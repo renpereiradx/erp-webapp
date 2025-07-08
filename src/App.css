@@ -1,0 +1,200 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  
+  /* Neo-Brutalist Color Palette */
+  --color-background: #ffffff;
+  --color-foreground: #000000;
+  --color-card: #ffffff;
+  --color-card-foreground: #000000;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #000000;
+  --color-primary: #000000;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f3f4f6;
+  --color-secondary-foreground: #000000;
+  --color-muted: #f9fafb;
+  --color-muted-foreground: #6b7280;
+  --color-accent: #84cc16; /* lime-500 */
+  --color-accent-foreground: #000000;
+  --color-destructive: #ef4444; /* red-500 */
+  --color-border: #000000;
+  --color-input: #ffffff;
+  --color-ring: #000000;
+  
+  /* Neo-Brutalist Specific Colors */
+  --color-brutalist-lime: #84cc16;
+  --color-brutalist-blue: #3b82f6;
+  --color-brutalist-pink: #ec4899;
+  --color-brutalist-orange: #f97316;
+  --color-brutalist-purple: #8b5cf6;
+  --color-brutalist-green: #10b981;
+  --color-brutalist-red: #ef4444;
+  --color-brutalist-yellow: #eab308;
+  
+  /* Chart colors with brutalist palette */
+  --color-chart-1: var(--color-brutalist-lime);
+  --color-chart-2: var(--color-brutalist-blue);
+  --color-chart-3: var(--color-brutalist-pink);
+  --color-chart-4: var(--color-brutalist-orange);
+  --color-chart-5: var(--color-brutalist-purple);
+  
+  /* Sidebar colors */
+  --color-sidebar: #ffffff;
+  --color-sidebar-foreground: #000000;
+  --color-sidebar-primary: #000000;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: #f3f4f6;
+  --color-sidebar-accent-foreground: #000000;
+  --color-sidebar-border: #000000;
+  --color-sidebar-ring: #000000;
+}
+
+:root {
+  --radius: 4px;
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #000000;
+  --muted: #f9fafb;
+  --muted-foreground: #6b7280;
+  --accent: #84cc16;
+  --accent-foreground: #000000;
+  --destructive: #ef4444;
+  --border: #000000;
+  --input: #ffffff;
+  --ring: #000000;
+  
+  /* Neo-Brutalist specific variables */
+  --brutalist-lime: #84cc16;
+  --brutalist-blue: #3b82f6;
+  --brutalist-pink: #ec4899;
+  --brutalist-orange: #f97316;
+  --brutalist-purple: #8b5cf6;
+  --brutalist-green: #10b981;
+  --brutalist-red: #ef4444;
+  --brutalist-yellow: #eab308;
+  
+  --chart-1: var(--brutalist-lime);
+  --chart-2: var(--brutalist-blue);
+  --chart-3: var(--brutalist-pink);
+  --chart-4: var(--brutalist-orange);
+  --chart-5: var(--brutalist-purple);
+  
+  --sidebar: #ffffff;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #000000;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f4f6;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #000000;
+  --sidebar-ring: #000000;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --popover: #1a1a1a;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #262626;
+  --secondary-foreground: #ffffff;
+  --muted: #171717;
+  --muted-foreground: #a3a3a3;
+  --accent: #84cc16;
+  --accent-foreground: #000000;
+  --destructive: #ef4444;
+  --border: #ffffff;
+  --input: #1a1a1a;
+  --ring: #ffffff;
+  
+  --sidebar: #000000;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #ffffff;
+  --sidebar-ring: #ffffff;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-bold;
+  }
+  
+  /* Neo-Brutalist base styles */
+  .brutalist-card {
+    @apply bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)];
+  }
+  
+  .brutalist-button {
+    @apply border-4 border-black font-black uppercase tracking-wide shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-150;
+  }
+  
+  .brutalist-button:hover {
+    @apply shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] translate-x-[2px] translate-y-[2px];
+  }
+  
+  .brutalist-button:active {
+    @apply shadow-none translate-x-[4px] translate-y-[4px];
+  }
+  
+  .brutalist-input {
+    @apply border-4 border-black bg-white font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+  
+  .brutalist-sidebar-item {
+    @apply border-2 border-black font-black uppercase tracking-wide shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-150;
+  }
+  
+  .brutalist-sidebar-item:hover {
+    @apply shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px];
+  }
+  
+  .brutalist-metric-card {
+    @apply bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-6;
+  }
+  
+  .brutalist-badge {
+    @apply border-2 border-black font-black text-xs px-2 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+  }
+}
+
+/* Utility classes for brutalist colors */
+.bg-brutalist-lime { background-color: var(--brutalist-lime); }
+.bg-brutalist-blue { background-color: var(--brutalist-blue); }
+.bg-brutalist-pink { background-color: var(--brutalist-pink); }
+.bg-brutalist-orange { background-color: var(--brutalist-orange); }
+.bg-brutalist-purple { background-color: var(--brutalist-purple); }
+.bg-brutalist-green { background-color: var(--brutalist-green); }
+.bg-brutalist-red { background-color: var(--brutalist-red); }
+.bg-brutalist-yellow { background-color: var(--brutalist-yellow); }
+
+.text-brutalist-lime { color: var(--brutalist-lime); }
+.text-brutalist-blue { color: var(--brutalist-blue); }
+.text-brutalist-pink { color: var(--brutalist-pink); }
+.text-brutalist-orange { color: var(--brutalist-orange); }
+.text-brutalist-purple { color: var(--brutalist-purple); }
+.text-brutalist-green { color: var(--brutalist-green); }
+.text-brutalist-red { color: var(--brutalist-red); }
+.text-brutalist-yellow { color: var(--brutalist-yellow); }
