@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Package, 
@@ -16,16 +16,26 @@ import {
   Bell,
   User,
   Menu,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { BrutalistBadge } from '@/components/ui/Card';
+import useAuthStore from '@/store/useAuthStore';
 
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
 
+  // Manejar logout
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
   // Configuración de navegación con colores neo-brutalistas
   const navigation = [
     { 
@@ -239,15 +249,72 @@ const MainLayout = ({ children }) => {
                 </BrutalistBadge>
               </Button>
 
-              {/* Profile */}
-              <Button variant="ghost" size="icon">
-                <User className="h-6 w-6" />
-                <BrutalistBadge color="green" className="absolute -top-2 -right-2 text-xs">
-                  1
-                </BrutalistBadge>
-              </Button>
+              {/* Profile Menu */}
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="relative"
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                >
+                  <User className="h-6 w-6" />
+                  <BrutalistBadge color="green" className="absolute -top-2 -right-2 text-xs">
+                    1
+                  </BrutalistBadge>
+                </Button>
+
+                {/* Dropdown Menu */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-72 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] z-50">
+                    {/* User Info */}
+                    <div className="p-4 border-b-4 border-black">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-lime-400 border-4 border-black flex items-center justify-center">
+                          <User className="w-6 h-6 text-black" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black uppercase tracking-wide">
+                            {user?.name || 'Usuario Demo'}
+                          </p>
+                          <p className="text-xs font-bold text-gray-600">
+                            {user?.email || user?.username || 'demo@erp.com'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="p-2">
+                      <Link
+                        to="/configuracion"
+                        className="flex items-center w-full px-4 py-3 text-sm font-bold text-left hover:bg-gray-100 transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <Settings className="w-4 h-4 mr-3" />
+                        CONFIGURACIÓN
+                      </Link>
+                      
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-3 text-sm font-bold text-left hover:bg-red-100 text-red-600 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 mr-3" />
+                        CERRAR SESIÓN
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
+          
+          {/* Overlay for user menu */}
+          {showUserMenu && (
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => setShowUserMenu(false)}
+            />
+          )}
         </div>
 
         {/* Page content */}

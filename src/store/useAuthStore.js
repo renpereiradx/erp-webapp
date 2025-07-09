@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { apiService } from '@/services/api';
+import { authService } from '@/services/authService';
 
 const useAuthStore = create(
   devtools(
@@ -14,6 +14,7 @@ const useAuthStore = create(
         // Estado inicial
         user: null,
         token: null,
+        roleId: null,
         isAuthenticated: false,
         loading: false,
         error: null,
@@ -27,10 +28,10 @@ const useAuthStore = create(
         login: async (credentials) => {
           set({ loading: true, error: null });
           try {
-            // Simular llamada a API de login
-            const response = await apiService.post('/auth/login', credentials);
+            // Llamada a API de login usando el servicio de autenticación
+            const response = await authService.login(credentials);
             
-            const { user, token } = response;
+            const { user, token, role_id } = response;
             
             // Guardar token en localStorage
             localStorage.setItem('auth_token', token);
@@ -38,14 +39,15 @@ const useAuthStore = create(
             set({
               user,
               token,
+              roleId: role_id,
               isAuthenticated: true,
               loading: false,
               error: null,
             });
             
-            return { user, token };
+            return { user, token, role_id };
           } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Error al iniciar sesión';
+            const errorMessage = error.message || 'Error al iniciar sesión';
             set({
               error: errorMessage,
               loading: false,
@@ -59,9 +61,9 @@ const useAuthStore = create(
         register: async (userData) => {
           set({ loading: true, error: null });
           try {
-            const response = await apiService.post('/auth/register', userData);
+            const response = await authService.register(userData);
             
-            const { user, token } = response;
+            const { user, token, role_id } = response;
             
             // Guardar token en localStorage
             localStorage.setItem('auth_token', token);
@@ -69,14 +71,15 @@ const useAuthStore = create(
             set({
               user,
               token,
+              roleId: role_id,
               isAuthenticated: true,
               loading: false,
               error: null,
             });
             
-            return { user, token };
+            return { user, token, role_id };
           } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Error al registrar usuario';
+            const errorMessage = error.message || 'Error al registrar usuario';
             set({
               error: errorMessage,
               loading: false,
@@ -93,6 +96,7 @@ const useAuthStore = create(
           set({
             user: null,
             token: null,
+            roleId: null,
             isAuthenticated: false,
             loading: false,
             error: null,
@@ -110,13 +114,14 @@ const useAuthStore = create(
           
           set({ loading: true });
           try {
-            // Verificar token con el servidor
-            const response = await apiService.get('/auth/me');
-            const user = response.user || response;
+            // Verificar token con el servicio de autenticación
+            const response = await authService.verifyToken(token);
+            const user = response.user;
             
             set({
               user,
               token,
+              roleId: user.role_id,
               isAuthenticated: true,
               loading: false,
             });
@@ -126,6 +131,7 @@ const useAuthStore = create(
             set({
               user: null,
               token: null,
+              roleId: null,
               isAuthenticated: false,
               loading: false,
             });
@@ -136,8 +142,8 @@ const useAuthStore = create(
         updateProfile: async (profileData) => {
           set({ loading: true, error: null });
           try {
-            const response = await apiService.put('/auth/profile', profileData);
-            const updatedUser = response.user || response;
+            const response = await authService.updateProfile(profileData);
+            const updatedUser = response.user;
             
             set((state) => ({
               user: { ...state.user, ...updatedUser },
@@ -146,7 +152,7 @@ const useAuthStore = create(
             
             return updatedUser;
           } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Error al actualizar perfil';
+            const errorMessage = error.message || 'Error al actualizar perfil';
             set({
               error: errorMessage,
               loading: false,
@@ -159,10 +165,10 @@ const useAuthStore = create(
         changePassword: async (passwordData) => {
           set({ loading: true, error: null });
           try {
-            await apiService.put('/auth/change-password', passwordData);
+            await authService.changePassword(passwordData);
             set({ loading: false });
           } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Error al cambiar contraseña';
+            const errorMessage = error.message || 'Error al cambiar contraseña';
             set({
               error: errorMessage,
               loading: false,
@@ -175,10 +181,10 @@ const useAuthStore = create(
         forgotPassword: async (email) => {
           set({ loading: true, error: null });
           try {
-            await apiService.post('/auth/forgot-password', { email });
+            await authService.forgotPassword(email);
             set({ loading: false });
           } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Error al enviar email de recuperación';
+            const errorMessage = error.message || 'Error al enviar email de recuperación';
             set({
               error: errorMessage,
               loading: false,
@@ -191,6 +197,7 @@ const useAuthStore = create(
         reset: () => set({
           user: null,
           token: null,
+          roleId: null,
           isAuthenticated: false,
           loading: false,
           error: null,
@@ -201,6 +208,7 @@ const useAuthStore = create(
         partialize: (state) => ({
           user: state.user,
           token: state.token,
+          roleId: state.roleId,
           isAuthenticated: state.isAuthenticated,
         }),
       }
