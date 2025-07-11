@@ -27,24 +27,20 @@ import useAuthStore from '@/store/useAuthStore';
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isLargeScreen, setIsLargeScreen] = useState(() => {
-    // Inicializar con el valor correcto si window está disponible
-    if (typeof window !== 'undefined') {
-      return window.innerWidth >= 1024;
-    }
-    return false;
-  });
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { theme } = useTheme();
 
-  // Hook para detectar pantallas grandes (mantenido para el futuro si es necesario)
+  // Hook para detectar cuando estamos en el cliente (post-hidratación)
   useEffect(() => {
+    setIsClient(true);
     const checkScreenSize = () => {
       setIsLargeScreen(window.innerWidth >= 1024);
     };
-
+    
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
     
@@ -53,6 +49,16 @@ const MainLayout = ({ children }) => {
 
   // Determinar si estamos en tema neo-brutalista
   const isNeoBrutalist = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
+
+  // Debug log temporal
+  console.log('MainLayout Debug:', {
+    isClient,
+    isLargeScreen,
+    windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'undefined',
+    theme,
+    sidebarShouldShow: isClient && isLargeScreen,
+    buttonShouldShow: isClient && !isLargeScreen
+  });
 
   // Manejar logout
   const handleLogout = () => {
@@ -163,9 +169,12 @@ const MainLayout = ({ children }) => {
 
   return (
     <div className="erp-main-layout min-h-screen" style={{ backgroundColor: 'var(--muted, #f9fafb)', ...getLayoutStyles() }} data-component="main-layout" data-testid="main-layout">
-      {/* Sidebar Desktop */}
+      {/* Sidebar Desktop - Hybrid approach */}
       <div 
-        className="erp-sidebar-desktop fixed inset-y-0 left-0 z-30 w-72 hidden lg:block"
+        className={`erp-sidebar-desktop fixed inset-y-0 left-0 z-30 w-72 ${!isClient ? 'hidden lg:block' : ''}`}
+        style={{ 
+          display: isClient ? (isLargeScreen ? 'block' : 'none') : undefined
+        }}
         data-component="sidebar-desktop" 
         data-testid="sidebar-desktop"
       >
@@ -399,7 +408,14 @@ const MainLayout = ({ children }) => {
       )}
 
       {/* Main content */}
-      <div className="erp-main-content lg:pl-72 flex flex-col flex-1" data-component="main-content" data-testid="main-content">
+      <div 
+        className={`erp-main-content flex flex-col flex-1 ${!isClient ? 'lg:pl-72' : ''}`}
+        style={{
+          marginLeft: isClient ? ((isLargeScreen) ? '288px' : '0px') : undefined // 288px = w-72
+        }}
+        data-component="main-content" 
+        data-testid="main-content"
+      >
         {/* Top navbar */}
         <div className="erp-navbar sticky top-0 z-10 flex-shrink-0 flex h-20" 
              style={{ 
@@ -413,10 +429,11 @@ const MainLayout = ({ children }) => {
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(true)}
-            className="erp-mobile-menu-btn px-4 lg:hidden"
+            className={`erp-mobile-menu-btn px-4 ${!isClient ? 'lg:hidden' : ''}`}
             style={{ 
               borderRight: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
-              color: 'var(--foreground)'
+              color: 'var(--foreground)',
+              display: isClient ? (!isLargeScreen ? 'flex' : 'none') : undefined
             }}
             data-testid="mobile-menu-btn"
             data-component="mobile-menu-btn"
