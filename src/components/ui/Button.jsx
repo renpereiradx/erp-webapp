@@ -1,54 +1,119 @@
 /**
- * Componente Button reutilizable con estilo Neo-Brutalista
- * Utiliza Tailwind CSS para estilos brutalist con bordes gruesos y sombras pronunciadas
+ * Componente Button reutilizable con soporte para múltiples temas
+ * Incluye variantes para Neo-Brutalist, Material y Fluent Design
  */
 
 import React from 'react';
+import { useTheme } from 'next-themes';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-// Definición de variantes usando class-variance-authority con estilo neo-brutalista
-const buttonVariants = cva(
-  // Estilos base neo-brutalistas
-  "inline-flex items-center justify-center whitespace-nowrap text-sm font-black uppercase tracking-wide ring-offset-background transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
-  {
-    variants: {
-      variant: {
-        default: "bg-white text-black hover:bg-gray-50",
-        primary: "bg-black text-white hover:bg-gray-800",
-        lime: "bg-brutalist-lime text-black hover:bg-lime-400",
-        blue: "bg-brutalist-blue text-white hover:bg-blue-600",
-        pink: "bg-brutalist-pink text-white hover:bg-pink-600",
-        orange: "bg-brutalist-orange text-white hover:bg-orange-600",
-        purple: "bg-brutalist-purple text-white hover:bg-purple-600",
-        green: "bg-brutalist-green text-white hover:bg-emerald-600",
-        red: "bg-brutalist-red text-white hover:bg-red-600",
-        yellow: "bg-brutalist-yellow text-black hover:bg-yellow-400",
-        destructive: "bg-brutalist-red text-white hover:bg-red-600",
-        outline: "border-4 border-black bg-white text-black hover:bg-gray-50",
-        secondary: "bg-gray-200 text-black hover:bg-gray-300",
-        ghost: "border-0 shadow-none hover:shadow-none hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0 hover:bg-gray-100",
-        link: "border-0 shadow-none hover:shadow-none hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0 text-black underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-12 px-6 py-3",
-        sm: "h-10 px-4 py-2 text-xs",
-        lg: "h-14 px-8 py-4 text-base",
-        icon: "h-12 w-12",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-);
-
-const Button = React.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) => {
+const Button = React.forwardRef(({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
+  const { theme } = useTheme();
+  const isNeoBrutalist = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
+  
   const Comp = asChild ? "span" : "button";
+  
+  const getButtonStyles = () => {
+    if (isNeoBrutalist) {
+      return {
+        border: '4px solid var(--border)',
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
+        transition: 'all 150ms ease'
+      };
+    }
+    return {
+      border: variant === 'outline' ? 'var(--border-width, 1px) solid var(--border)' : 'none',
+      fontWeight: '500',
+      textTransform: 'none',
+      letterSpacing: 'normal',
+      borderRadius: '6px',
+      transition: 'all 200ms ease'
+    };
+  };
+  
+  const getVariantStyles = () => {
+    const baseStyle = getButtonStyles();
+    
+    if (isNeoBrutalist) {
+      const brutalistVariants = {
+        default: { backgroundColor: 'var(--background)', color: 'var(--foreground)' },
+        primary: { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' },
+        lime: { backgroundColor: 'var(--brutalist-lime)', color: '#000000' },
+        blue: { backgroundColor: 'var(--brutalist-blue)', color: '#ffffff' },
+        pink: { backgroundColor: 'var(--brutalist-pink)', color: '#ffffff' },
+        orange: { backgroundColor: 'var(--brutalist-orange)', color: '#ffffff' },
+        purple: { backgroundColor: 'var(--brutalist-purple)', color: '#ffffff' },
+        green: { backgroundColor: 'var(--brutalist-green)', color: '#ffffff' },
+        red: { backgroundColor: 'var(--brutalist-red)', color: '#ffffff' },
+        yellow: { backgroundColor: 'var(--brutalist-yellow)', color: '#000000' },
+        destructive: { backgroundColor: 'var(--destructive)', color: 'var(--destructive-foreground)' },
+        outline: { backgroundColor: 'transparent', color: 'var(--foreground)' },
+        secondary: { backgroundColor: 'var(--secondary)', color: 'var(--secondary-foreground)' },
+        ghost: { backgroundColor: 'transparent', color: 'var(--foreground)', border: 'none', boxShadow: 'none' },
+        link: { backgroundColor: 'transparent', color: 'var(--foreground)', border: 'none', boxShadow: 'none', textDecoration: 'underline' },
+      };
+      return { ...baseStyle, ...brutalistVariants[variant] };
+    } else {
+      const standardVariants = {
+        default: { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' },
+        primary: { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' },
+        destructive: { backgroundColor: 'var(--destructive)', color: 'var(--destructive-foreground)' },
+        outline: { backgroundColor: 'transparent', color: 'var(--foreground)' },
+        secondary: { backgroundColor: 'var(--secondary)', color: 'var(--secondary-foreground)' },
+        ghost: { backgroundColor: 'transparent', color: 'var(--foreground)' },
+        link: { backgroundColor: 'transparent', color: 'var(--primary)', textDecoration: 'underline' },
+      };
+      return { ...baseStyle, ...standardVariants[variant] };
+    }
+  };
+  
+  const getSizeStyles = () => {
+    const sizes = {
+      default: { height: '2.5rem', padding: '0 1.5rem' },
+      sm: { height: '2rem', padding: '0 1rem', fontSize: '0.875rem' },
+      lg: { height: '3rem', padding: '0 2rem', fontSize: '1.125rem' },
+      icon: { height: '2.5rem', width: '2.5rem', padding: '0' },
+    };
+    return sizes[size] || sizes.default;
+  };
+
   return (
     <Comp
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(
+        "inline-flex items-center justify-center whitespace-nowrap text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+        isNeoBrutalist && "hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px]",
+        variant === 'ghost' && isNeoBrutalist && "hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0",
+        variant === 'link' && isNeoBrutalist && "hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0",
+        className
+      )}
+      style={{
+        ...getVariantStyles(),
+        ...getSizeStyles()
+      }}
+      onMouseEnter={(e) => {
+        if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
+          e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
+          e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
+        }
+      }}
+      onMouseDown={(e) => {
+        if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
+          e.target.style.boxShadow = 'none';
+        }
+      }}
+      onMouseUp={(e) => {
+        if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
+          e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
+        }
+      }}
       ref={ref}
       {...props}
     />
@@ -57,5 +122,5 @@ const Button = React.forwardRef(({ className, variant, size, asChild = false, ..
 
 Button.displayName = "Button";
 
-export { Button, buttonVariants };
+export { Button };
 

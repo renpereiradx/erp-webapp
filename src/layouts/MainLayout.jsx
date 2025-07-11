@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import { 
   LayoutDashboard, 
   Package, 
@@ -21,7 +22,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { BrutalistBadge } from '@/components/ui/Card';
 import useAuthStore from '@/store/useAuthStore';
 
 const MainLayout = ({ children }) => {
@@ -30,13 +30,17 @@ const MainLayout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { theme } = useTheme();
+
+  // Determinar si estamos en tema neo-brutalista
+  const isNeoBrutalist = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
 
   // Manejar logout
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-  // Configuración de navegación con colores neo-brutalistas
+  // Configuración de navegación
   const navigation = [
     { 
       name: 'Dashboard', 
@@ -84,19 +88,84 @@ const MainLayout = ({ children }) => {
 
   const isActive = (href) => location.pathname === href;
 
+  // Aplicar estilos condicionales según el tema
+  const getLayoutStyles = () => {
+    if (isNeoBrutalist) {
+      return {
+        fontFamily: 'var(--font-sans)',
+        fontWeight: 'bold'
+      };
+    }
+    return {
+      fontFamily: 'var(--font-sans)'
+    };
+  };
+
+  const getSidebarStyles = () => {
+    if (isNeoBrutalist) {
+      return {
+        backgroundColor: 'var(--background)', 
+        borderRight: '4px solid var(--border)',
+        boxShadow: '4px 0px 0px 0px rgba(0,0,0,1)'
+      };
+    }
+    return {
+      backgroundColor: 'var(--background)', 
+      borderRight: 'var(--border-width, 1px) solid var(--border)',
+      boxShadow: 'var(--shadow-sm)'
+    };
+  };
+
+  const getNavItemStyles = (active, item) => {
+    if (isNeoBrutalist) {
+      return {
+        borderWidth: '2px',
+        borderStyle: 'solid',
+        borderColor: 'var(--border)',
+        backgroundColor: active ? `var(--brutalist-${item?.color || 'blue'})` : 'var(--card)',
+        color: active ? '#000000' : 'var(--foreground)',
+        boxShadow: '2px 2px 0px 0px rgba(0,0,0,1)',
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        transition: 'all 150ms ease',
+        ':hover': {
+          boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)',
+          transform: 'translate(1px, 1px)'
+        }
+      };
+    }
+    return {
+      backgroundColor: active ? 'var(--accent)' : 'transparent',
+      color: active ? 'var(--accent-foreground)' : 'var(--foreground)',
+      transition: 'colors 200ms ease'
+    };
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 font-bold">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--muted, #f9fafb)', ...getLayoutStyles() }}>
       {/* Sidebar Desktop */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
-        <div className="flex flex-col flex-grow bg-white border-r-4 border-black shadow-[4px_0px_0px_0px_rgba(0,0,0,1)] overflow-y-auto">
+        <div className="flex flex-col flex-grow overflow-y-auto"
+             style={getSidebarStyles()}>
           {/* Logo */}
-          <div className="flex items-center flex-shrink-0 px-6 py-6 border-b-4 border-black">
+          <div className="flex items-center flex-shrink-0 px-6 py-6"
+               style={{ 
+                 borderBottom: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)'
+               }}>
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
-                <LayoutDashboard className="h-6 w-6 text-white" />
+              <div className="w-10 h-10 flex items-center justify-center rounded-md"
+                   style={{ 
+                     backgroundColor: 'var(--primary)', 
+                     color: 'var(--primary-foreground)',
+                     border: isNeoBrutalist ? '2px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
+                     boxShadow: isNeoBrutalist ? '2px 2px 0px 0px rgba(0,0,0,1)' : 'none'
+                   }}>
+                <LayoutDashboard className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-xl font-black uppercase tracking-wide text-black">
+                <h1 className={`text-xl ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-bold'}`}
+                    style={{ color: 'var(--foreground)' }}>
                   ERP System
                 </h1>
               </div>
@@ -104,26 +173,56 @@ const MainLayout = ({ children }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="mt-6 flex-1 px-4 space-y-3">
+          <nav className={`mt-6 flex-1 px-4 ${isNeoBrutalist ? 'space-y-3' : 'space-y-2'}`}>
             {navigation.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
+              const navStyles = getNavItemStyles(active, item);
               
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`group flex items-center px-4 py-3 text-sm font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-150 hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] ${
-                    active 
-                      ? `bg-brutalist-${item.color} text-black` 
-                      : 'bg-white text-black hover:bg-gray-50'
-                  }`}
+                  className={`group flex items-center px-4 py-3 text-sm ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-medium'} ${isNeoBrutalist ? '' : 'rounded-md'} transition-all duration-200`}
+                  style={navStyles}
+                  onMouseEnter={(e) => {
+                    if (!active && !isNeoBrutalist) {
+                      e.target.style.backgroundColor = 'var(--accent)';
+                      e.target.style.color = 'var(--accent-foreground)';
+                    } else if (isNeoBrutalist) {
+                      e.target.style.boxShadow = '1px 1px 0px 0px rgba(0,0,0,1)';
+                      e.target.style.transform = 'translate(1px, 1px)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active && !isNeoBrutalist) {
+                      e.target.style.backgroundColor = 'transparent';
+                      e.target.style.color = 'var(--foreground)';
+                    } else if (isNeoBrutalist) {
+                      e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
+                      e.target.style.transform = 'translate(0px, 0px)';
+                    }
+                  }}
                 >
                   <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
                   <span className="flex-1">{item.name}</span>
-                  <BrutalistBadge color={item.color} className="ml-2">
-                    {item.badge}
-                  </BrutalistBadge>
+                  {isNeoBrutalist ? (
+                    <span className={`ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
+                          style={{ 
+                            backgroundColor: `var(--brutalist-${item.color})`,
+                            boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)'
+                          }}>
+                      {item.badge}
+                    </span>
+                  ) : (
+                    <span className="ml-2 px-2 py-1 text-xs font-medium rounded-full"
+                          style={{ 
+                            backgroundColor: 'var(--muted)', 
+                            color: 'var(--muted-foreground)' 
+                          }}>
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -131,19 +230,28 @@ const MainLayout = ({ children }) => {
 
           {/* Upgrade Section */}
           <div className="flex-shrink-0 p-4">
-            <div className="bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4">
-              <h3 className="text-sm font-black uppercase tracking-wide text-black mb-2">
+            <div className={`p-4 ${isNeoBrutalist ? '' : 'rounded-lg'}`}
+                 style={{ 
+                   backgroundColor: 'var(--card)', 
+                   border: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
+                   boxShadow: isNeoBrutalist ? '4px 4px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-sm)'
+                 }}>
+              <h3 className={`text-sm ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-semibold'} mb-2`}
+                  style={{ color: 'var(--foreground)' }}>
                 Upgrade to Pro
               </h3>
-              <p className="text-xs font-bold text-gray-600 mb-4 uppercase tracking-wide">
+              <p className={`text-xs mb-4 ${isNeoBrutalist ? 'font-bold uppercase tracking-wide' : ''}`}
+                 style={{ color: 'var(--muted-foreground)' }}>
                 Are you looking for more features? Check out our Pro version.
               </p>
-              <Button variant="red" size="sm" className="w-full">
+              <Button variant={isNeoBrutalist ? "red" : "default"} size="sm" className="w-full">
                 <span className="mr-2">→</span>
                 Upgrade Now
-                <BrutalistBadge color="yellow" className="ml-2">
-                  22
-                </BrutalistBadge>
+                {isNeoBrutalist && (
+                  <span className="ml-2 px-2 py-1 text-xs font-black border-2 border-black bg-yellow-400">
+                    22
+                  </span>
+                )}
               </Button>
             </div>
           </div>
@@ -153,15 +261,21 @@ const MainLayout = ({ children }) => {
       {/* Sidebar Mobile */}
       {sidebarOpen && (
         <div className="fixed inset-0 flex z-40 lg:hidden">
-          <div className="fixed inset-0 bg-black bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white border-r-4 border-black shadow-[4px_0px_0px_0px_rgba(0,0,0,1)]">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
+          <div className="relative flex-1 flex flex-col max-w-xs w-full"
+               style={{ 
+                 backgroundColor: 'var(--background)',
+                 borderRight: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
+                 boxShadow: isNeoBrutalist ? '4px 0px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-lg)'
+               }}>
             {/* Close button */}
             <div className="absolute top-0 right-0 -mr-12 pt-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setSidebarOpen(false)}
-                className="text-white border-2 border-white"
+                className={`text-white ${isNeoBrutalist ? 'border-2 border-white' : ''}`}
+                style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
               >
                 <X className="h-6 w-6" />
               </Button>
@@ -170,13 +284,23 @@ const MainLayout = ({ children }) => {
             {/* Mobile sidebar content - same as desktop */}
             <div className="flex flex-col flex-grow overflow-y-auto">
               {/* Logo */}
-              <div className="flex items-center flex-shrink-0 px-6 py-6 border-b-4 border-black">
+              <div className="flex items-center flex-shrink-0 px-6 py-6"
+                   style={{ 
+                     borderBottom: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)'
+                   }}>
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
-                    <LayoutDashboard className="h-6 w-6 text-white" />
+                  <div className="w-10 h-10 flex items-center justify-center rounded-md"
+                       style={{ 
+                         backgroundColor: 'var(--primary)', 
+                         color: 'var(--primary-foreground)',
+                         border: isNeoBrutalist ? '2px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
+                         boxShadow: isNeoBrutalist ? '2px 2px 0px 0px rgba(0,0,0,1)' : 'none'
+                       }}>
+                    <LayoutDashboard className="h-6 w-6" />
                   </div>
                   <div>
-                    <h1 className="text-xl font-black uppercase tracking-wide text-black">
+                    <h1 className={`text-xl ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-bold'}`}
+                        style={{ color: 'var(--foreground)' }}>
                       ERP System
                     </h1>
                   </div>
@@ -184,27 +308,57 @@ const MainLayout = ({ children }) => {
               </div>
 
               {/* Navigation */}
-              <nav className="mt-6 flex-1 px-4 space-y-3">
+              <nav className={`mt-6 flex-1 px-4 ${isNeoBrutalist ? 'space-y-3' : 'space-y-2'}`}>
                 {navigation.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
+                  const navStyles = getNavItemStyles(active, item);
                   
                   return (
                     <Link
                       key={item.name}
                       to={item.href}
                       onClick={() => setSidebarOpen(false)}
-                      className={`group flex items-center px-4 py-3 text-sm font-black uppercase tracking-wide border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-150 hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] ${
-                        active 
-                          ? `bg-brutalist-${item.color} text-black` 
-                          : 'bg-white text-black hover:bg-gray-50'
-                      }`}
+                      className={`group flex items-center px-4 py-3 text-sm ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-medium'} ${isNeoBrutalist ? '' : 'rounded-md'} transition-all duration-200`}
+                      style={navStyles}
+                      onMouseEnter={(e) => {
+                        if (!active && !isNeoBrutalist) {
+                          e.target.style.backgroundColor = 'var(--accent)';
+                          e.target.style.color = 'var(--accent-foreground)';
+                        } else if (isNeoBrutalist) {
+                          e.target.style.boxShadow = '1px 1px 0px 0px rgba(0,0,0,1)';
+                          e.target.style.transform = 'translate(1px, 1px)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!active && !isNeoBrutalist) {
+                          e.target.style.backgroundColor = 'transparent';
+                          e.target.style.color = 'var(--foreground)';
+                        } else if (isNeoBrutalist) {
+                          e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
+                          e.target.style.transform = 'translate(0px, 0px)';
+                        }
+                      }}
                     >
                       <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
                       <span className="flex-1">{item.name}</span>
-                      <BrutalistBadge color={item.color} className="ml-2">
-                        {item.badge}
-                      </BrutalistBadge>
+                      {isNeoBrutalist ? (
+                        <span className={`ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
+                              style={{ 
+                                backgroundColor: `var(--brutalist-${item.color})`,
+                                boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)'
+                              }}>
+                          {item.badge}
+                        </span>
+                      ) : (
+                        <span className="ml-2 px-2 py-1 text-xs font-medium rounded-full"
+                              style={{ 
+                                backgroundColor: 'var(--muted)', 
+                                color: 'var(--muted-foreground)' 
+                              }}>
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}
@@ -217,12 +371,22 @@ const MainLayout = ({ children }) => {
       {/* Main content */}
       <div className="lg:pl-72 flex flex-col flex-1">
         {/* Top navbar */}
-        <div className="sticky top-0 z-10 flex-shrink-0 flex h-20 bg-white border-b-4 border-black shadow-[0px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="sticky top-0 z-10 flex-shrink-0 flex h-20" 
+             style={{ 
+               backgroundColor: 'var(--background)', 
+               borderBottom: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
+               boxShadow: isNeoBrutalist ? '0px 4px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-sm)',
+               color: 'var(--foreground)'
+             }}>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(true)}
-            className="px-4 text-black lg:hidden border-r-4 border-black"
+            className="px-4 lg:hidden"
+            style={{ 
+              borderRight: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
+              color: 'var(--foreground)'
+            }}
           >
             <Menu className="h-6 w-6" />
           </Button>
@@ -244,9 +408,20 @@ const MainLayout = ({ children }) => {
               {/* Notifications */}
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-6 w-6" />
-                <BrutalistBadge color="red" className="absolute -top-2 -right-2 text-xs">
-                  3
-                </BrutalistBadge>
+                {isNeoBrutalist ? (
+                  <span className="absolute -top-2 -right-2 px-2 py-1 text-xs font-black border-2 border-black bg-red-400"
+                        style={{ boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)' }}>
+                    3
+                  </span>
+                ) : (
+                  <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full"
+                        style={{ 
+                          backgroundColor: 'var(--destructive)', 
+                          color: 'var(--destructive-foreground)' 
+                        }}>
+                    3
+                  </span>
+                )}
               </Button>
 
               {/* Profile Menu */}
@@ -258,25 +433,51 @@ const MainLayout = ({ children }) => {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
                   <User className="h-6 w-6" />
-                  <BrutalistBadge color="green" className="absolute -top-2 -right-2 text-xs">
-                    1
-                  </BrutalistBadge>
+                  {isNeoBrutalist ? (
+                    <span className="absolute -top-2 -right-2 px-2 py-1 text-xs font-black border-2 border-black bg-green-400"
+                          style={{ boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)' }}>
+                      1
+                    </span>
+                  ) : (
+                    <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full"
+                          style={{ 
+                            backgroundColor: 'var(--accent)', 
+                            color: 'var(--accent-foreground)' 
+                          }}>
+                      1
+                    </span>
+                  )}
                 </Button>
 
                 {/* Dropdown Menu */}
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] z-50">
+                  <div className={`absolute right-0 mt-2 w-72 z-50 ${isNeoBrutalist ? '' : 'rounded-lg'}`}
+                       style={{ 
+                         backgroundColor: 'var(--popover)', 
+                         border: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
+                         boxShadow: isNeoBrutalist ? '8px 8px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-lg)'
+                       }}>
                     {/* User Info */}
-                    <div className="p-4 border-b-4 border-black">
+                    <div className="p-4"
+                         style={{ 
+                           borderBottom: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)'
+                         }}>
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-lime-400 border-4 border-black flex items-center justify-center">
-                          <User className="w-6 h-6 text-black" />
+                        <div className={`w-12 h-12 flex items-center justify-center ${isNeoBrutalist ? '' : 'rounded-full'}`}
+                             style={{ 
+                               backgroundColor: 'var(--primary)', 
+                               color: 'var(--primary-foreground)',
+                               border: isNeoBrutalist ? '4px solid var(--border)' : 'none'
+                             }}>
+                          <User className="w-6 h-6" />
                         </div>
                         <div>
-                          <p className="text-sm font-black uppercase tracking-wide">
+                          <p className={`text-sm ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-semibold'}`}
+                             style={{ color: 'var(--foreground)' }}>
                             {user?.name || 'Usuario Demo'}
                           </p>
-                          <p className="text-xs font-bold text-gray-600">
+                          <p className={`text-xs ${isNeoBrutalist ? 'font-bold' : ''}`}
+                             style={{ color: 'var(--muted-foreground)' }}>
                             {user?.email || user?.username || 'demo@erp.com'}
                           </p>
                         </div>
@@ -287,19 +488,37 @@ const MainLayout = ({ children }) => {
                     <div className="p-2">
                       <Link
                         to="/configuracion"
-                        className="flex items-center w-full px-4 py-3 text-sm font-bold text-left hover:bg-gray-100 transition-colors"
+                        className={`flex items-center w-full px-4 py-3 text-sm ${isNeoBrutalist ? 'font-bold' : 'font-medium'} text-left transition-colors ${isNeoBrutalist ? '' : 'rounded-md'}`}
+                        style={{ color: 'var(--foreground)' }}
                         onClick={() => setShowUserMenu(false)}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = isNeoBrutalist ? 'var(--muted)' : 'var(--accent)';
+                          e.target.style.color = isNeoBrutalist ? 'var(--foreground)' : 'var(--accent-foreground)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = 'transparent';
+                          e.target.style.color = 'var(--foreground)';
+                        }}
                       >
                         <Settings className="w-4 h-4 mr-3" />
-                        CONFIGURACIÓN
+                        {isNeoBrutalist ? 'CONFIGURACIÓN' : 'Configuración'}
                       </Link>
                       
                       <button
                         onClick={handleLogout}
-                        className="flex items-center w-full px-4 py-3 text-sm font-bold text-left hover:bg-red-100 text-red-600 transition-colors"
+                        className={`flex items-center w-full px-4 py-3 text-sm ${isNeoBrutalist ? 'font-bold' : 'font-medium'} text-left transition-colors ${isNeoBrutalist ? '' : 'rounded-md'}`}
+                        style={{ color: 'var(--destructive)' }}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = 'var(--destructive)';
+                          e.target.style.color = 'var(--destructive-foreground)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = 'transparent';
+                          e.target.style.color = 'var(--destructive)';
+                        }}
                       >
                         <LogOut className="w-4 h-4 mr-3" />
-                        CERRAR SESIÓN
+                        {isNeoBrutalist ? 'CERRAR SESIÓN' : 'Cerrar Sesión'}
                       </button>
                     </div>
                   </div>

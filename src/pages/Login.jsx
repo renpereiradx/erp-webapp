@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import { 
   Eye, 
   EyeOff, 
@@ -19,6 +20,7 @@ import useAuthStore from '@/store/useAuthStore';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const { login, loading, error, clearError } = useAuthStore();
   
   const [formData, setFormData] = useState({
@@ -27,6 +29,8 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+
+  const isNeoBrutalism = theme?.includes('neo-brutalism');
 
   // Validación del formulario
   const validateForm = () => {
@@ -101,37 +105,63 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header con logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-black rounded-none border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-6">
-            <User className="w-10 h-10 text-white" />
+          <div className={`inline-flex items-center justify-center w-20 h-20 mb-6 ${
+            isNeoBrutalism 
+              ? 'bg-foreground rounded-none border-4 border-foreground shadow-neo-brutal'
+              : 'bg-primary rounded-lg border border-border shadow-lg'
+          }`}>
+            <User className={`w-10 h-10 ${isNeoBrutalism ? 'text-background' : 'text-primary-foreground'}`} />
           </div>
-          <h1 className="text-4xl font-black uppercase tracking-wide mb-2">
+          <h1 className={`text-4xl mb-2 ${
+            isNeoBrutalism 
+              ? 'font-black uppercase tracking-wide'
+              : 'font-bold'
+          }`}>
             Sistema ERP
           </h1>
-          <p className="text-lg font-bold text-gray-600 uppercase tracking-wide">
+          <p className={`text-lg text-muted-foreground ${
+            isNeoBrutalism 
+              ? 'font-bold uppercase tracking-wide'
+              : 'font-medium'
+          }`}>
             Acceso al Sistema
           </p>
         </div>
 
         {/* Formulario de login */}
-        <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8">
+        <div className={`bg-card p-8 ${
+          isNeoBrutalism 
+            ? 'border-4 border-foreground shadow-neo-brutal'
+            : 'border border-border rounded-lg shadow-lg'
+        }`}>
           {/* Error general */}
           {error && (
-            <div className="mb-6 p-4 bg-red-100 border-4 border-red-500 rounded-none">
+            <div className={`mb-6 p-4 bg-destructive/10 border border-destructive ${
+              isNeoBrutalism ? 'border-4 rounded-none' : 'rounded-lg'
+            }`}>
               <div className="flex items-start">
-                <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" />
+                <AlertCircle className="w-5 h-5 text-destructive mr-3 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-black text-red-800 uppercase text-sm mb-1">
+                  <h3 className={`text-destructive mb-1 ${
+                    isNeoBrutalism 
+                      ? 'font-black uppercase text-sm'
+                      : 'font-semibold text-sm'
+                  }`}>
                     Error de Autenticación
                   </h3>
-                  <p className="font-bold text-red-700 text-sm leading-relaxed">
+                  <p className={`text-destructive text-sm leading-relaxed ${
+                    isNeoBrutalism ? 'font-bold' : 'font-medium'
+                  }`}>
                     {error}
                   </p>
                   {error.includes('conexión') && (
-                    <div className="mt-2 text-xs font-bold text-red-600">
+                    <div className={`mt-2 text-xs text-destructive ${
+                      isNeoBrutalism ? 'font-bold' : 'font-medium'
+                    }`}>
                       <p>💡 Sugerencias:</p>
                       <ul className="list-disc list-inside mt-1 space-y-1">
                         <li>Verifica que el servidor esté ejecutándose</li>
@@ -141,7 +171,9 @@ const Login = () => {
                     </div>
                   )}
                   {error.includes('credenciales') && (
-                    <div className="mt-2 text-xs font-bold text-red-600">
+                    <div className={`mt-2 text-xs text-destructive ${
+                      isNeoBrutalism ? 'font-bold' : 'font-medium'
+                    }`}>
                       <p>💡 Sugerencias:</p>
                       <ul className="list-disc list-inside mt-1 space-y-1">
                         <li>Verifica que el usuario y contraseña sean correctos</li>
@@ -158,7 +190,11 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Campo Email/Username */}
             <div>
-              <label className="block text-sm font-black uppercase tracking-wide mb-2">
+              <label className={`block text-sm mb-2 ${
+                isNeoBrutalism 
+                  ? 'font-black uppercase tracking-wide'
+                  : 'font-medium'
+              }`}>
                 Email o Usuario
               </label>
               <div className="relative">
@@ -168,14 +204,16 @@ const Login = () => {
                   value={formData.username}
                   onChange={handleInputChange}
                   placeholder="USUARIO@EMAIL.COM"
-                  className={`pl-12 font-bold ${
-                    formErrors.username ? 'border-red-500' : ''
-                  }`}
+                  className={`pl-12 ${
+                    isNeoBrutalism ? 'font-bold' : ''
+                  } ${formErrors.username ? 'border-destructive' : ''}`}
                 />
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               </div>
               {formErrors.username && (
-                <p className="mt-2 text-sm font-bold text-red-600 uppercase">
+                <p className={`mt-2 text-sm text-destructive ${
+                  isNeoBrutalism ? 'font-bold uppercase' : 'font-medium'
+                }`}>
                   {formErrors.username}
                 </p>
               )}
@@ -183,7 +221,11 @@ const Login = () => {
 
             {/* Campo Contraseña */}
             <div>
-              <label className="block text-sm font-black uppercase tracking-wide mb-2">
+              <label className={`block text-sm mb-2 ${
+                isNeoBrutalism 
+                  ? 'font-black uppercase tracking-wide'
+                  : 'font-medium'
+              }`}>
                 Contraseña
               </label>
               <div className="relative">
@@ -193,21 +235,23 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="••••••••"
-                  className={`pl-12 pr-12 font-bold ${
-                    formErrors.password ? 'border-red-500' : ''
-                  }`}
+                  className={`pl-12 pr-12 ${
+                    isNeoBrutalism ? 'font-bold' : ''
+                  } ${formErrors.password ? 'border-destructive' : ''}`}
                 />
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
               {formErrors.password && (
-                <p className="mt-2 text-sm font-bold text-red-600 uppercase">
+                <p className={`mt-2 text-sm text-destructive ${
+                  isNeoBrutalism ? 'font-bold uppercase' : 'font-medium'
+                }`}>
                   {formErrors.password}
                 </p>
               )}
@@ -223,7 +267,9 @@ const Login = () => {
             >
               {loading ? (
                 <div className="flex items-center">
-                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <div className={`w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mr-2 ${
+                    isNeoBrutalism ? 'border-foreground' : 'border-current'
+                  }`}></div>
                   INICIANDO SESIÓN...
                 </div>
               ) : (
@@ -237,9 +283,21 @@ const Login = () => {
 
           {/* Separador */}
           <div className="my-6 flex items-center">
-            <div className="flex-1 border-t-4 border-black"></div>
-            <span className="px-4 text-sm font-black uppercase tracking-wide">O</span>
-            <div className="flex-1 border-t-4 border-black"></div>
+            <div className={`flex-1 ${
+              isNeoBrutalism 
+                ? 'border-t-4 border-foreground'
+                : 'border-t border-border'
+            }`}></div>
+            <span className={`px-4 text-sm ${
+              isNeoBrutalism 
+                ? 'font-black uppercase tracking-wide'
+                : 'font-medium'
+            }`}>O</span>
+            <div className={`flex-1 ${
+              isNeoBrutalism 
+                ? 'border-t-4 border-foreground'
+                : 'border-t border-border'
+            }`}></div>
           </div>
 
           {/* Demo Login */}
@@ -257,25 +315,45 @@ const Login = () => {
           </Button>
 
           {/* Información de API */}
-          <div className="mt-4 p-4 bg-gray-50 border-4 border-black">
-            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">
+          <div className={`mt-4 p-4 bg-muted ${
+            isNeoBrutalism 
+              ? 'border-4 border-foreground'
+              : 'border border-border rounded-lg'
+          }`}>
+            <p className={`text-xs text-muted-foreground mb-1 ${
+              isNeoBrutalism 
+                ? 'font-bold uppercase tracking-wide'
+                : 'font-medium'
+            }`}>
               API Endpoint:
             </p>
-            <p className="text-sm font-bold">POST localhost:5050/login</p>
-            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mt-2 mb-1">
+            <p className={`text-sm ${isNeoBrutalism ? 'font-bold' : 'font-medium'}`}>POST localhost:5050/login</p>
+            <p className={`text-xs text-muted-foreground mt-2 mb-1 ${
+              isNeoBrutalism 
+                ? 'font-bold uppercase tracking-wide'
+                : 'font-medium'
+            }`}>
               Request format:
             </p>
-            <p className="text-sm font-bold">{"{ \"email\": \"user@email.com\", \"password\": \"pass\" }"}</p>
-            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide mt-2 mb-1">
+            <p className={`text-sm ${isNeoBrutalism ? 'font-bold' : 'font-medium'}`}>{"{ \"email\": \"user@email.com\", \"password\": \"pass\" }"}</p>
+            <p className={`text-xs text-muted-foreground mt-2 mb-1 ${
+              isNeoBrutalism 
+                ? 'font-bold uppercase tracking-wide'
+                : 'font-medium'
+            }`}>
               Acepta email o username:
             </p>
-            <p className="text-sm font-bold">demo@erp.com o demo | demo123</p>
+            <p className={`text-sm ${isNeoBrutalism ? 'font-bold' : 'font-medium'}`}>demo@erp.com o demo | demo123</p>
           </div>
         </div>
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-sm font-bold text-gray-500 uppercase tracking-wide">
+          <p className={`text-sm text-muted-foreground ${
+            isNeoBrutalism 
+              ? 'font-bold uppercase tracking-wide'
+              : 'font-medium'
+          }`}>
             Sistema ERP © 2025
           </p>
         </div>

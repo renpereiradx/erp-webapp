@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { useTheme } from 'next-themes';
 import { 
   DollarSign, 
   Users, 
@@ -20,6 +21,9 @@ import { MetricCard, BrutalistBadge } from '@/components/ui/Card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const Dashboard = () => {
+  const { theme } = useTheme();
+  const isNeoBrutalism = theme?.includes('neo-brutalism');
+
   // Datos de ejemplo para los gráficos
   const salesData = [
     { name: 'Ene', value: 12000 },
@@ -49,10 +53,18 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-4xl font-black uppercase tracking-wide text-black">
+          <h1 className={`text-4xl text-foreground ${
+            isNeoBrutalism 
+              ? 'font-black uppercase tracking-wide'
+              : 'font-bold'
+          }`}>
             Dashboard
           </h1>
-          <p className="mt-2 text-lg font-bold text-gray-600 uppercase tracking-wide">
+          <p className={`mt-2 text-lg text-muted-foreground ${
+            isNeoBrutalism 
+              ? 'font-bold uppercase tracking-wide'
+              : 'font-medium'
+          }`}>
             Resumen general de tu negocio
           </p>
         </div>
@@ -60,9 +72,11 @@ const Dashboard = () => {
           <Button variant="red" size="lg">
             <BarChart3 className="mr-2 h-5 w-5" />
             Ver Reportes Completos
-            <BrutalistBadge color="yellow" className="ml-2">
-              10
-            </BrutalistBadge>
+            {isNeoBrutalism && (
+              <BrutalistBadge color="yellow" className="ml-2">
+                10
+              </BrutalistBadge>
+            )}
           </Button>
         </div>
       </div>
@@ -73,19 +87,35 @@ const Dashboard = () => {
         <MetricCard color="white" className="relative">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-wide text-gray-600">
+              <p className={`text-sm text-muted-foreground ${
+                isNeoBrutalism 
+                  ? 'font-black uppercase tracking-wide'
+                  : 'font-medium'
+              }`}>
                 Ventas Totales
               </p>
-              <p className="text-3xl font-black text-black">$125,430</p>
+              <p className={`text-3xl text-foreground ${
+                isNeoBrutalism ? 'font-black' : 'font-bold'
+              }`}>$125,430</p>
               <div className="flex items-center mt-2">
-                <TrendingUp className="h-4 w-4 text-brutalist-green mr-1" />
-                <span className="text-sm font-bold text-brutalist-green uppercase">
+                <TrendingUp className="h-4 w-4 text-chart-success mr-1" />
+                <span className={`text-sm text-chart-success ${
+                  isNeoBrutalism 
+                    ? 'font-bold uppercase'
+                    : 'font-medium'
+                }`}>
                   12.5% vs mes anterior
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 bg-brutalist-lime border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-black" />
+            <div className={`w-12 h-12 flex items-center justify-center ${
+              isNeoBrutalism 
+                ? 'bg-chart-success border-2 border-foreground shadow-neo-brutal'
+                : 'bg-chart-success/10 border border-chart-success rounded-lg'
+            }`}>
+              <DollarSign className={`h-6 w-6 ${
+                isNeoBrutalism ? 'text-foreground' : 'text-chart-success'
+              }`} />
             </div>
           </div>
         </MetricCard>
@@ -94,19 +124,35 @@ const Dashboard = () => {
         <MetricCard color="white" className="relative">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-wide text-gray-600">
+              <p className={`text-sm text-muted-foreground ${
+                isNeoBrutalism 
+                  ? 'font-black uppercase tracking-wide'
+                  : 'font-medium'
+              }`}>
                 Clientes
               </p>
-              <p className="text-3xl font-black text-black">1,247</p>
+              <p className={`text-3xl text-foreground ${
+                isNeoBrutalism ? 'font-black' : 'font-bold'
+              }`}>1,247</p>
               <div className="flex items-center mt-2">
-                <TrendingUp className="h-4 w-4 text-brutalist-green mr-1" />
-                <span className="text-sm font-bold text-brutalist-green uppercase">
+                <TrendingUp className="h-4 w-4 text-chart-success mr-1" />
+                <span className={`text-sm text-chart-success ${
+                  isNeoBrutalism 
+                    ? 'font-bold uppercase'
+                    : 'font-medium'
+                }`}>
                   8.2% vs mes anterior
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 bg-brutalist-blue border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
-              <Users className="h-6 w-6 text-white" />
+            <div className={`w-12 h-12 flex items-center justify-center ${
+              isNeoBrutalism 
+                ? 'bg-chart-primary border-2 border-foreground shadow-neo-brutal'
+                : 'bg-chart-primary/10 border border-chart-primary rounded-lg'
+            }`}>
+              <Users className={`h-6 w-6 ${
+                isNeoBrutalism ? 'text-background' : 'text-chart-primary'
+              }`} />
             </div>
           </div>
         </MetricCard>
@@ -115,19 +161,35 @@ const Dashboard = () => {
         <MetricCard color="white" className="relative">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-wide text-gray-600">
+              <p className={`text-sm text-muted-foreground ${
+                isNeoBrutalism 
+                  ? 'font-black uppercase tracking-wide'
+                  : 'font-medium'
+              }`}>
                 Productos
               </p>
-              <p className="text-3xl font-black text-black">856</p>
+              <p className={`text-3xl text-foreground ${
+                isNeoBrutalism ? 'font-black' : 'font-bold'
+              }`}>856</p>
               <div className="flex items-center mt-2">
-                <TrendingDown className="h-4 w-4 text-brutalist-red mr-1" />
-                <span className="text-sm font-bold text-brutalist-red uppercase">
+                <TrendingDown className="h-4 w-4 text-chart-danger mr-1" />
+                <span className={`text-sm text-chart-danger ${
+                  isNeoBrutalism 
+                    ? 'font-bold uppercase'
+                    : 'font-medium'
+                }`}>
                   2.1% vs mes anterior
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 bg-brutalist-orange border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
-              <Package className="h-6 w-6 text-white" />
+            <div className={`w-12 h-12 flex items-center justify-center ${
+              isNeoBrutalism 
+                ? 'bg-chart-warning border-2 border-foreground shadow-neo-brutal'
+                : 'bg-chart-warning/10 border border-chart-warning rounded-lg'
+            }`}>
+              <Package className={`h-6 w-6 ${
+                isNeoBrutalism ? 'text-background' : 'text-chart-warning'
+              }`} />
             </div>
           </div>
         </MetricCard>
@@ -136,19 +198,35 @@ const Dashboard = () => {
         <MetricCard color="white" className="relative">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-wide text-gray-600">
+              <p className={`text-sm text-muted-foreground ${
+                isNeoBrutalism 
+                  ? 'font-black uppercase tracking-wide'
+                  : 'font-medium'
+              }`}>
                 Pedidos
               </p>
-              <p className="text-3xl font-black text-black">342</p>
+              <p className={`text-3xl text-foreground ${
+                isNeoBrutalism ? 'font-black' : 'font-bold'
+              }`}>342</p>
               <div className="flex items-center mt-2">
-                <TrendingUp className="h-4 w-4 text-brutalist-green mr-1" />
-                <span className="text-sm font-bold text-brutalist-green uppercase">
+                <TrendingUp className="h-4 w-4 text-chart-success mr-1" />
+                <span className={`text-sm text-chart-success ${
+                  isNeoBrutalism 
+                    ? 'font-bold uppercase'
+                    : 'font-medium'
+                }`}>
                   15.3% vs mes anterior
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 bg-brutalist-purple border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
-              <ShoppingCart className="h-6 w-6 text-white" />
+            <div className={`w-12 h-12 flex items-center justify-center ${
+              isNeoBrutalism 
+                ? 'bg-chart-accent border-2 border-foreground shadow-neo-brutal'
+                : 'bg-chart-accent/10 border border-chart-accent rounded-lg'
+            }`}>
+              <ShoppingCart className={`h-6 w-6 ${
+                isNeoBrutalism ? 'text-background' : 'text-chart-accent'
+              }`} />
             </div>
           </div>
         </MetricCard>
@@ -157,33 +235,56 @@ const Dashboard = () => {
       {/* Gráficos */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Gráfico de Ventas Mensuales */}
-        <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6">
-          <h3 className="text-xl font-black uppercase tracking-wide text-black mb-2">
+        <div className={`bg-card p-6 ${
+          isNeoBrutalism 
+            ? 'border-4 border-foreground shadow-neo-brutal'
+            : 'border border-border rounded-lg shadow-lg'
+        }`}>
+          <h3 className={`text-xl text-foreground mb-2 ${
+            isNeoBrutalism 
+              ? 'font-black uppercase tracking-wide'
+              : 'font-bold'
+          }`}>
             Ventas Mensuales
           </h3>
-          <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-6">
+          <p className={`text-sm text-muted-foreground mb-6 ${
+            isNeoBrutalism 
+              ? 'font-bold uppercase tracking-wide'
+              : 'font-medium'
+          }`}>
             Evolución de ventas en los últimos 6 meses
           </p>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={salesData}>
-                <CartesianGrid strokeWidth={2} stroke="#000000" />
+                <CartesianGrid 
+                  strokeWidth={isNeoBrutalism ? 2 : 1} 
+                  stroke="hsl(var(--border))" 
+                />
                 <XAxis 
                   dataKey="name" 
-                  axisLine={{ stroke: '#000000', strokeWidth: 2 }}
-                  tickLine={{ stroke: '#000000', strokeWidth: 2 }}
-                  tick={{ fontWeight: 'bold', fontSize: 12 }}
+                  axisLine={{ stroke: 'hsl(var(--border))', strokeWidth: isNeoBrutalism ? 2 : 1 }}
+                  tickLine={{ stroke: 'hsl(var(--border))', strokeWidth: isNeoBrutalism ? 2 : 1 }}
+                  tick={{ 
+                    fontWeight: isNeoBrutalism ? 'bold' : 'normal', 
+                    fontSize: 12,
+                    fill: 'hsl(var(--foreground))'
+                  }}
                 />
                 <YAxis 
-                  axisLine={{ stroke: '#000000', strokeWidth: 2 }}
-                  tickLine={{ stroke: '#000000', strokeWidth: 2 }}
-                  tick={{ fontWeight: 'bold', fontSize: 12 }}
+                  axisLine={{ stroke: 'hsl(var(--border))', strokeWidth: isNeoBrutalism ? 2 : 1 }}
+                  tickLine={{ stroke: 'hsl(var(--border))', strokeWidth: isNeoBrutalism ? 2 : 1 }}
+                  tick={{ 
+                    fontWeight: isNeoBrutalism ? 'bold' : 'normal', 
+                    fontSize: 12,
+                    fill: 'hsl(var(--foreground))'
+                  }}
                 />
                 <Bar 
                   dataKey="value" 
-                  fill="#8b5cf6" 
-                  stroke="#000000" 
-                  strokeWidth={2}
+                  fill="hsl(var(--chart-accent))" 
+                  stroke={isNeoBrutalism ? "hsl(var(--foreground))" : "none"}
+                  strokeWidth={isNeoBrutalism ? 2 : 0}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -191,11 +292,23 @@ const Dashboard = () => {
         </div>
 
         {/* Gráfico de Ventas por Categoría */}
-        <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6">
-          <h3 className="text-xl font-black uppercase tracking-wide text-black mb-2">
+        <div className={`bg-card p-6 ${
+          isNeoBrutalism 
+            ? 'border-4 border-foreground shadow-neo-brutal'
+            : 'border border-border rounded-lg shadow-lg'
+        }`}>
+          <h3 className={`text-xl text-foreground mb-2 ${
+            isNeoBrutalism 
+              ? 'font-black uppercase tracking-wide'
+              : 'font-bold'
+          }`}>
             Ventas por Categoría
           </h3>
-          <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-6">
+          <p className={`text-sm text-muted-foreground mb-6 ${
+            isNeoBrutalism 
+              ? 'font-bold uppercase tracking-wide'
+              : 'font-medium'
+          }`}>
             Distribución de ventas por categoría de producto
           </p>
           <div className="h-80">
@@ -208,8 +321,8 @@ const Dashboard = () => {
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
-                  stroke="#000000"
-                  strokeWidth={2}
+                  stroke={isNeoBrutalism ? "hsl(var(--foreground))" : "none"}
+                  strokeWidth={isNeoBrutalism ? 2 : 0}
                 >
                   {categoryData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -224,22 +337,46 @@ const Dashboard = () => {
       {/* Secciones adicionales */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Productos con Stock Bajo */}
-        <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6">
+        <div className={`bg-card p-6 ${
+          isNeoBrutalism 
+            ? 'border-4 border-foreground shadow-neo-brutal'
+            : 'border border-border rounded-lg shadow-lg'
+        }`}>
           <div className="flex items-center mb-4">
-            <AlertTriangle className="h-6 w-6 text-brutalist-orange mr-2" />
-            <h3 className="text-xl font-black uppercase tracking-wide text-black">
+            <AlertTriangle className="h-6 w-6 text-chart-warning mr-2" />
+            <h3 className={`text-xl text-foreground ${
+              isNeoBrutalism 
+                ? 'font-black uppercase tracking-wide'
+                : 'font-bold'
+            }`}>
               Productos con Stock Bajo
             </h3>
           </div>
-          <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-6">
+          <p className={`text-sm text-muted-foreground mb-6 ${
+            isNeoBrutalism 
+              ? 'font-bold uppercase tracking-wide'
+              : 'font-medium'
+          }`}>
             Productos que necesitan reposición urgente
           </p>
           <div className="space-y-4">
             {lowStockProducts.map((product, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 border-2 border-black">
+              <div key={index} className={`flex items-center justify-between p-4 bg-muted ${
+                isNeoBrutalism 
+                  ? 'border-2 border-foreground'
+                  : 'border border-border rounded-lg'
+              }`}>
                 <div>
-                  <p className="font-black text-black uppercase">{product.name}</p>
-                  <p className="text-sm font-bold text-gray-600 uppercase">
+                  <p className={`text-foreground ${
+                    isNeoBrutalism 
+                      ? 'font-black uppercase'
+                      : 'font-semibold'
+                  }`}>{product.name}</p>
+                  <p className={`text-sm text-muted-foreground ${
+                    isNeoBrutalism 
+                      ? 'font-bold uppercase'
+                      : 'font-medium'
+                  }`}>
                     Stock actual: {product.current} | Mínimo: {product.minimum}
                   </p>
                 </div>
@@ -252,11 +389,23 @@ const Dashboard = () => {
         </div>
 
         {/* Acciones Rápidas */}
-        <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6">
-          <h3 className="text-xl font-black uppercase tracking-wide text-black mb-2">
+        <div className={`bg-card p-6 ${
+          isNeoBrutalism 
+            ? 'border-4 border-foreground shadow-neo-brutal'
+            : 'border border-border rounded-lg shadow-lg'
+        }`}>
+          <h3 className={`text-xl text-foreground mb-2 ${
+            isNeoBrutalism 
+              ? 'font-black uppercase tracking-wide'
+              : 'font-bold'
+          }`}>
             Acciones Rápidas
           </h3>
-          <p className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-6">
+          <p className={`text-sm text-muted-foreground mb-6 ${
+            isNeoBrutalism 
+              ? 'font-bold uppercase tracking-wide'
+              : 'font-medium'
+          }`}>
             Accesos directos a funciones principales
           </p>
           <div className="grid grid-cols-2 gap-4">
