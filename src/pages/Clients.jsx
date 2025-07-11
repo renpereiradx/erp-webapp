@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useTheme } from 'next-themes';
 import { 
   Users, 
   Plus, 
@@ -25,6 +26,7 @@ import { Input } from '@/components/ui/Input';
 import useClientStore from '@/store/useClientStore';
 
 const Clients = () => {
+  const { theme } = useTheme();
   const {
     clients,
     loading,
@@ -39,6 +41,9 @@ const Clients = () => {
 
   const [showFilters, setShowFilters] = useState(false);
   const [selectedClients, setSelectedClients] = useState([]);
+
+  // Determinar si estamos en tema neo-brutalista
+  const isNeoBrutalist = theme?.includes('neo-brutalism');
 
   // Datos de ejemplo para demostración
   const mockClients = [
@@ -231,7 +236,7 @@ const Clients = () => {
             isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-bold'
           }`} data-testid="clients-title-text" style={{ color: 'var(--foreground)' }}>Clientes</h1>
           <p className={`clients-subtitle text-muted-foreground ${
-            isNeoBrutalism ? 'font-bold uppercase tracking-wide' : 'font-normal'
+            isNeoBrutalist ? 'font-bold uppercase tracking-wide' : 'font-normal'
           }`} data-testid="clients-subtitle" style={{ color: 'var(--muted-foreground)' }}>
             Gestiona tu base de clientes
           </p>
@@ -273,7 +278,7 @@ const Clients = () => {
             <div className="clients-filters-panel mt-4 pt-4 border-t grid gap-4 sm:grid-cols-3" data-component="filters-panel" data-testid="filters-panel">
               <div className="clients-filter-type" data-component="filter-type" data-testid="filter-type">
                 <label className={`clients-filter-label block text-sm font-medium mb-2 ${
-                  isNeoBrutalism ? 'font-black uppercase tracking-wide' : 'font-medium'
+                  isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-medium'
                 }`} style={{ color: 'var(--foreground)' }}>Tipo</label>
                 <select 
                   className="clients-filter-select w-full p-2 border rounded-md"
@@ -293,7 +298,7 @@ const Clients = () => {
               
               <div className="clients-filter-status" data-component="filter-status" data-testid="filter-status">
                 <label className={`clients-filter-label block text-sm font-medium mb-2 ${
-                  isNeoBrutalism ? 'font-black uppercase tracking-wide' : 'font-medium'
+                  isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-medium'
                 }`} style={{ color: 'var(--foreground)' }}>Estado</label>
                 <select 
                   className="clients-filter-select w-full p-2 border rounded-md"
@@ -313,7 +318,7 @@ const Clients = () => {
               
               <div className="clients-filter-sort" data-component="filter-sort" data-testid="filter-sort">
                 <label className={`clients-filter-label block text-sm font-medium mb-2 ${
-                  isNeoBrutalism ? 'font-black uppercase tracking-wide' : 'font-medium'
+                  isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-medium'
                 }`} style={{ color: 'var(--foreground)' }}>Ordenar por</label>
                 <select 
                   className="clients-filter-select w-full p-2 border rounded-md"
