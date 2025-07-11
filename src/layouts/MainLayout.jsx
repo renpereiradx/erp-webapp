@@ -3,7 +3,7 @@
  * Incluye sidebar responsive, navbar y área de contenido principal
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { 
@@ -27,10 +27,27 @@ import useAuthStore from '@/store/useAuthStore';
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { theme } = useTheme();
+
+  // Hook para detectar pantallas grandes
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024);
+    };
+
+    // Check inicial
+    checkScreenSize();
+
+    // Agregar listener para cambios de tamaño
+    window.addEventListener('resize', checkScreenSize);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   // Determinar si estamos en tema neo-brutalista
   const isNeoBrutalist = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
@@ -390,12 +407,14 @@ const MainLayout = ({ children }) => {
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(true)}
-            className="erp-mobile-menu-btn px-4 lg:hidden"
+            className="erp-mobile-menu-btn px-4 block lg:hidden"
             style={{ 
               borderRight: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
-              color: 'var(--foreground)'
+              color: 'var(--foreground)',
+              display: isLargeScreen ? 'none' : 'flex'
             }}
             data-testid="mobile-menu-btn"
+            data-component="mobile-menu-btn"
           >
             <Menu className="h-6 w-6" />
           </Button>
