@@ -27,25 +27,27 @@ import useAuthStore from '@/store/useAuthStore';
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(() => {
+    // Inicializar con el valor correcto si window está disponible
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return false;
+  });
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { theme } = useTheme();
 
-  // Hook para detectar pantallas grandes
+  // Hook para detectar pantallas grandes (mantenido para el futuro si es necesario)
   useEffect(() => {
     const checkScreenSize = () => {
       setIsLargeScreen(window.innerWidth >= 1024);
     };
 
-    // Check inicial
     checkScreenSize();
-
-    // Agregar listener para cambios de tamaño
     window.addEventListener('resize', checkScreenSize);
     
-    // Cleanup
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
@@ -162,8 +164,12 @@ const MainLayout = ({ children }) => {
   return (
     <div className="erp-main-layout min-h-screen" style={{ backgroundColor: 'var(--muted, #f9fafb)', ...getLayoutStyles() }} data-component="main-layout" data-testid="main-layout">
       {/* Sidebar Desktop */}
-      <div className="erp-sidebar-desktop hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col" data-component="sidebar-desktop" data-testid="sidebar-desktop">
-        <div className="erp-sidebar-content flex flex-col flex-grow overflow-y-auto"
+      <div 
+        className="erp-sidebar-desktop fixed inset-y-0 left-0 z-30 w-72 hidden lg:block"
+        data-component="sidebar-desktop" 
+        data-testid="sidebar-desktop"
+      >
+        <div className="erp-sidebar-content h-full flex flex-col overflow-y-auto"
              style={getSidebarStyles()} data-component="sidebar-content" data-testid="sidebar-content">
           {/* Logo */}
           <div className="erp-sidebar-logo flex items-center flex-shrink-0 px-6 py-6"
@@ -407,11 +413,10 @@ const MainLayout = ({ children }) => {
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(true)}
-            className="erp-mobile-menu-btn px-4 block lg:hidden"
+            className="erp-mobile-menu-btn px-4 lg:hidden"
             style={{ 
               borderRight: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
-              color: 'var(--foreground)',
-              display: isLargeScreen ? 'none' : 'flex'
+              color: 'var(--foreground)'
             }}
             data-testid="mobile-menu-btn"
             data-component="mobile-menu-btn"
