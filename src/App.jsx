@@ -11,6 +11,7 @@ import Dashboard from '@/pages/Dashboard';
 import Products from '@/pages/Products';
 import Clients from '@/pages/Clients';
 import Login from '@/pages/Login';
+import Settings from '@/pages/Settings';
 import useAuthStore from '@/store/useAuthStore';
 import './App.css';
 
@@ -45,24 +46,6 @@ const Reports = () => (
       <h2 className="text-xl font-semibold mb-2">Página en Desarrollo</h2>
       <p className="text-muted-foreground">
         Los reportes avanzados estarán disponibles próximamente.
-      </p>
-    </div>
-  </div>
-);
-
-// Componente de página de configuración (placeholder)
-const Settings = () => (
-  <div className="space-y-6">
-    <div>
-      <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>
-      <p className="text-muted-foreground">
-        Personaliza tu sistema ERP
-      </p>
-    </div>
-    <div className="bg-card rounded-lg border p-8 text-center">
-      <h2 className="text-xl font-semibold mb-2">Página en Desarrollo</h2>
-      <p className="text-muted-foreground">
-        Las opciones de configuración estarán disponibles próximamente.
       </p>
     </div>
   </div>

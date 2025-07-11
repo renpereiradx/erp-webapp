@@ -3,31 +3,84 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@layer base {
+  /* --- TEMA BASE NEO-BRUTALISM (POR DEFECTO) --- */
+  :root {
+    --color-primary: #000000;
+    --color-secondary: #f3f4f6;
+    --color-background: #ffffff;
+    --color-text: #000000;
+    --border-radius: 4px;
+  }
+
+  [data-theme='neo-brutalism-dark'] {
+    --color-primary: #ffffff;
+    --color-secondary: #262626;
+    --color-background: #000000;
+    --color-text: #ffffff;
+    --border-radius: 4px;
+  }
+
+  /* --- TEMA MATERIAL --- */
+  [data-theme='material-light'] {
+    --color-primary: #6200ee;
+    --color-secondary: #03dac6;
+    --color-background: #ffffff;
+    --color-text: #000000;
+    --border-radius: 4px;
+  }
+
+  [data-theme='material-dark'] {
+    --color-primary: #bb86fc;
+    --color-secondary: #03dac6;
+    --color-background: #121212;
+    --color-text: #ffffff;
+    --border-radius: 4px;
+  }
+
+  /* --- TEMA FLUENT --- */
+  [data-theme='fluent-light'] {
+    --color-primary: #0078d4;
+    --color-secondary: #eff6fc;
+    --color-background: #ffffff;
+    --color-text: #323130;
+    --border-radius: 2px;
+  }
+  
+  [data-theme='fluent-dark'] {
+    --color-primary: #2899f5;
+    --color-secondary: #323130;
+    --color-background: #201f1e;
+    --color-text: #f3f2f1;
+    --border-radius: 2px;
+  }
+}
+
 @theme inline {
   --radius-sm: 2px;
   --radius-md: 4px;
   --radius-lg: 6px;
   --radius-xl: 8px;
   
-  /* Neo-Brutalist Color Palette */
-  --color-background: #ffffff;
-  --color-foreground: #000000;
-  --color-card: #ffffff;
-  --color-card-foreground: #000000;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #000000;
-  --color-primary: #000000;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #f3f4f6;
-  --color-secondary-foreground: #000000;
+  /* Configuración de colores usando variables CSS para soporte multi-tema */
+  --color-background: var(--color-background, #ffffff);
+  --color-foreground: var(--color-text, #000000);
+  --color-card: var(--color-background, #ffffff);
+  --color-card-foreground: var(--color-text, #000000);
+  --color-popover: var(--color-background, #ffffff);
+  --color-popover-foreground: var(--color-text, #000000);
+  --color-primary: var(--color-primary, #000000);
+  --color-primary-foreground: var(--color-background, #ffffff);
+  --color-secondary: var(--color-secondary, #f3f4f6);
+  --color-secondary-foreground: var(--color-text, #000000);
   --color-muted: #f9fafb;
   --color-muted-foreground: #6b7280;
   --color-accent: #84cc16; /* lime-500 */
-  --color-accent-foreground: #000000;
+  --color-accent-foreground: var(--color-text, #000000);
   --color-destructive: #ef4444; /* red-500 */
-  --color-border: #000000;
-  --color-input: #ffffff;
-  --color-ring: #000000;
+  --color-border: var(--color-primary, #000000);
+  --color-input: var(--color-background, #ffffff);
+  --color-ring: var(--color-primary, #000000);
   
   /* Neo-Brutalist Specific Colors */
   --color-brutalist-lime: #84cc16;
@@ -178,6 +231,93 @@
   .brutalist-badge {
     @apply border-2 border-black font-black text-xs px-2 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
   }
+}
+
+/* Estilos específicos para cada tema */
+
+/* Material Design Styles */
+[data-theme='material-light'], [data-theme='material-dark'] {
+  /* Material Design específico */
+}
+
+[data-theme='material-light'] .material-card {
+  @apply bg-white rounded-lg shadow-lg border-0;
+}
+
+[data-theme='material-dark'] .material-card {
+  @apply bg-gray-800 rounded-lg shadow-lg border-0;
+}
+
+[data-theme='material-light'] .material-button, [data-theme='material-dark'] .material-button {
+  @apply rounded-lg font-medium tracking-normal shadow-md border-0 transition-all duration-200;
+}
+
+[data-theme='material-light'] .material-button:hover, [data-theme='material-dark'] .material-button:hover {
+  @apply shadow-lg transform-none;
+}
+
+[data-theme='material-light'] .material-input, [data-theme='material-dark'] .material-input {
+  @apply rounded-lg border-2 border-gray-300 shadow-none focus:border-primary;
+}
+
+/* Fluent Design Styles */
+[data-theme='fluent-light'], [data-theme='fluent-dark'] {
+  /* Fluent Design específico */
+}
+
+[data-theme='fluent-light'] .fluent-card {
+  @apply bg-white rounded-sm shadow-sm border border-gray-200;
+}
+
+[data-theme='fluent-dark'] .fluent-card {
+  @apply bg-gray-800 rounded-sm shadow-sm border border-gray-600;
+}
+
+[data-theme='fluent-light'] .fluent-button, [data-theme='fluent-dark'] .fluent-button {
+  @apply rounded-sm font-normal tracking-normal shadow-none border border-gray-300 transition-all duration-100;
+}
+
+[data-theme='fluent-light'] .fluent-button:hover, [data-theme='fluent-dark'] .fluent-button:hover {
+  @apply bg-gray-50 transform-none;
+}
+
+[data-theme='fluent-dark'] .fluent-button:hover {
+  @apply bg-gray-700;
+}
+
+[data-theme='fluent-light'] .fluent-input, [data-theme='fluent-dark'] .fluent-input {
+  @apply rounded-sm border border-gray-300 shadow-none focus:border-primary;
+}
+
+/* Aplicar estilos según el tema activo */
+[data-theme='material-light'] .brutalist-card,
+[data-theme='material-dark'] .brutalist-card {
+  @apply material-card;
+}
+
+[data-theme='material-light'] .brutalist-button,
+[data-theme='material-dark'] .brutalist-button {
+  @apply material-button;
+}
+
+[data-theme='material-light'] .brutalist-input,
+[data-theme='material-dark'] .brutalist-input {
+  @apply material-input;
+}
+
+[data-theme='fluent-light'] .brutalist-card,
+[data-theme='fluent-dark'] .brutalist-card {
+  @apply fluent-card;
+}
+
+[data-theme='fluent-light'] .brutalist-button,
+[data-theme='fluent-dark'] .brutalist-button {
+  @apply fluent-button;
+}
+
+[data-theme='fluent-light'] .brutalist-input,
+[data-theme='fluent-dark'] .brutalist-input {
+  @apply fluent-input;
 }
 
 /* Utility classes for brutalist colors */
