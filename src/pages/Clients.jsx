@@ -223,39 +223,45 @@ const Clients = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="clients-page space-y-6" data-component="clients-page" data-testid="clients-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Clientes</h1>
-          <p className="text-muted-foreground">
+      <div className="clients-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" data-component="clients-header" data-testid="clients-header">
+        <div className="clients-title-section" data-component="clients-title" data-testid="clients-title">
+          <h1 className={`clients-title text-3xl tracking-tight ${
+            isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-bold'
+          }`} data-testid="clients-title-text" style={{ color: 'var(--foreground)' }}>Clientes</h1>
+          <p className={`clients-subtitle text-muted-foreground ${
+            isNeoBrutalism ? 'font-bold uppercase tracking-wide' : 'font-normal'
+          }`} data-testid="clients-subtitle" style={{ color: 'var(--muted-foreground)' }}>
             Gestiona tu base de clientes
           </p>
         </div>
-        <Button className="w-full sm:w-auto">
+        <Button className="clients-new-btn w-full sm:w-auto" data-testid="new-client-btn">
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Cliente
         </Button>
       </div>
 
       {/* Barra de búsqueda y filtros */}
-      <Card>
+      <Card className="clients-search-section" data-component="clients-search" data-testid="clients-search">
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="clients-search-controls flex flex-col sm:flex-row gap-4" data-component="search-controls" data-testid="search-controls">
             {/* Búsqueda */}
-            <div className="flex-1">
+            <div className="clients-search-input-section flex-1" data-component="search-input-section" data-testid="search-input-section">
               <Input
                 placeholder="Buscar clientes por nombre, email o empresa..."
                 leftIcon={<Search className="h-4 w-4" />}
                 onChange={(e) => handleSearch(e.target.value)}
+                className="clients-search-input"
+                data-testid="clients-search-input"
               />
             </div>
-            
             {/* Botón de filtros */}
             <Button 
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="w-full sm:w-auto"
+              className="clients-filters-btn w-full sm:w-auto"
+              data-testid="filters-toggle-btn"
             >
               <Filter className="mr-2 h-4 w-4" />
               Filtros
@@ -264,12 +270,20 @@ const Clients = () => {
           
           {/* Panel de filtros expandible */}
           {showFilters && (
-            <div className="mt-4 pt-4 border-t grid gap-4 sm:grid-cols-3">
-              <div>
-                <label className="block text-sm font-medium mb-2">Tipo</label>
+            <div className="clients-filters-panel mt-4 pt-4 border-t grid gap-4 sm:grid-cols-3" data-component="filters-panel" data-testid="filters-panel">
+              <div className="clients-filter-type" data-component="filter-type" data-testid="filter-type">
+                <label className={`clients-filter-label block text-sm font-medium mb-2 ${
+                  isNeoBrutalism ? 'font-black uppercase tracking-wide' : 'font-medium'
+                }`} style={{ color: 'var(--foreground)' }}>Tipo</label>
                 <select 
-                  className="w-full p-2 border rounded-md"
+                  className="clients-filter-select w-full p-2 border rounded-md"
                   onChange={(e) => handleFilterChange('type', e.target.value)}
+                  style={{ 
+                    backgroundColor: 'var(--input)', 
+                    color: 'var(--foreground)', 
+                    border: '1px solid var(--border)' 
+                  }}
+                  data-testid="type-filter"
                 >
                   <option value="">Todos los tipos</option>
                   <option value="individual">Individual</option>
@@ -277,11 +291,19 @@ const Clients = () => {
                 </select>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium mb-2">Estado</label>
+              <div className="clients-filter-status" data-component="filter-status" data-testid="filter-status">
+                <label className={`clients-filter-label block text-sm font-medium mb-2 ${
+                  isNeoBrutalism ? 'font-black uppercase tracking-wide' : 'font-medium'
+                }`} style={{ color: 'var(--foreground)' }}>Estado</label>
                 <select 
-                  className="w-full p-2 border rounded-md"
+                  className="clients-filter-select w-full p-2 border rounded-md"
                   onChange={(e) => handleFilterChange('status', e.target.value)}
+                  style={{ 
+                    backgroundColor: 'var(--input)', 
+                    color: 'var(--foreground)', 
+                    border: '1px solid var(--border)' 
+                  }}
+                  data-testid="status-filter"
                 >
                   <option value="">Todos los estados</option>
                   <option value="active">Activo</option>
@@ -289,11 +311,19 @@ const Clients = () => {
                 </select>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium mb-2">Ordenar por</label>
+              <div className="clients-filter-sort" data-component="filter-sort" data-testid="filter-sort">
+                <label className={`clients-filter-label block text-sm font-medium mb-2 ${
+                  isNeoBrutalism ? 'font-black uppercase tracking-wide' : 'font-medium'
+                }`} style={{ color: 'var(--foreground)' }}>Ordenar por</label>
                 <select 
-                  className="w-full p-2 border rounded-md"
+                  className="clients-filter-select w-full p-2 border rounded-md"
                   onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                  style={{ 
+                    backgroundColor: 'var(--input)', 
+                    color: 'var(--foreground)', 
+                    border: '1px solid var(--border)' 
+                  }}
+                  data-testid="sort-filter"
                 >
                   <option value="name">Nombre</option>
                   <option value="totalSpent">Total gastado</option>

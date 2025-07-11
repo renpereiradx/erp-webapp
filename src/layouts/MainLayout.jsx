@@ -143,18 +143,19 @@ const MainLayout = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--muted, #f9fafb)', ...getLayoutStyles() }}>
+    <div className="erp-main-layout min-h-screen" style={{ backgroundColor: 'var(--muted, #f9fafb)', ...getLayoutStyles() }} data-component="main-layout" data-testid="main-layout">
       {/* Sidebar Desktop */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
-        <div className="flex flex-col flex-grow overflow-y-auto"
-             style={getSidebarStyles()}>
+      <div className="erp-sidebar-desktop hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col" data-component="sidebar-desktop" data-testid="sidebar-desktop">
+        <div className="erp-sidebar-content flex flex-col flex-grow overflow-y-auto"
+             style={getSidebarStyles()} data-component="sidebar-content" data-testid="sidebar-content">
           {/* Logo */}
-          <div className="flex items-center flex-shrink-0 px-6 py-6"
+          <div className="erp-sidebar-logo flex items-center flex-shrink-0 px-6 py-6"
                style={{ 
                  borderBottom: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)'
-               }}>
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 flex items-center justify-center rounded-md"
+               }}
+               data-component="sidebar-logo" data-testid="sidebar-logo">
+            <div className="erp-logo-content flex items-center space-x-3" data-component="logo-content" data-testid="logo-content">
+              <div className="erp-logo-icon w-10 h-10 flex items-center justify-center rounded-md"
                    style={{ 
                      backgroundColor: 'var(--primary)', 
                      color: 'var(--primary-foreground)',
@@ -163,9 +164,10 @@ const MainLayout = ({ children }) => {
                    }}>
                 <LayoutDashboard className="h-6 w-6" />
               </div>
-              <div>
-                <h1 className={`text-xl ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-bold'}`}
-                    style={{ color: 'var(--foreground)' }}>
+              <div className="erp-logo-text">
+                <h1 className={`erp-logo-title text-xl ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-bold'}`}
+                    style={{ color: 'var(--foreground)' }}
+                    data-testid="logo-title">
                   ERP System
                 </h1>
               </div>
@@ -173,7 +175,7 @@ const MainLayout = ({ children }) => {
           </div>
 
           {/* Navigation */}
-          <nav className={`mt-6 flex-1 px-4 ${isNeoBrutalist ? 'space-y-3' : 'space-y-2'}`}>
+          <nav className={`erp-sidebar-nav mt-6 flex-1 px-4 ${isNeoBrutalist ? 'space-y-3' : 'space-y-2'}`} data-component="sidebar-nav" data-testid="sidebar-nav">
             {navigation.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -183,8 +185,11 @@ const MainLayout = ({ children }) => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`group flex items-center px-4 py-3 text-sm ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-medium'} ${isNeoBrutalist ? '' : 'rounded-md'} transition-all duration-200`}
+                  className={`erp-nav-item group flex items-center px-4 py-3 text-sm ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-medium'} ${isNeoBrutalist ? '' : 'rounded-md'} transition-all duration-200`}
                   style={navStyles}
+                  data-component="nav-item" 
+                  data-testid={`nav-item-${item.name.toLowerCase()}`}
+                  data-active={active}
                   onMouseEnter={(e) => {
                     if (!active && !isNeoBrutalist) {
                       e.target.style.backgroundColor = 'var(--accent)';
@@ -204,22 +209,24 @@ const MainLayout = ({ children }) => {
                     }
                   }}
                 >
-                  <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                  <span className="flex-1">{item.name}</span>
+                  <Icon className="erp-nav-icon mr-3 h-5 w-5 flex-shrink-0" />
+                  <span className="erp-nav-text flex-1">{item.name}</span>
                   {isNeoBrutalist ? (
-                    <span className={`ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
+                    <span className={`erp-nav-badge ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
                           style={{ 
                             backgroundColor: `var(--brutalist-${item.color})`,
                             boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)'
-                          }}>
+                          }}
+                          data-testid={`nav-badge-${item.name.toLowerCase()}`}>
                       {item.badge}
                     </span>
                   ) : (
-                    <span className="ml-2 px-2 py-1 text-xs font-medium rounded-full"
+                    <span className="erp-nav-badge ml-2 px-2 py-1 text-xs font-medium rounded-full"
                           style={{ 
                             backgroundColor: 'var(--muted)', 
                             color: 'var(--muted-foreground)' 
-                          }}>
+                          }}
+                          data-testid={`nav-badge-${item.name.toLowerCase()}`}>
                       {item.badge}
                     </span>
                   )}
@@ -369,72 +376,78 @@ const MainLayout = ({ children }) => {
       )}
 
       {/* Main content */}
-      <div className="lg:pl-72 flex flex-col flex-1">
+      <div className="erp-main-content lg:pl-72 flex flex-col flex-1" data-component="main-content" data-testid="main-content">
         {/* Top navbar */}
-        <div className="sticky top-0 z-10 flex-shrink-0 flex h-20" 
+        <div className="erp-navbar sticky top-0 z-10 flex-shrink-0 flex h-20" 
              style={{ 
                backgroundColor: 'var(--background)', 
                borderBottom: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
                boxShadow: isNeoBrutalist ? '0px 4px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-sm)',
                color: 'var(--foreground)'
-             }}>
+             }}
+             data-component="navbar" data-testid="navbar">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(true)}
-            className="px-4 lg:hidden"
+            className="erp-mobile-menu-btn px-4 lg:hidden"
             style={{ 
               borderRight: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
               color: 'var(--foreground)'
             }}
+            data-testid="mobile-menu-btn"
           >
             <Menu className="h-6 w-6" />
           </Button>
 
-          <div className="flex-1 px-4 flex justify-between items-center">
+          <div className="erp-navbar-content flex-1 px-4 flex justify-between items-center" data-component="navbar-content" data-testid="navbar-content">
             {/* Search */}
-            <div className="flex-1 flex justify-center lg:ml-6 lg:mr-6">
-              <div className="max-w-lg w-full lg:max-w-xs">
+            <div className="erp-search-section flex-1 flex justify-center lg:ml-6 lg:mr-6" data-component="search-section" data-testid="search-section">
+              <div className="erp-search-container max-w-lg w-full lg:max-w-xs" data-component="search-container" data-testid="search-container">
                 <Input
                   placeholder="Buscar productos, clientes..."
                   leftIcon={<Search className="h-5 w-5" />}
-                  className="w-full"
+                  className="erp-search-input w-full"
+                  data-testid="search-input"
                 />
               </div>
             </div>
 
             {/* Right side */}
-            <div className="ml-4 flex items-center md:ml-6 space-x-4">
+            <div className="erp-navbar-actions ml-4 flex items-center md:ml-6 space-x-4" data-component="navbar-actions" data-testid="navbar-actions">
               {/* Notifications */}
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="erp-notifications-btn relative" data-testid="notifications-btn">
                 <Bell className="h-6 w-6" />
                 {isNeoBrutalist ? (
-                  <span className="absolute -top-2 -right-2 px-2 py-1 text-xs font-black border-2 border-black bg-red-400"
-                        style={{ boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)' }}>
+                  <span className="erp-notification-badge absolute -top-2 -right-2 px-2 py-1 text-xs font-black border-2 border-black bg-red-400"
+                        style={{ boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)' }}
+                        data-testid="notification-badge">
                     3
                   </span>
                 ) : (
-                  <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full"
+                  <span className="erp-notification-badge absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full"
                         style={{ 
                           backgroundColor: 'var(--destructive)', 
                           color: 'var(--destructive-foreground)' 
-                        }}>
+                        }}
+                        data-testid="notification-badge">
                     3
                   </span>
                 )}
               </Button>
 
               {/* Profile Menu */}
-              <div className="relative">
+              <div className="erp-profile-menu relative" data-component="profile-menu" data-testid="profile-menu">
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="relative"
+                  className="erp-profile-btn relative"
                   onClick={() => setShowUserMenu(!showUserMenu)}
+                  data-testid="profile-btn"
                 >
                   <User className="h-6 w-6" />
                   {isNeoBrutalist ? (
-                    <span className="absolute -top-2 -right-2 px-2 py-1 text-xs font-black border-2 border-black bg-green-400"
+                    <span className="erp-profile-badge absolute -top-2 -right-2 px-2 py-1 text-xs font-black border-2 border-black bg-green-400"
                           style={{ boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)' }}>
                       1
                     </span>

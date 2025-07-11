@@ -15,6 +15,7 @@ const Card = React.forwardRef(({ className, ...props }, ref) => {
     <div
       ref={ref}
       className={cn(
+        "erp-card",
         isNeoBrutalist ? "brutalist-card" : "rounded-lg",
         className
       )}
@@ -33,7 +34,7 @@ Card.displayName = "Card";
 const CardHeader = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-2 p-6", className)}
+    className={cn("erp-card-header flex flex-col space-y-2 p-6", className)}
     {...props}
   />
 ));
@@ -47,6 +48,7 @@ const CardTitle = React.forwardRef(({ className, ...props }, ref) => {
     <h3
       ref={ref}
       className={cn(
+        "erp-card-title",
         isNeoBrutalist 
           ? "text-2xl font-black uppercase tracking-wide leading-none sm:text-xl md:text-2xl"
           : "text-2xl font-semibold leading-none sm:text-xl md:text-2xl",
@@ -67,6 +69,7 @@ const CardDescription = React.forwardRef(({ className, ...props }, ref) => {
     <p
       ref={ref}
       className={cn(
+        "erp-card-description",
         isNeoBrutalist
           ? "text-sm font-bold uppercase tracking-wide sm:text-sm md:text-base"
           : "text-sm font-normal sm:text-sm md:text-base",
@@ -83,7 +86,7 @@ const CardContent = React.forwardRef(({ className, ...props }, ref) => (
   <div 
     ref={ref} 
     className={cn(
-      "p-6 pt-0",
+      "erp-card-content p-6 pt-0",
       // Responsive padding
       "sm:p-4 sm:pt-0 md:p-6 md:pt-0",
       className
@@ -97,7 +100,7 @@ const CardFooter = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "flex items-center p-6 pt-0",
+      "erp-card-footer flex items-center p-6 pt-0",
       // Responsive layout
       "flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3",
       className
@@ -149,7 +152,7 @@ const MetricCard = React.forwardRef(({ className, color = "white", ...props }, r
     <div
       ref={ref}
       className={cn(
-        "p-6 transition-all duration-150",
+        "erp-metric-card p-6 transition-all duration-150",
         isNeoBrutalist && "hover:translate-x-[2px] hover:translate-y-[2px]",
         className
       )}
@@ -209,7 +212,7 @@ const BrutalistBadge = React.forwardRef(({ className, color = "lime", children, 
     <span
       ref={ref}
       className={cn(
-        "inline-flex items-center justify-center text-xs px-3 py-1",
+        "erp-brutalist-badge inline-flex items-center justify-center text-xs px-3 py-1",
         isNeoBrutalist ? "font-black uppercase tracking-wide" : "font-medium",
         className
       )}

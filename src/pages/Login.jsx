@@ -105,39 +105,48 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="login-page min-h-screen bg-background flex items-center justify-center p-4" data-component="login-page" data-testid="login-page" style={{ backgroundColor: 'var(--background)' }}>
+      <div className="login-container w-full max-w-md" data-component="login-container" data-testid="login-container">
         {/* Header con logo */}
-        <div className="text-center mb-8">
-          <div className={`inline-flex items-center justify-center w-20 h-20 mb-6 ${
+        <div className="login-header text-center mb-8" data-component="login-header" data-testid="login-header">
+          <div className={`login-logo inline-flex items-center justify-center w-20 h-20 mb-6 ${
             isNeoBrutalism 
               ? 'bg-foreground rounded-none border-4 border-foreground shadow-neo-brutal'
               : 'bg-primary rounded-lg border border-border shadow-lg'
-          }`}>
-            <User className={`w-10 h-10 ${isNeoBrutalism ? 'text-background' : 'text-primary-foreground'}`} />
+          }`} data-component="login-logo" data-testid="login-logo" style={{
+            backgroundColor: isNeoBrutalism ? 'var(--foreground)' : 'var(--primary)',
+            border: isNeoBrutalism ? '4px solid var(--border)' : '1px solid var(--border)'
+          }}>
+            <User className={`w-10 h-10 ${isNeoBrutalism ? 'text-background' : 'text-primary-foreground'}`} style={{
+              color: isNeoBrutalism ? 'var(--background)' : 'var(--primary-foreground)'
+            }} />
           </div>
-          <h1 className={`text-4xl mb-2 ${
+          <h1 className={`login-title text-4xl mb-2 ${
             isNeoBrutalism 
               ? 'font-black uppercase tracking-wide'
               : 'font-bold'
-          }`}>
+          }`} data-testid="login-title" style={{ color: 'var(--foreground)' }}>
             Sistema ERP
           </h1>
-          <p className={`text-lg text-muted-foreground ${
+          <p className={`login-subtitle text-lg text-muted-foreground ${
             isNeoBrutalism 
               ? 'font-bold uppercase tracking-wide'
               : 'font-medium'
-          }`}>
+          }`} data-testid="login-subtitle" style={{ color: 'var(--muted-foreground)' }}>
             Acceso al Sistema
           </p>
         </div>
 
         {/* Formulario de login */}
-        <div className={`bg-card p-8 ${
+        <div className={`login-form bg-card p-8 ${
           isNeoBrutalism 
             ? 'border-4 border-foreground shadow-neo-brutal'
             : 'border border-border rounded-lg shadow-lg'
-        }`}>
+        }`} data-component="login-form" data-testid="login-form" style={{
+          backgroundColor: 'var(--card)',
+          border: isNeoBrutalism ? '4px solid var(--border)' : '1px solid var(--border)',
+          boxShadow: isNeoBrutalism ? '8px 8px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-lg)'
+        }}>
           {/* Error general */}
           {error && (
             <div className={`mb-6 p-4 bg-destructive/10 border border-destructive ${

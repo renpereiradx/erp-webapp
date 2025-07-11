@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useTheme } from 'next-themes';
 import { 
   Package, 
   Plus, 
@@ -23,6 +24,9 @@ import { Input } from '@/components/ui/Input';
 import useProductStore from '@/store/useProductStore';
 
 const Products = () => {
+  const { theme } = useTheme();
+  const isNeoBrutalism = theme?.includes('neo-brutalism');
+  
   const {
     products,
     loading,
@@ -208,31 +212,37 @@ const Products = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="products-page space-y-6" data-component="products-page" data-testid="products-page">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Productos</h1>
-          <p className="text-muted-foreground">
+      <div className="products-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" data-component="products-header" data-testid="products-header">
+        <div className="products-title-section" data-component="products-title" data-testid="products-title">
+          <h1 className={`products-title text-3xl tracking-tight ${
+            isNeoBrutalism ? 'font-black uppercase tracking-wide' : 'font-bold'
+          }`} data-testid="products-title-text" style={{ color: 'var(--foreground)' }}>Productos</h1>
+          <p className={`products-subtitle text-muted-foreground ${
+            isNeoBrutalism ? 'font-bold uppercase tracking-wide' : 'font-normal'
+          }`} data-testid="products-subtitle" style={{ color: 'var(--muted-foreground)' }}>
             Gestiona tu inventario de productos
           </p>
         </div>
-        <Button className="w-full sm:w-auto">
+        <Button className="products-new-btn w-full sm:w-auto" data-testid="new-product-btn">
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Producto
         </Button>
       </div>
 
       {/* Barra de búsqueda y filtros */}
-      <Card>
+      <Card className="products-search-section" data-component="products-search" data-testid="products-search">
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="products-search-controls flex flex-col sm:flex-row gap-4" data-component="search-controls" data-testid="search-controls">
             {/* Búsqueda */}
-            <div className="flex-1">
+            <div className="products-search-input-section flex-1" data-component="search-input-section" data-testid="search-input-section">
               <Input
                 placeholder="Buscar productos por nombre, SKU o categoría..."
                 leftIcon={<Search className="h-4 w-4" />}
                 onChange={(e) => handleSearch(e.target.value)}
+                className="products-search-input"
+                data-testid="products-search-input"
               />
             </div>
             
