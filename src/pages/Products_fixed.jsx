@@ -1,0 +1,515 @@
+/**
+ * Página de Productos del sistema ERP
+ * Demuestra el uso de Zustand store, componentes responsive y gestión de estado
+ * Incluye listado, filtros, búsqueda y acciones CRUD
+ */
+
+import React, { useEffect, useState } from 'react';
+import { useTheme } from 'next-themes';
+import { 
+  Package, 
+  Plus, 
+  Search, 
+  Filter, 
+  Edit, 
+  Trash2, 
+  Eye,
+  AlertCircle,
+  CheckCircle,
+  XCircle
+} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import useProductStore from '@/store/useProductStore';
+
+const Products = () => {
+  const { theme } = useTheme();
+  const isNeoBrutalism = theme?.includes('neo-brutalism');
+  
+  const {
+    products,
+    loading,
+    error,
+    pagination,
+    filters,
+    fetchProducts,
+    deleteProduct,
+    setFilters,
+    clearError,
+  } = useProductStore();
+
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+
+  // Datos de ejemplo para demostración (se usarían datos reales de la API)
+  const mockProducts = [
+    {
+      id: 1,
+      name: 'iPhone 15 Pro',
+      sku: 'IPH15P-128',
+      category: 'Electrónicos',
+      price: 999.99,
+      stock: 25,
+      minStock: 10,
+      status: 'active',
+      image: '/api/placeholder/100/100',
+      description: 'Smartphone Apple iPhone 15 Pro 128GB',
+    },
+    {
+      id: 2,
+      name: 'Laptop Dell XPS 13',
+      sku: 'DELL-XPS13',
+      category: 'Computadoras',
+      price: 1299.99,
+      stock: 8,
+      minStock: 15,
+      status: 'active',
+      image: '/api/placeholder/100/100',
+      description: 'Laptop Dell XPS 13 Intel i7 16GB RAM',
+    },
+    {
+      id: 3,
+      name: 'Auriculares Sony WH-1000XM4',
+      sku: 'SONY-WH1000',
+      category: 'Audio',
+      price: 349.99,
+      stock: 3,
+      minStock: 20,
+      status: 'low_stock',
+      image: '/api/placeholder/100/100',
+      description: 'Auriculares inalámbricos con cancelación de ruido',
+    },
+    {
+      id: 4,
+      name: 'Camiseta Nike Dri-FIT',
+      sku: 'NIKE-DFIT-M',
+      category: 'Ropa',
+      price: 29.99,
+      stock: 150,
+      minStock: 50,
+      status: 'active',
+      image: '/api/placeholder/100/100',
+      description: 'Camiseta deportiva Nike Dri-FIT talla M',
+    },
+    {
+      id: 5,
+      name: 'Mesa de Oficina IKEA',
+      sku: 'IKEA-DESK-120',
+      category: 'Muebles',
+      price: 199.99,
+      stock: 0,
+      minStock: 5,
+      status: 'out_of_stock',
+      image: '/api/placeholder/100/100',
+      description: 'Mesa de oficina IKEA 120x60cm color blanco',
+    },
+  ];
+
+  // Debug log
+  console.log('Products component rendering:', {
+    theme,
+    isNeoBrutalism,
+    mockProductsCount: mockProducts.length,
+    showFilters
+  });
+
+  // Simular carga de productos
+  useEffect(() => {
+    // En una aplicación real, esto cargaría datos de la API
+    // fetchProducts();
+    console.log('Cargando productos...');
+  }, []);
+
+  const handleSearch = (searchTerm) => {
+    setFilters({ search: searchTerm });
+    // fetchProducts({ search: searchTerm });
+  };
+
+  const handleFilterChange = (filterName, value) => {
+    setFilters({ [filterName]: value });
+    // fetchProducts({ [filterName]: value });
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+      try {
+        await deleteProduct(productId);
+        // Mostrar notificación de éxito
+      } catch (error) {
+        console.error('Error al eliminar producto:', error);
+      }
+    }
+  };
+
+  const getStatusIcon = (status, stock, minStock) => {
+    if (status === 'out_of_stock' || stock === 0) {
+      return <XCircle className="h-4 w-4 text-red-500" />;
+    } else if (status === 'low_stock' || stock <= minStock) {
+      return <AlertCircle className="h-4 w-4 text-orange-500" />;
+    }
+    return <CheckCircle className="h-4 w-4 text-green-500" />;
+  };
+
+  const getStatusText = (status, stock, minStock) => {
+    if (status === 'out_of_stock' || stock === 0) {
+      return 'Sin Stock';
+    } else if (status === 'low_stock' || stock <= minStock) {
+      return 'Stock Bajo';
+    }
+    return 'En Stock';
+  };
+
+  // Componente ProductCard con isNeoBrutalism como prop
+  const ProductCard = ({ product, isNeoBrutalism }) => (
+    <Card className="transition-shadow duration-200" style={{ ':hover': { boxShadow: 'var(--shadow-lg)' } }}>
+      <CardContent className="p-4">
+        <div className="flex items-start space-x-4">
+          {/* Imagen del producto */}
+          <div 
+            className="w-16 h-16 flex-shrink-0 flex items-center justify-center"
+            style={{ 
+              backgroundColor: 'var(--muted)',
+              borderRadius: isNeoBrutalism ? '0' : '8px'
+            }}
+          >
+            <Package className="h-8 w-8" style={{ color: 'var(--muted-foreground)' }} />
+          </div>
+          
+          {/* Información del producto */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg truncate" style={{ color: 'var(--foreground)' }}>
+                  {product.name}
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  {product.sku}
+                </p>
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  {product.category}
+                </p>
+              </div>
+              
+              {/* Estado del producto */}
+              <div className="flex items-center space-x-1 ml-2">
+                {getStatusIcon(product.status, product.stock, product.minStock)}
+                <span className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>
+                  {getStatusText(product.status, product.stock, product.minStock)}
+                </span>
+              </div>
+            </div>
+            
+            {/* Precio y stock */}
+            <div className="mt-2 flex items-center justify-between">
+              <div>
+                <p className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>
+                  ${product.price}
+                </p>
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  Stock: {product.stock} unidades
+                </p>
+              </div>
+              
+              {/* Acciones */}
+              <div className="flex space-x-1">
+                <Button size="sm" variant="ghost">
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost">
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost"
+                  onClick={() => handleDeleteProduct(product.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="products-page space-y-6" data-component="products-page" data-testid="products-page">
+      {/* Header */}
+      <div className="products-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" data-component="products-header" data-testid="products-header">
+        <div className="products-title-section" data-component="products-title" data-testid="products-title">
+          <h1 className={`products-title text-3xl tracking-tight ${
+            isNeoBrutalism ? 'font-black uppercase tracking-wide' : 'font-bold'
+          }`} data-testid="products-title-text" style={{ color: 'var(--foreground)' }}>Productos</h1>
+          <p className={`products-subtitle text-muted-foreground ${
+            isNeoBrutalism ? 'font-bold uppercase tracking-wide' : 'font-normal'
+          }`} data-testid="products-subtitle" style={{ color: 'var(--muted-foreground)' }}>
+            Gestiona tu inventario de productos
+          </p>
+        </div>
+        <Button className="products-new-btn w-full sm:w-auto" data-testid="new-product-btn">
+          <Plus className="mr-2 h-4 w-4" />
+          Nuevo Producto
+        </Button>
+      </div>
+
+      {/* Barra de búsqueda y filtros */}
+      <Card className="products-search-section" data-component="products-search" data-testid="products-search">
+        <CardContent className="p-4">
+          <div className="products-search-controls flex flex-col sm:flex-row gap-4" data-component="search-controls" data-testid="search-controls">
+            {/* Búsqueda */}
+            <div className="products-search-input-section flex-1" data-component="search-input-section" data-testid="search-input-section">
+              <Input
+                placeholder="Buscar productos por nombre, SKU o categoría..."
+                leftIcon={<Search className="h-4 w-4" />}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="products-search-input"
+                data-testid="products-search-input"
+              />
+            </div>
+            
+            {/* Botón de filtros */}
+            <Button 
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="w-full sm:w-auto"
+            >
+              <Filter className="mr-2 h-4 w-4" />
+              Filtros
+            </Button>
+          </div>
+          
+          {/* Panel de filtros expandible */}
+          {showFilters && (
+            <div className="mt-4 pt-4 border-t grid gap-4 sm:grid-cols-3">
+              <div>
+                <label className="block text-sm font-medium mb-2">Categoría</label>
+                <select 
+                  className="w-full p-2 border rounded-md"
+                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                >
+                  <option value="">Todas las categorías</option>
+                  <option value="Electrónicos">Electrónicos</option>
+                  <option value="Computadoras">Computadoras</option>
+                  <option value="Audio">Audio</option>
+                  <option value="Ropa">Ropa</option>
+                  <option value="Muebles">Muebles</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Estado</label>
+                <select 
+                  className="w-full p-2 border rounded-md"
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                >
+                  <option value="">Todos los estados</option>
+                  <option value="active">En Stock</option>
+                  <option value="low_stock">Stock Bajo</option>
+                  <option value="out_of_stock">Sin Stock</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Ordenar por</label>
+                <select 
+                  className="w-full p-2 border rounded-md"
+                  onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                >
+                  <option value="name">Nombre</option>
+                  <option value="price">Precio</option>
+                  <option value="stock">Stock</option>
+                  <option value="category">Categoría</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Estadísticas rápidas */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <Package className="h-8 w-8" style={{ color: 'var(--primary)' }} />
+              <div>
+                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+                  {mockProducts.length}
+                </p>
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  Total Productos
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-8 w-8" style={{ color: '#10b981' }} />
+              <div>
+                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+                  {mockProducts.filter(p => p.stock > p.minStock).length}
+                </p>
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  En Stock
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-8 w-8" style={{ color: '#f97316' }} />
+              <div>
+                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+                  {mockProducts.filter(p => p.stock <= p.minStock && p.stock > 0).length}
+                </p>
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  Stock Bajo
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <XCircle className="h-8 w-8" style={{ color: '#ef4444' }} />
+              <div>
+                <p className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
+                  {mockProducts.filter(p => p.stock === 0).length}
+                </p>
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  Sin Stock
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Lista de productos */}
+      <div className="space-y-4">
+        {/* Vista de escritorio - Tabla */}
+        <div className="block">
+          <Card>
+            <CardHeader>
+              <CardTitle>Lista de Productos</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Vista de tabla (pantallas grandes) - Se muestra cuando la pantalla es mayor a 768px
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-3 font-semibold">Producto</th>
+                      <th className="text-left p-3 font-semibold">SKU</th>
+                      <th className="text-left p-3 font-semibold">Categoría</th>
+                      <th className="text-left p-3 font-semibold">Precio</th>
+                      <th className="text-left p-3 font-semibold">Stock</th>
+                      <th className="text-left p-3 font-semibold">Estado</th>
+                      <th className="text-left p-3 font-semibold">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mockProducts.map((product) => (
+                      <tr key={product.id} className="border-b" style={{ 
+                        backgroundColor: 'var(--background)',
+                        ':hover': { backgroundColor: 'var(--muted)' }
+                      }}>
+                        <td className="p-3">
+                          <div className="flex items-center space-x-3">
+                            <div 
+                              className="w-10 h-10 flex items-center justify-center"
+                              style={{ 
+                                backgroundColor: 'var(--muted)',
+                                borderRadius: isNeoBrutalism ? '0' : '6px'
+                              }}
+                            >
+                              <Package className="h-5 w-5" style={{ color: 'var(--muted-foreground)' }} />
+                            </div>
+                            <div>
+                              <p className="font-medium" style={{ color: 'var(--foreground)' }}>{product.name}</p>
+                              <p className="text-sm truncate max-w-xs" style={{ color: 'var(--muted-foreground)' }}>
+                                {product.description}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3 text-sm" style={{ color: 'var(--foreground)' }}>{product.sku}</td>
+                        <td className="p-3 text-sm" style={{ color: 'var(--foreground)' }}>{product.category}</td>
+                        <td className="p-3 text-sm font-medium" style={{ color: 'var(--foreground)' }}>${product.price}</td>
+                        <td className="p-3 text-sm" style={{ color: 'var(--foreground)' }}>{product.stock}</td>
+                        <td className="p-3">
+                          <div className="flex items-center space-x-1">
+                            {getStatusIcon(product.status, product.stock, product.minStock)}
+                            <span className="text-xs" style={{ color: 'var(--foreground)' }}>
+                              {getStatusText(product.status, product.stock, product.minStock)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex space-x-1">
+                            <Button size="sm" variant="ghost">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => handleDeleteProduct(product.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Vista móvil alternativa - Cards */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>
+            Vista de Cards (responsive)
+          </h3>
+          {mockProducts.map((product) => (
+            <ProductCard key={product.id} product={product} isNeoBrutalism={isNeoBrutalism} />
+          ))}
+        </div>
+      </div>
+
+      {/* Paginación */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Mostrando {mockProducts.length} de {mockProducts.length} productos
+        </p>
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm" disabled>
+            Anterior
+          </Button>
+          <Button variant="outline" size="sm" disabled>
+            Siguiente
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Products;

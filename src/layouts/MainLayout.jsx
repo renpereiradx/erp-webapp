@@ -168,8 +168,8 @@ const MainLayout = ({ children }) => {
   };
 
   return (
-    <div className="erp-main-layout min-h-screen" style={{ backgroundColor: 'var(--muted, #f9fafb)', ...getLayoutStyles() }} data-component="main-layout" data-testid="main-layout">
-      {/* Sidebar Desktop - Hybrid approach */}
+    <div className="erp-main-layout flex min-h-screen" style={{ backgroundColor: 'var(--muted, #f9fafb)', ...getLayoutStyles() }} data-component="main-layout" data-testid="main-layout">
+      {/* Sidebar Desktop - Fixed sidebar */}
       <div 
         className={`erp-sidebar-desktop fixed inset-y-0 left-0 z-30 w-72 ${!isClient ? 'hidden lg:block' : ''}`}
         style={{ 
@@ -409,20 +409,23 @@ const MainLayout = ({ children }) => {
 
       {/* Main content */}
       <div 
-        className={`erp-main-content flex flex-col flex-1 ${!isClient ? 'lg:pl-72' : ''}`}
+        className={`erp-main-content flex flex-col min-h-screen ${!isClient ? 'lg:ml-72' : ''}`}
         style={{
-          marginLeft: isClient ? ((isLargeScreen) ? '288px' : '0px') : undefined // 288px = w-72
+          marginLeft: isClient ? ((isLargeScreen) ? '288px' : '0px') : undefined, // 288px = w-72
+          width: isClient ? ((isLargeScreen) ? 'calc(100vw - 288px)' : '100vw') : undefined,
+          maxWidth: isClient ? ((isLargeScreen) ? 'calc(100vw - 288px)' : '100vw') : undefined
         }}
         data-component="main-content" 
         data-testid="main-content"
       >
         {/* Top navbar */}
-        <div className="erp-navbar sticky top-0 z-10 flex-shrink-0 flex h-20" 
+        <div className="erp-navbar sticky top-0 z-10 flex-shrink-0 flex h-20 w-full" 
              style={{ 
                backgroundColor: 'var(--background)', 
                borderBottom: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
                boxShadow: isNeoBrutalist ? '0px 4px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-sm)',
-               color: 'var(--foreground)'
+               color: 'var(--foreground)',
+               maxWidth: '100%'
              }}
              data-component="navbar" data-testid="navbar">
           <Button
@@ -591,8 +594,8 @@ const MainLayout = ({ children }) => {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 relative overflow-y-auto focus:outline-none">
-          <div className="py-8 px-6 lg:px-8">
+        <main className="flex-1 relative overflow-y-auto focus:outline-none w-full" style={{ minHeight: '100vh', maxWidth: '100%' }}>
+          <div className="py-8 px-6 lg:px-8 w-full max-w-full" style={{ minHeight: '100%' }}>
             {children}
           </div>
         </main>

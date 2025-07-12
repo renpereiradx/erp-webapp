@@ -45,94 +45,28 @@ const Clients = () => {
   // Determinar si estamos en tema neo-brutalista
   const isNeoBrutalist = theme?.includes('neo-brutalism');
 
-  // Datos de ejemplo para demostración
-  const mockClients = [
-    {
-      id: 1,
-      name: 'Juan Pérez',
-      email: 'juan.perez@email.com',
-      phone: '+34 612 345 678',
-      company: 'Empresa ABC S.L.',
-      type: 'empresa',
-      status: 'active',
-      address: 'Calle Mayor 123, Madrid',
-      totalOrders: 15,
-      totalSpent: 12450.50,
-      lastOrder: '2024-01-15',
-      avatar: null,
-    },
-    {
-      id: 2,
-      name: 'María García',
-      email: 'maria.garcia@gmail.com',
-      phone: '+34 687 654 321',
-      company: null,
-      type: 'individual',
-      status: 'active',
-      address: 'Avenida de la Paz 45, Barcelona',
-      totalOrders: 8,
-      totalSpent: 3250.75,
-      lastOrder: '2024-01-20',
-      avatar: null,
-    },
-    {
-      id: 3,
-      name: 'Carlos Rodríguez',
-      email: 'carlos@techsolutions.com',
-      phone: '+34 654 987 123',
-      company: 'Tech Solutions Ltd.',
-      type: 'empresa',
-      status: 'active',
-      address: 'Polígono Industrial Norte, Valencia',
-      totalOrders: 25,
-      totalSpent: 28750.00,
-      lastOrder: '2024-01-22',
-      avatar: null,
-    },
-    {
-      id: 4,
-      name: 'Ana Martínez',
-      email: 'ana.martinez@hotmail.com',
-      phone: '+34 698 765 432',
-      company: null,
-      type: 'individual',
-      status: 'inactive',
-      address: 'Plaza del Sol 8, Sevilla',
-      totalOrders: 3,
-      totalSpent: 890.25,
-      lastOrder: '2023-12-10',
-      avatar: null,
-    },
-    {
-      id: 5,
-      name: 'Roberto Silva',
-      email: 'roberto@constructora.es',
-      phone: '+34 611 222 333',
-      company: 'Constructora Silva',
-      type: 'empresa',
-      status: 'active',
-      address: 'Calle de la Construcción 77, Bilbao',
-      totalOrders: 42,
-      totalSpent: 85600.00,
-      lastOrder: '2024-01-25',
-      avatar: null,
-    },
-  ];
-
+  // Cargar clientes al montar el componente
   useEffect(() => {
-    // En una aplicación real, esto cargaría datos de la API
-    // fetchClients();
-    console.log('Cargando clientes...');
-  }, []);
+    fetchClients();
+  }, [fetchClients]);
+
+  // Datos para las estadísticas (usar los clientes del store)
+  const statsData = {
+    total: pagination.total || 0,
+    active: clients.filter(c => c.status === 'active').length,
+    companies: clients.filter(c => c.type === 'empresa').length,
+    individuals: clients.filter(c => c.type === 'particular').length,
+  };
 
   const handleSearch = (searchTerm) => {
     setFilters({ search: searchTerm });
-    // fetchClients({ search: searchTerm });
+    fetchClients({ search: searchTerm });
   };
 
   const handleFilterChange = (filterName, value) => {
-    setFilters({ [filterName]: value });
-    // fetchClients({ [filterName]: value });
+    const newFilters = { [filterName]: value };
+    setFilters(newFilters);
+    fetchClients(newFilters);
   };
 
   const handleDeleteClient = async (clientId) => {
@@ -160,61 +94,66 @@ const Clients = () => {
 
   const ClientCard = ({ client }) => (
     <Card className="hover:shadow-lg transition-shadow duration-200">
-      <CardContent className="p-4">
-        <div className="flex items-start space-x-4">
+      <CardContent className="p-6 pt-4">
+        <div className="flex items-center space-x-4">
           {/* Avatar */}
-          <div className="w-12 h-12 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center">
+          <div className="w-14 h-14 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center">
             {getClientTypeIcon(client.type)}
           </div>
           
           {/* Información del cliente */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h3 className="font-semibold text-lg">{client.name}</h3>
+                <h3 className="font-semibold text-lg leading-tight mb-1">{client.name}</h3>
                 {client.company && (
-                  <p className="text-sm text-muted-foreground">{client.company}</p>
+                  <p className="text-sm text-muted-foreground mb-2">{client.company}</p>
                 )}
-                <div className="mt-1 space-y-1">
+                <div className="space-y-1.5">
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <Mail className="h-3 w-3 mr-1" />
-                    {client.email}
+                    <Mail className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                    <span className="truncate">{client.email}</span>
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <Phone className="h-3 w-3 mr-1" />
-                    {client.phone}
+                    <Phone className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                    <span>{client.phone}</span>
                   </div>
                   <div className="flex items-center text-sm text-muted-foreground">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    {client.address}
+                    <MapPin className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                    <span className="truncate">{client.address}</span>
                   </div>
                 </div>
               </div>
               
               {/* Estado */}
-              <div className="ml-2">
+              <div className="ml-3 flex-shrink-0 flex items-center">
                 {getStatusBadge(client.status)}
               </div>
             </div>
             
             {/* Estadísticas y acciones */}
-            <div className="mt-3 flex items-center justify-between">
-              <div className="text-sm">
-                <p><strong>{client.totalOrders}</strong> pedidos</p>
-                <p><strong>${client.totalSpent.toLocaleString()}</strong> gastado</p>
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="text-sm space-y-1">
+                <p className="text-muted-foreground flex items-center">
+                  <strong className="text-foreground mr-1">{client.totalOrders}</strong> pedidos
+                </p>
+                <p className="text-muted-foreground flex items-center">
+                  <strong className="text-foreground mr-1">${client.totalSpent.toLocaleString()}</strong> gastado
+                </p>
               </div>
               
               {/* Acciones */}
-              <div className="flex space-x-1">
-                <Button size="sm" variant="ghost">
+              <div className="flex items-center space-x-1">
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 flex items-center justify-center">
                   <Eye className="h-4 w-4" />
                 </Button>
-                <Button size="sm" variant="ghost">
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 flex items-center justify-center">
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button 
                   size="sm" 
                   variant="ghost"
+                  className="h-8 w-8 p-0 flex items-center justify-center"
                   onClick={() => handleDeleteClient(client.id)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -342,13 +281,15 @@ const Clients = () => {
       </Card>
 
       {/* Estadísticas rápidas */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="clients-stats-grid">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
               <Users className="h-8 w-8 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{mockClients.length}</p>
+                <p className="text-2xl font-bold">
+                  {loading ? '...' : pagination.total}
+                </p>
                 <p className="text-sm text-muted-foreground">Total Clientes</p>
               </div>
             </div>
@@ -361,7 +302,7 @@ const Clients = () => {
               <User className="h-8 w-8 text-green-500" />
               <div>
                 <p className="text-2xl font-bold">
-                  {mockClients.filter(c => c.type === 'individual').length}
+                  {loading ? '...' : statsData.individuals}
                 </p>
                 <p className="text-sm text-muted-foreground">Individuales</p>
               </div>
@@ -375,7 +316,7 @@ const Clients = () => {
               <Building className="h-8 w-8 text-purple-500" />
               <div>
                 <p className="text-2xl font-bold">
-                  {mockClients.filter(c => c.type === 'empresa').length}
+                  {loading ? '...' : statsData.companies}
                 </p>
                 <p className="text-sm text-muted-foreground">Empresas</p>
               </div>
@@ -389,7 +330,7 @@ const Clients = () => {
               <Users className="h-8 w-8 text-orange-500" />
               <div>
                 <p className="text-2xl font-bold">
-                  {mockClients.filter(c => c.status === 'active').length}
+                  {loading ? '...' : statsData.active}
                 </p>
                 <p className="text-sm text-muted-foreground">Activos</p>
               </div>
@@ -400,98 +341,45 @@ const Clients = () => {
 
       {/* Lista de clientes */}
       <div className="space-y-4">
-        {/* Vista de escritorio - Tabla */}
-        <div className="hidden lg:block">
-          <Card>
-            <CardHeader>
-              <CardTitle>Lista de Clientes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Cliente</th>
-                      <th className="text-left p-2">Contacto</th>
-                      <th className="text-left p-2">Tipo</th>
-                      <th className="text-left p-2">Pedidos</th>
-                      <th className="text-left p-2">Total Gastado</th>
-                      <th className="text-left p-2">Estado</th>
-                      <th className="text-left p-2">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mockClients.map((client) => (
-                      <tr key={client.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <td className="p-2">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                              {getClientTypeIcon(client.type)}
-                            </div>
-                            <div>
-                              <p className="font-medium">{client.name}</p>
-                              {client.company && (
-                                <p className="text-sm text-muted-foreground">{client.company}</p>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-2 text-sm">
-                          <div>
-                            <p>{client.email}</p>
-                            <p className="text-muted-foreground">{client.phone}</p>
-                          </div>
-                        </td>
-                        <td className="p-2 text-sm capitalize">{client.type}</td>
-                        <td className="p-2 text-sm">{client.totalOrders}</td>
-                        <td className="p-2 text-sm font-medium">${client.totalSpent.toLocaleString()}</td>
-                        <td className="p-2">
-                          {getStatusBadge(client.status)}
-                        </td>
-                        <td className="p-2">
-                          <div className="flex space-x-1">
-                            <Button size="sm" variant="ghost">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              onClick={() => handleDeleteClient(client.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+        <Card>
+          <CardHeader>
+            <CardTitle>Lista de Clientes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-2"></div>
+                <span>Cargando clientes...</span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Vista móvil y tablet - Cards */}
-        <div className="lg:hidden space-y-4">
-          {mockClients.map((client) => (
-            <ClientCard key={client.id} client={client} />
-          ))}
-        </div>
+            ) : error ? (
+              <div className="text-center p-8 text-destructive">
+                Error: {error}
+              </div>
+            ) : clients.length === 0 ? (
+              <div className="text-center p-8 text-muted-foreground">
+                No se encontraron clientes
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {clients.map((client) => (
+                  <ClientCard key={client.id} client={client} />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Paginación */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Mostrando {mockClients.length} de {mockClients.length} clientes
+          Mostrando {clients.length} de {pagination.total} clientes
         </p>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm" disabled>
+          <Button variant="outline" size="sm" disabled={pagination.page <= 1}>
             Anterior
           </Button>
-          <Button variant="outline" size="sm" disabled>
+          <Button variant="outline" size="sm" disabled={pagination.page >= pagination.totalPages}>
             Siguiente
           </Button>
         </div>

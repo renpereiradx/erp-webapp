@@ -81,39 +81,39 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Métricas principales */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Métricas principales - Layout compacto y responsivo */}
+      <div className="erp-metrics-grid grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
         {/* Ventas Totales */}
         <MetricCard color="white" className="relative">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm text-muted-foreground ${
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${
                 isNeoBrutalism 
                   ? 'font-black uppercase tracking-wide'
                   : 'font-medium'
               }`}>
                 Ventas Totales
               </p>
-              <p className={`text-3xl text-foreground ${
+              <p className={`text-lg font-black text-foreground ${
                 isNeoBrutalism ? 'font-black' : 'font-bold'
               }`}>$125,430</p>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="h-4 w-4 text-chart-success mr-1" />
-                <span className={`text-sm text-chart-success ${
+              <div className="flex items-center">
+                <TrendingUp className="h-3 w-3 text-chart-success mr-1" />
+                <span className={`text-xs text-chart-success ${
                   isNeoBrutalism 
                     ? 'font-bold uppercase'
                     : 'font-medium'
                 }`}>
-                  12.5% vs mes anterior
+                  12.5%
                 </span>
               </div>
             </div>
-            <div className={`w-12 h-12 flex items-center justify-center ${
+            <div className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${
               isNeoBrutalism 
                 ? 'bg-chart-success border-2 border-foreground shadow-neo-brutal'
                 : 'bg-chart-success/10 border border-chart-success rounded-lg'
             }`}>
-              <DollarSign className={`h-6 w-6 ${
+              <DollarSign className={`h-4 w-4 ${
                 isNeoBrutalism ? 'text-foreground' : 'text-chart-success'
               }`} />
             </div>
@@ -122,35 +122,35 @@ const Dashboard = () => {
 
         {/* Clientes */}
         <MetricCard color="white" className="relative">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm text-muted-foreground ${
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${
                 isNeoBrutalism 
                   ? 'font-black uppercase tracking-wide'
                   : 'font-medium'
               }`}>
                 Clientes
               </p>
-              <p className={`text-3xl text-foreground ${
+              <p className={`text-lg font-black text-foreground ${
                 isNeoBrutalism ? 'font-black' : 'font-bold'
               }`}>1,247</p>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="h-4 w-4 text-chart-success mr-1" />
-                <span className={`text-sm text-chart-success ${
+              <div className="flex items-center">
+                <TrendingUp className="h-3 w-3 text-chart-success mr-1" />
+                <span className={`text-xs text-chart-success ${
                   isNeoBrutalism 
                     ? 'font-bold uppercase'
                     : 'font-medium'
                 }`}>
-                  8.2% vs mes anterior
+                  8.2%
                 </span>
               </div>
             </div>
-            <div className={`w-12 h-12 flex items-center justify-center ${
+            <div className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${
               isNeoBrutalism 
                 ? 'bg-chart-primary border-2 border-foreground shadow-neo-brutal'
                 : 'bg-chart-primary/10 border border-chart-primary rounded-lg'
             }`}>
-              <Users className={`h-6 w-6 ${
+              <Users className={`h-4 w-4 ${
                 isNeoBrutalism ? 'text-background' : 'text-chart-primary'
               }`} />
             </div>
@@ -159,35 +159,35 @@ const Dashboard = () => {
 
         {/* Productos */}
         <MetricCard color="white" className="relative">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm text-muted-foreground ${
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${
                 isNeoBrutalism 
                   ? 'font-black uppercase tracking-wide'
                   : 'font-medium'
               }`}>
                 Productos
               </p>
-              <p className={`text-3xl text-foreground ${
+              <p className={`text-lg font-black text-foreground ${
                 isNeoBrutalism ? 'font-black' : 'font-bold'
               }`}>856</p>
-              <div className="flex items-center mt-2">
-                <TrendingDown className="h-4 w-4 text-chart-danger mr-1" />
-                <span className={`text-sm text-chart-danger ${
+              <div className="flex items-center">
+                <TrendingDown className="h-3 w-3 text-chart-danger mr-1" />
+                <span className={`text-xs text-chart-danger ${
                   isNeoBrutalism 
                     ? 'font-bold uppercase'
                     : 'font-medium'
                 }`}>
-                  2.1% vs mes anterior
+                  2.1%
                 </span>
               </div>
             </div>
-            <div className={`w-12 h-12 flex items-center justify-center ${
+            <div className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${
               isNeoBrutalism 
                 ? 'bg-chart-warning border-2 border-foreground shadow-neo-brutal'
                 : 'bg-chart-warning/10 border border-chart-warning rounded-lg'
             }`}>
-              <Package className={`h-6 w-6 ${
+              <Package className={`h-4 w-4 ${
                 isNeoBrutalism ? 'text-background' : 'text-chart-warning'
               }`} />
             </div>
@@ -196,35 +196,35 @@ const Dashboard = () => {
 
         {/* Pedidos */}
         <MetricCard color="white" className="relative">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm text-muted-foreground ${
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${
                 isNeoBrutalism 
                   ? 'font-black uppercase tracking-wide'
                   : 'font-medium'
               }`}>
                 Pedidos
               </p>
-              <p className={`text-3xl text-foreground ${
+              <p className={`text-lg font-black text-foreground ${
                 isNeoBrutalism ? 'font-black' : 'font-bold'
               }`}>342</p>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="h-4 w-4 text-chart-success mr-1" />
-                <span className={`text-sm text-chart-success ${
+              <div className="flex items-center">
+                <TrendingUp className="h-3 w-3 text-chart-success mr-1" />
+                <span className={`text-xs text-chart-success ${
                   isNeoBrutalism 
                     ? 'font-bold uppercase'
                     : 'font-medium'
                 }`}>
-                  15.3% vs mes anterior
+                  15.3%
                 </span>
               </div>
             </div>
-            <div className={`w-12 h-12 flex items-center justify-center ${
+            <div className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${
               isNeoBrutalism 
                 ? 'bg-chart-accent border-2 border-foreground shadow-neo-brutal'
                 : 'bg-chart-accent/10 border border-chart-accent rounded-lg'
             }`}>
-              <ShoppingCart className={`h-6 w-6 ${
+              <ShoppingCart className={`h-4 w-4 ${
                 isNeoBrutalism ? 'text-background' : 'text-chart-accent'
               }`} />
             </div>

@@ -33,6 +33,7 @@ const Products = () => {
     error,
     pagination,
     filters,
+    categories,
     fetchProducts,
     deleteProduct,
     setFilters,
@@ -42,85 +43,28 @@ const Products = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState([]);
 
-  // Datos de ejemplo para demostración (se usarían datos reales de la API)
-  const mockProducts = [
-    {
-      id: 1,
-      name: 'iPhone 15 Pro',
-      sku: 'IPH15P-128',
-      category: 'Electrónicos',
-      price: 999.99,
-      stock: 25,
-      minStock: 10,
-      status: 'active',
-      image: '/api/placeholder/100/100',
-      description: 'Smartphone Apple iPhone 15 Pro 128GB',
-    },
-    {
-      id: 2,
-      name: 'Laptop Dell XPS 13',
-      sku: 'DELL-XPS13',
-      category: 'Computadoras',
-      price: 1299.99,
-      stock: 8,
-      minStock: 15,
-      status: 'active',
-      image: '/api/placeholder/100/100',
-      description: 'Laptop Dell XPS 13 Intel i7 16GB RAM',
-    },
-    {
-      id: 3,
-      name: 'Auriculares Sony WH-1000XM4',
-      sku: 'SONY-WH1000',
-      category: 'Audio',
-      price: 349.99,
-      stock: 3,
-      minStock: 20,
-      status: 'low_stock',
-      image: '/api/placeholder/100/100',
-      description: 'Auriculares inalámbricos con cancelación de ruido',
-    },
-    {
-      id: 4,
-      name: 'Camiseta Nike Dri-FIT',
-      sku: 'NIKE-DFIT-M',
-      category: 'Ropa',
-      price: 29.99,
-      stock: 150,
-      minStock: 50,
-      status: 'active',
-      image: '/api/placeholder/100/100',
-      description: 'Camiseta deportiva Nike Dri-FIT talla M',
-    },
-    {
-      id: 5,
-      name: 'Mesa de Oficina IKEA',
-      sku: 'IKEA-DESK-120',
-      category: 'Muebles',
-      price: 199.99,
-      stock: 0,
-      minStock: 5,
-      status: 'out_of_stock',
-      image: '/api/placeholder/100/100',
-      description: 'Mesa de oficina IKEA 120x60cm color blanco',
-    },
-  ];
-
-  // Simular carga de productos
+  // Cargar productos al montar el componente
   useEffect(() => {
-    // En una aplicación real, esto cargaría datos de la API
-    // fetchProducts();
-    console.log('Cargando productos...');
-  }, []);
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Datos para las estadísticas (usar los productos del store)
+  const statsData = {
+    total: products.length,
+    inStock: products.filter(p => p.stock > p.minStock).length,
+    lowStock: products.filter(p => p.stock <= p.minStock && p.stock > 0).length,
+    outOfStock: products.filter(p => p.stock === 0).length,
+  };
 
   const handleSearch = (searchTerm) => {
     setFilters({ search: searchTerm });
-    // fetchProducts({ search: searchTerm });
+    fetchProducts({ search: searchTerm });
   };
 
   const handleFilterChange = (filterName, value) => {
-    setFilters({ [filterName]: value });
-    // fetchProducts({ [filterName]: value });
+    const newFilters = { [filterName]: value };
+    setFilters(newFilters);
+    fetchProducts(newFilters);
   };
 
   const handleDeleteProduct = async (productId) => {
@@ -152,53 +96,66 @@ const Products = () => {
     return 'En Stock';
   };
 
-  const ProductCard = ({ product }) => (
-    <Card className="hover:shadow-lg transition-shadow duration-200">
-      <CardContent className="p-4">
-        <div className="flex items-start space-x-4">
+  const ProductCard = ({ product, isNeoBrutalism }) => (
+    <Card className="product-card hover:shadow-lg transition-shadow duration-200">
+      <CardContent className="p-6 pt-4">
+        <div className="flex items-center space-x-4">
           {/* Imagen del producto */}
-          <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">
-            <Package className="h-8 w-8 text-gray-400" />
+          <div 
+            className={`w-16 h-16 flex-shrink-0 flex items-center justify-center bg-muted ${
+              isNeoBrutalism ? '' : 'rounded-lg'
+            }`}
+          >
+            <Package className="h-8 w-8 text-muted-foreground" />
           </div>
           
           {/* Información del producto */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <h3 className="font-semibold text-lg truncate">{product.name}</h3>
-                <p className="text-sm text-muted-foreground">{product.sku}</p>
-                <p className="text-sm text-muted-foreground">{product.category}</p>
+                <h3 className="font-semibold text-lg leading-tight mb-1 text-foreground">
+                  {product.name}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-1">
+                  SKU: {product.sku}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Categoría: {product.category}
+                </p>
               </div>
               
               {/* Estado del producto */}
-              <div className="flex items-center space-x-1 ml-2">
+              <div className="flex items-center space-x-1.5 ml-3 flex-shrink-0">
                 {getStatusIcon(product.status, product.stock, product.minStock)}
-                <span className="text-xs font-medium">
+                <span className="text-xs font-medium text-foreground">
                   {getStatusText(product.status, product.stock, product.minStock)}
                 </span>
               </div>
             </div>
             
             {/* Precio y stock */}
-            <div className="mt-2 flex items-center justify-between">
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
               <div>
-                <p className="text-lg font-bold">${product.price}</p>
-                <p className="text-sm text-muted-foreground">
-                  Stock: {product.stock} unidades
+                <p className="text-lg font-bold text-foreground mb-1 flex items-center">
+                  ${product.price}
+                </p>
+                <p className="text-sm text-muted-foreground flex items-center">
+                  Stock: <span className="font-medium text-foreground ml-1">{product.stock}</span> unidades
                 </p>
               </div>
               
               {/* Acciones */}
-              <div className="flex space-x-1">
-                <Button size="sm" variant="ghost">
+              <div className="flex items-center space-x-1">
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 flex items-center justify-center">
                   <Eye className="h-4 w-4" />
                 </Button>
-                <Button size="sm" variant="ghost">
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 flex items-center justify-center">
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button 
                   size="sm" 
                   variant="ghost"
+                  className="h-8 w-8 p-0 flex items-center justify-center"
                   onClick={() => handleDeleteProduct(product.id)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -212,22 +169,23 @@ const Products = () => {
   );
 
   return (
-    <div className="products-page space-y-6" data-component="products-page" data-testid="products-page">
+    <div className="products-page space-y-6 w-full max-w-full overflow-x-hidden" data-component="products-page" data-testid="products-page">
       {/* Header */}
-      <div className="products-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" data-component="products-header" data-testid="products-header">
+      <div className="products-header flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 gap-4" data-component="products-header" data-testid="products-header">
         <div className="products-title-section" data-component="products-title" data-testid="products-title">
-          <h1 className={`products-title text-3xl tracking-tight ${
+          <h1 className={`products-title text-2xl sm:text-3xl tracking-tight ${
             isNeoBrutalism ? 'font-black uppercase tracking-wide' : 'font-bold'
-          }`} data-testid="products-title-text" style={{ color: 'var(--foreground)' }}>Productos</h1>
-          <p className={`products-subtitle text-muted-foreground ${
+          } text-foreground`} data-testid="products-title-text">Productos</h1>
+          <p className={`products-subtitle mt-1 text-sm sm:text-base ${
             isNeoBrutalism ? 'font-bold uppercase tracking-wide' : 'font-normal'
-          }`} data-testid="products-subtitle" style={{ color: 'var(--muted-foreground)' }}>
+          } text-muted-foreground`} data-testid="products-subtitle">
             Gestiona tu inventario de productos
           </p>
         </div>
-        <Button className="products-new-btn w-full sm:w-auto" data-testid="new-product-btn">
+        <Button className="products-new-btn w-full sm:w-auto whitespace-nowrap" data-testid="new-product-btn">
           <Plus className="mr-2 h-4 w-4" />
-          Nuevo Producto
+          <span className="hidden sm:inline">Nuevo Producto</span>
+          <span className="sm:hidden">Nuevo</span>
         </Button>
       </div>
 
@@ -259,26 +217,28 @@ const Products = () => {
           
           {/* Panel de filtros expandible */}
           {showFilters && (
-            <div className="mt-4 pt-4 border-t grid gap-4 sm:grid-cols-3">
+            <div className="mt-4 pt-4 border-t grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               <div>
-                <label className="block text-sm font-medium mb-2">Categoría</label>
+                <label className="block text-sm font-medium mb-2 text-foreground">
+                  Categoría
+                </label>
                 <select 
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2 border rounded-md bg-input text-foreground border-border focus:ring-2 focus:ring-ring focus:border-ring"
                   onChange={(e) => handleFilterChange('category', e.target.value)}
                 >
                   <option value="">Todas las categorías</option>
-                  <option value="Electrónicos">Electrónicos</option>
-                  <option value="Computadoras">Computadoras</option>
-                  <option value="Audio">Audio</option>
-                  <option value="Ropa">Ropa</option>
-                  <option value="Muebles">Muebles</option>
+                  {categories?.map((category) => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">Estado</label>
+                <label className="block text-sm font-medium mb-2 text-foreground">
+                  Estado
+                </label>
                 <select 
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2 border rounded-md bg-input text-foreground border-border focus:ring-2 focus:ring-ring focus:border-ring"
                   onChange={(e) => handleFilterChange('status', e.target.value)}
                 >
                   <option value="">Todos los estados</option>
@@ -288,10 +248,12 @@ const Products = () => {
                 </select>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium mb-2">Ordenar por</label>
+              <div className="sm:col-span-2 lg:col-span-1">
+                <label className="block text-sm font-medium mb-2 text-foreground">
+                  Ordenar por
+                </label>
                 <select 
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2 border rounded-md bg-input text-foreground border-border focus:ring-2 focus:ring-ring focus:border-ring"
                   onChange={(e) => handleFilterChange('sortBy', e.target.value)}
                 >
                   <option value="name">Nombre</option>
@@ -306,14 +268,18 @@ const Products = () => {
       </Card>
 
       {/* Estadísticas rápidas */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="products-stats-grid">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <Package className="h-8 w-8 text-blue-500" />
+              <Package className="h-8 w-8 text-primary" />
               <div>
-                <p className="text-2xl font-bold">{mockProducts.length}</p>
-                <p className="text-sm text-muted-foreground">Total Productos</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {loading ? '...' : pagination.total}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Total Productos
+                </p>
               </div>
             </div>
           </CardContent>
@@ -324,10 +290,12 @@ const Products = () => {
             <div className="flex items-center space-x-2">
               <CheckCircle className="h-8 w-8 text-green-500" />
               <div>
-                <p className="text-2xl font-bold">
-                  {mockProducts.filter(p => p.stock > p.minStock).length}
+                <p className="text-2xl font-bold text-foreground">
+                  {loading ? '...' : statsData.inStock}
                 </p>
-                <p className="text-sm text-muted-foreground">En Stock</p>
+                <p className="text-sm text-muted-foreground">
+                  En Stock
+                </p>
               </div>
             </div>
           </CardContent>
@@ -338,10 +306,12 @@ const Products = () => {
             <div className="flex items-center space-x-2">
               <AlertCircle className="h-8 w-8 text-orange-500" />
               <div>
-                <p className="text-2xl font-bold">
-                  {mockProducts.filter(p => p.stock <= p.minStock && p.stock > 0).length}
+                <p className="text-2xl font-bold text-foreground">
+                  {loading ? '...' : statsData.lowStock}
                 </p>
-                <p className="text-sm text-muted-foreground">Stock Bajo</p>
+                <p className="text-sm text-muted-foreground">
+                  Stock Bajo
+                </p>
               </div>
             </div>
           </CardContent>
@@ -352,10 +322,12 @@ const Products = () => {
             <div className="flex items-center space-x-2">
               <XCircle className="h-8 w-8 text-red-500" />
               <div>
-                <p className="text-2xl font-bold">
-                  {mockProducts.filter(p => p.stock === 0).length}
+                <p className="text-2xl font-bold text-foreground">
+                  {loading ? '...' : statsData.outOfStock}
                 </p>
-                <p className="text-sm text-muted-foreground">Sin Stock</p>
+                <p className="text-sm text-muted-foreground">
+                  Sin Stock
+                </p>
               </div>
             </div>
           </CardContent>
@@ -364,98 +336,45 @@ const Products = () => {
 
       {/* Lista de productos */}
       <div className="space-y-4">
-        {/* Vista de escritorio - Tabla */}
-        <div className="hidden md:block">
-          <Card>
-            <CardHeader>
-              <CardTitle>Lista de Productos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Producto</th>
-                      <th className="text-left p-2">SKU</th>
-                      <th className="text-left p-2">Categoría</th>
-                      <th className="text-left p-2">Precio</th>
-                      <th className="text-left p-2">Stock</th>
-                      <th className="text-left p-2">Estado</th>
-                      <th className="text-left p-2">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mockProducts.map((product) => (
-                      <tr key={product.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
-                        <td className="p-2">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-                              <Package className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{product.name}</p>
-                              <p className="text-sm text-muted-foreground truncate max-w-xs">
-                                {product.description}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-2 text-sm">{product.sku}</td>
-                        <td className="p-2 text-sm">{product.category}</td>
-                        <td className="p-2 text-sm font-medium">${product.price}</td>
-                        <td className="p-2 text-sm">{product.stock}</td>
-                        <td className="p-2">
-                          <div className="flex items-center space-x-1">
-                            {getStatusIcon(product.status, product.stock, product.minStock)}
-                            <span className="text-xs">
-                              {getStatusText(product.status, product.stock, product.minStock)}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-2">
-                          <div className="flex space-x-1">
-                            <Button size="sm" variant="ghost">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              onClick={() => handleDeleteProduct(product.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+        <Card>
+          <CardHeader>
+            <CardTitle>Lista de Productos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-2"></div>
+                <span>Cargando productos...</span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Vista móvil - Cards */}
-        <div className="md:hidden space-y-4">
-          {mockProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+            ) : error ? (
+              <div className="text-center p-8 text-destructive">
+                Error: {error}
+              </div>
+            ) : products.length === 0 ? (
+              <div className="text-center p-8 text-muted-foreground">
+                No se encontraron productos
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} isNeoBrutalism={isNeoBrutalism} />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Paginación */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Mostrando {mockProducts.length} de {mockProducts.length} productos
+          Mostrando {products.length} de {pagination.total} productos
         </p>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm" disabled>
+          <Button variant="outline" size="sm" disabled={pagination.page <= 1}>
             Anterior
           </Button>
-          <Button variant="outline" size="sm" disabled>
+          <Button variant="outline" size="sm" disabled={pagination.page >= pagination.totalPages}>
             Siguiente
           </Button>
         </div>
