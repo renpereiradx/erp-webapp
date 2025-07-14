@@ -1,5 +1,6 @@
 /**
- * Layout principal del sistema ERP con estilo Neo-Brutalista
+ * Layout principal del sistema ERP - Multi-tema
+ * Soporte para Neo-Brutalism, Material Design y Fluent Design
  * Incluye sidebar responsive, navbar y área de contenido principal
  */
 
@@ -47,8 +48,10 @@ const MainLayout = ({ children }) => {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // Determinar si estamos en tema neo-brutalista
+  // Determinar los temas activos
   const isNeoBrutalist = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
+  const isMaterial = theme?.includes('material');
+  const isFluent = theme?.includes('fluent');
 
   // Debug log temporal
   console.log('MainLayout Debug:', {
@@ -64,6 +67,48 @@ const MainLayout = ({ children }) => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  // Helper functions para generar clases según el tema activo
+  const getTitleClass = (size = 'title') => {
+    if (isNeoBrutalist) {
+      switch(size) {
+        case 'title': return 'font-black uppercase tracking-wide';
+        case 'body': return 'font-bold uppercase tracking-wide';
+        case 'caption': return 'font-bold uppercase tracking-wide text-sm';
+        default: return 'font-black uppercase tracking-wide';
+      }
+    }
+    if (isFluent) {
+      switch(size) {
+        case 'title': return 'fluent-title';
+        case 'body': return 'fluent-body';
+        case 'caption': return 'fluent-caption';
+        default: return 'fluent-body';
+      }
+    }
+    if (isMaterial) {
+      switch(size) {
+        case 'title': return 'material-headline-medium';
+        case 'body': return 'material-body-medium';
+        case 'caption': return 'material-body-small';
+        default: return 'material-body-medium';
+      }
+    }
+    return 'font-medium';
+  };
+
+  const getCardClass = () => {
+    if (isNeoBrutalist) return 'border-4 border-foreground shadow-neo-brutal';
+    if (isFluent) return 'fluent-elevation-2 fluent-radius-medium';
+    if (isMaterial) return 'material-card-elevated';
+    return 'border border-border rounded-lg shadow-lg';
+  };
+
+  const getButtonClass = () => {
+    if (isFluent) return 'fluent-elevation-2 fluent-radius-small';
+    if (isMaterial) return 'material-button-elevated';
+    return '';
   };
   // Configuración de navegación
   const navigation = [
@@ -134,6 +179,20 @@ const MainLayout = ({ children }) => {
         boxShadow: '4px 0px 0px 0px rgba(0,0,0,1)'
       };
     }
+    if (isFluent) {
+      return {
+        backgroundColor: 'var(--fluent-surface-primary)', 
+        borderRight: '1px solid var(--fluent-neutral-grey-30)',
+        boxShadow: 'var(--fluent-elevation-4)'
+      };
+    }
+    if (isMaterial) {
+      return {
+        backgroundColor: 'var(--material-surface)', 
+        borderRight: '1px solid var(--material-outline)',
+        boxShadow: 'var(--material-elevation-2)'
+      };
+    }
     return {
       backgroundColor: 'var(--background)', 
       borderRight: 'var(--border-width, 1px) solid var(--border)',
@@ -157,6 +216,29 @@ const MainLayout = ({ children }) => {
         ':hover': {
           boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)',
           transform: 'translate(1px, 1px)'
+        }
+      };
+    }
+    if (isFluent) {
+      return {
+        backgroundColor: active ? 'var(--fluent-brand-primary)' : 'transparent',
+        color: active ? 'white' : 'var(--fluent-text-primary)',
+        borderRadius: 'var(--fluent-radius-small)',
+        boxShadow: active ? 'var(--fluent-elevation-2)' : 'none',
+        transition: 'all var(--fluent-duration-normal) var(--fluent-curve-easy-ease)',
+        ':hover': {
+          backgroundColor: active ? 'var(--fluent-brand-primary-hover)' : 'var(--fluent-surface-secondary)'
+        }
+      };
+    }
+    if (isMaterial) {
+      return {
+        backgroundColor: active ? 'var(--material-primary)' : 'transparent',
+        color: active ? 'var(--material-on-primary)' : 'var(--material-on-surface)',
+        borderRadius: 'var(--material-radius-medium)',
+        transition: 'all 200ms ease',
+        ':hover': {
+          backgroundColor: active ? 'var(--material-primary-hover)' : 'var(--material-surface-variant)'
         }
       };
     }
@@ -197,7 +279,7 @@ const MainLayout = ({ children }) => {
                 <LayoutDashboard className="h-6 w-6" />
               </div>
               <div className="erp-logo-text">
-                <h1 className={`erp-logo-title text-xl ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-bold'}`}
+                <h1 className={`erp-logo-title text-xl ${getTitleClass('title')}`}
                     style={{ color: 'var(--foreground)' }}
                     data-testid="logo-title">
                   ERP System
@@ -217,7 +299,7 @@ const MainLayout = ({ children }) => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`erp-nav-item group flex items-center px-4 py-3 text-sm ${isNeoBrutalist ? 'font-black uppercase tracking-wide' : 'font-medium'} ${isNeoBrutalist ? '' : 'rounded-md'} transition-all duration-200`}
+                  className={`erp-nav-item group flex items-center px-4 py-3 text-sm ${getTitleClass('body')} ${isNeoBrutalist ? '' : isFluent ? 'fluent-radius-small' : 'rounded-md'} transition-all duration-200`}
                   style={navStyles}
                   data-component="nav-item" 
                   data-testid={`nav-item-${item.name.toLowerCase()}`}

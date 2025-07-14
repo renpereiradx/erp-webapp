@@ -1,5 +1,6 @@
 /**
- * Página de Login con estilo Neo-Brutalista
+ * Página de Login - Multi-tema
+ * Soporte para Neo-Brutalism, Material Design y Fluent Design
  * Sistema de autenticación con formulario interactivo
  */
 
@@ -31,6 +32,69 @@ const Login = () => {
   const [formErrors, setFormErrors] = useState({});
 
   const isNeoBrutalism = theme?.includes('neo-brutalism');
+  const isMaterial = theme?.includes('material');
+  const isFluent = theme?.includes('fluent');
+
+  // Helper functions para generar clases según el tema activo
+  const getTitleClass = (size = 'title') => {
+    if (isNeoBrutalism) {
+      switch(size) {
+        case 'display': return 'font-black uppercase tracking-wide text-5xl';
+        case 'large-title': return 'font-black uppercase tracking-wide text-4xl';
+        case 'title': return 'font-black uppercase tracking-wide text-2xl';
+        case 'subtitle': return 'font-black uppercase tracking-wide text-xl';
+        case 'body-large': return 'font-bold uppercase tracking-wide text-lg';
+        case 'body': return 'font-bold uppercase tracking-wide text-base';
+        case 'caption': return 'font-bold uppercase tracking-wide text-sm';
+        default: return 'font-black uppercase tracking-wide';
+      }
+    }
+    if (isFluent) {
+      switch(size) {
+        case 'display': return 'fluent-display';
+        case 'large-title': return 'fluent-large-title';
+        case 'title': return 'fluent-title';
+        case 'subtitle': return 'fluent-subtitle';
+        case 'body-large': return 'fluent-body-large';
+        case 'body': return 'fluent-body';
+        case 'caption': return 'fluent-caption';
+        case 'caption-strong': return 'fluent-caption-strong';
+        default: return 'fluent-title';
+      }
+    }
+    if (isMaterial) {
+      switch(size) {
+        case 'display': return 'material-display';
+        case 'large-title': return 'material-headline-large';
+        case 'title': return 'material-headline-medium';
+        case 'subtitle': return 'material-headline-small';
+        case 'body-large': return 'material-body-large';
+        case 'body': return 'material-body-medium';
+        case 'caption': return 'material-body-small';
+        default: return 'material-headline-medium';
+      }
+    }
+    return 'font-bold';
+  };
+
+  const getCardClass = () => {
+    if (isNeoBrutalism) return 'border-4 border-foreground shadow-neo-brutal bg-background';
+    if (isFluent) return 'fluent-elevation-8 fluent-radius-large bg-background';
+    if (isMaterial) return 'material-card-elevated bg-background';
+    return 'border border-border rounded-xl shadow-2xl bg-background';
+  };
+
+  const getButtonClass = () => {
+    if (isFluent) return 'fluent-elevation-4 fluent-radius-medium w-full';
+    if (isMaterial) return 'material-button-elevated w-full';
+    return 'w-full';
+  };
+
+  const getInputClass = () => {
+    if (isFluent) return 'fluent-radius-small';
+    if (isMaterial) return 'material-input';
+    return '';
+  };
 
   // Validación del formulario
   const validateForm = () => {
@@ -52,7 +116,6 @@ const Login = () => {
     return Object.keys(errors).length === 0;
   };
 
-  // Manejar cambios en el formulario
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -60,310 +123,203 @@ const Login = () => {
       [name]: value
     }));
     
-    // Limpiar error específico cuando el usuario empiece a escribir
+    // Limpiar errores cuando el usuario empieza a escribir
     if (formErrors[name]) {
       setFormErrors(prev => ({
         ...prev,
         [name]: ''
       }));
     }
-    clearError();
   };
 
-  // Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
+    clearError();
     
     if (!validateForm()) {
       return;
     }
-
+    
     try {
-      await login(formData);
+      await login(formData.username, formData.password);
       navigate('/dashboard');
-    } catch (error) {
-      console.error('Error en login:', error);
+    } catch (err) {
+      console.error('Error de login:', err);
     }
   };
 
-  // Login demo rápido
-  const handleDemoLogin = async () => {
-    const demoCredentials = {
-      username: 'demo@erp.com',
-      password: 'demo123'
-    };
-    
-    setFormData(demoCredentials);
-    
-    try {
-      await login(demoCredentials);
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Error en demo login:', error);
-      // El error será mostrado automáticamente por el store
-    }
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
-    <div className="login-page min-h-screen bg-background flex items-center justify-center p-4" data-component="login-page" data-testid="login-page" style={{ backgroundColor: 'var(--background)' }}>
-      <div className="login-container w-full max-w-md" data-component="login-container" data-testid="login-container">
-        {/* Header con logo */}
-        <div className="login-header text-center mb-8" data-component="login-header" data-testid="login-header">
-          <div className={`login-logo inline-flex items-center justify-center w-20 h-20 mb-6 ${
-            isNeoBrutalism 
-              ? 'bg-foreground rounded-none border-4 border-foreground shadow-neo-brutal'
-              : 'bg-primary rounded-lg border border-border shadow-lg'
-          }`} data-component="login-logo" data-testid="login-logo" style={{
-            backgroundColor: isNeoBrutalism ? 'var(--foreground)' : 'var(--primary)',
-            border: isNeoBrutalism ? '4px solid var(--border)' : '1px solid var(--border)'
-          }}>
-            <User className={`w-10 h-10 ${isNeoBrutalism ? 'text-background' : 'text-primary-foreground'}`} style={{
-              color: isNeoBrutalism ? 'var(--background)' : 'var(--primary-foreground)'
-            }} />
-          </div>
-          <h1 className={`login-title text-4xl mb-2 ${
-            isNeoBrutalism 
-              ? 'font-black uppercase tracking-wide'
-              : 'font-bold'
-          }`} data-testid="login-title" style={{ color: 'var(--foreground)' }}>
-            Sistema ERP
+    <div className="min-h-screen flex items-center justify-center p-4" 
+         style={{
+           background: isFluent 
+             ? 'linear-gradient(135deg, var(--fluent-brand-primary) 0%, var(--fluent-brand-secondary) 100%)'
+             : isNeoBrutalism 
+             ? 'linear-gradient(135deg, #84cc16 0%, #eab308 100%)'
+             : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+         }}>
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className={`text-white mb-2 ${getTitleClass('display')}`}>
+            ERP System
           </h1>
-          <p className={`login-subtitle text-lg text-muted-foreground ${
-            isNeoBrutalism 
-              ? 'font-bold uppercase tracking-wide'
-              : 'font-medium'
-          }`} data-testid="login-subtitle" style={{ color: 'var(--muted-foreground)' }}>
-            Acceso al Sistema
+          <p className={`text-white/90 ${getTitleClass('body-large')}`}>
+            {isNeoBrutalism ? 'ACCESO AL SISTEMA' : 'Acceso al sistema'}
           </p>
         </div>
 
-        {/* Formulario de login */}
-        <div className={`login-form bg-card p-8 ${
-          isNeoBrutalism 
-            ? 'border-4 border-foreground shadow-neo-brutal'
-            : 'border border-border rounded-lg shadow-lg'
-        }`} data-component="login-form" data-testid="login-form" style={{
-          backgroundColor: 'var(--card)',
-          border: isNeoBrutalism ? '4px solid var(--border)' : '1px solid var(--border)',
-          boxShadow: isNeoBrutalism ? '8px 8px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-lg)'
-        }}>
+        {/* Formulario de Login */}
+        <div className={`p-8 ${getCardClass()}`}>
+          <div className="text-center mb-8">
+            <h2 className={`text-foreground mb-2 ${getTitleClass('large-title')}`}>
+              {isNeoBrutalism ? 'INICIAR SESIÓN' : 'Iniciar Sesión'}
+            </h2>
+            <p className={`text-muted-foreground ${getTitleClass('body')}`}>
+              {isNeoBrutalism ? 'INGRESA TUS CREDENCIALES' : 'Ingresa tus credenciales para continuar'}
+            </p>
+          </div>
+
           {/* Error general */}
           {error && (
-            <div className={`mb-6 p-4 bg-destructive/10 border border-destructive ${
-              isNeoBrutalism ? 'border-4 rounded-none' : 'rounded-lg'
+            <div className={`mb-6 p-4 border text-red-600 flex items-center ${
+              isFluent 
+                ? 'fluent-radius-small border-red-300 bg-red-50 dark:bg-red-900/20'
+                : isNeoBrutalism
+                ? 'border-4 border-red-600 bg-red-100 dark:bg-red-900'
+                : 'border-red-300 bg-red-50 dark:bg-red-900/20 rounded-lg'
             }`}>
-              <div className="flex items-start">
-                <AlertCircle className="w-5 h-5 text-destructive mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className={`text-destructive mb-1 ${
-                    isNeoBrutalism 
-                      ? 'font-black uppercase text-sm'
-                      : 'font-semibold text-sm'
-                  }`}>
-                    Error de Autenticación
-                  </h3>
-                  <p className={`text-destructive text-sm leading-relaxed ${
-                    isNeoBrutalism ? 'font-bold' : 'font-medium'
-                  }`}>
-                    {error}
-                  </p>
-                  {error.includes('conexión') && (
-                    <div className={`mt-2 text-xs text-destructive ${
-                      isNeoBrutalism ? 'font-bold' : 'font-medium'
-                    }`}>
-                      <p>💡 Sugerencias:</p>
-                      <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Verifica que el servidor esté ejecutándose</li>
-                        <li>Comprueba tu conexión a internet</li>
-                        <li>Contacta al soporte técnico si persiste</li>
-                      </ul>
-                    </div>
-                  )}
-                  {error.includes('credenciales') && (
-                    <div className={`mt-2 text-xs text-destructive ${
-                      isNeoBrutalism ? 'font-bold' : 'font-medium'
-                    }`}>
-                      <p>💡 Sugerencias:</p>
-                      <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Verifica que el usuario y contraseña sean correctos</li>
-                        <li>Asegúrate de que tu cuenta esté activa</li>
-                        <li>Intenta recuperar tu contraseña</li>
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0" />
+              <span className={getTitleClass('body')}>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Campo Email/Username */}
+            {/* Campo de Usuario */}
             <div>
-              <label className={`block text-sm mb-2 ${
-                isNeoBrutalism 
-                  ? 'font-black uppercase tracking-wide'
-                  : 'font-medium'
-              }`}>
-                Email o Usuario
+              <label className={`block text-foreground mb-2 ${getTitleClass('caption-strong')}`}>
+                {isNeoBrutalism ? 'USUARIO O EMAIL' : 'Usuario o Email'}
               </label>
               <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="text"
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  placeholder="USUARIO@EMAIL.COM"
-                  className={`pl-12 ${
-                    isNeoBrutalism ? 'font-bold' : ''
-                  } ${formErrors.username ? 'border-destructive' : ''}`}
+                  placeholder={isNeoBrutalism ? "INGRESA TU USUARIO" : "Ingresa tu usuario"}
+                  className={`pl-10 ${getInputClass()} ${formErrors.username ? 'border-red-500' : ''}`}
+                  style={isFluent ? { 
+                    border: formErrors.username ? '2px solid var(--fluent-danger-primary)' : '1px solid var(--fluent-neutral-grey-60)'
+                  } : {}}
                 />
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               </div>
               {formErrors.username && (
-                <p className={`mt-2 text-sm text-destructive ${
-                  isNeoBrutalism ? 'font-bold uppercase' : 'font-medium'
-                }`}>
+                <p className={`mt-2 text-red-600 ${getTitleClass('caption')}`}>
                   {formErrors.username}
                 </p>
               )}
             </div>
 
-            {/* Campo Contraseña */}
+            {/* Campo de Contraseña */}
             <div>
-              <label className={`block text-sm mb-2 ${
-                isNeoBrutalism 
-                  ? 'font-black uppercase tracking-wide'
-                  : 'font-medium'
-              }`}>
-                Contraseña
+              <label className={`block text-foreground mb-2 ${getTitleClass('caption-strong')}`}>
+                {isNeoBrutalism ? 'CONTRASEÑA' : 'Contraseña'}
               </label>
               <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder="••••••••"
-                  className={`pl-12 pr-12 ${
-                    isNeoBrutalism ? 'font-bold' : ''
-                  } ${formErrors.password ? 'border-destructive' : ''}`}
+                  placeholder={isNeoBrutalism ? "INGRESA TU CONTRASEÑA" : "Ingresa tu contraseña"}
+                  className={`pl-10 pr-10 ${getInputClass()} ${formErrors.password ? 'border-red-500' : ''}`}
+                  style={isFluent ? { 
+                    border: formErrors.password ? '2px solid var(--fluent-danger-primary)' : '1px solid var(--fluent-neutral-grey-60)'
+                  } : {}}
                 />
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={togglePasswordVisibility}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
               {formErrors.password && (
-                <p className={`mt-2 text-sm text-destructive ${
-                  isNeoBrutalism ? 'font-bold uppercase' : 'font-medium'
-                }`}>
+                <p className={`mt-2 text-red-600 ${getTitleClass('caption')}`}>
                   {formErrors.password}
                 </p>
               )}
             </div>
 
-            {/* Botón de login */}
+            {/* Recordar sesión */}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="remember"
+                className={`mr-3 ${
+                  isFluent ? 'fluent-checkbox' : ''
+                }`}
+              />
+              <label htmlFor="remember" className={`text-muted-foreground ${getTitleClass('body')}`}>
+                {isNeoBrutalism ? 'RECORDAR SESIÓN' : 'Recordar sesión'}
+              </label>
+            </div>
+
+            {/* Botón de Login */}
             <Button
               type="submit"
-              variant="lime"
+              variant="blue"
               size="lg"
-              className="w-full"
               disabled={loading}
+              className={getButtonClass()}
             >
               {loading ? (
-                <div className="flex items-center">
-                  <div className={`w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mr-2 ${
-                    isNeoBrutalism ? 'border-foreground' : 'border-current'
-                  }`}></div>
-                  INICIANDO SESIÓN...
-                </div>
+                <span className={getTitleClass('body')}>
+                  {isNeoBrutalism ? 'INICIANDO...' : 'Iniciando...'}
+                </span>
               ) : (
-                <div className="flex items-center justify-center">
-                  INICIAR SESIÓN
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </div>
+                <>
+                  <span className={getTitleClass('body')}>
+                    {isNeoBrutalism ? 'INICIAR SESIÓN' : 'Iniciar Sesión'}
+                  </span>
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </>
               )}
             </Button>
           </form>
 
-          {/* Separador */}
-          <div className="my-6 flex items-center">
-            <div className={`flex-1 ${
-              isNeoBrutalism 
-                ? 'border-t-4 border-foreground'
-                : 'border-t border-border'
-            }`}></div>
-            <span className={`px-4 text-sm ${
-              isNeoBrutalism 
-                ? 'font-black uppercase tracking-wide'
-                : 'font-medium'
-            }`}>O</span>
-            <div className={`flex-1 ${
-              isNeoBrutalism 
-                ? 'border-t-4 border-foreground'
-                : 'border-t border-border'
-            }`}></div>
-          </div>
-
-          {/* Demo Login */}
-          <Button
-            type="button"
-            variant="blue"
-            size="lg"
-            className="w-full"
-            onClick={handleDemoLogin}
-            disabled={loading}
-          >
-            <div className="flex items-center justify-center">
-              🚀 ACCESO DEMO (API)
+          {/* Links adicionales */}
+          <div className="mt-8 text-center space-y-4">
+            <a 
+              href="#" 
+              className={`text-muted-foreground hover:text-foreground transition-colors ${getTitleClass('body')}`}
+            >
+              {isNeoBrutalism ? '¿OLVIDASTE TU CONTRASEÑA?' : '¿Olvidaste tu contraseña?'}
+            </a>
+            
+            <div className={`pt-4 border-t text-muted-foreground ${
+              isFluent ? '' : 'border-gray-200 dark:border-gray-700'
+            }`} style={isFluent ? { borderColor: 'var(--fluent-neutral-grey-30)' } : {}}>
+              <p className={getTitleClass('caption')}>
+                {isNeoBrutalism ? '¿NO TIENES CUENTA?' : '¿No tienes cuenta?'}{' '}
+                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
+                  {isNeoBrutalism ? 'REGISTRARSE' : 'Regístrate'}
+                </a>
+              </p>
             </div>
-          </Button>
-
-          {/* Información de API */}
-          <div className={`mt-4 p-4 bg-muted ${
-            isNeoBrutalism 
-              ? 'border-4 border-foreground'
-              : 'border border-border rounded-lg'
-          }`}>
-            <p className={`text-xs text-muted-foreground mb-1 ${
-              isNeoBrutalism 
-                ? 'font-bold uppercase tracking-wide'
-                : 'font-medium'
-            }`}>
-              API Endpoint:
-            </p>
-            <p className={`text-sm ${isNeoBrutalism ? 'font-bold' : 'font-medium'}`}>POST localhost:5050/login</p>
-            <p className={`text-xs text-muted-foreground mt-2 mb-1 ${
-              isNeoBrutalism 
-                ? 'font-bold uppercase tracking-wide'
-                : 'font-medium'
-            }`}>
-              Request format:
-            </p>
-            <p className={`text-sm ${isNeoBrutalism ? 'font-bold' : 'font-medium'}`}>{"{ \"email\": \"user@email.com\", \"password\": \"pass\" }"}</p>
-            <p className={`text-xs text-muted-foreground mt-2 mb-1 ${
-              isNeoBrutalism 
-                ? 'font-bold uppercase tracking-wide'
-                : 'font-medium'
-            }`}>
-              Acepta email o username:
-            </p>
-            <p className={`text-sm ${isNeoBrutalism ? 'font-bold' : 'font-medium'}`}>demo@erp.com o demo | demo123</p>
           </div>
         </div>
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className={`text-sm text-muted-foreground ${
-            isNeoBrutalism 
-              ? 'font-bold uppercase tracking-wide'
-              : 'font-medium'
-          }`}>
-            Sistema ERP © 2025
+          <p className={`text-white/70 ${getTitleClass('caption')}`}>
+            © 2024 ERP System. {isNeoBrutalism ? 'TODOS LOS DERECHOS RESERVADOS.' : 'Todos los derechos reservados.'}
           </p>
         </div>
       </div>
