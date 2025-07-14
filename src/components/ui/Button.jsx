@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils';
 const Button = React.forwardRef(({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
   const { theme } = useTheme();
   const isNeoBrutalist = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
+  const isFluent = theme?.includes('fluent');
+  const isMaterial = theme?.includes('material');
   
   const Comp = asChild ? "span" : "button";
   
@@ -23,6 +25,31 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
         letterSpacing: '0.025em',
         boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
         transition: 'all 150ms ease'
+      };
+    }
+    if (isFluent) {
+      return {
+        border: variant === 'outline' ? '1px solid var(--fluent-border-neutral)' : 'none',
+        fontWeight: '600',
+        textTransform: 'none',
+        letterSpacing: 'normal',
+        borderRadius: 'var(--fluent-corner-radius-medium)',
+        boxShadow: variant === 'ghost' || variant === 'link' ? 'none' : 'var(--fluent-shadow-2)',
+        transition: 'all 0.1s var(--fluent-curve-easy-ease, cubic-bezier(0.33, 0, 0.67, 1))',
+        fontFamily: 'var(--fluent-font-family-base, "Segoe UI", system-ui, sans-serif)',
+        position: 'relative',
+        overflow: 'hidden'
+      };
+    }
+    if (isMaterial) {
+      return {
+        border: variant === 'outline' ? '1px solid var(--material-outline)' : 'none',
+        fontWeight: '500',
+        textTransform: 'none',
+        letterSpacing: '0.5px',
+        borderRadius: 'var(--material-radius-medium)',
+        boxShadow: 'var(--material-elevation-2)',
+        transition: 'all 200ms ease'
       };
     }
     return {
@@ -57,6 +84,79 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
         link: { backgroundColor: 'transparent', color: 'var(--foreground)', border: 'none', boxShadow: 'none', textDecoration: 'underline' },
       };
       return { ...baseStyle, ...brutalistVariants[variant] };
+    } else if (isFluent) {
+      const fluentVariants = {
+        default: { 
+          backgroundColor: 'var(--fluent-brand-primary)', 
+          color: 'var(--fluent-text-on-accent)' 
+        },
+        primary: { 
+          backgroundColor: 'var(--fluent-brand-primary)', 
+          color: 'var(--fluent-text-on-accent)' 
+        },
+        destructive: { 
+          backgroundColor: 'var(--fluent-semantic-danger)', 
+          color: 'var(--fluent-neutral-white)' 
+        },
+        outline: { 
+          backgroundColor: 'transparent', 
+          color: 'var(--fluent-text-primary)',
+          border: '1px solid var(--fluent-border-neutral)',
+          boxShadow: 'none'
+        },
+        secondary: { 
+          backgroundColor: 'var(--fluent-surface-tertiary)', 
+          color: 'var(--fluent-text-primary)',
+          boxShadow: 'var(--fluent-shadow-2)'
+        },
+        ghost: { 
+          backgroundColor: 'transparent', 
+          color: 'var(--fluent-text-primary)', 
+          border: 'none', 
+          boxShadow: 'none' 
+        },
+        link: { 
+          backgroundColor: 'transparent', 
+          color: 'var(--fluent-text-accent)', 
+          border: 'none', 
+          boxShadow: 'none', 
+          textDecoration: 'underline' 
+        },
+        // Color variants for Fluent
+        blue: { 
+          backgroundColor: 'var(--fluent-brand-primary)', 
+          color: 'var(--fluent-text-on-accent)' 
+        },
+        green: { 
+          backgroundColor: 'var(--fluent-semantic-success)', 
+          color: 'var(--fluent-neutral-white)' 
+        },
+        red: { 
+          backgroundColor: 'var(--fluent-semantic-danger)', 
+          color: 'var(--fluent-neutral-white)' 
+        },
+        yellow: { 
+          backgroundColor: 'var(--fluent-semantic-warning)', 
+          color: 'var(--fluent-neutral-black)' 
+        },
+        orange: { 
+          backgroundColor: '#F7630C', 
+          color: 'var(--fluent-neutral-white)' 
+        },
+        purple: { 
+          backgroundColor: '#8764B8', 
+          color: 'var(--fluent-neutral-white)' 
+        },
+        pink: { 
+          backgroundColor: '#E3008C', 
+          color: 'var(--fluent-neutral-white)' 
+        },
+        lime: { 
+          backgroundColor: '#73AA24', 
+          color: 'var(--fluent-neutral-white)' 
+        }
+      };
+      return { ...baseStyle, ...fluentVariants[variant] };
     } else {
       const standardVariants = {
         default: { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' },
@@ -88,6 +188,7 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
         isNeoBrutalist && "hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px]",
         variant === 'ghost' && isNeoBrutalist && "hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0",
         variant === 'link' && isNeoBrutalist && "hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0",
+        isFluent && "fluent-button",
         className
       )}
       style={{
@@ -97,21 +198,45 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
       onMouseEnter={(e) => {
         if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
           e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
+        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
+          e.target.style.boxShadow = 'var(--fluent-shadow-4)';
+          e.target.style.transform = 'translateY(-1px)';
+          if (variant === 'outline') {
+            e.target.style.backgroundColor = 'var(--fluent-surface-card-hover)';
+          }
         }
       }}
       onMouseLeave={(e) => {
         if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
           e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
+        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
+          e.target.style.boxShadow = 'var(--fluent-shadow-2)';
+          e.target.style.transform = 'translateY(0px)';
+          if (variant === 'outline') {
+            e.target.style.backgroundColor = 'transparent';
+          }
         }
       }}
       onMouseDown={(e) => {
         if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
           e.target.style.boxShadow = 'none';
+        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
+          e.target.style.boxShadow = 'var(--fluent-shadow-2)';
+          e.target.style.transform = 'translateY(0px)';
+          if (variant === 'outline') {
+            e.target.style.backgroundColor = 'var(--fluent-surface-card-pressed)';
+          }
         }
       }}
       onMouseUp={(e) => {
         if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
           e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
+        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
+          e.target.style.boxShadow = 'var(--fluent-shadow-4)';
+          e.target.style.transform = 'translateY(-1px)';
+          if (variant === 'outline') {
+            e.target.style.backgroundColor = 'var(--fluent-surface-card-hover)';
+          }
         }
       }}
       ref={ref}

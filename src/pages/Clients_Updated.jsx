@@ -153,7 +153,7 @@ const Clients = () => {
         ? 'fluent-radius-small text-white'
         : 'fluent-radius-small text-white';
       const bgStyle = status === 'active' 
-        ? { backgroundColor: 'var(--fluent-semantic-success)' }
+        ? { backgroundColor: 'var(--fluent-success-primary)' }
         : { backgroundColor: 'var(--fluent-neutral-grey-100)' };
       return (
         <span 
@@ -173,92 +173,77 @@ const Clients = () => {
   };
 
   const ClientCard = ({ client }) => (
-    <Card className={`hover:shadow-lg transition-all duration-200 ${getCardClass()}`} 
-          style={isFluent ? { 
-            transition: 'all 0.1s var(--fluent-curve-easy-ease)',
-            transform: 'translateY(0px)'
-          } : {}}
-          onMouseEnter={(e) => {
-            if (isFluent) {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = 'var(--fluent-shadow-8)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (isFluent) {
-              e.currentTarget.style.transform = 'translateY(0px)';
-              e.currentTarget.style.boxShadow = 'var(--fluent-shadow-2)';
-            }
-          }}
-    >
-      <CardContent className="p-4">
-        {/* Header con avatar y estado */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className={`w-10 h-10 bg-gray-200 dark:bg-gray-700 flex-shrink-0 flex items-center justify-center ${
-              isFluent ? 'fluent-radius-circular fluent-elevation-1' : 'rounded-full'
-            }`} style={isFluent ? { backgroundColor: 'var(--fluent-neutral-grey-20)' } : {}}>
-              {getClientTypeIcon(client.type)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className={`font-semibold truncate ${getTitleClass('subtitle')}`}>{client.name}</h3>
-              {client.company && (
-                <p className={`text-muted-foreground text-sm truncate ${getTitleClass('caption')}`}>{client.company}</p>
-              )}
-            </div>
-          </div>
-          <div className="flex-shrink-0">
-            {getStatusBadge(client.status)}
-          </div>
-        </div>
-        
-        {/* Información de contacto */}
-        <div className="space-y-2 mb-4">
-          <div className={`flex items-center text-muted-foreground text-sm ${getTitleClass('caption')}`}>
-            <Mail className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-            <span className="truncate">{client.email}</span>
-          </div>
-          <div className={`flex items-center text-muted-foreground text-sm ${getTitleClass('caption')}`}>
-            <Phone className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-            <span>{client.phone}</span>
-          </div>
-          <div className={`flex items-center text-muted-foreground text-sm ${getTitleClass('caption')}`}>
-            <MapPin className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-            <span className="truncate">{client.address}</span>
-          </div>
-        </div>
-        
-        {/* Estadísticas */}
-        <div className={`flex items-center justify-between pt-3 border-t ${
-          isFluent ? '' : 'border-gray-100 dark:border-gray-700'
-        }`} style={isFluent ? { borderColor: 'var(--fluent-neutral-grey-30)' } : {}}>
-          <div className={`flex items-center space-x-4 text-xs ${getTitleClass('caption')}`}>
-            <div className="text-center">
-              <div className="font-semibold text-foreground">{client.totalOrders}</div>
-              <div className="text-muted-foreground">Pedidos</div>
-            </div>
-            <div className="text-center">
-              <div className="font-semibold text-foreground">${client.totalSpent.toLocaleString()}</div>
-              <div className="text-muted-foreground">Gastado</div>
-            </div>
+    <Card className={`hover:shadow-lg transition-shadow duration-200 ${getCardClass()}`}>
+      <CardContent className="p-6 pt-4">
+        <div className="flex items-center space-x-4">
+          {/* Avatar */}
+          <div className={`w-14 h-14 bg-gray-200 flex-shrink-0 flex items-center justify-center ${
+            isFluent ? 'fluent-radius-circular fluent-elevation-1' : 'rounded-full'
+          }`}>
+            {getClientTypeIcon(client.type)}
           </div>
           
-          {/* Acciones */}
-          <div className="flex items-center space-x-1">
-            <Button size="sm" variant="ghost" className={`h-7 w-7 p-0 ${getButtonClass()}`}>
-              <Eye className="h-3.5 w-3.5" />
-            </Button>
-            <Button size="sm" variant="ghost" className={`h-7 w-7 p-0 ${getButtonClass()}`}>
-              <Edit className="h-3.5 w-3.5" />
-            </Button>
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              className={`h-7 w-7 p-0 ${getButtonClass()}`}
-              onClick={() => handleDeleteClient(client.id)}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
+          {/* Información del cliente */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1">
+                <h3 className={`leading-tight mb-1 ${getTitleClass('subtitle')}`}>{client.name}</h3>
+                {client.company && (
+                  <p className={`text-muted-foreground mb-2 ${getTitleClass('body')}`}>{client.company}</p>
+                )}
+                <div className="space-y-1.5">
+                  <div className={`flex items-center text-muted-foreground ${getTitleClass('caption')}`}>
+                    <Mail className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                    <span className="truncate">{client.email}</span>
+                  </div>
+                  <div className={`flex items-center text-muted-foreground ${getTitleClass('caption')}`}>
+                    <Phone className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                    <span>{client.phone}</span>
+                  </div>
+                  <div className={`flex items-center text-muted-foreground ${getTitleClass('caption')}`}>
+                    <MapPin className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                    <span className="truncate">{client.address}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Estado */}
+              <div className="ml-3 flex-shrink-0 flex items-center">
+                {getStatusBadge(client.status)}
+              </div>
+            </div>
+            
+            {/* Estadísticas y acciones */}
+            <div className={`flex items-center justify-between pt-3 ${
+              isFluent ? 'border-t' : 'border-t border-gray-100 dark:border-gray-700'
+            }`} style={isFluent ? { borderColor: 'var(--fluent-neutral-grey-30)' } : {}}>
+              <div className={`space-y-1 ${getTitleClass('caption')}`}>
+                <p className="text-muted-foreground flex items-center">
+                  <strong className="text-foreground mr-1">{client.totalOrders}</strong> pedidos
+                </p>
+                <p className="text-muted-foreground flex items-center">
+                  <strong className="text-foreground mr-1">${client.totalSpent.toLocaleString()}</strong> gastado
+                </p>
+              </div>
+              
+              {/* Acciones */}
+              <div className="flex items-center space-x-1">
+                <Button size="sm" variant="ghost" className={`h-8 w-8 p-0 flex items-center justify-center ${getButtonClass()}`}>
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" className={`h-8 w-8 p-0 flex items-center justify-center ${getButtonClass()}`}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className={`h-8 w-8 p-0 flex items-center justify-center ${getButtonClass()}`}
+                  onClick={() => handleDeleteClient(client.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>
@@ -416,7 +401,7 @@ const Clients = () => {
       </Card>
 
       {/* Lista de clientes */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {clients.map((client) => (
           <ClientCard key={client.id} client={client} />
         ))}

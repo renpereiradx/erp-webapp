@@ -136,7 +136,7 @@ const Dashboard = () => {
       return colorType === 'primary' ? 'text-background' : 'text-foreground';
     }
     if (isFluent) {
-      return colorType === 'warning' ? 'text-black' : 'text-white';
+      return 'text-white';
     }
     const colorMap = {
       success: 'text-chart-success',
@@ -149,17 +149,12 @@ const Dashboard = () => {
 
   const getFluentIconBackground = (colorType) => {
     const colorMap = {
-      success: 'var(--fluent-semantic-success)',
+      success: 'var(--fluent-success-primary)',
       primary: 'var(--fluent-brand-primary)',
-      warning: 'var(--fluent-semantic-warning)',
+      warning: 'var(--fluent-warning-primary)',
       accent: 'var(--fluent-brand-secondary)'
     };
-    return { 
-      backgroundColor: colorMap[colorType] || colorMap.primary,
-      color: colorType === 'warning' ? 'var(--fluent-neutral-black)' : 'var(--fluent-neutral-white)',
-      borderRadius: 'var(--fluent-corner-radius-small)',
-      boxShadow: 'var(--fluent-shadow-2)'
-    };
+    return { backgroundColor: colorMap[colorType] || colorMap.primary };
   };
 
   return (
@@ -192,107 +187,107 @@ const Dashboard = () => {
       </div>
 
       {/* Métricas principales */}
-      <div className="erp-metrics-grid grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="erp-metrics-grid grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
         {/* Ventas Totales */}
         <MetricCard color="white" className={`relative ${getCardClass()}`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="metric-content flex-1 min-w-0">
-              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')} mb-1`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')}`}>
                 Ventas Totales
               </p>
-              <p className={`text-2xl font-bold text-foreground ${getTitleClass('title')} mb-1`}>
+              <p className={`text-lg text-foreground ${getTitleClass('title')}`}>
                 $125,430
               </p>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-chart-success flex-shrink-0" />
+              <div className="flex items-center">
+                <TrendingUp className="h-3 w-3 text-chart-success mr-1" />
                 <span className={`text-xs text-chart-success ${getTitleClass('caption')}`}>
-                  +12.5% este mes
+                  12.5%
                 </span>
               </div>
             </div>
             <div 
-              className={`metric-icon flex-shrink-0 w-10 h-10 flex items-center justify-center ${getIconBackgroundClass('success')}`}
+              className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${getIconBackgroundClass('success')}`}
               style={isFluent ? getFluentIconBackground('success') : {}}
             >
-              <DollarSign className={`h-5 w-5 ${getIconColor('success')}`} />
+              <DollarSign className={`h-4 w-4 ${getIconColor('success')}`} />
             </div>
           </div>
         </MetricCard>
 
         {/* Clientes */}
         <MetricCard color="white" className={`relative ${getCardClass()}`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="metric-content flex-1 min-w-0">
-              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')} mb-1`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')}`}>
                 Clientes
               </p>
-              <p className={`text-2xl font-bold text-foreground ${getTitleClass('title')} mb-1`}>
+              <p className={`text-lg text-foreground ${getTitleClass('title')}`}>
                 1,247
               </p>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-chart-success flex-shrink-0" />
+              <div className="flex items-center">
+                <TrendingUp className="h-3 w-3 text-chart-success mr-1" />
                 <span className={`text-xs text-chart-success ${getTitleClass('caption')}`}>
-                  +8.2% este mes
+                  8.2%
                 </span>
               </div>
             </div>
             <div 
-              className={`metric-icon flex-shrink-0 w-10 h-10 flex items-center justify-center ${getIconBackgroundClass('primary')}`}
+              className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${getIconBackgroundClass('primary')}`}
               style={isFluent ? getFluentIconBackground('primary') : {}}
             >
-              <Users className={`h-5 w-5 ${getIconColor('primary')}`} />
+              <Users className={`h-4 w-4 ${getIconColor('primary')}`} />
             </div>
           </div>
         </MetricCard>
 
         {/* Productos */}
         <MetricCard color="white" className={`relative ${getCardClass()}`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="metric-content flex-1 min-w-0">
-              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')} mb-1`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')}`}>
                 Productos
               </p>
-              <p className={`text-2xl font-bold text-foreground ${getTitleClass('title')} mb-1`}>
+              <p className={`text-lg text-foreground ${getTitleClass('title')}`}>
                 856
               </p>
-              <div className="flex items-center gap-1">
-                <TrendingDown className="h-3 w-3 text-chart-danger flex-shrink-0" />
+              <div className="flex items-center">
+                <TrendingDown className="h-3 w-3 text-chart-danger mr-1" />
                 <span className={`text-xs text-chart-danger ${getTitleClass('caption')}`}>
-                  -2.1% este mes
+                  2.1%
                 </span>
               </div>
             </div>
             <div 
-              className={`metric-icon flex-shrink-0 w-10 h-10 flex items-center justify-center ${getIconBackgroundClass('warning')}`}
+              className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${getIconBackgroundClass('warning')}`}
               style={isFluent ? getFluentIconBackground('warning') : {}}
             >
-              <Package className={`h-5 w-5 ${getIconColor('warning')}`} />
+              <Package className={`h-4 w-4 ${getIconColor('warning')}`} />
             </div>
           </div>
         </MetricCard>
 
         {/* Pedidos */}
         <MetricCard color="white" className={`relative ${getCardClass()}`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="metric-content flex-1 min-w-0">
-              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')} mb-1`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')}`}>
                 Pedidos
               </p>
-              <p className={`text-2xl font-bold text-foreground ${getTitleClass('title')} mb-1`}>
+              <p className={`text-lg text-foreground ${getTitleClass('title')}`}>
                 342
               </p>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-chart-success flex-shrink-0" />
+              <div className="flex items-center">
+                <TrendingUp className="h-3 w-3 text-chart-success mr-1" />
                 <span className={`text-xs text-chart-success ${getTitleClass('caption')}`}>
-                  +15.3% este mes
+                  15.3%
                 </span>
               </div>
             </div>
             <div 
-              className={`metric-icon flex-shrink-0 w-10 h-10 flex items-center justify-center ${getIconBackgroundClass('accent')}`}
+              className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${getIconBackgroundClass('accent')}`}
               style={isFluent ? getFluentIconBackground('accent') : {}}
             >
-              <ShoppingCart className={`h-5 w-5 ${getIconColor('accent')}`} />
+              <ShoppingCart className={`h-4 w-4 ${getIconColor('accent')}`} />
             </div>
           </div>
         </MetricCard>

@@ -160,11 +160,11 @@ const Products = () => {
     if (isFluent) {
       let bgStyle = {};
       if (product.stock <= 0) {
-        bgStyle = { backgroundColor: 'var(--fluent-semantic-danger)' };
+        bgStyle = { backgroundColor: 'var(--fluent-danger-primary)' };
       } else if (product.stock <= product.minStock) {
-        bgStyle = { backgroundColor: 'var(--fluent-semantic-warning)' };
+        bgStyle = { backgroundColor: 'var(--fluent-warning-primary)' };
       } else {
-        bgStyle = { backgroundColor: 'var(--fluent-semantic-success)' };
+        bgStyle = { backgroundColor: 'var(--fluent-success-primary)' };
       }
       
       return (
@@ -189,29 +189,43 @@ const Products = () => {
     const Icon = stockStatus.icon;
 
     return (
-      <Card className={`hover:shadow-lg transition-all duration-200 ${getCardClass()}`}
-            style={isFluent ? { 
-              transition: 'all 0.1s var(--fluent-curve-easy-ease)',
-              transform: 'translateY(0px)'
-            } : {}}
-            onMouseEnter={(e) => {
-              if (isFluent) {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = 'var(--fluent-shadow-8)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (isFluent) {
-                e.currentTarget.style.transform = 'translateY(0px)';
-                e.currentTarget.style.boxShadow = 'var(--fluent-shadow-2)';
-              }
-            }}
-      >
-        <CardContent className="p-4">
+      <Card className={`hover:shadow-lg transition-shadow duration-200 ${getCardClass()}`}>
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h3 className={`mb-2 ${getTitleClass('subtitle')}`}>{product.name}</h3>
+              <p className={`text-muted-foreground mb-3 ${getTitleClass('body')}`}>{product.description}</p>
+              
+              <div className="space-y-2">
+                <div className={`flex items-center ${getTitleClass('caption')}`}>
+                  <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground">Precio:</span>
+                  <span className={`ml-1 text-foreground ${getTitleClass('body')}`}>${product.price.toFixed(2)}</span>
+                </div>
+                
+                <div className={`flex items-center ${getTitleClass('caption')}`}>
+                  <Archive className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground">Stock:</span>
+                  <span className={`ml-1 text-foreground ${getTitleClass('body')}`}>{product.stock} unidades</span>
+                </div>
+                
+                <div className={`flex items-center ${getTitleClass('caption')}`}>
+                  <Package className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-muted-foreground">Categoría:</span>
+                  <span className={`ml-1 text-foreground ${getTitleClass('body')}`}>{product.category}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="ml-4 flex-shrink-0">
+              {getStatusBadge(product)}
+            </div>
+          </div>
+          
           {/* Imagen del producto */}
-          <div className={`mb-3 h-32 bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${
+          <div className={`mb-4 h-32 bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${
             isFluent ? 'fluent-radius-small' : 'rounded-lg'
-          }`} style={isFluent ? { backgroundColor: 'var(--fluent-neutral-grey-20)' } : {}}>
+          }`}>
             {product.image ? (
               <img 
                 src={product.image} 
@@ -223,56 +237,25 @@ const Products = () => {
             )}
           </div>
           
-          {/* Header con nombre y estado */}
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1 min-w-0">
-              <h3 className={`font-semibold truncate ${getTitleClass('subtitle')}`}>{product.name}</h3>
-              <p className={`text-muted-foreground text-sm truncate ${getTitleClass('caption')}`}>{product.description}</p>
-            </div>
-            <div className="flex-shrink-0 ml-2">
-              {getStatusBadge(product)}
-            </div>
-          </div>
-          
-          {/* Información principal */}
-          <div className="space-y-2 mb-3">
-            <div className={`flex items-center justify-between text-sm ${getTitleClass('caption')}`}>
-              <span className="text-muted-foreground">Precio:</span>
-              <span className={`font-semibold text-foreground ${getTitleClass('body')}`}>${product.price.toFixed(2)}</span>
-            </div>
-            
-            <div className={`flex items-center justify-between text-sm ${getTitleClass('caption')}`}>
-              <span className="text-muted-foreground">Stock:</span>
-              <span className={`font-semibold text-foreground ${getTitleClass('body')}`}>{product.stock} unidades</span>
-            </div>
-            
-            <div className={`flex items-center justify-between text-sm ${getTitleClass('caption')}`}>
-              <span className="text-muted-foreground">Categoría:</span>
-              <span className={`font-semibold text-foreground truncate ml-2 ${getTitleClass('body')}`}>{product.category}</span>
-            </div>
-          </div>
-          
-          {/* Footer con SKU y acciones */}
-          <div className={`flex items-center justify-between pt-3 border-t ${
-            isFluent ? '' : 'border-gray-100 dark:border-gray-700'
-          }`} style={isFluent ? { borderColor: 'var(--fluent-neutral-grey-30)' } : {}}>
-            <div className={`text-muted-foreground text-xs ${getTitleClass('caption')}`}>
+          {/* Acciones */}
+          <div className="flex items-center justify-between">
+            <div className={`text-muted-foreground ${getTitleClass('caption')}`}>
               SKU: {product.sku}
             </div>
             <div className="flex items-center space-x-1">
-              <Button size="sm" variant="ghost" className={`h-7 w-7 p-0 ${getButtonClass()}`}>
-                <Eye className="h-3.5 w-3.5" />
+              <Button size="sm" variant="ghost" className={`h-8 w-8 p-0 ${getButtonClass()}`}>
+                <Eye className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="ghost" className={`h-7 w-7 p-0 ${getButtonClass()}`}>
-                <Edit className="h-3.5 w-3.5" />
+              <Button size="sm" variant="ghost" className={`h-8 w-8 p-0 ${getButtonClass()}`}>
+                <Edit className="h-4 w-4" />
               </Button>
               <Button 
                 size="sm" 
                 variant="ghost" 
-                className={`h-7 w-7 p-0 ${getButtonClass()}`}
+                className={`h-8 w-8 p-0 ${getButtonClass()}`}
                 onClick={() => handleDeleteProduct(product.id)}
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -442,7 +425,7 @@ const Products = () => {
       </Card>
 
       {/* Lista de productos */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
