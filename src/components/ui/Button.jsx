@@ -1,6 +1,7 @@
 /**
- * Componente Button reutilizable con soporte para múltiples temas
- * Incluye variantes para Neo-Brutalist, Material y Fluent Design
+ * Componente Button optimizado para Neo-Brutalism
+ * Incluye variantes brutalist específicas con énfasis en bordes gruesos, sombras y colores vibrantes
+ * Mantiene compatibilidad con Material Design y Fluent Design
  */
 
 import React from 'react';
@@ -10,21 +11,69 @@ import { cn } from '@/lib/utils';
 
 const Button = React.forwardRef(({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
   const { theme } = useTheme();
-  const isNeoBrutalist = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
+  const isNeoBrutalism = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
   const isFluent = theme?.includes('fluent');
   const isMaterial = theme?.includes('material');
   
   const Comp = asChild ? "span" : "button";
   
-  const getButtonStyles = () => {
-    if (isNeoBrutalist) {
-      return {
+  // Helper functions específicas para Neo-Brutalism
+  const getBrutalistBaseStyles = () => ({
+    border: '4px solid var(--border)',
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    borderRadius: '0px',
+    boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
+    transition: 'all 150ms ease',
+    cursor: 'pointer',
+    position: 'relative',
+    overflow: 'hidden',
+    fontFamily: 'inherit'
+  });
+
+  const getBrutalistHoverStyles = () => ({
+    transform: 'translate(-3px, -3px)',
+    boxShadow: '9px 9px 0px 0px rgba(0,0,0,1)'
+  });
+
+  const getBrutalistActiveStyles = () => ({
+    transform: 'translate(2px, 2px)',
+    boxShadow: '2px 2px 0px 0px rgba(0,0,0,1)'
+  });
+
+  const getBrutalistSizeStyles = (size) => {
+    const sizes = {
+      sm: {
+        padding: '8px 16px',
+        fontSize: '0.75rem',
+        lineHeight: '1.2',
+        border: '3px solid var(--border)',
+        boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)'
+      },
+      default: {
+        padding: '12px 24px',
+        fontSize: '0.875rem',
+        lineHeight: '1.25',
         border: '4px solid var(--border)',
-        fontWeight: 'bold',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em',
-        boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
-        transition: 'all 150ms ease'
+        boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)'
+      },
+      lg: {
+        padding: '16px 32px',
+        fontSize: '1rem',
+        lineHeight: '1.5',
+        border: '5px solid var(--border)',
+        boxShadow: '8px 8px 0px 0px rgba(0,0,0,1)'
+      }
+    };
+    return sizes[size] || sizes.default;
+  };
+
+  const getButtonStyles = () => {
+    if (isNeoBrutalism) {
+      return {
+        ...getBrutalistBaseStyles(),
+        ...getBrutalistSizeStyles(size)
       };
     }
     if (isFluent) {
@@ -68,279 +117,164 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
   const getVariantStyles = () => {
     const baseStyle = getButtonStyles();
     
-    if (isNeoBrutalist) {
+    if (isNeoBrutalism) {
       const brutalistVariants = {
-        default: { backgroundColor: 'var(--background)', color: 'var(--foreground)' },
-        primary: { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' },
-        lime: { backgroundColor: 'var(--brutalist-lime)', color: '#000000' },
-        blue: { backgroundColor: 'var(--brutalist-blue)', color: '#ffffff' },
-        pink: { backgroundColor: 'var(--brutalist-pink)', color: '#ffffff' },
-        orange: { backgroundColor: 'var(--brutalist-orange)', color: '#ffffff' },
-        purple: { backgroundColor: 'var(--brutalist-purple)', color: '#ffffff' },
-        green: { backgroundColor: 'var(--brutalist-green)', color: '#ffffff' },
-        red: { backgroundColor: 'var(--brutalist-red)', color: '#ffffff' },
-        yellow: { backgroundColor: 'var(--brutalist-yellow)', color: '#000000' },
-        destructive: { backgroundColor: 'var(--destructive)', color: 'var(--destructive-foreground)' },
-        outline: { backgroundColor: 'transparent', color: 'var(--foreground)' },
-        secondary: { backgroundColor: 'var(--secondary)', color: 'var(--secondary-foreground)' },
-        ghost: { backgroundColor: 'transparent', color: 'var(--foreground)', border: 'none', boxShadow: 'none' },
-        link: { backgroundColor: 'transparent', color: 'var(--foreground)', border: 'none', boxShadow: 'none', textDecoration: 'underline' },
+        default: { 
+          backgroundColor: 'var(--background)', 
+          color: 'var(--foreground)',
+          borderColor: 'var(--border)'
+        },
+        primary: { 
+          backgroundColor: 'var(--primary)', 
+          color: 'var(--primary-foreground)',
+          borderColor: 'var(--border)'
+        },
+        lime: { 
+          backgroundColor: 'var(--brutalist-lime)', 
+          color: '#000000',
+          borderColor: 'var(--border)'
+        },
+        blue: { 
+          backgroundColor: 'var(--brutalist-blue)', 
+          color: '#ffffff',
+          borderColor: 'var(--border)'
+        },
+        pink: { 
+          backgroundColor: 'var(--brutalist-pink)', 
+          color: '#ffffff',
+          borderColor: 'var(--border)'
+        },
+        orange: { 
+          backgroundColor: 'var(--brutalist-orange)', 
+          color: '#ffffff',
+          borderColor: 'var(--border)'
+        },
+        purple: { 
+          backgroundColor: 'var(--brutalist-purple)', 
+          color: '#ffffff',
+          borderColor: 'var(--border)'
+        },
+        green: { 
+          backgroundColor: 'var(--brutalist-green)', 
+          color: '#ffffff',
+          borderColor: 'var(--border)'
+        },
+        destructive: { 
+          backgroundColor: 'var(--destructive)', 
+          color: 'var(--destructive-foreground)',
+          borderColor: 'var(--border)'
+        },
+        outline: {
+          backgroundColor: 'transparent',
+          color: 'var(--foreground)',
+          borderColor: 'var(--border)'
+        },
+        ghost: {
+          backgroundColor: 'transparent',
+          color: 'var(--foreground)',
+          border: '4px solid transparent',
+          boxShadow: 'none'
+        },
+        link: {
+          backgroundColor: 'transparent',
+          color: 'var(--primary)',
+          border: 'none',
+          boxShadow: 'none',
+          textDecoration: 'underline',
+          textDecorationThickness: '3px'
+        }
       };
-      return { ...baseStyle, ...brutalistVariants[variant] };
-    } else if (isFluent) {
+      
+      return {
+        ...baseStyle,
+        ...brutalistVariants[variant]
+      };
+    }
+    
+    if (isFluent) {
       const fluentVariants = {
-        default: { 
-          backgroundColor: 'var(--fluent-brand-primary)', 
-          color: 'var(--fluent-text-on-accent)' 
-        },
-        primary: { 
-          backgroundColor: 'var(--fluent-brand-primary)', 
-          color: 'var(--fluent-text-on-accent)' 
-        },
-        destructive: { 
-          backgroundColor: 'var(--fluent-semantic-danger)', 
-          color: 'var(--fluent-neutral-white)' 
-        },
-        outline: { 
-          backgroundColor: 'transparent', 
-          color: 'var(--fluent-text-primary)',
-          border: '1px solid var(--fluent-border-neutral)',
-          boxShadow: 'none'
-        },
-        secondary: { 
-          backgroundColor: 'var(--fluent-surface-tertiary)', 
-          color: 'var(--fluent-text-primary)',
-          boxShadow: 'var(--fluent-shadow-2)'
-        },
-        ghost: { 
-          backgroundColor: 'transparent', 
-          color: 'var(--fluent-text-primary)', 
-          border: 'none', 
-          boxShadow: 'none' 
-        },
-        link: { 
-          backgroundColor: 'transparent', 
-          color: 'var(--fluent-text-accent)', 
-          border: 'none', 
-          boxShadow: 'none', 
-          textDecoration: 'underline' 
-        },
-        // Color variants for Fluent
-        blue: { 
-          backgroundColor: 'var(--fluent-brand-primary)', 
-          color: 'var(--fluent-text-on-accent)' 
-        },
-        green: { 
-          backgroundColor: 'var(--fluent-semantic-success)', 
-          color: 'var(--fluent-neutral-white)' 
-        },
-        red: { 
-          backgroundColor: 'var(--fluent-semantic-danger)', 
-          color: 'var(--fluent-neutral-white)' 
-        },
-        yellow: { 
-          backgroundColor: 'var(--fluent-semantic-warning)', 
-          color: 'var(--fluent-neutral-black)' 
-        },
-        orange: { 
-          backgroundColor: '#F7630C', 
-          color: 'var(--fluent-neutral-white)' 
-        },
-        purple: { 
-          backgroundColor: '#8764B8', 
-          color: 'var(--fluent-neutral-white)' 
-        },
-        pink: { 
-          backgroundColor: '#E3008C', 
-          color: 'var(--fluent-neutral-white)' 
-        },
-        lime: { 
-          backgroundColor: '#73AA24', 
-          color: 'var(--fluent-neutral-white)' 
-        }
+        default: { backgroundColor: 'var(--fluent-neutral-background-1)', color: 'var(--fluent-neutral-foreground-1)' },
+        primary: { backgroundColor: 'var(--fluent-brand-background)', color: 'var(--fluent-neutral-foreground-on-brand)' },
+        destructive: { backgroundColor: 'var(--fluent-palette-red-background-1)', color: 'var(--fluent-neutral-foreground-on-brand)' },
+        outline: { backgroundColor: 'transparent', color: 'var(--fluent-brand-foreground-1)' },
+        secondary: { backgroundColor: 'var(--fluent-neutral-background-2)', color: 'var(--fluent-neutral-foreground-2)' },
+        ghost: { backgroundColor: 'transparent', color: 'var(--fluent-neutral-foreground-1)' },
+        link: { backgroundColor: 'transparent', color: 'var(--fluent-brand-foreground-1)', textDecoration: 'underline' }
       };
-      return { ...baseStyle, ...fluentVariants[variant] };
-    } else if (isMaterial) {
+      
+      return {
+        ...baseStyle,
+        ...fluentVariants[variant]
+      };
+    }
+    
+    if (isMaterial) {
       const materialVariants = {
-        default: { 
-          backgroundColor: 'var(--material-primary)', 
-          color: 'var(--material-on-primary)' 
-        },
-        primary: { 
-          backgroundColor: 'var(--material-primary)', 
-          color: 'var(--material-on-primary)' 
-        },
-        destructive: { 
-          backgroundColor: 'var(--material-error)', 
-          color: 'var(--material-on-error)' 
-        },
-        outline: { 
-          backgroundColor: 'transparent', 
-          color: 'var(--material-primary)',
-          border: '1px solid var(--material-outline)',
-          boxShadow: 'none'
-        },
-        secondary: { 
-          backgroundColor: 'var(--material-secondary)', 
-          color: 'var(--material-on-secondary)',
-          boxShadow: 'var(--material-elevation-2)'
-        },
-        ghost: { 
-          backgroundColor: 'transparent', 
-          color: 'var(--material-primary)', 
-          border: 'none', 
-          boxShadow: 'none' 
-        },
-        link: { 
-          backgroundColor: 'transparent', 
-          color: 'var(--material-primary)', 
-          border: 'none', 
-          boxShadow: 'none', 
-          textDecoration: 'underline' 
-        },
-        // Color variants for Material
-        blue: { 
-          backgroundColor: 'var(--material-primary)', 
-          color: 'var(--material-on-primary)' 
-        },
-        green: { 
-          backgroundColor: '#4CAF50', 
-          color: '#FFFFFF' 
-        },
-        red: { 
-          backgroundColor: 'var(--material-error)', 
-          color: 'var(--material-on-error)' 
-        },
-        yellow: { 
-          backgroundColor: '#FF9800', 
-          color: '#000000' 
-        },
-        orange: { 
-          backgroundColor: '#FF5722', 
-          color: '#FFFFFF' 
-        },
-        purple: { 
-          backgroundColor: '#9C27B0', 
-          color: '#FFFFFF' 
-        },
-        pink: { 
-          backgroundColor: '#E91E63', 
-          color: '#FFFFFF' 
-        },
-        lime: { 
-          backgroundColor: '#8BC34A', 
-          color: '#000000' 
-        }
+        default: { backgroundColor: 'var(--material-primary)', color: 'var(--material-on-primary)' },
+        primary: { backgroundColor: 'var(--material-primary)', color: 'var(--material-on-primary)' },
+        destructive: { backgroundColor: 'var(--material-error)', color: 'var(--material-on-error)' },
+        outline: { backgroundColor: 'transparent', color: 'var(--material-primary)' },
+        secondary: { backgroundColor: 'var(--material-secondary)', color: 'var(--material-on-secondary)' },
+        ghost: { backgroundColor: 'transparent', color: 'var(--material-primary)' },
+        link: { backgroundColor: 'transparent', color: 'var(--material-primary)', textDecoration: 'underline' }
       };
-      return { ...baseStyle, ...materialVariants[variant] };
-    } else {
-      const standardVariants = {
-        default: { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' },
-        primary: { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' },
-        destructive: { backgroundColor: 'var(--destructive)', color: 'var(--destructive-foreground)' },
-        outline: { backgroundColor: 'transparent', color: 'var(--foreground)' },
-        secondary: { backgroundColor: 'var(--secondary)', color: 'var(--secondary-foreground)' },
-        ghost: { backgroundColor: 'transparent', color: 'var(--foreground)' },
-        link: { backgroundColor: 'transparent', color: 'var(--primary)', textDecoration: 'underline' },
+      
+      return {
+        ...baseStyle,
+        ...materialVariants[variant]
       };
-      return { ...baseStyle, ...standardVariants[variant] };
+    }
+
+    // Default variants
+    const defaultVariants = {
+      default: { backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' },
+      destructive: { backgroundColor: 'var(--destructive)', color: 'var(--destructive-foreground)' },
+      outline: { backgroundColor: 'transparent', color: 'var(--foreground)' },
+      secondary: { backgroundColor: 'var(--secondary)', color: 'var(--secondary-foreground)' },
+      ghost: { backgroundColor: 'transparent', color: 'var(--primary)' },
+      link: { backgroundColor: 'transparent', color: 'var(--primary)', textDecoration: 'underline' }
+    };
+    
+    return {
+      ...baseStyle,
+      ...defaultVariants[variant]
+    };
+  };
+
+  const handleMouseEnter = (e) => {
+    if (isNeoBrutalism && variant !== 'ghost' && variant !== 'link') {
+      Object.assign(e.target.style, getBrutalistHoverStyles());
     }
   };
-  
-  const getSizeStyles = () => {
-    const sizes = {
-      default: { height: '2.5rem', padding: '0 1.5rem' },
-      sm: { height: '2rem', padding: '0 1rem', fontSize: '0.875rem' },
-      lg: { height: '3rem', padding: '0 2rem', fontSize: '1.125rem' },
-      icon: { height: '2.5rem', width: '2.5rem', padding: '0' },
-    };
-    return sizes[size] || sizes.default;
+
+  const handleMouseLeave = (e) => {
+    if (isNeoBrutalism && variant !== 'ghost' && variant !== 'link') {
+      e.target.style.transform = 'translate(0px, 0px)';
+      e.target.style.boxShadow = getBrutalistSizeStyles(size).boxShadow;
+    }
+  };
+
+  const handleMouseDown = (e) => {
+    if (isNeoBrutalism && variant !== 'ghost' && variant !== 'link') {
+      Object.assign(e.target.style, getBrutalistActiveStyles());
+    }
+  };
+
+  const handleMouseUp = (e) => {
+    if (isNeoBrutalism && variant !== 'ghost' && variant !== 'link') {
+      Object.assign(e.target.style, getBrutalistHoverStyles());
+    }
   };
 
   return (
     <Comp
-      className={cn(
-        "erp-button inline-flex items-center justify-center whitespace-nowrap text-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-        isNeoBrutalist && "hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px]",
-        variant === 'ghost' && isNeoBrutalist && "hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0",
-        variant === 'link' && isNeoBrutalist && "hover:translate-x-0 hover:translate-y-0 active:translate-x-0 active:translate-y-0",
-        isFluent && "fluent-button",
-        isMaterial && "material-button",
-        className
-      )}
-      style={{
-        ...getVariantStyles(),
-        ...getSizeStyles()
-      }}
-      onMouseEnter={(e) => {
-        if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
-        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--fluent-shadow-4)';
-          e.target.style.transform = 'translateY(-1px)';
-          if (variant === 'outline') {
-            e.target.style.backgroundColor = 'var(--fluent-surface-card-hover)';
-          }
-        } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--material-elevation-4)';
-          e.target.style.transform = 'translateY(-2px)';
-          if (variant === 'outline') {
-            e.target.style.backgroundColor = 'var(--material-surface-hover)';
-          }
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
-        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--fluent-shadow-2)';
-          e.target.style.transform = 'translateY(0px)';
-          if (variant === 'outline') {
-            e.target.style.backgroundColor = 'transparent';
-          }
-        } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--material-elevation-2)';
-          e.target.style.transform = 'translateY(0px)';
-          if (variant === 'outline') {
-            e.target.style.backgroundColor = 'transparent';
-          }
-        }
-      }}
-      onMouseDown={(e) => {
-        if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'none';
-        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--fluent-shadow-2)';
-          e.target.style.transform = 'translateY(0px)';
-          if (variant === 'outline') {
-            e.target.style.backgroundColor = 'var(--fluent-surface-card-pressed)';
-          }
-        } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--material-elevation-8)';
-          e.target.style.transform = 'translateY(0px)';
-          if (variant === 'outline') {
-            e.target.style.backgroundColor = 'var(--material-surface-pressed)';
-          }
-        }
-      }}
-      onMouseUp={(e) => {
-        if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
-        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--fluent-shadow-4)';
-          e.target.style.transform = 'translateY(-1px)';
-          if (variant === 'outline') {
-            e.target.style.backgroundColor = 'var(--fluent-surface-card-hover)';
-          }
-        } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--material-elevation-4)';
-          e.target.style.transform = 'translateY(-2px)';
-          if (variant === 'outline') {
-            e.target.style.backgroundColor = 'var(--material-surface-hover)';
-          }
-        }
-      }}
+      className={cn(className)}
       ref={ref}
+      style={getVariantStyles()}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
       {...props}
     />
   );

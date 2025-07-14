@@ -1,7 +1,7 @@
 /**
- * Página Dashboard del sistema ERP - Multi-tema
- * Soporte para Neo-Brutalism, Material Design y Fluent Design
- * Muestra métricas principales, gráficos y resumen del negocio
+ * Página Dashboard del sistema ERP - Optimizada para Neo-Brutalism
+ * Sistema de diseño brutal con énfasis en tipografía bold, colores vibrantes y bordes gruesos
+ * Incluye soporte multi-tema mejorado con helper functions específicas
  */
 
 import React from 'react';
@@ -15,7 +15,10 @@ import {
   TrendingDown,
   AlertTriangle,
   BarChart3,
-  Plus
+  Plus,
+  Zap,
+  Target,
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MetricCard, BrutalistBadge } from '@/components/ui/Card';
@@ -27,7 +30,83 @@ const Dashboard = () => {
   const isMaterial = theme?.includes('material');
   const isFluent = theme?.includes('fluent');
 
-  // Datos de ejemplo para los gráficos
+  // Helper functions para estilo específico de Neo-Brutalism
+  const getBrutalistMetricStyles = () => ({
+    background: 'var(--background)',
+    border: '4px solid var(--border)',
+    borderRadius: '0px',
+    boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
+    transform: 'none',
+    transition: 'all 200ms ease'
+  });
+
+  const getBrutalistIconBackground = (colorVar) => ({
+    background: `var(${colorVar})`,
+    border: '3px solid var(--border)',
+    borderRadius: '0px',
+    boxShadow: '3px 3px 0px 0px rgba(0,0,0,1)',
+    width: '60px',
+    height: '60px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  });
+
+  const getBrutalistTypography = (level = 'base') => {
+    const styles = {
+      title: {
+        fontSize: '3.5rem',
+        fontWeight: '900',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        lineHeight: '1.1',
+        textShadow: '3px 3px 0px rgba(0,0,0,0.8)'
+      },
+      heading: {
+        fontSize: '1.875rem',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        lineHeight: '1.2'
+      },
+      subheading: {
+        fontSize: '1.25rem',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em'
+      },
+      base: {
+        fontSize: '1rem',
+        fontWeight: '600',
+        letterSpacing: '0.01em'
+      }
+    };
+    return styles[level] || styles.base;
+  };
+
+  const getBrutalistGridLayout = () => ({
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: '2rem',
+    maxWidth: '1400px',
+    margin: '0 auto'
+  });
+
+  const getBrutalistButtonStyles = () => ({
+    background: 'var(--brutalist-lime)',
+    color: '#000000',
+    border: '3px solid var(--border)',
+    borderRadius: '0px',
+    padding: '12px 24px',
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: '0.025em',
+    boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
+    transition: 'all 150ms ease',
+    cursor: 'pointer'
+  });
+
+  // Datos de ejemplo para los gráficos con colores Neo-Brutalist
   const salesData = [
     { name: 'Ene', value: 12000 },
     { name: 'Feb', value: 15000 },
@@ -38,462 +117,434 @@ const Dashboard = () => {
   ];
 
   const categoryData = [
-    { name: 'Electrónicos', value: 35, color: '#84cc16' },
-    { name: 'Ropa', value: 25, color: '#3b82f6' },
-    { name: 'Hogar', value: 20, color: '#ec4899' },
-    { name: 'Deportes', value: 15, color: '#f97316' },
-    { name: 'Otros', value: 5, color: '#8b5cf6' },
+    { name: 'Electrónicos', value: 35, color: 'var(--brutalist-lime)' },
+    { name: 'Ropa', value: 25, color: 'var(--brutalist-blue)' },
+    { name: 'Hogar', value: 20, color: 'var(--brutalist-pink)' },
+    { name: 'Deportes', value: 15, color: 'var(--brutalist-orange)' },
+    { name: 'Otros', value: 5, color: 'var(--brutalist-purple)' },
   ];
 
   const lowStockProducts = [
-    { name: 'iPhone 15', current: 3, minimum: 10 },
-    { name: 'Laptop Dell', current: 5, minimum: 15 },
-    { name: 'Auriculares Sony', current: 2, minimum: 20 },
+    { name: 'iPhone 15', current: 3, minimum: 10, alert: 'critical' },
+    { name: 'Laptop Dell', current: 5, minimum: 15, alert: 'high' },
+    { name: 'Mouse Gaming', current: 8, minimum: 20, alert: 'medium' },
+    { name: 'Teclado RGB', current: 12, minimum: 25, alert: 'low' },
   ];
 
-  // Helper functions para generar clases según el tema activo
-  const getTitleClass = (size = 'title') => {
-    if (isNeoBrutalism) {
-      switch(size) {
-        case 'display': return 'font-black uppercase tracking-wide text-4xl';
-        case 'large-title': return 'font-black uppercase tracking-wide text-3xl';
-        case 'title': return 'font-black uppercase tracking-wide text-xl';
-        case 'subtitle': return 'font-black uppercase tracking-wide text-lg';
-        case 'body-large': return 'font-bold uppercase tracking-wide text-base';
-        case 'body': return 'font-bold uppercase tracking-wide text-sm';
-        case 'caption': return 'font-bold uppercase tracking-wide text-xs';
-        default: return 'font-black uppercase tracking-wide';
-      }
-    }
-    if (isFluent) {
-      switch(size) {
-        case 'display': return 'fluent-display';
-        case 'large-title': return 'fluent-large-title';
-        case 'title': return 'fluent-title';
-        case 'subtitle': return 'fluent-subtitle';
-        case 'body-large': return 'fluent-body-large';
-        case 'body': return 'fluent-body';
-        case 'caption': return 'fluent-caption';
-        case 'caption-strong': return 'fluent-caption-strong';
-        default: return 'fluent-title';
-      }
-    }
-    if (isMaterial) {
-      switch(size) {
-        case 'display': return 'material-display';
-        case 'large-title': return 'material-headline-large';
-        case 'title': return 'material-headline-medium';
-        case 'subtitle': return 'material-headline-small';
-        case 'body-large': return 'material-body-large';
-        case 'body': return 'material-body-medium';
-        case 'caption': return 'material-body-small';
-        default: return 'material-headline-medium';
-      }
-    }
-    return 'font-bold';
-  };
+  const recentActivity = [
+    { type: 'sale', message: 'Nueva venta por $2,450', time: 'hace 5 min', urgent: true },
+    { type: 'inventory', message: 'Stock crítico: iPhone 15', time: 'hace 12 min', urgent: true },
+    { type: 'customer', message: 'Nuevo cliente registrado', time: 'hace 28 min', urgent: false },
+    { type: 'order', message: 'Pedido #1847 completado', time: 'hace 1 hora', urgent: false },
+  ];
 
-  const getCardClass = () => {
-    if (isNeoBrutalism) return 'border-4 border-foreground shadow-neo-brutal';
-    if (isFluent) return 'fluent-elevation-2 fluent-radius-medium fluent-motion-standard';
-    if (isMaterial) return 'material-card-elevated';
-    return 'border border-border rounded-lg shadow-lg';
-  };
-
-  const getButtonClass = () => {
-    if (isFluent) return 'fluent-elevation-4 fluent-radius-medium';
-    if (isMaterial) return 'material-button-elevated';
-    return '';
-  };
-
-  const getIconBackgroundClass = (colorType) => {
-    if (isNeoBrutalism) {
-      const colorMap = {
-        success: 'bg-chart-success border-2 border-foreground shadow-neo-brutal',
-        primary: 'bg-chart-primary border-2 border-foreground shadow-neo-brutal',
-        warning: 'bg-chart-warning border-2 border-foreground shadow-neo-brutal',
-        accent: 'bg-chart-accent border-2 border-foreground shadow-neo-brutal'
-      };
-      return colorMap[colorType] || colorMap.primary;
+  // Métricas con estilo Neo-Brutalist específico
+  const metrics = [
+    {
+      title: "VENTAS TOTALES",
+      value: "$125,430",
+      change: "+12.5%",
+      trend: "up",
+      icon: DollarSign,
+      color: "--brutalist-lime",
+      description: "Comparado con el mes anterior"
+    },
+    {
+      title: "CLIENTES ACTIVOS", 
+      value: "2,847",
+      change: "+8.2%",
+      trend: "up",
+      icon: Users,
+      color: "--brutalist-blue",
+      description: "Usuarios únicos este mes"
+    },
+    {
+      title: "PRODUCTOS",
+      value: "1,253",
+      change: "-2.1%",
+      trend: "down", 
+      icon: Package,
+      color: "--brutalist-pink",
+      description: "Items en inventario"
+    },
+    {
+      title: "PEDIDOS HOY",
+      value: "147",
+      change: "+25.8%",
+      trend: "up",
+      icon: ShoppingCart,
+      color: "--brutalist-orange",
+      description: "Órdenes procesadas hoy"
     }
-    if (isFluent) {
-      return 'fluent-elevation-2 fluent-radius-small';
-    }
-    if (isMaterial) {
-      return 'material-elevation-2 rounded-lg';
-    }
-    const colorMap = {
-      success: 'bg-chart-success/10 border border-chart-success rounded-lg',
-      primary: 'bg-chart-primary/10 border border-chart-primary rounded-lg',
-      warning: 'bg-chart-warning/10 border border-chart-warning rounded-lg',
-      accent: 'bg-chart-accent/10 border border-chart-accent rounded-lg'
-    };
-    return colorMap[colorType] || colorMap.primary;
-  };
-
-  const getIconColor = (colorType) => {
-    if (isNeoBrutalism) {
-      return colorType === 'primary' ? 'text-background' : 'text-foreground';
-    }
-    if (isFluent) {
-      return colorType === 'warning' ? 'text-black' : 'text-white';
-    }
-    if (isMaterial) {
-      return 'text-white';
-    }
-    const colorMap = {
-      success: 'text-chart-success',
-      primary: 'text-chart-primary',
-      warning: 'text-chart-warning',
-      accent: 'text-chart-accent'
-    };
-    return colorMap[colorType] || colorMap.primary;
-  };
-
-  const getFluentIconBackground = (colorType) => {
-    const colorMap = {
-      success: 'var(--fluent-semantic-success)',
-      primary: 'var(--fluent-brand-primary)',
-      warning: 'var(--fluent-semantic-warning)',
-      accent: 'var(--fluent-brand-secondary)'
-    };
-    return { 
-      backgroundColor: colorMap[colorType] || colorMap.primary,
-      color: colorType === 'warning' ? 'var(--fluent-neutral-black)' : 'var(--fluent-neutral-white)',
-      borderRadius: 'var(--fluent-corner-radius-small)',
-      boxShadow: 'var(--fluent-shadow-2)'
-    };
-  };
-
-  const getMaterialIconBackground = (colorType) => {
-    const colorMap = {
-      success: 'var(--material-success-primary)',
-      primary: 'var(--material-primary)',
-      warning: 'var(--material-warning-primary)',
-      accent: 'var(--material-secondary)'
-    };
-    return { 
-      backgroundColor: colorMap[colorType] || colorMap.primary,
-      color: 'white',
-      borderRadius: 'var(--material-radius-small)',
-      boxShadow: 'var(--material-elevation-2)'
-    };
-  };
+  ];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className={`text-foreground ${getTitleClass('large-title')}`}>
-            Dashboard
-          </h1>
-          <p className={`mt-2 text-muted-foreground ${getTitleClass('body-large')}`}>
-            Resumen general de tu negocio
-          </p>
-        </div>
-        <div className="mt-4 sm:mt-0">
-          <Button 
-            variant="red" 
-            size="lg" 
-            className={getButtonClass()}
+    <div className="min-h-screen bg-background text-foreground p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        {/* Header Neo-Brutalist */}
+        <header className="text-center py-8">
+          <h1 
+            className="text-primary mb-4"
+            style={getBrutalistTypography('title')}
           >
-            <BarChart3 className="mr-2 h-5 w-5" />
-            Ver Reportes Completos
-            {isNeoBrutalism && (
-              <BrutalistBadge color="yellow" className="ml-2">
-                10
-              </BrutalistBadge>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {/* Métricas principales */}
-      <div className="erp-metrics-grid grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Ventas Totales */}
-        <MetricCard color="white" className={`relative ${getCardClass()}`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="metric-content flex-1 min-w-0">
-              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')} mb-1`}>
-                Ventas Totales
-              </p>
-              <p className={`text-2xl font-bold text-foreground ${getTitleClass('title')} mb-1`}>
-                $125,430
-              </p>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-chart-success flex-shrink-0" />
-                <span className={`text-xs text-chart-success ${getTitleClass('caption')}`}>
-                  +12.5% este mes
-                </span>
-              </div>
-            </div>
-            <div 
-              className={`metric-icon flex-shrink-0 w-10 h-10 flex items-center justify-center ${getIconBackgroundClass('success')}`}
-              style={isFluent ? getFluentIconBackground('success') : isMaterial ? getMaterialIconBackground('success') : {}}
-            >
-              <DollarSign className={`h-5 w-5 ${getIconColor('success')}`} />
-            </div>
-          </div>
-        </MetricCard>
-
-        {/* Clientes */}
-        <MetricCard color="white" className={`relative ${getCardClass()}`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="metric-content flex-1 min-w-0">
-              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')} mb-1`}>
-                Clientes
-              </p>
-              <p className={`text-2xl font-bold text-foreground ${getTitleClass('title')} mb-1`}>
-                1,247
-              </p>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-chart-success flex-shrink-0" />
-                <span className={`text-xs text-chart-success ${getTitleClass('caption')}`}>
-                  +8.2% este mes
-                </span>
-              </div>
-            </div>
-            <div 
-              className={`metric-icon flex-shrink-0 w-10 h-10 flex items-center justify-center ${getIconBackgroundClass('primary')}`}
-              style={isFluent ? getFluentIconBackground('primary') : isMaterial ? getMaterialIconBackground('primary') : {}}
-            >
-              <Users className={`h-5 w-5 ${getIconColor('primary')}`} />
-            </div>
-          </div>
-        </MetricCard>
-
-        {/* Productos */}
-        <MetricCard color="white" className={`relative ${getCardClass()}`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="metric-content flex-1 min-w-0">
-              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')} mb-1`}>
-                Productos
-              </p>
-              <p className={`text-2xl font-bold text-foreground ${getTitleClass('title')} mb-1`}>
-                856
-              </p>
-              <div className="flex items-center gap-1">
-                <TrendingDown className="h-3 w-3 text-chart-danger flex-shrink-0" />
-                <span className={`text-xs text-chart-danger ${getTitleClass('caption')}`}>
-                  -2.1% este mes
-                </span>
-              </div>
-            </div>
-            <div 
-              className={`metric-icon flex-shrink-0 w-10 h-10 flex items-center justify-center ${getIconBackgroundClass('warning')}`}
-              style={isFluent ? getFluentIconBackground('warning') : isMaterial ? getMaterialIconBackground('warning') : {}}
-            >
-              <Package className={`h-5 w-5 ${getIconColor('warning')}`} />
-            </div>
-          </div>
-        </MetricCard>
-
-        {/* Pedidos */}
-        <MetricCard color="white" className={`relative ${getCardClass()}`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="metric-content flex-1 min-w-0">
-              <p className={`text-xs text-muted-foreground ${getTitleClass('caption-strong')} mb-1`}>
-                Pedidos
-              </p>
-              <p className={`text-2xl font-bold text-foreground ${getTitleClass('title')} mb-1`}>
-                342
-              </p>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-chart-success flex-shrink-0" />
-                <span className={`text-xs text-chart-success ${getTitleClass('caption')}`}>
-                  +15.3% este mes
-                </span>
-              </div>
-            </div>
-            <div 
-              className={`metric-icon flex-shrink-0 w-10 h-10 flex items-center justify-center ${getIconBackgroundClass('accent')}`}
-              style={isFluent ? getFluentIconBackground('accent') : isMaterial ? getMaterialIconBackground('accent') : {}}
-            >
-              <ShoppingCart className={`h-5 w-5 ${getIconColor('accent')}`} />
-            </div>
-          </div>
-        </MetricCard>
-      </div>
-
-      {/* Gráficos */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Gráfico de Ventas Mensuales */}
-        <div className={`bg-card p-6 ${getCardClass()}`}>
-          <h3 className={`text-foreground mb-2 ${getTitleClass('title')}`}>
-            Ventas Mensuales
-          </h3>
-          <p className={`text-muted-foreground mb-6 ${getTitleClass('body')}`}>
-            Evolución de ventas en los últimos 6 meses
+            DASHBOARD ERP
+          </h1>
+          <p 
+            className="text-muted-foreground max-w-2xl mx-auto"
+            style={getBrutalistTypography('base')}
+          >
+            SISTEMA DE GESTIÓN EMPRESARIAL CON DISEÑO NEO-BRUTALIST
           </p>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={salesData}>
-                <CartesianGrid 
-                  strokeWidth={isNeoBrutalism ? 2 : 1} 
-                  stroke="hsl(var(--border))" 
-                />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={{ stroke: 'hsl(var(--border))', strokeWidth: isNeoBrutalism ? 2 : 1 }}
-                  tickLine={{ stroke: 'hsl(var(--border))', strokeWidth: isNeoBrutalism ? 2 : 1 }}
-                  tick={{ 
-                    fontWeight: isNeoBrutalism ? 'bold' : 'normal', 
-                    fontSize: 12,
-                    fill: 'hsl(var(--foreground))'
-                  }}
-                />
-                <YAxis 
-                  axisLine={{ stroke: 'hsl(var(--border))', strokeWidth: isNeoBrutalism ? 2 : 1 }}
-                  tickLine={{ stroke: 'hsl(var(--border))', strokeWidth: isNeoBrutalism ? 2 : 1 }}
-                  tick={{ 
-                    fontWeight: isNeoBrutalism ? 'bold' : 'normal', 
-                    fontSize: 12,
-                    fill: 'hsl(var(--foreground))'
-                  }}
-                />
-                <Bar 
-                  dataKey="value" 
-                  fill="hsl(var(--chart-accent))" 
-                  stroke={isNeoBrutalism ? "hsl(var(--foreground))" : "none"}
-                  strokeWidth={isNeoBrutalism ? 2 : 0}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Gráfico de Ventas por Categoría */}
-        <div className={`bg-card p-6 ${getCardClass()}`}>
-          <h3 className={`text-foreground mb-2 ${getTitleClass('title')}`}>
-            Ventas por Categoría
-          </h3>
-          <p className={`text-muted-foreground mb-6 ${getTitleClass('body')}`}>
-            Distribución de ventas por categoría de producto
-          </p>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  stroke={isNeoBrutalism ? "hsl(var(--foreground))" : "none"}
-                  strokeWidth={isNeoBrutalism ? 2 : 0}
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
           
-          {/* Leyenda personalizada */}
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {categoryData.map((entry, index) => (
-              <div key={index} className="flex items-center">
-                <div 
-                  className={`w-3 h-3 mr-2 ${isNeoBrutalism ? 'border border-foreground' : 'rounded-sm'}`}
-                  style={{ backgroundColor: entry.color }}
-                ></div>
-                <span className={`text-xs text-muted-foreground ${getTitleClass('caption')}`}>
-                  {entry.name} ({entry.value}%)
-                </span>
-              </div>
-            ))}
+          {/* Botones de acción rápida */}
+          <div className="flex flex-wrap justify-center gap-4 mt-6">
+            <button
+              style={getBrutalistButtonStyles()}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translate(-2px, -2px)';
+                e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translate(0px, 0px)';
+                e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
+              }}
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              NUEVA VENTA
+            </button>
+            <button
+              style={{...getBrutalistButtonStyles(), background: 'var(--brutalist-blue)'}}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translate(-2px, -2px)';
+                e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translate(0px, 0px)';
+                e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
+              }}
+            >
+              <Users className="w-5 h-5 mr-2" />
+              AÑADIR CLIENTE
+            </button>
+            <button
+              style={{...getBrutalistButtonStyles(), background: 'var(--brutalist-pink)'}}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translate(-2px, -2px)';
+                e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translate(0px, 0px)';
+                e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
+              }}
+            >
+              <Package className="w-5 h-5 mr-2" />
+              GESTIONAR STOCK
+            </button>
           </div>
-        </div>
-      </div>
+        </header>
 
-      {/* Alertas y productos con stock bajo */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Productos con Stock Bajo */}
-        <div className={`bg-card p-6 ${getCardClass()}`}>
-          <div className="flex items-center mb-4">
-            <AlertTriangle className="h-6 w-6 text-chart-warning mr-2" />
-            <h3 className={`text-foreground ${getTitleClass('title')}`}>
-              Productos con Stock Bajo
+        {/* Métricas principales con estilo Neo-Brutalist */}
+        <section>
+          <h2 
+            className="text-primary mb-6 text-center"
+            style={getBrutalistTypography('heading')}
+          >
+            MÉTRICAS PRINCIPALES
+          </h2>
+          <div style={getBrutalistGridLayout()}>
+            {metrics.map((metric, index) => {
+              const IconComponent = metric.icon;
+              return (
+                <div
+                  key={index}
+                  className="p-6 hover:cursor-pointer"
+                  style={getBrutalistMetricStyles()}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translate(-3px, -3px)';
+                    e.currentTarget.style.boxShadow = '9px 9px 0px 0px rgba(0,0,0,1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translate(0px, 0px)';
+                    e.currentTarget.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)';
+                  }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4 mb-4">
+                        <div style={getBrutalistIconBackground(metric.color)}>
+                          <IconComponent className="w-8 h-8 text-black" />
+                        </div>
+                        <div>
+                          <h3 
+                            className="text-foreground"
+                            style={getBrutalistTypography('subheading')}
+                          >
+                            {metric.title}
+                          </h3>
+                          <p 
+                            className="text-muted-foreground text-sm"
+                            style={{...getBrutalistTypography('base'), fontSize: '0.875rem'}}
+                          >
+                            {metric.description}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div 
+                          className="text-foreground"
+                          style={{...getBrutalistTypography('heading'), fontSize: '2.5rem'}}
+                        >
+                          {metric.value}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {metric.trend === 'up' ? (
+                            <TrendingUp className="w-5 h-5 text-green-600" />
+                          ) : (
+                            <TrendingDown className="w-5 h-5 text-red-600" />
+                          )}
+                          <span 
+                            className={`font-bold ${metric.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}
+                            style={getBrutalistTypography('base')}
+                          >
+                            {metric.change}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Dashboard de actividad reciente con estilo brutal */}
+        <section className="grid lg:grid-cols-2 gap-8">
+          
+          {/* Actividad reciente */}
+          <div 
+            className="p-6"
+            style={getBrutalistMetricStyles()}
+          >
+            <h3 
+              className="text-primary mb-6"
+              style={getBrutalistTypography('heading')}
+            >
+              ACTIVIDAD RECIENTE
             </h3>
-          </div>
-          <div className="space-y-3">
-            {lowStockProducts.map((product, index) => (
-              <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${
-                isNeoBrutalism 
-                  ? 'border-2 border-chart-warning bg-chart-warning/20'
-                  : isMaterial
-                  ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
-                  : isFluent
-                  ? 'bg-amber-50 dark:bg-amber-900/20'
-                  : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
-              }`}>
-                <div>
-                  <p className={`font-medium text-foreground ${getTitleClass('body')}`}>
-                    {product.name}
-                  </p>
-                  <p className={`text-xs text-muted-foreground ${getTitleClass('caption')}`}>
-                    Stock actual: {product.current} unidades
-                  </p>
+            <div className="space-y-4">
+              {recentActivity.map((activity, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-4 p-4"
+                  style={{
+                    background: activity.urgent ? 'var(--brutalist-orange)' : 'var(--background)',
+                    border: '2px solid var(--border)',
+                    borderRadius: '0px',
+                    color: activity.urgent ? '#000000' : 'var(--foreground)'
+                  }}
+                >
+                  <div 
+                    style={{
+                      ...getBrutalistIconBackground('--brutalist-lime'),
+                      width: '40px',
+                      height: '40px'
+                    }}
+                  >
+                    <Activity className="w-5 h-5 text-black" />
+                  </div>
+                  <div className="flex-1">
+                    <p style={getBrutalistTypography('base')}>
+                      {activity.message}
+                    </p>
+                    <p className="text-sm opacity-75">
+                      {activity.time}
+                    </p>
+                  </div>
+                  {activity.urgent && (
+                    <AlertTriangle className="w-6 h-6 text-red-600" />
+                  )}
                 </div>
-                <div className={`text-right ${getTitleClass('caption')}`}>
-                  <p className="text-chart-warning font-semibold">
-                    ¡Crítico!
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Mín: {product.minimum}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-          <div className="mt-4">
-            <Button variant="yellow" size="sm" className={`w-full ${getButtonClass()}`}>
-              <Plus className="mr-2 h-4 w-4" />
-              Reabastecer Productos
-            </Button>
-          </div>
-        </div>
 
-        {/* Acciones rápidas */}
-        <div className={`bg-card p-6 ${getCardClass()}`}>
-          <h3 className={`text-foreground mb-4 ${getTitleClass('title')}`}>
-            Acciones Rápidas
-          </h3>
-          <div className="grid gap-3">
-            <Button variant="blue" className={`justify-start h-16 flex-col ${getButtonClass()}`}>
-              <div className="flex items-center w-full">
-                <Plus className="mr-2 h-5 w-5" />
-                <span className={getTitleClass('body')}>Nuevo Producto</span>
-              </div>
-              <span className={`text-xs text-left w-full ${getTitleClass('caption')}`}>
-                Agregar producto al inventario
-              </span>
-            </Button>
-            
-            <Button variant="green" className={`justify-start h-16 flex-col ${getButtonClass()}`}>
-              <div className="flex items-center w-full">
-                <Users className="mr-2 h-5 w-5" />
-                <span className={getTitleClass('body')}>Nuevo Cliente</span>
-              </div>
-              <span className={`text-xs text-left w-full ${getTitleClass('caption')}`}>
-                Registrar cliente nuevo
-              </span>
-            </Button>
-            
-            <Button variant="purple" className={`justify-start h-16 flex-col ${getButtonClass()}`}>
-              <div className="flex items-center w-full">
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                <span className={getTitleClass('body')}>Nueva Venta</span>
-              </div>
-              <span className={`text-xs text-left w-full ${getTitleClass('caption')}`}>
-                Procesar venta rápida
-              </span>
-            </Button>
+          {/* Stock crítico */}
+          <div 
+            className="p-6"
+            style={getBrutalistMetricStyles()}
+          >
+            <h3 
+              className="text-primary mb-6"
+              style={getBrutalistTypography('heading')}
+            >
+              STOCK CRÍTICO
+            </h3>
+            <div className="space-y-4">
+              {lowStockProducts.map((product, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center justify-between p-4"
+                  style={{
+                    background: 'var(--background)',
+                    border: '2px solid var(--border)',
+                    borderRadius: '0px'
+                  }}
+                >
+                  <div>
+                    <p style={getBrutalistTypography('base')}>
+                      {product.name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Actual: {product.current} | Mínimo: {product.minimum}
+                    </p>
+                  </div>
+                  <div 
+                    className="px-3 py-1 text-sm font-bold"
+                    style={{
+                      background: product.alert === 'critical' ? 'var(--brutalist-pink)' : 
+                                product.alert === 'high' ? 'var(--brutalist-orange)' : 
+                                'var(--brutalist-lime)',
+                      color: '#000000',
+                      border: '2px solid var(--border)',
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    {product.alert}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* Gráficos con estilo Neo-Brutalist */}
+        <section className="grid lg:grid-cols-2 gap-8">
+          
+          {/* Gráfico de ventas */}
+          <div 
+            className="p-6"
+            style={getBrutalistMetricStyles()}
+          >
+            <h3 
+              className="text-primary mb-6"
+              style={getBrutalistTypography('heading')}
+            >
+              VENTAS MENSUALES
+            </h3>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={salesData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="var(--foreground)"
+                    style={{...getBrutalistTypography('base'), fontSize: '12px'}}
+                  />
+                  <YAxis 
+                    stroke="var(--foreground)"
+                    style={{...getBrutalistTypography('base'), fontSize: '12px'}}
+                  />
+                  <Bar 
+                    dataKey="value" 
+                    fill="var(--brutalist-lime)"
+                    stroke="var(--border)"
+                    strokeWidth={2}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Gráfico de categorías */}
+          <div 
+            className="p-6"
+            style={getBrutalistMetricStyles()}
+          >
+            <h3 
+              className="text-primary mb-6"
+              style={getBrutalistTypography('heading')}
+            >
+              CATEGORÍAS DE PRODUCTOS
+            </h3>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                    stroke="var(--border)"
+                    strokeWidth={2}
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {categoryData.map((item, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4"
+                    style={{
+                      backgroundColor: item.color,
+                      border: '1px solid var(--border)'
+                    }}
+                  />
+                  <span 
+                    className="text-sm"
+                    style={getBrutalistTypography('base')}
+                  >
+                    {item.name} ({item.value}%)
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Footer de acciones rápidas */}
+        <footer className="text-center py-8">
+          <div className="flex flex-wrap justify-center gap-4">
+            <button
+              style={{...getBrutalistButtonStyles(), background: 'var(--brutalist-purple)'}}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translate(-2px, -2px)';
+                e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translate(0px, 0px)';
+                e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
+              }}
+            >
+              <BarChart3 className="w-5 h-5 mr-2" />
+              VER REPORTES
+            </button>
+            <button
+              style={{...getBrutalistButtonStyles(), background: 'var(--brutalist-green)'}}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translate(-2px, -2px)';
+                e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translate(0px, 0px)';
+                e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
+              }}
+            >
+              <Target className="w-5 h-5 mr-2" />
+              CONFIGURAR METAS
+            </button>
+          </div>
+        </footer>
+
       </div>
     </div>
   );

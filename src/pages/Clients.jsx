@@ -1,304 +1,259 @@
 /**
- * Página de Clientes del sistema ERP - Multi-tema
- * Soporte para Neo-Brutalism, Material Design y Fluent Design
- * Incluye listado, filtros, búsqueda y gestión de clientes
+ * Página Clients optimizada para Neo-Brutalism
+ * Sistema de gestión de clientes con diseño brutal, grid responsivo y componentes interactivos
+ * Incluye helper functions específicas para estilo Neo-Brutalist
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { 
-  Users, 
   Plus, 
   Search, 
   Filter, 
+  MoreVertical, 
   Edit, 
   Trash2, 
-  Eye,
-  Mail,
-  Phone,
+  Phone, 
+  Mail, 
   MapPin,
+  User,
   Building,
-  User
+  Calendar,
+  DollarSign,
+  Star,
+  AlertCircle
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import useClientStore from '@/store/useClientStore';
 
 const Clients = () => {
   const { theme } = useTheme();
-  const {
-    clients,
-    loading,
-    error,
-    pagination,
-    filters,
-    fetchClients,
-    deleteClient,
-    setFilters,
-    clearError,
-  } = useClientStore();
-
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedClients, setSelectedClients] = useState([]);
-
-  // Determinar el tema activo
+  const { clients, loading, error, fetchClients, deleteClient } = useClientStore();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  
   const isNeoBrutalism = theme?.includes('neo-brutalism');
   const isMaterial = theme?.includes('material');
   const isFluent = theme?.includes('fluent');
 
-  // Helper functions para generar clases según el tema activo
-  const getTitleClass = (size = 'title') => {
-    if (isNeoBrutalism) {
-      switch(size) {
-        case 'display': return 'font-black uppercase tracking-wide text-4xl';
-        case 'large-title': return 'font-black uppercase tracking-wide text-3xl';
-        case 'title': return 'font-black uppercase tracking-wide text-xl';
-        case 'subtitle': return 'font-black uppercase tracking-wide text-lg';
-        case 'body-large': return 'font-bold uppercase tracking-wide text-base';
-        case 'body': return 'font-bold uppercase tracking-wide text-sm';
-        case 'caption': return 'font-bold uppercase tracking-wide text-xs';
-        default: return 'font-black uppercase tracking-wide';
+  // Helper functions específicas para Neo-Brutalism
+  const getBrutalistCardStyles = () => ({
+    background: 'var(--background)',
+    border: '4px solid var(--border)',
+    borderRadius: '0px',
+    boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
+    transition: 'all 200ms ease',
+    overflow: 'hidden'
+  });
+
+  const getBrutalistHeaderStyles = () => ({
+    background: 'var(--brutalist-lime)',
+    color: '#000000',
+    padding: '16px',
+    border: 'none',
+    borderBottom: '4px solid var(--border)',
+    margin: '-1px -1px 0 -1px'
+  });
+
+  const getBrutalistTypography = (level = 'base') => {
+    const styles = {
+      title: {
+        fontSize: '3rem',
+        fontWeight: '900',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        lineHeight: '1.1',
+        textShadow: '2px 2px 0px rgba(0,0,0,0.8)'
+      },
+      heading: {
+        fontSize: '1.5rem',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        lineHeight: '1.2'
+      },
+      subheading: {
+        fontSize: '1.125rem',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em'
+      },
+      base: {
+        fontSize: '0.875rem',
+        fontWeight: '600',
+        letterSpacing: '0.01em'
+      },
+      small: {
+        fontSize: '0.75rem',
+        fontWeight: '600',
+        letterSpacing: '0.01em'
       }
-    }
-    if (isFluent) {
-      switch(size) {
-        case 'display': return 'fluent-display';
-        case 'large-title': return 'fluent-large-title';
-        case 'title': return 'fluent-title';
-        case 'subtitle': return 'fluent-subtitle';
-        case 'body-large': return 'fluent-body-large';
-        case 'body': return 'fluent-body';
-        case 'caption': return 'fluent-caption';
-        case 'caption-strong': return 'fluent-caption-strong';
-        default: return 'fluent-title';
+    };
+    return styles[level] || styles.base;
+  };
+
+  const getBrutalistBadgeStyles = (type) => {
+    const badges = {
+      vip: {
+        background: 'var(--brutalist-orange)',
+        color: '#000000',
+        border: '2px solid var(--border)',
+        padding: '4px 8px',
+        borderRadius: '0px',
+        fontSize: '0.75rem',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em'
+      },
+      regular: {
+        background: 'var(--brutalist-blue)',
+        color: '#ffffff',
+        border: '2px solid var(--border)',
+        padding: '4px 8px',
+        borderRadius: '0px',
+        fontSize: '0.75rem',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em'
+      },
+      premium: {
+        background: 'var(--brutalist-purple)',
+        color: '#ffffff',
+        border: '2px solid var(--border)',
+        padding: '4px 8px',
+        borderRadius: '0px',
+        fontSize: '0.75rem',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em'
       }
-    }
-    if (isMaterial) {
-      switch(size) {
-        case 'display': return 'material-display';
-        case 'large-title': return 'material-headline-large';
-        case 'title': return 'material-headline-medium';
-        case 'subtitle': return 'material-headline-small';
-        case 'body-large': return 'material-body-large';
-        case 'body': return 'material-body-medium';
-        case 'caption': return 'material-body-small';
-        default: return 'material-headline-medium';
+    };
+    return badges[type] || badges.regular;
+  };
+
+  const getBrutalistButtonStyles = (variant = 'primary') => {
+    const buttons = {
+      primary: {
+        background: 'var(--brutalist-lime)',
+        color: '#000000',
+        border: '3px solid var(--border)',
+        borderRadius: '0px',
+        padding: '8px 16px',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
+        transition: 'all 150ms ease',
+        cursor: 'pointer'
+      },
+      secondary: {
+        background: 'var(--brutalist-blue)',
+        color: '#ffffff',
+        border: '3px solid var(--border)',
+        borderRadius: '0px',
+        padding: '8px 16px',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
+        transition: 'all 150ms ease',
+        cursor: 'pointer'
+      },
+      danger: {
+        background: 'var(--brutalist-pink)',
+        color: '#ffffff',
+        border: '3px solid var(--border)',
+        borderRadius: '0px',
+        padding: '8px 16px',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
+        transition: 'all 150ms ease',
+        cursor: 'pointer'
       }
-    }
-    return 'font-bold';
+    };
+    return buttons[variant] || buttons.primary;
   };
 
-  const getCardClass = () => {
-    if (isNeoBrutalism) return 'border-4 border-foreground shadow-neo-brutal';
-    if (isFluent) return 'fluent-elevation-2 fluent-radius-medium fluent-motion-standard';
-    if (isMaterial) return 'material-card-elevated';
-    return 'border border-border rounded-lg shadow-lg';
-  };
+  const getBrutalistInputStyles = () => ({
+    background: 'var(--background)',
+    border: '3px solid var(--border)',
+    borderRadius: '0px',
+    padding: '12px 16px',
+    fontSize: '1rem',
+    fontWeight: '600',
+    color: 'var(--foreground)',
+    boxShadow: '3px 3px 0px 0px rgba(0,0,0,1)',
+    transition: 'all 150ms ease'
+  });
 
-  const getButtonClass = () => {
-    if (isFluent) return 'fluent-elevation-2 fluent-radius-small';
-    if (isMaterial) return 'material-button-elevated';
-    return '';
-  };
+  const getBrutalistGridLayout = () => ({
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+    gap: '2rem',
+    padding: '2rem 0'
+  });
 
-  const getInputClass = () => {
-    if (isFluent) return 'fluent-radius-small';
-    if (isMaterial) return 'material-input';
-    return '';
-  };
-
-  // Cargar clientes al montar el componente
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
 
-  // Datos para las estadísticas (usar los clientes del store)
-  const statsData = {
-    total: pagination.total || 0,
-    active: clients.filter(c => c.status === 'active').length,
-    companies: clients.filter(c => c.type === 'empresa').length,
-    individuals: clients.filter(c => c.type === 'particular').length,
-  };
-
-  const handleSearch = (searchTerm) => {
-    setFilters({ search: searchTerm });
-    fetchClients({ search: searchTerm });
-  };
-
-  const handleFilterChange = (filterName, value) => {
-    const newFilters = { [filterName]: value };
-    setFilters(newFilters);
-    fetchClients(newFilters);
-  };
-
-  const handleDeleteClient = async (clientId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
-      try {
-        await deleteClient(clientId);
-        // Mostrar notificación de éxito
-      } catch (error) {
-        console.error('Error al eliminar cliente:', error);
-      }
-    }
-  };
-
-  const getClientTypeIcon = (type) => {
-    return type === 'empresa' ? <Building className="h-4 w-4" /> : <User className="h-4 w-4" />;
-  };
-
-  const getStatusBadge = (status) => {
-    if (isFluent) {
-      const activeClass = status === 'active' 
-        ? 'fluent-radius-small text-white'
-        : 'fluent-radius-small text-white';
-      const bgStyle = status === 'active' 
-        ? { backgroundColor: 'var(--fluent-semantic-success)' }
-        : { backgroundColor: 'var(--fluent-neutral-grey-100)' };
-      return (
-        <span 
-          className={`px-2 py-1 text-xs font-medium ${activeClass} ${getTitleClass('caption')}`}
-          style={bgStyle}
-        >
-          {status === 'active' ? 'Activo' : 'Inactivo'}
-        </span>
-      );
-    }
+  // Filtrar clientes basado en búsqueda y filtro
+  const filteredClients = clients.filter(client => {
+    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         client.company.toLowerCase().includes(searchTerm.toLowerCase());
     
-    if (isMaterial) {
-      const bgStyle = status === 'active' 
-        ? { backgroundColor: 'var(--material-success-primary, #4CAF50)', color: 'white' }
-        : { backgroundColor: 'var(--material-neutral-variant, #666)', color: 'white' };
-      return (
-        <span 
-          className={`px-2 py-1 text-xs font-medium rounded-full ${getTitleClass('caption')}`}
-          style={bgStyle}
-        >
-          {status === 'active' ? 'Activo' : 'Inactivo'}
-        </span>
-      );
-    }
+    if (selectedFilter === 'all') return matchesSearch;
+    if (selectedFilter === 'vip') return matchesSearch && client.type === 'VIP';
+    if (selectedFilter === 'regular') return matchesSearch && client.type === 'Regular';
+    if (selectedFilter === 'premium') return matchesSearch && client.type === 'Premium';
     
-    const baseClasses = `px-2 py-1 rounded-full text-xs font-medium ${getTitleClass('caption')}`;
-    if (status === 'active') {
-      return <span className={`${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`}>Activo</span>;
+    return matchesSearch;
+  });
+
+  const handleCardHover = (e) => {
+    if (isNeoBrutalism) {
+      e.currentTarget.style.transform = 'translate(-3px, -3px)';
+      e.currentTarget.style.boxShadow = '9px 9px 0px 0px rgba(0,0,0,1)';
     }
-    return <span className={`${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200`}>Inactivo</span>;
   };
 
-  const ClientCard = ({ client }) => (
-    <Card className={`hover:shadow-lg transition-all duration-200 ${getCardClass()}`} 
-          style={isFluent ? { 
-            transition: 'all 0.1s var(--fluent-curve-easy-ease)',
-            transform: 'translateY(0px)'
-          } : isMaterial ? {
-            transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
-            transform: 'translateY(0px)'
-          } : {}}
-          onMouseEnter={(e) => {
-            if (isFluent) {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = 'var(--fluent-shadow-8)';
-            } else if (isMaterial) {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = 'var(--material-elevation-8)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (isFluent) {
-              e.currentTarget.style.transform = 'translateY(0px)';
-              e.currentTarget.style.boxShadow = 'var(--fluent-shadow-2)';
-            } else if (isMaterial) {
-              e.currentTarget.style.transform = 'translateY(0px)';
-              e.currentTarget.style.boxShadow = 'var(--material-elevation-2)';
-            }
-          }}
-    >
-      <CardContent className="p-4">
-        {/* Header con avatar y estado */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <div className={`w-10 h-10 bg-gray-200 dark:bg-gray-700 flex-shrink-0 flex items-center justify-center ${
-              isFluent ? 'fluent-radius-circular fluent-elevation-1' : 
-              isMaterial ? 'rounded-full' : 
-              'rounded-full'
-            }`} style={isFluent ? { backgroundColor: 'var(--fluent-neutral-grey-20)' } : 
-                      isMaterial ? { backgroundColor: 'var(--material-surface-variant)' } : {}}>
-              {getClientTypeIcon(client.type)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className={`font-semibold truncate ${getTitleClass('subtitle')}`}>{client.name}</h3>
-              {client.company && (
-                <p className={`text-muted-foreground text-sm truncate ${getTitleClass('caption')}`}>{client.company}</p>
-              )}
-            </div>
-          </div>
-          <div className="flex-shrink-0">
-            {getStatusBadge(client.status)}
-          </div>
-        </div>
-        
-        {/* Información de contacto */}
-        <div className="space-y-2 mb-4">
-          <div className={`flex items-center text-muted-foreground text-sm ${getTitleClass('caption')}`}>
-            <Mail className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-            <span className="truncate">{client.email}</span>
-          </div>
-          <div className={`flex items-center text-muted-foreground text-sm ${getTitleClass('caption')}`}>
-            <Phone className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-            <span>{client.phone}</span>
-          </div>
-          <div className={`flex items-center text-muted-foreground text-sm ${getTitleClass('caption')}`}>
-            <MapPin className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-            <span className="truncate">{client.address}</span>
-          </div>
-        </div>
-        
-        {/* Estadísticas */}
-        <div className={`flex items-center justify-between pt-3 border-t ${
-          isFluent ? '' : 
-          isMaterial ? '' :
-          'border-gray-100 dark:border-gray-700'
-        }`} style={isFluent ? { borderColor: 'var(--fluent-neutral-grey-30)' } : 
-                   isMaterial ? { borderColor: 'var(--material-outline-variant)' } : {}}>
-          <div className={`flex items-center space-x-4 text-xs ${getTitleClass('caption')}`}>
-            <div className="text-center">
-              <div className="font-semibold text-foreground">{client.totalOrders}</div>
-              <div className="text-muted-foreground">Pedidos</div>
-            </div>
-            <div className="text-center">
-              <div className="font-semibold text-foreground">${client.totalSpent.toLocaleString()}</div>
-              <div className="text-muted-foreground">Gastado</div>
-            </div>
-          </div>
-          
-          {/* Acciones */}
-          <div className="flex items-center space-x-1">
-            <Button size="sm" variant="ghost" className={`h-7 w-7 p-0 ${getButtonClass()}`}>
-              <Eye className="h-3.5 w-3.5" />
-            </Button>
-            <Button size="sm" variant="ghost" className={`h-7 w-7 p-0 ${getButtonClass()}`}>
-              <Edit className="h-3.5 w-3.5" />
-            </Button>
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              className={`h-7 w-7 p-0 ${getButtonClass()}`}
-              onClick={() => handleDeleteClient(client.id)}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const handleCardLeave = (e) => {
+    if (isNeoBrutalism) {
+      e.currentTarget.style.transform = 'translate(0px, 0px)';
+      e.currentTarget.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)';
+    }
+  };
+
+  const handleButtonHover = (e) => {
+    if (isNeoBrutalism) {
+      e.target.style.transform = 'translate(-2px, -2px)';
+      e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)';
+    }
+  };
+
+  const handleButtonLeave = (e) => {
+    if (isNeoBrutalism) {
+      e.target.style.transform = 'translate(0px, 0px)';
+      e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
+    }
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className={`text-center ${getTitleClass('body-large')}`}>
-          Cargando clientes...
+      <div className="min-h-screen bg-background text-foreground p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-20">
+            <div 
+              className="text-primary"
+              style={getBrutalistTypography('heading')}
+            >
+              CARGANDO CLIENTES...
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -306,174 +261,379 @@ const Clients = () => {
 
   if (error) {
     return (
-      <div className={`text-center text-red-500 min-h-screen flex items-center justify-center ${getTitleClass('body-large')}`}>
-        Error: {error}
+      <div className="min-h-screen bg-background text-foreground p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-20">
+            <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+            <div 
+              className="text-red-500 mb-4"
+              style={getBrutalistTypography('heading')}
+            >
+              ERROR AL CARGAR
+            </div>
+            <p style={getBrutalistTypography('base')}>
+              {error}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className={`text-foreground ${getTitleClass('large-title')}`}>
-            Clientes
+    <div className="min-h-screen bg-background text-foreground p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        {/* Header Neo-Brutalist */}
+        <header className="text-center py-8">
+          <h1 
+            className="text-primary mb-4"
+            style={getBrutalistTypography('title')}
+          >
+            GESTIÓN DE CLIENTES
           </h1>
-          <p className={`mt-2 text-muted-foreground ${getTitleClass('body-large')}`}>
-            Gestiona tu base de clientes y sus datos
+          <p 
+            className="text-muted-foreground max-w-2xl mx-auto mb-8"
+            style={getBrutalistTypography('base')}
+          >
+            ADMINISTRA TU BASE DE CLIENTES CON ESTILO NEO-BRUTALIST
           </p>
-        </div>
-        <div className="mt-4 sm:mt-0">
-          <Button variant="green" size="lg" className={getButtonClass()}>
-            <Plus className="mr-2 h-5 w-5" />
-            Nuevo Cliente
-          </Button>
-        </div>
-      </div>
+          
+          {/* Botón principal */}
+          <button
+            style={getBrutalistButtonStyles('primary')}
+            onMouseEnter={handleButtonHover}
+            onMouseLeave={handleButtonLeave}
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            AÑADIR CLIENTE
+          </button>
+        </header>
 
-      {/* Estadísticas rápidas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className={getCardClass()}>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-muted-foreground" />
-              <div className="ml-4">
-                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>Total Clientes</p>
-                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.total}</p>
-              </div>
+        {/* Barra de búsqueda y filtros */}
+        <section 
+          className="p-6"
+          style={getBrutalistCardStyles()}
+        >
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Búsqueda */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="BUSCAR CLIENTES..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12"
+                style={{
+                  ...getBrutalistInputStyles(),
+                  textTransform: 'uppercase',
+                  fontWeight: '600'
+                }}
+                onFocus={(e) => {
+                  if (isNeoBrutalism) {
+                    e.target.style.transform = 'translate(-2px, -2px)';
+                    e.target.style.boxShadow = '5px 5px 0px 0px rgba(0,0,0,1)';
+                  }
+                }}
+                onBlur={(e) => {
+                  if (isNeoBrutalism) {
+                    e.target.style.transform = 'translate(0px, 0px)';
+                    e.target.style.boxShadow = '3px 3px 0px 0px rgba(0,0,0,1)';
+                  }
+                }}
+              />
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card className={getCardClass()}>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <User className="h-8 w-8 text-muted-foreground" />
-              <div className="ml-4">
-                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>Activos</p>
-                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.active}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className={getCardClass()}>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Building className="h-8 w-8 text-muted-foreground" />
-              <div className="ml-4">
-                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>Empresas</p>
-                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.companies}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className={getCardClass()}>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <User className="h-8 w-8 text-muted-foreground" />
-              <div className="ml-4">
-                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>Particulares</p>
-                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.individuals}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Filtros y búsqueda */}
-      <Card className={getCardClass()}>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 max-w-sm">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar clientes..."
-                  className={`pl-10 ${getInputClass()}`}
-                  onChange={(e) => handleSearch(e.target.value)}
-                />
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className={getButtonClass()}
+            {/* Filtro por tipo */}
+            <select
+              value={selectedFilter}
+              onChange={(e) => setSelectedFilter(e.target.value)}
+              style={{
+                ...getBrutalistInputStyles(),
+                textTransform: 'uppercase',
+                fontWeight: '600'
+              }}
             >
-              <Filter className="mr-2 h-4 w-4" />
-              Filtros
-            </Button>
-          </div>
+              <option value="all">TODOS LOS CLIENTES</option>
+              <option value="vip">CLIENTES VIP</option>
+              <option value="premium">CLIENTES PREMIUM</option>
+              <option value="regular">CLIENTES REGULARES</option>
+            </select>
 
-          {showFilters && (
-            <div className={`mt-4 p-4 border-t ${
-              isFluent ? '' : 
-              isMaterial ? '' :
-              'border-gray-200 dark:border-gray-700'
-            }`} style={isFluent ? { borderColor: 'var(--fluent-neutral-grey-30)' } : 
-                       isMaterial ? { borderColor: 'var(--material-outline-variant)' } : {}}>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div>
-                  <label className={`block mb-2 ${getTitleClass('caption-strong')}`}>Estado</label>
-                  <select
-                    className={`w-full p-2 border rounded-md bg-background text-foreground ${getInputClass()}`}
-                    onChange={(e) => handleFilterChange('status', e.target.value)}
-                  >
-                    <option value="">Todos</option>
-                    <option value="active">Activos</option>
-                    <option value="inactive">Inactivos</option>
-                  </select>
+            {/* Estadísticas rápidas */}
+            <div className="flex items-center justify-center gap-4">
+              <div className="text-center">
+                <div 
+                  className="text-foreground"
+                  style={getBrutalistTypography('heading')}
+                >
+                  {filteredClients.length}
                 </div>
-                <div>
-                  <label className={`block mb-2 ${getTitleClass('caption-strong')}`}>Tipo</label>
-                  <select
-                    className={`w-full p-2 border rounded-md bg-background text-foreground ${getInputClass()}`}
-                    onChange={(e) => handleFilterChange('type', e.target.value)}
-                  >
-                    <option value="">Todos</option>
-                    <option value="empresa">Empresas</option>
-                    <option value="particular">Particulares</option>
-                  </select>
+                <div 
+                  className="text-muted-foreground"
+                  style={getBrutalistTypography('small')}
+                >
+                  TOTAL
+                </div>
+              </div>
+              <div className="text-center">
+                <div 
+                  className="text-foreground"
+                  style={getBrutalistTypography('heading')}
+                >
+                  {filteredClients.filter(c => c.type === 'VIP').length}
+                </div>
+                <div 
+                  className="text-muted-foreground"
+                  style={getBrutalistTypography('small')}
+                >
+                  VIP
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Grid de clientes con estilo Neo-Brutalist */}
+        <section style={getBrutalistGridLayout()}>
+          {filteredClients.length === 0 ? (
+            <div className="col-span-full text-center py-20">
+              <User className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <div 
+                className="text-muted-foreground"
+                style={getBrutalistTypography('heading')}
+              >
+                NO SE ENCONTRARON CLIENTES
+              </div>
+            </div>
+          ) : (
+            filteredClients.map((client) => (
+              <div
+                key={client.id}
+                className="cursor-pointer"
+                style={getBrutalistCardStyles()}
+                onMouseEnter={handleCardHover}
+                onMouseLeave={handleCardLeave}
+              >
+                {/* Header de la card */}
+                <div style={getBrutalistHeaderStyles()}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        style={{
+                          background: '#000000',
+                          color: 'var(--brutalist-lime)',
+                          width: '40px',
+                          height: '40px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '2px solid var(--border)',
+                          borderRadius: '0px'
+                        }}
+                      >
+                        <User className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 style={getBrutalistTypography('subheading')}>
+                          {client.name}
+                        </h3>
+                        <div style={getBrutalistBadgeStyles(client.type.toLowerCase())}>
+                          {client.type}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#000000',
+                        cursor: 'pointer',
+                        padding: '4px'
+                      }}
+                    >
+                      <MoreVertical className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Contenido de la card */}
+                <div className="p-6 space-y-4">
+                  
+                  {/* Información de contacto */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        style={{
+                          background: 'var(--brutalist-blue)',
+                          color: '#ffffff',
+                          width: '32px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '2px solid var(--border)',
+                          borderRadius: '0px'
+                        }}
+                      >
+                        <Building className="w-4 h-4" />
+                      </div>
+                      <span style={getBrutalistTypography('base')}>
+                        {client.company}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div 
+                        style={{
+                          background: 'var(--brutalist-pink)',
+                          color: '#ffffff',
+                          width: '32px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '2px solid var(--border)',
+                          borderRadius: '0px'
+                        }}
+                      >
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <span style={getBrutalistTypography('base')}>
+                        {client.email}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div 
+                        style={{
+                          background: 'var(--brutalist-orange)',
+                          color: '#ffffff',
+                          width: '32px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '2px solid var(--border)',
+                          borderRadius: '0px'
+                        }}
+                      >
+                        <Phone className="w-4 h-4" />
+                      </div>
+                      <span style={getBrutalistTypography('base')}>
+                        {client.phone}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div 
+                        style={{
+                          background: 'var(--brutalist-purple)',
+                          color: '#ffffff',
+                          width: '32px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '2px solid var(--border)',
+                          borderRadius: '0px'
+                        }}
+                      >
+                        <MapPin className="w-4 h-4" />
+                      </div>
+                      <span style={getBrutalistTypography('base')}>
+                        {client.address}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Métricas del cliente */}
+                  <div 
+                    className="grid grid-cols-2 gap-3 pt-4"
+                    style={{
+                      borderTop: '2px solid var(--border)'
+                    }}
+                  >
+                    <div className="text-center">
+                      <div 
+                        className="text-foreground"
+                        style={getBrutalistTypography('subheading')}
+                      >
+                        ${client.totalSpent?.toLocaleString() || '0'}
+                      </div>
+                      <div 
+                        className="text-muted-foreground"
+                        style={getBrutalistTypography('small')}
+                      >
+                        TOTAL GASTADO
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div 
+                        className="text-foreground"
+                        style={getBrutalistTypography('subheading')}
+                      >
+                        {client.orders || 0}
+                      </div>
+                      <div 
+                        className="text-muted-foreground"
+                        style={getBrutalistTypography('small')}
+                      >
+                        PEDIDOS
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="flex gap-2 pt-4">
+                    <button
+                      style={getBrutalistButtonStyles('secondary')}
+                      onMouseEnter={handleButtonHover}
+                      onMouseLeave={handleButtonLeave}
+                      className="flex-1"
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      EDITAR
+                    </button>
+                    <button
+                      style={getBrutalistButtonStyles('danger')}
+                      onMouseEnter={handleButtonHover}
+                      onMouseLeave={handleButtonLeave}
+                      onClick={() => deleteClient(client.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
           )}
-        </CardContent>
-      </Card>
+        </section>
 
-      {/* Lista de clientes */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {clients.map((client) => (
-          <ClientCard key={client.id} client={client} />
-        ))}
+        {/* Footer de acciones */}
+        <footer className="text-center py-8">
+          <div className="flex flex-wrap justify-center gap-4">
+            <button
+              style={getBrutalistButtonStyles('secondary')}
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonLeave}
+            >
+              <Filter className="w-5 h-5 mr-2" />
+              FILTROS AVANZADOS
+            </button>
+            <button
+              style={{...getBrutalistButtonStyles('primary'), background: 'var(--brutalist-purple)'}}
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonLeave}
+            >
+              <DollarSign className="w-5 h-5 mr-2" />
+              REPORTE DE VENTAS
+            </button>
+          </div>
+        </footer>
+
       </div>
-
-      {/* Paginación */}
-      {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-center space-x-2">
-          <Button
-            variant="outline"
-            disabled={pagination.currentPage === 1}
-            onClick={() => fetchClients({ page: pagination.currentPage - 1 })}
-            className={getButtonClass()}
-          >
-            Anterior
-          </Button>
-          <span className={`px-4 py-2 ${getTitleClass('body')}`}>
-            Página {pagination.currentPage} de {pagination.totalPages}
-          </span>
-          <Button
-            variant="outline"
-            disabled={pagination.currentPage === pagination.totalPages}
-            onClick={() => fetchClients({ page: pagination.currentPage + 1 })}
-            className={getButtonClass()}
-          >
-            Siguiente
-          </Button>
-        </div>
-      )}
     </div>
   );
 };

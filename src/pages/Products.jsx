@@ -1,330 +1,363 @@
 /**
- * Página de Productos del sistema ERP - Multi-tema
- * Soporte para Neo-Brutalism, Material Design y Fluent Design
- * Incluye listado, filtros, búsqueda y acciones CRUD
+ * Página Products optimizada para Neo-Brutalism
+ * Sistema de gestión de productos con diseño brutal, grid responsivo y filtros avanzados
+ * Incluye helper functions específicas para estilo Neo-Brutalist
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { 
-  Package, 
   Plus, 
   Search, 
   Filter, 
+  MoreVertical, 
   Edit, 
   Trash2, 
-  Eye,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
+  Package, 
+  DollarSign, 
+  BarChart3,
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  Star,
   ShoppingCart,
-  DollarSign,
-  Archive
+  Layers,
+  Tag,
+  Zap
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import useProductStore from '@/store/useProductStore';
 
 const Products = () => {
   const { theme } = useTheme();
+  const { products, loading, error, fetchProducts, deleteProduct } = useProductStore();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStock, setSelectedStock] = useState('all');
+  
   const isNeoBrutalism = theme?.includes('neo-brutalism');
   const isMaterial = theme?.includes('material');
   const isFluent = theme?.includes('fluent');
-  
-  const {
-    products,
-    loading,
-    error,
-    pagination,
-    filters,
-    categories,
-    fetchProducts,
-    deleteProduct,
-    setFilters,
-    clearError,
-  } = useProductStore();
 
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState([]);
+  // Helper functions específicas para Neo-Brutalism
+  const getBrutalistCardStyles = () => ({
+    background: 'var(--background)',
+    border: '4px solid var(--border)',
+    borderRadius: '0px',
+    boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
+    transition: 'all 200ms ease',
+    overflow: 'hidden'
+  });
 
-  // Helper functions para generar clases según el tema activo
-  const getTitleClass = (size = 'title') => {
-    if (isNeoBrutalism) {
-      switch(size) {
-        case 'display': return 'font-black uppercase tracking-wide text-4xl';
-        case 'large-title': return 'font-black uppercase tracking-wide text-3xl';
-        case 'title': return 'font-black uppercase tracking-wide text-xl';
-        case 'subtitle': return 'font-black uppercase tracking-wide text-lg';
-        case 'body-large': return 'font-bold uppercase tracking-wide text-base';
-        case 'body': return 'font-bold uppercase tracking-wide text-sm';
-        case 'caption': return 'font-bold uppercase tracking-wide text-xs';
-        default: return 'font-black uppercase tracking-wide';
+  const getBrutalistHeaderStyles = (colorVar = '--brutalist-lime') => ({
+    background: `var(${colorVar})`,
+    color: colorVar === '--brutalist-lime' ? '#000000' : '#ffffff',
+    padding: '16px',
+    border: 'none',
+    borderBottom: '4px solid var(--border)',
+    margin: '-1px -1px 0 -1px'
+  });
+
+  const getBrutalistTypography = (level = 'base') => {
+    const styles = {
+      title: {
+        fontSize: '3rem',
+        fontWeight: '900',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        lineHeight: '1.1',
+        textShadow: '2px 2px 0px rgba(0,0,0,0.8)'
+      },
+      heading: {
+        fontSize: '1.5rem',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        lineHeight: '1.2'
+      },
+      subheading: {
+        fontSize: '1.125rem',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em'
+      },
+      base: {
+        fontSize: '0.875rem',
+        fontWeight: '600',
+        letterSpacing: '0.01em'
+      },
+      small: {
+        fontSize: '0.75rem',
+        fontWeight: '600',
+        letterSpacing: '0.01em'
+      },
+      price: {
+        fontSize: '1.25rem',
+        fontWeight: '900',
+        letterSpacing: '0.025em'
       }
-    }
-    if (isFluent) {
-      switch(size) {
-        case 'display': return 'fluent-display';
-        case 'large-title': return 'fluent-large-title';
-        case 'title': return 'fluent-title';
-        case 'subtitle': return 'fluent-subtitle';
-        case 'body-large': return 'fluent-body-large';
-        case 'body': return 'fluent-body';
-        case 'caption': return 'fluent-caption';
-        case 'caption-strong': return 'fluent-caption-strong';
-        default: return 'fluent-title';
+    };
+    return styles[level] || styles.base;
+  };
+
+  const getBrutalistBadgeStyles = (type) => {
+    const badges = {
+      'en-stock': {
+        background: 'var(--brutalist-lime)',
+        color: '#000000',
+        border: '2px solid var(--border)',
+        padding: '4px 8px',
+        borderRadius: '0px',
+        fontSize: '0.75rem',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em'
+      },
+      'poco-stock': {
+        background: 'var(--brutalist-orange)',
+        color: '#ffffff',
+        border: '2px solid var(--border)',
+        padding: '4px 8px',
+        borderRadius: '0px',
+        fontSize: '0.75rem',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em'
+      },
+      'sin-stock': {
+        background: 'var(--brutalist-pink)',
+        color: '#ffffff',
+        border: '2px solid var(--border)',
+        padding: '4px 8px',
+        borderRadius: '0px',
+        fontSize: '0.75rem',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em'
+      },
+      electronics: {
+        background: 'var(--brutalist-blue)',
+        color: '#ffffff',
+        border: '2px solid var(--border)',
+        padding: '3px 6px',
+        borderRadius: '0px',
+        fontSize: '0.7rem',
+        fontWeight: '700',
+        textTransform: 'uppercase'
+      },
+      clothing: {
+        background: 'var(--brutalist-purple)',
+        color: '#ffffff',
+        border: '2px solid var(--border)',
+        padding: '3px 6px',
+        borderRadius: '0px',
+        fontSize: '0.7rem',
+        fontWeight: '700',
+        textTransform: 'uppercase'
+      },
+      home: {
+        background: 'var(--brutalist-green)',
+        color: '#ffffff',
+        border: '2px solid var(--border)',
+        padding: '3px 6px',
+        borderRadius: '0px',
+        fontSize: '0.7rem',
+        fontWeight: '700',
+        textTransform: 'uppercase'
+      },
+      sports: {
+        background: 'var(--brutalist-orange)',
+        color: '#ffffff',
+        border: '2px solid var(--border)',
+        padding: '3px 6px',
+        borderRadius: '0px',
+        fontSize: '0.7rem',
+        fontWeight: '700',
+        textTransform: 'uppercase'
       }
-    }
-    if (isMaterial) {
-      switch(size) {
-        case 'display': return 'material-display';
-        case 'large-title': return 'material-headline-large';
-        case 'title': return 'material-headline-medium';
-        case 'subtitle': return 'material-headline-small';
-        case 'body-large': return 'material-body-large';
-        case 'body': return 'material-body-medium';
-        case 'caption': return 'material-body-small';
-        default: return 'material-headline-medium';
+    };
+    return badges[type] || badges['en-stock'];
+  };
+
+  const getBrutalistButtonStyles = (variant = 'primary') => {
+    const buttons = {
+      primary: {
+        background: 'var(--brutalist-lime)',
+        color: '#000000',
+        border: '3px solid var(--border)',
+        borderRadius: '0px',
+        padding: '8px 16px',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
+        transition: 'all 150ms ease',
+        cursor: 'pointer'
+      },
+      secondary: {
+        background: 'var(--brutalist-blue)',
+        color: '#ffffff',
+        border: '3px solid var(--border)',
+        borderRadius: '0px',
+        padding: '8px 16px',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
+        transition: 'all 150ms ease',
+        cursor: 'pointer'
+      },
+      danger: {
+        background: 'var(--brutalist-pink)',
+        color: '#ffffff',
+        border: '3px solid var(--border)',
+        borderRadius: '0px',
+        padding: '8px 16px',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
+        transition: 'all 150ms ease',
+        cursor: 'pointer'
+      },
+      small: {
+        background: 'var(--brutalist-purple)',
+        color: '#ffffff',
+        border: '2px solid var(--border)',
+        borderRadius: '0px',
+        padding: '6px 12px',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        fontSize: '0.75rem',
+        letterSpacing: '0.025em',
+        boxShadow: '3px 3px 0px 0px rgba(0,0,0,1)',
+        transition: 'all 150ms ease',
+        cursor: 'pointer'
       }
-    }
-    return 'font-bold';
+    };
+    return buttons[variant] || buttons.primary;
   };
 
-  const getCardClass = () => {
-    if (isNeoBrutalism) return 'border-4 border-foreground shadow-neo-brutal';
-    if (isFluent) return 'fluent-elevation-2 fluent-radius-medium fluent-motion-standard';
-    if (isMaterial) return 'material-card-elevated';
-    return 'border border-border rounded-lg shadow-lg';
-  };
+  const getBrutalistInputStyles = () => ({
+    background: 'var(--background)',
+    border: '3px solid var(--border)',
+    borderRadius: '0px',
+    padding: '12px 16px',
+    fontSize: '1rem',
+    fontWeight: '600',
+    color: 'var(--foreground)',
+    boxShadow: '3px 3px 0px 0px rgba(0,0,0,1)',
+    transition: 'all 150ms ease'
+  });
 
-  const getButtonClass = () => {
-    if (isFluent) return 'fluent-elevation-2 fluent-radius-small';
-    if (isMaterial) return 'material-button-elevated';
-    return '';
-  };
+  const getBrutalistGridLayout = () => ({
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    gap: '2rem',
+    padding: '2rem 0'
+  });
 
-  const getInputClass = () => {
-    if (isFluent) return 'fluent-radius-small';
-    if (isMaterial) return 'material-input';
-    return '';
-  };
+  const getBrutalistIconBackground = (colorVar) => ({
+    background: `var(${colorVar})`,
+    border: '2px solid var(--border)',
+    borderRadius: '0px',
+    boxShadow: '2px 2px 0px 0px rgba(0,0,0,1)',
+    width: '40px',
+    height: '40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  });
 
-  // Cargar productos al montar el componente
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Datos para estadísticas
-  const statsData = {
-    total: products.length,
-    inStock: products.filter(p => p.stock > 0).length,
-    lowStock: products.filter(p => p.stock <= p.minStock && p.stock > 0).length,
-    outOfStock: products.filter(p => p.stock === 0).length,
+  // Funciones de utilidad para productos
+  const getStockStatus = (stock) => {
+    if (stock === 0) return 'sin-stock';
+    if (stock <= 10) return 'poco-stock';
+    return 'en-stock';
   };
 
-  const handleSearch = (searchTerm) => {
-    setFilters({ search: searchTerm });
-    fetchProducts({ search: searchTerm });
-  };
-
-  const handleFilterChange = (filterName, value) => {
-    const newFilters = { [filterName]: value };
-    setFilters(newFilters);
-    fetchProducts(newFilters);
-  };
-
-  const handleDeleteProduct = async (productId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-      try {
-        await deleteProduct(productId);
-      } catch (error) {
-        console.error('Error al eliminar producto:', error);
-      }
+  const getStockIcon = (status) => {
+    switch (status) {
+      case 'sin-stock': return AlertTriangle;
+      case 'poco-stock': return TrendingDown;
+      default: return TrendingUp;
     }
   };
 
-  const getStockStatus = (product) => {
-    if (product.stock <= 0) {
-      return { icon: XCircle, color: 'text-red-500', label: 'Sin stock', bg: 'bg-red-100 dark:bg-red-900' };
-    } else if (product.stock <= product.minStock) {
-      return { icon: AlertCircle, color: 'text-yellow-500', label: 'Stock bajo', bg: 'bg-yellow-100 dark:bg-yellow-900' };
-    } else {
-      return { icon: CheckCircle, color: 'text-green-500', label: 'En stock', bg: 'bg-green-100 dark:bg-green-900' };
-    }
+  const getCategoryColor = (category) => {
+    const colors = {
+      'Electronics': '--brutalist-blue',
+      'Clothing': '--brutalist-purple',
+      'Home': '--brutalist-green',
+      'Sports': '--brutalist-orange'
+    };
+    return colors[category] || '--brutalist-lime';
   };
 
-  const getStatusBadge = (product) => {
-    const stockStatus = getStockStatus(product);
-    const Icon = stockStatus.icon;
-
-    if (isFluent) {
-      let bgStyle = {};
-      if (product.stock <= 0) {
-        bgStyle = { backgroundColor: 'var(--fluent-semantic-danger)' };
-      } else if (product.stock <= product.minStock) {
-        bgStyle = { backgroundColor: 'var(--fluent-semantic-warning)' };
-      } else {
-        bgStyle = { backgroundColor: 'var(--fluent-semantic-success)' };
-      }
-      
-      return (
-        <span 
-          className={`px-2 py-1 text-xs font-medium text-white fluent-radius-small ${getTitleClass('caption')}`}
-          style={bgStyle}
-        >
-          {stockStatus.label}
-        </span>
-      );
-    }
+  // Filtrar productos
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.category.toLowerCase().includes(searchTerm.toLowerCase());
     
-    if (isMaterial) {
-      let bgStyle = {};
-      if (product.stock <= 0) {
-        bgStyle = { backgroundColor: 'var(--material-error, #B00020)', color: 'white' };
-      } else if (product.stock <= product.minStock) {
-        bgStyle = { backgroundColor: '#FF9800', color: 'white' };
-      } else {
-        bgStyle = { backgroundColor: '#4CAF50', color: 'white' };
-      }
-      
-      return (
-        <span 
-          className={`px-2 py-1 text-xs font-medium rounded-full ${getTitleClass('caption')}`}
-          style={bgStyle}
-        >
-          {stockStatus.label}
-        </span>
-      );
-    }
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${stockStatus.bg} ${stockStatus.color} ${getTitleClass('caption')}`}>
-        {stockStatus.label}
-      </span>
-    );
+    const matchesStock = selectedStock === 'all' || 
+                        (selectedStock === 'in-stock' && product.stock > 10) ||
+                        (selectedStock === 'low-stock' && product.stock <= 10 && product.stock > 0) ||
+                        (selectedStock === 'out-of-stock' && product.stock === 0);
+    
+    return matchesSearch && matchesCategory && matchesStock;
+  });
+
+  const handleCardHover = (e) => {
+    if (isNeoBrutalism) {
+      e.currentTarget.style.transform = 'translate(-3px, -3px)';
+      e.currentTarget.style.boxShadow = '9px 9px 0px 0px rgba(0,0,0,1)';
+    }
   };
 
-  const ProductCard = ({ product }) => {
-    const stockStatus = getStockStatus(product);
-    const Icon = stockStatus.icon;
+  const handleCardLeave = (e) => {
+    if (isNeoBrutalism) {
+      e.currentTarget.style.transform = 'translate(0px, 0px)';
+      e.currentTarget.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)';
+    }
+  };
 
-    return (
-      <Card className={`hover:shadow-lg transition-all duration-200 ${getCardClass()}`}
-            style={isFluent ? { 
-              transition: 'all 0.1s var(--fluent-curve-easy-ease)',
-              transform: 'translateY(0px)'
-            } : isMaterial ? {
-              transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: 'translateY(0px)'
-            } : {}}
-            onMouseEnter={(e) => {
-              if (isFluent) {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = 'var(--fluent-shadow-8)';
-              } else if (isMaterial) {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = 'var(--material-elevation-8)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (isFluent) {
-                e.currentTarget.style.transform = 'translateY(0px)';
-                e.currentTarget.style.boxShadow = 'var(--fluent-shadow-2)';
-              } else if (isMaterial) {
-                e.currentTarget.style.transform = 'translateY(0px)';
-                e.currentTarget.style.boxShadow = 'var(--material-elevation-2)';
-              }
-            }}
-      >
-        <CardContent className="p-4">
-          {/* Imagen del producto */}
-          <div className={`mb-3 h-32 bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${
-            isFluent ? 'fluent-radius-small' : 
-            isMaterial ? 'rounded-lg' :
-            'rounded-lg'
-          }`} style={isFluent ? { backgroundColor: 'var(--fluent-neutral-grey-20)' } : 
-                      isMaterial ? { backgroundColor: 'var(--material-surface-variant)' } : {}}>
-            {product.image ? (
-              <img 
-                src={product.image} 
-                alt={product.name}
-                className={`h-full w-full object-cover ${
-                  isFluent ? 'fluent-radius-small' : 
-                  isMaterial ? 'rounded-lg' :
-                  'rounded-lg'
-                }`}
-              />
-            ) : (
-              <Package className="h-12 w-12 text-muted-foreground" />
-            )}
-          </div>
-          
-          {/* Header con nombre y estado */}
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1 min-w-0">
-              <h3 className={`font-semibold truncate ${getTitleClass('subtitle')}`}>{product.name}</h3>
-              <p className={`text-muted-foreground text-sm truncate ${getTitleClass('caption')}`}>{product.description}</p>
-            </div>
-            <div className="flex-shrink-0 ml-2">
-              {getStatusBadge(product)}
-            </div>
-          </div>
-          
-          {/* Información principal */}
-          <div className="space-y-2 mb-3">
-            <div className={`flex items-center justify-between text-sm ${getTitleClass('caption')}`}>
-              <span className="text-muted-foreground">Precio:</span>
-              <span className={`font-semibold text-foreground ${getTitleClass('body')}`}>${product.price.toFixed(2)}</span>
-            </div>
-            
-            <div className={`flex items-center justify-between text-sm ${getTitleClass('caption')}`}>
-              <span className="text-muted-foreground">Stock:</span>
-              <span className={`font-semibold text-foreground ${getTitleClass('body')}`}>{product.stock} unidades</span>
-            </div>
-            
-            <div className={`flex items-center justify-between text-sm ${getTitleClass('caption')}`}>
-              <span className="text-muted-foreground">Categoría:</span>
-              <span className={`font-semibold text-foreground truncate ml-2 ${getTitleClass('body')}`}>{product.category}</span>
-            </div>
-          </div>
-          
-          {/* Footer con SKU y acciones */}
-          <div className={`flex items-center justify-between pt-3 border-t ${
-            isFluent ? '' : 
-            isMaterial ? '' :
-            'border-gray-100 dark:border-gray-700'
-          }`} style={isFluent ? { borderColor: 'var(--fluent-neutral-grey-30)' } : 
-                     isMaterial ? { borderColor: 'var(--material-outline-variant)' } : {}}>
-            <div className={`text-muted-foreground text-xs ${getTitleClass('caption')}`}>
-              SKU: {product.sku}
-            </div>
-            <div className="flex items-center space-x-1">
-              <Button size="sm" variant="ghost" className={`h-7 w-7 p-0 ${getButtonClass()}`}>
-                <Eye className="h-3.5 w-3.5" />
-              </Button>
-              <Button size="sm" variant="ghost" className={`h-7 w-7 p-0 ${getButtonClass()}`}>
-                <Edit className="h-3.5 w-3.5" />
-              </Button>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className={`h-7 w-7 p-0 ${getButtonClass()}`}
-                onClick={() => handleDeleteProduct(product.id)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
+  const handleButtonHover = (e) => {
+    if (isNeoBrutalism) {
+      e.target.style.transform = 'translate(-2px, -2px)';
+      e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)';
+    }
+  };
+
+  const handleButtonLeave = (e) => {
+    if (isNeoBrutalism) {
+      e.target.style.transform = 'translate(0px, 0px)';
+      const baseBoxShadow = e.target.classList.contains('small-button') ? 
+                           '3px 3px 0px 0px rgba(0,0,0,1)' : 
+                           '4px 4px 0px 0px rgba(0,0,0,1)';
+      e.target.style.boxShadow = baseBoxShadow;
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className={`text-center ${getTitleClass('body-large')}`}>
-          Cargando productos...
+      <div className="min-h-screen bg-background text-foreground p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-20">
+            <div 
+              className="text-primary"
+              style={getBrutalistTypography('heading')}
+            >
+              CARGANDO PRODUCTOS...
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -332,176 +365,381 @@ const Products = () => {
 
   if (error) {
     return (
-      <div className={`text-center text-red-500 min-h-screen flex items-center justify-center ${getTitleClass('body-large')}`}>
-        Error: {error}
+      <div className="min-h-screen bg-background text-foreground p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-20">
+            <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+            <div 
+              className="text-red-500 mb-4"
+              style={getBrutalistTypography('heading')}
+            >
+              ERROR AL CARGAR
+            </div>
+            <p style={getBrutalistTypography('base')}>
+              {error}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className={`text-foreground ${getTitleClass('large-title')}`}>
-            Productos
+    <div className="min-h-screen bg-background text-foreground p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        {/* Header Neo-Brutalist */}
+        <header className="text-center py-8">
+          <h1 
+            className="text-primary mb-4"
+            style={getBrutalistTypography('title')}
+          >
+            GESTIÓN DE PRODUCTOS
           </h1>
-          <p className={`mt-2 text-muted-foreground ${getTitleClass('body-large')}`}>
-            Gestiona tu inventario y catálogo de productos
+          <p 
+            className="text-muted-foreground max-w-2xl mx-auto mb-8"
+            style={getBrutalistTypography('base')}
+          >
+            ADMINISTRA TU INVENTARIO CON ESTILO NEO-BRUTALIST
           </p>
-        </div>
-        <div className="mt-4 sm:mt-0">
-          <Button variant="blue" size="lg" className={getButtonClass()}>
-            <Plus className="mr-2 h-5 w-5" />
-            Nuevo Producto
-          </Button>
-        </div>
-      </div>
-
-      {/* Estadísticas rápidas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className={getCardClass()}>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Package className="h-8 w-8 text-muted-foreground" />
-              <div className="ml-4">
-                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>Total Productos</p>
-                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.total}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className={getCardClass()}>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-green-500" />
-              <div className="ml-4">
-                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>En Stock</p>
-                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.inStock}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className={getCardClass()}>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <AlertCircle className="h-8 w-8 text-yellow-500" />
-              <div className="ml-4">
-                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>Stock Bajo</p>
-                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.lowStock}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className={getCardClass()}>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <XCircle className="h-8 w-8 text-red-500" />
-              <div className="ml-4">
-                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>Sin Stock</p>
-                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.outOfStock}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filtros y búsqueda */}
-      <Card className={getCardClass()}>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 max-w-sm">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar productos..."
-                  className={`pl-10 ${getInputClass()}`}
-                  onChange={(e) => handleSearch(e.target.value)}
-                />
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className={getButtonClass()}
+          
+          {/* Botones de acción principal */}
+          <div className="flex flex-wrap justify-center gap-4">
+            <button
+              style={getBrutalistButtonStyles('primary')}
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonLeave}
             >
-              <Filter className="mr-2 h-4 w-4" />
-              Filtros
-            </Button>
+              <Plus className="w-5 h-5 mr-2" />
+              AÑADIR PRODUCTO
+            </button>
+            <button
+              style={getBrutalistButtonStyles('secondary')}
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonLeave}
+            >
+              <BarChart3 className="w-5 h-5 mr-2" />
+              ANALYTICS
+            </button>
           </div>
+        </header>
 
-          {showFilters && (
-            <div className={`mt-4 p-4 border-t ${
-              isFluent ? '' : 
-              isMaterial ? '' :
-              'border-gray-200 dark:border-gray-700'
-            }`} style={isFluent ? { borderColor: 'var(--fluent-neutral-grey-30)' } : 
-                       isMaterial ? { borderColor: 'var(--material-outline-variant)' } : {}}>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div>
-                  <label className={`block mb-2 ${getTitleClass('caption-strong')}`}>Categoría</label>
-                  <select
-                    className={`w-full p-2 border rounded-md bg-background text-foreground ${getInputClass()}`}
-                    onChange={(e) => handleFilterChange('category', e.target.value)}
-                  >
-                    <option value="">Todas</option>
-                    {categories.map(category => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
+        {/* Panel de filtros y búsqueda */}
+        <section 
+          className="p-6"
+          style={getBrutalistCardStyles()}
+        >
+          <div className="grid md:grid-cols-4 gap-4">
+            {/* Búsqueda */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="BUSCAR PRODUCTOS..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12"
+                style={{
+                  ...getBrutalistInputStyles(),
+                  textTransform: 'uppercase',
+                  fontWeight: '600'
+                }}
+                onFocus={(e) => {
+                  if (isNeoBrutalism) {
+                    e.target.style.transform = 'translate(-2px, -2px)';
+                    e.target.style.boxShadow = '5px 5px 0px 0px rgba(0,0,0,1)';
+                  }
+                }}
+                onBlur={(e) => {
+                  if (isNeoBrutalism) {
+                    e.target.style.transform = 'translate(0px, 0px)';
+                    e.target.style.boxShadow = '3px 3px 0px 0px rgba(0,0,0,1)';
+                  }
+                }}
+              />
+            </div>
+
+            {/* Filtro por categoría */}
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              style={{
+                ...getBrutalistInputStyles(),
+                textTransform: 'uppercase',
+                fontWeight: '600'
+              }}
+            >
+              <option value="all">TODAS LAS CATEGORÍAS</option>
+              <option value="Electronics">ELECTRÓNICOS</option>
+              <option value="Clothing">ROPA</option>
+              <option value="Home">HOGAR</option>
+              <option value="Sports">DEPORTES</option>
+            </select>
+
+            {/* Filtro por stock */}
+            <select
+              value={selectedStock}
+              onChange={(e) => setSelectedStock(e.target.value)}
+              style={{
+                ...getBrutalistInputStyles(),
+                textTransform: 'uppercase',
+                fontWeight: '600'
+              }}
+            >
+              <option value="all">TODO EL STOCK</option>
+              <option value="in-stock">EN STOCK</option>
+              <option value="low-stock">POCO STOCK</option>
+              <option value="out-of-stock">SIN STOCK</option>
+            </select>
+
+            {/* Estadísticas rápidas */}
+            <div className="flex items-center justify-center gap-4">
+              <div className="text-center">
+                <div 
+                  className="text-foreground"
+                  style={getBrutalistTypography('heading')}
+                >
+                  {filteredProducts.length}
                 </div>
-                <div>
-                  <label className={`block mb-2 ${getTitleClass('caption-strong')}`}>Estado de Stock</label>
-                  <select
-                    className={`w-full p-2 border rounded-md bg-background text-foreground ${getInputClass()}`}
-                    onChange={(e) => handleFilterChange('stockStatus', e.target.value)}
-                  >
-                    <option value="">Todos</option>
-                    <option value="inStock">En Stock</option>
-                    <option value="lowStock">Stock Bajo</option>
-                    <option value="outOfStock">Sin Stock</option>
-                  </select>
+                <div 
+                  className="text-muted-foreground"
+                  style={getBrutalistTypography('small')}
+                >
+                  PRODUCTOS
+                </div>
+              </div>
+              <div className="text-center">
+                <div 
+                  className="text-foreground"
+                  style={getBrutalistTypography('heading')}
+                >
+                  {filteredProducts.filter(p => p.stock <= 10).length}
+                </div>
+                <div 
+                  className="text-muted-foreground"
+                  style={getBrutalistTypography('small')}
+                >
+                  ALERTAS
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Grid de productos con estilo Neo-Brutalist */}
+        <section style={getBrutalistGridLayout()}>
+          {filteredProducts.length === 0 ? (
+            <div className="col-span-full text-center py-20">
+              <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <div 
+                className="text-muted-foreground"
+                style={getBrutalistTypography('heading')}
+              >
+                NO SE ENCONTRARON PRODUCTOS
+              </div>
+            </div>
+          ) : (
+            filteredProducts.map((product) => {
+              const stockStatus = getStockStatus(product.stock);
+              const StockIcon = getStockIcon(stockStatus);
+              const categoryColor = getCategoryColor(product.category);
+              
+              return (
+                <div
+                  key={product.id}
+                  className="cursor-pointer"
+                  style={getBrutalistCardStyles()}
+                  onMouseEnter={handleCardHover}
+                  onMouseLeave={handleCardLeave}
+                >
+                  {/* Header de la card */}
+                  <div style={getBrutalistHeaderStyles(categoryColor)}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div style={getBrutalistIconBackground('--background')}>
+                          <Package className="w-6 h-6 text-foreground" />
+                        </div>
+                        <div>
+                          <h3 style={getBrutalistTypography('subheading')}>
+                            {product.name}
+                          </h3>
+                          <div style={getBrutalistBadgeStyles(product.category.toLowerCase())}>
+                            {product.category}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: categoryColor === '--brutalist-lime' ? '#000000' : '#ffffff',
+                          cursor: 'pointer',
+                          padding: '4px'
+                        }}
+                      >
+                        <MoreVertical className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Contenido de la card */}
+                  <div className="p-6 space-y-4">
+                    
+                    {/* Descripción */}
+                    <p 
+                      className="text-muted-foreground"
+                      style={getBrutalistTypography('base')}
+                    >
+                      {product.description}
+                    </p>
+
+                    {/* Precio y stock */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div 
+                          className="text-foreground"
+                          style={getBrutalistTypography('price')}
+                        >
+                          ${product.price}
+                        </div>
+                        <div 
+                          className="text-muted-foreground"
+                          style={getBrutalistTypography('small')}
+                        >
+                          PRECIO
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <StockIcon className={`w-5 h-5 ${
+                            stockStatus === 'sin-stock' ? 'text-red-500' :
+                            stockStatus === 'poco-stock' ? 'text-orange-500' :
+                            'text-green-500'
+                          }`} />
+                          <span 
+                            className="text-foreground"
+                            style={getBrutalistTypography('subheading')}
+                          >
+                            {product.stock}
+                          </span>
+                        </div>
+                        <div style={getBrutalistBadgeStyles(stockStatus)}>
+                          {stockStatus === 'sin-stock' ? 'SIN STOCK' :
+                           stockStatus === 'poco-stock' ? 'POCO STOCK' :
+                           'EN STOCK'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Métricas adicionales */}
+                    <div 
+                      className="grid grid-cols-2 gap-3 pt-4"
+                      style={{
+                        borderTop: '2px solid var(--border)'
+                      }}
+                    >
+                      <div className="text-center">
+                        <div 
+                          className="text-foreground"
+                          style={getBrutalistTypography('subheading')}
+                        >
+                          {product.sold || 0}
+                        </div>
+                        <div 
+                          className="text-muted-foreground"
+                          style={getBrutalistTypography('small')}
+                        >
+                          VENDIDOS
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star 
+                              key={i} 
+                              className={`w-4 h-4 ${
+                                i < (product.rating || 0) ? 'text-yellow-500 fill-current' : 'text-gray-300'
+                              }`} 
+                            />
+                          ))}
+                        </div>
+                        <div 
+                          className="text-muted-foreground"
+                          style={getBrutalistTypography('small')}
+                        >
+                          RATING
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Acciones */}
+                    <div className="flex gap-2 pt-4">
+                      <button
+                        style={getBrutalistButtonStyles('small')}
+                        onMouseEnter={handleButtonHover}
+                        onMouseLeave={handleButtonLeave}
+                        className="flex-1 small-button"
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        EDITAR
+                      </button>
+                      <button
+                        style={{...getBrutalistButtonStyles('small'), background: 'var(--brutalist-orange)'}}
+                        onMouseEnter={handleButtonHover}
+                        onMouseLeave={handleButtonLeave}
+                        className="flex-1 small-button"
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-1" />
+                        VENDER
+                      </button>
+                      <button
+                        style={{...getBrutalistButtonStyles('small'), background: 'var(--brutalist-pink)'}}
+                        onMouseEnter={handleButtonHover}
+                        onMouseLeave={handleButtonLeave}
+                        onClick={() => deleteProduct(product.id)}
+                        className="small-button"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
           )}
-        </CardContent>
-      </Card>
+        </section>
 
-      {/* Lista de productos */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+        {/* Footer de acciones avanzadas */}
+        <footer className="text-center py-8">
+          <div className="flex flex-wrap justify-center gap-4">
+            <button
+              style={getBrutalistButtonStyles('secondary')}
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonLeave}
+            >
+              <Layers className="w-5 h-5 mr-2" />
+              GESTIÓN MASIVA
+            </button>
+            <button
+              style={{...getBrutalistButtonStyles('primary'), background: 'var(--brutalist-purple)'}}
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonLeave}
+            >
+              <Tag className="w-5 h-5 mr-2" />
+              ETIQUETAS
+            </button>
+            <button
+              style={{...getBrutalistButtonStyles('primary'), background: 'var(--brutalist-orange)'}}
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonLeave}
+            >
+              <Zap className="w-5 h-5 mr-2" />
+              AUTOMATIZACIÓN
+            </button>
+          </div>
+        </footer>
+
       </div>
-
-      {/* Paginación */}
-      {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-center space-x-2">
-          <Button
-            variant="outline"
-            disabled={pagination.currentPage === 1}
-            onClick={() => fetchProducts({ page: pagination.currentPage - 1 })}
-            className={getButtonClass()}
-          >
-            Anterior
-          </Button>
-          <span className={`px-4 py-2 ${getTitleClass('body')}`}>
-            Página {pagination.currentPage} de {pagination.totalPages}
-          </span>
-          <Button
-            variant="outline"
-            disabled={pagination.currentPage === pagination.totalPages}
-            onClick={() => fetchProducts({ page: pagination.currentPage + 1 })}
-            className={getButtonClass()}
-          >
-            Siguiente
-          </Button>
-        </div>
-      )}
     </div>
   );
 };

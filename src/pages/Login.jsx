@@ -1,6 +1,7 @@
 /**
- * Página de Login con estilo Neo-Brutalista
- * Sistema de autenticación con formulario interactivo
+ * Página de Login optimizada para Neo-Brutalism
+ * Sistema de autenticación con formulario interactivo y estilo brutal mejorado
+ * Incluye helper functions específicas para estilo Neo-Brutalist
  */
 
 import React, { useState } from 'react';
@@ -12,7 +13,10 @@ import {
   Lock, 
   User, 
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  Shield,
+  Zap,
+  Coffee
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -31,21 +35,164 @@ const Login = () => {
   const [formErrors, setFormErrors] = useState({});
 
   const isNeoBrutalism = theme?.includes('neo-brutalism');
+  const isMaterial = theme?.includes('material');
+  const isFluent = theme?.includes('fluent');
+
+  // Helper functions específicas para Neo-Brutalism
+  const getBrutalistContainerStyles = () => ({
+    background: 'var(--background)',
+    border: '6px solid var(--border)',
+    borderRadius: '0px',
+    boxShadow: '12px 12px 0px 0px rgba(0,0,0,1)',
+    padding: '3rem',
+    maxWidth: '500px',
+    width: '100%'
+  });
+
+  const getBrutalistTypography = (level = 'base') => {
+    const styles = {
+      title: {
+        fontSize: '3.5rem',
+        fontWeight: '900',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        lineHeight: '1',
+        textShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+        marginBottom: '1rem'
+      },
+      heading: {
+        fontSize: '2rem',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        lineHeight: '1.2',
+        marginBottom: '0.5rem'
+      },
+      subheading: {
+        fontSize: '1.25rem',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em'
+      },
+      base: {
+        fontSize: '1rem',
+        fontWeight: '600',
+        letterSpacing: '0.01em'
+      },
+      small: {
+        fontSize: '0.875rem',
+        fontWeight: '600',
+        letterSpacing: '0.01em'
+      }
+    };
+    return styles[level] || styles.base;
+  };
+
+  const getBrutalistInputStyles = () => ({
+    background: 'var(--background)',
+    border: '4px solid var(--border)',
+    borderRadius: '0px',
+    padding: '16px 20px',
+    fontSize: '1.125rem',
+    fontWeight: '600',
+    color: 'var(--foreground)',
+    boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
+    transition: 'all 150ms ease',
+    textTransform: 'none',
+    width: '100%'
+  });
+
+  const getBrutalistButtonStyles = (variant = 'primary') => {
+    const buttons = {
+      primary: {
+        background: 'var(--brutalist-lime)',
+        color: '#000000',
+        border: '4px solid var(--border)',
+        borderRadius: '0px',
+        padding: '16px 32px',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        fontSize: '1.125rem',
+        boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
+        transition: 'all 150ms ease',
+        cursor: 'pointer',
+        width: '100%'
+      },
+      secondary: {
+        background: 'var(--brutalist-blue)',
+        color: '#ffffff',
+        border: '4px solid var(--border)',
+        borderRadius: '0px',
+        padding: '12px 24px',
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        fontSize: '1rem',
+        boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
+        transition: 'all 150ms ease',
+        cursor: 'pointer',
+        width: '100%'
+      },
+      demo: {
+        background: 'var(--brutalist-orange)',
+        color: '#ffffff',
+        border: '3px solid var(--border)',
+        borderRadius: '0px',
+        padding: '8px 16px',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: '0.025em',
+        fontSize: '0.875rem',
+        boxShadow: '3px 3px 0px 0px rgba(0,0,0,1)',
+        transition: 'all 150ms ease',
+        cursor: 'pointer'
+      }
+    };
+    return buttons[variant] || buttons.primary;
+  };
+
+  const getBrutalistIconStyles = (colorVar) => ({
+    background: `var(${colorVar})`,
+    border: '3px solid var(--border)',
+    borderRadius: '0px',
+    boxShadow: '3px 3px 0px 0px rgba(0,0,0,1)',
+    width: '60px',
+    height: '60px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: colorVar === '--brutalist-lime' ? '#000000' : '#ffffff'
+  });
+
+  const getBrutalistErrorStyles = () => ({
+    background: 'var(--brutalist-pink)',
+    color: '#ffffff',
+    border: '3px solid var(--border)',
+    borderRadius: '0px',
+    padding: '12px 16px',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.025em',
+    fontSize: '0.875rem',
+    boxShadow: '3px 3px 0px 0px rgba(0,0,0,1)',
+    marginBottom: '1rem'
+  });
 
   // Validación del formulario
   const validateForm = () => {
     const errors = {};
     
     if (!formData.username) {
-      errors.username = 'El email o usuario es requerido';
+      errors.username = 'EL EMAIL O USUARIO ES REQUERIDO';
     } else if (formData.username.length < 3) {
-      errors.username = 'Debe tener al menos 3 caracteres';
+      errors.username = 'DEBE TENER AL MENOS 3 CARACTERES';
     }
     
     if (!formData.password) {
-      errors.password = 'La contraseña es requerida';
+      errors.password = 'LA CONTRASEÑA ES REQUERIDA';
     } else if (formData.password.length < 6) {
-      errors.password = 'La contraseña debe tener al menos 6 caracteres';
+      errors.password = 'LA CONTRASEÑA DEBE TENER AL MENOS 6 CARACTERES';
     }
     
     setFormErrors(errors);
@@ -100,271 +247,300 @@ const Login = () => {
       navigate('/dashboard');
     } catch (error) {
       console.error('Error en demo login:', error);
-      // El error será mostrado automáticamente por el store
+    }
+  };
+
+  const handleInputFocus = (e) => {
+    if (isNeoBrutalism) {
+      e.target.style.transform = 'translate(-3px, -3px)';
+      e.target.style.boxShadow = '7px 7px 0px 0px rgba(0,0,0,1)';
+    }
+  };
+
+  const handleInputBlur = (e) => {
+    if (isNeoBrutalism) {
+      e.target.style.transform = 'translate(0px, 0px)';
+      e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
+    }
+  };
+
+  const handleButtonHover = (e) => {
+    if (isNeoBrutalism) {
+      e.target.style.transform = 'translate(-3px, -3px)';
+      const shadowSize = e.target.classList.contains('demo-button') ? '6px 6px' : '9px 9px';
+      e.target.style.boxShadow = `${shadowSize} 0px 0px rgba(0,0,0,1)`;
+    }
+  };
+
+  const handleButtonLeave = (e) => {
+    if (isNeoBrutalism) {
+      e.target.style.transform = 'translate(0px, 0px)';
+      const shadowSize = e.target.classList.contains('demo-button') ? '3px 3px' : '6px 6px';
+      e.target.style.boxShadow = `${shadowSize} 0px 0px rgba(0,0,0,1)`;
     }
   };
 
   return (
-    <div className="login-page min-h-screen bg-background flex items-center justify-center p-4" data-component="login-page" data-testid="login-page" style={{ backgroundColor: 'var(--background)' }}>
-      <div className="login-container w-full max-w-md" data-component="login-container" data-testid="login-container">
-        {/* Header con logo */}
-        <div className="login-header text-center mb-8" data-component="login-header" data-testid="login-header">
-          <div className={`login-logo inline-flex items-center justify-center w-20 h-20 mb-6 ${
-            isNeoBrutalism 
-              ? 'bg-foreground rounded-none border-4 border-foreground shadow-neo-brutal'
-              : 'bg-primary rounded-lg border border-border shadow-lg'
-          }`} data-component="login-logo" data-testid="login-logo" style={{
-            backgroundColor: isNeoBrutalism ? 'var(--foreground)' : 'var(--primary)',
-            border: isNeoBrutalism ? '4px solid var(--border)' : '1px solid var(--border)'
-          }}>
-            <User className={`w-10 h-10 ${isNeoBrutalism ? 'text-background' : 'text-primary-foreground'}`} style={{
-              color: isNeoBrutalism ? 'var(--background)' : 'var(--primary-foreground)'
-            }} />
-          </div>
-          <h1 className={`login-title text-4xl mb-2 ${
-            isNeoBrutalism 
-              ? 'font-black uppercase tracking-wide'
-              : 'font-bold'
-          }`} data-testid="login-title" style={{ color: 'var(--foreground)' }}>
-            Sistema ERP
-          </h1>
-          <p className={`login-subtitle text-lg text-muted-foreground ${
-            isNeoBrutalism 
-              ? 'font-bold uppercase tracking-wide'
-              : 'font-medium'
-          }`} data-testid="login-subtitle" style={{ color: 'var(--muted-foreground)' }}>
-            Acceso al Sistema
-          </p>
-        </div>
-
-        {/* Formulario de login */}
-        <div className={`login-form bg-card p-8 ${
-          isNeoBrutalism 
-            ? 'border-4 border-foreground shadow-neo-brutal'
-            : 'border border-border rounded-lg shadow-lg'
-        }`} data-component="login-form" data-testid="login-form" style={{
-          backgroundColor: 'var(--card)',
-          border: isNeoBrutalism ? '4px solid var(--border)' : '1px solid var(--border)',
-          boxShadow: isNeoBrutalism ? '8px 8px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-lg)'
-        }}>
-          {/* Error general */}
-          {error && (
-            <div className={`mb-6 p-4 bg-destructive/10 border border-destructive ${
-              isNeoBrutalism ? 'border-4 rounded-none' : 'rounded-lg'
-            }`}>
-              <div className="flex items-start">
-                <AlertCircle className="w-5 h-5 text-destructive mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className={`text-destructive mb-1 ${
-                    isNeoBrutalism 
-                      ? 'font-black uppercase text-sm'
-                      : 'font-semibold text-sm'
-                  }`}>
-                    Error de Autenticación
-                  </h3>
-                  <p className={`text-destructive text-sm leading-relaxed ${
-                    isNeoBrutalism ? 'font-bold' : 'font-medium'
-                  }`}>
-                    {error}
-                  </p>
-                  {error.includes('conexión') && (
-                    <div className={`mt-2 text-xs text-destructive ${
-                      isNeoBrutalism ? 'font-bold' : 'font-medium'
-                    }`}>
-                      <p>💡 Sugerencias:</p>
-                      <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Verifica que el servidor esté ejecutándose</li>
-                        <li>Comprueba tu conexión a internet</li>
-                        <li>Contacta al soporte técnico si persiste</li>
-                      </ul>
-                    </div>
-                  )}
-                  {error.includes('credenciales') && (
-                    <div className={`mt-2 text-xs text-destructive ${
-                      isNeoBrutalism ? 'font-bold' : 'font-medium'
-                    }`}>
-                      <p>💡 Sugerencias:</p>
-                      <ul className="list-disc list-inside mt-1 space-y-1">
-                        <li>Verifica que el usuario y contraseña sean correctos</li>
-                        <li>Asegúrate de que tu cuenta esté activa</li>
-                        <li>Intenta recuperar tu contraseña</li>
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Campo Email/Username */}
-            <div>
-              <label className={`block text-sm mb-2 ${
-                isNeoBrutalism 
-                  ? 'font-black uppercase tracking-wide'
-                  : 'font-medium'
-              }`}>
-                Email o Usuario
-              </label>
-              <div className="relative">
-                <Input
-                  type="text"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  placeholder="USUARIO@EMAIL.COM"
-                  className={`pl-12 ${
-                    isNeoBrutalism ? 'font-bold' : ''
-                  } ${formErrors.username ? 'border-destructive' : ''}`}
-                />
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              </div>
-              {formErrors.username && (
-                <p className={`mt-2 text-sm text-destructive ${
-                  isNeoBrutalism ? 'font-bold uppercase' : 'font-medium'
-                }`}>
-                  {formErrors.username}
-                </p>
-              )}
-            </div>
-
-            {/* Campo Contraseña */}
-            <div>
-              <label className={`block text-sm mb-2 ${
-                isNeoBrutalism 
-                  ? 'font-black uppercase tracking-wide'
-                  : 'font-medium'
-              }`}>
-                Contraseña
-              </label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="••••••••"
-                  className={`pl-12 pr-12 ${
-                    isNeoBrutalism ? 'font-bold' : ''
-                  } ${formErrors.password ? 'border-destructive' : ''}`}
-                />
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              {formErrors.password && (
-                <p className={`mt-2 text-sm text-destructive ${
-                  isNeoBrutalism ? 'font-bold uppercase' : 'font-medium'
-                }`}>
-                  {formErrors.password}
-                </p>
-              )}
-            </div>
-
-            {/* Botón de login */}
-            <Button
-              type="submit"
-              variant="lime"
-              size="lg"
-              className="w-full"
-              disabled={loading}
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
+      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
+        
+        {/* Panel izquierdo - Información */}
+        <div className="space-y-8 text-center lg:text-left">
+          <div>
+            <h1 
+              className="text-primary"
+              style={getBrutalistTypography('title')}
             >
-              {loading ? (
-                <div className="flex items-center">
-                  <div className={`w-5 h-5 border-2 border-t-transparent rounded-full animate-spin mr-2 ${
-                    isNeoBrutalism ? 'border-foreground' : 'border-current'
-                  }`}></div>
-                  INICIANDO SESIÓN...
-                </div>
-              ) : (
-                <div className="flex items-center justify-center">
-                  INICIAR SESIÓN
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </div>
-              )}
-            </Button>
-          </form>
-
-          {/* Separador */}
-          <div className="my-6 flex items-center">
-            <div className={`flex-1 ${
-              isNeoBrutalism 
-                ? 'border-t-4 border-foreground'
-                : 'border-t border-border'
-            }`}></div>
-            <span className={`px-4 text-sm ${
-              isNeoBrutalism 
-                ? 'font-black uppercase tracking-wide'
-                : 'font-medium'
-            }`}>O</span>
-            <div className={`flex-1 ${
-              isNeoBrutalism 
-                ? 'border-t-4 border-foreground'
-                : 'border-t border-border'
-            }`}></div>
+              ERP SYSTEM
+            </h1>
+            <h2 
+              className="text-foreground"
+              style={getBrutalistTypography('heading')}
+            >
+              NEO-BRUTALIST DESIGN
+            </h2>
+            <p 
+              className="text-muted-foreground mt-4 max-w-md mx-auto lg:mx-0"
+              style={getBrutalistTypography('base')}
+            >
+              SISTEMA DE GESTIÓN EMPRESARIAL CON DISEÑO MODERNO Y FUNCIONALIDAD AVANZADA
+            </p>
           </div>
 
-          {/* Demo Login */}
-          <Button
-            type="button"
-            variant="blue"
-            size="lg"
-            className="w-full"
-            onClick={handleDemoLogin}
-            disabled={loading}
-          >
-            <div className="flex items-center justify-center">
-              🚀 ACCESO DEMO (API)
+          {/* Características destacadas */}
+          <div className="grid gap-6">
+            <div className="flex items-center gap-4 justify-center lg:justify-start">
+              <div style={getBrutalistIconStyles('--brutalist-lime')}>
+                <Shield className="w-8 h-8" />
+              </div>
+              <div className="text-left">
+                <h3 style={getBrutalistTypography('subheading')}>
+                  SEGURIDAD TOTAL
+                </h3>
+                <p style={getBrutalistTypography('small')} className="text-muted-foreground">
+                  Autenticación robusta y datos protegidos
+                </p>
+              </div>
             </div>
-          </Button>
 
-          {/* Información de API */}
-          <div className={`mt-4 p-4 bg-muted ${
-            isNeoBrutalism 
-              ? 'border-4 border-foreground'
-              : 'border border-border rounded-lg'
-          }`}>
-            <p className={`text-xs text-muted-foreground mb-1 ${
-              isNeoBrutalism 
-                ? 'font-bold uppercase tracking-wide'
-                : 'font-medium'
-            }`}>
-              API Endpoint:
-            </p>
-            <p className={`text-sm ${isNeoBrutalism ? 'font-bold' : 'font-medium'}`}>POST localhost:5050/login</p>
-            <p className={`text-xs text-muted-foreground mt-2 mb-1 ${
-              isNeoBrutalism 
-                ? 'font-bold uppercase tracking-wide'
-                : 'font-medium'
-            }`}>
-              Request format:
-            </p>
-            <p className={`text-sm ${isNeoBrutalism ? 'font-bold' : 'font-medium'}`}>{"{ \"email\": \"user@email.com\", \"password\": \"pass\" }"}</p>
-            <p className={`text-xs text-muted-foreground mt-2 mb-1 ${
-              isNeoBrutalism 
-                ? 'font-bold uppercase tracking-wide'
-                : 'font-medium'
-            }`}>
-              Acepta email o username:
-            </p>
-            <p className={`text-sm ${isNeoBrutalism ? 'font-bold' : 'font-medium'}`}>demo@erp.com o demo | demo123</p>
+            <div className="flex items-center gap-4 justify-center lg:justify-start">
+              <div style={getBrutalistIconStyles('--brutalist-blue')}>
+                <Zap className="w-8 h-8" />
+              </div>
+              <div className="text-left">
+                <h3 style={getBrutalistTypography('subheading')}>
+                  RENDIMIENTO BRUTAL
+                </h3>
+                <p style={getBrutalistTypography('small')} className="text-muted-foreground">
+                  Velocidad extrema en todas las operaciones
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 justify-center lg:justify-start">
+              <div style={getBrutalistIconStyles('--brutalist-orange')}>
+                <Coffee className="w-8 h-8" />
+              </div>
+              <div className="text-left">
+                <h3 style={getBrutalistTypography('subheading')}>
+                  FÁCIL DE USAR
+                </h3>
+                <p style={getBrutalistTypography('small')} className="text-muted-foreground">
+                  Interfaz intuitiva con estilo único
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className={`text-sm text-muted-foreground ${
-            isNeoBrutalism 
-              ? 'font-bold uppercase tracking-wide'
-              : 'font-medium'
-          }`}>
-            Sistema ERP © 2025
-          </p>
+        {/* Panel derecho - Formulario de login */}
+        <div className="flex justify-center">
+          <div style={getBrutalistContainerStyles()}>
+            
+            {/* Header del formulario */}
+            <div className="text-center mb-8">
+              <div style={getBrutalistIconStyles('--brutalist-purple')} className="mx-auto mb-4">
+                <User className="w-10 h-10" />
+              </div>
+              <h2 
+                className="text-foreground"
+                style={getBrutalistTypography('heading')}
+              >
+                INICIAR SESIÓN
+              </h2>
+              <p 
+                className="text-muted-foreground mt-2"
+                style={getBrutalistTypography('base')}
+              >
+                ACCEDE A TU PANEL DE CONTROL
+              </p>
+            </div>
+
+            {/* Mostrar error general */}
+            {error && (
+              <div style={getBrutalistErrorStyles()}>
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" />
+                  <span>{error.toUpperCase()}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Formulario */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              
+              {/* Campo de usuario */}
+              <div>
+                <label 
+                  htmlFor="username"
+                  className="block text-foreground mb-3"
+                  style={getBrutalistTypography('subheading')}
+                >
+                  USUARIO O EMAIL
+                </label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-muted-foreground" />
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
+                    className="pl-14"
+                    style={getBrutalistInputStyles()}
+                    placeholder="TU USUARIO O EMAIL"
+                    disabled={loading}
+                  />
+                </div>
+                {formErrors.username && (
+                  <div className="mt-2" style={{...getBrutalistErrorStyles(), padding: '8px 12px'}}>
+                    {formErrors.username}
+                  </div>
+                )}
+              </div>
+
+              {/* Campo de contraseña */}
+              <div>
+                <label 
+                  htmlFor="password"
+                  className="block text-foreground mb-3"
+                  style={getBrutalistTypography('subheading')}
+                >
+                  CONTRASEÑA
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-muted-foreground" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
+                    className="pl-14 pr-14"
+                    style={getBrutalistInputStyles()}
+                    placeholder="TU CONTRASEÑA"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
+                  </button>
+                </div>
+                {formErrors.password && (
+                  <div className="mt-2" style={{...getBrutalistErrorStyles(), padding: '8px 12px'}}>
+                    {formErrors.password}
+                  </div>
+                )}
+              </div>
+
+              {/* Botón de envío */}
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  ...getBrutalistButtonStyles('primary'),
+                  opacity: loading ? 0.7 : 1,
+                  cursor: loading ? 'not-allowed' : 'pointer'
+                }}
+                onMouseEnter={!loading ? handleButtonHover : undefined}
+                onMouseLeave={!loading ? handleButtonLeave : undefined}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  {loading ? (
+                    <>
+                      <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      INICIANDO SESIÓN...
+                    </>
+                  ) : (
+                    <>
+                      INICIAR SESIÓN
+                      <ArrowRight className="w-6 h-6" />
+                    </>
+                  )}
+                </div>
+              </button>
+
+              {/* Separador */}
+              <div className="text-center">
+                <div 
+                  className="text-muted-foreground"
+                  style={getBrutalistTypography('base')}
+                >
+                  O PRUEBA LA DEMO
+                </div>
+              </div>
+
+              {/* Botón demo */}
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                disabled={loading}
+                className="demo-button"
+                style={{
+                  ...getBrutalistButtonStyles('demo'),
+                  opacity: loading ? 0.7 : 1,
+                  cursor: loading ? 'not-allowed' : 'pointer'
+                }}
+                onMouseEnter={!loading ? handleButtonHover : undefined}
+                onMouseLeave={!loading ? handleButtonLeave : undefined}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Coffee className="w-5 h-5" />
+                  ACCESO DEMO
+                </div>
+              </button>
+            </form>
+
+            {/* Footer */}
+            <div className="mt-8 text-center">
+              <p 
+                className="text-muted-foreground"
+                style={getBrutalistTypography('small')}
+              >
+                ¿PROBLEMAS CON EL ACCESO?
+              </p>
+              <button
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--primary)',
+                  cursor: 'pointer',
+                  ...getBrutalistTypography('small'),
+                  textDecoration: 'underline',
+                  textDecorationThickness: '2px'
+                }}
+              >
+                CONTACTAR SOPORTE
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
