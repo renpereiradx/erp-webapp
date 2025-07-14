@@ -1,5 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./themes/materialDesign.css";
 
 @layer base {
   /* --- TEMA BASE NEO-BRUTALISM (POR DEFECTO) --- */
@@ -61,67 +64,6 @@
     --accent: #84cc16;
     --accent-foreground: #111827;
     --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-  }
-
-  /* --- TEMA MATERIAL --- */
-  [data-theme='material-light'] {
-    --color-primary: #6200ee;
-    --color-secondary: #03dac6;
-    --color-background: #ffffff;
-    --color-text: #000000;
-    --border-radius: 8px;
-    --border-width: 1px;
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    
-    --background: #ffffff;
-    --foreground: #000000;
-    --card: #ffffff;
-    --card-foreground: #000000;
-    --popover: #ffffff;
-    --popover-foreground: #000000;
-    --primary: #6200ee;
-    --primary-foreground: #ffffff;
-    --secondary: #03dac6;
-    --secondary-foreground: #000000;
-    --muted: #f5f5f5;
-    --muted-foreground: #757575;
-    --accent: #03dac6;
-    --accent-foreground: #000000;
-    --destructive: #b00020;
-    --destructive-foreground: #ffffff;
-    --border: #e0e0e0;
-    --input: #ffffff;
-    --ring: #6200ee;
-  }
-
-  [data-theme='material-dark'] {
-    --color-primary: #bb86fc;
-    --color-secondary: #03dac6;
-    --color-background: #121212;
-    --color-text: #ffffff;
-    --border-radius: 8px;
-    --border-width: 1px;
-    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    
-    --background: #121212;
-    --foreground: #ffffff;
-    --card: #1e1e1e;
-    --card-foreground: #ffffff;
-    --primary: #bb86fc;
-    --primary-foreground: #000000;
-    --secondary: #03dac6;
-    --secondary-foreground: #000000;
-    --border: #373737;
-    --input: #1e1e1e;
-    --ring: #bb86fc;
-    --muted: #2d2d2d;
-    --muted-foreground: #a8a8a8;
-    --accent: #03dac6;
-    --accent-foreground: #000000;
-    --destructive: #cf6679;
     --destructive-foreground: #ffffff;
   }
 
