@@ -4,6 +4,7 @@
 @import "tw-animate-css";
 @import "./themes/materialDesign.css";
 @import "./themes/fluentDesign.css";
+@import "./themes/neoBrutalism.css";
 
 @layer base {
   /* --- TEMA BASE NEO-BRUTALISM (POR DEFECTO) --- */
