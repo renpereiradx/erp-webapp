@@ -1,0 +1,537 @@
+/* 
+ * Fluent Design System 2.0
+ * Based on Microsoft Fluent 2 specifications
+ * https://fluent2.microsoft.design/
+ */
+
+/* Fluent 2 Light Theme */
+[data-theme='fluent-light'] {
+  /* Brand Colors */
+  --fluent-brand-primary: #0078D4;
+  --fluent-brand-primary-hover: #005A9E;
+  --fluent-brand-primary-pressed: #004578;
+  --fluent-brand-primary-selected: #0078D4;
+  --fluent-brand-secondary: #40E0D0;
+  --fluent-brand-tertiary: #0078D4;
+  
+  /* Neutral Colors */
+  --fluent-neutral-white: #FFFFFF;
+  --fluent-neutral-black: #000000;
+  --fluent-neutral-grey-10: #FAF9F8;
+  --fluent-neutral-grey-20: #F3F2F1;
+  --fluent-neutral-grey-30: #EDEBE9;
+  --fluent-neutral-grey-40: #E1DFDD;
+  --fluent-neutral-grey-50: #D2D0CE;
+  --fluent-neutral-grey-60: #C8C6C4;
+  --fluent-neutral-grey-70: #BEBBB8;
+  --fluent-neutral-grey-80: #B3B0AD;
+  --fluent-neutral-grey-90: #A19F9D;
+  --fluent-neutral-grey-100: #979593;
+  --fluent-neutral-grey-110: #8A8886;
+  --fluent-neutral-grey-120: #797775;
+  --fluent-neutral-grey-130: #605E5C;
+  --fluent-neutral-grey-140: #484644;
+  --fluent-neutral-grey-150: #323130;
+  --fluent-neutral-grey-160: #201F1E;
+  
+  /* Semantic Colors */
+  --fluent-semantic-success: #107C10;
+  --fluent-semantic-warning: #FFB900;
+  --fluent-semantic-danger: #D13438;
+  --fluent-semantic-severe: #D13438;
+  --fluent-semantic-caution: #FFB900;
+  --fluent-semantic-info: #0078D4;
+  
+  /* Text Colors */
+  --fluent-text-primary: #212121;
+  --fluent-text-secondary: #605E5C;
+  --fluent-text-tertiary: #8A8886;
+  --fluent-text-disabled: #A19F9D;
+  --fluent-text-accent: #0078D4;
+  --fluent-text-on-accent: #FFFFFF;
+  --fluent-text-on-accent-selected: #FFFFFF;
+  
+  /* Surface Colors */
+  --fluent-surface-primary: #FFFFFF;
+  --fluent-surface-secondary: #FAF9F8;
+  --fluent-surface-tertiary: #F3F2F1;
+  --fluent-surface-quaternary: #EDEBE9;
+  --fluent-surface-alt: #FAFAFA;
+  --fluent-surface-card: #FFFFFF;
+  --fluent-surface-card-hover: #F8F8F8;
+  --fluent-surface-card-pressed: #F0F0F0;
+  
+  /* Background Colors */
+  --fluent-background-canvas: #FAFAFA;
+  --fluent-background-application: #F3F2F1;
+  --fluent-background-layer: #FFFFFF;
+  --fluent-background-layer-alt: #F8F7F6;
+  --fluent-background-overlay: rgba(255, 255, 255, 0.95);
+  
+  /* Border Colors */
+  --fluent-border-neutral: #E1DFDD;
+  --fluent-border-neutral-variant: #C8C6C4;
+  --fluent-border-on-accent: rgba(255, 255, 255, 0.1);
+  --fluent-border-accent: #0078D4;
+  --fluent-border-focus: #605E5C;
+  
+  /* Stroke Colors */
+  --fluent-stroke-surface: #E1DFDD;
+  --fluent-stroke-accessible: #605E5C;
+  --fluent-stroke-focus-outer: #000000;
+  --fluent-stroke-focus-inner: #FFFFFF;
+  
+  /* Shadow and Elevation */
+  --fluent-shadow-2: 0px 1px 2px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
+  --fluent-shadow-4: 0px 2px 4px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
+  --fluent-shadow-8: 0px 4px 8px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
+  --fluent-shadow-16: 0px 8px 16px rgba(0, 0, 0, 0.14), 0px 0px 2px rgba(0, 0, 0, 0.12);
+  --fluent-shadow-28: 0px 14px 28px rgba(0, 0, 0, 0.24), 0px 0px 8px rgba(0, 0, 0, 0.20);
+  --fluent-shadow-64: 0px 32px 64px rgba(0, 0, 0, 0.24), 0px 0px 8px rgba(0, 0, 0, 0.20);
+  
+  /* Corner Radius */
+  --fluent-corner-radius-none: 0px;
+  --fluent-corner-radius-small: 2px;
+  --fluent-corner-radius-medium: 4px;
+  --fluent-corner-radius-large: 6px;
+  --fluent-corner-radius-xlarge: 8px;
+  --fluent-corner-radius-circular: 10000px;
+  
+  /* Spacing Tokens */
+  --fluent-size-none: 0px;
+  --fluent-size-20: 2px;
+  --fluent-size-40: 4px;
+  --fluent-size-60: 6px;
+  --fluent-size-80: 8px;
+  --fluent-size-100: 10px;
+  --fluent-size-120: 12px;
+  --fluent-size-160: 16px;
+  --fluent-size-200: 20px;
+  --fluent-size-240: 24px;
+  --fluent-size-280: 28px;
+  --fluent-size-320: 32px;
+  --fluent-size-360: 36px;
+  --fluent-size-400: 40px;
+  --fluent-size-480: 48px;
+  --fluent-size-520: 52px;
+  --fluent-size-560: 56px;
+  
+  /* Component Heights */
+  --fluent-control-height-small: 24px;
+  --fluent-control-height-medium: 32px;
+  --fluent-control-height-large: 40px;
+  --fluent-control-height-xlarge: 48px;
+  
+  /* Motion and Animation */
+  --fluent-duration-ultra-fast: 50ms;
+  --fluent-duration-faster: 100ms;
+  --fluent-duration-fast: 150ms;
+  --fluent-duration-normal: 200ms;
+  --fluent-duration-gentle: 250ms;
+  --fluent-duration-slow: 300ms;
+  --fluent-duration-slower: 400ms;
+  --fluent-duration-ultra-slow: 500ms;
+  
+  --fluent-curve-accelerate-max: cubic-bezier(1, 0, 1, 1);
+  --fluent-curve-accelerate-mid: cubic-bezier(0.7, 0, 1, 0.5);
+  --fluent-curve-accelerate-min: cubic-bezier(0.8, 0, 0.78, 1);
+  --fluent-curve-decelerate-max: cubic-bezier(0, 0, 0, 1);
+  --fluent-curve-decelerate-mid: cubic-bezier(0.1, 0.9, 0.2, 1);
+  --fluent-curve-decelerate-min: cubic-bezier(0.33, 0, 0.1, 1);
+  --fluent-curve-easy-ease: cubic-bezier(0.33, 0, 0.67, 1);
+  --fluent-curve-linear: cubic-bezier(0, 0, 1, 1);
+  
+  /* Legacy CSS Variables for compatibility */
+  --background: var(--fluent-background-canvas);
+  --foreground: var(--fluent-text-primary);
+  --card: var(--fluent-surface-card);
+  --card-foreground: var(--fluent-text-primary);
+  --popover: var(--fluent-surface-layer);
+  --popover-foreground: var(--fluent-text-primary);
+  --primary: var(--fluent-brand-primary);
+  --primary-foreground: var(--fluent-text-on-accent);
+  --secondary: var(--fluent-surface-secondary);
+  --secondary-foreground: var(--fluent-text-primary);
+  --muted: var(--fluent-surface-tertiary);
+  --muted-foreground: var(--fluent-text-secondary);
+  --accent: var(--fluent-brand-primary);
+  --accent-foreground: var(--fluent-text-on-accent);
+  --destructive: var(--fluent-semantic-danger);
+  --destructive-foreground: var(--fluent-text-on-accent);
+  --border: var(--fluent-border-neutral);
+  --input: var(--fluent-surface-primary);
+  --ring: var(--fluent-border-focus);
+  --radius: var(--fluent-corner-radius-medium);
+  
+  /* Custom theme variables */
+  --color-primary: var(--fluent-brand-primary);
+  --color-secondary: var(--fluent-surface-secondary);
+  --color-background: var(--fluent-background-canvas);
+  --color-text: var(--fluent-text-primary);
+  --border-radius: var(--fluent-corner-radius-medium);
+  --border-width: 1px;
+  --shadow-sm: var(--fluent-shadow-2);
+  --shadow-lg: var(--fluent-shadow-16);
+}
+
+/* Fluent 2 Dark Theme */
+[data-theme='fluent-dark'] {
+  /* Brand Colors */
+  --fluent-brand-primary: #2899F5;
+  --fluent-brand-primary-hover: #479EF5;
+  --fluent-brand-primary-pressed: #6BB6FF;
+  --fluent-brand-primary-selected: #2899F5;
+  --fluent-brand-secondary: #40E0D0;
+  --fluent-brand-tertiary: #2899F5;
+  
+  /* Neutral Colors */
+  --fluent-neutral-white: #FFFFFF;
+  --fluent-neutral-black: #000000;
+  --fluent-neutral-grey-10: #0B0A0A;
+  --fluent-neutral-grey-20: #151414;
+  --fluent-neutral-grey-30: #1E1D1D;
+  --fluent-neutral-grey-40: #292827;
+  --fluent-neutral-grey-50: #343332;
+  --fluent-neutral-grey-60: #3F3E3D;
+  --fluent-neutral-grey-70: #4A4948;
+  --fluent-neutral-grey-80: #565554;
+  --fluent-neutral-grey-90: #61605F;
+  --fluent-neutral-grey-100: #6C6B6A;
+  --fluent-neutral-grey-110: #787776;
+  --fluent-neutral-grey-120: #8A8886;
+  --fluent-neutral-grey-130: #9C9A99;
+  --fluent-neutral-grey-140: #B3B0AD;
+  --fluent-neutral-grey-150: #BEBBB8;
+  --fluent-neutral-grey-160: #C8C6C4;
+  
+  /* Semantic Colors */
+  --fluent-semantic-success: #54B054;
+  --fluent-semantic-warning: #FCE100;
+  --fluent-semantic-danger: #F7630C;
+  --fluent-semantic-severe: #F7630C;
+  --fluent-semantic-caution: #FCE100;
+  --fluent-semantic-info: #2899F5;
+  
+  /* Text Colors */
+  --fluent-text-primary: #F3F2F1;
+  --fluent-text-secondary: #C8C6C4;
+  --fluent-text-tertiary: #8A8886;
+  --fluent-text-disabled: #605E5C;
+  --fluent-text-accent: #2899F5;
+  --fluent-text-on-accent: #000000;
+  --fluent-text-on-accent-selected: #000000;
+  
+  /* Surface Colors */
+  --fluent-surface-primary: #201F1E;
+  --fluent-surface-secondary: #292827;
+  --fluent-surface-tertiary: #323130;
+  --fluent-surface-quaternary: #3B3A39;
+  --fluent-surface-alt: #1B1A19;
+  --fluent-surface-card: #292827;
+  --fluent-surface-card-hover: #343332;
+  --fluent-surface-card-pressed: #3B3A39;
+  
+  /* Background Colors */
+  --fluent-background-canvas: #201F1E;
+  --fluent-background-application: #1B1A19;
+  --fluent-background-layer: #292827;
+  --fluent-background-layer-alt: #323130;
+  --fluent-background-overlay: rgba(32, 31, 30, 0.95);
+  
+  /* Border Colors */
+  --fluent-border-neutral: #3B3A39;
+  --fluent-border-neutral-variant: #484644;
+  --fluent-border-on-accent: rgba(0, 0, 0, 0.1);
+  --fluent-border-accent: #2899F5;
+  --fluent-border-focus: #C8C6C4;
+  
+  /* Stroke Colors */
+  --fluent-stroke-surface: #3B3A39;
+  --fluent-stroke-accessible: #C8C6C4;
+  --fluent-stroke-focus-outer: #FFFFFF;
+  --fluent-stroke-focus-inner: #000000;
+  
+  /* Shadow and Elevation */
+  --fluent-shadow-2: 0px 1px 2px rgba(0, 0, 0, 0.24), 0px 0px 2px rgba(0, 0, 0, 0.20);
+  --fluent-shadow-4: 0px 2px 4px rgba(0, 0, 0, 0.28), 0px 0px 2px rgba(0, 0, 0, 0.24);
+  --fluent-shadow-8: 0px 4px 8px rgba(0, 0, 0, 0.28), 0px 0px 2px rgba(0, 0, 0, 0.24);
+  --fluent-shadow-16: 0px 8px 16px rgba(0, 0, 0, 0.28), 0px 0px 2px rgba(0, 0, 0, 0.24);
+  --fluent-shadow-28: 0px 14px 28px rgba(0, 0, 0, 0.32), 0px 0px 8px rgba(0, 0, 0, 0.28);
+  --fluent-shadow-64: 0px 32px 64px rgba(0, 0, 0, 0.32), 0px 0px 8px rgba(0, 0, 0, 0.28);
+  
+  /* Corner Radius */
+  --fluent-corner-radius-none: 0px;
+  --fluent-corner-radius-small: 2px;
+  --fluent-corner-radius-medium: 4px;
+  --fluent-corner-radius-large: 6px;
+  --fluent-corner-radius-xlarge: 8px;
+  --fluent-corner-radius-circular: 10000px;
+  
+  /* Spacing Tokens (same as light theme) */
+  --fluent-size-none: 0px;
+  --fluent-size-20: 2px;
+  --fluent-size-40: 4px;
+  --fluent-size-60: 6px;
+  --fluent-size-80: 8px;
+  --fluent-size-100: 10px;
+  --fluent-size-120: 12px;
+  --fluent-size-160: 16px;
+  --fluent-size-200: 20px;
+  --fluent-size-240: 24px;
+  --fluent-size-280: 28px;
+  --fluent-size-320: 32px;
+  --fluent-size-360: 36px;
+  --fluent-size-400: 40px;
+  --fluent-size-480: 48px;
+  --fluent-size-520: 52px;
+  --fluent-size-560: 56px;
+  
+  /* Component Heights */
+  --fluent-control-height-small: 24px;
+  --fluent-control-height-medium: 32px;
+  --fluent-control-height-large: 40px;
+  --fluent-control-height-xlarge: 48px;
+  
+  /* Motion and Animation (same as light theme) */
+  --fluent-duration-ultra-fast: 50ms;
+  --fluent-duration-faster: 100ms;
+  --fluent-duration-fast: 150ms;
+  --fluent-duration-normal: 200ms;
+  --fluent-duration-gentle: 250ms;
+  --fluent-duration-slow: 300ms;
+  --fluent-duration-slower: 400ms;
+  --fluent-duration-ultra-slow: 500ms;
+  
+  --fluent-curve-accelerate-max: cubic-bezier(1, 0, 1, 1);
+  --fluent-curve-accelerate-mid: cubic-bezier(0.7, 0, 1, 0.5);
+  --fluent-curve-accelerate-min: cubic-bezier(0.8, 0, 0.78, 1);
+  --fluent-curve-decelerate-max: cubic-bezier(0, 0, 0, 1);
+  --fluent-curve-decelerate-mid: cubic-bezier(0.1, 0.9, 0.2, 1);
+  --fluent-curve-decelerate-min: cubic-bezier(0.33, 0, 0.1, 1);
+  --fluent-curve-easy-ease: cubic-bezier(0.33, 0, 0.67, 1);
+  --fluent-curve-linear: cubic-bezier(0, 0, 1, 1);
+  
+  /* Legacy CSS Variables for compatibility */
+  --background: var(--fluent-background-canvas);
+  --foreground: var(--fluent-text-primary);
+  --card: var(--fluent-surface-card);
+  --card-foreground: var(--fluent-text-primary);
+  --popover: var(--fluent-surface-layer);
+  --popover-foreground: var(--fluent-text-primary);
+  --primary: var(--fluent-brand-primary);
+  --primary-foreground: var(--fluent-text-on-accent);
+  --secondary: var(--fluent-surface-secondary);
+  --secondary-foreground: var(--fluent-text-primary);
+  --muted: var(--fluent-surface-tertiary);
+  --muted-foreground: var(--fluent-text-secondary);
+  --accent: var(--fluent-brand-primary);
+  --accent-foreground: var(--fluent-text-on-accent);
+  --destructive: var(--fluent-semantic-danger);
+  --destructive-foreground: var(--fluent-text-on-accent);
+  --border: var(--fluent-border-neutral);
+  --input: var(--fluent-surface-primary);
+  --ring: var(--fluent-border-focus);
+  --radius: var(--fluent-corner-radius-medium);
+  
+  /* Custom theme variables */
+  --color-primary: var(--fluent-brand-primary);
+  --color-secondary: var(--fluent-surface-secondary);
+  --color-background: var(--fluent-background-canvas);
+  --color-text: var(--fluent-text-primary);
+  --border-radius: var(--fluent-corner-radius-medium);
+  --border-width: 1px;
+  --shadow-sm: var(--fluent-shadow-2);
+  --shadow-lg: var(--fluent-shadow-16);
+}
+
+/* Fluent 2 Typography Scale */
+.fluent-typography {
+  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.fluent-display {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 600;
+  font-size: 4.25rem; /* 68px */
+  line-height: 5.75rem; /* 92px */
+  letter-spacing: -0.02em;
+}
+
+.fluent-large-title {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 600;
+  font-size: 2.5rem; /* 40px */
+  line-height: 3.25rem; /* 52px */
+  letter-spacing: -0.01em;
+}
+
+.fluent-title {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 600;
+  font-size: 1.75rem; /* 28px */
+  line-height: 2.25rem; /* 36px */
+  letter-spacing: 0em;
+}
+
+.fluent-subtitle {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem; /* 20px */
+  line-height: 1.75rem; /* 28px */
+  letter-spacing: 0em;
+}
+
+.fluent-body-large {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 400;
+  font-size: 1.125rem; /* 18px */
+  line-height: 1.5rem; /* 24px */
+  letter-spacing: 0em;
+}
+
+.fluent-body {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 400;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+  letter-spacing: 0em;
+}
+
+.fluent-body-strong {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+  letter-spacing: 0em;
+}
+
+.fluent-caption {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 400;
+  font-size: 0.75rem; /* 12px */
+  line-height: 1rem; /* 16px */
+  letter-spacing: 0em;
+}
+
+.fluent-caption-strong {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 600;
+  font-size: 0.75rem; /* 12px */
+  line-height: 1rem; /* 16px */
+  letter-spacing: 0em;
+}
+
+/* Fluent 2 Component Base Styles */
+.fluent-component {
+  font-family: 'Segoe UI', sans-serif;
+  transition: all var(--fluent-duration-fast) var(--fluent-curve-easy-ease);
+}
+
+/* Elevation Utility Classes */
+.fluent-elevation-2 { box-shadow: var(--fluent-shadow-2); }
+.fluent-elevation-4 { box-shadow: var(--fluent-shadow-4); }
+.fluent-elevation-8 { box-shadow: var(--fluent-shadow-8); }
+.fluent-elevation-16 { box-shadow: var(--fluent-shadow-16); }
+.fluent-elevation-28 { box-shadow: var(--fluent-shadow-28); }
+.fluent-elevation-64 { box-shadow: var(--fluent-shadow-64); }
+
+/* Surface Utility Classes */
+.fluent-surface-primary { background-color: var(--fluent-surface-primary); color: var(--fluent-text-primary); }
+.fluent-surface-secondary { background-color: var(--fluent-surface-secondary); color: var(--fluent-text-primary); }
+.fluent-surface-tertiary { background-color: var(--fluent-surface-tertiary); color: var(--fluent-text-primary); }
+.fluent-surface-card { background-color: var(--fluent-surface-card); color: var(--fluent-text-primary); }
+
+/* Brand Color Utility Classes */
+.fluent-brand-primary { background-color: var(--fluent-brand-primary); color: var(--fluent-text-on-accent); }
+.fluent-brand-secondary { background-color: var(--fluent-brand-secondary); color: var(--fluent-text-primary); }
+
+/* Semantic Color Utility Classes */
+.fluent-semantic-success { background-color: var(--fluent-semantic-success); color: var(--fluent-text-on-accent); }
+.fluent-semantic-warning { background-color: var(--fluent-semantic-warning); color: var(--fluent-text-primary); }
+.fluent-semantic-danger { background-color: var(--fluent-semantic-danger); color: var(--fluent-text-on-accent); }
+
+/* Corner Radius Utilities */
+.fluent-corner-none { border-radius: var(--fluent-corner-radius-none); }
+.fluent-corner-small { border-radius: var(--fluent-corner-radius-small); }
+.fluent-corner-medium { border-radius: var(--fluent-corner-radius-medium); }
+.fluent-corner-large { border-radius: var(--fluent-corner-radius-large); }
+.fluent-corner-xlarge { border-radius: var(--fluent-corner-radius-xlarge); }
+.fluent-corner-circular { border-radius: var(--fluent-corner-radius-circular); }
+
+/* Spacing Utilities */
+.fluent-spacing-none { gap: var(--fluent-size-none); }
+.fluent-spacing-20 { gap: var(--fluent-size-20); }
+.fluent-spacing-40 { gap: var(--fluent-size-40); }
+.fluent-spacing-80 { gap: var(--fluent-size-80); }
+.fluent-spacing-120 { gap: var(--fluent-size-120); }
+.fluent-spacing-160 { gap: var(--fluent-size-160); }
+.fluent-spacing-200 { gap: var(--fluent-size-200); }
+.fluent-spacing-240 { gap: var(--fluent-size-240); }
+.fluent-spacing-320 { gap: var(--fluent-size-320); }
+.fluent-spacing-480 { gap: var(--fluent-size-480); }
+
+/* Apply Fluent font to body when theme is active */
+[data-theme='fluent-light'] body,
+[data-theme='fluent-dark'] body {
+  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* Interactive States */
+.fluent-interactive {
+  transition: all var(--fluent-duration-fast) var(--fluent-curve-easy-ease);
+  cursor: pointer;
+}
+
+.fluent-interactive:hover {
+  filter: brightness(1.05);
+}
+
+.fluent-interactive:active {
+  filter: brightness(0.95);
+  transform: scale(0.98);
+}
+
+.fluent-interactive:focus-visible {
+  outline: 2px solid var(--fluent-stroke-focus-outer);
+  outline-offset: 2px;
+}
+
+/* Fluent Design Motion */
+.fluent-motion-fade-in {
+  animation: fluent-fade-in var(--fluent-duration-normal) var(--fluent-curve-decelerate-mid);
+}
+
+.fluent-motion-slide-up {
+  animation: fluent-slide-up var(--fluent-duration-normal) var(--fluent-curve-decelerate-mid);
+}
+
+.fluent-motion-scale-in {
+  animation: fluent-scale-in var(--fluent-duration-normal) var(--fluent-curve-decelerate-mid);
+}
+
+@keyframes fluent-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fluent-slide-up {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fluent-scale-in {
+  from { 
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
