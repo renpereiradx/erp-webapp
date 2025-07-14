@@ -1,6 +1,6 @@
 /**
- * Página de Productos del sistema ERP
- * Demuestra el uso de Zustand store, componentes responsive y gestión de estado
+ * Página de Productos del sistema ERP - Multi-tema
+ * Soporte para Neo-Brutalism, Material Design y Fluent Design
  * Incluye listado, filtros, búsqueda y acciones CRUD
  */
 
@@ -16,7 +16,10 @@ import {
   Eye,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  ShoppingCart,
+  DollarSign,
+  Archive
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -26,6 +29,8 @@ import useProductStore from '@/store/useProductStore';
 const Products = () => {
   const { theme } = useTheme();
   const isNeoBrutalism = theme?.includes('neo-brutalism');
+  const isMaterial = theme?.includes('material');
+  const isFluent = theme?.includes('fluent');
   
   const {
     products,
@@ -43,15 +48,76 @@ const Products = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState([]);
 
+  // Helper functions para generar clases según el tema activo
+  const getTitleClass = (size = 'title') => {
+    if (isNeoBrutalism) {
+      switch(size) {
+        case 'display': return 'font-black uppercase tracking-wide text-4xl';
+        case 'large-title': return 'font-black uppercase tracking-wide text-3xl';
+        case 'title': return 'font-black uppercase tracking-wide text-xl';
+        case 'subtitle': return 'font-black uppercase tracking-wide text-lg';
+        case 'body-large': return 'font-bold uppercase tracking-wide text-base';
+        case 'body': return 'font-bold uppercase tracking-wide text-sm';
+        case 'caption': return 'font-bold uppercase tracking-wide text-xs';
+        default: return 'font-black uppercase tracking-wide';
+      }
+    }
+    if (isFluent) {
+      switch(size) {
+        case 'display': return 'fluent-display';
+        case 'large-title': return 'fluent-large-title';
+        case 'title': return 'fluent-title';
+        case 'subtitle': return 'fluent-subtitle';
+        case 'body-large': return 'fluent-body-large';
+        case 'body': return 'fluent-body';
+        case 'caption': return 'fluent-caption';
+        case 'caption-strong': return 'fluent-caption-strong';
+        default: return 'fluent-title';
+      }
+    }
+    if (isMaterial) {
+      switch(size) {
+        case 'display': return 'material-display';
+        case 'large-title': return 'material-headline-large';
+        case 'title': return 'material-headline-medium';
+        case 'subtitle': return 'material-headline-small';
+        case 'body-large': return 'material-body-large';
+        case 'body': return 'material-body-medium';
+        case 'caption': return 'material-body-small';
+        default: return 'material-headline-medium';
+      }
+    }
+    return 'font-bold';
+  };
+
+  const getCardClass = () => {
+    if (isNeoBrutalism) return 'border-4 border-foreground shadow-neo-brutal';
+    if (isFluent) return 'fluent-elevation-2 fluent-radius-medium fluent-motion-standard';
+    if (isMaterial) return 'material-card-elevated';
+    return 'border border-border rounded-lg shadow-lg';
+  };
+
+  const getButtonClass = () => {
+    if (isFluent) return 'fluent-elevation-2 fluent-radius-small';
+    if (isMaterial) return 'material-button-elevated';
+    return '';
+  };
+
+  const getInputClass = () => {
+    if (isFluent) return 'fluent-radius-small';
+    if (isMaterial) return 'material-input';
+    return '';
+  };
+
   // Cargar productos al montar el componente
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Datos para las estadísticas (usar los productos del store)
+  // Datos para estadísticas
   const statsData = {
     total: products.length,
-    inStock: products.filter(p => p.stock > p.minStock).length,
+    inStock: products.filter(p => p.stock > 0).length,
     lowStock: products.filter(p => p.stock <= p.minStock && p.stock > 0).length,
     outOfStock: products.filter(p => p.stock === 0).length,
   };
@@ -71,317 +137,373 @@ const Products = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
       try {
         await deleteProduct(productId);
-        // Mostrar notificación de éxito
       } catch (error) {
         console.error('Error al eliminar producto:', error);
       }
     }
   };
 
-  const getStatusIcon = (status, stock, minStock) => {
-    if (status === 'out_of_stock' || stock === 0) {
-      return <XCircle className="h-4 w-4 text-red-500" />;
-    } else if (status === 'low_stock' || stock <= minStock) {
-      return <AlertCircle className="h-4 w-4 text-orange-500" />;
+  const getStockStatus = (product) => {
+    if (product.stock <= 0) {
+      return { icon: XCircle, color: 'text-red-500', label: 'Sin stock', bg: 'bg-red-100 dark:bg-red-900' };
+    } else if (product.stock <= product.minStock) {
+      return { icon: AlertCircle, color: 'text-yellow-500', label: 'Stock bajo', bg: 'bg-yellow-100 dark:bg-yellow-900' };
+    } else {
+      return { icon: CheckCircle, color: 'text-green-500', label: 'En stock', bg: 'bg-green-100 dark:bg-green-900' };
     }
-    return <CheckCircle className="h-4 w-4 text-green-500" />;
   };
 
-  const getStatusText = (status, stock, minStock) => {
-    if (status === 'out_of_stock' || stock === 0) {
-      return 'Sin Stock';
-    } else if (status === 'low_stock' || stock <= minStock) {
-      return 'Stock Bajo';
+  const getStatusBadge = (product) => {
+    const stockStatus = getStockStatus(product);
+    const Icon = stockStatus.icon;
+
+    if (isFluent) {
+      let bgStyle = {};
+      if (product.stock <= 0) {
+        bgStyle = { backgroundColor: 'var(--fluent-semantic-danger)' };
+      } else if (product.stock <= product.minStock) {
+        bgStyle = { backgroundColor: 'var(--fluent-semantic-warning)' };
+      } else {
+        bgStyle = { backgroundColor: 'var(--fluent-semantic-success)' };
+      }
+      
+      return (
+        <span 
+          className={`px-2 py-1 text-xs font-medium text-white fluent-radius-small ${getTitleClass('caption')}`}
+          style={bgStyle}
+        >
+          {stockStatus.label}
+        </span>
+      );
     }
-    return 'En Stock';
+    
+    if (isMaterial) {
+      let bgStyle = {};
+      if (product.stock <= 0) {
+        bgStyle = { backgroundColor: 'var(--material-error, #B00020)', color: 'white' };
+      } else if (product.stock <= product.minStock) {
+        bgStyle = { backgroundColor: '#FF9800', color: 'white' };
+      } else {
+        bgStyle = { backgroundColor: '#4CAF50', color: 'white' };
+      }
+      
+      return (
+        <span 
+          className={`px-2 py-1 text-xs font-medium rounded-full ${getTitleClass('caption')}`}
+          style={bgStyle}
+        >
+          {stockStatus.label}
+        </span>
+      );
+    }
+    
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${stockStatus.bg} ${stockStatus.color} ${getTitleClass('caption')}`}>
+        {stockStatus.label}
+      </span>
+    );
   };
 
-  const ProductCard = ({ product, isNeoBrutalism }) => (
-    <Card className="product-card hover:shadow-lg transition-shadow duration-200">
-      <CardContent className="p-6 pt-4">
-        <div className="flex items-center space-x-4">
+  const ProductCard = ({ product }) => {
+    const stockStatus = getStockStatus(product);
+    const Icon = stockStatus.icon;
+
+    return (
+      <Card className={`hover:shadow-lg transition-all duration-200 ${getCardClass()}`}
+            style={isFluent ? { 
+              transition: 'all 0.1s var(--fluent-curve-easy-ease)',
+              transform: 'translateY(0px)'
+            } : isMaterial ? {
+              transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: 'translateY(0px)'
+            } : {}}
+            onMouseEnter={(e) => {
+              if (isFluent) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = 'var(--fluent-shadow-8)';
+              } else if (isMaterial) {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = 'var(--material-elevation-8)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (isFluent) {
+                e.currentTarget.style.transform = 'translateY(0px)';
+                e.currentTarget.style.boxShadow = 'var(--fluent-shadow-2)';
+              } else if (isMaterial) {
+                e.currentTarget.style.transform = 'translateY(0px)';
+                e.currentTarget.style.boxShadow = 'var(--material-elevation-2)';
+              }
+            }}
+      >
+        <CardContent className="p-4">
           {/* Imagen del producto */}
-          <div 
-            className={`w-16 h-16 flex-shrink-0 flex items-center justify-center bg-muted ${
-              isNeoBrutalism ? '' : 'rounded-lg'
-            }`}
-          >
-            <Package className="h-8 w-8 text-muted-foreground" />
+          <div className={`mb-3 h-32 bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${
+            isFluent ? 'fluent-radius-small' : 
+            isMaterial ? 'rounded-lg' :
+            'rounded-lg'
+          }`} style={isFluent ? { backgroundColor: 'var(--fluent-neutral-grey-20)' } : 
+                      isMaterial ? { backgroundColor: 'var(--material-surface-variant)' } : {}}>
+            {product.image ? (
+              <img 
+                src={product.image} 
+                alt={product.name}
+                className={`h-full w-full object-cover ${
+                  isFluent ? 'fluent-radius-small' : 
+                  isMaterial ? 'rounded-lg' :
+                  'rounded-lg'
+                }`}
+              />
+            ) : (
+              <Package className="h-12 w-12 text-muted-foreground" />
+            )}
           </div>
           
-          {/* Información del producto */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg leading-tight mb-1 text-foreground">
-                  {product.name}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-1">
-                  SKU: {product.sku}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Categoría: {product.category}
-                </p>
-              </div>
-              
-              {/* Estado del producto */}
-              <div className="flex items-center space-x-1.5 ml-3 flex-shrink-0">
-                {getStatusIcon(product.status, product.stock, product.minStock)}
-                <span className="text-xs font-medium text-foreground">
-                  {getStatusText(product.status, product.stock, product.minStock)}
-                </span>
-              </div>
+          {/* Header con nombre y estado */}
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1 min-w-0">
+              <h3 className={`font-semibold truncate ${getTitleClass('subtitle')}`}>{product.name}</h3>
+              <p className={`text-muted-foreground text-sm truncate ${getTitleClass('caption')}`}>{product.description}</p>
             </div>
-            
-            {/* Precio y stock */}
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
-              <div>
-                <p className="text-lg font-bold text-foreground mb-1 flex items-center">
-                  ${product.price}
-                </p>
-                <p className="text-sm text-muted-foreground flex items-center">
-                  Stock: <span className="font-medium text-foreground ml-1">{product.stock}</span> unidades
-                </p>
-              </div>
-              
-              {/* Acciones */}
-              <div className="flex items-center space-x-1">
-                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 flex items-center justify-center">
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 flex items-center justify-center">
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost"
-                  className="h-8 w-8 p-0 flex items-center justify-center"
-                  onClick={() => handleDeleteProduct(product.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+            <div className="flex-shrink-0 ml-2">
+              {getStatusBadge(product)}
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  return (
-    <div className="products-page space-y-6 w-full max-w-full overflow-x-hidden" data-component="products-page" data-testid="products-page">
-      {/* Header */}
-      <div className="products-header flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 gap-4" data-component="products-header" data-testid="products-header">
-        <div className="products-title-section" data-component="products-title" data-testid="products-title">
-          <h1 className={`products-title text-2xl sm:text-3xl tracking-tight ${
-            isNeoBrutalism ? 'font-black uppercase tracking-wide' : 'font-bold'
-          } text-foreground`} data-testid="products-title-text">Productos</h1>
-          <p className={`products-subtitle mt-1 text-sm sm:text-base ${
-            isNeoBrutalism ? 'font-bold uppercase tracking-wide' : 'font-normal'
-          } text-muted-foreground`} data-testid="products-subtitle">
-            Gestiona tu inventario de productos
-          </p>
-        </div>
-        <Button className="products-new-btn w-full sm:w-auto whitespace-nowrap" data-testid="new-product-btn">
-          <Plus className="mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">Nuevo Producto</span>
-          <span className="sm:hidden">Nuevo</span>
-        </Button>
-      </div>
-
-      {/* Barra de búsqueda y filtros */}
-      <Card className="products-search-section" data-component="products-search" data-testid="products-search">
-        <CardContent className="p-4">
-          <div className="products-search-controls flex flex-col sm:flex-row gap-4" data-component="search-controls" data-testid="search-controls">
-            {/* Búsqueda */}
-            <div className="products-search-input-section flex-1" data-component="search-input-section" data-testid="search-input-section">
-              <Input
-                placeholder="Buscar productos por nombre, SKU o categoría..."
-                leftIcon={<Search className="h-4 w-4" />}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="products-search-input"
-                data-testid="products-search-input"
-              />
+          
+          {/* Información principal */}
+          <div className="space-y-2 mb-3">
+            <div className={`flex items-center justify-between text-sm ${getTitleClass('caption')}`}>
+              <span className="text-muted-foreground">Precio:</span>
+              <span className={`font-semibold text-foreground ${getTitleClass('body')}`}>${product.price.toFixed(2)}</span>
             </div>
             
-            {/* Botón de filtros */}
-            <Button 
+            <div className={`flex items-center justify-between text-sm ${getTitleClass('caption')}`}>
+              <span className="text-muted-foreground">Stock:</span>
+              <span className={`font-semibold text-foreground ${getTitleClass('body')}`}>{product.stock} unidades</span>
+            </div>
+            
+            <div className={`flex items-center justify-between text-sm ${getTitleClass('caption')}`}>
+              <span className="text-muted-foreground">Categoría:</span>
+              <span className={`font-semibold text-foreground truncate ml-2 ${getTitleClass('body')}`}>{product.category}</span>
+            </div>
+          </div>
+          
+          {/* Footer con SKU y acciones */}
+          <div className={`flex items-center justify-between pt-3 border-t ${
+            isFluent ? '' : 
+            isMaterial ? '' :
+            'border-gray-100 dark:border-gray-700'
+          }`} style={isFluent ? { borderColor: 'var(--fluent-neutral-grey-30)' } : 
+                     isMaterial ? { borderColor: 'var(--material-outline-variant)' } : {}}>
+            <div className={`text-muted-foreground text-xs ${getTitleClass('caption')}`}>
+              SKU: {product.sku}
+            </div>
+            <div className="flex items-center space-x-1">
+              <Button size="sm" variant="ghost" className={`h-7 w-7 p-0 ${getButtonClass()}`}>
+                <Eye className="h-3.5 w-3.5" />
+              </Button>
+              <Button size="sm" variant="ghost" className={`h-7 w-7 p-0 ${getButtonClass()}`}>
+                <Edit className="h-3.5 w-3.5" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className={`h-7 w-7 p-0 ${getButtonClass()}`}
+                onClick={() => handleDeleteProduct(product.id)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className={`text-center ${getTitleClass('body-large')}`}>
+          Cargando productos...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`text-center text-red-500 min-h-screen flex items-center justify-center ${getTitleClass('body-large')}`}>
+        Error: {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className={`text-foreground ${getTitleClass('large-title')}`}>
+            Productos
+          </h1>
+          <p className={`mt-2 text-muted-foreground ${getTitleClass('body-large')}`}>
+            Gestiona tu inventario y catálogo de productos
+          </p>
+        </div>
+        <div className="mt-4 sm:mt-0">
+          <Button variant="blue" size="lg" className={getButtonClass()}>
+            <Plus className="mr-2 h-5 w-5" />
+            Nuevo Producto
+          </Button>
+        </div>
+      </div>
+
+      {/* Estadísticas rápidas */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className={getCardClass()}>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Package className="h-8 w-8 text-muted-foreground" />
+              <div className="ml-4">
+                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>Total Productos</p>
+                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.total}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className={getCardClass()}>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <CheckCircle className="h-8 w-8 text-green-500" />
+              <div className="ml-4">
+                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>En Stock</p>
+                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.inStock}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className={getCardClass()}>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <AlertCircle className="h-8 w-8 text-yellow-500" />
+              <div className="ml-4">
+                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>Stock Bajo</p>
+                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.lowStock}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className={getCardClass()}>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <XCircle className="h-8 w-8 text-red-500" />
+              <div className="ml-4">
+                <p className={`text-muted-foreground ${getTitleClass('caption-strong')}`}>Sin Stock</p>
+                <p className={`text-2xl text-foreground ${getTitleClass('title')}`}>{statsData.outOfStock}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filtros y búsqueda */}
+      <Card className={getCardClass()}>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 max-w-sm">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar productos..."
+                  className={`pl-10 ${getInputClass()}`}
+                  onChange={(e) => handleSearch(e.target.value)}
+                />
+              </div>
+            </div>
+            <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="w-full sm:w-auto"
+              className={getButtonClass()}
             >
               <Filter className="mr-2 h-4 w-4" />
               Filtros
             </Button>
           </div>
-          
-          {/* Panel de filtros expandible */}
+
           {showFilters && (
-            <div className="mt-4 pt-4 border-t grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-              <div>
-                <label className="block text-sm font-medium mb-2 text-foreground">
-                  Categoría
-                </label>
-                <select 
-                  className="w-full p-2 border rounded-md bg-input text-foreground border-border focus:ring-2 focus:ring-ring focus:border-ring"
-                  onChange={(e) => handleFilterChange('category', e.target.value)}
-                >
-                  <option value="">Todas las categorías</option>
-                  {categories?.map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2 text-foreground">
-                  Estado
-                </label>
-                <select 
-                  className="w-full p-2 border rounded-md bg-input text-foreground border-border focus:ring-2 focus:ring-ring focus:border-ring"
-                  onChange={(e) => handleFilterChange('status', e.target.value)}
-                >
-                  <option value="">Todos los estados</option>
-                  <option value="active">En Stock</option>
-                  <option value="low_stock">Stock Bajo</option>
-                  <option value="out_of_stock">Sin Stock</option>
-                </select>
-              </div>
-              
-              <div className="sm:col-span-2 lg:col-span-1">
-                <label className="block text-sm font-medium mb-2 text-foreground">
-                  Ordenar por
-                </label>
-                <select 
-                  className="w-full p-2 border rounded-md bg-input text-foreground border-border focus:ring-2 focus:ring-ring focus:border-ring"
-                  onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                >
-                  <option value="name">Nombre</option>
-                  <option value="price">Precio</option>
-                  <option value="stock">Stock</option>
-                  <option value="category">Categoría</option>
-                </select>
+            <div className={`mt-4 p-4 border-t ${
+              isFluent ? '' : 
+              isMaterial ? '' :
+              'border-gray-200 dark:border-gray-700'
+            }`} style={isFluent ? { borderColor: 'var(--fluent-neutral-grey-30)' } : 
+                       isMaterial ? { borderColor: 'var(--material-outline-variant)' } : {}}>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div>
+                  <label className={`block mb-2 ${getTitleClass('caption-strong')}`}>Categoría</label>
+                  <select
+                    className={`w-full p-2 border rounded-md bg-background text-foreground ${getInputClass()}`}
+                    onChange={(e) => handleFilterChange('category', e.target.value)}
+                  >
+                    <option value="">Todas</option>
+                    {categories.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={`block mb-2 ${getTitleClass('caption-strong')}`}>Estado de Stock</label>
+                  <select
+                    className={`w-full p-2 border rounded-md bg-background text-foreground ${getInputClass()}`}
+                    onChange={(e) => handleFilterChange('stockStatus', e.target.value)}
+                  >
+                    <option value="">Todos</option>
+                    <option value="inStock">En Stock</option>
+                    <option value="lowStock">Stock Bajo</option>
+                    <option value="outOfStock">Sin Stock</option>
+                  </select>
+                </div>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Estadísticas rápidas */}
-      <div className="products-stats-grid">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Package className="h-8 w-8 text-primary" />
-              <div>
-                <p className="text-2xl font-bold text-foreground">
-                  {loading ? '...' : pagination.total}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Total Productos
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-2xl font-bold text-foreground">
-                  {loading ? '...' : statsData.inStock}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  En Stock
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <AlertCircle className="h-8 w-8 text-orange-500" />
-              <div>
-                <p className="text-2xl font-bold text-foreground">
-                  {loading ? '...' : statsData.lowStock}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Stock Bajo
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <XCircle className="h-8 w-8 text-red-500" />
-              <div>
-                <p className="text-2xl font-bold text-foreground">
-                  {loading ? '...' : statsData.outOfStock}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Sin Stock
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Lista de productos */}
-      <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Lista de Productos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center p-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-2"></div>
-                <span>Cargando productos...</span>
-              </div>
-            ) : error ? (
-              <div className="text-center p-8 text-destructive">
-                Error: {error}
-              </div>
-            ) : products.length === 0 ? (
-              <div className="text-center p-8 text-muted-foreground">
-                No se encontraron productos
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {products.map((product) => (
-                  <ProductCard key={product.id} product={product} isNeoBrutalism={isNeoBrutalism} />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
       </div>
 
       {/* Paginación */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Mostrando {products.length} de {pagination.total} productos
-        </p>
-        <div className="flex space-x-2">
-          <Button variant="outline" size="sm" disabled={pagination.page <= 1}>
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center space-x-2">
+          <Button
+            variant="outline"
+            disabled={pagination.currentPage === 1}
+            onClick={() => fetchProducts({ page: pagination.currentPage - 1 })}
+            className={getButtonClass()}
+          >
             Anterior
           </Button>
-          <Button variant="outline" size="sm" disabled={pagination.page >= pagination.totalPages}>
+          <span className={`px-4 py-2 ${getTitleClass('body')}`}>
+            Página {pagination.currentPage} de {pagination.totalPages}
+          </span>
+          <Button
+            variant="outline"
+            disabled={pagination.currentPage === pagination.totalPages}
+            onClick={() => fetchProducts({ page: pagination.currentPage + 1 })}
+            className={getButtonClass()}
+          >
             Siguiente
           </Button>
         </div>
-      </div>
+      )}
     </div>
   );
 };
 
 export default Products;
-

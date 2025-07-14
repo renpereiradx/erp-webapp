@@ -315,15 +315,192 @@ const Dashboard = () => {
           </div>
         </MetricCard>
       </div>
+          </p>
+        </div>
+        <div className="mt-4 sm:mt-0">
+          <Button variant="red" size="lg">
+            <BarChart3 className="mr-2 h-5 w-5" />
+            Ver Reportes Completos
+            {isNeoBrutalism && (
+              <BrutalistBadge color="yellow" className="ml-2">
+                10
+              </BrutalistBadge>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Métricas principales - Layout compacto y responsivo */}
+      <div className="erp-metrics-grid grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
+        {/* Ventas Totales */}
+        <MetricCard color="white" className="relative">
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${
+                isNeoBrutalism 
+                  ? 'font-black uppercase tracking-wide'
+                  : 'font-medium'
+              }`}>
+                Ventas Totales
+              </p>
+              <p className={`text-lg font-black text-foreground ${
+                isNeoBrutalism ? 'font-black' : 'font-bold'
+              }`}>$125,430</p>
+              <div className="flex items-center">
+                <TrendingUp className="h-3 w-3 text-chart-success mr-1" />
+                <span className={`text-xs text-chart-success ${
+                  isNeoBrutalism 
+                    ? 'font-bold uppercase'
+                    : 'font-medium'
+                }`}>
+                  12.5%
+                </span>
+              </div>
+            </div>
+            <div className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${
+              isNeoBrutalism 
+                ? 'bg-chart-success border-2 border-foreground shadow-neo-brutal'
+                : 'bg-chart-success/10 border border-chart-success rounded-lg'
+            }`}>
+              <DollarSign className={`h-4 w-4 ${
+                isNeoBrutalism ? 'text-foreground' : 'text-chart-success'
+              }`} />
+            </div>
+          </div>
+        </MetricCard>
+
+        {/* Clientes */}
+        <MetricCard color="white" className="relative">
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${
+                isNeoBrutalism 
+                  ? 'font-black uppercase tracking-wide'
+                  : 'font-medium'
+              }`}>
+                Clientes
+              </p>
+              <p className={`text-lg font-black text-foreground ${
+                isNeoBrutalism ? 'font-black' : 'font-bold'
+              }`}>1,247</p>
+              <div className="flex items-center">
+                <TrendingUp className="h-3 w-3 text-chart-success mr-1" />
+                <span className={`text-xs text-chart-success ${
+                  isNeoBrutalism 
+                    ? 'font-bold uppercase'
+                    : 'font-medium'
+                }`}>
+                  8.2%
+                </span>
+              </div>
+            </div>
+            <div className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${
+              isNeoBrutalism 
+                ? 'bg-chart-primary border-2 border-foreground shadow-neo-brutal'
+                : 'bg-chart-primary/10 border border-chart-primary rounded-lg'
+            }`}>
+              <Users className={`h-4 w-4 ${
+                isNeoBrutalism ? 'text-background' : 'text-chart-primary'
+              }`} />
+            </div>
+          </div>
+        </MetricCard>
+
+        {/* Productos */}
+        <MetricCard color="white" className="relative">
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${
+                isNeoBrutalism 
+                  ? 'font-black uppercase tracking-wide'
+                  : 'font-medium'
+              }`}>
+                Productos
+              </p>
+              <p className={`text-lg font-black text-foreground ${
+                isNeoBrutalism ? 'font-black' : 'font-bold'
+              }`}>856</p>
+              <div className="flex items-center">
+                <TrendingDown className="h-3 w-3 text-chart-danger mr-1" />
+                <span className={`text-xs text-chart-danger ${
+                  isNeoBrutalism 
+                    ? 'font-bold uppercase'
+                    : 'font-medium'
+                }`}>
+                  2.1%
+                </span>
+              </div>
+            </div>
+            <div className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${
+              isNeoBrutalism 
+                ? 'bg-chart-warning border-2 border-foreground shadow-neo-brutal'
+                : 'bg-chart-warning/10 border border-chart-warning rounded-lg'
+            }`}>
+              <Package className={`h-4 w-4 ${
+                isNeoBrutalism ? 'text-background' : 'text-chart-warning'
+              }`} />
+            </div>
+          </div>
+        </MetricCard>
+
+        {/* Pedidos */}
+        <MetricCard color="white" className="relative">
+          <div className="flex items-center justify-between gap-2">
+            <div className="metric-content flex-1">
+              <p className={`text-xs text-muted-foreground ${
+                isNeoBrutalism 
+                  ? 'font-black uppercase tracking-wide'
+                  : 'font-medium'
+              }`}>
+                Pedidos
+              </p>
+              <p className={`text-lg font-black text-foreground ${
+                isNeoBrutalism ? 'font-black' : 'font-bold'
+              }`}>342</p>
+              <div className="flex items-center">
+                <TrendingUp className="h-3 w-3 text-chart-success mr-1" />
+                <span className={`text-xs text-chart-success ${
+                  isNeoBrutalism 
+                    ? 'font-bold uppercase'
+                    : 'font-medium'
+                }`}>
+                  15.3%
+                </span>
+              </div>
+            </div>
+            <div className={`metric-icon flex-shrink-0 w-8 h-8 flex items-center justify-center ${
+              isNeoBrutalism 
+                ? 'bg-chart-accent border-2 border-foreground shadow-neo-brutal'
+                : 'bg-chart-accent/10 border border-chart-accent rounded-lg'
+            }`}>
+              <ShoppingCart className={`h-4 w-4 ${
+                isNeoBrutalism ? 'text-background' : 'text-chart-accent'
+              }`} />
+            </div>
+          </div>
+        </MetricCard>
+      </div>
 
       {/* Gráficos */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Gráfico de Ventas Mensuales */}
-        <div className={`bg-card p-6 ${getCardClass()}`}>
-          <h3 className={`text-foreground mb-2 ${getTitleClass('title')}`}>
+        <div className={`bg-card p-6 ${
+          isNeoBrutalism 
+            ? 'border-4 border-foreground shadow-neo-brutal'
+            : 'border border-border rounded-lg shadow-lg'
+        }`}>
+          <h3 className={`text-xl text-foreground mb-2 ${
+            isNeoBrutalism 
+              ? 'font-black uppercase tracking-wide'
+              : 'font-bold'
+          }`}>
             Ventas Mensuales
           </h3>
-          <p className={`text-muted-foreground mb-6 ${getTitleClass('body')}`}>
+          <p className={`text-sm text-muted-foreground mb-6 ${
+            isNeoBrutalism 
+              ? 'font-bold uppercase tracking-wide'
+              : 'font-medium'
+          }`}>
             Evolución de ventas en los últimos 6 meses
           </p>
           <div className="h-80">
@@ -364,11 +541,23 @@ const Dashboard = () => {
         </div>
 
         {/* Gráfico de Ventas por Categoría */}
-        <div className={`bg-card p-6 ${getCardClass()}`}>
-          <h3 className={`text-foreground mb-2 ${getTitleClass('title')}`}>
+        <div className={`bg-card p-6 ${
+          isNeoBrutalism 
+            ? 'border-4 border-foreground shadow-neo-brutal'
+            : 'border border-border rounded-lg shadow-lg'
+        }`}>
+          <h3 className={`text-xl text-foreground mb-2 ${
+            isNeoBrutalism 
+              ? 'font-black uppercase tracking-wide'
+              : 'font-bold'
+          }`}>
             Ventas por Categoría
           </h3>
-          <p className={`text-muted-foreground mb-6 ${getTitleClass('body')}`}>
+          <p className={`text-sm text-muted-foreground mb-6 ${
+            isNeoBrutalism 
+              ? 'font-bold uppercase tracking-wide'
+              : 'font-medium'
+          }`}>
             Distribución de ventas por categoría de producto
           </p>
           <div className="h-80">
@@ -391,106 +580,99 @@ const Dashboard = () => {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          
-          {/* Leyenda personalizada */}
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {categoryData.map((entry, index) => (
-              <div key={index} className="flex items-center">
-                <div 
-                  className={`w-3 h-3 mr-2 ${isNeoBrutalism ? 'border border-foreground' : 'rounded-sm'}`}
-                  style={{ backgroundColor: entry.color }}
-                ></div>
-                <span className={`text-xs text-muted-foreground ${getTitleClass('caption')}`}>
-                  {entry.name} ({entry.value}%)
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* Alertas y productos con stock bajo */}
+      {/* Secciones adicionales */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Productos con Stock Bajo */}
-        <div className={`bg-card p-6 ${getCardClass()}`}>
+        <div className={`bg-card p-6 ${
+          isNeoBrutalism 
+            ? 'border-4 border-foreground shadow-neo-brutal'
+            : 'border border-border rounded-lg shadow-lg'
+        }`}>
           <div className="flex items-center mb-4">
             <AlertTriangle className="h-6 w-6 text-chart-warning mr-2" />
-            <h3 className={`text-foreground ${getTitleClass('title')}`}>
+            <h3 className={`text-xl text-foreground ${
+              isNeoBrutalism 
+                ? 'font-black uppercase tracking-wide'
+                : 'font-bold'
+            }`}>
               Productos con Stock Bajo
             </h3>
           </div>
-          <div className="space-y-3">
+          <p className={`text-sm text-muted-foreground mb-6 ${
+            isNeoBrutalism 
+              ? 'font-bold uppercase tracking-wide'
+              : 'font-medium'
+          }`}>
+            Productos que necesitan reposición urgente
+          </p>
+          <div className="space-y-4">
             {lowStockProducts.map((product, index) => (
-              <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${
+              <div key={index} className={`flex items-center justify-between p-4 bg-muted ${
                 isNeoBrutalism 
-                  ? 'border-2 border-chart-warning bg-chart-warning/20'
-                  : isMaterial
-                  ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
-                  : isFluent
-                  ? 'bg-amber-50 dark:bg-amber-900/20'
-                  : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
+                  ? 'border-2 border-foreground'
+                  : 'border border-border rounded-lg'
               }`}>
                 <div>
-                  <p className={`font-medium text-foreground ${getTitleClass('body')}`}>
-                    {product.name}
-                  </p>
-                  <p className={`text-xs text-muted-foreground ${getTitleClass('caption')}`}>
-                    Stock actual: {product.current} unidades
-                  </p>
-                </div>
-                <div className={`text-right ${getTitleClass('caption')}`}>
-                  <p className="text-chart-warning font-semibold">
-                    ¡Crítico!
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Mín: {product.minimum}
+                  <p className={`text-foreground ${
+                    isNeoBrutalism 
+                      ? 'font-black uppercase'
+                      : 'font-semibold'
+                  }`}>{product.name}</p>
+                  <p className={`text-sm text-muted-foreground ${
+                    isNeoBrutalism 
+                      ? 'font-bold uppercase'
+                      : 'font-medium'
+                  }`}>
+                    Stock actual: {product.current} | Mínimo: {product.minimum}
                   </p>
                 </div>
+                <Button variant="orange" size="sm">
+                  Reponer
+                </Button>
               </div>
             ))}
           </div>
-          <div className="mt-4">
-            <Button variant="yellow" size="sm" className={`w-full ${getButtonClass()}`}>
-              <Plus className="mr-2 h-4 w-4" />
-              Reabastecer Productos
-            </Button>
-          </div>
         </div>
 
-        {/* Acciones rápidas */}
-        <div className={`bg-card p-6 ${getCardClass()}`}>
-          <h3 className={`text-foreground mb-4 ${getTitleClass('title')}`}>
+        {/* Acciones Rápidas */}
+        <div className={`bg-card p-6 ${
+          isNeoBrutalism 
+            ? 'border-4 border-foreground shadow-neo-brutal'
+            : 'border border-border rounded-lg shadow-lg'
+        }`}>
+          <h3 className={`text-xl text-foreground mb-2 ${
+            isNeoBrutalism 
+              ? 'font-black uppercase tracking-wide'
+              : 'font-bold'
+          }`}>
             Acciones Rápidas
           </h3>
-          <div className="grid gap-3">
-            <Button variant="blue" className={`justify-start h-16 flex-col ${getButtonClass()}`}>
-              <div className="flex items-center w-full">
-                <Plus className="mr-2 h-5 w-5" />
-                <span className={getTitleClass('body')}>Nuevo Producto</span>
-              </div>
-              <span className={`text-xs text-left w-full ${getTitleClass('caption')}`}>
-                Agregar producto al inventario
-              </span>
+          <p className={`text-sm text-muted-foreground mb-6 ${
+            isNeoBrutalism 
+              ? 'font-bold uppercase tracking-wide'
+              : 'font-medium'
+          }`}>
+            Accesos directos a funciones principales
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <Button variant="lime" className="h-16 flex-col">
+              <Plus className="h-5 w-5 mb-1" />
+              Nuevo Producto
             </Button>
-            
-            <Button variant="green" className={`justify-start h-16 flex-col ${getButtonClass()}`}>
-              <div className="flex items-center w-full">
-                <Users className="mr-2 h-5 w-5" />
-                <span className={getTitleClass('body')}>Nuevo Cliente</span>
-              </div>
-              <span className={`text-xs text-left w-full ${getTitleClass('caption')}`}>
-                Registrar cliente nuevo
-              </span>
+            <Button variant="blue" className="h-16 flex-col">
+              <Plus className="h-5 w-5 mb-1" />
+              Nuevo Cliente
             </Button>
-            
-            <Button variant="purple" className={`justify-start h-16 flex-col ${getButtonClass()}`}>
-              <div className="flex items-center w-full">
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                <span className={getTitleClass('body')}>Nueva Venta</span>
-              </div>
-              <span className={`text-xs text-left w-full ${getTitleClass('caption')}`}>
-                Procesar venta rápida
-              </span>
+            <Button variant="purple" className="h-16 flex-col">
+              <Plus className="h-5 w-5 mb-1" />
+              Nuevo Pedido
+            </Button>
+            <Button variant="pink" className="h-16 flex-col">
+              <BarChart3 className="h-5 w-5 mb-1" />
+              Ver Reportes
             </Button>
           </div>
         </div>
@@ -500,3 +682,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
