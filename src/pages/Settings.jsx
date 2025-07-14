@@ -1,11 +1,13 @@
 import React from 'react';
 import { ThemeSwitcher } from '../components/ThemeSwitcher';
 import MaterialDesignShowcase from '../components/MaterialDesignShowcase';
+import FluentDesignShowcase from '../components/FluentDesignShowcase';
 import { useTheme } from 'next-themes';
 
 const Settings = () => {
   const { theme } = useTheme();
   const isMaterial = theme?.includes('material');
+  const isFluent = theme?.includes('fluent');
 
   return (
     <div className="p-6 bg-background text-foreground min-h-screen">
@@ -37,6 +39,19 @@ const Settings = () => {
                 Explora los componentes y estilos del sistema de diseño Material Design 3.0
               </p>
               <MaterialDesignShowcase />
+            </div>
+          )}
+          
+          {/* Fluent Design Showcase - Solo visible cuando el tema Fluent está activo */}
+          {isFluent && (
+            <div className="brutalist-card p-6">
+              <h2 className="text-2xl font-bold text-primary mb-4">
+                Fluent Design System 2.0
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Explora los componentes y estilos del sistema de diseño Fluent 2.0 de Microsoft
+              </p>
+              <FluentDesignShowcase />
             </div>
           )}
           
