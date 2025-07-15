@@ -7,8 +7,32 @@
 @import "./themes/neoBrutalism.css";
 
 @layer base {
-  /* --- TEMA BASE NEO-BRUTALISM (POR DEFECTO) --- */
+  /* --- TEMA BASE NEUTRO (SIN TEMA ESPECÍFICO) --- */
   :root {
+    /* Variables básicas que se definen en cada tema específico */
+    --background: #ffffff;
+    --foreground: #000000;
+    --card: #ffffff;
+    --card-foreground: #000000;
+    --popover: #ffffff;
+    --popover-foreground: #000000;
+    --primary: #0078d4;
+    --primary-foreground: #ffffff;
+    --secondary: #f3f4f6;
+    --secondary-foreground: #000000;
+    --muted: #f9fafb;
+    --muted-foreground: #6b7280;
+    --accent: #0078d4;
+    --accent-foreground: #ffffff;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #d1d1d1;
+    --input: #ffffff;
+    --ring: #0078d4;
+  }
+
+  /* --- TEMA NEO-BRUTALISM LIGHT --- */
+  [data-theme='neo-brutalism-light'] {
     --color-primary: #000000;
     --color-secondary: #f3f4f6;
     --color-background: #ffffff;
@@ -18,7 +42,6 @@
     --shadow-sm: 4px 4px 0px 0px rgba(0,0,0,1);
     --shadow-lg: 8px 8px 0px 0px rgba(0,0,0,1);
     
-    /* Variables Tailwind que usan nuestras variables de tema */
     --background: #ffffff;
     --foreground: #000000;
     --card: #ffffff;

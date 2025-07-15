@@ -43,14 +43,14 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
     }
     if (isMaterial) {
       return {
-        border: variant === 'outline' ? '1px solid var(--border)' : 'none',
+        border: variant === 'outline' ? '1px solid var(--material-outline)' : 'none',
         fontWeight: '500',
         textTransform: 'none',
         letterSpacing: '0.5px',
-        borderRadius: '20px',
-        boxShadow: variant === 'ghost' || variant === 'link' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
+        borderRadius: 'var(--material-corner-radius-medium, 20px)',
+        boxShadow: variant === 'ghost' || variant === 'link' ? 'none' : 'var(--material-elevation-2)',
         transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
-        fontFamily: '"Roboto", system-ui, sans-serif',
+        fontFamily: 'var(--material-font-family, "Roboto", system-ui, sans-serif)',
         position: 'relative',
         overflow: 'hidden'
       };
@@ -163,53 +163,53 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
     } else if (isMaterial) {
       const materialVariants = {
         default: { 
-          backgroundColor: 'var(--primary)', 
-          color: 'var(--primary-foreground)' 
+          backgroundColor: 'var(--material-primary)', 
+          color: 'var(--material-on-primary)' 
         },
         primary: { 
-          backgroundColor: 'var(--primary)', 
-          color: 'var(--primary-foreground)' 
+          backgroundColor: 'var(--material-primary)', 
+          color: 'var(--material-on-primary)' 
         },
         destructive: { 
-          backgroundColor: 'var(--destructive)', 
-          color: 'var(--destructive-foreground)' 
+          backgroundColor: 'var(--material-error)', 
+          color: 'var(--material-on-error)' 
         },
         outline: { 
           backgroundColor: 'transparent', 
-          color: 'var(--primary)',
-          border: '1px solid var(--border)',
+          color: 'var(--material-primary)',
+          border: '1px solid var(--material-outline)',
           boxShadow: 'none'
         },
         secondary: { 
-          backgroundColor: 'var(--secondary)', 
-          color: 'var(--secondary-foreground)',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          backgroundColor: 'var(--material-secondary)', 
+          color: 'var(--material-on-secondary)',
+          boxShadow: 'var(--material-elevation-2)'
         },
         ghost: { 
           backgroundColor: 'transparent', 
-          color: 'var(--primary)', 
+          color: 'var(--material-primary)', 
           border: 'none', 
           boxShadow: 'none' 
         },
         link: { 
           backgroundColor: 'transparent', 
-          color: 'var(--primary)', 
+          color: 'var(--material-primary)', 
           border: 'none', 
           boxShadow: 'none', 
           textDecoration: 'underline' 
         },
         // Color variants for Material
         blue: { 
-          backgroundColor: 'var(--primary)', 
-          color: 'var(--primary-foreground)' 
+          backgroundColor: 'var(--material-primary)', 
+          color: 'var(--material-on-primary)' 
         },
         green: { 
           backgroundColor: '#4CAF50', 
           color: '#FFFFFF' 
         },
         red: { 
-          backgroundColor: 'var(--destructive)', 
-          color: 'var(--destructive-foreground)' 
+          backgroundColor: 'var(--material-error)', 
+          color: 'var(--material-on-error)' 
         },
         yellow: { 
           backgroundColor: '#FF9800', 
@@ -282,10 +282,10 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
             e.target.style.backgroundColor = 'var(--fluent-surface-card-hover)';
           }
         } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+          e.target.style.boxShadow = 'var(--material-elevation-4)';
           e.target.style.transform = 'translateY(-2px)';
           if (variant === 'outline') {
-            e.target.style.backgroundColor = 'rgba(0,0,0,0.04)';
+            e.target.style.backgroundColor = 'var(--material-surface-hover)';
           }
         }
       }}
@@ -299,7 +299,7 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
             e.target.style.backgroundColor = 'transparent';
           }
         } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+          e.target.style.boxShadow = 'var(--material-elevation-2)';
           e.target.style.transform = 'translateY(0px)';
           if (variant === 'outline') {
             e.target.style.backgroundColor = 'transparent';
@@ -316,10 +316,10 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
             e.target.style.backgroundColor = 'var(--fluent-surface-card-pressed)';
           }
         } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = '0 6px 12px rgba(0,0,0,0.3)';
+          e.target.style.boxShadow = 'var(--material-elevation-8)';
           e.target.style.transform = 'translateY(0px)';
           if (variant === 'outline') {
-            e.target.style.backgroundColor = 'rgba(0,0,0,0.08)';
+            e.target.style.backgroundColor = 'var(--material-surface-pressed)';
           }
         }
       }}
@@ -333,10 +333,10 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
             e.target.style.backgroundColor = 'var(--fluent-surface-card-hover)';
           }
         } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+          e.target.style.boxShadow = 'var(--material-elevation-4)';
           e.target.style.transform = 'translateY(-2px)';
           if (variant === 'outline') {
-            e.target.style.backgroundColor = 'rgba(0,0,0,0.04)';
+            e.target.style.backgroundColor = 'var(--material-surface-hover)';
           }
         }
       }}
