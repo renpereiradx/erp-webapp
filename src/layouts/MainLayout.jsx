@@ -351,14 +351,16 @@ const MainLayout = ({ children }) => {
       minWidth: '20px',
       height: '20px',
       fontSize: '12px',
+      lineHeight: '1',
       fontWeight: isNeoBrutalist ? 900 : isMaterial ? 500 : isFluent ? 600 : 700,
       position: 'absolute',
       top: '-8px',
       right: '-8px',
       visibility: 'visible',
       opacity: '1',
-      zIndex: 10,
+      zIndex: 20,
       padding: '0 4px',
+      pointerEvents: 'none',
       ...colors[type]
     };
 
@@ -374,14 +376,18 @@ const MainLayout = ({ children }) => {
         ...baseStyles,
         borderRadius: '50%',
         boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 2px rgba(0, 0, 0, 0.24)',
-        border: 'none'
+        border: 'none',
+        minWidth: '20px',
+        height: '20px'
       };
     } else if (isFluent) {
       return {
         ...baseStyles,
         borderRadius: '50%',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: 'none'
+        border: 'none',
+        minWidth: '20px',
+        height: '20px'
       };
     } else {
       return {
@@ -683,9 +689,17 @@ const MainLayout = ({ children }) => {
             </div>
 
             {/* Right side */}
-            <div className="erp-navbar-actions ml-4 flex items-center md:ml-6 space-x-4" data-component="navbar-actions" data-testid="navbar-actions">
+            <div className="erp-navbar-actions ml-4 flex items-center md:ml-6 space-x-4" 
+                 style={{ overflow: 'visible' }}
+                 data-component="navbar-actions" 
+                 data-testid="navbar-actions">
               {/* Notifications */}
-              <Button variant="ghost" size="icon" className="erp-notifications-btn relative" data-testid="notifications-btn">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="erp-notifications-btn relative" 
+                style={{ overflow: 'visible', position: 'relative' }}
+                data-testid="notifications-btn">
                 <Bell className="h-6 w-6" />
                 <span style={getBaseBadgeStyles('notification')} data-testid="notification-badge">
                   3
@@ -693,11 +707,15 @@ const MainLayout = ({ children }) => {
               </Button>
 
               {/* Profile Menu */}
-              <div className="erp-profile-menu relative" data-component="profile-menu" data-testid="profile-menu">
+              <div className="erp-profile-menu relative" 
+                   style={{ overflow: 'visible' }}
+                   data-component="profile-menu" 
+                   data-testid="profile-menu">
                 <Button 
                   variant="ghost" 
                   size="icon"
                   className="erp-profile-btn relative"
+                  style={{ overflow: 'visible', position: 'relative' }}
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   data-testid="profile-btn"
                 >
