@@ -12,7 +12,6 @@ import Products from '@/pages/Products';
 import Clients from '@/pages/Clients';
 import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
-import ThemeDebug from '@/pages/ThemeDebug';
 import useAuthStore from '@/store/useAuthStore';
 import './App.css';
 
@@ -112,7 +111,6 @@ function App() {
                   <Route path="/pedidos" element={<Orders />} />
                   <Route path="/reportes" element={<Reports />} />
                   <Route path="/configuracion" element={<Settings />} />
-                  <Route path="/theme-debug" element={<ThemeDebug />} />
                   
                   {/* Ruta 404 */}
                   <Route path="*" element={

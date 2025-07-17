@@ -29,8 +29,23 @@ Thumbs.db
 # Env files
 .env*
 
-# Coverage
-coverage/
+# Development and backup files
+*_backup.*
+*_old.*
+*_new.*
+*_temp.*
+*_test.*
+*_debug.*
+*.backup
+*.tmp
+*.temp
 
-# Misc
-*.local 
+# Test HTML files
+test-*.html
+debug-*.html
+validation-*.html
+
+# Documentation drafts
+*_DRAFT.*
+*_TODO.*
+*_TEMP.*
