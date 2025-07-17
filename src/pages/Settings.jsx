@@ -6,8 +6,9 @@ import { useTheme } from 'next-themes';
 
 const Settings = () => {
   const { theme } = useTheme();
-  const isMaterial = theme?.includes('material');
-  const isFluent = theme?.includes('fluent');
+  const isNeoBrutalism = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
+  const isMaterial = theme === 'material-light' || theme === 'material-dark';
+  const isFluent = theme === 'fluent-light' || theme === 'fluent-dark';
 
   return (
     <div className="p-6 bg-background text-foreground min-h-screen">

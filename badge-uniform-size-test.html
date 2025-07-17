@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Tamaño Uniforme de Badges - Stock Crítico</title>
+    <style>
+        :root {
+            /* Variables base */
+            --background: #ffffff;
+            --foreground: #000000;
+            --border: #000000;
+            --muted: #f5f5f5;
+            --muted-foreground: #666666;
+            
+            /* Neo-Brutalism colors */
+            --brutalist-pink: #ff69b4;
+            --brutalist-orange: #ffa500;
+            --brutalist-lime: #32cd32;
+            
+            /* Material Design colors */
+            --md-error-main: #d32f2f;
+            --md-warning-main: #f57c00;
+            --md-semantic-success: #388e3c;
+            --md-on-primary: #ffffff;
+            --md-corner-small: 4px;
+            --md-surface-variant: #f5f5f5;
+            
+            /* Fluent Design colors */
+            --fluent-semantic-danger: #d13438;
+            --fluent-semantic-warning: #ff8c00;
+            --fluent-semantic-success: #107c10;
+            --fluent-text-on-accent: #ffffff;
+            --fluent-corner-radius-small: 2px;
+            --fluent-surface-secondary: #fafafa;
+            --fluent-border-neutral: #e1dfdd;
+        }
+
+        .dark {
+            --background: #000000;
+            --foreground: #ffffff;
+            --border: #ffffff;
+            --muted: #1a1a1a;
+            --muted-foreground: #a0a0a0;
+            
+            --md-error-main: #f44336;
+            --md-warning-main: #ff9800;
+            --md-semantic-success: #4caf50;
+            --md-surface-variant: #2d2d2d;
+            
+            --fluent-semantic-danger: #ff6b6b;
+            --fluent-semantic-warning: #ffb347;
+            --fluent-semantic-success: #90ee90;
+            --fluent-surface-secondary: #1e1e1e;
+            --fluent-border-neutral: #404040;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--background);
+            color: var(--foreground);
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .theme-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .theme-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stock-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .stock-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: var(--muted);
+            border-radius: 4px;
+        }
+
+        .product-info h4 {
+            margin: 0 0 4px 0;
+            font-weight: 500;
+        }
+
+        .product-details {
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+            margin: 0;
+        }
+
+        /* Neo-Brutalism Badge Styles */
+        .badge-neo-critical {
+            background: var(--brutalist-pink);
+            color: #000000;
+            border: 2px solid var(--border);
+            border-radius: 0px;
+            text-transform: uppercase;
+            font-weight: bold;
+            min-width: 90px;
+            width: 90px;
+            max-width: 90px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge-neo-high {
+            background: var(--brutalist-orange);
+            color: #000000;
+            border: 2px solid var(--border);
+            border-radius: 0px;
+            text-transform: uppercase;
+            font-weight: bold;
+            min-width: 90px;
+            width: 90px;
+            max-width: 90px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge-neo-medium {
+            background: var(--brutalist-lime);
+            color: #000000;
+            border: 2px solid var(--border);
+            border-radius: 0px;
+            text-transform: uppercase;
+            font-weight: bold;
+            min-width: 90px;
+            width: 90px;
+            max-width: 90px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Material Design Badge Styles */
+        .badge-material-critical {
+            background: var(--md-error-main);
+            color: var(--md-on-primary);
+            border: none;
+            border-radius: var(--md-corner-small);
+            font-weight: 500;
+            min-width: 82px;
+            width: 82px;
+            max-width: 82px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 16px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge-material-high {
+            background: var(--md-warning-main);
+            color: var(--md-on-primary);
+            border: none;
+            border-radius: var(--md-corner-small);
+            font-weight: 500;
+            min-width: 82px;
+            width: 82px;
+            max-width: 82px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 16px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge-material-medium {
+            background: var(--md-semantic-success);
+            color: var(--md-on-primary);
+            border: none;
+            border-radius: var(--md-corner-small);
+            font-weight: 500;
+            min-width: 82px;
+            width: 82px;
+            max-width: 82px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 16px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Fluent Design Badge Styles */
+        .badge-fluent-critical {
+            background: var(--fluent-semantic-danger);
+            color: var(--fluent-text-on-accent);
+            border: none;
+            border-radius: var(--fluent-corner-radius-small);
+            font-weight: 400;
+            min-width: 78px;
+            width: 78px;
+            max-width: 78px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge-fluent-high {
+            background: var(--fluent-semantic-warning);
+            color: var(--fluent-text-on-accent);
+            border: none;
+            border-radius: var(--fluent-corner-radius-small);
+            font-weight: 400;
+            min-width: 78px;
+            width: 78px;
+            max-width: 78px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge-fluent-medium {
+            background: var(--fluent-semantic-success);
+            color: var(--fluent-text-on-accent);
+            border: none;
+            border-radius: var(--fluent-corner-radius-small);
+            font-weight: 400;
+            min-width: 78px;
+            width: 78px;
+            max-width: 78px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Button Styles for Footer */
+        .footer-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        /* Neo-Brutalism Footer Button Styles */
+        .btn-neo {
+            background: var(--brutalist-lime);
+            color: #000000;
+            border: 3px solid var(--border);
+            border-radius: 0px;
+            padding: 12px 24px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+            transition: all 150ms ease;
+            cursor: pointer;
+            min-width: 180px;
+            width: 180px;
+            max-width: 180px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-decoration: none;
+            font-family: Arial, sans-serif;
+        }
+
+        .btn-neo:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px 0px rgba(0,0,0,1);
+        }
+
+        .btn-neo.secondary {
+            background: var(--brutalist-orange);
+        }
+
+        /* Material Design Footer Button Styles */
+        .btn-material {
+            background: var(--md-primary-main);
+            color: var(--md-on-primary);
+            border: none;
+            border-radius: var(--md-corner-small);
+            padding: 8px 24px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+            font-size: 0.875rem;
+            letter-spacing: 0.02857em;
+            text-transform: uppercase;
+            box-shadow: var(--md-elevation-2);
+            transition: all 150ms ease;
+            cursor: pointer;
+            min-height: 36px;
+            min-width: 160px;
+            width: 160px;
+            max-width: 160px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-decoration: none;
+        }
+
+        .btn-material:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-material.secondary {
+            background: var(--md-secondary-main);
+            color: var(--md-on-secondary);
+        }
+
+        /* Fluent Design Footer Button Styles */
+        .btn-fluent {
+            background: var(--fluent-brand-primary);
+            color: var(--fluent-text-on-accent);
+            border: 1px solid var(--fluent-border-accent);
+            border-radius: var(--fluent-corner-radius-medium);
+            padding: 8px 20px;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-weight: 400;
+            font-size: 0.875rem;
+            letter-spacing: 0em;
+            box-shadow: var(--fluent-shadow-4);
+            transition: all 150ms cubic-bezier(0.33, 0, 0.67, 1);
+            cursor: pointer;
+            min-height: 32px;
+            min-width: 150px;
+            width: 150px;
+            max-width: 150px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-decoration: none;
+        }
+
+        .btn-fluent:hover {
+            transform: translateY(-1px);
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.18);
+        }
+
+        .btn-fluent.secondary {
+            background: var(--fluent-semantic-success);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--foreground);
+            color: var(--background);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .size-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff0000;
+            color: white;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 2px;
+            font-weight: bold;
+        }
+
+        .badge-container {
+            position: relative;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
+    
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 40px;">
+            Prueba de Tamaño Uniforme - Badges y Botones del Dashboard
+        </h1>
+        
+        <!-- Neo-Brutalism Theme -->
+        <div class="theme-section">
+            <h2 class="theme-title">🔥 Neo-Brutalism Theme</h2>
+            <div class="stock-grid">
+                <div class="stock-item">
+                    <div class="product-info">
+                        <h4>iPhone 15</h4>
+                        <p class="product-details">Actual: 3 | Mínimo: 10</p>
+                    </div>
+                    <div class="badge-container">
+                        <div class="badge-neo-critical">CRÍTICO</div>
+                        <span class="size-indicator">90px</span>
+                    </div>
+                </div>
+                
+                <div class="stock-item">
+                    <div class="product-info">
+                        <h4>Laptop Dell</h4>
+                        <p class="product-details">Actual: 5 | Mínimo: 15</p>
+                    </div>
+                    <div class="badge-container">
+                        <div class="badge-neo-high">ALTO</div>
+                        <span class="size-indicator">90px</span>
+                    </div>
+                </div>
+                
+                <div class="stock-item">
+                    <div class="product-info">
+                        <h4>Mouse Gaming</h4>
+                        <p class="product-details">Actual: 8 | Mínimo: 20</p>
+                    </div>
+                    <div class="badge-container">
+                        <div class="badge-neo-medium">MEDIO</div>
+                        <span class="size-indicator">90px</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Material Design Theme -->
+        <div class="theme-section">
+            <h2 class="theme-title">🎨 Material Design Theme</h2>
+            <div class="stock-grid">
+                <div class="stock-item">
+                    <div class="product-info">
+                        <h4>iPhone 15</h4>
+                        <p class="product-details">Actual: 3 | Mínimo: 10</p>
+                    </div>
+                    <div class="badge-container">
+                        <div class="badge-material-critical">Crítico</div>
+                        <span class="size-indicator">82px</span>
+                    </div>
+                </div>
+                
+                <div class="stock-item">
+                    <div class="product-info">
+                        <h4>Laptop Dell</h4>
+                        <p class="product-details">Actual: 5 | Mínimo: 15</p>
+                    </div>
+                    <div class="badge-container">
+                        <div class="badge-material-high">Alto</div>
+                        <span class="size-indicator">82px</span>
+                    </div>
+                </div>
+                
+                <div class="stock-item">
+                    <div class="product-info">
+                        <h4>Mouse Gaming</h4>
+                        <p class="product-details">Actual: 8 | Mínimo: 20</p>
+                    </div>
+                    <div class="badge-container">
+                        <div class="badge-material-medium">Medio</div>
+                        <span class="size-indicator">82px</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fluent Design Theme -->
+        <div class="theme-section">
+            <h2 class="theme-title">💎 Fluent Design Theme</h2>
+            <div class="stock-grid">
+                <div class="stock-item">
+                    <div class="product-info">
+                        <h4>iPhone 15</h4>
+                        <p class="product-details">Actual: 3 | Mínimo: 10</p>
+                    </div>
+                    <div class="badge-container">
+                        <div class="badge-fluent-critical">Crítico</div>
+                        <span class="size-indicator">78px</span>
+                    </div>
+                </div>
+                
+                <div class="stock-item">
+                    <div class="product-info">
+                        <h4>Laptop Dell</h4>
+                        <p class="product-details">Actual: 5 | Mínimo: 15</p>
+                    </div>
+                    <div class="badge-container">
+                        <div class="badge-fluent-high">Alto</div>
+                        <span class="size-indicator">78px</span>
+                    </div>
+                </div>
+                
+                <div class="stock-item">
+                    <div class="product-info">
+                        <h4>Mouse Gaming</h4>
+                        <p class="product-details">Actual: 8 | Mínimo: 20</p>
+                    </div>
+                    <div class="badge-container">
+                        <div class="badge-fluent-medium">Medio</div>
+                        <span class="size-indicator">78px</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Buttons Section -->
+        <div class="footer-buttons">
+            <a href="#" class="btn-neo">Acción Crítica</a>
+            <a href="#" class="btn-neo secondary">Acción Secundaria</a>
+            <a href="#" class="btn-material">Acción Principal</a>
+            <a href="#" class="btn-material secondary">Acción Secundaria</a>
+            <a href="#" class="btn-fluent">Acción Primaria</a>
+            <a href="#" class="btn-fluent secondary">Acción Secundaria</a>
+        </div>
+
+        <!-- Footer Buttons Section -->
+        <div class="theme-section">
+            <h2 class="theme-title">🚀 Footer Buttons - Neo-Brutalism</h2>
+            <div class="footer-buttons">
+                <div class="badge-container">
+                    <button class="btn-neo">📊 VER REPORTES</button>
+                    <span class="size-indicator">180px</span>
+                </div>
+                <div class="badge-container">
+                    <button class="btn-neo secondary">🎯 CONFIGURAR METAS</button>
+                    <span class="size-indicator">180px</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Material Design Footer Buttons -->
+        <div class="theme-section">
+            <h2 class="theme-title">🎨 Footer Buttons - Material Design</h2>
+            <div class="footer-buttons">
+                <div class="badge-container">
+                    <button class="btn-material">📊 Ver Reportes</button>
+                    <span class="size-indicator">160px</span>
+                </div>
+                <div class="badge-container">
+                    <button class="btn-material secondary">🎯 Configurar Metas</button>
+                    <span class="size-indicator">160px</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fluent Design Footer Buttons -->
+        <div class="theme-section">
+            <h2 class="theme-title">💎 Footer Buttons - Fluent Design</h2>
+            <div class="footer-buttons">
+                <div class="badge-container">
+                    <button class="btn-fluent">📊 Ver Reportes</button>
+                    <span class="size-indicator">150px</span>
+                </div>
+                <div class="badge-container">
+                    <button class="btn-fluent secondary">🎯 Configurar Metas</button>
+                    <span class="size-indicator">150px</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isDark = false;
+        
+        function toggleTheme() {
+            isDark = !isDark;
+            const body = document.body;
+            const button = document.querySelector('.theme-toggle');
+            
+            if (isDark) {
+                body.classList.add('dark');
+                button.textContent = '☀️ Modo Claro';
+            } else {
+                body.classList.remove('dark');
+                button.textContent = '🌙 Modo Oscuro';
+            }
+        }
+    </script>
+</body>
+</html>

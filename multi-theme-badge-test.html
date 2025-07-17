@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Theme Badge Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Material Design variables */
+    [data-theme='material-light'] {
+      --md-error-main: #B00020;
+      --md-on-error: #FFFFFF;
+      --md-secondary-main: #03DAC6;
+      --md-on-secondary: #000000;
+    }
+
+    /* Fluent Design variables */
+    [data-theme='fluent-light'] {
+      --fluent-semantic-danger: #D13438;
+      --fluent-text-on-accent: #FFFFFF;
+      --fluent-brand-primary: #0078D4;
+    }
+
+    /* Neo-Brutalism variables */
+    [data-theme='neo-brutalism-light'] {
+      --brutalist-red: #ef4444;
+      --brutalist-green: #10b981;
+    }
+
+    .theme-section {
+      margin: 30px 0;
+      padding: 20px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .badge-test {
+      margin: 20px;
+      display: inline-block;
+    }
+
+    .neo-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      overflow: visible;
+      min-width: 20px;
+      height: 20px;
+      font-size: 12px;
+      font-weight: 900;
+      visibility: visible;
+      opacity: 1;
+      z-index: 10;
+      padding: 0 4px;
+      border: 2px solid #000000;
+      box-shadow: 1px 1px 0px 0px rgba(0,0,0,1);
+      border-radius: 0px;
+    }
+
+    .neo-notification {
+      background-color: var(--brutalist-red);
+      color: #000000;
+    }
+
+    .neo-profile {
+      background-color: var(--brutalist-green);
+      color: #000000;
+    }
+
+    .material-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      overflow: visible;
+      min-width: 20px;
+      height: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      visibility: visible;
+      opacity: 1;
+      z-index: 10;
+      padding: 0 4px;
+      border-radius: 50%;
+      box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 2px rgba(0, 0, 0, 0.24);
+      border: none;
+    }
+
+    .material-notification {
+      background-color: var(--md-error-main);
+      color: var(--md-on-error);
+    }
+
+    .material-profile {
+      background-color: var(--md-secondary-main);
+      color: var(--md-on-secondary);
+    }
+
+    .fluent-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      overflow: visible;
+      min-width: 20px;
+      height: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      visibility: visible;
+      opacity: 1;
+      z-index: 10;
+      padding: 0 4px;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border: none;
+    }
+
+    .fluent-notification {
+      background-color: var(--fluent-semantic-danger);
+      color: var(--fluent-text-on-accent);
+    }
+
+    .fluent-profile {
+      background-color: var(--fluent-brand-primary);
+      color: var(--fluent-text-on-accent);
+    }
+  </style>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="bg-gray-100 p-8">
+  <h1 class="text-3xl font-bold mb-8">🎨 Multi-Theme Badge Test</h1>
+
+  <!-- Neo-Brutalism Theme -->
+  <div class="theme-section" data-theme="neo-brutalism-light" style="background: #ffffff;">
+    <h2 class="text-2xl font-bold mb-4">🟦 Neo-Brutalism Theme</h2>
+    
+    <div class="badge-test">
+      <div class="relative inline-block">
+        <button class="p-3 bg-gray-200 border-2 border-black">
+          <i data-lucide="bell" class="w-6 h-6"></i>
+        </button>
+        <span class="neo-badge neo-notification">3</span>
+      </div>
+      <span class="ml-4 text-sm">Notification Badge (Red)</span>
+    </div>
+
+    <div class="badge-test">
+      <div class="relative inline-block">
+        <button class="p-3 bg-gray-200 border-2 border-black">
+          <i data-lucide="user" class="w-6 h-6"></i>
+        </button>
+        <span class="neo-badge neo-profile">1</span>
+      </div>
+      <span class="ml-4 text-sm">Profile Badge (Green)</span>
+    </div>
+  </div>
+
+  <!-- Material Design Theme -->
+  <div class="theme-section" data-theme="material-light" style="background: #ffffff;">
+    <h2 class="text-2xl font-bold mb-4">🟣 Material Design Theme</h2>
+    
+    <div class="badge-test">
+      <div class="relative inline-block">
+        <button class="p-3 bg-gray-100 rounded-lg shadow">
+          <i data-lucide="bell" class="w-6 h-6"></i>
+        </button>
+        <span class="material-badge material-notification">3</span>
+      </div>
+      <span class="ml-4 text-sm">Notification Badge (Error Color)</span>
+    </div>
+
+    <div class="badge-test">
+      <div class="relative inline-block">
+        <button class="p-3 bg-gray-100 rounded-lg shadow">
+          <i data-lucide="user" class="w-6 h-6"></i>
+        </button>
+        <span class="material-badge material-profile">1</span>
+      </div>
+      <span class="ml-4 text-sm">Profile Badge (Secondary Color)</span>
+    </div>
+  </div>
+
+  <!-- Fluent Design Theme -->
+  <div class="theme-section" data-theme="fluent-light" style="background: #ffffff;">
+    <h2 class="text-2xl font-bold mb-4">🔵 Fluent Design Theme</h2>
+    
+    <div class="badge-test">
+      <div class="relative inline-block">
+        <button class="p-3 bg-gray-50 rounded shadow-sm">
+          <i data-lucide="bell" class="w-6 h-6"></i>
+        </button>
+        <span class="fluent-badge fluent-notification">3</span>
+      </div>
+      <span class="ml-4 text-sm">Notification Badge (Danger Color)</span>
+    </div>
+
+    <div class="badge-test">
+      <div class="relative inline-block">
+        <button class="p-3 bg-gray-50 rounded shadow-sm">
+          <i data-lucide="user" class="w-6 h-6"></i>
+        </button>
+        <span class="fluent-badge fluent-profile">1</span>
+      </div>
+      <span class="ml-4 text-sm">Profile Badge (Brand Primary)</span>
+    </div>
+  </div>
+
+  <!-- Diagnostic Section -->
+  <div class="theme-section">
+    <h2 class="text-2xl font-bold mb-4">🔬 CSS Variables Diagnostic</h2>
+    <div id="diagnostic-results"></div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Diagnostic script
+    setTimeout(() => {
+      const diagnosticDiv = document.getElementById('diagnostic-results');
+      
+      // Test variables for each theme
+      const themes = [
+        {
+          name: 'Neo-Brutalism',
+          element: document.querySelector('[data-theme="neo-brutalism-light"]'),
+          variables: ['--brutalist-red', '--brutalist-green']
+        },
+        {
+          name: 'Material Design',
+          element: document.querySelector('[data-theme="material-light"]'),
+          variables: ['--md-error-main', '--md-on-error', '--md-secondary-main', '--md-on-secondary']
+        },
+        {
+          name: 'Fluent Design',
+          element: document.querySelector('[data-theme="fluent-light"]'),
+          variables: ['--fluent-semantic-danger', '--fluent-text-on-accent', '--fluent-brand-primary']
+        }
+      ];
+      
+      let diagnosticHTML = '<div class="grid grid-cols-1 gap-4">';
+      
+      themes.forEach(theme => {
+        const computedStyle = getComputedStyle(theme.element);
+        diagnosticHTML += `<div class="p-4 bg-white border border-gray-300 rounded">`;
+        diagnosticHTML += `<h3 class="font-bold text-lg mb-2">${theme.name}</h3>`;
+        
+        theme.variables.forEach(varName => {
+          const value = computedStyle.getPropertyValue(varName);
+          const hasValue = value && value.trim() !== '';
+          diagnosticHTML += `
+            <div class="flex justify-between items-center p-2 border-b border-gray-200">
+              <code class="text-sm">${varName}</code>
+              <span class="text-sm ${hasValue ? 'text-green-600' : 'text-red-600'}">
+                ${hasValue ? value.trim() : 'NOT DEFINED'}
+              </span>
+            </div>
+          `;
+        });
+        
+        diagnosticHTML += `</div>`;
+      });
+      
+      diagnosticHTML += '</div>';
+      diagnosticDiv.innerHTML = diagnosticHTML;
+    }, 100);
+  </script>
+</body>
+</html>

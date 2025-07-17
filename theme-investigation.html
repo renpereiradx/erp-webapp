@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Investigation - Material & Fluent CSS Variables</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .theme-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        .variables-list {
+            columns: 2;
+            gap: 20px;
+        }
+        .variable-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            break-inside: avoid;
+        }
+        .variable-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .variable-value {
+            color: #666;
+            margin-left: 10px;
+        }
+        .test-element {
+            margin: 10px 0;
+            padding: 15px;
+            border: 1px solid var(--border, #ccc);
+            border-radius: 8px;
+            background: var(--background, #fff);
+            color: var(--foreground, #000);
+        }
+        .badge-test {
+            display: inline-block;
+            min-width: 20px;
+            height: 20px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            background: var(--md-error-main, red);
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            line-height: 16px;
+        }
+        .fluent-badge {
+            background: var(--fluent-semantic-danger, red);
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Theme Investigation - Material & Fluent CSS Variables Debug</h1>
+    
+    <div class="debug-info">
+        <h3>Current DOM State:</h3>
+        <p><strong>Document Element data-theme:</strong> <span id="current-theme">Not set</span></p>
+        <p><strong>Body data-theme:</strong> <span id="body-theme">Not set</span></p>
+        <p><strong>Computed styles applied:</strong> <span id="styles-applied">Checking...</span></p>
+    </div>
+
+    <div class="theme-section">
+        <h2>Theme Switching Controls</h2>
+        <button onclick="setTheme('material-light')">Set Material Light</button>
+        <button onclick="setTheme('material-dark')">Set Material Dark</button>
+        <button onclick="setTheme('fluent-light')">Set Fluent Light</button>
+        <button onclick="setTheme('fluent-dark')">Set Fluent Dark</button>
+        <button onclick="setTheme('neo-brutalism-light')">Set Neo-Brutalism Light</button>
+    </div>
+
+    <div class="theme-section">
+        <h2>Material Design Variables Test</h2>
+        <div class="test-element">
+            <p>Background should use Material variables:</p>
+            <div style="background: var(--md-primary-main, red); color: var(--md-on-primary, white); padding: 10px; margin: 5px 0;">
+                Primary Color Block (--md-primary-main)
+            </div>
+            <div style="background: var(--md-secondary-main, red); color: var(--md-on-secondary, white); padding: 10px; margin: 5px 0;">
+                Secondary Color Block (--md-secondary-main)
+            </div>
+            <div style="background: var(--md-error-main, red); color: var(--md-on-error, white); padding: 10px; margin: 5px 0;">
+                Error Color Block (--md-error-main)
+            </div>
+            <span class="badge-test">3</span> Material Badge Test
+        </div>
+        
+        <h3>Material Variables Values:</h3>
+        <div id="material-variables" class="variables-list">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <div class="theme-section">
+        <h2>Fluent Design Variables Test</h2>
+        <div class="test-element">
+            <p>Background should use Fluent variables:</p>
+            <div style="background: var(--fluent-brand-primary, blue); color: var(--fluent-on-primary, white); padding: 10px; margin: 5px 0;">
+                Primary Color Block (--fluent-brand-primary)
+            </div>
+            <div style="background: var(--fluent-semantic-danger, red); color: white; padding: 10px; margin: 5px 0;">
+                Danger Color Block (--fluent-semantic-danger)
+            </div>
+            <span class="badge-test fluent-badge">5</span> Fluent Badge Test
+        </div>
+        
+        <h3>Fluent Variables Values:</h3>
+        <div id="fluent-variables" class="variables-list">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <div class="theme-section">
+        <h2>Legacy Variables Test (Compatibility)</h2>
+        <div class="test-element">
+            <div style="background: var(--background, gray); color: var(--foreground, black); padding: 10px; margin: 5px 0;">
+                Background/Foreground Test
+            </div>
+            <div style="background: var(--primary, blue); color: var(--primary-foreground, white); padding: 10px; margin: 5px 0;">
+                Primary Color Test
+            </div>
+            <div style="background: var(--destructive, red); color: var(--destructive-foreground, white); padding: 10px; margin: 5px 0;">
+                Destructive Color Test
+            </div>
+        </div>
+        
+        <h3>Legacy Variables Values:</h3>
+        <div id="legacy-variables" class="variables-list">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Import the CSS files to ensure they're loaded
+        const linkMaterial = document.createElement('link');
+        linkMaterial.rel = 'stylesheet';
+        linkMaterial.href = '/src/themes/materialDesign.css';
+        document.head.appendChild(linkMaterial);
+
+        const linkFluent = document.createElement('link');
+        linkFluent.rel = 'stylesheet';
+        linkFluent.href = '/src/themes/fluentDesign.css';
+        document.head.appendChild(linkFluent);
+
+        const linkAppCSS = document.createElement('link');
+        linkAppCSS.rel = 'stylesheet';
+        linkAppCSS.href = '/src/App.css';
+        document.head.appendChild(linkAppCSS);
+
+        function setTheme(themeName) {
+            console.log('Setting theme to:', themeName);
+            document.documentElement.setAttribute('data-theme', themeName);
+            document.body.setAttribute('data-theme', themeName);
+            updateDebugInfo();
+            updateVariables();
+        }
+
+        function updateDebugInfo() {
+            const docTheme = document.documentElement.getAttribute('data-theme');
+            const bodyTheme = document.body.getAttribute('data-theme');
+            
+            document.getElementById('current-theme').textContent = docTheme || 'Not set';
+            document.getElementById('body-theme').textContent = bodyTheme || 'Not set';
+            
+            // Check if styles are being applied
+            const rootStyle = getComputedStyle(document.documentElement);
+            const bgValue = rootStyle.getPropertyValue('--background');
+            const primaryValue = rootStyle.getPropertyValue('--md-primary-main');
+            
+            document.getElementById('styles-applied').textContent = 
+                `Background: ${bgValue || 'Not found'}, MD Primary: ${primaryValue || 'Not found'}`;
+        }
+
+        function updateVariables() {
+            const rootStyle = getComputedStyle(document.documentElement);
+            
+            // Material Design variables
+            const materialVars = [
+                '--md-primary-main', '--md-primary-light', '--md-primary-dark',
+                '--md-secondary-main', '--md-secondary-light', '--md-secondary-dark',
+                '--md-error-main', '--md-on-error',
+                '--md-surface-main', '--md-on-surface',
+                '--md-background-main', '--md-on-background'
+            ];
+            
+            // Fluent Design variables
+            const fluentVars = [
+                '--fluent-brand-primary', '--fluent-brand-secondary',
+                '--fluent-semantic-danger', '--fluent-semantic-success',
+                '--fluent-surface-primary', '--fluent-surface-secondary',
+                '--fluent-text-primary', '--fluent-text-secondary'
+            ];
+            
+            // Legacy variables
+            const legacyVars = [
+                '--background', '--foreground', '--card', '--card-foreground',
+                '--primary', '--primary-foreground', '--secondary', '--secondary-foreground',
+                '--destructive', '--destructive-foreground', '--accent', '--accent-foreground'
+            ];
+            
+            updateVariablesList('material-variables', materialVars, rootStyle);
+            updateVariablesList('fluent-variables', fluentVars, rootStyle);
+            updateVariablesList('legacy-variables', legacyVars, rootStyle);
+        }
+        
+        function updateVariablesList(containerId, variables, rootStyle) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            variables.forEach(varName => {
+                const value = rootStyle.getPropertyValue(varName);
+                const item = document.createElement('div');
+                item.className = 'variable-item';
+                item.innerHTML = `
+                    <span class="variable-name">${varName}:</span>
+                    <span class="variable-value">${value || 'Not set'}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDebugInfo();
+            updateVariables();
+            
+            // Set default theme for testing
+            setTheme('material-light');
+        });
+
+        // Monitor for changes
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                    updateDebugInfo();
+                    updateVariables();
+                }
+            });
+        });
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
+    </script>
+</body>
+</html>

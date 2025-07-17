@@ -1,7 +1,7 @@
 /**
- * Página de Login - Multi-tema
- * Soporte para Neo-Brutalism, Material Design y Fluent Design
- * Sistema de autenticación con formulario interactivo
+ * Página de Login - Multi-tema optimizada
+ * Soporte completo para Neo-Brutalism, Material Design y Fluent Design
+ * Sistema de autenticación con formulario interactivo y estilos específicos por tema
  */
 
 import React, { useState } from 'react';
@@ -18,6 +18,8 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import useAuthStore from '@/store/useAuthStore';
+import { materialColors, materialTypography, materialSpacing, materialCorners, materialElevation } from '@/utils/materialDesignUtils';
+import { fluentColors, fluentTypography, fluentSpacing, fluentCorners, fluentElevation } from '@/utils/fluentDesignUtils';
 
 const Login = () => {
   const navigate = useNavigate();

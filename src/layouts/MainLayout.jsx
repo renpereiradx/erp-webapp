@@ -48,10 +48,46 @@ const MainLayout = ({ children }) => {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // Determinar los temas activos
+  // Determinar los temas activos - Corregido para detección exacta
   const isNeoBrutalist = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
-  const isMaterial = theme?.includes('material');
-  const isFluent = theme?.includes('fluent');
+  const isMaterial = theme === 'material-light' || theme === 'material-dark';
+  const isFluent = theme === 'fluent-light' || theme === 'fluent-dark';
+
+  // Asegurar que el tema se aplique correctamente al DOM
+  useEffect(() => {
+    if (typeof window !== 'undefined' && theme) {
+      const body = document.body;
+      const html = document.documentElement;
+      
+      // Asegurar que el tema se aplique tanto al html como al body
+      html.setAttribute('data-theme', theme);
+      body.setAttribute('data-theme', theme);
+      
+      console.log('🎨 Theme applied to DOM:', { 
+        theme, 
+        htmlTheme: html.getAttribute('data-theme'), 
+        bodyTheme: body.getAttribute('data-theme'),
+        isNeoBrutalist,
+        isMaterial,
+        isFluent
+      });
+      
+      // Verificar que las variables CSS están disponibles
+      const rootStyle = getComputedStyle(document.documentElement);
+      console.log('🔍 CSS Variables verification:', {
+        theme,
+        background: rootStyle.getPropertyValue('--background'),
+        foreground: rootStyle.getPropertyValue('--foreground'),
+        primary: rootStyle.getPropertyValue('--primary'),
+        mdPrimary: rootStyle.getPropertyValue('--md-primary-main'),
+        mdError: rootStyle.getPropertyValue('--md-error-main'),
+        fluentPrimary: rootStyle.getPropertyValue('--fluent-brand-primary'),
+        fluentDanger: rootStyle.getPropertyValue('--fluent-semantic-danger')
+      });
+    }
+  }, [theme, isNeoBrutalist, isMaterial, isFluent]);
+
+  // ...existing code...
 
   // Debug log temporal
   console.log('MainLayout Debug:', {
@@ -247,6 +283,113 @@ const MainLayout = ({ children }) => {
       color: active ? 'var(--accent-foreground)' : 'var(--foreground)',
       transition: 'colors 200ms ease'
     };
+  };
+
+  // Helper function para obtener colores de badges según el tema
+  const getBadgeColors = (type = 'notification') => {
+    console.log('🎨 getBadgeColors called:', { theme, type, isNeoBrutalist, isMaterial, isFluent });
+    
+    if (isNeoBrutalist) {
+      return {
+        notification: {
+          backgroundColor: 'var(--brutalist-red)',
+          color: '#000000'
+        },
+        profile: {
+          backgroundColor: 'var(--brutalist-green)',
+          color: '#000000'
+        }
+      };
+    } else if (isMaterial) {
+      return {
+        notification: {
+          backgroundColor: 'var(--md-error-main, #B00020)',
+          color: 'var(--md-on-error, #FFFFFF)'
+        },
+        profile: {
+          backgroundColor: 'var(--md-secondary-main, #03DAC6)',
+          color: 'var(--md-on-secondary, #000000)'
+        }
+      };
+    } else if (isFluent) {
+      return {
+        notification: {
+          backgroundColor: 'var(--fluent-semantic-danger, #D13438)',
+          color: '#FFFFFF'
+        },
+        profile: {
+          backgroundColor: 'var(--fluent-brand-primary, #0078D4)',
+          color: '#FFFFFF'
+        }
+      };
+    } else {
+      // Default theme fallback
+      return {
+        notification: {
+          backgroundColor: 'var(--destructive, #ef4444)',
+          color: 'var(--destructive-foreground, #ffffff)'
+        },
+        profile: {
+          backgroundColor: 'var(--accent, #0078d4)',
+          color: 'var(--accent-foreground, #ffffff)'
+        }
+      };
+    }
+  };
+
+  // Helper function para obtener estilos base de badges
+  const getBaseBadgeStyles = (type = 'notification') => {
+    const colors = getBadgeColors(type);
+    console.log('🎯 getBaseBadgeStyles called:', { type, colors, theme });
+    
+    const baseStyles = {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      whiteSpace: 'nowrap',
+      overflow: 'visible',
+      minWidth: '20px',
+      height: '20px',
+      fontSize: '12px',
+      fontWeight: isNeoBrutalist ? 900 : isMaterial ? 500 : isFluent ? 600 : 700,
+      position: 'absolute',
+      top: '-8px',
+      right: '-8px',
+      visibility: 'visible',
+      opacity: '1',
+      zIndex: 10,
+      padding: '0 4px',
+      ...colors[type]
+    };
+
+    if (isNeoBrutalist) {
+      return {
+        ...baseStyles,
+        border: '2px solid #000000',
+        boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)',
+        borderRadius: '0px'
+      };
+    } else if (isMaterial) {
+      return {
+        ...baseStyles,
+        borderRadius: '50%',
+        boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 2px rgba(0, 0, 0, 0.24)',
+        border: 'none'
+      };
+    } else if (isFluent) {
+      return {
+        ...baseStyles,
+        borderRadius: '50%',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        border: 'none'
+      };
+    } else {
+      return {
+        ...baseStyles,
+        borderRadius: '50%',
+        border: 'none'
+      };
+    }
   };
 
   return (
@@ -544,22 +687,9 @@ const MainLayout = ({ children }) => {
               {/* Notifications */}
               <Button variant="ghost" size="icon" className="erp-notifications-btn relative" data-testid="notifications-btn">
                 <Bell className="h-6 w-6" />
-                {isNeoBrutalist ? (
-                  <span className="erp-notification-badge absolute -top-2 -right-2 px-2 py-1 text-xs font-black border-2 border-black bg-red-400"
-                        style={{ boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)' }}
-                        data-testid="notification-badge">
-                    3
-                  </span>
-                ) : (
-                  <span className="erp-notification-badge absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full"
-                        style={{ 
-                          backgroundColor: 'var(--destructive)', 
-                          color: 'var(--destructive-foreground)' 
-                        }}
-                        data-testid="notification-badge">
-                    3
-                  </span>
-                )}
+                <span style={getBaseBadgeStyles('notification')} data-testid="notification-badge">
+                  3
+                </span>
               </Button>
 
               {/* Profile Menu */}
@@ -572,20 +702,9 @@ const MainLayout = ({ children }) => {
                   data-testid="profile-btn"
                 >
                   <User className="h-6 w-6" />
-                  {isNeoBrutalist ? (
-                    <span className="erp-profile-badge absolute -top-2 -right-2 px-2 py-1 text-xs font-black border-2 border-black bg-green-400"
-                          style={{ boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)' }}>
-                      1
-                    </span>
-                  ) : (
-                    <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none rounded-full"
-                          style={{ 
-                            backgroundColor: 'var(--accent)', 
-                            color: 'var(--accent-foreground)' 
-                          }}>
-                      1
-                    </span>
-                  )}
+                  <span style={getBaseBadgeStyles('profile')}>
+                    1
+                  </span>
                 </Button>
 
                 {/* Dropdown Menu */}
