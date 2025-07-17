@@ -349,17 +349,18 @@ const MainLayout = ({ children }) => {
       whiteSpace: 'nowrap',
       overflow: 'visible',
       minWidth: '20px',
+      width: '20px',
       height: '20px',
-      fontSize: '12px',
+      fontSize: '11px',
       lineHeight: '1',
       fontWeight: isNeoBrutalist ? 900 : isMaterial ? 500 : isFluent ? 600 : 700,
       position: 'absolute',
-      top: '-8px',
-      right: '-8px',
+      top: '-3px',
+      right: '-3px',
       visibility: 'visible',
       opacity: '1',
       zIndex: 20,
-      padding: '0 4px',
+      padding: '0',
       pointerEvents: 'none',
       ...colors[type]
     };
@@ -368,26 +369,25 @@ const MainLayout = ({ children }) => {
       return {
         ...baseStyles,
         border: '2px solid #000000',
-        boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)',
-        borderRadius: '0px'
+        boxShadow: '2px 2px 0px 0px rgba(0,0,0,1)',
+        borderRadius: '0px',
+        minWidth: '22px',
+        width: '22px',
+        height: '22px'
       };
     } else if (isMaterial) {
       return {
         ...baseStyles,
         borderRadius: '50%',
         boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 2px rgba(0, 0, 0, 0.24)',
-        border: 'none',
-        minWidth: '20px',
-        height: '20px'
+        border: 'none'
       };
     } else if (isFluent) {
       return {
         ...baseStyles,
         borderRadius: '50%',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        border: 'none',
-        minWidth: '20px',
-        height: '20px'
+        border: 'none'
       };
     } else {
       return {
@@ -667,7 +667,11 @@ const MainLayout = ({ children }) => {
             style={{ 
               borderRight: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
               color: 'var(--foreground)',
-              display: isClient ? (!isLargeScreen ? 'flex' : 'none') : undefined
+              display: isClient ? (!isLargeScreen ? 'flex' : 'none') : undefined,
+              width: '48px',
+              height: '48px',
+              minWidth: '48px',
+              minHeight: '48px'
             }}
             data-testid="mobile-menu-btn"
             data-component="mobile-menu-btn"
@@ -698,7 +702,14 @@ const MainLayout = ({ children }) => {
                 variant="ghost" 
                 size="icon" 
                 className="erp-notifications-btn relative" 
-                style={{ overflow: 'visible', position: 'relative' }}
+                style={{ 
+                  overflow: 'visible', 
+                  position: 'relative',
+                  width: '48px',
+                  height: '48px',
+                  minWidth: '48px',
+                  minHeight: '48px'
+                }}
                 data-testid="notifications-btn">
                 <Bell className="h-6 w-6" />
                 <span style={getBaseBadgeStyles('notification')} data-testid="notification-badge">
@@ -715,7 +726,14 @@ const MainLayout = ({ children }) => {
                   variant="ghost" 
                   size="icon"
                   className="erp-profile-btn relative"
-                  style={{ overflow: 'visible', position: 'relative' }}
+                  style={{ 
+                    overflow: 'visible', 
+                    position: 'relative',
+                    width: '48px',
+                    height: '48px',
+                    minWidth: '48px',
+                    minHeight: '48px'
+                  }}
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   data-testid="profile-btn"
                 >
