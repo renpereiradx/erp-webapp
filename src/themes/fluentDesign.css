@@ -158,6 +158,10 @@
   --accent-foreground: var(--fluent-text-on-accent);
   --destructive: var(--fluent-semantic-danger);
   --destructive-foreground: var(--fluent-text-on-accent);
+  --success: var(--fluent-semantic-success);
+  --success-foreground: var(--fluent-text-on-accent);
+  --warning: var(--fluent-semantic-warning);
+  --warning-foreground: var(--fluent-text-on-accent);
   --border: var(--fluent-border-neutral);
   --input: var(--fluent-surface-primary);
   --ring: var(--fluent-border-focus);
@@ -328,8 +332,12 @@
   --accent-foreground: var(--fluent-text-on-accent);
   --destructive: var(--fluent-semantic-danger);
   --destructive-foreground: var(--fluent-text-on-accent);
+  --success: var(--fluent-semantic-success);
+  --success-foreground: var(--fluent-text-on-accent);
+  --warning: var(--fluent-semantic-warning);
+  --warning-foreground: var(--fluent-text-on-accent);
   --border: var(--fluent-border-neutral);
-  --input: var(--fluent-surface-primary);
+  --input: var(--fluent-surface-card);
   --ring: var(--fluent-border-focus);
   --radius: var(--fluent-corner-radius-medium);
   

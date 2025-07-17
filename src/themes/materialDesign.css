@@ -32,6 +32,15 @@
   --md-error-main: #B00020;
   --md-on-error: #FFFFFF;
   
+  /* Success, Warning, Info Colors */
+  --md-semantic-success: #4CAF50;
+  --md-on-success: #FFFFFF;
+  --md-semantic-warning: #FF9800;
+  --md-warning-main: #FF9800;
+  --md-on-warning: #000000;
+  --md-semantic-info: #2196F3;
+  --md-on-info: #FFFFFF;
+  
   /* Text Colors */
   --md-text-primary: rgba(0, 0, 0, 0.87);
   --md-text-secondary: rgba(0, 0, 0, 0.54);
@@ -103,6 +112,10 @@
   --accent-foreground: var(--md-on-secondary);
   --destructive: var(--md-error-main);
   --destructive-foreground: var(--md-on-error);
+  --success: var(--md-semantic-success);
+  --success-foreground: var(--md-on-success);
+  --warning: var(--md-semantic-warning);
+  --warning-foreground: var(--md-on-warning);
   --border: var(--md-outline);
   --input: var(--md-surface-main);
   --ring: var(--md-primary-main);
@@ -123,7 +136,7 @@
 [data-theme='material-dark'] {
   /* Primary Colors */
   --md-primary-main: #BB86FC;
-  --md-primary-light: #BB86FC;
+  --md-primary-light: #E1BEE7;
   --md-primary-dark: #3700B3;
   --md-on-primary: #000000;
   
@@ -134,22 +147,31 @@
   --md-on-secondary: #000000;
   
   /* Surface Colors */
-  --md-surface-main: #121212;
-  --md-surface-variant: #2C2C2C;
-  --md-on-surface: #FFFFFF;
-  --md-on-surface-variant: #A8A8A8;
+  --md-surface-main: #1E1E1E;
+  --md-surface-variant: #2D2D2D;
+  --md-on-surface: #E1E1E1;
+  --md-on-surface-variant: #C4C4C4;
   
   /* Background Colors */
   --md-background-main: #121212;
-  --md-on-background: #FFFFFF;
+  --md-on-background: #E1E1E1;
   
   /* Error Colors */
   --md-error-main: #CF6679;
-  --md-on-error: #000000;
+  --md-on-error: #FFFFFF;
+  
+  /* Success, Warning, Info Colors for Dark Theme */
+  --md-semantic-success: #4CAF50;
+  --md-on-success: #FFFFFF;
+  --md-semantic-warning: #FF9800;
+  --md-warning-main: #FF9800;
+  --md-on-warning: #000000;
+  --md-semantic-info: #2196F3;
+  --md-on-info: #FFFFFF;
   
   /* Text Colors */
   --md-text-primary: rgba(255, 255, 255, 0.87);
-  --md-text-secondary: rgba(255, 255, 255, 0.54);
+  --md-text-secondary: rgba(255, 255, 255, 0.60);
   --md-text-disabled: rgba(255, 255, 255, 0.38);
   
   /* Additional Surface Colors */
@@ -218,6 +240,10 @@
   --accent-foreground: var(--md-on-secondary);
   --destructive: var(--md-error-main);
   --destructive-foreground: var(--md-on-error);
+  --success: var(--md-semantic-success);
+  --success-foreground: var(--md-on-success);
+  --warning: var(--md-semantic-warning);
+  --warning-foreground: var(--md-on-warning);
   --border: var(--md-outline);
   --input: var(--md-surface-container);
   --ring: var(--md-primary-main);
