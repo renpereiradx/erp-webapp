@@ -1,64 +1,141 @@
 /**
  * Servicio para la gestión de productos en el sistema ERP
- * Contiene todas las funciones relacionadas con la API de productos
+ * Migrado para usar el cliente oficial del Business Management API
  */
 
-import { apiService } from './api';
+import { apiClient } from './api';
 
 export const productService = {
-  // Obtener todos los productos con paginación y filtros
-  getProducts: async (params = {}) => {
-    const queryParams = new URLSearchParams({
-      page: params.page || 1,
-      limit: params.limit || 10,
-      search: params.search || '',
-      category: params.category || '',
-      sortBy: params.sortBy || 'name',
-      sortOrder: params.sortOrder || 'asc',
-    }).toString();
-
-    return await apiService.get(`/productos?${queryParams}`);
+  // =================== PRODUCTOS ===================
+  
+  // Obtener productos paginados
+  getProducts: async (page = 1, pageSize = 10) => {
+    return await apiClient.getProducts(page, pageSize);
   },
 
   // Obtener un producto por ID
-  getProductById: async (id) => {
-    return await apiService.get(`/productos/${id}`);
+  getProductById: async (productId) => {
+    return await apiClient.getProductById(productId);
+  },
+
+  // Buscar productos por nombre
+  searchProductsByName: async (name) => {
+    return await apiClient.searchProductsByName(name);
+  },
+
+  // Búsqueda inteligente: por ID o nombre
+  searchProducts: async (searchTerm) => {
+    return await apiClient.searchProducts(searchTerm);
   },
 
   // Crear un nuevo producto
   createProduct: async (productData) => {
-    return await apiService.post('/productos', productData);
+    return await apiClient.createProduct(productData);
   },
 
   // Actualizar un producto existente
-  updateProduct: async (id, productData) => {
-    return await apiService.put(`/productos/${id}`, productData);
+  updateProduct: async (productId, productData) => {
+    return await apiClient.updateProduct(productId, productData);
   },
 
-  // Eliminar un producto
-  deleteProduct: async (id) => {
-    return await apiService.delete(`/productos/${id}`);
+  // Eliminar producto (soft delete)
+  deleteProduct: async (productId) => {
+    return await apiClient.deleteProduct(productId);
   },
+
+  // =================== DESCRIPCIONES ===================
+
+  // Crear descripción de producto
+  createProductDescription: async (productId, description) => {
+    return await apiClient.createProductDescription(productId, description);
+  },
+
+  // Obtener descripción por ID
+  getDescriptionById: async (descId) => {
+    return await apiClient.getProductDescription(descId);
+  },
+
+  // Actualizar descripción
+  updateDescription: async (descId, description) => {
+    return await apiClient.updateProductDescription(descId, description);
+  },
+
+  // =================== PRECIOS ===================
+
+  // Obtener precio de producto
+  getProductPrice: async (productId) => {
+    return await apiClient.getProductPrice(productId);
+  },
+
+  // Crear precio por Product ID
+  createProductPrice: async (productId, priceData) => {
+    return await apiClient.setProductPrice(productId, priceData);
+  },
+
+  // Actualizar precio por Product ID
+  updateProductPriceByProductId: async (productId, priceData) => {
+    return await apiClient.updateProductPrice(productId, priceData);
+  },
+
+  // =================== STOCK ===================
+
+  // Obtener stock por Product ID
+  getStockByProductId: async (productId) => {
+    return await apiClient.getProductStock(productId);
+  },
+
+  // Crear stock
+  createStock: async (productId, stockData) => {
+    return await apiClient.createStock(productId, stockData);
+  },
+
+  // Actualizar stock por Product ID
+  updateStockByProductId: async (productId, stockData) => {
+    return await apiClient.updateStockByProductId(productId, stockData);
+  },
+
+  // Obtener stock por ID
+  getStockById: async (stockId) => {
+    return await apiClient.getStockById(stockId);
+  },
+
+  // =================== UTILIDADES ===================
 
   // Obtener categorías de productos
   getCategories: async () => {
-    return await apiService.get('/productos/categorias');
+    return await apiClient.getCategories();
   },
 
-  // Buscar productos por código de barras
-  searchByBarcode: async (barcode) => {
-    return await apiService.get(`/productos/barcode/${barcode}`);
+  // Validar estructura de datos antes de envío
+  validateProductData: (productData) => {
+    const required = ['name'];
+    const missing = required.filter(field => !productData[field]);
+    if (missing.length > 0) {
+      throw new Error(`Campos requeridos faltantes: ${missing.join(', ')}`);
+    }
+    return true;
   },
 
-  // Actualizar stock de un producto
-  updateStock: async (id, stockData) => {
-    return await apiService.put(`/productos/${id}/stock`, stockData);
+  validatePriceData: (priceData) => {
+    if (!priceData.costPrice && priceData.costPrice !== 0 && !priceData.cost_price && priceData.cost_price !== 0) {
+      throw new Error('cost_price es requerido');
+    }
+    return true;
   },
 
-  // Obtener productos con stock bajo
-  getLowStockProducts: async (threshold = 10) => {
-    return await apiService.get(`/productos/stock-bajo?threshold=${threshold}`);
+  validateStockData: (stockData) => {
+    if (!stockData.quantity && stockData.quantity !== 0) {
+      throw new Error('quantity es requerido');
+    }
+    return true;
   },
+
+  validateDescriptionData: (descriptionData) => {
+    if (!descriptionData.description) {
+      throw new Error('description es requerido');
+    }
+    return true;
+  }
 };
 
 export default productService;

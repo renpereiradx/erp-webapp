@@ -1,516 +1,389 @@
 /**
  * Store de Zustand para la gestión de productos en el ERP
- * Incluye estado local y funciones para interactuar con la API
+ * Requiere autenticación para acceder a los datos
  */
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { productService } from '@/services/productService';
 
-// Datos mock para demostración
-const mockProducts = [
-  {
-    id: 1,
-    name: 'iPhone 15 Pro',
-    sku: 'IPH15P-128',
-    category: 'Electrónicos',
-    price: 999.99,
-    stock: 25,
-    minStock: 10,
-    status: 'active',
-    image: '/api/placeholder/100/100',
-    description: 'Smartphone Apple iPhone 15 Pro 128GB',
-    barcode: '123456789012',
-    supplier: 'Apple Inc.',
-    location: 'A-1-01',
-    createdAt: '2024-01-15T10:30:00Z',
-    updatedAt: '2024-01-20T14:45:00Z',
-  },
-  {
-    id: 2,
-    name: 'Laptop Dell XPS 13',
-    sku: 'DELL-XPS13',
-    category: 'Computadoras',
-    price: 1299.99,
-    stock: 8,
-    minStock: 15,
-    status: 'low_stock',
-    image: '/api/placeholder/100/100',
-    description: 'Laptop Dell XPS 13 Intel i7 16GB RAM',
-    barcode: '123456789013',
-    supplier: 'Dell Technologies',
-    location: 'B-2-05',
-    createdAt: '2024-01-16T09:15:00Z',
-    updatedAt: '2024-01-22T11:30:00Z',
-  },
-  {
-    id: 3,
-    name: 'Auriculares Sony WH-1000XM4',
-    sku: 'SONY-WH1000',
-    category: 'Audio',
-    price: 349.99,
-    stock: 0,
-    minStock: 5,
-    status: 'out_of_stock',
-    image: '/api/placeholder/100/100',
-    description: 'Auriculares inalámbricos con cancelación de ruido',
-    barcode: '123456789014',
-    supplier: 'Sony Electronics',
-    location: 'C-1-03',
-    createdAt: '2024-01-17T16:20:00Z',
-    updatedAt: '2024-01-25T08:15:00Z',
-  },
-  {
-    id: 4,
-    name: 'Monitor Samsung 27" 4K',
-    sku: 'SAM-M27-4K',
-    category: 'Accesorios',
-    price: 449.99,
-    stock: 12,
-    minStock: 8,
-    status: 'active',
-    image: '/api/placeholder/100/100',
-    description: 'Monitor Samsung 27 pulgadas 4K UHD',
-    barcode: '123456789015',
-    supplier: 'Samsung Electronics',
-    location: 'A-3-02',
-    createdAt: '2024-01-18T12:45:00Z',
-    updatedAt: '2024-01-26T15:30:00Z',
-  },
-  {
-    id: 5,
-    name: 'Teclado Mecánico Corsair',
-    sku: 'COR-K95-RGB',
-    category: 'Accesorios',
-    price: 179.99,
-    stock: 3,
-    minStock: 10,
-    status: 'low_stock',
-    image: '/api/placeholder/100/100',
-    description: 'Teclado mecánico gaming RGB Cherry MX',
-    barcode: '123456789016',
-    supplier: 'Corsair',
-    location: 'C-2-01',
-    createdAt: '2024-01-19T14:10:00Z',
-    updatedAt: '2024-01-27T09:45:00Z',
-  },
-  {
-    id: 6,
-    name: 'Mouse Logitech MX Master 3',
-    sku: 'LOG-MX3',
-    category: 'Accesorios',
-    price: 99.99,
-    stock: 20,
-    minStock: 15,
-    status: 'active',
-    image: '/api/placeholder/100/100',
-    description: 'Mouse inalámbrico para productividad',
-    barcode: '123456789017',
-    supplier: 'Logitech',
-    location: 'C-2-02',
-    createdAt: '2024-01-20T11:25:00Z',
-    updatedAt: '2024-01-28T13:20:00Z',
-  },
-  {
-    id: 7,
-    name: 'Tablet iPad Air',
-    sku: 'IPAD-AIR-256',
-    category: 'Electrónicos',
-    price: 749.99,
-    stock: 15,
-    minStock: 12,
-    status: 'active',
-    image: '/api/placeholder/100/100',
-    description: 'iPad Air 256GB WiFi + Cellular',
-    barcode: '123456789018',
-    supplier: 'Apple Inc.',
-    location: 'A-1-03',
-    createdAt: '2024-01-21T08:30:00Z',
-    updatedAt: '2024-01-29T16:10:00Z',
-  },
-  {
-    id: 8,
-    name: 'Impresora HP LaserJet',
-    sku: 'HP-LJ-PRO',
-    category: 'Oficina',
-    price: 299.99,
-    stock: 6,
-    minStock: 8,
-    status: 'low_stock',
-    image: '/api/placeholder/100/100',
-    description: 'Impresora láser monocromática',
-    barcode: '123456789019',
-    supplier: 'HP Inc.',
-    location: 'D-1-01',
-    createdAt: '2024-01-22T15:40:00Z',
-    updatedAt: '2024-01-30T10:25:00Z',
-  },
-  {
-    id: 9,
-    name: 'Webcam Logitech C920',
-    sku: 'LOG-C920-HD',
-    category: 'Accesorios',
-    price: 79.99,
-    stock: 0,
-    minStock: 5,
-    status: 'out_of_stock',
-    image: '/api/placeholder/100/100',
-    description: 'Webcam HD 1080p para videoconferencias',
-    barcode: '123456789020',
-    supplier: 'Logitech',
-    location: 'C-3-01',
-    createdAt: '2024-01-23T13:15:00Z',
-    updatedAt: '2024-01-31T14:45:00Z',
-  },
-  {
-    id: 10,
-    name: 'Disco SSD Samsung 1TB',
-    sku: 'SAM-SSD-1TB',
-    category: 'Almacenamiento',
-    price: 129.99,
-    stock: 18,
-    minStock: 20,
-    status: 'active',
-    image: '/api/placeholder/100/100',
-    description: 'SSD NVMe M.2 1TB alta velocidad',
-    barcode: '123456789021',
-    supplier: 'Samsung Electronics',
-    location: 'B-1-02',
-    createdAt: '2024-01-24T10:50:00Z',
-    updatedAt: '2024-02-01T12:30:00Z',
-  },
-  {
-    id: 11,
-    name: 'Router WiFi 6 ASUS',
-    sku: 'ASUS-AX6000',
-    category: 'Redes',
-    price: 199.99,
-    stock: 7,
-    minStock: 5,
-    status: 'active',
-    image: '/api/placeholder/100/100',
-    description: 'Router inalámbrico WiFi 6 AX6000',
-    barcode: '123456789022',
-    supplier: 'ASUS',
-    location: 'E-1-01',
-    createdAt: '2024-01-25T09:20:00Z',
-    updatedAt: '2024-02-02T11:15:00Z',
-  },
-  {
-    id: 12,
-    name: 'Cámara Canon EOS R5',
-    sku: 'CAN-EOSR5',
-    category: 'Fotografía',
-    price: 3899.99,
-    stock: 2,
-    minStock: 3,
-    status: 'low_stock',
-    image: '/api/placeholder/100/100',
-    description: 'Cámara mirrorless profesional 45MP',
-    barcode: '123456789023',
-    supplier: 'Canon Inc.',
-    location: 'F-1-01',
-    createdAt: '2024-01-26T14:35:00Z',
-    updatedAt: '2024-02-03T16:20:00Z',
-  }
-];
-
-const mockCategories = [
-  'Electrónicos',
-  'Computadoras', 
-  'Audio',
-  'Ropa',
-  'Muebles',
-  'Accesorios'
-];
-
 const useProductStore = create(
   devtools(
     (set, get) => ({
-      // Estado inicial
+      // =================== ESTADO ===================
       products: [],
-      categories: [],
-      currentProduct: null,
+      selectedProduct: null,
       loading: false,
       error: null,
-      pagination: {
-        page: 1,
-        limit: 10,
-        total: 0,
-        totalPages: 0,
-      },
+      
+      // Categories (inicialmente vacías, se cargan desde API)
+      categories: [],
+      
+      // Pagination
+      currentPage: 1,
+      pageSize: 10,
+      totalProducts: 0,
+      totalPages: 0,
+      
+      // Search
+      lastSearchTerm: '',
+      
+      // Filtros locales (para productos ya cargados)
       filters: {
         search: '',
         category: '',
+        status: '',
         sortBy: 'name',
-        sortOrder: 'asc',
+        sortOrder: 'asc'
       },
 
-      // Acciones para manejo de loading y errores
+      // =================== ACTIONS ===================
+
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
       clearError: () => set({ error: null }),
 
-      // Acciones para filtros y paginación
-      setFilters: (filters) => set((state) => ({
-        filters: { ...state.filters, ...filters }
-      })),
-      
-      setPagination: (pagination) => set((state) => ({
-        pagination: { ...state.pagination, ...pagination }
+      setFilters: (newFilters) => 
+        set((state) => ({
+          filters: { ...state.filters, ...newFilters },
+          currentPage: 1
+        })),
+
+      setCurrentPage: (page) => set({ currentPage: page }),
+
+      setPageSize: (pageSize) => set((state) => ({
+        pageSize,
+        currentPage: 1, // Reset to first page when changing page size
+        totalPages: Math.ceil(state.totalProducts / pageSize)
       })),
 
-      // Obtener productos con filtros y paginación
-      fetchProducts: async (params = {}) => {
+      // =================== API CALLS ===================
+
+      fetchCategories: async () => {
         set({ loading: true, error: null });
+        
         try {
-          const { filters } = get();
-          const queryParams = {
-            ...filters,
-            ...params,
-          };
-
-          // Usar datos mock para demostración
-          // En producción, descomentar la línea siguiente:
-          // const response = await productService.getProducts(queryParams);
+          console.log('Obteniendo categorías desde la API...');
           
-          // Simulamos llamada a API con datos mock
-          await new Promise(resolve => setTimeout(resolve, 500)); // Simular delay de red
+          // Verificar que haya token disponible (más robusto)
+          const token = localStorage.getItem('authToken');
+          console.log('Token check:', token ? 'Token presente' : 'Token ausente');
           
-          let filteredProducts = [...mockProducts];
-          
-          // Aplicar filtros
-          if (queryParams.search) {
-            const searchTerm = queryParams.search.toLowerCase();
-            filteredProducts = filteredProducts.filter(product => 
-              product.name.toLowerCase().includes(searchTerm) ||
-              product.sku.toLowerCase().includes(searchTerm) ||
-              product.category.toLowerCase().includes(searchTerm) ||
-              product.description.toLowerCase().includes(searchTerm)
-            );
+          if (!token || token.trim() === '') {
+            throw new Error('AUTHENTICATION_REQUIRED');
           }
           
-          if (queryParams.category) {
-            filteredProducts = filteredProducts.filter(product => 
-              product.category === queryParams.category
-            );
+          console.log('Token disponible, haciendo petición a /categories...');
+          const response = await productService.getCategories();
+          console.log('Respuesta recibida:', response);
+          
+          // La respuesta viene en formato { "categories": [...] } según el ejemplo de Postman
+          const categories = response.categories || response.data || (Array.isArray(response) ? response : []);
+          
+          if (categories && categories.length > 0) {
+            console.log('Categorías obtenidas de la API:', categories);
+            set({ categories: categories, loading: false });
+            return categories;
+          } else {
+            throw new Error('API_EMPTY_RESPONSE');
           }
-          
-          if (queryParams.status) {
-            filteredProducts = filteredProducts.filter(product => {
-              if (queryParams.status === 'active') {
-                return product.stock > product.minStock;
-              } else if (queryParams.status === 'low_stock') {
-                return product.stock <= product.minStock && product.stock > 0;
-              } else if (queryParams.status === 'out_of_stock') {
-                return product.stock === 0;
-              }
-              return true;
-            });
-          }
-          
-          // Aplicar ordenamiento
-          if (queryParams.sortBy) {
-            filteredProducts.sort((a, b) => {
-              const aValue = a[queryParams.sortBy];
-              const bValue = b[queryParams.sortBy];
-              
-              if (queryParams.sortOrder === 'desc') {
-                return bValue > aValue ? 1 : -1;
-              }
-              return aValue > bValue ? 1 : -1;
-            });
-          }
-          
-          // Aplicar paginación
-          const page = queryParams.page || 1;
-          const limit = queryParams.limit || 10;
-          const startIndex = (page - 1) * limit;
-          const endIndex = startIndex + limit;
-          const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
-          
-          set({
-            products: paginatedProducts,
-            categories: mockCategories,
-            pagination: {
-              page: page,
-              limit: limit,
-              total: filteredProducts.length,
-              totalPages: Math.ceil(filteredProducts.length / limit),
-            },
-            loading: false,
-          });
         } catch (error) {
-          set({
-            error: error.message || 'Error al cargar productos',
-            loading: false,
-          });
+          console.error('Error obteniendo categorías:', error.message);
+          
+          // Determinar el tipo de error para mostrar mensaje apropiado
+          let errorMessage = 'Error desconocido';
+          if (error.message === 'AUTHENTICATION_REQUIRED') {
+            errorMessage = 'Debe iniciar sesión para cargar categorías';
+          } else if (error.message === 'API_EMPTY_RESPONSE') {
+            errorMessage = 'No se encontraron categorías en el servidor';
+          } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+            errorMessage = 'Sesión expirada. Debe iniciar sesión nuevamente';
+          } else if (error.message.includes('Network') || error.message.includes('fetch')) {
+            errorMessage = 'Error de conexión. Verifique su conexión a internet';
+          } else {
+            errorMessage = 'Error del servidor al cargar categorías';
+          }
+          
+          set({ categories: [], loading: false, error: errorMessage });
+          throw new Error(errorMessage);
         }
       },
 
-      // Obtener un producto por ID
-      fetchProductById: async (id) => {
+      fetchProducts: async (page = null, pageSize = null, searchTerm = '') => {
+        const state = get();
+        const currentPage = page || state.currentPage;
+        const currentPageSize = pageSize || state.pageSize;
+
         set({ loading: true, error: null });
+
         try {
-          const product = await productService.getProductById(id);
+          // Verificar si hay token (consistente con categorías)
+          const token = localStorage.getItem('authToken');
+          console.log('Token check para productos:', token ? 'Token presente' : 'Token ausente');
+          
+          if (!token || token.trim() === '') {
+            const errorMessage = 'Debe iniciar sesión para acceder a los productos';
+            set({ 
+              products: [], 
+              totalProducts: 0, 
+              totalPages: 0, 
+              loading: false, 
+              error: errorMessage 
+            });
+            throw new Error(errorMessage);
+          }
+
+          let response;
+          let products = [];
+          let totalCount = 0;
+          
+          console.log('🚀 Intentando obtener productos desde API...');
+          
+          if (searchTerm && searchTerm.trim()) {
+            console.log('📊 Búsqueda con término:', searchTerm.trim());
+            // Usar búsqueda por ID o nombre
+            response = await productService.searchProducts(searchTerm.trim());
+            products = Array.isArray(response) ? response : [response];
+            totalCount = products.length;
+            
+            // Para búsquedas, simular paginación local
+            const startIndex = (currentPage - 1) * currentPageSize;
+            const endIndex = startIndex + currentPageSize;
+            const paginatedProducts = products.slice(startIndex, endIndex);
+            
+            set({
+              products: paginatedProducts,
+              totalProducts: totalCount,
+              totalPages: Math.ceil(totalCount / currentPageSize),
+              currentPage: currentPage,
+              pageSize: currentPageSize,
+              loading: false,
+              lastSearchTerm: searchTerm.trim()
+            });
+
+            return { data: paginatedProducts, total: totalCount };
+          } else {
+            console.log('📋 Obteniendo productos paginados:', { currentPage, currentPageSize });
+            // Usar paginación normal de la API
+            response = await productService.getProducts(currentPage, currentPageSize);
+            console.log('📦 Respuesta de productos:', response);
+            products = Array.isArray(response) ? response : [response];
+            totalCount = products.length;
+            
+            set({
+              products: products,
+              totalProducts: totalCount,
+              totalPages: Math.ceil(totalCount / currentPageSize),
+              currentPage: currentPage,
+              pageSize: currentPageSize,
+              loading: false,
+              lastSearchTerm: searchTerm
+            });
+
+            return { data: products, total: totalCount };
+          }
+        } catch (apiError) {
+          console.error('❌ Error obteniendo productos:', apiError.message);
+          
+          const errorMessage = `Error al cargar productos: ${apiError.message}`;
           set({
-            currentProduct: product,
+            products: [],
+            totalProducts: 0,
+            totalPages: 0,
             loading: false,
+            error: errorMessage
           });
+
+          throw apiError;
+        }
+      },
+
+      // Nueva función para búsqueda específica
+      searchProducts: async (searchTerm) => {
+        if (!searchTerm.trim()) {
+          // Si no hay término, limpiar productos
+          set({ 
+            products: [], 
+            totalProducts: 0, 
+            totalPages: 0,
+            currentPage: 1,
+            lastSearchTerm: ''
+          });
+          return { data: [], total: 0 };
+        }
+
+        return await get().fetchProducts(1, 10, searchTerm);
+      },
+
+      // Función para cargar página específica
+      loadPage: async (page) => {
+        const state = get();
+        return await get().fetchProducts(page, state.pageSize, state.lastSearchTerm || '');
+      },
+
+      // Función para cambiar tamaño de página y recargar
+      changePageSize: async (newPageSize) => {
+        const state = get();
+        get().setPageSize(newPageSize);
+        return await get().fetchProducts(1, newPageSize, state.lastSearchTerm || '');
+      },
+
+      // Limpiar productos (para estado inicial)
+      clearProducts: () => {
+        set({ 
+          products: [], 
+          totalProducts: 0, 
+          totalPages: 0,
+          currentPage: 1,
+          lastSearchTerm: '',
+          loading: false,
+          error: null
+        });
+      },
+
+      fetchProductById: async (productId) => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await productService.getProductById(productId);
+          const product = response.data || response;
+
+          set({
+            selectedProduct: product,
+            loading: false
+          });
+
           return product;
         } catch (error) {
+          console.error('Error fetching product:', error);
           set({
-            error: error.response?.data?.message || 'Error al cargar producto',
-            loading: false,
+            error: error.message || 'Error al cargar producto',
+            loading: false
           });
           throw error;
         }
       },
 
-      // Crear nuevo producto
       createProduct: async (productData) => {
         set({ loading: true, error: null });
+
         try {
-          const newProduct = await productService.createProduct(productData);
-          
+          productService.validateProductData(productData);
+          const response = await productService.createProduct(productData);
+          const newProduct = response.data || response;
+
           set((state) => ({
             products: [newProduct, ...state.products],
-            loading: false,
+            totalProducts: state.totalProducts + 1,
+            loading: false
           }));
-          
+
           return newProduct;
         } catch (error) {
+          console.error('Error creating product:', error);
           set({
-            error: error.response?.data?.message || 'Error al crear producto',
-            loading: false,
+            error: error.message || 'Error al crear producto',
+            loading: false
           });
           throw error;
         }
       },
 
-      // Actualizar producto existente
-      updateProduct: async (id, productData) => {
+      updateProduct: async (productId, productData) => {
         set({ loading: true, error: null });
+
         try {
-          const updatedProduct = await productService.updateProduct(id, productData);
-          
+          productService.validateProductData(productData);
+          const response = await productService.updateProduct(productId, productData);
+          const updatedProduct = response.data || response;
+
           set((state) => ({
             products: state.products.map(product =>
-              product.id === id ? updatedProduct : product
+              product.id === productId ? { ...product, ...updatedProduct } : product
             ),
-            currentProduct: state.currentProduct?.id === id ? updatedProduct : state.currentProduct,
-            loading: false,
+            selectedProduct: state.selectedProduct?.id === productId 
+              ? { ...state.selectedProduct, ...updatedProduct }
+              : state.selectedProduct,
+            loading: false
           }));
-          
+
           return updatedProduct;
         } catch (error) {
+          console.error('Error updating product:', error);
           set({
-            error: error.response?.data?.message || 'Error al actualizar producto',
-            loading: false,
+            error: error.message || 'Error al actualizar producto',
+            loading: false
           });
           throw error;
         }
       },
 
-      // Eliminar producto
-      deleteProduct: async (id) => {
+      deleteProduct: async (productId) => {
         set({ loading: true, error: null });
+
         try {
-          await productService.deleteProduct(id);
-          
+          await productService.deleteProduct(productId);
+
           set((state) => ({
-            products: state.products.filter(product => product.id !== id),
-            currentProduct: state.currentProduct?.id === id ? null : state.currentProduct,
-            loading: false,
+            products: state.products.filter(product => product.id !== productId),
+            totalProducts: Math.max(0, state.totalProducts - 1),
+            selectedProduct: state.selectedProduct?.id === productId ? null : state.selectedProduct,
+            loading: false
           }));
+
+          return true;
         } catch (error) {
+          console.error('Error deleting product:', error);
           set({
-            error: error.response?.data?.message || 'Error al eliminar producto',
-            loading: false,
+            error: error.message || 'Error al eliminar producto',
+            loading: false
           });
           throw error;
         }
       },
 
-      // Obtener categorías
-      fetchCategories: async () => {
-        try {
-          const categories = await productService.getCategories();
-          set({ categories });
-          return categories;
-        } catch (error) {
-          console.error('Error al cargar categorías:', error);
+      // Utilidades
+      setSelectedProduct: (product) => set({ selectedProduct: product }),
+      
+      // Filtro local (para productos ya cargados)
+      setLocalFilters: (newFilters) => 
+        set((state) => ({
+          filters: { ...state.filters, ...newFilters }
+        })),
+
+      refresh: async () => {
+        const state = get();
+        if (state.lastSearchTerm) {
+          await state.searchProducts(state.lastSearchTerm);
+        } else if (state.products.length > 0) {
+          await state.loadPage(state.currentPage);
         }
       },
 
-      // Actualizar stock de producto
-      updateProductStock: async (id, stockData) => {
-        set({ loading: true, error: null });
-        try {
-          const updatedProduct = await productService.updateStock(id, stockData);
-          
-          set((state) => ({
-            products: state.products.map(product =>
-              product.id === id ? { ...product, ...updatedProduct } : product
-            ),
-            loading: false,
-          }));
-          
-          return updatedProduct;
-        } catch (error) {
-          set({
-            error: error.response?.data?.message || 'Error al actualizar stock',
-            loading: false,
-          });
-          throw error;
-        }
-      },
-
-      // Obtener productos con stock bajo
-      fetchLowStockProducts: async (threshold = 10) => {
-        set({ loading: true, error: null });
-        try {
-          const lowStockProducts = await productService.getLowStockProducts(threshold);
-          set({ loading: false });
-          return lowStockProducts;
-        } catch (error) {
-          set({
-            error: error.response?.data?.message || 'Error al cargar productos con stock bajo',
-            loading: false,
-          });
-          throw error;
-        }
-      },
-
-      // Limpiar producto actual
-      clearCurrentProduct: () => set({ currentProduct: null }),
-
-      // Reset del store
       reset: () => set({
         products: [],
-        categories: [],
-        currentProduct: null,
+        selectedProduct: null,
         loading: false,
         error: null,
-        pagination: {
-          page: 1,
-          limit: 10,
-          total: 0,
-          totalPages: 0,
-        },
+        currentPage: 1,
+        pageSize: 10,
+        totalProducts: 0,
+        totalPages: 0,
+        lastSearchTerm: '',
         filters: {
           search: '',
           category: '',
+          status: '',
           sortBy: 'name',
-          sortOrder: 'asc',
-        },
-      }),
+          sortOrder: 'asc'
+        }
+      })
     }),
     {
-      name: 'product-store', // Nombre para DevTools
+      name: 'product-store',
+      version: 2
     }
   )
 );
 
 export default useProductStore;
-

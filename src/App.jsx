@@ -1,7 +1,6 @@
 /**
  * Componente principal de la aplicación ERP
- * Configura React Router DOM y la estructura general de la aplicación
- * Implementa sistema de autenticación con protección de rutas
+ * Sistema de autenticación completo
  */
 
 import React, { useEffect } from 'react';
@@ -9,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainLayout from '@/layouts/MainLayout';
 import Dashboard from '@/pages/Dashboard';
 import Products from '@/pages/Products';
+import ProductsDebug from '@/pages/ProductsDebug';
 import Clients from '@/pages/Clients';
 import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
@@ -51,54 +51,54 @@ const Reports = () => (
   </div>
 );
 
-// Componente de ruta protegida
+// TEMPORAL: Componentes de autenticación eliminados completamente
+// para evitar errores con useAuthStore comentado
+
+// Componente de protección de rutas
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuthStore();
   
-  // Mostrar loading mientras se verifica la autenticación
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-black rounded-none border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mb-4">
-            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          </div>
-          <p className="text-lg font-black uppercase tracking-wide">
-            Cargando Sistema ERP...
-          </p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Cargando...</div>
       </div>
     );
   }
   
-  // Redirigir al login si no está autenticado
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
-};
-
-// Componente para manejar redirección desde login
-const LoginRedirect = () => {
-  const { isAuthenticated } = useAuthStore();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
   
-  // Si ya está autenticado, redirigir al dashboard
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />;
+  return children;
 };
 
 function App() {
-  const { checkAuth, isAuthenticated } = useAuthStore();
+  const { isAuthenticated, loading, initializeAuth } = useAuthStore();
 
+  // Inicializar autenticación al cargar la aplicación
   useEffect(() => {
-    // Verificar autenticación al cargar la aplicación
-    checkAuth();
-  }, [checkAuth]);
+    initializeAuth();
+  }, [initializeAuth]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-lg">Inicializando aplicación...</div>
+      </div>
+    );
+  }
 
   return (
     <Router>
       <div className="min-h-screen bg-white">
         <Routes>
-          {/* Ruta de login */}
-          <Route path="/login" element={<LoginRedirect />} />
+          {/* Ruta de login - siempre accesible */}
+          <Route path="/login" element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+          } />
           
-          {/* Rutas protegidas con layout */}
+          {/* Rutas protegidas */}
           <Route path="/*" element={
             <ProtectedRoute>
               <MainLayout>

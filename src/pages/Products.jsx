@@ -1,10 +1,11 @@
 /**
- * Página Products - Multi-tema optimizada
- * Sistema de gestión de productos con soporte completo para Neo-Brutalism, Material Design y Fluent Design
- * Incluye helper functions específicas para cada sistema de diseño
+ * Página Products - Sistema de gestión completo
+ * Rediseñada para trabajar con la Business Management API
+ * Incluye CRUD completo con modales y gestión de descripciones, precios y stock
  */
 
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTheme } from 'next-themes';
 import { 
   Plus, 
@@ -23,190 +24,62 @@ import {
   ShoppingCart,
   Layers,
   Tag,
-  Zap
+  Zap,
+  Eye,
+  AlertCircle,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import useProductStore from '@/store/useProductStore';
+import ProductModal from '@/components/ProductModal';
+import ProductDetailModal from '@/components/ProductDetailModal';
+import DeleteProductModal from '@/components/DeleteProductModal';
+import ToastContainer from '@/components/ui/ToastContainer';
+import { useToast } from '@/hooks/useToast';
 
 const Products = () => {
   const { theme } = useTheme();
-  const { products, loading, error, fetchProducts, deleteProduct } = useProductStore();
-  const [searchTerm, setSearchTerm] = useState('');
+  const location = useLocation();
+  const { toasts, success, error: showError, removeToast } = useToast();
+  const { 
+    products, 
+    loading: isLoading, 
+    error: storeError, 
+    totalProducts,
+    currentPage,
+    totalPages,
+    pageSize,
+    categories,
+    lastSearchTerm,
+    fetchCategories,
+    searchProducts,
+    loadPage,
+    changePageSize,
+    clearProducts,
+    deleteProduct,
+    clearError 
+  } = useProductStore();
+
+  // Estados locales para UI
+  const [apiSearchTerm, setApiSearchTerm] = useState(''); // Para búsqueda en API
+  const [localSearchTerm, setLocalSearchTerm] = useState(''); // Para filtro local
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStock, setSelectedStock] = useState('all');
   
+  // Estados para modales
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [editingProduct, setEditingProduct] = useState(null);
+
   const isNeoBrutalism = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
   const isMaterial = theme === 'material-light' || theme === 'material-dark';
   const isFluent = theme === 'fluent-light' || theme === 'fluent-dark';
 
-  // Helper functions específicas para Neo-Brutalism
-  const getBrutalistCardStyles = () => ({
-    background: 'var(--background)',
-    border: '4px solid var(--border)',
-    borderRadius: '0px',
-    boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
-    transition: 'all 200ms ease',
-    overflow: 'hidden'
-  });
-
-  const getBrutalistTypography = (level = 'base') => {
-    const styles = {
-      title: {
-        fontSize: '3rem',
-        fontWeight: '900',
-        textTransform: 'uppercase',
-        letterSpacing: '0.05em',
-        lineHeight: '1.1',
-        textShadow: '2px 2px 0px rgba(0,0,0,0.8)'
-      },
-      heading: {
-        fontSize: '1.5rem',
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em',
-        lineHeight: '1.2'
-      },
-      subheading: {
-        fontSize: '1.125rem',
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em'
-      },
-      base: {
-        fontSize: '0.875rem',
-        fontWeight: '600',
-        letterSpacing: '0.01em'
-      },
-      small: {
-        fontSize: '0.75rem',
-        fontWeight: '600',
-        letterSpacing: '0.01em'
-      },
-      price: {
-        fontSize: '1.25rem',
-        fontWeight: '900',
-        letterSpacing: '0.025em'
-      }
-    };
-    return styles[level] || styles.base;
-  };
-
-  const getBrutalistBadgeStyles = (type) => {
-    const badges = {
-      'en-stock': {
-        background: 'var(--brutalist-lime)',
-        color: '#000000',
-        border: '2px solid var(--border)',
-        padding: '4px 8px',
-        borderRadius: '0px',
-        fontSize: '0.75rem',
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em',
-        minWidth: '90px',
-        width: '90px',
-        maxWidth: '90px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      },
-      'poco-stock': {
-        background: 'var(--brutalist-orange)',
-        color: '#ffffff',
-        border: '2px solid var(--border)',
-        padding: '4px 8px',
-        borderRadius: '0px',
-        fontSize: '0.75rem',
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em',
-        minWidth: '90px',
-        width: '90px',
-        maxWidth: '90px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      },
-      'sin-stock': {
-        background: 'var(--brutalist-pink)',
-        color: '#ffffff',
-        border: '2px solid var(--border)',
-        padding: '4px 8px',
-        borderRadius: '0px',
-        fontSize: '0.75rem',
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em',
-        minWidth: '90px',
-        width: '90px',
-        maxWidth: '90px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      }
-    };
-    return badges[type] || badges['en-stock'];
-  };
-
-  const getBrutalistButtonStyles = (variant = 'primary') => {
-    const buttons = {
-      primary: {
-        background: 'var(--brutalist-lime)',
-        color: '#000000',
-        border: '3px solid var(--border)',
-        borderRadius: '0px',
-        padding: '12px 24px',
-        fontSize: '1rem',
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em',
-        cursor: 'pointer',
-        boxShadow: '3px 3px 0px 0px rgba(0,0,0,1)',
-        transition: 'all 150ms ease'
-      },
-      secondary: {
-        background: 'var(--background)',
-        color: 'var(--foreground)',
-        border: '3px solid var(--border)',
-        borderRadius: '0px',
-        padding: '12px 24px',
-        fontSize: '1rem',
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em',
-        cursor: 'pointer',
-        boxShadow: '3px 3px 0px 0px rgba(0,0,0,1)',
-        transition: 'all 150ms ease'
-      },
-      small: {
-        background: 'var(--brutalist-blue)',
-        color: '#ffffff',
-        border: '2px solid var(--border)',
-        borderRadius: '0px',
-        padding: '8px 16px',
-        fontSize: '0.75rem',
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em',
-        cursor: 'pointer',
-        boxShadow: '2px 2px 0px 0px rgba(0,0,0,1)',
-        transition: 'all 150ms ease'
-      }
-    };
-    return buttons[variant] || buttons.primary;
-  };
-
-  // Helper functions universales que se adaptan al tema activo (mejorados como Dashboard)
+  // Helper functions para estilos (mejorados)
   const getCardStyles = () => {
     if (isNeoBrutalism) return {
       background: 'var(--background)',
@@ -235,7 +108,15 @@ const Products = () => {
       overflow: 'hidden',
       padding: 'var(--fluent-size-160, 16px)'
     };
-    return getBrutalistCardStyles();
+    return {
+      background: 'var(--card)',
+      border: '1px solid var(--border)',
+      borderRadius: '8px',
+      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+      transition: 'all 200ms ease',
+      overflow: 'hidden',
+      padding: '24px'
+    };
   };
 
   const getTypographyStyles = (level = 'base') => {
@@ -273,12 +154,6 @@ const Products = () => {
         fontSize: '0.75rem',
         fontWeight: '600',
         letterSpacing: '0.01em'
-      },
-      price: {
-        fontSize: '1.5rem',
-        fontWeight: '900',
-        letterSpacing: '0.025em',
-        textTransform: 'uppercase'
       }
     }[level] || {
       fontSize: '1rem',
@@ -286,181 +161,39 @@ const Products = () => {
       letterSpacing: '0.01em'
     };
     
-    if (isMaterial) return {
-      title: {
-        fontFamily: 'Roboto, sans-serif',
-        fontWeight: 500,
-        fontSize: '1.75rem',
-        letterSpacing: '0.00735em',
-        color: 'var(--md-on-background, var(--foreground))',
-        lineHeight: 1.167,
-        marginBottom: 'var(--md-spacing-3, 24px)'
-      },
-      heading: {
-        fontFamily: 'Roboto, sans-serif',
-        fontWeight: 500,
-        fontSize: '1.25rem',
-        letterSpacing: '0.00938em',
-        color: 'var(--md-on-surface, var(--foreground))',
-        lineHeight: 1.334,
-        marginBottom: 'var(--md-spacing-2, 16px)'
-      },
-      subheading: {
-        fontFamily: 'Roboto, sans-serif',
-        fontWeight: 400,
-        fontSize: '1rem',
-        letterSpacing: '0.00938em',
-        color: 'var(--md-on-surface-variant, var(--muted-foreground))',
-        lineHeight: 1.5
-      },
-      base: {
-        fontFamily: 'Roboto, sans-serif',
-        fontWeight: 400,
-        fontSize: '0.875rem',
-        letterSpacing: '0.01071em',
-        color: 'var(--md-on-surface, var(--foreground))',
-        lineHeight: 1.429
-      },
-      small: {
-        fontFamily: 'Roboto, sans-serif',
-        fontWeight: 400,
-        fontSize: '0.75rem',
-        letterSpacing: '0.03333em',
-        color: 'var(--md-on-surface-variant, var(--muted-foreground))',
-        lineHeight: 1.333
-      },
-      price: {
-        fontFamily: 'Roboto, sans-serif',
-        fontWeight: 600,
-        fontSize: '1.25rem',
-        letterSpacing: '0.00938em',
-        color: 'var(--md-on-surface, var(--foreground))'
-      }
-    }[level] || {
-      fontFamily: 'Roboto, sans-serif',
-      fontWeight: 400,
-      fontSize: '0.875rem',
-      letterSpacing: '0.01071em',
-      color: 'var(--md-on-surface, var(--foreground))',
-      lineHeight: 1.429
-    };
-    
-    if (isFluent) return {
-      title: {
-        fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-        fontWeight: 600,
-        fontSize: '1.75rem',
-        letterSpacing: '-0.005em',
-        color: 'var(--fluent-text-primary, var(--foreground))',
-        lineHeight: 1.286,
-        marginBottom: 'var(--fluent-size-160, 16px)'
-      },
-      heading: {
-        fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-        fontWeight: 600,
-        fontSize: '1.25rem',
-        letterSpacing: '0em',
-        color: 'var(--fluent-text-primary, var(--foreground))',
-        lineHeight: 1.4,
-        marginBottom: 'var(--fluent-size-120, 12px)'
-      },
-      subheading: {
-        fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-        fontWeight: 400,
-        fontSize: '1rem',
-        letterSpacing: '0em',
-        color: 'var(--fluent-text-secondary, var(--muted-foreground))',
-        lineHeight: 1.429
-      },
-      base: {
-        fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-        fontWeight: 400,
-        fontSize: '0.875rem',
-        letterSpacing: '0em',
-        color: 'var(--fluent-text-primary, var(--foreground))',
-        lineHeight: 1.429
-      },
-      small: {
-        fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-        fontWeight: 400,
-        fontSize: '0.75rem',
-        letterSpacing: '0em',
-        color: 'var(--fluent-text-secondary, var(--muted-foreground))',
-        lineHeight: 1.333
-      },
-      price: {
-        fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-        fontWeight: 600,
-        fontSize: '1.25rem',
-        letterSpacing: '0em',
-        color: 'var(--fluent-text-primary, var(--foreground))'
-      }
-    }[level] || {
-      fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-      fontWeight: 400,
-      fontSize: '0.875rem',
-      letterSpacing: '0em',
-      color: 'var(--fluent-text-primary, var(--foreground))',
-      lineHeight: 1.429
-    };
-    
-    return getBrutalistTypography(level);
+    return {
+      title: { fontSize: '2.5rem', fontWeight: '700', marginBottom: '1rem' },
+      heading: { fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.75rem' },
+      subheading: { fontSize: '1.125rem', fontWeight: '500', marginBottom: '0.5rem' },
+      base: { fontSize: '0.875rem', fontWeight: '400' },
+      small: { fontSize: '0.75rem', fontWeight: '400' }
+    }[level] || { fontSize: '0.875rem', fontWeight: '400' };
   };
 
   const getBadgeStyles = (type) => {
-    // Colores de fondo según el tipo de stock (como Dashboard)
     const getBackgroundColor = () => {
       switch (type) {
-        case 'sin-stock':
-          return isNeoBrutalism ? 'var(--brutalist-pink)' : 
-                 isMaterial ? 'var(--md-error-main, var(--destructive))' :
-                 isFluent ? 'var(--fluent-semantic-danger, var(--destructive))' : 'var(--destructive)';
-        case 'poco-stock':
-          return isNeoBrutalism ? 'var(--brutalist-orange)' : 
-                 isMaterial ? 'var(--md-warning-main, var(--warning))' :
-                 isFluent ? 'var(--fluent-semantic-warning, var(--warning))' : 'var(--warning)';
-        default: // en-stock
-          return isNeoBrutalism ? 'var(--brutalist-lime)' : 
-                 isMaterial ? 'var(--md-semantic-success, var(--success))' :
-                 isFluent ? 'var(--fluent-semantic-success, var(--success))' : 'var(--success)';
+        case 'inactive':
+          return isNeoBrutalism ? 'var(--brutalist-pink)' : 'var(--destructive)';
+        case 'low-stock':
+          return isNeoBrutalism ? 'var(--brutalist-orange)' : 'var(--warning)';
+        default: // active
+          return isNeoBrutalism ? 'var(--brutalist-lime)' : 'var(--success)';
       }
     };
 
     return {
       background: getBackgroundColor(),
-      color: isNeoBrutalism ? '#000000' : 
-            isMaterial ? 'var(--md-on-primary, white)' :
-            isFluent ? 'var(--fluent-text-on-accent, white)' : 'white',
+      color: isNeoBrutalism ? '#000000' : 'white',
       border: isNeoBrutalism ? '2px solid var(--border)' : 'none',
-      borderRadius: isNeoBrutalism ? '0px' : 
-                   isMaterial ? 'var(--md-corner-small, 4px)' :
-                   isFluent ? 'var(--fluent-corner-radius-small, 2px)' : '4px',
+      borderRadius: isNeoBrutalism ? '0px' : '4px',
       textTransform: isNeoBrutalism ? 'uppercase' : 'none',
-      fontWeight: isNeoBrutalism ? 'bold' : 
-                 isMaterial ? '500' :
-                 isFluent ? '400' : '500',
-      minWidth: isNeoBrutalism ? '90px' : 
-               isMaterial ? '82px' :
-               isFluent ? '78px' : '82px',
-      width: isNeoBrutalism ? '90px' : 
-             isMaterial ? '82px' :
-             isFluent ? '78px' : '82px',
-      maxWidth: isNeoBrutalism ? '90px' : 
-                isMaterial ? '82px' :
-                isFluent ? '78px' : '82px',
-      textAlign: 'center',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: isNeoBrutalism ? '8px 12px' :
-               isMaterial ? '6px 16px' :
-               isFluent ? '4px 12px' : '6px 12px',
-      fontSize: isNeoBrutalism ? '0.75rem' :
-               isMaterial ? '0.75rem' :
-               isFluent ? '0.75rem' : '0.75rem',
-      whiteSpace: 'nowrap',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis'
+      fontWeight: isNeoBrutalism ? 'bold' : '500',
+      fontSize: '0.75rem',
+      padding: isNeoBrutalism ? '8px 12px' : '4px 8px',
+      display: 'inline-block',
+      minWidth: '80px',
+      textAlign: 'center'
     };
   };
 
@@ -477,17 +210,7 @@ const Products = () => {
         letterSpacing: '0.025em',
         boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
         transition: 'all 150ms ease',
-        cursor: 'pointer',
-        minWidth: variant === 'small' ? '120px' : '180px',
-        width: variant === 'small' ? '120px' : '180px',
-        maxWidth: variant === 'small' ? '120px' : '180px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        fontSize: variant === 'small' ? '0.75rem' : '1rem'
+        cursor: 'pointer'
       },
       secondary: {
         background: 'var(--background)',
@@ -500,391 +223,101 @@ const Products = () => {
         letterSpacing: '0.025em',
         boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
         transition: 'all 150ms ease',
-        cursor: 'pointer',
-        minWidth: variant === 'small' ? '120px' : '180px',
-        width: variant === 'small' ? '120px' : '180px',
-        maxWidth: variant === 'small' ? '120px' : '180px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        fontSize: variant === 'small' ? '0.75rem' : '1rem'
-      },
-      tertiary: {
-        background: 'var(--brutalist-purple)',
-        color: '#ffffff',
-        border: '3px solid var(--border)',
-        borderRadius: '0px',
-        padding: '12px 24px',
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em',
-        boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
-        transition: 'all 150ms ease',
-        cursor: 'pointer',
-        minWidth: variant === 'small' ? '120px' : '180px',
-        width: variant === 'small' ? '120px' : '180px',
-        maxWidth: variant === 'small' ? '120px' : '180px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        fontSize: variant === 'small' ? '0.75rem' : '1rem'
-      },
-      small: {
-        background: 'var(--brutalist-blue)',
-        color: '#ffffff',
-        border: '2px solid var(--border)',
-        borderRadius: '0px',
-        padding: '8px 16px',
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: '0.025em',
-        boxShadow: '3px 3px 0px 0px rgba(0,0,0,1)',
-        transition: 'all 150ms ease',
-        cursor: 'pointer',
-        minWidth: '120px',
-        width: '120px',
-        maxWidth: '120px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        fontSize: '0.75rem'
+        cursor: 'pointer'
       }
-    }[variant] || {
-      background: 'var(--brutalist-lime)',
-      color: '#000000',
-      border: '3px solid var(--border)',
-      borderRadius: '0px',
-      padding: '12px 24px',
-      fontWeight: '800',
-      textTransform: 'uppercase',
-      letterSpacing: '0.025em',
-      boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
-      transition: 'all 150ms ease',
-      cursor: 'pointer'
-    };
-    
-    if (isMaterial) return {
-      primary: {
-        background: 'var(--md-primary-main, var(--primary))',
-        color: 'var(--md-on-primary, var(--primary-foreground))',
-        border: 'none',
-        borderRadius: 'var(--md-corner-small, 8px)',
-        padding: '8px 24px',
-        fontFamily: 'Roboto, sans-serif',
-        fontWeight: 500,
-        fontSize: '0.875rem',
-        letterSpacing: '0.02857em',
-        textTransform: 'uppercase',
-        boxShadow: 'var(--md-elevation-2, 0px 3px 6px rgba(0, 0, 0, 0.15))',
-        transition: 'all 150ms ease',
-        cursor: 'pointer',
-        minHeight: '36px',
-        minWidth: variant === 'small' ? '100px' : '160px',
-        width: variant === 'small' ? '100px' : '160px',
-        maxWidth: variant === 'small' ? '100px' : '160px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      },
-      secondary: {
-        background: 'transparent',
-        color: 'var(--md-primary-main, var(--primary))',
-        border: '1px solid var(--md-primary-main, var(--primary))',
-        borderRadius: 'var(--md-corner-small, 8px)',
-        padding: '8px 24px',
-        fontFamily: 'Roboto, sans-serif',
-        fontWeight: 500,
-        fontSize: '0.875rem',
-        letterSpacing: '0.02857em',
-        textTransform: 'uppercase',
-        transition: 'all 150ms ease',
-        cursor: 'pointer',
-        minHeight: '36px',
-        minWidth: variant === 'small' ? '100px' : '160px',
-        width: variant === 'small' ? '100px' : '160px',
-        maxWidth: variant === 'small' ? '100px' : '160px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      },
-      tertiary: {
-        background: 'var(--md-secondary-main, var(--secondary))',
-        color: 'var(--md-on-secondary, var(--secondary-foreground))',
-        border: 'none',
-        borderRadius: 'var(--md-corner-small, 8px)',
-        padding: '8px 24px',
-        fontFamily: 'Roboto, sans-serif',
-        fontWeight: 500,
-        fontSize: '0.875rem',
-        letterSpacing: '0.02857em',
-        textTransform: 'uppercase',
-        boxShadow: 'var(--md-elevation-2, 0px 3px 6px rgba(0, 0, 0, 0.15))',
-        transition: 'all 150ms ease',
-        cursor: 'pointer',
-        minHeight: '36px',
-        minWidth: variant === 'small' ? '100px' : '160px',
-        width: variant === 'small' ? '100px' : '160px',
-        maxWidth: variant === 'small' ? '100px' : '160px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      },
-      small: {
-        background: 'var(--md-secondary-main, var(--secondary))',
-        color: 'var(--md-on-secondary, var(--secondary-foreground))',
-        border: 'none',
-        borderRadius: 'var(--md-corner-small, 8px)',
-        padding: '6px 16px',
-        fontFamily: 'Roboto, sans-serif',
-        fontWeight: 500,
-        fontSize: '0.75rem',
-        letterSpacing: '0.02857em',
-        textTransform: 'uppercase',
-        boxShadow: 'var(--md-elevation-1, 0px 1px 3px rgba(0, 0, 0, 0.12))',
-        transition: 'all 150ms ease',
-        cursor: 'pointer',
-        minHeight: '32px',
-        minWidth: '100px',
-        width: '100px',
-        maxWidth: '100px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      }
-    }[variant] || {
-      background: 'var(--md-primary-main, var(--primary))',
-      color: 'var(--md-on-primary, var(--primary-foreground))',
-      border: 'none',
-      borderRadius: 'var(--md-corner-small, 8px)',
-      padding: '8px 24px',
-      cursor: 'pointer'
-    };
-    
-    if (isFluent) return {
-      primary: {
-        background: 'var(--fluent-brand-primary, var(--primary))',
-        color: 'var(--fluent-text-on-accent, var(--primary-foreground))',
-        border: '1px solid var(--fluent-border-accent, var(--fluent-brand-primary))',
-        borderRadius: 'var(--fluent-corner-radius-medium, 4px)',
-        padding: '8px 20px',
-        fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-        fontWeight: 400,
-        fontSize: '0.875rem',
-        letterSpacing: '0em',
-        boxShadow: 'var(--fluent-shadow-4, 0px 2px 4px rgba(0, 0, 0, 0.14))',
-        transition: 'all 150ms cubic-bezier(0.33, 0, 0.67, 1)',
-        cursor: 'pointer',
-        minHeight: '32px',
-        minWidth: variant === 'small' ? '90px' : '150px',
-        width: variant === 'small' ? '90px' : '150px',
-        maxWidth: variant === 'small' ? '90px' : '150px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      },
-      secondary: {
-        background: 'transparent',
-        color: 'var(--fluent-brand-primary, var(--primary))',
-        border: '1px solid var(--fluent-border-neutral, var(--border))',
-        borderRadius: 'var(--fluent-corner-radius-medium, 4px)',
-        padding: '8px 20px',
-        fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-        fontWeight: 400,
-        fontSize: '0.875rem',
-        letterSpacing: '0em',
-        transition: 'all 150ms cubic-bezier(0.33, 0, 0.67, 1)',
-        cursor: 'pointer',
-        minHeight: '32px',
-        minWidth: variant === 'small' ? '90px' : '150px',
-        width: variant === 'small' ? '90px' : '150px',
-        maxWidth: variant === 'small' ? '90px' : '150px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      },
-      tertiary: {
-        background: 'var(--fluent-brand-secondary, var(--secondary))',
-        color: 'var(--fluent-text-on-accent, var(--secondary-foreground))',
-        border: '1px solid var(--fluent-brand-secondary, var(--secondary))',
-        borderRadius: 'var(--fluent-corner-radius-medium, 4px)',
-        padding: '8px 20px',
-        fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-        fontWeight: 400,
-        fontSize: '0.875rem',
-        letterSpacing: '0em',
-        boxShadow: 'var(--fluent-shadow-4, 0px 2px 4px rgba(0, 0, 0, 0.14))',
-        transition: 'all 150ms cubic-bezier(0.33, 0, 0.67, 1)',
-        cursor: 'pointer',
-        minHeight: '32px',
-        minWidth: variant === 'small' ? '90px' : '150px',
-        width: variant === 'small' ? '90px' : '150px',
-        maxWidth: variant === 'small' ? '90px' : '150px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      },
-      small: {
-        background: 'var(--fluent-brand-secondary, var(--secondary))',
-        color: 'var(--fluent-text-on-accent, var(--secondary-foreground))',
-        border: '1px solid var(--fluent-border-neutral, var(--border))',
-        borderRadius: 'var(--fluent-corner-radius-medium, 4px)',
-        padding: '6px 16px',
-        fontFamily: '"Segoe UI", system-ui, -apple-system, sans-serif',
-        fontWeight: 400,
-        fontSize: '0.75rem',
-        letterSpacing: '0em',
-        boxShadow: 'var(--fluent-shadow-2, 0px 1px 2px rgba(0, 0, 0, 0.14))',
-        transition: 'all 150ms cubic-bezier(0.33, 0, 0.67, 1)',
-        cursor: 'pointer',
-        minHeight: '28px',
-        minWidth: '90px',
-        width: '90px',
-        maxWidth: '90px',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
-      }
-    }[variant] || {
-      background: 'var(--fluent-brand-primary, var(--primary))',
-      color: 'var(--fluent-text-on-accent, var(--primary-foreground))',
-      border: '1px solid var(--fluent-border-accent, var(--fluent-brand-primary))',
-      borderRadius: 'var(--fluent-corner-radius-medium, 4px)',
-      padding: '8px 20px',
-      cursor: 'pointer'
-    };
-    
-    return getBrutalistButtonStyles(variant);
-  };
+    }[variant];
 
-  const getGridLayoutStyles = () => {
-    if (isNeoBrutalism) return {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-      gap: '2rem',
-      maxWidth: '1400px',
-      margin: '0 auto'
-    };
-    if (isMaterial) return {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-      gap: 'var(--md-spacing-3, 24px)',
-      maxWidth: '1400px',
-      margin: '0 auto'
-    };
-    if (isFluent) return {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-      gap: 'var(--fluent-size-160, 16px)',
-      maxWidth: '1400px',
-      margin: '0 auto'
-    };
     return {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-      gap: '2rem',
-      maxWidth: '1400px',
-      margin: '0 auto'
+      padding: '8px 16px',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      border: variant === 'primary' ? 'none' : '1px solid var(--border)',
+      background: variant === 'primary' ? 'var(--primary)' : 'var(--background)',
+      color: variant === 'primary' ? 'var(--primary-foreground)' : 'var(--foreground)',
+      transition: 'all 150ms ease'
     };
   };
 
-  // Helper function para iconos con background temático (como Dashboard)
-  const getIconBackground = (colorVar) => {
-    if (isNeoBrutalism) return {
-      background: colorVar || 'var(--brutalist-blue)',
-      border: '3px solid var(--border)',
-      borderRadius: '0px',
-      boxShadow: '3px 3px 0px 0px rgba(0,0,0,1)',
-      width: '48px',
-      height: '48px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    };
-    if (isMaterial) return {
-      background: colorVar || 'var(--md-primary-main, var(--primary))',
-      border: 'none',
-      borderRadius: '50%',
-      boxShadow: 'var(--md-elevation-1, 0px 1px 3px rgba(0, 0, 0, 0.12))',
-      width: '48px',
-      height: '48px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 'var(--md-spacing-2, 16px)'
-    };
-    if (isFluent) return {
-      background: colorVar || 'var(--fluent-brand-primary, var(--primary))',
-      border: '1px solid var(--fluent-border-neutral, var(--border))',
-      borderRadius: 'var(--fluent-corner-radius-small, 2px)',
-      boxShadow: 'var(--fluent-shadow-2, 0px 1px 2px rgba(0, 0, 0, 0.14))',
-      width: '48px',
-      height: '48px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 'var(--fluent-size-120, 12px)'
-    };
-    return {
-      background: colorVar || 'var(--primary)',
-      borderRadius: '8px',
-      width: '48px',
-      height: '48px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    };
-  };
-
-  // useEffect para cargar productos
+  // useEffect para cargar categorías cuando hay autenticación
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    const loadCategoriesIfNeeded = async () => {
+      // Solo cargar si no tenemos categorías y hay token
+      const token = localStorage.getItem('authToken');
+      if (categories.length === 0 && token) {
+        console.log('🔄 Products: Loading categories...');
+        try {
+          await fetchCategories();
+        } catch (error) {
+          // Error será mostrado por el store en la UI donde sea relevante
+          console.log('Categories loading failed, will be handled by components that need them');
+        }
+      }
+    };
 
-  // Funciones de utilidad para productos
-  const getStockStatus = (stock) => {
-    if (stock === 0) return 'sin-stock';
-    if (stock <= 10) return 'poco-stock';
-    return 'en-stock';
+    loadCategoriesIfNeeded();
+  }, [categories.length, fetchCategories]);
+
+  // console.log('🎯 Products: Rendering with', { 
+  //   productsCount: products?.length || 0, 
+  //   isLoading, 
+  //   hasError: !!storeError 
+  // });
+
+  // Get category name by ID
+  const getCategoryName = (categoryId) => {
+    if (!categoryId) return 'Sin categoría';
+    const category = categories.find(cat => cat.id === parseInt(categoryId));
+    return category ? category.name : `Categoría ${categoryId}`;
+  };
+
+  // Funciones para búsqueda en API
+  const handleApiSearch = async () => {
+    if (apiSearchTerm.trim()) {
+      await searchProducts(apiSearchTerm.trim());
+    } else {
+      clearProducts();
+    }
+  };
+
+  const handleApiSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleApiSearch();
+    }
+  };
+
+  // Funciones para paginación
+  const handlePageChange = async (page) => {
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      await loadPage(page);
+    }
+  };
+
+  const handlePageSizeChange = async (newPageSize) => {
+    await changePageSize(parseInt(newPageSize));
+  };
+
+  // Función para limpiar búsqueda
+  const handleClearSearch = () => {
+    setApiSearchTerm('');
+    setLocalSearchTerm('');
+    clearProducts();
+  };
+
+  // Funciones de utilidad
+  const getStockStatus = (product) => {
+    if (!product.is_active) return 'inactive';
+    if (product.stock_quantity && product.stock_quantity < 10) return 'low-stock';
+    return 'active';
   };
 
   const getStockIcon = (status) => {
     switch (status) {
-      case 'sin-stock': return AlertTriangle;
-      case 'poco-stock': return TrendingDown;
-      default: return TrendingUp;
+      case 'inactive':
+        return <XCircle className="w-4 h-4" />;
+      case 'low-stock':
+        return <AlertTriangle className="w-4 h-4" />;
+      default:
+        return <CheckCircle className="w-4 h-4" />;
     }
   };
 
@@ -892,44 +325,101 @@ const Products = () => {
   const handleButtonHover = (e) => {
     if (isNeoBrutalism) {
       e.target.style.transform = 'translate(-2px, -2px)';
-      e.target.style.boxShadow = '5px 5px 0px 0px rgba(0,0,0,1)';
+      e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)';
     }
   };
 
   const handleButtonLeave = (e) => {
     if (isNeoBrutalism) {
       e.target.style.transform = 'translate(0px, 0px)';
-      e.target.style.boxShadow = '3px 3px 0px 0px rgba(0,0,0,1)';
+      e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
     }
   };
 
-  // Lógica de filtrado de productos
+  // Funciones para modales
+  const handleCreateProduct = () => {
+    setEditingProduct(null);
+    setShowProductModal(true);
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setShowProductModal(true);
+  };
+
+  const handleViewProduct = (product) => {
+    setSelectedProduct(product);
+    setShowDetailModal(true);
+  };
+
+  const handleDeleteProduct = (product) => {
+    setSelectedProduct(product);
+    setShowDeleteModal(true);
+  };
+
+  // Función para auto-login de desarrollo - removida para producción
+  // const handleDevLogin = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     await enableDevAuth();
+  //     success('Auto-login exitoso! Recargando categorías...');
+  //     await fetchCategories();
+  //   } catch (error) {
+  //     showError('Error en auto-login: ' + error.message);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  const handleConfirmDelete = async (product) => {
+    try {
+      await deleteProduct(product.id);
+      setShowDeleteModal(false);
+      setSelectedProduct(null);
+      success(`Producto "${product.name}" eliminado exitosamente`);
+    } catch (err) {
+      console.error('Error al eliminar producto:', err);
+      showError('Error al eliminar el producto: ' + err.message);
+    }
+  };
+
+  const handleModalSuccess = () => {
+    // Refrescar la búsqueda actual si existe
+    if (lastSearchTerm) {
+      searchProducts(lastSearchTerm);
+    }
+    success('Operación completada exitosamente');
+    setShowProductModal(false);
+    setEditingProduct(null);
+  };
+
+  // Lógica de filtrado local (solo para productos ya cargados)
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesLocalSearch = localSearchTerm === '' || 
+      product.name.toLowerCase().includes(localSearchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || 
-                           product.category.toLowerCase() === selectedCategory.toLowerCase();
+      product.category_id == selectedCategory;
+    const matchesStock = selectedStock === 'all' || 
+      (selectedStock === 'active' && product.is_active) ||
+      (selectedStock === 'inactive' && !product.is_active);
     
-    const stockStatus = getStockStatus(product.stock);
-    const matchesStock = selectedStock === 'all' ||
-                        (selectedStock === 'in-stock' && stockStatus === 'en-stock') ||
-                        (selectedStock === 'low-stock' && stockStatus === 'poco-stock') ||
-                        (selectedStock === 'out-of-stock' && stockStatus === 'sin-stock');
-    
-    return matchesSearch && matchesCategory && matchesStock;
+    return matchesLocalSearch && matchesCategory && matchesStock;
   });
 
-  if (loading) {
+  // Estados de carga y error
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background text-foreground p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center py-20">
-            <div 
-              className="text-primary"
-              style={getTypographyStyles('heading')}
-            >
-              {isNeoBrutalism ? 'CARGANDO PRODUCTOS...' : 'Cargando productos...'}
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" />
+              <div 
+                className="text-muted-foreground"
+                style={getTypographyStyles('heading')}
+              >
+                {isNeoBrutalism ? 'CARGANDO PRODUCTOS...' : 'Cargando productos...'}
+              </div>
             </div>
           </div>
         </div>
@@ -937,21 +427,38 @@ const Products = () => {
     );
   }
 
-  if (error) {
+  if (storeError) {
     return (
       <div className="min-h-screen bg-background text-foreground p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center py-20">
-            <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+          <div className="flex items-center justify-center py-20">
             <div 
-              className="text-red-500 mb-4"
-              style={getTypographyStyles('heading')}
+              className="text-center p-6"
+              style={getCardStyles()}
             >
-              {isNeoBrutalism ? 'ERROR AL CARGAR' : 'Error al cargar'}
+              <AlertCircle className="w-16 h-16 mx-auto mb-4 text-destructive" />
+              <div 
+                className="text-destructive mb-4"
+                style={getTypographyStyles('heading')}
+              >
+                {isNeoBrutalism ? 'ERROR AL CARGAR' : 'Error al cargar'}
+              </div>
+              <p className="text-muted-foreground mb-4">{storeError}</p>
+              <button
+                onClick={() => {
+                  clearError();
+                  // Usar la última búsqueda si existe
+                  if (lastSearchTerm) {
+                    searchProducts(lastSearchTerm);
+                  }
+                }}
+                style={getButtonStyles('primary')}
+                onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
+                onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
+              >
+                {isNeoBrutalism ? 'REINTENTAR' : 'Reintentar'}
+              </button>
             </div>
-            <p style={getTypographyStyles('base')}>
-              {error}
-            </p>
           </div>
         </div>
       </div>
@@ -976,9 +483,9 @@ const Products = () => {
             className="text-muted-foreground max-w-2xl mx-auto mb-8"
             style={getTypographyStyles('base')}
           >
-            {isNeoBrutalism ? 'ADMINISTRA TU INVENTARIO CON ESTILO NEO-BRUTALIST' :
+            {isNeoBrutalism ? 'ADMINISTRA TU INVENTARIO CON LA BUSINESS MANAGEMENT API' :
              isMaterial ? 'Administra tu inventario con Material Design' :
-             'Manage your inventory with Fluent Design'}
+             'Manage your inventory with the Business Management API'}
           </p>
           
           <div className="flex flex-wrap justify-center gap-4">
@@ -986,9 +493,10 @@ const Products = () => {
               style={getButtonStyles('primary')}
               onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
               onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
+              onClick={handleCreateProduct}
             >
               <Plus className="w-5 h-5 mr-2" />
-              {isNeoBrutalism ? 'AÑADIR PRODUCTO' : 'Añadir Producto'}
+              {isNeoBrutalism ? 'NUEVO PRODUCTO' : 'Nuevo Producto'}
             </button>
             <button
               style={getButtonStyles('secondary')}
@@ -1001,214 +509,636 @@ const Products = () => {
           </div>
         </header>
 
-        {/* Panel de filtros */}
+        {/* Filtros y Búsqueda */}
         <section 
           className="p-6"
           style={getCardStyles()}
         >
-          <div className="grid md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder={isNeoBrutalism ? "BUSCAR PRODUCTOS..." : "Buscar productos..."}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 p-3 border rounded-md bg-background"
+          {/* Búsqueda en API */}
+          <div className="mb-6">
+            <div 
+              className="mb-3"
+              style={getTypographyStyles('subheading')}
+            >
+              {isNeoBrutalism ? 'BUSCAR EN BASE DE DATOS' : 'Buscar en Base de Datos'}
+            </div>
+            <div className="flex gap-3 mb-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder={isNeoBrutalism ? "BUSCAR POR NOMBRE O ID..." : "Buscar por nombre o ID..."}
+                  value={apiSearchTerm}
+                  onChange={(e) => setApiSearchTerm(e.target.value)}
+                  onKeyPress={handleApiSearchKeyPress}
+                  className="w-full pl-12 p-3 border rounded-md bg-background"
+                  style={isNeoBrutalism ? {
+                    border: '3px solid var(--border)',
+                    borderRadius: '0px',
+                    textTransform: 'uppercase',
+                    fontWeight: '600'
+                  } : {}}
+                />
+              </div>
+              <button
+                onClick={handleApiSearch}
+                style={{
+                  ...getButtonStyles('primary'),
+                  padding: '12px 24px'
+                }}
+                onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
+                onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
+              >
+                {isNeoBrutalism ? 'BUSCAR' : 'Buscar'}
+              </button>
+              <button
+                onClick={handleClearSearch}
+                style={{
+                  ...getButtonStyles('secondary'),
+                  padding: '12px 24px'
+                }}
+                onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
+                onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
+              >
+                {isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}
+              </button>
+            </div>
+
+            {/* Ayuda para búsqueda */}
+            <div className="text-xs text-muted-foreground mb-4">
+              {isNeoBrutalism ? 
+                'PUEDES BUSCAR POR NOMBRE (EJ: "PUMA") O POR ID COMPLETO (EJ: "BCYDWDKNR")' :
+                'Puedes buscar por nombre (ej: "Puma") o por ID completo (ej: "bcYdWdKNR")'
+              }
+            </div>
+            
+            {/* Control de tamaño de página */}
+            <div className="flex items-center gap-3">
+              <label 
+                htmlFor="pageSize"
+                className="text-sm text-muted-foreground"
+                style={getTypographyStyles('small')}
+              >
+                {isNeoBrutalism ? 'PRODUCTOS POR PÁGINA:' : 'Productos por página:'}
+              </label>
+              <select
+                id="pageSize"
+                value={pageSize}
+                onChange={(e) => handlePageSizeChange(e.target.value)}
+                className="px-3 py-2 border rounded-md bg-background"
                 style={isNeoBrutalism ? {
                   border: '3px solid var(--border)',
                   borderRadius: '0px',
                   textTransform: 'uppercase',
                   fontWeight: '600'
                 } : {}}
-              />
-            </div>
-
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="p-3 border rounded-md bg-background"
-              style={isNeoBrutalism ? {
-                border: '3px solid var(--border)',
-                borderRadius: '0px',
-                textTransform: 'uppercase',
-                fontWeight: '600'
-              } : {}}
-            >
-              <option value="all">{isNeoBrutalism ? 'TODAS LAS CATEGORÍAS' : 'Todas las categorías'}</option>
-              <option value="Electronics">{isNeoBrutalism ? 'ELECTRÓNICOS' : 'Electrónicos'}</option>
-              <option value="Clothing">{isNeoBrutalism ? 'ROPA' : 'Ropa'}</option>
-              <option value="Home">{isNeoBrutalism ? 'HOGAR' : 'Hogar'}</option>
-              <option value="Sports">{isNeoBrutalism ? 'DEPORTES' : 'Deportes'}</option>
-            </select>
-
-            <select
-              value={selectedStock}
-              onChange={(e) => setSelectedStock(e.target.value)}
-              className="p-3 border rounded-md bg-background"
-              style={isNeoBrutalism ? {
-                border: '3px solid var(--border)',
-                borderRadius: '0px',
-                textTransform: 'uppercase',
-                fontWeight: '600'
-              } : {}}
-            >
-              <option value="all">{isNeoBrutalism ? 'TODO EL STOCK' : 'Todo el stock'}</option>
-              <option value="in-stock">{isNeoBrutalism ? 'EN STOCK' : 'En stock'}</option>
-              <option value="low-stock">{isNeoBrutalism ? 'POCO STOCK' : 'Poco stock'}</option>
-              <option value="out-of-stock">{isNeoBrutalism ? 'SIN STOCK' : 'Sin stock'}</option>
-            </select>
-
-            <div className="text-center">
-              <div 
-                className="text-foreground text-2xl font-bold"
-                style={getTypographyStyles('heading')}
               >
-                {filteredProducts.length}
-              </div>
-              <div 
-                className="text-muted-foreground text-sm"
-                style={getTypographyStyles('small')}
-              >
-                {isNeoBrutalism ? 'PRODUCTOS' : 'Productos'}
-              </div>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
             </div>
           </div>
+
+          {/* Filtros locales - solo si hay productos cargados */}
+          {products.length > 0 && (
+            <div className="border-t pt-6">
+              <div 
+                className="mb-3"
+                style={getTypographyStyles('subheading')}
+              >
+                {isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : 'Filtrar Resultados Actuales'}
+              </div>
+              <div className="grid md:grid-cols-4 gap-4">
+                <div className="relative">
+                  <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder={isNeoBrutalism ? "FILTRAR POR NOMBRE..." : "Filtrar por nombre..."}
+                    value={localSearchTerm}
+                    onChange={(e) => setLocalSearchTerm(e.target.value)}
+                    className="w-full pl-12 p-3 border rounded-md bg-background"
+                    style={isNeoBrutalism ? {
+                      border: '3px solid var(--border)',
+                      borderRadius: '0px',
+                      textTransform: 'uppercase',
+                      fontWeight: '600'
+                    } : {}}
+                  />
+                </div>
+
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="p-3 border rounded-md bg-background"
+                  style={isNeoBrutalism ? {
+                    border: '3px solid var(--border)',
+                    borderRadius: '0px',
+                    textTransform: 'uppercase',
+                    fontWeight: '600'
+                  } : {}}
+                >
+                  <option value="all">{isNeoBrutalism ? 'TODAS LAS CATEGORÍAS' : 'Todas las categorías'}</option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {isNeoBrutalism ? category.name.toUpperCase() : category.name}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedStock}
+                  onChange={(e) => setSelectedStock(e.target.value)}
+                  className="p-3 border rounded-md bg-background"
+                  style={isNeoBrutalism ? {
+                    border: '3px solid var(--border)',
+                    borderRadius: '0px',
+                    textTransform: 'uppercase',
+                    fontWeight: '600'
+                  } : {}}
+                >
+                  <option value="all">{isNeoBrutalism ? 'TODOS LOS ESTADOS' : 'Todos los estados'}</option>
+                  <option value="active">{isNeoBrutalism ? 'ACTIVOS' : 'Activos'}</option>
+                  <option value="inactive">{isNeoBrutalism ? 'INACTIVOS' : 'Inactivos'}</option>
+                </select>
+
+                <div className="text-center">
+                  <div 
+                    className="text-foreground text-2xl font-bold"
+                    style={getTypographyStyles('heading')}
+                  >
+                    {filteredProducts.length}
+                  </div>
+                  <div 
+                    className="text-muted-foreground text-sm"
+                    style={getTypographyStyles('small')}
+                  >
+                    {isNeoBrutalism ? 'PRODUCTOS' : 'Productos'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
-        {/* Grid de productos */}
-        <section style={getGridLayoutStyles()}>
-          {filteredProducts.length === 0 ? (
-            <div className="col-span-full text-center py-20">
-              <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+        {/* Lista de Productos */}
+        <section>
+          {/* Estado de carga */}
+          {isLoading && (
+            <div 
+              className="text-center py-20"
+              style={getCardStyles()}
+            >
+              <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" />
               <div 
                 className="text-muted-foreground"
                 style={getTypographyStyles('heading')}
               >
-                {isNeoBrutalism ? 'NO SE ENCONTRARON PRODUCTOS' : 'No se encontraron productos'}
+                {isNeoBrutalism ? 'CARGANDO PRODUCTOS...' : 'Cargando productos...'}
               </div>
             </div>
-          ) : (
-            filteredProducts.map((product) => {
-              const stockStatus = getStockStatus(product.stock);
-              const StockIcon = getStockIcon(stockStatus);
-              
-              return (
-                <div
-                  key={product.id}
-                  className="cursor-pointer hover:scale-105 transition-transform"
-                  style={getCardStyles()}
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div style={getIconBackground(
-                          stockStatus === 'sin-stock' ? (isNeoBrutalism ? 'var(--brutalist-pink)' : isMaterial ? 'var(--md-error-main)' : 'var(--fluent-semantic-danger)') :
-                          stockStatus === 'poco-stock' ? (isNeoBrutalism ? 'var(--brutalist-orange)' : isMaterial ? 'var(--md-warning-main)' : 'var(--fluent-semantic-warning)') :
-                          (isNeoBrutalism ? 'var(--brutalist-lime)' : isMaterial ? 'var(--md-semantic-success)' : 'var(--fluent-semantic-success)')
-                        )}>
-                          <Package className="w-6 h-6 text-white" />
-                        </div>
-                        <h3 style={getTypographyStyles('subheading')}>
-                          {product.name}
-                        </h3>
-                      </div>
-                      <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    
-                    <p 
-                      className="text-muted-foreground"
-                      style={getTypographyStyles('base')}
-                    >
-                      {product.description}
-                    </p>
+          )}
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div 
-                          className="text-foreground font-bold"
-                          style={getTypographyStyles('price')}
+          {/* Mensaje cuando no hay productos cargados */}
+          {!isLoading && products.length === 0 && !lastSearchTerm && (
+            <div 
+              className="text-center py-20"
+              style={getCardStyles()}
+            >
+              <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <div 
+                className="text-muted-foreground mb-4"
+                style={getTypographyStyles('heading')}
+              >
+                {isNeoBrutalism ? 'NO HAY PRODUCTOS CARGADOS' : 'No hay productos cargados'}
+              </div>
+              <div 
+                className="text-muted-foreground mb-6"
+                style={getTypographyStyles('base')}
+              >
+                {isNeoBrutalism ? 
+                  'UTILIZA LA BÚSQUEDA PARA ENCONTRAR PRODUCTOS EN LA BASE DE DATOS' : 
+                  'Utiliza la búsqueda para encontrar productos en la base de datos'
+                }
+              </div>
+              <button
+                onClick={handleCreateProduct}
+                style={getButtonStyles('primary')}
+                onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
+                onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {isNeoBrutalism ? 'CREAR PRIMER PRODUCTO' : 'Crear Primer Producto'}
+              </button>
+            </div>
+          )}
+
+          {/* Mensaje cuando la búsqueda no devuelve resultados */}
+          {!isLoading && products.length === 0 && lastSearchTerm && (
+            <div 
+              className="text-center py-20"
+              style={getCardStyles()}
+            >
+              <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <div 
+                className="text-muted-foreground mb-4"
+                style={getTypographyStyles('heading')}
+              >
+                {isNeoBrutalism ? 'NO SE ENCONTRARON PRODUCTOS' : 'No se encontraron productos'}
+              </div>
+              <div 
+                className="text-muted-foreground mb-6"
+                style={getTypographyStyles('base')}
+              >
+                {isNeoBrutalism ? 
+                  `NO HAY PRODUCTOS QUE COINCIDAN CON "${lastSearchTerm.toUpperCase()}"` : 
+                  `No hay productos que coincidan con "${lastSearchTerm}"`
+                }
+              </div>
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={handleClearSearch}
+                  style={getButtonStyles('secondary')}
+                  onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
+                  onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
+                >
+                  {isNeoBrutalism ? 'LIMPIAR BÚSQUEDA' : 'Limpiar búsqueda'}
+                </button>
+                <button
+                  onClick={handleCreateProduct}
+                  style={getButtonStyles('primary')}
+                  onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
+                  onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  {isNeoBrutalism ? 'CREAR PRODUCTO' : 'Crear producto'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Mensaje cuando hay productos pero el filtro local no encuentra nada */}
+          {!isLoading && products.length > 0 && filteredProducts.length === 0 && localSearchTerm && (
+            <div 
+              className="text-center py-20"
+              style={getCardStyles()}
+            >
+              <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <div 
+                className="text-muted-foreground mb-4"
+                style={getTypographyStyles('heading')}
+              >
+                {isNeoBrutalism ? 'NO SE ENCONTRARON PRODUCTOS' : 'No se encontraron productos'}
+              </div>
+              <div 
+                className="text-muted-foreground"
+                style={getTypographyStyles('base')}
+              >
+                {isNeoBrutalism ? 
+                  `NO HAY PRODUCTOS QUE COINCIDAN CON "${localSearchTerm.toUpperCase()}"` : 
+                  `No hay productos que coincidan con "${localSearchTerm}"`
+                }
+              </div>
+            </div>
+          )}
+
+          {/* Grid de productos */}
+          {!isLoading && filteredProducts.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.map((product) => {
+                const status = getStockStatus(product);
+                
+                // Debug: Log del producto para verificar estructura de datos (comentado para reducir ruido)
+                // console.log('🔍 Product data:', {
+                //   id: product.id,
+                //   name: product.name,
+                //   price: product.price,
+                //   stock_quantity: product.stock_quantity,
+                //   category_id: product.category_id,
+                //   is_active: product.is_active,
+                //   code: product.code,
+                //   fullProduct: product
+                // });
+                
+                return (
+                  <div
+                    key={product.id}
+                    style={getCardStyles()}
+                    className="hover:shadow-lg transition-shadow"
+                  >
+                    {/* Product Card Header */}
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <h3 
+                          className="font-semibold mb-2 truncate"
+                          style={getTypographyStyles('subheading')}
                         >
-                          ${product.price}
-                        </div>
+                          {product.name || 'Sin nombre'}
+                        </h3>
                         <div 
-                          className="text-muted-foreground text-sm"
+                          className="text-xs text-muted-foreground mb-2"
                           style={getTypographyStyles('small')}
                         >
-                          {isNeoBrutalism ? 'PRECIO' : 'Precio'}
+                          {product.code ? `Código: ${product.code}` : `ID: ${product.id}`}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-2 mb-2">
-                          <StockIcon className={`w-4 h-4 ${
-                            stockStatus === 'sin-stock' ? 'text-red-500' :
-                            stockStatus === 'poco-stock' ? 'text-orange-500' :
-                            'text-green-500'
-                          }`} />
-                          <span style={getTypographyStyles('base')}>{product.stock}</span>
-                        </div>
-                        <div style={getBadgeStyles(stockStatus)}>
-                          {stockStatus === 'sin-stock' ? (isNeoBrutalism ? 'SIN STOCK' : 'Sin stock') :
-                           stockStatus === 'poco-stock' ? (isNeoBrutalism ? 'POCO STOCK' : 'Poco stock') :
-                           (isNeoBrutalism ? 'EN STOCK' : 'En stock')}
+                      
+                      {/* Status Badge */}
+                      <div style={getBadgeStyles(status)}>
+                        <div className="flex items-center gap-1">
+                          {getStockIcon(status)}
+                          <span>
+                            {status === 'active' ? 
+                              (isNeoBrutalism ? 'ACTIVO' : 'Activo') : 
+                              (isNeoBrutalism ? 'INACTIVO' : 'Inactivo')
+                            }
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-4">
+                    {/* Product Info */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between">
+                        <span 
+                          className="text-muted-foreground"
+                          style={getTypographyStyles('small')}
+                        >
+                          {isNeoBrutalism ? 'CATEGORÍA:' : 'Categoría:'}
+                        </span>
+                        <span style={getTypographyStyles('small')}>
+                          {getCategoryName(product.category_id)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span 
+                          className="text-muted-foreground"
+                          style={getTypographyStyles('small')}
+                        >
+                          {isNeoBrutalism ? 'PRECIO:' : 'Precio:'}
+                        </span>
+                        <span style={getTypographyStyles('small')}>
+                          ${product.price ? parseFloat(product.price).toFixed(2) : '0.00'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span 
+                          className="text-muted-foreground"
+                          style={getTypographyStyles('small')}
+                        >
+                          {isNeoBrutalism ? 'STOCK:' : 'Stock:'}
+                        </span>
+                        <span style={getTypographyStyles('small')}>
+                          {product.stock_quantity !== undefined ? product.stock_quantity : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2">
                       <button
-                        style={getButtonStyles('small')}
+                        onClick={() => handleViewProduct(product)}
+                        style={{
+                          ...getButtonStyles('secondary'),
+                          flex: 1,
+                          padding: '8px 12px',
+                          fontSize: '0.75rem'
+                        }}
                         onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
                         onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
-                        className="flex-1"
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        {isNeoBrutalism ? 'VER' : 'Ver'}
+                      </button>
+                      <button
+                        onClick={() => handleEditProduct(product)}
+                        style={{
+                          ...getButtonStyles('primary'),
+                          flex: 1,
+                          padding: '8px 12px',
+                          fontSize: '0.75rem'
+                        }}
+                        onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
+                        onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
                       >
                         <Edit className="w-4 h-4 mr-1" />
                         {isNeoBrutalism ? 'EDITAR' : 'Editar'}
                       </button>
                       <button
+                        onClick={() => handleDeleteProduct(product)}
                         style={{
-                          ...getButtonStyles('small'), 
-                          background: isMaterial ? 'var(--md-error-main, var(--destructive))' : 
-                                     isFluent ? 'var(--fluent-semantic-danger, var(--destructive))' : 
-                                     'var(--brutalist-pink)'
+                          ...getButtonStyles('secondary'),
+                          background: 'var(--destructive)',
+                          color: 'var(--destructive-foreground)',
+                          padding: '8px 12px'
                         }}
                         onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
                         onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
-                        onClick={() => deleteProduct(product.id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </section>
 
-        {/* Footer */}
-        <footer className="text-center py-8">
-          <div className="flex flex-wrap justify-center gap-4">
-            <button
-              style={getButtonStyles('secondary')}
-              onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
-              onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
-            >
-              <Layers className="w-5 h-5 mr-2" />
-              {isNeoBrutalism ? 'GESTIÓN MASIVA' : 'Gestión Masiva'}
-            </button>
-            <button
-              style={getButtonStyles('tertiary')}
-              onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
-              onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
-            >
-              <Tag className="w-5 h-5 mr-2" />
-              {isNeoBrutalism ? 'ETIQUETAS' : 'Etiquetas'}
-            </button>
-          </div>
-        </footer>
+        {/* Footer con paginación */}
+        {!isLoading && products.length > 0 && (
+          <footer className="text-center py-8">
+            <div className="flex flex-wrap justify-center gap-4 mb-4">
+              <div 
+                className="text-muted-foreground"
+                style={getTypographyStyles('small')}
+              >
+                {isNeoBrutalism ? 
+                  `MOSTRANDO ${filteredProducts.length} DE ${products.length} PRODUCTOS EN ESTA PÁGINA` :
+                  `Mostrando ${filteredProducts.length} de ${products.length} productos en esta página`
+                }
+              </div>
+              {lastSearchTerm && (
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="text-muted-foreground"
+                    style={getTypographyStyles('small')}
+                  >
+                    {isNeoBrutalism ? 
+                      `BUSQUEDA: "${lastSearchTerm.toUpperCase()}"` :
+                      `Búsqueda: "${lastSearchTerm}"`
+                    }
+                  </div>
+                  <div 
+                    className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800"
+                    style={getTypographyStyles('small')}
+                  >
+                    {/^[a-zA-Z0-9_-]{10,}$/.test(lastSearchTerm) 
+                      ? (isNeoBrutalism ? 'POR ID' : 'por ID')
+                      : (isNeoBrutalism ? 'POR NOMBRE' : 'por nombre')
+                    }
+                  </div>
+                </div>
+              )}
+              {totalProducts > 0 && (
+                <div 
+                  className="text-muted-foreground"
+                  style={getTypographyStyles('small')}
+                >
+                  {isNeoBrutalism ? 
+                    `TOTAL ENCONTRADOS: ${totalProducts}` :
+                    `Total encontrados: ${totalProducts}`
+                  }
+                </div>
+              )}
+            </div>
+
+            {/* Controles de paginación */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage <= 1 || isLoading}
+                  style={{
+                    ...getButtonStyles('secondary'),
+                    padding: '8px 12px',
+                    opacity: currentPage <= 1 ? 0.5 : 1,
+                    cursor: currentPage <= 1 ? 'not-allowed' : 'pointer'
+                  }}
+                  onMouseEnter={isNeoBrutalism && currentPage > 1 ? handleButtonHover : undefined}
+                  onMouseLeave={isNeoBrutalism && currentPage > 1 ? handleButtonLeave : undefined}
+                >
+                  {isNeoBrutalism ? 'PRIMERA' : 'Primera'}
+                </button>
+                
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1 || isLoading}
+                  style={{
+                    ...getButtonStyles('secondary'),
+                    padding: '8px 16px',
+                    opacity: currentPage <= 1 ? 0.5 : 1,
+                    cursor: currentPage <= 1 ? 'not-allowed' : 'pointer'
+                  }}
+                  onMouseEnter={isNeoBrutalism && currentPage > 1 ? handleButtonHover : undefined}
+                  onMouseLeave={isNeoBrutalism && currentPage > 1 ? handleButtonLeave : undefined}
+                >
+                  {isNeoBrutalism ? 'ANTERIOR' : 'Anterior'}
+                </button>
+                
+                {/* Números de página */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNumber;
+                  if (totalPages <= 5) {
+                    pageNumber = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNumber = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNumber = totalPages - 4 + i;
+                  } else {
+                    pageNumber = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => handlePageChange(pageNumber)}
+                      disabled={isLoading}
+                      style={{
+                        ...getButtonStyles(pageNumber === currentPage ? 'primary' : 'secondary'),
+                        padding: '8px 12px',
+                        minWidth: '40px',
+                        fontWeight: pageNumber === currentPage ? 'bold' : 'normal'
+                      }}
+                      onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
+                      onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= totalPages || isLoading}
+                  style={{
+                    ...getButtonStyles('secondary'),
+                    padding: '8px 16px',
+                    opacity: currentPage >= totalPages ? 0.5 : 1,
+                    cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer'
+                  }}
+                  onMouseEnter={isNeoBrutalism && currentPage < totalPages ? handleButtonHover : undefined}
+                  onMouseLeave={isNeoBrutalism && currentPage < totalPages ? handleButtonLeave : undefined}
+                >
+                  {isNeoBrutalism ? 'SIGUIENTE' : 'Siguiente'}
+                </button>
+
+                <button
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={currentPage >= totalPages || isLoading}
+                  style={{
+                    ...getButtonStyles('secondary'),
+                    padding: '8px 12px',
+                    opacity: currentPage >= totalPages ? 0.5 : 1,
+                    cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer'
+                  }}
+                  onMouseEnter={isNeoBrutalism && currentPage < totalPages ? handleButtonHover : undefined}
+                  onMouseLeave={isNeoBrutalism && currentPage < totalPages ? handleButtonLeave : undefined}
+                >
+                  {isNeoBrutalism ? 'ÚLTIMA' : 'Última'}
+                </button>
+
+                {/* Información de página actual */}
+                <div 
+                  className="text-muted-foreground ml-4"
+                  style={getTypographyStyles('small')}
+                >
+                  {isNeoBrutalism ? 
+                    `PÁGINA ${currentPage} DE ${totalPages}` :
+                    `Página ${currentPage} de ${totalPages}`
+                  }
+                </div>
+              </div>
+            )}
+          </footer>
+        )}
 
       </div>
+
+      {/* Modales */}
+      <ProductModal
+        isOpen={showProductModal}
+        onClose={() => setShowProductModal(false)}
+        product={editingProduct}
+        onSuccess={handleModalSuccess}
+      />
+
+      <ProductDetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        product={selectedProduct}
+        onRefresh={() => {
+          if (lastSearchTerm) {
+            searchProducts(lastSearchTerm);
+          }
+        }}
+      />
+
+      <DeleteProductModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        product={selectedProduct}
+        onConfirm={handleConfirmDelete}
+        loading={isLoading}
+      />
+
+      {/* Toast Notifications */}
+      <ToastContainer 
+        toasts={toasts} 
+        onRemoveToast={removeToast} 
+      />
     </div>
   );
 };

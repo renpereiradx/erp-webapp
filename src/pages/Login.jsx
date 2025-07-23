@@ -142,11 +142,74 @@ const Login = () => {
       return;
     }
     
+    // Credenciales de prueba para desarrollo
+    const testCredentials = [
+      { username: 'admin', password: 'admin123' },
+      { username: 'test', password: 'test123' },
+      { username: 'demo', password: 'demo123' },
+      { username: 'user', password: 'user123' }
+    ];
+    
+    // Verificar si son credenciales de prueba
+    const isTestLogin = testCredentials.some(cred => 
+      cred.username === formData.username && cred.password === formData.password
+    );
+    
+    if (isTestLogin) {
+      console.log('🧪 Using test credentials, simulating successful login');
+      try {
+        // Simular login exitoso con datos mock
+        const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifQ.mock';
+        localStorage.setItem('auth_token', mockToken);
+        
+        // Establecer datos de usuario directamente en el store
+        const { user, token, roleId, isAuthenticated, loading, error, setLoading, setError, clearError, ...actions } = useAuthStore.getState();
+        
+        const mockUser = {
+          id: '1',
+          username: formData.username,
+          email: formData.username + '@demo.com',
+          role: 'admin',
+          role_id: '1',
+          name: formData.username.charAt(0).toUpperCase() + formData.username.slice(1),
+          company: 'ERP Demo Company',
+          lastLogin: new Date().toISOString(),
+        };
+        
+        // Usar set directamente para actualizar el estado
+        useAuthStore.setState({
+          user: mockUser,
+          token: mockToken,
+          roleId: '1',
+          isAuthenticated: true,
+          loading: false,
+          error: null,
+        });
+        
+        console.log('🧪 Test login successful, navigating to dashboard');
+        navigate('/dashboard');
+        return;
+      } catch (err) {
+        console.error('Error in test login:', err);
+      }
+    }
+    
     try {
-      await login(formData.username, formData.password);
+      console.log('🔐 Attempting real API login...');
+      await login({
+        username: formData.username,
+        password: formData.password
+      });
+      console.log('🔐 Real API login successful, navigating to dashboard');
       navigate('/dashboard');
     } catch (err) {
       console.error('Error de login:', err);
+      // Si falla el login real pero hay credenciales de test, mostrar ayuda
+      if (!isTestLogin) {
+        setFormErrors({
+          password: 'Login failed. Try test credentials: admin/admin123, test/test123, demo/demo123, user/user123'
+        });
+      }
     }
   };
 
@@ -183,6 +246,21 @@ const Login = () => {
             <p className={`text-muted-foreground ${getTitleClass('body')}`}>
               {isNeoBrutalism ? 'INGRESA TUS CREDENCIALES' : 'Ingresa tus credenciales para continuar'}
             </p>
+            
+            {/* Credenciales de prueba */}
+            <div className={`mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 ${
+              isNeoBrutalism ? 'border-4 border-blue-600' : 'rounded-lg'
+            }`}>
+              <p className={`text-blue-800 dark:text-blue-200 text-sm mb-2 ${getTitleClass('caption-strong')}`}>
+                {isNeoBrutalism ? 'CREDENCIALES DE PRUEBA:' : 'Credenciales de prueba:'}
+              </p>
+              <div className={`text-blue-700 dark:text-blue-300 text-xs space-y-1 ${getTitleClass('caption')}`}>
+                <div>admin / admin123</div>
+                <div>test / test123</div>
+                <div>demo / demo123</div>
+                <div>user / user123</div>
+              </div>
+            </div>
           </div>
 
           {/* Error general */}

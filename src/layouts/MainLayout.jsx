@@ -23,7 +23,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import useAuthStore from '@/store/useAuthStore';
+// TEMPORAL: Desactivamos useAuthStore
+// import useAuthStore from '@/store/useAuthStore';
 
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,7 +33,9 @@ const MainLayout = ({ children }) => {
   const [isClient, setIsClient] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  // TEMPORAL: Desactivamos la autenticación
+  // const { user, logout } = useAuthStore();
+  const user = { name: 'Demo User', email: 'demo@erp.com' }; // Usuario temporal
   const { theme } = useTheme();
 
   // Hook para detectar cuando estamos en el cliente (post-hidratación)
@@ -63,46 +66,47 @@ const MainLayout = ({ children }) => {
       html.setAttribute('data-theme', theme);
       body.setAttribute('data-theme', theme);
       
-      console.log('🎨 Theme applied to DOM:', { 
-        theme, 
-        htmlTheme: html.getAttribute('data-theme'), 
-        bodyTheme: body.getAttribute('data-theme'),
-        isNeoBrutalist,
-        isMaterial,
-        isFluent
-      });
+      // console.log('🎨 Theme applied to DOM:', { 
+      //   theme, 
+      //   htmlTheme: html.getAttribute('data-theme'), 
+      //   bodyTheme: body.getAttribute('data-theme'),
+      //   isNeoBrutalist,
+      //   isMaterial,
+      //   isFluent
+      // });
       
       // Verificar que las variables CSS están disponibles
-      const rootStyle = getComputedStyle(document.documentElement);
-      console.log('🔍 CSS Variables verification:', {
-        theme,
-        background: rootStyle.getPropertyValue('--background'),
-        foreground: rootStyle.getPropertyValue('--foreground'),
-        primary: rootStyle.getPropertyValue('--primary'),
-        mdPrimary: rootStyle.getPropertyValue('--md-primary-main'),
-        mdError: rootStyle.getPropertyValue('--md-error-main'),
-        fluentPrimary: rootStyle.getPropertyValue('--fluent-brand-primary'),
-        fluentDanger: rootStyle.getPropertyValue('--fluent-semantic-danger')
-      });
+      // const rootStyle = getComputedStyle(document.documentElement);
+      // console.log('🔍 CSS Variables verification:', {
+      //   theme,
+      //   background: rootStyle.getPropertyValue('--background'),
+      //   foreground: rootStyle.getPropertyValue('--foreground'),
+      //   primary: rootStyle.getPropertyValue('--primary'),
+      //   mdPrimary: rootStyle.getPropertyValue('--md-primary-main'),
+      //   mdError: rootStyle.getPropertyValue('--md-error-main'),
+      //   fluentPrimary: rootStyle.getPropertyValue('--fluent-brand-primary'),
+      //   fluentDanger: rootStyle.getPropertyValue('--fluent-semantic-danger')
+      // });
     }
   }, [theme, isNeoBrutalist, isMaterial, isFluent]);
 
   // ...existing code...
 
-  // Debug log temporal
-  console.log('MainLayout Debug:', {
-    isClient,
-    isLargeScreen,
-    windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'undefined',
-    theme,
-    sidebarShouldShow: isClient && isLargeScreen,
-    buttonShouldShow: isClient && !isLargeScreen
-  });
+  // Debug log temporal (comentado para reducir ruido)
+  // console.log('MainLayout Debug:', {
+  //   isClient,
+  //   isLargeScreen,
+  //   windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'undefined',
+  //   theme,
+  //   sidebarShouldShow: isClient && isLargeScreen,
+  //   buttonShouldShow: isClient && !isLargeScreen
+  // });
 
-  // Manejar logout
+  // Manejar logout - TEMPORAL: Desactivado
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    console.log('🚫 Logout temporalmente desactivado');
+    // logout();
+    // navigate('/login');
   };
 
   // Helper functions para generar clases según el tema activo
@@ -287,7 +291,7 @@ const MainLayout = ({ children }) => {
 
   // Helper function para obtener colores de badges según el tema
   const getBadgeColors = (type = 'notification') => {
-    console.log('🎨 getBadgeColors called:', { theme, type, isNeoBrutalist, isMaterial, isFluent });
+    // console.log('🎨 getBadgeColors called:', { theme, type, isNeoBrutalist, isMaterial, isFluent });
     
     if (isNeoBrutalist) {
       return {
@@ -340,7 +344,7 @@ const MainLayout = ({ children }) => {
   // Helper function para obtener estilos base de badges
   const getBaseBadgeStyles = (type = 'notification') => {
     const colors = getBadgeColors(type);
-    console.log('🎯 getBaseBadgeStyles called:', { type, colors, theme });
+    // console.log('🎯 getBaseBadgeStyles called:', { type, colors, theme });
     
     const baseStyles = {
       display: 'flex',

@@ -1,9 +1,9 @@
 /**
  * Servicio de autenticación para el sistema ERP
- * Integrado con API RESTful real en localhost:5050
+ * Migrado para usar el cliente oficial del Business Management API
  */
 
-import { apiService } from './api';
+import { apiClient } from './api';
 
 // Helper para categorizar errores y proporcionar contexto adicional
 const getErrorDetails = (error) => {
@@ -102,17 +102,14 @@ const getErrorDetails = (error) => {
 export const authService = {
   /**
    * Iniciar sesión con username/email y contraseña
-   * Integrado con API real en localhost:5050/login
+   * Usa el cliente oficial del Business Management API
    */
   login: async (credentials) => {
     try {
       const { username, password } = credentials;
       
-      // Llamada a la API real - enviar como "email" pero puede ser username o email
-      const response = await apiService.post('/login', {
-        email: username, // El backend espera "email" pero acepta username o email
-        password
-      });
+      // Usar el método login del cliente oficial
+      const response = await apiClient.login(username, password);
       
       // Extraer token y role_id de la respuesta
       const { token, role_id } = response;
@@ -146,30 +143,44 @@ export const authService = {
       
       const { category, suggestions } = getErrorDetails(error);
       
+      // Si la respuesta del servidor contiene un mensaje específico, usarlo
+      const serverMessage = error.response?.data?.message || error.response?.data || error.message;
+      
       if (category.title === 'Error de Autenticación') {
+        // Usar el mensaje del servidor si está disponible y es específico
+        if (typeof serverMessage === 'string' && serverMessage.length > 0) {
+          throw new Error(serverMessage);
+        }
         throw new Error('Usuario o contraseña incorrectos. Por favor, verifica tus credenciales e intenta nuevamente.');
       } else if (category.title === 'Error de Validación') {
         throw new Error('Los datos ingresados no son válidos. Asegúrate de completar todos los campos correctamente.');
       } else if (category.title === 'Error de Permisos') {
         throw new Error('Tu cuenta ha sido bloqueada o no tienes permisos para acceder. Contacta al administrador del sistema.');
       } else if (category.title === 'Error del Servidor') {
+        // Para errores 500+, pero si el servidor responde con un mensaje específico, usarlo
+        if (typeof serverMessage === 'string' && serverMessage.length > 0) {
+          throw new Error(serverMessage);
+        }
         throw new Error('El servicio de autenticación no está disponible. Contacta al soporte técnico.');
       } else if (category.title === 'Límite de Solicitudes') {
         throw new Error('Demasiados intentos de inicio de sesión. Espera unos minutos antes de intentar nuevamente.');
       } else {
-        // Mensaje genérico más amigable
-        const userMessage = error.response?.data?.message || error.message;
-        throw new Error(userMessage || 'Error inesperado al iniciar sesión. Intenta nuevamente o contacta al soporte técnico.');
+        // Mensaje genérico más amigable - priorizar mensaje del servidor
+        if (typeof serverMessage === 'string' && serverMessage.length > 0) {
+          throw new Error(serverMessage);
+        }
+        throw new Error(error.message || 'Error inesperado al iniciar sesión. Intenta nuevamente o contacta al soporte técnico.');
       }
     }
   },
 
   /**
-   * Registrar nuevo usuario (si tu API lo soporta)
+   * Registrar nuevo usuario usando el cliente oficial
    */
   register: async (userData) => {
     try {
-      const response = await apiService.post('/register', userData);
+      // Usar el método signup del cliente oficial
+      const response = await apiClient.signup(userData.email || userData.username, userData.password);
       
       const { token, role_id } = response;
       
@@ -209,7 +220,7 @@ export const authService = {
       } else if (category.title === 'Error del Servidor') {
         throw new Error('Error interno del servidor durante el registro. Intenta más tarde o contacta al soporte técnico.');
       } else {
-        throw new Error(error.response?.data?.message || 'Error inesperado durante el registro. Intenta nuevamente o contacta al soporte técnico.');
+        throw new Error(error.response?.data?.message || error.message || 'Error inesperado durante el registro. Intenta nuevamente o contacta al soporte técnico.');
       }
     }
   },
@@ -220,10 +231,6 @@ export const authService = {
    */
   verifyToken: async (token) => {
     try {
-      // Intentar obtener información del usuario con el token
-      // Si tu API tiene un endpoint para verificar tokens, úsalo aquí
-      // Por ahora, decodificaremos el token localmente
-      
       if (!token) {
         throw new Error('Token no proporcionado');
       }
@@ -234,12 +241,14 @@ export const authService = {
         throw new Error('Formato de token inválido');
       }
       
-      // Si tienes un endpoint como /verify-token o /me, úsalo así:
-      // const response = await apiService.get('/verify-token', {
-      //   headers: { Authorization: `Bearer ${token}` }
-      // });
+      // Intentar hacer una llamada simple para verificar que el token funciona
+      try {
+        await apiClient.getCategories();
+      } catch (apiError) {
+        throw new Error('Token inválido o expirado');
+      }
       
-      // Por ahora, crear un usuario básico desde el token almacenado
+      // Si llegamos aquí, el token es válido
       const storedUser = JSON.parse(localStorage.getItem('auth-store') || '{}');
       
       if (storedUser.state?.user) {
@@ -298,9 +307,10 @@ export const authService = {
    */
   updateProfile: async (profileData) => {
     try {
-      // Si tu API tiene un endpoint para actualizar perfil, úsalo así:
-      const response = await apiService.put('/profile', profileData);
-      return response;
+      // Por ahora mantenemos funcionalidad básica hasta que haya endpoint específico
+      // const response = await apiClient.updateProfile(profileData);
+      
+      throw new Error('La actualización de perfil no está disponible actualmente');
       
     } catch (error) {
       console.error('Error actualizando perfil:', error);
@@ -316,7 +326,7 @@ export const authService = {
       } else if (category.title === 'Error del Servidor') {
         throw new Error('Error interno del servidor. No se pudo actualizar tu perfil. Intenta más tarde.');
       } else {
-        throw new Error(error.response?.data?.message || 'Error inesperado al actualizar el perfil. Intenta nuevamente.');
+        throw new Error(error.message || 'Error inesperado al actualizar el perfil. Intenta nuevamente.');
       }
     }
   },
@@ -326,10 +336,10 @@ export const authService = {
    */
   changePassword: async (passwordData) => {
     try {
-      await apiService.put('/change-password', passwordData);
-      return {
-        message: 'Contraseña cambiada exitosamente'
-      };
+      // Por ahora mantenemos funcionalidad básica hasta que haya endpoint específico  
+      // await apiClient.changePassword(passwordData);
+      
+      throw new Error('El cambio de contraseña no está disponible actualmente');
       
     } catch (error) {
       console.error('Error cambiando contraseña:', error);
@@ -345,7 +355,7 @@ export const authService = {
       } else if (category.title === 'Error del Servidor') {
         throw new Error('Error interno del servidor. No se pudo cambiar tu contraseña. Intenta más tarde.');
       } else {
-        throw new Error(error.response?.data?.message || 'Error inesperado al cambiar la contraseña. Intenta nuevamente.');
+        throw new Error(error.message || 'Error inesperado al cambiar la contraseña. Intenta nuevamente.');
       }
     }
   },
@@ -355,11 +365,10 @@ export const authService = {
    */
   forgotPassword: async (emailOrUsername) => {
     try {
-      // Enviar como "email" pero puede ser username o email
-      await apiService.post('/forgot-password', { email: emailOrUsername });
-      return {
-        message: 'Se ha enviado un email con instrucciones para recuperar tu contraseña'
-      };
+      // Por ahora mantenemos funcionalidad básica hasta que haya endpoint específico
+      // await apiClient.forgotPassword(emailOrUsername);
+      
+      throw new Error('La recuperación de contraseña no está disponible actualmente');
       
     } catch (error) {
       console.error('Error en recuperación de contraseña:', error);
@@ -377,18 +386,18 @@ export const authService = {
       } else if (category.title === 'Error de Conexión') {
         throw new Error('No se puede conectar al servidor. Verifica tu conexión a internet o contacta al soporte técnico.');
       } else {
-        throw new Error(error.response?.data?.message || 'Error inesperado al enviar el email de recuperación. Intenta nuevamente.');
+        throw new Error(error.message || 'Error inesperado al enviar el email de recuperación. Intenta nuevamente.');
       }
     }
   },
 
   /**
-   * Cerrar sesión
+   * Cerrar sesión usando el cliente oficial
    */
   logout: async () => {
     try {
-      // Si tu API tiene un endpoint para logout, úsalo así:
-      // await apiService.post('/logout');
+      // Usar el método logout del cliente oficial
+      apiClient.logout();
       
       return {
         message: 'Sesión cerrada exitosamente'
