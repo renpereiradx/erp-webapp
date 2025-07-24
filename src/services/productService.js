@@ -43,7 +43,24 @@ export const productService = {
     return await apiClient.deleteProduct(productId);
   },
 
-  // =================== DESCRIPCIONES ===================
+  // =================== MÉTODOS OPTIMIZADOS CON NUEVA ARQUITECTURA ATÓMICA ===================
+
+  // Obtener producto con todos sus detalles en una sola request
+  getProductWithDetails: async (productId) => {
+    return await apiClient.getProductWithDetails(productId);
+  },
+
+  // Buscar productos por nombre con todos sus detalles incluidos
+  searchProductsWithDetails: async (name) => {
+    return await apiClient.searchProductsWithDetails(name);
+  },
+
+  // Actualizar producto con descripción de forma atómica
+  updateProductWithDescription: async (productId, productData) => {
+    return await apiClient.updateProductWithDescription(productId, productData);
+  },
+
+  // =================== DESCRIPCIONES (Legacy - mantenido para compatibilidad) ===================
 
   // Crear descripción de producto
   createProductDescription: async (productId, description) => {

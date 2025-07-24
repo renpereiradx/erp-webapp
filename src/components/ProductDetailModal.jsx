@@ -62,25 +62,36 @@ const ProductDetailModal = ({
     
     setLoading(true);
     try {
-      // Cargar descripción, precios y stock en paralelo
-      const [descResponse, stockResponse] = await Promise.allSettled([
-        productService.getDescriptionById(product.id).catch(() => null),
-        productService.getStockByProductId(product.id).catch(() => null)
-      ]);
-
-      if (descResponse.status === 'fulfilled' && descResponse.value) {
-        setDescription(descResponse.value.description || '');
+      // 🔥 Usar el nuevo endpoint atómico que devuelve todos los detalles en una sola request
+      console.log('🔥 Cargando detalles completos del producto:', product.id);
+      const productWithDetails = await productService.getProductWithDetails(product.id);
+      
+      // El endpoint optimizado devuelve todo en una sola respuesta:
+      // - product info, category, stock, price, description
+      
+      if (productWithDetails.description) {
+        setDescription(productWithDetails.description.description || '');
       }
 
-      if (stockResponse.status === 'fulfilled' && stockResponse.value) {
-        const stock = stockResponse.value;
-        setStockData({
-          quantity: stock.quantity || '',
-          exp: stock.exp || '',
-          entity: { name: stock.entity?.name || '' }
+      if (productWithDetails.price) {
+        setPriceData({
+          cost_price: productWithDetails.price.purchase_price || '',
+          sale_price: '', // No disponible en el endpoint actual
+          tax: ''
         });
       }
+
+      if (productWithDetails.stock) {
+        setStockData({
+          quantity: productWithDetails.stock.quantity || '',
+          exp: '', // No disponible en el endpoint actual
+          entity: { name: '' }
+        });
+      }
+
+      console.log('✅ Detalles del producto cargados:', productWithDetails);
     } catch (err) {
+      console.error('❌ Error al cargar detalles del producto:', err);
       setError('Error al cargar detalles del producto');
     } finally {
       setLoading(false);

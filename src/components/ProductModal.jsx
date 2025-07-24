@@ -287,41 +287,28 @@ const ProductModal = ({
       // Validar datos
       productService.validateProductData(formData);
 
-      // Convertir id_category a número
+      // Convertir id_category a número y preparar datos
       const dataToSend = {
         ...formData,
-        id_category: parseInt(formData.id_category)
+        id_category: parseInt(formData.id_category),
+        description: formData.description.trim() // Incluir descripción en payload principal
       };
 
       if (product) {
-        // Editar producto existente
+        // 🔥 Editar producto con descripción de forma atómica
+        // Una sola operación que actualiza producto + descripción
         await productService.updateProduct(product.id, dataToSend);
-        
-        // Si hay descripción, actualizar o crear descripción
-        if (formData.description.trim()) {
-          if (product.description?.id) {
-            // Actualizar descripción existente
-            await productService.updateDescription(product.description.id, formData.description);
-          } else {
-            // Crear nueva descripción
-            await productService.createProductDescription(product.id, formData.description);
-          }
-        }
       } else {
-        // Crear nuevo producto
-        const newProduct = await productService.createProduct(dataToSend);
-        
-        // Si hay descripción, crear descripción para el nuevo producto
-        if (formData.description.trim() && newProduct.id) {
-          await productService.createProductDescription(newProduct.id, formData.description);
-        }
+        // 🔥 Crear nuevo producto con descripción de forma atómica  
+        // Una sola operación que crea producto + descripción
+        await productService.createProduct(dataToSend);
       }
 
       onSuccess && onSuccess();
       onClose();
     } catch (err) {
       console.error('Error en ProductModal:', err);
-      setError(err.message || 'Error al guardar el producto y descripción');
+      setError(err.message || 'Error al guardar el producto');
     } finally {
       setLoading(false);
     }

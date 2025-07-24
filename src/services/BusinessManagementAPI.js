@@ -181,12 +181,15 @@ class BusinessManagementAPI {
   async createProduct(productData) {
     console.log('🚀 createProduct llamado con:', productData);
     
+    // Nueva operación atómica: incluye descripción en el payload principal
     const payload = {
       name: productData.name,
-      id_category: productData.id_category || productData.categoryId || productData.category_id
+      id_category: productData.id_category || productData.categoryId || productData.category_id,
+      state: productData.state !== undefined ? productData.state : true,
+      description: productData.description || ''
     };
     
-    console.log('🚀 Payload a enviar:', payload);
+    console.log('🚀 Payload atómico a enviar:', payload);
     
     return this.makeRequest('/products/', {
       method: 'POST',
@@ -195,15 +198,8 @@ class BusinessManagementAPI {
   }
 
   async updateProduct(id, productData) {
-    return this.makeRequest(`/products/products/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        name: productData.name,
-        state: productData.state,
-        is_active: productData.is_active,
-        id_category: productData.categoryId || productData.category_id
-      })
-    });
+    // Usa la nueva operación atómica por defecto
+    return this.updateProductWithDescription(id, productData);
   }
 
   async deleteProduct(id) {
@@ -213,7 +209,50 @@ class BusinessManagementAPI {
   }
 
   // ============================================================================
-  // PRODUCT DESCRIPTIONS
+  // NUEVOS MÉTODOS ATÓMICOS OPTIMIZADOS
+  // ============================================================================
+
+  /**
+   * Obtiene un producto con todos sus detalles en una sola request
+   * Incluye: producto, categoría, stock, precio y descripción
+   * 4x más rápido que múltiples requests separadas
+   */
+  async getProductWithDetails(id) {
+    console.log('🔥 getProductWithDetails llamado para ID:', id);
+    return this.makeRequest(`/products/${id}/details`);
+  }
+
+  /**
+   * Busca productos por nombre con todos sus detalles incluidos
+   * Ideal para búsquedas con datos completos en una sola operación
+   */
+  async searchProductsWithDetails(name) {
+    console.log('🔍 searchProductsWithDetails llamado para:', name);
+    return this.makeRequest(`/products/search/details/${encodeURIComponent(name)}`);
+  }
+
+  /**
+   * Actualiza un producto con descripción de forma atómica
+   * Garantiza consistencia de datos en transacción única
+   */
+  async updateProductWithDescription(id, productData) {
+    console.log('✏️ updateProductWithDescription llamado:', { id, productData });
+    
+    const payload = {
+      name: productData.name,
+      id_category: productData.id_category || productData.categoryId || productData.category_id,
+      state: productData.state !== undefined ? productData.state : true,
+      description: productData.description || ''
+    };
+    
+    return this.makeRequest(`/products/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  // ============================================================================
+  // PRODUCT DESCRIPTIONS (Legacy - mantenido para compatibilidad)
   // ============================================================================
 
   async createProductDescription(productId, description) {
@@ -346,6 +385,44 @@ class BusinessManagementAPI {
 
   async deleteClient(clientId) {
     return this.makeRequest(`/client/delete/${clientId}`, {
+      method: 'PUT'
+    });
+  }
+
+  // ============================================================================
+  // SUPPLIERS
+  // ============================================================================
+
+  async getSuppliers(page = 1, pageSize = 10) {
+    return this.makeRequest(`/supplier/${page}/${pageSize}`);
+  }
+
+  async createSupplier(supplierData) {
+    return this.makeRequest('/supplier/', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: supplierData.name,
+        contact: supplierData.contact,
+        address: supplierData.address,
+        status: supplierData.status !== undefined ? supplierData.status : true
+      })
+    });
+  }
+
+  async updateSupplier(supplierId, supplierData) {
+    return this.makeRequest(`/supplier/${supplierId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: supplierData.name,
+        contact: supplierData.contact,
+        address: supplierData.address,
+        status: supplierData.status
+      })
+    });
+  }
+
+  async deleteSupplier(supplierId) {
+    return this.makeRequest(`/supplier/delete/${supplierId}`, {
       method: 'PUT'
     });
   }

@@ -279,6 +279,16 @@ const Products = () => {
     }
   };
 
+  // 🔥 Nueva función para búsqueda optimizada con detalles completos
+  const handleOptimizedSearch = async () => {
+    if (apiSearchTerm.trim()) {
+      console.log('🔥 Usando búsqueda optimizada con detalles:', apiSearchTerm.trim());
+      await searchProductsWithDetails(apiSearchTerm.trim());
+    } else {
+      clearProducts();
+    }
+  };
+
   const handleApiSearchKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleApiSearch();
