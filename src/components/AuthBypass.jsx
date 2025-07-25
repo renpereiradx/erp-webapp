@@ -6,7 +6,6 @@
 import React from 'react';
 
 const AuthBypass = ({ children }) => {
-  console.log('🚫 AuthBypass: Skipping authentication completely');
   return children;
 };
 

@@ -60,6 +60,30 @@ export const productService = {
     return await apiClient.updateProductDescription(descId, description);
   },
 
+  // =================== PRODUCTO CON DETALLES ===================
+
+  // Obtener producto con detalles completos
+  getProductWithDetails: async (productId) => {
+    return await apiClient.getProductWithDetails(productId);
+  },
+
+  // Obtener descripciones de un producto por Product ID
+  getProductDescriptions: async (productId) => {
+    try {
+      // Intentar obtener todas las descripciones del producto
+      return await apiClient.makeRequest(`/products/${productId}/descriptions`);
+    } catch (error) {
+      // Si es 404, significa que no hay descripciones para este producto
+      if (error.message.includes('404')) {
+        console.log('ℹ️ No hay descripciones disponibles para el producto:', productId);
+        return [];
+      }
+      // Para otros errores, log pero no throw para evitar romper el flujo
+      console.warn('⚠️ Error obteniendo descripciones para producto:', productId, error.message);
+      return [];
+    }
+  },
+
   // =================== PRECIOS ===================
 
   // Obtener precio de producto

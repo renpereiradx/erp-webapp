@@ -28,11 +28,13 @@ import {
   Eye,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  LogIn
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import useProductStore from '@/store/useProductStore';
+import useAuthStore from '@/store/useAuthStore';
 import ProductModal from '@/components/ProductModal';
 import ProductDetailModal from '@/components/ProductDetailModal';
 import DeleteProductModal from '@/components/DeleteProductModal';
@@ -43,6 +45,7 @@ const Products = () => {
   const { theme } = useTheme();
   const location = useLocation();
   const { toasts, success, error: showError, removeToast } = useToast();
+  const { isAuthenticated, login } = useAuthStore();
   const { 
     products, 
     loading: isLoading, 
@@ -241,15 +244,11 @@ const Products = () => {
   // useEffect para cargar categorías cuando hay autenticación
   useEffect(() => {
     const loadCategoriesIfNeeded = async () => {
-      // Solo cargar si no tenemos categorías y hay token
-      const token = localStorage.getItem('authToken');
-      if (categories.length === 0 && token) {
-        console.log('🔄 Products: Loading categories...');
+      if (categories.length === 0) {
         try {
           await fetchCategories();
         } catch (error) {
-          // Error será mostrado por el store en la UI donde sea relevante
-          console.log('Categories loading failed, will be handled by components that need them');
+          // Silent fallback handled by cache system
         }
       }
     };
@@ -371,6 +370,17 @@ const Products = () => {
   //   }
   // };
 
+  // Función para auto-login de desarrollo
+  const handleDevLogin = async () => {
+    try {
+      await login({ username: 'myemail', password: 'mypassword' });
+      success('Auto-login exitoso! Recargando categorías...');
+      await fetchCategories();
+    } catch (error) {
+      showError('Error en auto-login: ' + error.message);
+    }
+  };
+
   const handleConfirmDelete = async (product) => {
     try {
       await deleteProduct(product.id);
@@ -378,7 +388,6 @@ const Products = () => {
       setSelectedProduct(null);
       success(`Producto "${product.name}" eliminado exitosamente`);
     } catch (err) {
-      console.error('Error al eliminar producto:', err);
       showError('Error al eliminar el producto: ' + err.message);
     }
   };
@@ -427,7 +436,7 @@ const Products = () => {
     );
   }
 
-  if (storeError) {
+  if (storeError && !storeError.includes('No se encontraron productos')) {
     return (
       <div className="min-h-screen bg-background text-foreground p-6">
         <div className="max-w-7xl mx-auto">
@@ -444,6 +453,25 @@ const Products = () => {
                 {isNeoBrutalism ? 'ERROR AL CARGAR' : 'Error al cargar'}
               </div>
               <p className="text-muted-foreground mb-4">{storeError}</p>
+              
+              {/* Debug: Mostrar botón de login si no está autenticado */}
+              {!isAuthenticated && (
+                <div className="mb-4">
+                  <button
+                    onClick={handleDevLogin}
+                    style={{
+                      ...getButtonStyles('secondary'),
+                      marginRight: '12px'
+                    }}
+                    onMouseEnter={isNeoBrutalism ? handleButtonHover : undefined}
+                    onMouseLeave={isNeoBrutalism ? handleButtonLeave : undefined}
+                  >
+                    <LogIn className="w-4 h-4 mr-2" />
+                    {isNeoBrutalism ? 'LOGIN RÁPIDO' : 'Login Rápido'}
+                  </button>
+                </div>
+              )}
+              
               <button
                 onClick={() => {
                   clearError();
@@ -480,7 +508,7 @@ const Products = () => {
              'Product Management'}
           </h1>
           <p 
-            className="text-muted-foreground max-w-2xl mx-auto mb-8"
+            className="text-muted-foreground max-w-2xl mx-auto mb-4"
             style={getTypographyStyles('base')}
           >
             {isNeoBrutalism ? 'ADMINISTRA TU INVENTARIO CON LA BUSINESS MANAGEMENT API' :

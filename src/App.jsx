@@ -8,11 +8,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import MainLayout from '@/layouts/MainLayout';
 import Dashboard from '@/pages/Dashboard';
 import Products from '@/pages/Products';
-import ProductsDebug from '@/pages/ProductsDebug';
 import Clients from '@/pages/Clients';
 import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
 import useAuthStore from '@/store/useAuthStore';
+import { apiClient } from '@/services/api';
 import './App.css';
 
 // Componente de página de pedidos (placeholder)
@@ -79,6 +79,19 @@ function App() {
   // Inicializar autenticación al cargar la aplicación
   useEffect(() => {
     initializeAuth();
+    
+    const ensureAutoLogin = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        try {
+          await apiClient.ensureAuthentication();
+        } catch (error) {
+          // Auto-login failed
+        }
+      }
+    };
+    
+    ensureAutoLogin();
   }, [initializeAuth]);
 
   if (loading) {

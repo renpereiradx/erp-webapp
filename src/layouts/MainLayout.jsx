@@ -104,9 +104,7 @@ const MainLayout = ({ children }) => {
 
   // Manejar logout - TEMPORAL: Desactivado
   const handleLogout = () => {
-    console.log('🚫 Logout temporalmente desactivado');
-    // logout();
-    // navigate('/login');
+    // Logout temporalmente desactivado para development
   };
 
   // Helper functions para generar clases según el tema activo

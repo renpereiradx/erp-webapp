@@ -39,6 +39,12 @@ const ProductDetailModal = ({
     tax: ''
   });
   const [editingPrice, setEditingPrice] = useState(false);
+  const [stock, setStock] = useState({
+    current: 0,
+    minimum: 0,
+    maximum: 0,
+    reserved: 0
+  });
   const [stockData, setStockData] = useState({
     quantity: '',
     exp: '',
@@ -62,26 +68,93 @@ const ProductDetailModal = ({
     
     setLoading(true);
     try {
-      // Cargar descripción, precios y stock en paralelo
-      const [descResponse, stockResponse] = await Promise.allSettled([
-        productService.getDescriptionById(product.id).catch(() => null),
-        productService.getStockByProductId(product.id).catch(() => null)
-      ]);
-
-      if (descResponse.status === 'fulfilled' && descResponse.value) {
-        setDescription(descResponse.value.description || '');
+      // ESTRATEGIA MEJORADA: Evitar endpoints que fallan con 500
+      
+      // 1. Primero intentar obtener el producto con detalles completos
+      let productWithDetails = null;
+      try {
+        productWithDetails = await productService.getProductWithDetails(product.id);
+        
+        if (productWithDetails?.description) {
+          setDescription(productWithDetails.description);
+        }
+      } catch (error) {
+        // getProductWithDetails failed, continue with fallback
+        productWithDetails = product; // Usar el producto base como fallback
       }
 
-      if (stockResponse.status === 'fulfilled' && stockResponse.value) {
-        const stock = stockResponse.value;
-        setStockData({
-          quantity: stock.quantity || '',
-          exp: stock.exp || '',
-          entity: { name: stock.entity?.name || '' }
+      // 2. Cargar información adicional solo si es necesario
+      const promises = [];
+      
+      // Solo buscar descripción adicional si no la obtuvimos arriba
+      if (!productWithDetails?.description && !product.description) {
+        promises.push(
+          productService.getProductDescriptions(product.id)
+            .then(descriptions => {
+              if (descriptions && descriptions.length > 0) {
+                setDescription(descriptions[0].description || '');
+              } else {
+                // Sin descripción disponible
+                setDescription('Sin descripción disponible');
+              }
+            })
+            .catch(error => {
+              setDescription('Sin descripción disponible');
+            })
+        );
+      } else if (product.description && !productWithDetails?.description) {
+        // Usar la descripción que ya viene en el producto base
+        setDescription(product.description);
+      } else if (productWithDetails?.description) {
+        // Ya se estableció arriba, no hacer nada
+      } else {
+        // No hay descripción en ningún lado
+        setDescription('Sin descripción disponible');
+      }
+
+      // Intentar obtener stock actualizado
+      promises.push(
+        productService.getStockByProductId(product.id)
+          .then(stockData => {
+            if (stockData) {
+              setStock({
+                current: stockData.current_stock || stockData.quantity || 0,
+                minimum: stockData.minimum_stock || 0,
+                maximum: stockData.maximum_stock || 0,
+                reserved: stockData.reserved_stock || 0
+              });
+            }
+          })
+          .catch(error => {
+            if (product.stock_quantity !== undefined) {
+              setStock({
+                current: product.stock_quantity,
+                minimum: 0,
+                maximum: 0,
+                reserved: 0
+              });
+            }
+          })
+      );
+
+      if (promises.length > 0) {
+        await Promise.allSettled(promises);
+      }
+
+    } catch (error) {
+      setError('Error al cargar detalles del producto: ' + error.message);
+      
+      if (product.description) {
+        setDescription(product.description);
+      }
+      if (product.stock_quantity !== undefined) {
+        setStock({
+          current: product.stock_quantity,
+          minimum: 0,
+          maximum: 0,
+          reserved: 0
         });
       }
-    } catch (err) {
-      setError('Error al cargar detalles del producto');
     } finally {
       setLoading(false);
     }

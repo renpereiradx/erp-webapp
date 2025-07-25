@@ -156,9 +156,7 @@ const Login = () => {
     );
     
     if (isTestLogin) {
-      console.log('🧪 Using test credentials, simulating successful login');
       try {
-        // Simular login exitoso con datos mock
         const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifQ.mock';
         localStorage.setItem('auth_token', mockToken);
         
@@ -186,25 +184,20 @@ const Login = () => {
           error: null,
         });
         
-        console.log('🧪 Test login successful, navigating to dashboard');
         navigate('/dashboard');
         return;
       } catch (err) {
-        console.error('Error in test login:', err);
+        // Test login error
       }
     }
     
     try {
-      console.log('🔐 Attempting real API login...');
       await login({
         username: formData.username,
         password: formData.password
       });
-      console.log('🔐 Real API login successful, navigating to dashboard');
       navigate('/dashboard');
     } catch (err) {
-      console.error('Error de login:', err);
-      // Si falla el login real pero hay credenciales de test, mostrar ayuda
       if (!isTestLogin) {
         setFormErrors({
           password: 'Login failed. Try test credentials: admin/admin123, test/test123, demo/demo123, user/user123'

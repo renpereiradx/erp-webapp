@@ -9,13 +9,7 @@ export const useAuthDebug = () => {
   const authState = useAuthStore();
   
   useEffect(() => {
-    console.log('🔍 AuthDebug: Estado de autenticación actualizado', {
-      isAuthenticated: authState.isAuthenticated,
-      loading: authState.loading,
-      user: authState.user,
-      token: localStorage.getItem('token') ? '✅ Token presente' : '❌ Sin token',
-      timestamp: new Date().toISOString()
-    });
+    // Debug logging removed for production
   }, [authState.isAuthenticated, authState.loading, authState.user]);
   
   return authState;

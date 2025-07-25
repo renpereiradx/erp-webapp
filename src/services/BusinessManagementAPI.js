@@ -17,21 +17,64 @@ class BusinessManagementAPI {
   // ============================================================================
 
   getAuthHeaders() {
-    const token = localStorage.getItem('authToken');
+    let token = localStorage.getItem('authToken');
     const headers = token ? { 'Authorization': token } : {};
-    
-    // Debug info
-    console.log('🔐 getAuthHeaders llamado:', {
-      hasToken: !!token,
-      tokenLength: token ? token.length : 0,
-      tokenPreview: token ? `${token.substring(0, 20)}...` : 'N/A'
-    });
-    
     return headers;
+  }
+
+  async ensureAuthentication() {
+    const token = localStorage.getItem('authToken');
+    const isAutoLoginEnabled = import.meta.env.VITE_AUTO_LOGIN === 'true';
+    
+    if (!token && isAutoLoginEnabled) {
+      const newToken = await this.autoLogin();
+      return !!newToken;
+    }
+    return !!token;
+  }
+
+  async autoLogin() {
+    try {
+      const response = await fetch(`${this.baseUrl}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: 'myemail',
+          password: 'mypassword'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.token) {
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('userData', JSON.stringify({
+            id: data.role_id || '1',
+            username: 'myemail',
+            email: 'myemail',
+            role: 'admin',
+            role_id: data.role_id || 'admin',
+            name: 'Usuario Auto-Login',
+            company: 'ERP Systems Inc.',
+            lastLogin: new Date().toISOString(),
+          }));
+          return data.token;
+        }
+      }
+    } catch (error) {
+      // Auto-login falló silenciosamente
+    }
+    return null;
   }
 
   async makeRequest(endpoint, options = {}) {
     const url = `${this.baseUrl}${endpoint}`;
+    
+    // Asegurar autenticación antes de hacer la request
+    await this.ensureAuthentication();
+    
     const config = {
       timeout: this.timeout,
       headers: {
@@ -47,48 +90,73 @@ class BusinessManagementAPI {
       
       if (!response.ok) {
         if (response.status === 401) {
+          // Intentar auto-login una vez más
+          const newToken = await this.autoLogin();
+          if (newToken) {
+            // Reintentar con el nuevo token
+            const retryConfig = {
+              ...config,
+              headers: {
+                ...config.headers,
+                ...this.getAuthHeaders()
+              }
+            };
+            const retryResponse = await fetch(url, retryConfig);
+            if (retryResponse.ok) {
+              const contentType = retryResponse.headers.get('content-type');
+              if (contentType && contentType.includes('application/json')) {
+                return await retryResponse.json();
+              }
+              
+              // Si es texto plano, verificar si es un mensaje de error conocido
+              const textResponse = await retryResponse.text();
+              if (textResponse === 'Product not found' || textResponse.includes('not found')) {
+                throw new Error('Producto no encontrado');
+              }
+              
+              return textResponse;
+            }
+          }
           this.handleUnauthorized();
           throw new Error('Token expirado o inválido');
         }
+        
+        // Para errores 404 en endpoints específicos, dar información más clara
+        if (response.status === 404) {
+          if (endpoint.includes('/descriptions')) {
+            throw new Error('No hay descripciones disponibles para este producto');
+          }
+          if (endpoint.includes('/details')) {
+            throw new Error('Detalles del producto no disponibles');
+          }
+          if (endpoint.includes('/products/') && !endpoint.includes('/products/products/')) {
+            throw new Error('Producto no encontrado');
+          }
+        }
+        
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
-        return await response.json();
+        const data = await response.json();
+        return data;
       }
       
-      return await response.text();
+      // Si es texto plano, verificar si es un mensaje de error conocido
+      const textResponse = await response.text();
+      if (textResponse === 'Product not found' || textResponse.includes('not found')) {
+        throw new Error('Producto no encontrado');
+      }
+      
+      return textResponse;
     } catch (error) {
-      // Solo hacer log de errores que no sean de autenticación para reducir ruido
-      const isAuthError = error.message.includes('Token expirado') || 
-                         error.message.includes('401') ||
-                         error.message.includes('Authorization');
-      
-      const isDebugMode = localStorage.getItem('debug-mode') === 'true';
-      
-      if (!isAuthError || isDebugMode) {
-        console.error('API Request failed:', error);
-      }
-      
       throw error;
     }
   }
 
   handleUnauthorized() {
     localStorage.removeItem('authToken');
-    // TEMPORAL: Desactivar evento para evitar redirecciones automáticas
-    // Solo log si hay debugging activo
-    const isDebugMode = localStorage.getItem('debug-mode') === 'true';
-    if (isDebugMode) {
-      console.warn('🔐 Token expirado o inválido - evento unauthorized desactivado temporalmente');
-    }
-    /*
-    // Emit custom event for unauthorized access
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('api:unauthorized'));
-    }
-    */
   }
 
   // ============================================================================
@@ -136,12 +204,7 @@ class BusinessManagementAPI {
   // ============================================================================
 
   async getCategories() {
-    console.log('🏷️ getCategories llamado');
-    const token = localStorage.getItem('authToken');
-    console.log('🏷️ Token para categorías:', token ? 'Presente' : 'Ausente');
-    
     return this.makeRequest('/categories');
-    // Nota: Aunque la documentación indica que es público, el servidor requiere autenticación
   }
 
   // ============================================================================
@@ -149,7 +212,7 @@ class BusinessManagementAPI {
   // ============================================================================
 
   async getProducts(page = 1, pageSize = 10) {
-    return this.makeRequest(`/products/products/${page}/${pageSize}`);
+    return this.getProductsWithBasicDetails(page, pageSize);
   }
 
   async getProductById(id) {
@@ -160,33 +223,47 @@ class BusinessManagementAPI {
     return this.makeRequest(`/products/products/name/${encodeURIComponent(name)}`);
   }
 
-  // Búsqueda inteligente: por ID o nombre (nuestra implementación)
   async searchProducts(searchTerm) {
-    // Si el término parece un ID, intentar búsqueda por ID primero
-    const looksLikeId = /^[a-zA-Z0-9_-]{10,}$/.test(searchTerm);
+    // Detectar si parece un ID: entre 8-30 caracteres alfanuméricos/guiones
+    const looksLikeId = /^[a-zA-Z0-9_-]{8,30}$/.test(searchTerm) && 
+                       !/\s/.test(searchTerm) && 
+                       searchTerm.length >= 8;
     
     if (looksLikeId) {
       try {
         const product = await this.getProductById(searchTerm);
         return Array.isArray(product) ? product : [product];
       } catch (error) {
-        console.log(`ID search failed for "${searchTerm}", trying name search...`);
-        return await this.searchProductsByName(searchTerm);
+        // Solo hacer fallback a nombre si el error NO indica que es un ID válido pero inexistente
+        if (!error.message.includes('Producto no encontrado') && !error.message.includes('not found')) {
+          try {
+            return await this.searchProductsByName(searchTerm);
+          } catch (nameError) {
+            return [];
+          }
+        } else {
+          return [];
+        }
       }
     } else {
-      return await this.searchProductsByName(searchTerm);
+      try {
+        return await this.searchProductsByName(searchTerm);
+      } catch (error) {
+        return [];
+      }
     }
   }
 
   async createProduct(productData) {
-    console.log('🚀 createProduct llamado con:', productData);
-    
     const payload = {
       name: productData.name,
-      id_category: productData.id_category || productData.categoryId || productData.category_id
+      id_category: productData.id_category || productData.categoryId || productData.category_id,
+      state: productData.state !== undefined ? productData.state : true
     };
-    
-    console.log('🚀 Payload a enviar:', payload);
+
+    if (productData.description && productData.description.trim()) {
+      payload.description = productData.description.trim();
+    }
     
     return this.makeRequest('/products/', {
       method: 'POST',
@@ -195,14 +272,19 @@ class BusinessManagementAPI {
   }
 
   async updateProduct(id, productData) {
+    const payload = {
+      name: productData.name,
+      state: productData.state,
+      id_category: productData.id_category || productData.categoryId || productData.category_id
+    };
+
+    if (productData.description !== undefined) {
+      payload.description = productData.description.trim();
+    }
+
     return this.makeRequest(`/products/products/${id}`, {
       method: 'PUT',
-      body: JSON.stringify({
-        name: productData.name,
-        state: productData.state,
-        is_active: productData.is_active,
-        id_category: productData.categoryId || productData.category_id
-      })
+      body: JSON.stringify(payload)
     });
   }
 
@@ -210,6 +292,30 @@ class BusinessManagementAPI {
     return this.makeRequest(`/products/products/delete/${id}`, {
       method: 'PUT'
     });
+  }
+
+  // ============================================================================
+  // MÉTODOS OPTIMIZADOS PARA PRODUCTOS CON DETALLES (API Real)
+  // ============================================================================
+
+  async getProductsWithBasicDetails(page = 1, pageSize = 10) {
+    return this.makeRequest(`/products/products/${page}/${pageSize}`);
+  }
+
+  async getProductWithDetails(id) {
+    try {
+      return await this.makeRequest(`/products/${id}/details`);
+    } catch (error) {
+      return await this.getProductById(id);
+    }
+  }
+
+  async searchProductsWithDetails(name) {
+    try {
+      return await this.makeRequest(`/products/search/details/${encodeURIComponent(name)}`);
+    } catch (error) {
+      return await this.searchProductsByName(name);
+    }
   }
 
   // ============================================================================

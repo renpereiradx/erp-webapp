@@ -60,9 +60,7 @@ const ProductModal = ({
     if (isOpen && categories.length === 0) {
       setCategoriesLoading(true);
       
-      // Verificar token antes de hacer la llamada
       const token = localStorage.getItem('authToken');
-      console.log('ProductModal: Verificando token para categorías:', token ? 'Presente' : 'Ausente');
       
       if (!token) {
         setCategoriesError('Debe iniciar sesión para cargar categorías');
@@ -72,11 +70,9 @@ const ProductModal = ({
       
       fetchCategories()
         .then(() => {
-          console.log('Categorías cargadas exitosamente');
           setCategoriesError('');
         })
         .catch((err) => {
-          console.warn('Error cargando categorías:', err.message);
           setCategoriesError(err.message || 'Error cargando categorías');
         })
         .finally(() => {
@@ -320,7 +316,6 @@ const ProductModal = ({
       onSuccess && onSuccess();
       onClose();
     } catch (err) {
-      console.error('Error en ProductModal:', err);
       setError(err.message || 'Error al guardar el producto y descripción');
     } finally {
       setLoading(false);

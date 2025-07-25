@@ -6,6 +6,8 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { productService } from '@/services/productService';
+import { categoryCacheService } from '@/services/categoryCacheService';
+import { apiClient } from '@/services/api';
 
 const useProductStore = create(
   devtools(
@@ -60,53 +62,70 @@ const useProductStore = create(
       // =================== API CALLS ===================
 
       fetchCategories: async () => {
+        const currentCategories = get().categories;
+        if (currentCategories && currentCategories.length > 0) {
+          return currentCategories;
+        }
+
         set({ loading: true, error: null });
         
         try {
-          console.log('Obteniendo categorías desde la API...');
-          
-          // Verificar que haya token disponible (más robusto)
-          const token = localStorage.getItem('authToken');
-          console.log('Token check:', token ? 'Token presente' : 'Token ausente');
-          
-          if (!token || token.trim() === '') {
-            throw new Error('AUTHENTICATION_REQUIRED');
-          }
-          
-          console.log('Token disponible, haciendo petición a /categories...');
-          const response = await productService.getCategories();
-          console.log('Respuesta recibida:', response);
-          
-          // La respuesta viene en formato { "categories": [...] } según el ejemplo de Postman
-          const categories = response.categories || response.data || (Array.isArray(response) ? response : []);
+          const categories = await categoryCacheService.getCategories(apiClient);
           
           if (categories && categories.length > 0) {
-            console.log('Categorías obtenidas de la API:', categories);
             set({ categories: categories, loading: false });
             return categories;
           } else {
-            throw new Error('API_EMPTY_RESPONSE');
+            throw new Error('No se pudieron cargar categorías');
           }
         } catch (error) {
-          console.error('Error obteniendo categorías:', error.message);
+          const fallbackCategories = categoryCacheService.getFallbackCategories();
+          set({ 
+            categories: fallbackCategories, 
+            loading: false, 
+            error: 'Usando categorías offline - ' + error.message 
+          });
           
-          // Determinar el tipo de error para mostrar mensaje apropiado
-          let errorMessage = 'Error desconocido';
-          if (error.message === 'AUTHENTICATION_REQUIRED') {
-            errorMessage = 'Debe iniciar sesión para cargar categorías';
-          } else if (error.message === 'API_EMPTY_RESPONSE') {
-            errorMessage = 'No se encontraron categorías en el servidor';
-          } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-            errorMessage = 'Sesión expirada. Debe iniciar sesión nuevamente';
-          } else if (error.message.includes('Network') || error.message.includes('fetch')) {
-            errorMessage = 'Error de conexión. Verifique su conexión a internet';
-          } else {
-            errorMessage = 'Error del servidor al cargar categorías';
+          return fallbackCategories;
+        }
+      },
+
+      // =================== GESTIÓN DE CACHÉ DE CATEGORÍAS ===================
+
+      refreshCategoriesFromAPI: async () => {
+        set({ loading: true, error: null });
+        
+        try {
+          const categories = await categoryCacheService.forceRefreshFromAPI(apiClient);
+          
+          set({ categories: categories, loading: false, error: null });
+          return categories;
+        } catch (error) {
+          const currentState = get();
+          if (currentState.categories.length > 0) {
+            set({ loading: false, error: 'No se pudo actualizar, usando caché local' });
+            return currentState.categories;
           }
           
-          set({ categories: [], loading: false, error: errorMessage });
-          throw new Error(errorMessage);
+          const fallbackCategories = categoryCacheService.getFallbackCategories();
+          set({ 
+            categories: fallbackCategories, 
+            loading: false, 
+            error: 'Usando categorías offline - ' + error.message 
+          });
+          return fallbackCategories;
         }
+      },
+
+      clearCategoriesCache: () => {
+        categoryCacheService.clearCache();
+      },
+
+      /**
+       * Obtiene información del estado del caché
+       */
+      getCacheInfo: () => {
+        return categoryCacheService.getCacheInfo();
       },
 
       fetchProducts: async (page = null, pageSize = null, searchTerm = '') => {
@@ -117,36 +136,29 @@ const useProductStore = create(
         set({ loading: true, error: null });
 
         try {
-          // Verificar si hay token (consistente con categorías)
-          const token = localStorage.getItem('authToken');
-          console.log('Token check para productos:', token ? 'Token presente' : 'Token ausente');
-          
-          if (!token || token.trim() === '') {
-            const errorMessage = 'Debe iniciar sesión para acceder a los productos';
-            set({ 
-              products: [], 
-              totalProducts: 0, 
-              totalPages: 0, 
-              loading: false, 
-              error: errorMessage 
-            });
-            throw new Error(errorMessage);
-          }
-
           let response;
           let products = [];
           let totalCount = 0;
           
-          console.log('🚀 Intentando obtener productos desde API...');
-          
           if (searchTerm && searchTerm.trim()) {
-            console.log('📊 Búsqueda con término:', searchTerm.trim());
-            // Usar búsqueda por ID o nombre
             response = await productService.searchProducts(searchTerm.trim());
             products = Array.isArray(response) ? response : [response];
             totalCount = products.length;
             
-            // Para búsquedas, simular paginación local
+            if (totalCount === 0) {
+              set({
+                products: [],
+                totalProducts: 0,
+                totalPages: 0,
+                currentPage: 1,
+                pageSize: currentPageSize,
+                loading: false,
+                lastSearchTerm: searchTerm.trim(),
+                error: null
+              });
+              return { data: [], total: 0, message: `No se encontraron productos para "${searchTerm.trim()}"` };
+            }
+            
             const startIndex = (currentPage - 1) * currentPageSize;
             const endIndex = startIndex + currentPageSize;
             const paginatedProducts = products.slice(startIndex, endIndex);
@@ -158,15 +170,13 @@ const useProductStore = create(
               currentPage: currentPage,
               pageSize: currentPageSize,
               loading: false,
-              lastSearchTerm: searchTerm.trim()
+              lastSearchTerm: searchTerm.trim(),
+              error: null
             });
 
             return { data: paginatedProducts, total: totalCount };
           } else {
-            console.log('📋 Obteniendo productos paginados:', { currentPage, currentPageSize });
-            // Usar paginación normal de la API
             response = await productService.getProducts(currentPage, currentPageSize);
-            console.log('📦 Respuesta de productos:', response);
             products = Array.isArray(response) ? response : [response];
             totalCount = products.length;
             
@@ -183,8 +193,6 @@ const useProductStore = create(
             return { data: products, total: totalCount };
           }
         } catch (apiError) {
-          console.error('❌ Error obteniendo productos:', apiError.message);
-          
           const errorMessage = `Error al cargar productos: ${apiError.message}`;
           set({
             products: [],
@@ -255,7 +263,6 @@ const useProductStore = create(
 
           return product;
         } catch (error) {
-          console.error('Error fetching product:', error);
           set({
             error: error.message || 'Error al cargar producto',
             loading: false
@@ -280,7 +287,6 @@ const useProductStore = create(
 
           return newProduct;
         } catch (error) {
-          console.error('Error creating product:', error);
           set({
             error: error.message || 'Error al crear producto',
             loading: false
@@ -309,7 +315,6 @@ const useProductStore = create(
 
           return updatedProduct;
         } catch (error) {
-          console.error('Error updating product:', error);
           set({
             error: error.message || 'Error al actualizar producto',
             loading: false
@@ -333,7 +338,6 @@ const useProductStore = create(
 
           return true;
         } catch (error) {
-          console.error('Error deleting product:', error);
           set({
             error: error.message || 'Error al eliminar producto',
             loading: false

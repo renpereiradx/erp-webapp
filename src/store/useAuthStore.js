@@ -9,7 +9,7 @@ import { authService } from '@/services/authService';
 
 const useAuthStore = create(
   devtools(
-    persist(
+    // persist(  // ← DESHABILITADO TEMPORALMENTE PARA DEBUGGING
       (set, get) => ({
         // Estado inicial
         user: null,
@@ -26,18 +26,14 @@ const useAuthStore = create(
 
         // Función de login
         login: async (credentials) => {
-          console.log('🔑 AuthStore: login called with credentials:', credentials?.username);
           set({ loading: true, error: null });
           try {
-            // Llamada a API de login usando el servicio de autenticación
             const response = await authService.login(credentials);
-            console.log('🔑 AuthStore: login response received:', { hasUser: !!response.user, hasToken: !!response.token });
             
             const { user, token, role_id } = response;
             
-            // Guardar token en localStorage
             localStorage.setItem('authToken', token);
-            console.log('🔑 AuthStore: token saved to localStorage');
+            localStorage.setItem('userData', JSON.stringify(user));
             
             set({
               user,
@@ -48,11 +44,9 @@ const useAuthStore = create(
               error: null,
             });
             
-            console.log('🔑 AuthStore: state updated, user authenticated');
             return { user, token, role_id };
           } catch (error) {
             const errorMessage = error.message || 'Error al iniciar sesión';
-            console.error('🔑 AuthStore: login error:', errorMessage);
             set({
               error: errorMessage,
               loading: false,
@@ -95,8 +89,8 @@ const useAuthStore = create(
 
         // Función de logout
         logout: () => {
-          // Limpiar token del localStorage
           localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
           
           set({
             user: null,
@@ -110,19 +104,12 @@ const useAuthStore = create(
 
         // Verificar token existente al inicializar la app
         checkAuth: async () => {
-          console.log('🔍 AuthStore: checkAuth iniciado');
-          
           const token = localStorage.getItem('authToken');
-          console.log('🔍 AuthStore: token encontrado:', token ? 'SÍ' : 'NO');
           
           if (!token) {
-            console.log('🔍 AuthStore: Sin token, marcando como no autenticado');
             set({ isAuthenticated: false, loading: false });
             return;
           }
-          
-          // Establecer como autenticado inmediatamente si hay token
-          console.log('🔍 AuthStore: Token encontrado, autenticando inmediatamente');
           
           const testUser = {
             id: '2pmK5NPfHiRwZUkcd3d3cETC2JW',
@@ -143,8 +130,6 @@ const useAuthStore = create(
             loading: false,
             error: null,
           });
-          
-          console.log('🔍 AuthStore: Usuario autenticado exitosamente');
         },
 
         // Actualizar perfil de usuario
@@ -204,17 +189,40 @@ const useAuthStore = create(
 
         // Inicializar autenticación desde localStorage
         initializeAuth: () => {
+          set({ loading: true });
+          
           const token = localStorage.getItem('authToken');
-          console.log('🔑 AuthStore: inicializando autenticación', token ? 'Token encontrado' : 'Sin token');
           
           if (token) {
-            // Verificar que el token sea válido haciendo una llamada a la API
-            set({ loading: true });
+            const userData = localStorage.getItem('userData');
+            let user = null;
             
-            // Simplemente establecer el estado como autenticado si hay token
-            // La validación real se hará cuando se hagan llamadas a la API
+            if (userData) {
+              try {
+                user = JSON.parse(userData);
+              } catch (error) {
+                // Error parsing, use default data
+              }
+            }
+            
+            // Si no hay datos de usuario, usar datos por defecto
+            if (!user) {
+              user = {
+                id: '2pmK5NPfHiRwZUkcd3d3cETC2JW',
+                username: 'myemail',
+                email: 'myemail',
+                role: 'admin',
+                role_id: 'JZkiQB',
+                name: 'Usuario',
+                company: 'ERP Systems Inc.',
+                lastLogin: new Date().toISOString(),
+              };
+            }
+            
             set({
+              user,
               token,
+              roleId: user.role_id || 'JZkiQB',
               isAuthenticated: true,
               loading: false,
               error: null
@@ -240,22 +248,27 @@ const useAuthStore = create(
           loading: false,
           error: null,
         }),
-      }),
-      {
-        name: 'auth-store', // Nombre para persistencia
-        partialize: (state) => ({
-          user: state.user,
-          token: state.token,
-          roleId: state.roleId,
-          isAuthenticated: state.isAuthenticated,
-        }),
-      }
-    ),
+      }), // ← CIERRO PARÉNTESIS DEL STORE
+      // {
+      //   name: 'auth-store', // Nombre para persistencia
+      //   partialize: (state) => ({
+      //     user: state.user,
+      //     token: state.token,
+      //     roleId: state.roleId,
+      //     isAuthenticated: state.isAuthenticated,
+      //   }),
+      // }
+    // ), // ← PERSIST DESHABILITADO
     {
       name: 'auth-store', // Nombre para DevTools
     }
   )
 );
+
+// Hacer el store disponible globalmente para debugging
+if (typeof window !== 'undefined') {
+  window.useAuthStore = useAuthStore;
+}
 
 export default useAuthStore;
 
