@@ -3,10 +3,7 @@ import { apiClient } from './api';
 export const supplierService = {
   getSuppliers: async (params = {}) => {
     try {
-      const { page = 1, limit = 10 } = params;
-      // El endpoint de la API para proveedores es /supplier/{page}/{pageSize}
-      const response = await apiClient.getSuppliers(page, limit);
-      return response; // Asumimos que la API devuelve un objeto con { data, pagination }
+      return await apiClient.getSuppliers(params);
     } catch (error) {
       console.error('Error obteniendo proveedores:', error);
       throw new Error(error.message || 'Error al obtener la lista de proveedores');

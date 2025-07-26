@@ -9,53 +9,7 @@ export const clientService = {
   // Obtener todos los clientes con paginación y filtros
   getClients: async (params = {}) => {
     try {
-      const { page = 1, limit = 10, search, type, status, sortBy, sortOrder } = params;
-      
-      // La API soporta paginación, la usamos.
-      const response = await apiClient.getClients(page, limit);
-      
-      let filteredClients = response.data; // Asumimos que la respuesta ya está paginada
-
-      // El filtrado y ordenamiento se mantiene en el cliente por ahora
-      if (search) {
-        const searchTerm = search.toLowerCase();
-        filteredClients = filteredClients.filter(client => 
-          client.name?.toLowerCase().includes(searchTerm) ||
-          client.last_name?.toLowerCase().includes(searchTerm) ||
-          client.document_id?.toLowerCase().includes(searchTerm) ||
-          client.contact?.toLowerCase().includes(searchTerm)
-        );
-      }
-      
-      if (type) {
-        filteredClients = filteredClients.filter(client => client.type === type);
-      }
-      
-      if (status) {
-        filteredClients = filteredClients.filter(client => client.status === status);
-      }
-      
-      if (sortBy) {
-          filteredClients.sort((a, b) => {
-            let valueA = a[sortBy] || '';
-            let valueB = b[sortBy] || '';
-            
-            if (typeof valueA === 'string') {
-              valueA = valueA.toLowerCase();
-              valueB = valueB.toLowerCase();
-            }
-            
-            if (sortOrder === 'desc') {
-              return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
-            }
-            return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
-          });
-      }
-
-      return {
-        data: filteredClients,
-        pagination: response.pagination // Usamos la paginación de la API
-      };
+      return await apiClient.getClients(params);
     } catch (error) {
       console.error('Error obteniendo clientes:', error);
       throw new Error(error.message || 'Error al obtener la lista de clientes');

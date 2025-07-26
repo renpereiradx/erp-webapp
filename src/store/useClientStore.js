@@ -5,40 +5,66 @@ import { clientService } from '@/services/clientService';
 const useClientStore = create(
   devtools(
     (set, get) => ({
-      // Estado inicial
+      // Estado inicial mejorado
       clients: [],
       loading: false,
       error: null,
-      pagination: {
-        current_page: 1,
-        per_page: 10,
-        total: 0,
-        total_pages: 0,
+      lastSearchTerm: '',
+      currentPage: 1,
+      totalPages: 1,
+      totalClients: 0,
+      pageSize: 10,
+
+      // Limpiar errores
+      clearError: () => set({ error: null }),
+
+      // Limpiar la lista de clientes
+      clearClients: () => set({ clients: [], totalClients: 0, currentPage: 1, totalPages: 1, lastSearchTerm: '' }),
+
+      // Cambiar tamaño de página
+      changePageSize: async (newPageSize) => {
+        const { lastSearchTerm } = get();
+        set({ pageSize: newPageSize, currentPage: 1 });
+        await get().searchClients(lastSearchTerm, 1, newPageSize);
       },
 
-      // Acciones
-      fetchClients: async (page = 1, pageSize = 10) => {
-        set({ loading: true, error: null });
+      // Cargar una página específica
+      loadPage: async (page) => {
+        const { lastSearchTerm, pageSize } = get();
+        await get().searchClients(lastSearchTerm, page, pageSize);
+      },
+
+      // Acción principal de búsqueda y paginación
+      searchClients: async (searchTerm = '', page = 1, limit = 10) => {
+        set({ loading: true, error: null, lastSearchTerm: searchTerm });
         try {
-          const response = await clientService.getClients({ page, limit: pageSize });
+          // Asumimos que el servicio puede manejar la búsqueda y paginación
+          const response = await clientService.getClients({ page, limit, search: searchTerm });
+          
+          // La respuesta del servicio debe tener un formato consistente
+          // con paginación o ser un array plano si no hay paginación.
+          const isPaginated = response.data && response.pagination;
+          
           set({
-            clients: response.data,
-            pagination: response.pagination,
+            clients: isPaginated ? response.data : response,
+            currentPage: isPaginated ? response.pagination.current_page : 1,
+            totalPages: isPaginated ? response.pagination.total_pages : 1,
+            totalClients: isPaginated ? response.pagination.total : response.length,
             loading: false,
           });
+
         } catch (error) {
           set({ error: error.message, loading: false });
         }
       },
 
+      // Acciones CRUD (sin cambios, pero se benefician del estado mejorado)
       createClient: async (clientData) => {
         set({ loading: true });
         try {
-          const newClient = await clientService.createClient(clientData);
-          set((state) => ({ 
-            clients: [...state.clients, newClient],
-            loading: false 
-          }));
+          await clientService.createClient(clientData);
+          // Refrescar la última búsqueda para ver el nuevo cliente
+          await get().loadPage(get().currentPage);
         } catch (error) {
           set({ loading: false, error: error.message });
           throw error;
@@ -48,11 +74,8 @@ const useClientStore = create(
       updateClient: async (id, clientData) => {
         set({ loading: true });
         try {
-          const updatedClient = await clientService.updateClient(id, clientData);
-          set((state) => ({
-            clients: state.clients.map((c) => (c.id === id ? updatedClient : c)),
-            loading: false,
-          }));
+          await clientService.updateClient(id, clientData);
+          await get().loadPage(get().currentPage);
         } catch (error) {
           set({ loading: false, error: error.message });
           throw error;
@@ -63,10 +86,7 @@ const useClientStore = create(
         set({ loading: true });
         try {
           await clientService.deleteClient(id);
-          set((state) => ({
-            clients: state.clients.filter((c) => c.id !== id),
-            loading: false,
-          }));
+          await get().loadPage(get().currentPage);
         } catch (error) {
           set({ loading: false, error: error.message });
           throw error;

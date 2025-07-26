@@ -255,6 +255,11 @@ components:
         state:
           type: boolean
           example: true
+        product_type:
+          type: string
+          enum: ["PHYSICAL", "SERVICE"]
+          example: "PHYSICAL"
+          description: "Tipo de producto - PHYSICAL para productos físicos, SERVICE para servicios"
         description:
           type: string
           example: "Zapatillas deportivas de alta calidad con tecnología Air Max para máximo confort"
@@ -282,6 +287,184 @@ components:
         id_user:
           type: string
           example: "2pmK5NPfHiRwZUkcd3d3cETC2JW"
+
+    ProductWithDescriptionResponse:
+      type: object
+      description: Respuesta optimizada con producto y descripción
+      properties:
+        id:
+          type: string
+          description: ID único del producto
+          example: "GA4w4YlYpVP1LNji17o9FKbp8Dg"
+        name:
+          type: string
+          description: Nombre del producto
+          example: "Onion - Dried"
+        state:
+          type: boolean
+          description: Estado del producto (activo/inactivo)
+          example: true
+        product_type:
+          type: string
+          enum: ["PHYSICAL", "SERVICE"]
+          description: Tipo de producto
+          example: "PHYSICAL"
+        category:
+          type: object
+          description: Información de la categoría
+          properties:
+            id:
+              type: integer
+              example: 9
+            name:
+              type: string
+              example: "Baby"
+            description:
+              type: string
+              example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        description:
+          type: object
+          description: Descripción del producto
+          properties:
+            id:
+              type: integer
+              description: ID de la descripción
+              example: 15
+            description:
+              type: string
+              description: Texto de la descripción
+              example: "Cebolla deshidratada de alta calidad para uso culinario"
+            effective_date:
+              type: string
+              format: date-time
+              description: Fecha de efectividad de la descripción
+              example: "2025-01-15T10:30:00Z"
+            user_id:
+              type: string
+              description: ID del usuario que creó la descripción
+              example: "2pmK5NPfHiRwZUkcd3d3cETC2JW"
+
+    ProductEnriched:
+      type: object
+      description: Producto enriquecido con información completa de stock, precios y descripción
+      properties:
+        id:
+          type: string
+          description: ID único del producto
+          example: "GA4w4YlYpVP1LNji17o9FKbp8Dg"
+        name:
+          type: string
+          description: Nombre del producto
+          example: "Pelota de Fútbol"
+        state:
+          type: boolean
+          description: Estado del producto (activo/inactivo)
+          example: true
+        category:
+          $ref: '#/components/schemas/Category'
+        category_id:
+          type: integer
+          nullable: true
+          description: ID de la categoría
+          example: 1
+        category_name:
+          type: string
+          nullable: true
+          description: Nombre de la categoría
+          example: "Deportes"
+        product_type:
+          type: string
+          description: Tipo de producto
+          enum: ["PHYSICAL", "SERVICE"]
+          example: "PHYSICAL"
+        user_id:
+          type: string
+          nullable: true
+          description: ID del usuario que creó el producto
+          example: "user123"
+        # Información de precios
+        price_id:
+          type: integer
+          nullable: true
+          description: ID del registro de precio
+          example: 15
+        purchase_price:
+          type: number
+          format: float
+          nullable: true
+          description: Precio de compra del producto
+          example: 25.99
+        price_updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Fecha de última actualización del precio
+          example: "2025-07-24T10:30:00Z"
+        price_updated_by:
+          type: string
+          nullable: true
+          description: Usuario que actualizó el precio por última vez
+          example: "user123"
+        # Información de stock
+        stock_id:
+          type: integer
+          nullable: true
+          description: ID del registro de stock
+          example: 42
+        stock_quantity:
+          type: integer
+          nullable: true
+          description: Cantidad actual en stock
+          example: 15
+        stock_updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Fecha de última actualización del stock
+          example: "2025-07-24T09:15:00Z"
+        stock_updated_by:
+          type: string
+          nullable: true
+          description: Usuario que actualizó el stock por última vez
+          example: "user123"
+        # Información de descripción
+        description_id:
+          type: integer
+          nullable: true
+          description: ID del registro de descripción
+          example: 8
+        description:
+          type: string
+          nullable: true
+          description: Descripción del producto
+          example: "Pelota de fútbol oficial FIFA, tamaño reglamentario"
+        # Campos calculados
+        stock_status:
+          type: string
+          description: Estado calculado del stock
+          enum: ["out_of_stock", "low_stock", "medium_stock", "in_stock"]
+          example: "medium_stock"
+        price_formatted:
+          type: string
+          description: Precio formateado como moneda
+          example: "$25.99"
+        has_valid_stock:
+          type: boolean
+          description: Indica si el producto tiene información válida de stock
+          example: true
+        has_valid_price:
+          type: boolean
+          description: Indica si el producto tiene información válida de precio
+          example: true
+      required:
+        - id
+        - name
+        - state
+        - product_type
+        - stock_status
+        - price_formatted
+        - has_valid_stock
+        - has_valid_price
 
     ProductDescriptionRequest:
       type: object
@@ -768,6 +951,7 @@ paths:
             example:
               name: "Puma MB.01"
               id_category: 5
+              product_type: "PHYSICAL"
               description: "Zapatillas de baloncesto de alta performance diseñadas por LaMelo Ball"
       responses:
         '201':
@@ -787,25 +971,45 @@ paths:
     get:
       tags:
         - Products
-      summary: Obtener producto por ID
-      description: Recupera los detalles de un producto específico
+      summary: Obtener producto enriquecido por ID
+      description: |
+        Recupera los detalles completos de un producto específico incluyendo:
+        - Información básica del producto
+        - Stock actual y historial
+        - Precios y fechas de actualización
+        - Descripción del producto
+        - Campos calculados (estado de stock, precio formateado)
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
-          description: ID del producto
+          description: ID único del producto
           schema:
             type: string
-            example: "bcYdWdKNR"
+            example: "GA4w4YlYpVP1LNji17o9FKbp8Dg"
       responses:
         '200':
-          description: Detalles del producto
+          description: Producto enriquecido obtenido exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
+                $ref: '#/components/schemas/ProductEnriched'
+        '401':
+          description: Token de autenticación requerido o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
           content:
             application/json:
               schema:
@@ -866,6 +1070,62 @@ paths:
                   metadata:
                     po_id: 9
                     source: "purchase_order_cancellation"
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Token no válido o expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /products/{id}/with-description:
+    get:
+      tags:
+        - Products
+      summary: Obtener producto con descripción
+      description: |
+        Obtiene un producto con su descripción de forma optimizada.
+        Endpoint específico para obtener solo producto + descripción sin información adicional como stock o precios.
+        
+        **Ventajas**: 
+        - Respuesta ligera y rápida
+        - Solo datos de producto y descripción
+        - Optimizado para casos donde no se necesita información completa
+        - Mejor performance que /details para casos simples
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único del producto
+          schema:
+            type: string
+            example: "GA4w4YlYpVP1LNji17o9FKbp8Dg"
+      responses:
+        '200':
+          description: Producto con descripción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductWithDescriptionResponse'
+              example:
+                id: "GA4w4YlYpVP1LNji17o9FKbp8Dg"
+                name: "Onion - Dried"
+                state: true
+                product_type: "PHYSICAL"
+                category:
+                  id: 9
+                  name: "Baby"
+                  description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                description:
+                  id: 15
+                  description: "Cebolla deshidratada de alta calidad para uso culinario"
+                  effective_date: "2025-01-15T10:30:00Z"
+                  user_id: "2pmK5NPfHiRwZUkcd3d3cETC2JW"
         '404':
           description: Producto no encontrado
           content:
@@ -988,41 +1248,73 @@ paths:
     get:
       tags:
         - Products
-      summary: Buscar productos por nombre
-      description: Busca productos que coincidan con el nombre especificado
+      summary: Buscar productos enriquecidos por nombre
+      description: |
+        Busca productos que coincidan con el nombre especificado y devuelve información enriquecida incluyendo:
+        - Stock actual y estado
+        - Precios y fechas de actualización
+        - Descripción del producto
+        - Campos calculados
+      security:
+        - BearerAuth: []
       parameters:
         - name: name
           in: path
           required: true
-          description: Nombre del producto a buscar
+          description: Nombre del producto a buscar (búsqueda parcial)
           schema:
             type: string
-            example: "Samsung"
+            example: "pelota"
       responses:
         '200':
-          description: Lista de productos encontrados
+          description: Lista de productos enriquecidos encontrados
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Product'
+                  $ref: '#/components/schemas/ProductEnriched'
+        '401':
+          description: Token de autenticación requerido o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No se encontraron productos con ese nombre
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /products/products/{page}/{pageSize}:
     get:
       tags:
         - Products
-      summary: Obtener productos paginados
-      description: Recupera una lista paginada de productos
+      summary: Obtener productos enriquecidos paginados
+      description: |
+        Recupera una lista paginada de productos enriquecidos incluyendo:
+        - Stock actual y estado
+        - Precios y fechas de actualización
+        - Descripción del producto
+        - Campos calculados automáticos
+      security:
+        - BearerAuth: []
       parameters:
         - name: page
           in: path
           required: true
-          description: Número de página
+          description: Número de página (empezando desde 1)
           schema:
             type: integer
             minimum: 1
-            example: 5
+            example: 1
         - name: pageSize
           in: path
           required: true
@@ -1034,11 +1326,37 @@ paths:
             example: 10
       responses:
         '200':
-          description: Lista paginada de productos
+          description: Lista paginada de productos enriquecidos
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductEnriched'
+        '400':
+          description: Parámetros de paginación inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Token de autenticación requerido o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No se encontraron productos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /products/products/{id}:
     put:
@@ -1067,6 +1385,7 @@ paths:
               name: "Puma MB.01 Updated"
               id_category: 6
               state: true
+              product_type: "SERVICE"
               description: "Zapatillas de baloncesto actualizadas con nueva tecnología"
       responses:
         '200':
@@ -1108,6 +1427,79 @@ paths:
                 $ref: '#/components/schemas/SuccessResponse'
         '404':
           description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /products/enriched/all:
+    get:
+      tags:
+        - Products
+      summary: Obtener todos los productos enriquecidos
+      description: |
+        Obtiene todos los productos enriquecidos disponibles en el sistema incluyendo:
+        - Información completa de stock y disponibilidad
+        - Precios actuales y historial de actualizaciones
+        - Descripciones detalladas de productos
+        - Estados calculados automáticamente
+        - Información de categorías
+        
+        **Nota**: Este endpoint puede devolver gran cantidad de datos. 
+        Se recomienda usar los endpoints paginados para mejor rendimiento en producción.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista completa de productos enriquecidos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductEnriched'
+              examples:
+                productos_mixtos:
+                  summary: "Ejemplo con productos físicos y servicios"
+                  value:
+                    - id: "PROD_12345"
+                      name: "Pelota de Fútbol"
+                      state: true
+                      category:
+                        id: 1
+                        name: "Deportes"
+                        description: "Artículos deportivos"
+                      product_type: "PHYSICAL"
+                      purchase_price: 25.99
+                      stock_quantity: 15
+                      description: "Pelota de fútbol oficial FIFA"
+                      stock_status: "medium_stock"
+                      price_formatted: "$25.99"
+                      has_valid_stock: true
+                      has_valid_price: true
+                    - id: "SERV_67890"
+                      name: "Consultoría Empresarial"
+                      state: true
+                      category:
+                        id: 2
+                        name: "Servicios"
+                        description: "Servicios profesionales"
+                      product_type: "SERVICE"
+                      purchase_price: null
+                      stock_quantity: null
+                      description: "Consultoría especializada en gestión empresarial"
+                      stock_status: "out_of_stock"
+                      price_formatted: "N/A"
+                      has_valid_stock: false
+                      has_valid_price: false
+        '401':
+          description: Token de autenticación requerido o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
           content:
             application/json:
               schema:

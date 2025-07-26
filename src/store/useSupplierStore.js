@@ -10,11 +10,33 @@ const useSupplierStore = create(
       error: null,
       pagination: {},
 
-      fetchSuppliers: async (page = 1, pageSize = 10) => {
+      fetchSuppliers: async (page = 1, pageSize = 10, search = '') => {
         set({ loading: true, error: null });
         try {
-          const response = await supplierService.getSuppliers({ page, limit: pageSize });
-          set({ suppliers: response.data, pagination: response.pagination, loading: false });
+          let response = await supplierService.getSuppliers({ page, limit: pageSize, search });
+          // Si la búsqueda no devuelve nada, la API puede retornar null. Lo normalizamos a un array vacío.
+          if (search && !response) {
+            response = [];
+          }
+
+          if (search) {
+            set({
+              suppliers: response,
+              pagination: {
+                current_page: 1,
+                per_page: response.length,
+                total: response.length,
+                total_pages: 1,
+              },
+              loading: false,
+            });
+          } else {
+            set({
+              suppliers: response.data,
+              pagination: response.pagination,
+              loading: false,
+            });
+          }
         } catch (error) {
           set({ error: error.message, loading: false });
         }

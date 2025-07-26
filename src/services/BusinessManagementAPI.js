@@ -18,16 +18,7 @@ class BusinessManagementAPI {
 
   getAuthHeaders() {
     const token = localStorage.getItem('authToken');
-    const headers = token ? { 'Authorization': token } : {};
-    
-    // Debug info
-    console.log('🔐 getAuthHeaders llamado:', {
-      hasToken: !!token,
-      tokenLength: token ? token.length : 0,
-      tokenPreview: token ? `${token.substring(0, 20)}...` : 'N/A'
-    });
-    
-    return headers;
+    return token ? { 'Authorization': token } : {};
   }
 
   async makeRequest(endpoint, options = {}) {
@@ -54,13 +45,19 @@ class BusinessManagementAPI {
       }
 
       const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        return await response.json();
+      if (response.ok) {
+        try {
+          const data = await response.json();
+          return data;
+        } catch (jsonError) {
+          const textData = await response.text();
+          return textData;
+        }
+      } else {
+        const textData = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${textData}`);
       }
-      
-      return await response.text();
     } catch (error) {
-      // Solo hacer log de errores que no sean de autenticación para reducir ruido
       const isAuthError = error.message.includes('Token expirado') || 
                          error.message.includes('401') ||
                          error.message.includes('Authorization');
@@ -136,10 +133,6 @@ class BusinessManagementAPI {
   // ============================================================================
 
   async getCategories() {
-    console.log('🏷️ getCategories llamado');
-    const token = localStorage.getItem('authToken');
-    console.log('🏷️ Token para categorías:', token ? 'Presente' : 'Ausente');
-    
     return this.makeRequest('/categories');
     // Nota: Aunque la documentación indica que es público, el servidor requiere autenticación
   }
@@ -170,7 +163,6 @@ class BusinessManagementAPI {
         const product = await this.getProductById(searchTerm);
         return Array.isArray(product) ? product : [product];
       } catch (error) {
-        console.log(`ID search failed for "${searchTerm}", trying name search...`);
         return await this.searchProductsByName(searchTerm);
       }
     } else {
@@ -179,17 +171,12 @@ class BusinessManagementAPI {
   }
 
   async createProduct(productData) {
-    console.log('🚀 createProduct llamado con:', productData);
-    
-    // Nueva operación atómica: incluye descripción en el payload principal
     const payload = {
       name: productData.name,
       id_category: productData.id_category || productData.categoryId || productData.category_id,
       state: productData.state !== undefined ? productData.state : true,
       description: productData.description || ''
     };
-    
-    console.log('🚀 Payload atómico a enviar:', payload);
     
     return this.makeRequest('/products/', {
       method: 'POST',
@@ -218,7 +205,6 @@ class BusinessManagementAPI {
    * 4x más rápido que múltiples requests separadas
    */
   async getProductWithDetails(id) {
-    console.log('🔥 getProductWithDetails llamado para ID:', id);
     return this.makeRequest(`/products/${id}/details`);
   }
 
@@ -227,7 +213,6 @@ class BusinessManagementAPI {
    * Ideal para búsquedas con datos completos en una sola operación
    */
   async searchProductsWithDetails(name) {
-    console.log('🔍 searchProductsWithDetails llamado para:', name);
     return this.makeRequest(`/products/search/details/${encodeURIComponent(name)}`);
   }
 
@@ -236,8 +221,6 @@ class BusinessManagementAPI {
    * Garantiza consistencia de datos en transacción única
    */
   async updateProductWithDescription(id, productData) {
-    console.log('✏️ updateProductWithDescription llamado:', { id, productData });
-    
     const payload = {
       name: productData.name,
       id_category: productData.id_category || productData.categoryId || productData.category_id,
@@ -345,7 +328,11 @@ class BusinessManagementAPI {
   // CLIENTS
   // ============================================================================
 
-  async getClients(page = 1, pageSize = 10) {
+  async getClients(params = {}) {
+    const { page = 1, pageSize = 10, search } = params;
+    if (search) {
+      return this.searchClientsByName(search);
+    }
     return this.makeRequest(`/client/${page}/${pageSize}`);
   }
 
@@ -354,7 +341,14 @@ class BusinessManagementAPI {
   }
 
   async searchClientsByName(name) {
-    return this.makeRequest(`/client/name/${encodeURIComponent(name)}`);
+    try {
+      return await this.makeRequest(`/client/name/${encodeURIComponent(name)}`);
+    } catch (error) {
+      if (error.message && error.message.includes('404')) {
+        return []; // Not found is not an error for search, just an empty result.
+      }
+      throw error; // Re-throw other errors.
+    }
   }
 
   async createClient(clientData) {
@@ -393,8 +387,23 @@ class BusinessManagementAPI {
   // SUPPLIERS
   // ============================================================================
 
-  async getSuppliers(page = 1, pageSize = 10) {
+  async getSuppliers(params = {}) {
+    const { page = 1, pageSize = 10, search } = params;
+    if (search) {
+      return this.searchSuppliersByName(search);
+    }
     return this.makeRequest(`/supplier/${page}/${pageSize}`);
+  }
+
+  async searchSuppliersByName(name) {
+    try {
+      return await this.makeRequest(`/supplier/name/${encodeURIComponent(name)}`);
+    } catch (error) {
+      if (error.message && error.message.includes('404')) {
+        return []; // Not found is not an error for search, just an empty result.
+      }
+      throw error; // Re-throw other errors.
+    }
   }
 
   async createSupplier(supplierData) {
