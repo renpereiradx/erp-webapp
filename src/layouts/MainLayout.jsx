@@ -11,6 +11,7 @@ import {
   LayoutDashboard, 
   Package, 
   Users, 
+  Truck,
   ShoppingCart, 
   BarChart3, 
   Settings,
@@ -172,6 +173,13 @@ const MainLayout = ({ children }) => {
       icon: Users, 
       color: 'orange',
       badge: '3'
+    },
+    { 
+      name: 'Proveedores', 
+      href: '/proveedores', 
+      icon: Truck, 
+      color: 'teal',
+      badge: '7'
     },
     { 
       name: 'Pedidos', 

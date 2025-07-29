@@ -1,9 +1,10 @@
-import { apiClient } from './api';
+import { apiService } from './api';
 
 export const supplierService = {
-  getSuppliers: async (params = {}) => {
+  getSuppliers: async ({ page = 1, limit = 10, search = '' }) => {
     try {
-      return await apiClient.getSuppliers(params);
+      const endpoint = search ? `/supplier/name/${search}` : `/supplier/${page}/${limit}`;
+      return await apiService.get(endpoint);
     } catch (error) {
       console.error('Error obteniendo proveedores:', error);
       throw new Error(error.message || 'Error al obtener la lista de proveedores');
@@ -12,7 +13,7 @@ export const supplierService = {
 
   createSupplier: async (supplierData) => {
     try {
-      return await apiClient.createSupplier(supplierData);
+      return await apiService.post('/supplier/', supplierData);
     } catch (error) {
       console.error('Error creando proveedor:', error);
       throw new Error(error.message || 'Error al crear el proveedor');
@@ -21,7 +22,7 @@ export const supplierService = {
 
   updateSupplier: async (id, supplierData) => {
     try {
-      return await apiClient.updateSupplier(id, supplierData);
+      return await apiService.put(`/supplier/${id}`, supplierData);
     } catch (error) {
       console.error('Error actualizando proveedor:', error);
       throw new Error(error.message || 'Error al actualizar el proveedor');
@@ -30,7 +31,7 @@ export const supplierService = {
 
   deleteSupplier: async (id) => {
     try {
-      return await apiClient.deleteSupplier(id);
+      return await apiService.delete(`/supplier/${id}`);
     } catch (error) {
       console.error('Error eliminando proveedor:', error);
       throw new Error(error.message || 'Error al eliminar el proveedor');
