@@ -1,158 +1,194 @@
 /**
  * Servicio para la gestión de productos en el sistema ERP
- * Migrado para usar el cliente oficial del Business Management API
+ * Actualizado para usar la nueva estructura simplificada de la API
  */
 
-import { apiClient } from './api';
+import { apiService } from './api';
 
 export const productService = {
-  // =================== PRODUCTOS ===================
+  // =================== PRODUCTOS - NUEVOS ENDPOINTS SIMPLIFICADOS ===================
   
-  // Obtener productos paginados
-  getProducts: async (page = 1, pageSize = 10) => {
-    return await apiClient.getProducts(page, pageSize);
+  // Obtener todos los productos (información básica)
+  getAllProducts: async (params = {}) => {
+    const queryParams = new URLSearchParams({
+      category: params.category || '',
+      active: params.active !== undefined ? params.active : true,
+    }).toString();
+
+    return await apiService.get(`/products?${queryParams}`);
   },
 
-  // Obtener un producto por ID
+  // Obtener productos paginados con información enriquecida
+  getProducts: async (params = {}) => {
+    const queryParams = new URLSearchParams({
+      page: params.page || 1,
+      limit: params.limit || 10,
+      search: params.search || '',
+      category: params.category || '',
+      sortBy: params.sortBy || 'name',
+      sortOrder: params.sortOrder || 'asc',
+    }).toString();
+
+    return await apiService.get(`/products/paginated?${queryParams}`);
+  },
+
+  // Obtener un producto por ID con información completa
   getProductById: async (productId) => {
-    return await apiClient.getProductById(productId);
+    return await apiService.get(`/products/${productId}`);
   },
 
   // Buscar productos por nombre
-  searchProductsByName: async (name) => {
-    return await apiClient.searchProductsByName(name);
-  },
+  searchProducts: async (searchTerm, limit = 20) => {
+    const queryParams = new URLSearchParams({
+      q: searchTerm,
+      limit: limit,
+    }).toString();
 
-  // Búsqueda inteligente: por ID o nombre
-  searchProducts: async (searchTerm) => {
-    return await apiClient.searchProducts(searchTerm);
+    return await apiService.get(`/products/search?${queryParams}`);
   },
 
   // Crear un nuevo producto
   createProduct: async (productData) => {
-    return await apiClient.createProduct(productData);
+    return await apiService.post('/products', productData);
   },
 
   // Actualizar un producto existente
   updateProduct: async (productId, productData) => {
-    return await apiClient.updateProduct(productId, productData);
+    return await apiService.put(`/products/${productId}`, productData);
   },
 
   // Eliminar producto (soft delete)
   deleteProduct: async (productId) => {
-    return await apiClient.deleteProduct(productId);
+    return await apiService.delete(`/products/${productId}`);
   },
 
-  // =================== MÉTODOS OPTIMIZADOS CON NUEVA ARQUITECTURA ATÓMICA ===================
+  // =================== PRODUCTOS CON CANTIDADES DECIMALES Y PRECIOS POR UNIDAD ===================
 
-  // Obtener producto con todos sus detalles en una sola request
-  getProductWithDetails: async (productId) => {
-    return await apiClient.getProductWithDetails(productId);
+  // Obtener productos por categoría con información de precios
+  getProductsByCategory: async (categories) => {
+    const queryParams = new URLSearchParams({
+      categories: categories.join(','),
+    }).toString();
+
+    return await apiService.get(`/products/by-category?${queryParams}`);
   },
 
-  // Buscar productos por nombre con todos sus detalles incluidos
-  searchProductsWithDetails: async (name) => {
-    return await apiClient.searchProductsWithDetails(name);
+  // Obtener precio específico de un producto por unidad
+  getProductPriceByUnit: async (productId, unit = null) => {
+    const queryParams = unit ? `?unit=${unit}` : '';
+    return await apiService.get(`/products/${productId}/price${queryParams}`);
   },
 
-  // Actualizar producto con descripción de forma atómica
-  updateProductWithDescription: async (productId, productData) => {
-    return await apiClient.updateProductWithDescription(productId, productData);
+  // Obtener unidades disponibles para un producto
+  getProductUnits: async (productId) => {
+    return await apiService.get(`/products/${productId}/units`);
   },
 
-  // =================== DESCRIPCIONES (Legacy - mantenido para compatibilidad) ===================
+  // Crear precio por unidad para un producto
+  createUnitPrice: async (productId, unitPriceData) => {
+    return await apiService.post(`/products/${productId}/units`, unitPriceData);
+  },
+
+  // =================== GESTIÓN DE CATEGORÍAS ===================
+
+  // Obtener todas las categorías
+  getCategories: async () => {
+    return await apiService.get('/categories');
+  },
+
+  // =================== GESTIÓN DE DESCRIPCIONES (Legacy) ===================
 
   // Crear descripción de producto
   createProductDescription: async (productId, description) => {
-    return await apiClient.createProductDescription(productId, description);
+    return await apiService.post(`/product_description/${productId}`, { description });
   },
 
   // Obtener descripción por ID
   getDescriptionById: async (descId) => {
-    return await apiClient.getProductDescription(descId);
+    return await apiService.get(`/product_description/${descId}`);
   },
 
   // Actualizar descripción
   updateDescription: async (descId, description) => {
-    return await apiClient.updateProductDescription(descId, description);
+    return await apiService.put(`/product_description/${descId}`, { description });
   },
 
-  // =================== PRECIOS ===================
+  // =================== GESTIÓN DE PRECIOS (Legacy) ===================
 
-  // Obtener precio de producto
-  getProductPrice: async (productId) => {
-    return await apiClient.getProductPrice(productId);
+  // Obtener precio por ID de producto
+  getProductPriceByProductId: async (productId) => {
+    return await apiService.get(`/product_price/product_id/${productId}`);
   },
 
-  // Crear precio por Product ID
+  // Crear precio de producto
   createProductPrice: async (productId, priceData) => {
-    return await apiClient.setProductPrice(productId, priceData);
+    return await apiService.post(`/product_price/product_id/${productId}`, priceData);
   },
 
-  // Actualizar precio por Product ID
+  // Actualizar precio por ID de producto
   updateProductPriceByProductId: async (productId, priceData) => {
-    return await apiClient.updateProductPrice(productId, priceData);
+    return await apiService.put(`/product_price/product_id/${productId}`, priceData);
   },
 
-  // =================== STOCK ===================
+  // =================== GESTIÓN DE STOCK (Legacy) ===================
 
-  // Obtener stock por Product ID
+  // Obtener stock por ID de producto
   getStockByProductId: async (productId) => {
-    return await apiClient.getProductStock(productId);
+    return await apiService.get(`/stock/product_id/${productId}`);
   },
 
   // Crear stock
   createStock: async (productId, stockData) => {
-    return await apiClient.createStock(productId, stockData);
+    return await apiService.post(`/stock/${productId}`, stockData);
   },
 
-  // Actualizar stock por Product ID
+  // Actualizar stock por ID de producto
   updateStockByProductId: async (productId, stockData) => {
-    return await apiClient.updateStockByProductId(productId, stockData);
+    return await apiService.put(`/stock/product_id/${productId}`, stockData);
   },
 
   // Obtener stock por ID
   getStockById: async (stockId) => {
-    return await apiClient.getStockById(stockId);
+    return await apiService.get(`/stock/${stockId}`);
   },
 
-  // =================== UTILIDADES ===================
+  // =================== UTILIDADES Y VALIDACIONES ===================
 
-  // Obtener categorías de productos
-  getCategories: async () => {
-    return await apiClient.getCategories();
-  },
-
-  // Validar estructura de datos antes de envío
+  // Validar datos de producto
   validateProductData: (productData) => {
-    const required = ['name'];
-    const missing = required.filter(field => !productData[field]);
-    if (missing.length > 0) {
-      throw new Error(`Campos requeridos faltantes: ${missing.join(', ')}`);
-    }
-    return true;
+    const errors = [];
+    if (!productData.name) errors.push('El nombre es requerido');
+    if (!productData.id_category) errors.push('La categoría es requerida');
+    if (!productData.description) errors.push('La descripción es requerida');
+    return errors;
   },
 
+  // Validar datos de precio
   validatePriceData: (priceData) => {
-    if (!priceData.costPrice && priceData.costPrice !== 0 && !priceData.cost_price && priceData.cost_price !== 0) {
-      throw new Error('cost_price es requerido');
+    const errors = [];
+    if (!priceData.cost_price || priceData.cost_price <= 0) {
+      errors.push('El precio de costo debe ser mayor a 0');
     }
-    return true;
+    return errors;
   },
 
+  // Validar datos de stock
   validateStockData: (stockData) => {
-    if (!stockData.quantity && stockData.quantity !== 0) {
-      throw new Error('quantity es requerido');
+    const errors = [];
+    if (stockData.quantity === undefined || stockData.quantity < 0) {
+      errors.push('La cantidad debe ser mayor o igual a 0');
     }
-    return true;
+    return errors;
   },
 
-  validateDescriptionData: (descriptionData) => {
-    if (!descriptionData.description) {
-      throw new Error('description es requerido');
-    }
-    return true;
-  }
+  // Obtener productos con stock bajo
+  getLowStockProducts: async (threshold = 10) => {
+    const products = await productService.getProducts({ limit: 1000 });
+    return products.data?.filter(product => 
+      product.stock_quantity !== null && 
+      product.stock_quantity <= threshold
+    ) || [];
+  },
 };
 
 export default productService;

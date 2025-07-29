@@ -4,17 +4,29 @@ info:
   description: |
     API para sistema de gestión empresarial que incluye manejo de productos, inventarios, ventas, compras, clientes, proveedores y programación automática.
     
+    ## 🆕 Nuevas Funcionalidades v2.0
+    - ✅ **Cantidades Decimales**: Soporte completo para cantidades como 2.5 kg, 1.75 litros
+    - ✅ **Precios por Unidad**: Múltiples unidades por producto (kg, caja, litro, etc.)
+    - ✅ **Ventas con Unidades**: Endpoint `/sale/with-units` para ventas con cantidades decimales
+    - ✅ **Productos por Categoría**: Endpoint `/products/by-category` con información de precios
+    - ✅ **Gestión de Unidades**: Endpoints para crear y consultar precios por unidad
+    
     ## Características principales:
-    - Gestión de productos, categorías y precios
-    - Control de inventarios y stock
+    - Gestión de productos, categorías y precios (con soporte decimal)
+    - Control de inventarios y stock (cantidades decimales)
     - Administración de clientes y proveedores
-    - Registro de ventas y compras
+    - Registro de ventas y compras (con unidades específicas)
     - Sistema de programación automática
     - Autenticación JWT
     
+    ## Casos de uso principales:
+    - **Productos de peso**: Verduras, frutas, carnes con kg, cajas, etc.
+    - **Productos regulares**: Funcionamiento normal sin unidades específicas
+    - **Ventas mixtas**: Combinación de productos con y sin unidades
+    
     ## Autenticación
     La mayoría de endpoints requieren autenticación mediante JWT token en el header Authorization.
-  version: "1.0.0"
+  version: "2.0.0"
   contact:
     name: Business Management API
     email: support@businessmanagement.com
@@ -590,8 +602,10 @@ components:
           type: string
           example: "bcYdWdKNR"
         quantity:
-          type: integer
-          example: 25
+          type: number
+          format: float
+          example: 25.5
+          description: "Cantidad en stock (soporta decimales para productos de peso)"
         exp:
           type: string
           format: date
@@ -613,8 +627,10 @@ components:
       type: object
       properties:
         quantity:
-          type: integer
-          example: 16
+          type: number
+          format: float
+          example: 16.5
+          description: "Cantidad de stock (soporta decimales: 2.5 kg, 1.75 litros, etc.)"
         exp:
           type: string
           format: date
@@ -764,8 +780,10 @@ components:
           type: string
           example: "increase"
         quantity:
-          type: integer
-          example: 10
+          type: number
+          format: float
+          example: 10.5
+          description: "Cantidad de ajuste (soporta decimales)"
         reason:
           type: string
           example: "Stock correction"
@@ -810,6 +828,141 @@ components:
         total:
           type: integer
           example: 100
+
+    # Nuevos Modelos para Cantidades Decimales y Precios por Unidad
+    UnitPrice:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        product_id:
+          type: string
+          example: "PROD_TOMATE_001"
+        unit:
+          type: string
+          example: "kg"
+          description: "Unidad de medida (kg, caja, litro, etc.)"
+        price_per_unit:
+          type: number
+          format: float
+          example: 25.50
+          description: "Precio por unidad específica"
+        effective_date:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    ProductWithPricing:
+      type: object
+      properties:
+        product_id:
+          type: string
+          example: "PROD_TOMATE_001"
+        product_name:
+          type: string
+          example: "Tomate Cherry"
+        category_name:
+          type: string
+          example: "Verduras"
+        price:
+          type: number
+          format: float
+          example: 25.50
+        unit:
+          type: string
+          example: "kg"
+        price_source:
+          type: string
+          example: "unit_price"
+          description: "Fuente del precio: 'unit_price' o 'general_price'"
+        has_unit_pricing:
+          type: boolean
+          example: true
+
+    SaleDetailRequest:
+      type: object
+      properties:
+        product_id:
+          type: string
+          example: "PROD_TOMATE_001"
+        quantity:
+          type: number
+          format: float
+          example: 2.5
+          description: "Cantidad (soporta decimales: 2.5 kg, 1.75 litros)"
+        unit:
+          type: string
+          example: "kg"
+          description: "Unidad de medida (opcional para productos sin unidades específicas)"
+      required:
+        - product_id
+        - quantity
+
+    SaleDetailWithUnit:
+      type: object
+      properties:
+        product_id:
+          type: string
+          example: "PROD_TOMATE_001"
+        product_name:
+          type: string
+          example: "Tomate Cherry"
+        quantity:
+          type: number
+          format: float
+          example: 2.5
+        unit:
+          type: string
+          example: "kg"
+        unit_price:
+          type: number
+          format: float
+          example: 25.50
+        subtotal:
+          type: number
+          format: float
+          example: 63.75
+          description: "quantity * unit_price"
+
+    SaleWithUnitsRequest:
+      type: object
+      properties:
+        client_id:
+          type: string
+          example: "CLIENT_001"
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaleDetailRequest'
+      required:
+        - client_id
+        - details
+
+    ProductUnitsResponse:
+      type: object
+      properties:
+        product_id:
+          type: string
+          example: "PROD_TOMATE_001"
+        available_units:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitPrice'
+
+    CreateUnitPriceRequest:
+      type: object
+      properties:
+        unit:
+          type: string
+          example: "kg"
+        price_per_unit:
+          type: number
+          format: float
+          example: 25.50
+      required:
+        - unit
+        - price_per_unit
 
 paths:
   # Authentication Endpoints
@@ -933,7 +1086,68 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
   # Product Endpoints
-  /products/:
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Obtener todos los productos
+      description: |
+        Obtiene todos los productos disponibles en el sistema con información básica.
+        
+        **Características:**
+        - Respuesta rápida y liviana
+        - Ideal para listas desplegables y selecciones
+        - No incluye información detallada de stock o precios
+        - Soporte para filtros básicos por categoría
+      parameters:
+        - name: category
+          in: query
+          required: false
+          description: Filtrar por categoría específica
+          schema:
+            type: string
+          example: "Electrónicos"
+        - name: active
+          in: query
+          required: false
+          description: Filtrar solo productos activos
+          schema:
+            type: boolean
+            default: true
+          example: true
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de productos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+              example:
+                - id: "PROD_001"
+                  name: "iPhone 15 Pro"
+                  state: true
+                  category:
+                    id: 1
+                    name: "Electrónicos"
+                    description: "Dispositivos electrónicos"
+                - id: "PROD_002"
+                  name: "Laptop Dell XPS"
+                  state: true
+                  category:
+                    id: 1
+                    name: "Electrónicos"
+                    description: "Dispositivos electrónicos"
+        '401':
+          description: Token de autenticación requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     post:
       tags:
         - Products
@@ -971,7 +1185,7 @@ paths:
     get:
       tags:
         - Products
-      summary: Obtener producto enriquecido por ID
+      summary: Obtener producto por ID con información completa
       description: |
         Recupera los detalles completos de un producto específico incluyendo:
         - Información básica del producto
@@ -979,6 +1193,8 @@ paths:
         - Precios y fechas de actualización
         - Descripción del producto
         - Campos calculados (estado de stock, precio formateado)
+        
+        **Ideal para:** Vistas de detalle, edición de productos
       security:
         - BearerAuth: []
       parameters:
@@ -991,374 +1207,40 @@ paths:
             example: "GA4w4YlYpVP1LNji17o9FKbp8Dg"
       responses:
         '200':
-          description: Producto enriquecido obtenido exitosamente
+          description: Producto obtenido exitosamente
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProductEnriched'
-        '401':
-          description: Token de autenticación requerido o inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Producto no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error interno del servidor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /products/{id}/details:
-    get:
-      tags:
-        - Products
-      summary: Obtener producto con todos sus detalles
-      description: |
-        Recupera un producto con todos sus detalles relacionados en una sola consulta optimizada:
-        - Información básica del producto
-        - Stock actual
-        - Precio de compra
-        - Descripción
-        - Categoría
-        
-        **Ventaja**: Una sola request vs 4 requests múltiples. 4x más rápido y datos consistentes.
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID del producto
-          schema:
-            type: string
-            example: "GA4w4YlYpVP1LNji17o9FKbp8Dg"
-      responses:
-        '200':
-          description: Producto con todos los detalles
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDetails'
               example:
                 id: "GA4w4YlYpVP1LNji17o9FKbp8Dg"
-                name: "Onion - Dried"
+                name: "iPhone 15 Pro"
                 state: true
-                category_id: 9
-                user_id: "2prrJIgRvgaFVbuu49ua9QJVu8n"
-                product_type: "PHYSICAL"
                 category:
-                  id: 9
-                  name: "Baby"
-                  description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-                stock:
-                  id: 110
-                  quantity: 7
-                  effective_date: "2025-06-03T14:33:52.613475Z"
-                  metadata:
-                    type: "stock_adjustment"
-                    po_id: 9
-                    action: "cancel_po_return"
-                price:
-                  id: 54
-                  purchase_price: 320000.00
-                  effective_date: "2025-05-26T17:39:41.446265Z"
-                  metadata:
-                    po_id: 9
-                    source: "purchase_order_cancellation"
+                  id: 1
+                  name: "Electrónicos"
+                  description: "Dispositivos electrónicos"
+                product_type: "PHYSICAL"
+                purchase_price: 999.99
+                stock_quantity: 25
+                description: "Smartphone Apple iPhone 15 Pro 128GB"
+                stock_status: "in_stock"
+                price_formatted: "$999.99"
+                has_valid_stock: true
+                has_valid_price: true
+        '401':
+          description: Token de autenticación requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Producto no encontrado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Token no válido o expirado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
 
-  /products/{id}/with-description:
-    get:
-      tags:
-        - Products
-      summary: Obtener producto con descripción
-      description: |
-        Obtiene un producto con su descripción de forma optimizada.
-        Endpoint específico para obtener solo producto + descripción sin información adicional como stock o precios.
-        
-        **Ventajas**: 
-        - Respuesta ligera y rápida
-        - Solo datos de producto y descripción
-        - Optimizado para casos donde no se necesita información completa
-        - Mejor performance que /details para casos simples
-      parameters:
-        - name: id
-          in: path
-          required: true
-          description: ID único del producto
-          schema:
-            type: string
-            example: "GA4w4YlYpVP1LNji17o9FKbp8Dg"
-      responses:
-        '200':
-          description: Producto con descripción
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductWithDescriptionResponse'
-              example:
-                id: "GA4w4YlYpVP1LNji17o9FKbp8Dg"
-                name: "Onion - Dried"
-                state: true
-                product_type: "PHYSICAL"
-                category:
-                  id: 9
-                  name: "Baby"
-                  description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-                description:
-                  id: 15
-                  description: "Cebolla deshidratada de alta calidad para uso culinario"
-                  effective_date: "2025-01-15T10:30:00Z"
-                  user_id: "2pmK5NPfHiRwZUkcd3d3cETC2JW"
-        '404':
-          description: Producto no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Token no válido o expirado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /products/search/details/{name}:
-    get:
-      tags:
-        - Products
-      summary: Buscar productos con todos sus detalles por nombre
-      description: |
-        Busca productos por nombre y devuelve todos los productos que coincidan con todos sus detalles relacionados:
-        - Información básica del producto
-        - Stock actual
-        - Precio de compra
-        - Descripción
-        - Categoría
-        
-        **Ventajas**: 
-        - Una sola request vs múltiples requests por cada producto encontrado
-        - Datos completos y consistentes para cada resultado
-        - Optimizado para búsquedas rápidas en el frontend
-      parameters:
-        - name: name
-          in: path
-          required: true
-          description: Nombre del producto a buscar (búsqueda parcial con ILIKE)
-          schema:
-            type: string
-            example: "Onion"
-      responses:
-        '200':
-          description: Lista de productos con todos los detalles
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductDetails'
-              example:
-                - id: "GA4w4YlYpVP1LNji17o9FKbp8Dg"
-                  name: "Onion - Dried"
-                  state: true
-                  category_id: 9
-                  user_id: "2prrJIgRvgaFVbuu49ua9QJVu8n"
-                  product_type: "PHYSICAL"
-                  category:
-                    id: 9
-                    name: "Baby"
-                    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-                  stock:
-                    id: 110
-                    quantity: 7
-                    effective_date: "2025-06-03T14:33:52.613475Z"
-                    metadata:
-                      type: "stock_adjustment"
-                      po_id: 9
-                      action: "cancel_po_return"
-                  price:
-                    id: 54
-                    purchase_price: 320000.00
-                    effective_date: "2025-05-26T17:39:41.446265Z"
-                    metadata:
-                      po_id: 9
-                      source: "purchase_order_cancellation"
-                - id: "123456789"
-                  name: "Green Onion Fresh"
-                  state: true
-                  category_id: 5
-                  user_id: "user123"
-                  product_type: "PHYSICAL"
-                  category:
-                    id: 5
-                    name: "Vegetables"
-                    description: "Fresh vegetables category"
-                  stock:
-                    id: 111
-                    quantity: 25
-                    effective_date: "2025-01-15T10:00:00Z"
-                    metadata:
-                      type: "restock"
-                      source: "supplier_delivery"
-                  price:
-                    id: 55
-                    purchase_price: 15000.00
-                    effective_date: "2025-01-10T08:00:00Z"
-                    metadata:
-                      supplier_id: "sup001"
-                      bulk_discount: true
-        '400':
-          description: Parámetro name requerido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "Name parameter is required"
-        '500':
-          description: Error interno del servidor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Token no válido o expirado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /products/products/name/{name}:
-    get:
-      tags:
-        - Products
-      summary: Buscar productos enriquecidos por nombre
-      description: |
-        Busca productos que coincidan con el nombre especificado y devuelve información enriquecida incluyendo:
-        - Stock actual y estado
-        - Precios y fechas de actualización
-        - Descripción del producto
-        - Campos calculados
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: name
-          in: path
-          required: true
-          description: Nombre del producto a buscar (búsqueda parcial)
-          schema:
-            type: string
-            example: "pelota"
-      responses:
-        '200':
-          description: Lista de productos enriquecidos encontrados
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductEnriched'
-        '401':
-          description: Token de autenticación requerido o inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: No se encontraron productos con ese nombre
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error interno del servidor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /products/products/{page}/{pageSize}:
-    get:
-      tags:
-        - Products
-      summary: Obtener productos enriquecidos paginados
-      description: |
-        Recupera una lista paginada de productos enriquecidos incluyendo:
-        - Stock actual y estado
-        - Precios y fechas de actualización
-        - Descripción del producto
-        - Campos calculados automáticos
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: page
-          in: path
-          required: true
-          description: Número de página (empezando desde 1)
-          schema:
-            type: integer
-            minimum: 1
-            example: 1
-        - name: pageSize
-          in: path
-          required: true
-          description: Cantidad de elementos por página
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            example: 10
-      responses:
-        '200':
-          description: Lista paginada de productos enriquecidos
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductEnriched'
-        '400':
-          description: Parámetros de paginación inválidos
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Token de autenticación requerido o inválido
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: No se encontraron productos
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error interno del servidor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /products/products/{id}:
     put:
       tags:
         - Products
@@ -1382,18 +1264,24 @@ paths:
             schema:
               $ref: '#/components/schemas/ProductRequest'
             example:
-              name: "Puma MB.01 Updated"
-              id_category: 6
+              name: "iPhone 15 Pro Updated"
+              id_category: 1
               state: true
-              product_type: "SERVICE"
-              description: "Zapatillas de baloncesto actualizadas con nueva tecnología"
+              product_type: "PHYSICAL"
+              description: "Smartphone Apple iPhone 15 Pro con nuevas características"
       responses:
         '200':
           description: Producto actualizado exitosamente
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
+                $ref: '#/components/schemas/ProductEnriched'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Producto no encontrado
           content:
@@ -1401,15 +1289,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /products/products/delete/{id}:
-    put:
+    delete:
       tags:
         - Products
-      summary: Eliminar producto con descripción
+      summary: Eliminar producto
       description: |
-        Marca un producto como eliminado junto con su descripción de forma atómica (soft delete).
-        Esta operación garantiza que tanto el producto como su descripción se marcan como eliminados
-        correctamente o ninguno se modifica en caso de error (transacción de base de datos).
+        Marca un producto como eliminado (soft delete).
+        Esta operación marca el producto como inactivo pero mantiene los datos históricos.
       parameters:
         - name: id
           in: path
@@ -1425,6 +1311,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
+              example:
+                message: "Producto eliminado exitosamente"
         '404':
           description: Producto no encontrado
           content:
@@ -1432,74 +1320,410 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /products/enriched/all:
+  /products/search:
     get:
       tags:
         - Products
-      summary: Obtener todos los productos enriquecidos
+      summary: Buscar productos por nombre
       description: |
-        Obtiene todos los productos enriquecidos disponibles en el sistema incluyendo:
-        - Información completa de stock y disponibilidad
-        - Precios actuales y historial de actualizaciones
-        - Descripciones detalladas de productos
-        - Estados calculados automáticamente
+        Busca productos por nombre y devuelve información enriquecida incluyendo:
+        - Stock actual y estado calculado
+        - Precios y fechas de actualización
+        - Descripción del producto
         - Información de categorías
         
-        **Nota**: Este endpoint puede devolver gran cantidad de datos. 
-        Se recomienda usar los endpoints paginados para mejor rendimiento en producción.
+        **Características:**
+        - Búsqueda parcial (ILIKE)
+        - Resultados enriquecidos con toda la información
+        - Optimizado para búsquedas rápidas en el frontend
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Término de búsqueda (nombre del producto)
+          schema:
+            type: string
+          example: "iPhone"
+        - name: limit
+          in: query
+          required: false
+          description: Cantidad máxima de resultados
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+          example: 20
       security:
         - BearerAuth: []
       responses:
         '200':
-          description: Lista completa de productos enriquecidos
+          description: Lista de productos encontrados
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/ProductEnriched'
-              examples:
-                productos_mixtos:
-                  summary: "Ejemplo con productos físicos y servicios"
-                  value:
-                    - id: "PROD_12345"
-                      name: "Pelota de Fútbol"
-                      state: true
-                      category:
-                        id: 1
-                        name: "Deportes"
-                        description: "Artículos deportivos"
-                      product_type: "PHYSICAL"
-                      purchase_price: 25.99
-                      stock_quantity: 15
-                      description: "Pelota de fútbol oficial FIFA"
-                      stock_status: "medium_stock"
-                      price_formatted: "$25.99"
-                      has_valid_stock: true
-                      has_valid_price: true
-                    - id: "SERV_67890"
-                      name: "Consultoría Empresarial"
-                      state: true
-                      category:
-                        id: 2
-                        name: "Servicios"
-                        description: "Servicios profesionales"
-                      product_type: "SERVICE"
-                      purchase_price: null
-                      stock_quantity: null
-                      description: "Consultoría especializada en gestión empresarial"
-                      stock_status: "out_of_stock"
-                      price_formatted: "N/A"
-                      has_valid_stock: false
-                      has_valid_price: false
-        '401':
-          description: Token de autenticación requerido o inválido
+              example:
+                - id: "PROD_001"
+                  name: "iPhone 15 Pro"
+                  state: true
+                  category:
+                    id: 1
+                    name: "Electrónicos"
+                    description: "Dispositivos electrónicos"
+                  product_type: "PHYSICAL"
+                  purchase_price: 999.99
+                  stock_quantity: 25
+                  description: "Smartphone Apple iPhone 15 Pro 128GB"
+                  stock_status: "in_stock"
+                  price_formatted: "$999.99"
+                  has_valid_stock: true
+                  has_valid_price: true
+        '400':
+          description: Parámetro de búsqueda requerido
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Error interno del servidor
+        '401':
+          description: Token de autenticación requerido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Nuevos Endpoints para Cantidades Decimales y Precios por Unidad
+  /products/by-category:
+    get:
+      tags:
+        - Products
+      summary: Obtener productos por categoría con información de precios
+      description: |
+        Obtiene productos filtrados por categorías con información completa de precios por unidad.
+        
+        **Características:**
+        - Filtra por múltiples categorías
+        - Incluye información de precios por unidad cuando está disponible
+        - Prioriza unit_prices sobre precios generales
+        - Optimizado para productos de peso (Verduras, Frutas, Carnes)
+      parameters:
+        - name: categories
+          in: query
+          required: true
+          description: Lista de nombres de categorías separadas por comas
+          schema:
+            type: string
+          example: "Verduras,Frutas"
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de productos con información de precios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductWithPricing'
+              example:
+                - product_id: "PROD_TOMATE_001"
+                  product_name: "Tomate Cherry"
+                  category_name: "Verduras"
+                  price: 25.50
+                  unit: "kg"
+                  price_source: "unit_price"
+                  has_unit_pricing: true
+                - product_id: "PROD_PAPA_001"
+                  product_name: "Papa Criolla"
+                  category_name: "Verduras"
+                  price: 18.00
+                  unit: "kg"
+                  price_source: "unit_price"
+                  has_unit_pricing: true
+        '400':
+          description: Parámetros inválidos
+        '401':
+          description: Token no válido o expirado
+
+  /products/{id}/price:
+    get:
+      tags:
+        - Products
+      summary: Obtener precio específico de un producto por unidad
+      description: |
+        Obtiene el precio de un producto para una unidad específica.
+        
+        **Lógica de precios:**
+        - Si se especifica `unit` y existe precio para esa unidad → retorna precio por unidad
+        - Si no se especifica `unit` o no existe precio por unidad → retorna precio general
+        - Para categorías Verduras/Frutas se recomienda siempre especificar unidad
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único del producto
+          schema:
+            type: string
+          example: "PROD_TOMATE_001"
+        - name: unit
+          in: query
+          required: false
+          description: Unidad de medida (kg, caja, litro, etc.)
+          schema:
+            type: string
+          example: "kg"
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Precio del producto para la unidad especificada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product_id:
+                    type: string
+                    example: "PROD_TOMATE_001"
+                  price:
+                    type: number
+                    format: float
+                    example: 25.50
+                  unit:
+                    type: string
+                    example: "kg"
+                  price_source:
+                    type: string
+                    example: "unit_price"
+        '404':
+          description: Producto no encontrado o precio no disponible
+        '401':
+          description: Token no válido o expirado
+
+  /products/{id}/units:
+    get:
+      tags:
+        - Products
+      summary: Obtener unidades disponibles para un producto
+      description: |
+        Lista todas las unidades de medida disponibles para un producto con sus respectivos precios.
+        
+        **Casos de uso:**
+        - Mostrar opciones de unidades en el frontend
+        - Validar unidades disponibles antes de crear una venta
+        - Configurar selectors de unidades dinámicamente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único del producto
+          schema:
+            type: string
+          example: "PROD_TOMATE_001"
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista de unidades disponibles con precios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductUnitsResponse'
+              example:
+                product_id: "PROD_TOMATE_001"
+                available_units:
+                  - id: 1
+                    product_id: "PROD_TOMATE_001"
+                    unit: "kg"
+                    price_per_unit: 25.50
+                    effective_date: "2024-01-15T10:30:00Z"
+                  - id: 2
+                    product_id: "PROD_TOMATE_001"
+                    unit: "caja"
+                    price_per_unit: 450.00
+                    effective_date: "2024-01-15T10:30:00Z"
+        '404':
+          description: Producto no encontrado
+        '401':
+          description: Token no válido o expirado
+
+    post:
+      tags:
+        - Products
+      summary: Crear precio por unidad para un producto
+      description: |
+        Crea un nuevo precio específico para una unidad de medida de un producto.
+        
+        **Casos de uso:**
+        - Configurar precios por kg, caja, litro, etc.
+        - Actualizar precios para diferentes unidades de medida
+        - Gestión administrativa de precios por unidad
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único del producto
+          schema:
+            type: string
+          example: "PROD_TOMATE_001"
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUnitPriceRequest'
+            example:
+              unit: "kg"
+              price_per_unit: 25.50
+      responses:
+        '201':
+          description: Precio por unidad creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitPrice'
+              example:
+                id: 1
+                product_id: "PROD_TOMATE_001"
+                unit: "kg"
+                price_per_unit: 25.50
+                effective_date: "2024-01-15T10:30:00Z"
+        '400':
+          description: Datos inválidos o unidad ya existe
+        '404':
+          description: Producto no encontrado
+        '401':
+          description: Token no válido o expirado
+
+  /products/paginated:
+    get:
+      tags:
+        - Products
+      summary: Obtener productos paginados con información enriquecida
+      description: |
+        Recupera una lista paginada de productos enriquecidos incluyendo:
+        - Stock actual y estado calculado
+        - Precios y fechas de actualización
+        - Descripción del producto
+        - Información de categorías
+        - Campos calculados automáticos
+        
+        **Ideal para:** Interfaces de administración, listados de productos con toda la información
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Número de página (empezando desde 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          example: 1
+        - name: limit
+          in: query
+          required: false
+          description: Cantidad de elementos por página
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          example: 10
+        - name: search
+          in: query
+          required: false
+          description: Buscar por nombre del producto
+          schema:
+            type: string
+          example: "iPhone"
+        - name: category
+          in: query
+          required: false
+          description: Filtrar por categoría
+          schema:
+            type: string
+          example: "Electrónicos"
+        - name: sortBy
+          in: query
+          required: false
+          description: Campo por el cual ordenar
+          schema:
+            type: string
+            enum: ["name", "price", "stock", "category"]
+            default: "name"
+          example: "name"
+        - name: sortOrder
+          in: query
+          required: false
+          description: Orden de clasificación
+          schema:
+            type: string
+            enum: ["asc", "desc"]
+            default: "asc"
+          example: "asc"
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Lista paginada de productos enriquecidos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductEnriched'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 10
+                      total:
+                        type: integer
+                        example: 150
+                      totalPages:
+                        type: integer
+                        example: 15
+              example:
+                data:
+                  - id: "PROD_001"
+                    name: "iPhone 15 Pro"
+                    state: true
+                    category:
+                      id: 1
+                      name: "Electrónicos"
+                      description: "Dispositivos electrónicos"
+                    product_type: "PHYSICAL"
+                    purchase_price: 999.99
+                    stock_quantity: 25
+                    description: "Smartphone Apple iPhone 15 Pro 128GB"
+                    stock_status: "in_stock"
+                    price_formatted: "$999.99"
+                    has_valid_stock: true
+                    has_valid_price: true
+                pagination:
+                  page: 1
+                  limit: 10
+                  total: 150
+                  totalPages: 15
+        '400':
+          description: Parámetros de paginación inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Token de autenticación requerido
           content:
             application/json:
               schema:
@@ -2574,6 +2798,123 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Sale'
+
+  /sale/with-units:
+    post:
+      tags:
+        - Sales
+      summary: Crear venta con cantidades decimales y unidades específicas
+      description: |
+        Procesa una venta utilizando el nuevo sistema de cantidades decimales y unidades específicas.
+        
+        **Características:**
+        - ✅ Soporta cantidades decimales (2.5 kg, 1.75 litros)
+        - ✅ Valida unidades disponibles para cada producto
+        - ✅ Calcula precios usando unit_prices cuando están disponibles
+        - ✅ Actualiza inventario con cantidades decimales
+        - ✅ Manejo automático de productos con/sin unidades específicas
+        
+        **Casos de uso:**
+        - Ventas de productos de peso (verduras, frutas, carnes)
+        - Ventas con múltiples unidades por producto
+        - Integración con el nuevo sistema de precios por unidad
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaleWithUnitsRequest'
+            example:
+              client_id: "CLIENT_001"
+              details:
+                - product_id: "PROD_TOMATE_001"
+                  quantity: 2.5
+                  unit: "kg"
+                - product_id: "PROD_PAPA_001"
+                  quantity: 1.75
+                  unit: "kg"
+                - product_id: "PROD_REGULAR_001"
+                  quantity: 3.0
+                  # Sin unidad para productos regulares
+      responses:
+        '201':
+          description: Venta creada exitosamente con cantidades decimales
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sale_id:
+                    type: string
+                    example: "SALE_001"
+                  total_amount:
+                    type: number
+                    format: float
+                    example: 127.50
+                  client_id:
+                    type: string
+                    example: "CLIENT_001"
+                  details:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SaleDetailWithUnit'
+                  created_at:
+                    type: string
+                    format: date-time
+                    example: "2024-01-15T10:30:00Z"
+              example:
+                sale_id: "SALE_001"
+                total_amount: 127.50
+                client_id: "CLIENT_001"
+                details:
+                  - product_id: "PROD_TOMATE_001"
+                    product_name: "Tomate Cherry"
+                    quantity: 2.5
+                    unit: "kg"
+                    unit_price: 25.50
+                    subtotal: 63.75
+                  - product_id: "PROD_PAPA_001"
+                    product_name: "Papa Criolla"
+                    quantity: 1.75
+                    unit: "kg"
+                    unit_price: 18.00
+                    subtotal: 31.50
+                  - product_id: "PROD_REGULAR_001"
+                    product_name: "Producto Regular"
+                    quantity: 3.0
+                    unit: ""
+                    unit_price: 10.75
+                    subtotal: 32.25
+                created_at: "2024-01-15T10:30:00Z"
+        '400':
+          description: |
+            Error en validación de datos:
+            - Cantidad inválida (debe ser > 0, máximo 2 decimales)
+            - Unidad no disponible para el producto
+            - Stock insuficiente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_quantity:
+                  summary: Cantidad inválida
+                  value:
+                    error: "Cantidad inválida: 2.555 kg. Máximo 2 decimales permitidos"
+                invalid_unit:
+                  summary: Unidad no disponible
+                  value:
+                    error: "Unidad 'litro' no disponible para producto PROD_TOMATE_001"
+                insufficient_stock:
+                  summary: Stock insuficiente
+                  value:
+                    error: "Stock insuficiente para PROD_TOMATE_001. Disponible: 1.5 kg, Solicitado: 2.5 kg"
+        '404':
+          description: Cliente o producto no encontrado
+        '401':
+          description: Token no válido o expirado
 
   /sale/{id}:
     get:

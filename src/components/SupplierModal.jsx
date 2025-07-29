@@ -62,17 +62,19 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
   if (!isOpen) return null;
 
   const isNeoBrutalism = theme?.includes('neo-brutalism');
+  const isMaterial = theme?.includes('material');
+  const isFluent = theme?.includes('fluent');
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4" onClick={onClose}>
       <div 
         onClick={(e) => e.stopPropagation()}
-        className={`bg-card text-foreground p-6 w-full max-w-md transition-all duration-300 ease-in-out transform scale-95 opacity-0 animate-scale-in ${isNeoBrutalism ? 'border-4 border-black shadow-neo-brutal-dialog' : 'rounded-2xl shadow-2xl'}`}>
+        className={`bg-card text-foreground p-6 w-full max-w-md transition-all duration-300 ease-in-out transform scale-95 opacity-0 animate-scale-in ${isNeoBrutalism ? 'border-4 border-black shadow-neo-brutal-dialog' : isMaterial ? 'rounded-2xl shadow-2xl' : 'rounded-lg shadow-lg'}`}>
         
         <div className={`flex justify-between items-center pb-4 mb-6 ${isNeoBrutalism ? 'border-b-4 border-black' : 'border-b'}`}>
             <div className="flex items-center gap-4">
                 <Building className="h-8 w-8 text-primary"/>
-                <h2 className={`text-2xl font-bold ${isNeoBrutalism ? 'uppercase' : ''}`}>{supplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}</h2>
+                <h2 className={`text-2xl font-bold ${isNeoBrutalism ? 'uppercase' : isMaterial ? 'font-medium' : ''}`}>{supplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}</h2>
             </div>
           <Button variant="ghost" size="icon" onClick={onClose} className={`rounded-full ${isNeoBrutalism ? 'border-2 border-black' : ''}`}>
             <X className="h-6 w-6" />

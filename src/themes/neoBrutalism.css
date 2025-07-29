@@ -440,3 +440,7 @@
   transform: translate(-3px, -3px);
   box-shadow: var(--shadow-brutal-large);
 }
+
+.shadow-neo-brutal-dialog {
+  box-shadow: var(--shadow-brutal-large);
+}
