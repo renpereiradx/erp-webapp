@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useTheme } from 'next-themes';
 import { X, Save, User, Phone, MapPin, ToggleLeft, ToggleRight, Loader, Building } from 'lucide-react';
 import useSupplierStore from '@/store/useSupplierStore';
@@ -63,47 +64,73 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
 
   const isNeoBrutalism = theme?.includes('neo-brutalism');
   const isMaterial = theme?.includes('material');
-  const isFluent = theme?.includes('fluent');
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4" onClick={onClose}>
-      <div 
-        onClick={(e) => e.stopPropagation()}
-        className={`bg-card text-foreground p-6 w-full max-w-md transition-all duration-300 ease-in-out transform scale-95 opacity-0 animate-scale-in ${isNeoBrutalism ? 'border-4 border-black shadow-neo-brutal-dialog' : isMaterial ? 'rounded-2xl shadow-2xl' : 'rounded-lg shadow-lg'}`}>
-        
-        <div className={`flex justify-between items-center pb-4 mb-6 ${isNeoBrutalism ? 'border-b-4 border-black' : 'border-b'}`}>
-            <div className="flex items-center gap-4">
-                <Building className="h-8 w-8 text-primary"/>
-                <h2 className={`text-2xl font-bold ${isNeoBrutalism ? 'uppercase' : isMaterial ? 'font-medium' : ''}`}>{supplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}</h2>
-            </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className={`rounded-full ${isNeoBrutalism ? 'border-2 border-black' : ''}`}>
+  const modalStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '20px'
+    },
+    modal: {
+      background: 'var(--card)',
+      border: isNeoBrutalism ? '4px solid var(--border)' : '1px solid var(--border)',
+      borderRadius: isNeoBrutalism ? '0px' : (isMaterial ? '16px' : '8px'),
+      boxShadow: isNeoBrutalism ? '8px 8px 0px 0px rgba(0,0,0,1)' : '0px 4px 8px rgba(0, 0, 0, 0.1)',
+      width: '100%',
+      maxWidth: '500px',
+      maxHeight: '90vh',
+      overflow: 'auto'
+    }
+  };
+
+  const modalContent = (
+    <div style={modalStyles.overlay} onClick={onClose}>
+      <div style={modalStyles.modal} onClick={(e) => e.stopPropagation()}>
+        <div style={{ padding: '24px', borderBottom: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Building className="w-6 h-6 text-primary" />
+            <h2 style={{ fontSize: isNeoBrutalism ? '1.5rem' : '1.25rem', fontWeight: isNeoBrutalism ? '800' : '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', margin: 0 }}>
+              {supplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}
+            </h2>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-6 w-6" />
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className={`${isNeoBrutalism ? 'font-bold uppercase' : ''}`}>Nombre del Proveedor</Label>
+        <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <Label htmlFor="name" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Nombre del Proveedor</Label>
               <Input leftIcon={<User />} id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Ej: Tech Supplies Inc." required />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="contact" className={`${isNeoBrutalism ? 'font-bold uppercase' : ''}`}>Información de Contacto</Label>
+            <div>
+              <Label htmlFor="contact" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Información de Contacto</Label>
               <Input leftIcon={<Phone />} id="contact" name="contact" value={formData.contact} onChange={handleChange} placeholder="Ej: 123-456-7890 o email" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="address" className={`${isNeoBrutalism ? 'font-bold uppercase' : ''}`}>Dirección</Label>
+            <div>
+              <Label htmlFor="address" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Dirección</Label>
               <Input leftIcon={<MapPin />} id="address" name="address" value={formData.address} onChange={handleChange} placeholder="Ej: 123 Main St, Anytown, USA" />
             </div>
 
-          <div className={`flex items-center justify-between p-3 rounded-lg ${isNeoBrutalism ? 'border-2 border-black' : 'bg-muted'}`}>
-            <Label htmlFor="status" className={`font-bold ${isNeoBrutalism ? 'uppercase' : ''}`}>Estado</Label>
-            <Button type="button" variant={'ghost'} onClick={handleStatusToggle} className={`flex items-center gap-2 rounded-full p-2 ${formData.status ? 'text-green-500' : 'text-red-500'}`}>
-                {formData.status ? <ToggleRight className="h-6 w-6" /> : <ToggleLeft className="h-6 w-6" />}
-                <span className="font-bold">{formData.status ? 'Activo' : 'Inactivo'}</span>
-            </Button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: isNeoBrutalism ? '0px' : '8px', border: isNeoBrutalism ? '2px solid var(--border)' : '1px solid var(--border)', background: 'var(--muted)' }}>
+              <Label htmlFor="status" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none' }}>Estado</Label>
+              <Button type="button" variant={'ghost'} onClick={handleStatusToggle} style={{ color: formData.status ? 'var(--success)' : 'var(--destructive)' }}>
+                  {formData.status ? <ToggleRight className="h-6 w-6" /> : <ToggleLeft className="h-6 w-6" />}
+                  <span style={{ fontWeight: 'bold' }}>{formData.status ? 'Activo' : 'Inactivo'}</span>
+              </Button>
+            </div>
           </div>
 
-          <div className={`flex justify-end space-x-4 pt-6 ${isNeoBrutalism ? 'border-t-4 border-black' : 'border-t'}`}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '24px', borderTop: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)' }}>
             <Button type="button" variant={isNeoBrutalism ? 'secondary' : 'outline'} onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
@@ -116,6 +143,8 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
       </div>
     </div>
   );
+
+  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default SupplierModal;
