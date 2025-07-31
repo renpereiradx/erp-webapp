@@ -211,7 +211,15 @@ class BusinessManagementAPI {
   // PRODUCTS
   // ============================================================================
 
-  async getProducts(page = 1, pageSize = 10) {
+  async getProducts(page = 1, pageSize = 10, enriched = true) {
+    if (enriched) {
+      try {
+        return this.getProductsWithEnrichedDetails(page, pageSize);
+      } catch (error) {
+        // Fallback a productos básicos
+        return this.getProductsWithBasicDetails(page, pageSize);
+      }
+    }
     return this.getProductsWithBasicDetails(page, pageSize);
   }
 
@@ -220,7 +228,25 @@ class BusinessManagementAPI {
   }
 
   async searchProductsByName(name) {
-    return this.makeRequest(`/products/products/name/${encodeURIComponent(name)}`);
+    // Usar el nuevo endpoint que devuelve datos enriquecidos
+    return this.makeRequest(`/products/name/${encodeURIComponent(name)}`);
+  }
+
+  async searchProductsByNameEnriched(name) {
+    // Método específico para obtener datos enriquecidos por nombre
+    try {
+      const products = await this.makeRequest(`/products/name/${encodeURIComponent(name)}`);
+      
+      // Los productos ya vienen con estructura enriquecida del backend
+      if (Array.isArray(products)) {
+        return products.map(product => this.normalizeEnrichedProduct(product));
+      }
+      
+      return [];
+    } catch (error) {
+      console.warn('Error en búsqueda enriquecida por nombre:', error.message);
+      return [];
+    }
   }
 
   async searchProducts(searchTerm) {
@@ -231,13 +257,15 @@ class BusinessManagementAPI {
     
     if (looksLikeId) {
       try {
-        const product = await this.getProductById(searchTerm);
+        // Para búsquedas por ID, usar el endpoint de detalles enriquecidos
+        const product = await this.getProductWithDetails(searchTerm);
         return Array.isArray(product) ? product : [product];
       } catch (error) {
         // Solo hacer fallback a nombre si el error NO indica que es un ID válido pero inexistente
         if (!error.message.includes('Producto no encontrado') && !error.message.includes('not found')) {
           try {
-            return await this.searchProductsByName(searchTerm);
+            // Usar el nuevo endpoint enriquecido
+            return await this.searchProductsByNameEnriched(searchTerm);
           } catch (nameError) {
             return [];
           }
@@ -247,8 +275,10 @@ class BusinessManagementAPI {
       }
     } else {
       try {
-        return await this.searchProductsByName(searchTerm);
+        // Para búsquedas por nombre, usar el nuevo endpoint enriquecido
+        return await this.searchProductsByNameEnriched(searchTerm);
       } catch (error) {
+        console.warn('Error en búsqueda por nombre:', error.message);
         return [];
       }
     }
@@ -302,6 +332,139 @@ class BusinessManagementAPI {
     return this.makeRequest(`/products/products/${page}/${pageSize}`);
   }
 
+  async getProductsWithEnrichedDetails(page = 1, pageSize = 10) {
+    // Intentar obtener productos con detalles enriquecidos si está disponible
+    try {
+      // Este endpoint no existe aún pero podría implementarse en el futuro
+      // return this.makeRequest(`/products/products/enriched/${page}/${pageSize}`);
+      
+      // Por ahora usar el endpoint normal y enriquecer en paralelo
+      const products = await this.getProductsWithBasicDetails(page, pageSize);
+      
+      // Enriquecer productos en paralelo (máximo 5 simultáneos para evitar sobrecarga)
+      if (Array.isArray(products.data)) {
+        const enrichedProducts = await this.enrichProductsBatch(products.data, 5);
+        return {
+          ...products,
+          data: enrichedProducts
+        };
+      }
+      
+      return products;
+    } catch (error) {
+      // Fallback al método básico
+      return this.getProductsWithBasicDetails(page, pageSize);
+    }
+  }
+
+  async enrichProductsBatch(products, batchSize = 5) {
+    const enrichedProducts = [];
+    
+    // Procesar en lotes para evitar sobrecarga del servidor
+    for (let i = 0; i < products.length; i += batchSize) {
+      const batch = products.slice(i, i + batchSize);
+      
+      const enrichedBatch = await Promise.allSettled(
+        batch.map(product => this.enrichSingleProduct(product))
+      );
+      
+      // Agregar productos enriquecidos o básicos en caso de error
+      enrichedBatch.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          enrichedProducts.push(result.value);
+        } else {
+          // En caso de error, usar producto básico
+          enrichedProducts.push(batch[index]);
+        }
+      });
+    }
+    
+    return enrichedProducts;
+  }
+
+  async enrichSingleProduct(product) {
+    try {
+      // Intentar obtener el producto con todos los detalles
+      const enrichedProduct = await this.getProductWithDetails(product.id);
+      return enrichedProduct;
+    } catch (error) {
+      // En caso de error, intentar enriquecer con requests individuales
+      return this.enrichProductManually(product);
+    }
+  }
+
+  // Normalizar productos que vienen del nuevo endpoint con estructura enriquecida
+  normalizeEnrichedProduct(product) {
+    return {
+      // Datos básicos del producto
+      id: product.id,
+      name: product.name,
+      state: product.state,
+      is_active: product.state,
+      category_id: product.category_id,
+      category_name: product.category_name,
+      product_type: product.product_type,
+      user_id: product.user_id,
+      
+      // Datos de precios - priorizando unit_prices
+      price: product.purchase_price,
+      purchase_price: product.purchase_price,
+      price_id: product.price_id,
+      price_updated_at: product.price_updated_at,
+      price_updated_by: product.price_updated_by,
+      price_formatted: product.price_formatted,
+      has_valid_price: product.has_valid_price,
+      has_unit_pricing: product.has_unit_pricing,
+      
+      // Datos de stock
+      stock_quantity: product.stock_quantity,
+      stock_id: product.stock_id,
+      stock_updated_at: product.stock_updated_at,
+      stock_updated_by: product.stock_updated_by,
+      stock_status: product.stock_status,
+      has_valid_stock: product.has_valid_stock,
+      
+      // Datos de descripción
+      description: product.description,
+      description_id: product.description_id,
+      
+      // Datos de categoría enriquecidos
+      category: product.category,
+      
+      // Metadatos para identificar productos enriquecidos
+      _enriched: true,
+      _source: 'backend_enriched'
+    };
+  }
+
+  async enrichProductManually(product) {
+    const enrichedProduct = { ...product };
+    
+    // Obtener datos adicionales en paralelo
+    const enrichmentPromises = [
+      this.getProductPrice(product.id).catch(() => null),
+      this.getProductStock(product.id).catch(() => null),
+      this.getProductDescription(product.id).catch(() => null)
+    ];
+    
+    const [price, stock, description] = await Promise.allSettled(enrichmentPromises);
+    
+    // Agregar datos enriquecidos si están disponibles
+    if (price.status === 'fulfilled' && price.value) {
+      enrichedProduct.price = price.value;
+    }
+    
+    if (stock.status === 'fulfilled' && stock.value) {
+      enrichedProduct.stock = stock.value;
+    }
+    
+    if (description.status === 'fulfilled' && description.value) {
+      enrichedProduct.description = description.value;
+    }
+    
+    return enrichedProduct;
+  }
+
   async getProductWithDetails(id) {
     try {
       return await this.makeRequest(`/products/${id}/details`);
@@ -314,7 +477,12 @@ class BusinessManagementAPI {
     try {
       return await this.makeRequest(`/products/search/details/${encodeURIComponent(name)}`);
     } catch (error) {
-      return await this.searchProductsByName(name);
+      // Fallback: buscar productos básicos y enriquecerlos
+      const basicProducts = await this.searchProductsByName(name);
+      if (Array.isArray(basicProducts)) {
+        return this.enrichProductsBatch(basicProducts, 3);
+      }
+      return basicProducts;
     }
   }
 

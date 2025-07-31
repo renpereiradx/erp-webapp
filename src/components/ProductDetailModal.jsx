@@ -18,6 +18,8 @@ import {
   Trash2
 } from 'lucide-react';
 import { productService } from '@/services/productService';
+import BusinessManagementAPI from '@/services/BusinessManagementAPI';
+import { isEnrichedProduct } from '@/utils/productUtils';
 
 const ProductDetailModal = ({ 
   isOpen, 
@@ -347,6 +349,19 @@ const ProductDetailModal = ({
                 margin: 0
               }}>
                 {product.name}
+                {isEnrichedProduct(product) && (
+                  <span 
+                    style={{
+                      marginLeft: '8px',
+                      fontSize: '0.75rem',
+                      color: '#10b981',
+                      fontWeight: '500'
+                    }}
+                    title="Producto con datos enriquecidos"
+                  >
+                    ✨ ENRIQUECIDO
+                  </span>
+                )}
               </h2>
               <p style={{
                 fontSize: '0.875rem',

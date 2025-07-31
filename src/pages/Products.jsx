@@ -38,6 +38,7 @@ import useAuthStore from '@/store/useAuthStore';
 import ProductModal from '@/components/ProductModal';
 import ProductDetailModal from '@/components/ProductDetailModal';
 import DeleteProductModal from '@/components/DeleteProductModal';
+import { createProductSummary, getStockStatus, formatPrice, isEnrichedProduct } from '@/utils/productUtils';
 import ToastContainer from '@/components/ui/ToastContainer';
 import { useToast } from '@/hooks/useToast';
 
@@ -850,12 +851,27 @@ const Products = () => {
                 //   fullProduct: product
                 // });
                 
+                const productSummary = createProductSummary(product);
+                const stockStatus = getStockStatus(product);
+                
                 return (
                   <div
                     key={product.id}
                     style={getCardStyles()}
-                    className="hover:shadow-lg transition-shadow"
+                    className="hover:shadow-lg transition-shadow relative"
                   >
+                    {/* Enriched Product Indicators */}
+                    <div className="absolute top-2 right-2 flex flex-col gap-1">
+                      {isEnrichedProduct(product) && (
+                        <div className="w-2 h-2 bg-green-400 rounded-full" 
+                             title="Producto con datos enriquecidos" />
+                      )}
+                      {productSummary.hasUnitPricing && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full" 
+                             title="Producto con precios por unidad (kg, caja, etc.)" />
+                      )}
+                    </div>
+                    
                     {/* Product Card Header */}
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
@@ -887,9 +903,10 @@ const Products = () => {
                       </div>
                     </div>
 
-                    {/* Product Info */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between">
+                    {/* Enhanced Product Info */}
+                    <div className="space-y-3 mb-4">
+                      {/* Category Info */}
+                      <div className="flex justify-between items-center">
                         <span 
                           className="text-muted-foreground"
                           style={getTypographyStyles('small')}
@@ -897,31 +914,92 @@ const Products = () => {
                           {isNeoBrutalism ? 'CATEGORÍA:' : 'Categoría:'}
                         </span>
                         <span style={getTypographyStyles('small')}>
-                          {getCategoryName(product.category_id)}
+                          {productSummary.category?.name || getCategoryName(product.category_id)}
                         </span>
                       </div>
-                      <div className="flex justify-between">
+                      
+                      {/* Price Info - Enhanced */}
+                      <div className="flex justify-between items-center">
                         <span 
                           className="text-muted-foreground"
                           style={getTypographyStyles('small')}
                         >
-                          {isNeoBrutalism ? 'PRECIO:' : 'Precio:'}
+                          {productSummary.hasUnitPricing 
+                            ? (isNeoBrutalism ? 'PRECIO/UNIDAD:' : 'Precio/Unidad:')
+                            : (isNeoBrutalism ? 'PRECIO:' : 'Precio:')
+                          }
                         </span>
-                        <span style={getTypographyStyles('small')}>
-                          ${product.price ? parseFloat(product.price).toFixed(2) : '0.00'}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          {productSummary.priceFormatted ? (
+                            <span 
+                              style={getTypographyStyles('small')}
+                              className="font-medium text-green-600"
+                            >
+                              {productSummary.priceFormatted}
+                            </span>
+                          ) : productSummary.price ? (
+                            <span 
+                              style={getTypographyStyles('small')}
+                              className="font-medium text-green-600"
+                            >
+                              {productSummary.price.formatted}
+                            </span>
+                          ) : (
+                            <span 
+                              style={getTypographyStyles('small')}
+                              className="text-muted-foreground"
+                            >
+                              {product.price ? `$${parseFloat(product.price).toFixed(2)}` : 'N/A'}
+                            </span>
+                          )}
+                          {(productSummary.priceFormatted || productSummary.price) && (
+                            <DollarSign className="w-3 h-3 text-green-600" />
+                          )}
+                          {productSummary.hasUnitPricing && (
+                            <Tag className="w-3 h-3 text-blue-500" title="Múltiples unidades disponibles" />
+                          )}
+                        </div>
                       </div>
-                      <div className="flex justify-between">
+                      
+                      {/* Stock Info - Enhanced with color coding */}
+                      <div className="flex justify-between items-center">
                         <span 
                           className="text-muted-foreground"
                           style={getTypographyStyles('small')}
                         >
                           {isNeoBrutalism ? 'STOCK:' : 'Stock:'}
                         </span>
-                        <span style={getTypographyStyles('small')}>
-                          {product.stock_quantity !== undefined ? product.stock_quantity : 'N/A'}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span 
+                            style={{
+                              ...getTypographyStyles('small'),
+                              color: stockStatus.color === 'red' ? '#ef4444' :
+                                     stockStatus.color === 'orange' ? '#f97316' :
+                                     stockStatus.color === 'blue' ? '#3b82f6' :
+                                     stockStatus.color === 'green' ? '#10b981' : '#6b7280'
+                            }}
+                            className="font-medium"
+                          >
+                            {stockStatus.text}
+                          </span>
+                          {stockStatus.status === 'out' && <AlertTriangle className="w-3 h-3 text-red-500" />}
+                          {stockStatus.status === 'low' && <AlertCircle className="w-3 h-3 text-orange-500" />}
+                          {stockStatus.status === 'in-stock' && <CheckCircle className="w-3 h-3 text-green-500" />}
+                        </div>
                       </div>
+                      
+                      {/* Description Preview - Only for enriched products */}
+                      {productSummary.description && (
+                        <div className="border-t pt-2">
+                          <p 
+                            className="text-xs text-muted-foreground line-clamp-2"
+                            style={getTypographyStyles('small')}
+                            title={productSummary.description.text}
+                          >
+                            {productSummary.description.text}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Actions */}
