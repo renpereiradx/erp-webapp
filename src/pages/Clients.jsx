@@ -41,7 +41,7 @@ const getButtonStyles = (theme, variant = 'primary') => {
 };
 const getBadgeStyles = (theme, status) => {
     const isNeoBrutalism = theme?.includes('neo-brutalism');
-    const backgroundColor = status ? (isNeoBrutalism ? 'var(--brutalist-lime)' : 'var(--success)') : (isNeoBrutalism ? 'var(--brutalist-pink)' : 'var(--destructive)');
+    const backgroundColor = status === true ? (isNeoBrutalism ? 'var(--brutalist-lime)' : 'var(--success)') : (isNeoBrutalism ? 'var(--brutalist-pink)' : 'var(--destructive)');
     return { background: backgroundColor, color: isNeoBrutalism ? '#000000' : 'white', border: isNeoBrutalism ? '2px solid var(--border)' : 'none', borderRadius: isNeoBrutalism ? '0px' : '4px', textTransform: isNeoBrutalism ? 'uppercase' : 'none', fontWeight: isNeoBrutalism ? 'bold' : '500', fontSize: '0.75rem', padding: isNeoBrutalism ? '8px 12px' : '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', minWidth: '80px', textAlign: 'center' };
 };
 
@@ -68,7 +68,7 @@ const ClientsPage = () => {
     const search = localSearchTerm.toLowerCase();
     const fullName = `${client.name || ''} ${client.last_name || ''}`.toLowerCase();
     const matchesSearch = fullName.includes(search) || (client.document_id || '').toLowerCase().includes(search);
-    const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' && client.status) || (statusFilter === 'inactive' && !client.status);
+    const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' && client.status === true) || (statusFilter === 'inactive' && client.status === false);
     return matchesSearch && matchesStatus;
   });
 
@@ -150,7 +150,7 @@ const ClientsPage = () => {
             <div>
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-semibold mb-2 truncate" style={getTypographyStyles(theme, 'subheading')}>{client.name} {client.last_name || ''}</h3>
-                                <div style={getBadgeStyles(theme, client.status)}>{client.status ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}<span>{client.status ? (isNeoBrutalism ? 'ACTIVO' : 'Activo') : (isNeoBrutalism ? 'INACTIVO' : 'Inactivo')}</span></div>
+                                <div style={getBadgeStyles(theme, !!client.status)}>{!!client.status ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}<span>{!!client.status ? (isNeoBrutalism ? 'ACTIVO' : 'Activo') : (isNeoBrutalism ? 'INACTIVO' : 'Inactivo')}</span></div>
               </div>
               <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>DOCUMENTO:</span><span style={getTypographyStyles(theme, 'small')}>{client.document_id || 'N/A'}</span></div>
@@ -204,13 +204,13 @@ const ClientsPage = () => {
             <div className="border-t pt-6">
               <div className="mb-3" style={getTypographyStyles(theme, 'subheading')}>{isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : 'Filtrar Resultados Actuales'}</div>
               <div className="grid md:grid-cols-3 gap-4">
-                <Input
+              <Input
                   leftIcon={<Filter className="w-5 h-5 text-muted-foreground" />}
-                  type="text"
+                type="text"
                   placeholder={isNeoBrutalism ? 'FILTRAR POR NOMBRE...' : 'Filtrar por nombre...'}
-                  value={localSearchTerm}
-                  onChange={(e) => setLocalSearchTerm(e.target.value)}
-                />
+                value={localSearchTerm}
+                onChange={(e) => setLocalSearchTerm(e.target.value)}
+              />
                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="p-3 border rounded-md bg-background" style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="all">Todos los Estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select>
                 <div className="text-center p-3" style={isNeoBrutalism ? {border: '3px solid var(--border)'} : {}}><div style={getTypographyStyles(theme, 'heading')}>{filteredClients.length}</div><div style={getTypographyStyles(theme, 'small')}>CLIENTES MOSTRADOS</div></div>
               </div>
