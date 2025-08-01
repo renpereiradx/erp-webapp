@@ -9,6 +9,7 @@ import MainLayout from '@/layouts/MainLayout';
 import Dashboard from '@/pages/Dashboard';
 import Products from '@/pages/Products';
 import Clients from '@/pages/Clients';
+import Suppliers from '@/pages/Suppliers';
 import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
 import ProductDetailTest from '@/components/ProductDetailTest';
@@ -123,6 +124,7 @@ function App() {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/productos" element={<Products />} />
                   <Route path="/clientes" element={<Clients />} />
+                  <Route path="/proveedores" element={<Suppliers />} />
                   <Route path="/pedidos" element={<Orders />} />
                   <Route path="/reportes" element={<Reports />} />
                   <Route path="/configuracion" element={<Settings />} />

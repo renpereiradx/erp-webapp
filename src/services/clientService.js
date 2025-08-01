@@ -26,6 +26,19 @@ export const clientService = {
     }
   },
 
+  // Obtener un cliente por nombre
+  getClientByName: async (name) => {
+    try {
+      // Asumiendo que apiClient tiene un método para manejar rutas personalizadas o que se puede construir la URL
+      // Si apiClient.makeRequest es el método genérico para hacer peticiones
+      const response = await apiClient.makeRequest(`/client/name/${encodeURIComponent(name)}`, { method: 'GET' });
+      return response;
+    } catch (error) {
+      console.error('Error obteniendo cliente por nombre:', error);
+      throw new Error(error.message || 'Error al obtener el cliente por nombre');
+    }
+  },
+
   // Crear un nuevo cliente
   createClient: async (clientData) => {
     try {

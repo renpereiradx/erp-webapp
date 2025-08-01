@@ -659,70 +659,7 @@
   }
 }
 
-/* DEBUG: Asegurar visibilidad de listas */
-.clients-page .space-y-4 > *,
-.products-page .space-y-4 > * {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
 
-/* Asegurar que las tablas sean visibles */
-.clients-page table,
-.products-page table {
-  display: table !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  width: 100% !important;
-}
-
-.clients-page tbody,
-.products-page tbody {
-  display: table-row-group !important;
-  visibility: visible !important;
-}
-
-.clients-page tr,
-.products-page tr {
-  display: table-row !important;
-  visibility: visible !important;
-}
-
-.clients-page td,
-.products-page td {
-  display: table-cell !important;
-  visibility: visible !important;
-}
-
-/* Asegurar que las cards sean visibles */
-.client-card,
-.product-card {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  margin-bottom: 1rem !important;
-}
-
-/* Fix para contenedores que podrían estar ocultos */
-.lg\\:hidden {
-  display: block !important;
-}
-
-@media (min-width: 1024px) {
-  .lg\\:hidden {
-    display: none !important;
-  }
-  .hidden.lg\\:block {
-    display: block !important;
-  }
-}
-
-/* Asegurar que el contenido de las cards sea visible */
-.client-card .flex,
-.product-card .flex {
-  display: flex !important;
-  visibility: visible !important;
-}
 
 /* Mejoras específicas para las cards de clientes y productos */
 .client-card,

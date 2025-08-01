@@ -20,6 +20,13 @@ import DeleteSupplierModal from '@/components/DeleteSupplierModal';
 import ToastContainer from '@/components/ui/ToastContainer';
 import { useToast } from '@/hooks/useToast';
 import { Input } from '@/components/ui/Input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // NOTE: Styling functions are kept consistent with other pages like Clients.jsx
 const getCardStyles = (theme) => {
@@ -210,7 +217,6 @@ const SuppliersPage = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
-              <select onChange={(e) => setStatusFilter(e.target.value)} defaultValue="active" className="p-3 border rounded-md bg-background" style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="all">Todos los Estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select>
               <button onClick={handleSearch} disabled={!searchTerm} style={{...getButtonStyles(theme, 'primary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'BUSCAR' : 'Buscar'}</button>
               <button onClick={handleClearSearch} style={{...getButtonStyles(theme, 'secondary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}</button>
             </div>
@@ -227,7 +233,20 @@ const SuppliersPage = () => {
                   value={localSearchTerm}
                   onChange={(e) => setLocalSearchTerm(e.target.value)}
                 />
-                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="p-3 border rounded-md bg-background" style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="all">Todos los Estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className={`
+                    flex h-9 w-full min-w-0 rounded-md border bg-background px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none
+                    focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]
+                    ${isNeoBrutalism ? 'border-[3px] border-[var(--border)] rounded-none uppercase font-semibold' : 'border-input'}
+                  `}>
+                    <SelectValue placeholder="Filtrar por estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los Estados</SelectItem>
+                    <SelectItem value="active">Activos</SelectItem>
+                    <SelectItem value="inactive">Inactivos</SelectItem>
+                  </SelectContent>
+                </Select>
                 <div className="text-center p-3" style={isNeoBrutalism ? {border: '3px solid var(--border)'} : {}}><div style={getTypographyStyles(theme, 'heading')}>{filteredSuppliers.length}</div><div style={getTypographyStyles(theme, 'small')}>PROVEEDORES MOSTRADOS</div></div>
               </div>
             </div>

@@ -34,25 +34,69 @@ const useClientStore = create(
         await get().searchClients(lastSearchTerm, page, pageSize);
       },
 
-      // Acción principal de búsqueda y paginación
+            // Acción principal de búsqueda y paginación
       searchClients: async (searchTerm = '', page = 1, limit = 10) => {
         set({ loading: true, error: null, lastSearchTerm: searchTerm });
         try {
-          // Asumimos que el servicio puede manejar la búsqueda y paginación
-          const response = await clientService.getClients({ page, limit, search: searchTerm });
+          let clientsData = [];
+          let paginationInfo = null;
+
+          if (searchTerm.trim() !== '') {
+            // Si se proporciona un término de búsqueda, usar el endpoint getClientByName
+            const clientByNameResponse = await clientService.getClientByName(searchTerm);
+
+            let parsedResponse = clientByNameResponse;
+            if (typeof clientByNameResponse === 'string') {
+                try {
+                    parsedResponse = JSON.parse(clientByNameResponse);
+                } catch (e) {
+                    parsedResponse = []; // Fallback to empty array if parsing fails
+                }
+            }
+
+            // La API podría devolver un solo objeto o un array. Normalizar a un array.
+            clientsData = Array.isArray(parsedResponse) ? parsedResponse : (parsedResponse ? [parsedResponse] : []);
+            // Para una búsqueda de nombre específico, la información de paginación no es típicamente relevante,
+            // así que podemos establecer totalPages y totalClients basándonos en los clientes encontrados.
+            paginationInfo = {
+                current_page: 1,
+                per_page: clientsData.length,
+                total: clientsData.length,
+                total_pages: 1
+            };
+          } else {
+            // Si no hay término de búsqueda, obtener todos los clientes con paginación
+            const response = await clientService.getClients({ page, limit, search: searchTerm });
+            
+            if (response && typeof response === 'object') {
+              if (response.data && response.pagination) {
+                clientsData = Array.isArray(response.data) ? response.data : [];
+                paginationInfo = response.pagination;
+              } else if (Array.isArray(response)) {
+                clientsData = response;
+              } else if (response.clients && Array.isArray(response.clients)) {
+                clientsData = response.clients;
+              } else {
+                const possibleArrays = Object.values(response).filter(val => Array.isArray(val));
+                if (possibleArrays.length > 0) {
+                  clientsData = possibleArrays[0];
+                }
+              }
+            } else if (Array.isArray(response)) {
+              clientsData = response;
+            }
+          }
           
-          // La respuesta del servicio debe tener un formato consistente
-          // con paginación o ser un array plano si no hay paginación.
-          const isPaginated = response.data && response.pagination;
+          // Filtrar elementos inválidos
+          const validClients = clientsData.filter(c => c && typeof c === 'object');
           
           set({
-            clients: isPaginated ? (response.data || []).filter(c => c) : (response || []).filter(c => c),
-            currentPage: isPaginated ? response.pagination.current_page : 1,
-            totalPages: isPaginated ? response.pagination.total_pages : 1,
-            totalClients: isPaginated ? response.pagination.total : response.length,
+            clients: validClients,
+            currentPage: paginationInfo ? paginationInfo.current_page : 1,
+            totalPages: paginationInfo ? paginationInfo.total_pages : 1,
+            totalClients: paginationInfo ? paginationInfo.total : validClients.length,
             loading: false,
           });
-
         } catch (error) {
           set({ error: error.message, loading: false });
         }
