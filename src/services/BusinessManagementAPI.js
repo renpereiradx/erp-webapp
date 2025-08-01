@@ -639,7 +639,11 @@ class BusinessManagementAPI {
   // CLIENTS
   // ============================================================================
 
-  async getClients(page = 1, pageSize = 10) {
+  async getClients(params = {}) {
+    const { page = 1, pageSize = 10, search } = params;
+    if (search) {
+      return this.searchClientsByName(search);
+    }
     return this.makeRequest(`/client/${page}/${pageSize}`);
   }
 
@@ -648,7 +652,14 @@ class BusinessManagementAPI {
   }
 
   async searchClientsByName(name) {
-    return this.makeRequest(`/client/name/${encodeURIComponent(name)}`);
+    try {
+      return await this.makeRequest(`/client/name/${encodeURIComponent(name)}`);
+    } catch (error) {
+      if (error.message && error.message.includes('404')) {
+        return []; // Not found is not an error for search, just an empty result.
+      }
+      throw error; // Re-throw other errors.
+    }
   }
 
   async createClient(clientData) {
@@ -679,6 +690,59 @@ class BusinessManagementAPI {
 
   async deleteClient(clientId) {
     return this.makeRequest(`/client/delete/${clientId}`, {
+      method: 'PUT'
+    });
+  }
+
+  // ============================================================================
+  // SUPPLIERS
+  // ============================================================================
+
+  async getSuppliers(params = {}) {
+    const { page = 1, pageSize = 10, search } = params;
+    if (search) {
+      return this.searchSuppliersByName(search);
+    }
+    return this.makeRequest(`/supplier/${page}/${pageSize}`);
+  }
+
+  async searchSuppliersByName(name) {
+    try {
+      return await this.makeRequest(`/supplier/name/${encodeURIComponent(name)}`);
+    } catch (error) {
+      if (error.message && error.message.includes('404')) {
+        return []; // Not found is not an error for search, just an empty result.
+      }
+      throw error; // Re-throw other errors.
+    }
+  }
+
+  async createSupplier(supplierData) {
+    return this.makeRequest('/supplier/', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: supplierData.name,
+        contact: supplierData.contact,
+        address: supplierData.address,
+        status: supplierData.status !== undefined ? supplierData.status : true
+      })
+    });
+  }
+
+  async updateSupplier(supplierId, supplierData) {
+    return this.makeRequest(`/supplier/${supplierId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: supplierData.name,
+        contact: supplierData.contact,
+        address: supplierData.address,
+        status: supplierData.status
+      })
+    });
+  }
+
+  async deleteSupplier(supplierId) {
+    return this.makeRequest(`/supplier/delete/${supplierId}`, {
       method: 'PUT'
     });
   }

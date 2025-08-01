@@ -9,73 +9,7 @@ export const clientService = {
   // Obtener todos los clientes con paginación y filtros
   getClients: async (params = {}) => {
     try {
-      // El cliente API oficial devuelve todos los clientes
-      // Implementamos filtrado local hasta que el backend soporte parámetros
-      const clients = await apiClient.getClients();
-      
-      let filteredClients = [...clients];
-      
-      // Aplicar filtro de búsqueda si existe
-      if (params.search) {
-        const searchTerm = params.search.toLowerCase();
-        filteredClients = filteredClients.filter(client => 
-          client.name?.toLowerCase().includes(searchTerm) ||
-          client.email?.toLowerCase().includes(searchTerm) ||
-          client.phone?.toLowerCase().includes(searchTerm) ||
-          client.company?.toLowerCase().includes(searchTerm)
-        );
-      }
-      
-      // Aplicar filtro de tipo si existe
-      if (params.type) {
-        filteredClients = filteredClients.filter(client => 
-          client.type === params.type
-        );
-      }
-      
-      // Aplicar filtro de estado si existe
-      if (params.status) {
-        filteredClients = filteredClients.filter(client => 
-          client.status === params.status
-        );
-      }
-      
-      // Aplicar ordenamiento
-      const sortBy = params.sortBy || 'name';
-      const sortOrder = params.sortOrder || 'asc';
-      
-      filteredClients.sort((a, b) => {
-        let valueA = a[sortBy] || '';
-        let valueB = b[sortBy] || '';
-        
-        if (typeof valueA === 'string') {
-          valueA = valueA.toLowerCase();
-          valueB = valueB.toLowerCase();
-        }
-        
-        if (sortOrder === 'desc') {
-          return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
-        }
-        return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
-      });
-      
-      // Aplicar paginación
-      const page = parseInt(params.page) || 1;
-      const limit = parseInt(params.limit) || 10;
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      
-      const paginatedClients = filteredClients.slice(startIndex, endIndex);
-      
-      return {
-        data: paginatedClients,
-        pagination: {
-          current_page: page,
-          per_page: limit,
-          total: filteredClients.length,
-          total_pages: Math.ceil(filteredClients.length / limit)
-        }
-      };
+      return await apiClient.getClients(params);
     } catch (error) {
       console.error('Error obteniendo clientes:', error);
       throw new Error(error.message || 'Error al obtener la lista de clientes');
