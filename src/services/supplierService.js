@@ -31,7 +31,7 @@ export const supplierService = {
 
   deleteSupplier: async (id) => {
     try {
-      return await apiService.delete(`/supplier/${id}`);
+      return await apiService.put(`/supplier/delete/${id}`);
     } catch (error) {
       console.error('Error eliminando proveedor:', error);
       throw new Error(error.message || 'Error al eliminar el proveedor');

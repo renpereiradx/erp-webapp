@@ -4,39 +4,37 @@ import { supplierService } from '@/services/supplierService';
 
 const useSupplierStore = create(
   devtools(
-    (set) => ({
+    (set, get) => ({
       suppliers: [],
       loading: false,
       error: null,
       pagination: {},
+
+      clearSuppliers: () => set({ suppliers: [], pagination: {}, error: null }),
 
       fetchSuppliers: async (page = 1, pageSize = 10, search = '') => {
         set({ loading: true, error: null });
         try {
           let response = await supplierService.getSuppliers({ page, limit: pageSize, search });
           // Si la búsqueda no devuelve nada, la API puede retornar null. Lo normalizamos a un array vacío.
-          if (search && !response) {
+          if (!response) {
             response = [];
           }
 
-          if (search) {
-            set({
-              suppliers: response,
-              pagination: {
-                current_page: 1,
-                per_page: response.length,
-                total: response.length,
-                total_pages: 1,
-              },
-              loading: false,
-            });
-          } else {
-            set({
-              suppliers: response.data,
-              pagination: response.pagination,
-              loading: false,
-            });
-          }
+          // Si la respuesta tiene una propiedad 'data' y 'pagination', la usamos
+          // de lo contrario, asumimos que la respuesta es directamente el array de proveedores
+          const isPaginated = response.data && response.pagination;
+          
+          set({
+            suppliers: isPaginated ? response.data.filter(s => s) : response.filter(s => s),
+            pagination: isPaginated ? response.pagination : {
+              current_page: 1,
+              per_page: response.length,
+              total: response.length,
+              total_pages: 1,
+            },
+            loading: false,
+          });
         } catch (error) {
           set({ error: error.message, loading: false });
         }

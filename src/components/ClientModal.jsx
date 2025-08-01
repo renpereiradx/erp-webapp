@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { useTheme } from 'next-themes';
-import { X, User, FileText, Phone } from 'lucide-react';
+import { X, Save, User, Phone, MapPin, Loader, FileText } from 'lucide-react';
 import useClientStore from '@/store/useClientStore';
 import { useToast } from '@/hooks/useToast';
-import { Input } from '@/components/ui/Input'; // Usando el componente Input del proyecto
-import { Switch } from '@/components/ui/switch'; // Usando el componente Switch
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/label';
 
 const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
   const { theme } = useTheme();
@@ -14,12 +16,10 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     last_name: '',
-    document_id: '',
+    address: '',
     contact: '',
-    status: true,
+    document_id: '',
   });
-
-  const isNeoBrutalism = theme.includes('neo-brutalism');
 
   useEffect(() => {
     if (isOpen) {
@@ -27,12 +27,12 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
         setFormData({
           name: client.name || '',
           last_name: client.last_name || '',
-          document_id: client.document_id || '',
+          address: client.address || '',
           contact: client.contact || '',
-          status: client.status !== undefined ? client.status : true,
+          document_id: client.document_id || '',
         });
       } else {
-        setFormData({ name: '', last_name: '', document_id: '', contact: '', status: true });
+        setFormData({ name: '', last_name: '', address: '', contact: '', document_id: '' });
       }
     }
   }, [client, isOpen]);
@@ -42,17 +42,15 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleStatusChange = (checked) => {
-    setFormData((prev) => ({ ...prev, status: checked }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (client) {
         await updateClient(client.id, formData);
+        success('Cliente actualizado con éxito');
       } else {
         await createClient(formData);
+        success('Cliente creado con éxito');
       }
       onSuccess();
     } catch (err) {
@@ -62,84 +60,89 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
 
   if (!isOpen) return null;
 
-  // Estilos (simplificados para claridad, se asume que los estilos de tema se aplican)
-  const modalStyles = { /* ... */ };
-  const getButtonStyles = (variant) => { /* ... */ };
+  const isNeoBrutalism = theme?.includes('neo-brutalism');
+  const isMaterial = theme?.includes('material');
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-      <div
-        className={`p-6 rounded-lg w-full max-w-lg bg-card text-foreground ${isNeoBrutalism ? 'border-4 border-border shadow-neo-brutal' : 'border shadow-xl'}`}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className={`text-2xl ${isNeoBrutalism ? 'font-black uppercase' : 'font-bold'}`}>
-            {client ? 'Editar Cliente' : 'Crear Nuevo Cliente'}
-          </h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Layout en Grid para campos principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Nombre"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              leftIcon={<User size={18} />}
-              required
-            />
-            <Input
-              label="Apellido"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              leftIcon={<User size={18} />}
-            />
+  const modalStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '20px'
+    },
+    modal: {
+      background: 'var(--card)',
+      border: isNeoBrutalism ? '4px solid var(--border)' : '1px solid var(--border)',
+      borderRadius: isNeoBrutalism ? '0px' : (isMaterial ? '16px' : '8px'),
+      boxShadow: isNeoBrutalism ? '8px 8px 0px 0px rgba(0,0,0,1)' : '0px 4px 8px rgba(0, 0, 0, 0.1)',
+      width: '100%',
+      maxWidth: '500px',
+      maxHeight: '90vh',
+      overflow: 'auto'
+    }
+  };
+
+  const modalContent = (
+    <div style={modalStyles.overlay} onClick={onClose}>
+      <div style={modalStyles.modal} onClick={(e) => e.stopPropagation()}>
+        <div style={{ padding: '24px', borderBottom: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <User className="w-6 h-6 text-primary" />
+            <h2 style={{ fontSize: isNeoBrutalism ? '1.5rem' : '1.25rem', fontWeight: isNeoBrutalism ? '800' : '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', margin: 0 }}>
+              {client ? 'Editar Cliente' : 'Nuevo Cliente'}
+            </h2>
           </div>
-          <Input
-            label="Documento de Identidad"
-            name="document_id"
-            value={formData.document_id}
-            onChange={handleChange}
-            leftIcon={<FileText size={18} />}
-          />
-          <Input
-            label="Email o Teléfono de Contacto"
-            name="contact"
-            value={formData.contact}
-            onChange={handleChange}
-            leftIcon={<Phone size={18} />}
-          />
-          
-          {/* Switch para el estado */}
-          <div className="flex items-center justify-between pt-2">
-            <label htmlFor="status" className={`font-medium ${isNeoBrutalism ? 'uppercase font-bold' : ''}`}>
-              Estado del Cliente
-            </label>
-            <div className="flex items-center space-x-2">
-                <span className={`text-sm ${!formData.status ? 'text-foreground' : 'text-muted-foreground'}`}>{isNeoBrutalism ? 'INACTIVO' : 'Inactivo'}</span>
-                <Switch
-                    id="status"
-                    checked={formData.status}
-                    onCheckedChange={handleStatusChange}
-                />
-                <span className={`text-sm ${formData.status ? 'text-foreground' : 'text-muted-foreground'}`}>{isNeoBrutalism ? 'ACTIVO' : 'Activo'}</span>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-6 w-6" />
+          </Button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <Label htmlFor="name" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Nombre</Label>
+              <Input leftIcon={<User />} id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Ej: Juan" required />
+            </div>
+            <div>
+              <Label htmlFor="last_name" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Apellido</Label>
+              <Input leftIcon={<User />} id="last_name" name="last_name" value={formData.last_name} onChange={handleChange} placeholder="Ej: Pérez" />
+            </div>
+            <div>
+              <Label htmlFor="document_id" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Documento</Label>
+              <Input leftIcon={<FileText />} id="document_id" name="document_id" value={formData.document_id} onChange={handleChange} placeholder="Ej: 1234567-8" />
+            </div>
+            <div>
+              <Label htmlFor="address" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Dirección</Label>
+              <Input leftIcon={<MapPin />} id="address" name="address" value={formData.address} onChange={handleChange} placeholder="Ej: Av. Siempre Viva 123" />
+            </div>
+            <div>
+              <Label htmlFor="contact" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Contacto</Label>
+              <Input leftIcon={<Phone />} id="contact" name="contact" value={formData.contact} onChange={handleChange} placeholder="Ej: 987-654-321 o juan.perez@example.com" />
             </div>
           </div>
 
-          {/* Botones de acción */}
-          <div className="flex justify-end space-x-4 pt-4">
-            <button type="button" onClick={onClose} className={`px-4 py-2 rounded ${isNeoBrutalism ? 'font-bold uppercase border-3 border-border shadow-neo-brutal-small' : 'bg-secondary text-secondary-foreground'}`}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '24px', borderTop: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)' }}>
+            <Button type="button" variant={isNeoBrutalism ? 'secondary' : 'outline'} onClick={onClose} disabled={loading}>
               Cancelar
-            </button>
-            <button type="submit" className={`px-4 py-2 rounded ${isNeoBrutalism ? 'font-bold uppercase bg-brutalist-lime text-black border-3 border-border shadow-neo-brutal-small' : 'bg-primary text-primary-foreground'}`} disabled={loading}>
-              {loading ? 'Guardando...' : 'Guardar Cambios'}
-            </button>
+            </Button>
+            <Button type="submit" variant="default" disabled={loading} className="min-w-[150px]">
+              {loading ? <Loader className="animate-spin" /> : <Save className="mr-2" />} 
+              {client ? 'Guardar Cambios' : 'Crear'}
+            </Button>
           </div>
         </form>
       </div>
     </div>
   );
+
+  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default ClientModal;

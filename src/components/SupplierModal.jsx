@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useTheme } from 'next-themes';
-import { X, Save, User, Phone, MapPin, ToggleLeft, ToggleRight, Loader, Building } from 'lucide-react';
+import { X, Save, User, Phone, MapPin, ToggleLeft, ToggleRight, Loader, Building, FileText, MessageSquare } from 'lucide-react';
 import useSupplierStore from '@/store/useSupplierStore';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
@@ -15,29 +15,61 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
 
   const [formData, setFormData] = useState({
     name: '',
-    contact: '',
-    address: '',
+    tax_id: '',
+    contact_info: {
+      phone: '',
+      fax: '',
+      address: ''
+    },
     status: true,
   });
 
   useEffect(() => {
     if (isOpen) {
       if (supplier) {
+        const contactInfo = supplier.contact_info ? (typeof supplier.contact_info === 'object' ? supplier.contact_info : JSON.parse(supplier.contact_info)) : {};
         setFormData({
           name: supplier.name || '',
-          contact: supplier.contact || '',
-          address: supplier.address || '',
+          tax_id: supplier.tax_id || '',
+          contact_info: {
+            phone: contactInfo.phone || '',
+            fax: contactInfo.fax || '',
+            address: contactInfo.address || ''
+          },
           status: supplier.status !== undefined ? supplier.status : true,
         });
       } else {
-        setFormData({ name: '', contact: '', address: '', status: true });
+        setFormData({
+          name: '',
+          tax_id: '',
+          contact_info: {
+            phone: '',
+            fax: '',
+            address: ''
+          },
+          status: true
+        });
       }
     }
   }, [supplier, isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleContactInfoChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      contact_info: {
+        ...prev.contact_info,
+        [name]: value,
+      },
+    }));
   };
 
   const handleStatusToggle = () => {
@@ -47,11 +79,16 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const dataToSend = {
+        ...formData,
+        contact_info: formData.contact_info
+      };
+
       if (supplier) {
-        await updateSupplier(supplier.id, formData);
+        await updateSupplier(supplier.id, dataToSend);
         success('Proveedor actualizado con éxito');
       } else {
-        await createSupplier(formData);
+        await createSupplier(dataToSend);
         success('Proveedor creado con éxito');
       }
       onSuccess();
@@ -113,12 +150,20 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
               <Input leftIcon={<User />} id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Ej: Tech Supplies Inc." required />
             </div>
             <div>
-              <Label htmlFor="contact" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Información de Contacto</Label>
-              <Input leftIcon={<Phone />} id="contact" name="contact" value={formData.contact} onChange={handleChange} placeholder="Ej: 123-456-7890 o email" />
+              <Label htmlFor="tax_id" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>RUC</Label>
+              <Input leftIcon={<FileText />} id="tax_id" name="tax_id" value={formData.tax_id} onChange={handleChange} placeholder="Ej: 12345678-9" />
+            </div>
+            <div>
+              <Label htmlFor="phone" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Teléfono</Label>
+              <Input leftIcon={<Phone />} id="phone" name="phone" value={formData.contact_info.phone} onChange={handleContactInfoChange} placeholder="Ej: +595 983 111 222" />
+            </div>
+            <div>
+              <Label htmlFor="fax" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Fax</Label>
+              <Input leftIcon={<MessageSquare />} id="fax" name="fax" value={formData.contact_info.fax} onChange={handleContactInfoChange} placeholder="Ej: FAX-PAR-6356" />
             </div>
             <div>
               <Label htmlFor="address" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Dirección</Label>
-              <Input leftIcon={<MapPin />} id="address" name="address" value={formData.address} onChange={handleChange} placeholder="Ej: 123 Main St, Anytown, USA" />
+              <Input leftIcon={<MapPin />} id="address" name="address" value={formData.contact_info.address} onChange={handleContactInfoChange} placeholder="Ej: Av. Mcal. López 1234, Asunción, Paraguay" />
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: isNeoBrutalism ? '0px' : '8px', border: isNeoBrutalism ? '2px solid var(--border)' : '1px solid var(--border)', background: 'var(--muted)' }}>

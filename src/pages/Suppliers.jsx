@@ -46,27 +46,45 @@ const getBadgeStyles = (theme, status) => {
 const SuppliersPage = () => {
   const { theme } = useTheme();
   const { toasts, success, error: showError, removeToast } = useToast();
-  const isNeoBrutalism = theme?.includes('neo-brutalism');
-
   const {
     suppliers, loading, error, pagination,
-    fetchSuppliers, deleteSupplier
+    fetchSuppliers, deleteSupplier, clearSuppliers
   } = useSupplierStore();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  
+  const [localSearchTerm, setLocalSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('active');
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [editingSupplier, setEditingSupplier] = useState(null);
 
+  const isNeoBrutalism = theme?.includes('neo-brutalism');
+
+  const filteredSuppliers = (suppliers || []).filter(supplier => {
+    const search = localSearchTerm.toLowerCase();
+    const matchesSearch = (supplier.name || '').toLowerCase().includes(search) || 
+                          (supplier.tax_id || '').toLowerCase().includes(search) ||
+                          (typeof supplier.contact_info === 'string' && supplier.contact_info.toLowerCase().includes(search));
+    const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' && supplier.status) || (statusFilter === 'inactive' && !supplier.status);
+    return matchesSearch && matchesStatus;
+  });
+
   useEffect(() => {
-    // clearSuppliers(); // Assuming a clear function exists in the store
+    clearSuppliers();
   }, []);
 
-  const handleSearch = () => fetchSuppliers(1, 10, searchTerm);
-  const handleClearSearch = () => { setSearchTerm(''); fetchSuppliers(1, 10, ''); };
+  const handleSearch = () => {
+    if (searchTerm.trim() !== '') {
+      fetchSuppliers(1, 10, searchTerm);
+    }
+  };
+  
+  const handleClearSearch = () => { 
+    setSearchTerm(''); 
+    clearSuppliers(); 
+  };
+
   const handlePageChange = (page) => fetchSuppliers(page, pagination.per_page, searchTerm);
 
   const handleCreateSupplier = () => { setEditingSupplier(null); setShowSupplierModal(true); };
@@ -85,13 +103,6 @@ const SuppliersPage = () => {
     fetchSuppliers(pagination.current_page || 1, pagination.per_page || 10, searchTerm);
     success('Operación de proveedor completada.');
   };
-
-  const filteredSuppliers = (suppliers || []).filter(supplier => {
-    const search = searchTerm.toLowerCase();
-    const matchesSearch = (supplier.name || '').toLowerCase().includes(search) || (supplier.contact || '').toLowerCase().includes(search);
-    const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' && supplier.status) || (statusFilter === 'inactive' && !supplier.status);
-    return matchesSearch && matchesStatus;
-  });
 
   const handleButtonHover = (e) => { if (isNeoBrutalism) { e.target.style.transform = 'translate(-2px, -2px)'; e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)'; } };
   const handleButtonLeave = (e) => { if (isNeoBrutalism) { e.target.style.transform = 'translate(0px, 0px)'; e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)'; } };
@@ -114,12 +125,12 @@ const SuppliersPage = () => {
       );
     }
 
-    if (suppliers.length === 0 && !searchTerm) {
+    if (suppliers.length === 0 && searchTerm.trim() === '') {
       return (
         <div className="text-center py-20 p-6" style={getCardStyles(theme)}>
           <Truck className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
           <p className="text-muted-foreground mb-4" style={getTypographyStyles(theme, 'heading')}>{isNeoBrutalism ? 'SIN PROVEEDORES' : 'Sin Proveedores'}</p>
-          <p className="text-muted-foreground" style={getTypographyStyles(theme, 'base')}>{isNeoBrutalism ? 'CREA UN PROVEEDOR PARA EMPEZAR' : 'Crea un proveedor para empezar.'}</p>
+          <p className="text-muted-foreground" style={getTypographyStyles(theme, 'base')}>{isNeoBrutalism ? 'REALIZA UNA BÚSQUEDA PARA EMPEZAR' : 'Realiza una búsqueda para empezar.'}</p>
         </div>
       );
     }
@@ -134,27 +145,43 @@ const SuppliersPage = () => {
         );
     }
 
+    const parseContactInfo = (contactInfo) => {
+      if (!contactInfo) return {};
+      if (typeof contactInfo === 'object') return contactInfo;
+      try {
+        return JSON.parse(contactInfo);
+      } catch (error) {
+        return {};
+      }
+    };
+
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredSuppliers.map(supplier => (
-          <div key={supplier.id} style={{...getCardStyles(theme), display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}} className="hover:shadow-lg transition-shadow">
-            <div>
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="font-semibold mb-2 truncate" style={getTypographyStyles(theme, 'subheading')}>{supplier.name}</h3>
-                <div style={getBadgeStyles(theme, supplier.status)}>{supplier.status ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}<span>{supplier.status ? (isNeoBrutalism ? 'ACTIVO' : 'Activo') : (isNeoBrutalism ? 'INACTIVO' : 'Inactivo')}</span></div>
+        {filteredSuppliers.map(supplier => {
+          if (!supplier) return null;
+          const contactInfo = parseContactInfo(supplier.contact_info);
+          return (
+            <div key={supplier.id} style={{...getCardStyles(theme), display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}} className="hover:shadow-lg transition-shadow">
+              <div>
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="font-semibold mb-2 truncate" style={getTypographyStyles(theme, 'subheading')}>{supplier.name}</h3>
+                  <div style={getBadgeStyles(theme, supplier.status)}>{supplier.status ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}<span>{supplier.status ? (isNeoBrutalism ? 'ACTIVO' : 'Activo') : (isNeoBrutalism ? 'INACTIVO' : 'Inactivo')}</span></div>
+                </div>
+                <div className="space-y-2 mb-4">
+                                    <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>RUC:</span><span style={getTypographyStyles(theme, 'small')}>{supplier.tax_id || 'N/A'}</span></div>
+                  {contactInfo.phone && <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>TELÉFONO:</span><span style={getTypographyStyles(theme, 'small')}>{contactInfo.phone}</span></div>}
+                  {contactInfo.fax && <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>FAX:</span><span style={getTypographyStyles(theme, 'small')}>{contactInfo.fax}</span></div>}
+                  {contactInfo.address && <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>DIRECCIÓN:</span><span style={getTypographyStyles(theme, 'small')}>{contactInfo.address}</span></div>}
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>REGISTRO:</span><span style={getTypographyStyles(theme, 'small')}>{new Date(supplier.created_at).toLocaleDateString()}</span></div>
+                </div>
               </div>
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>CONTACTO:</span><span style={getTypographyStyles(theme, 'small')}>{supplier.contact || 'N/A'}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>DIRECCIÓN:</span><span style={getTypographyStyles(theme, 'small')}>{supplier.address || 'N/A'}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>REGISTRO:</span><span style={getTypographyStyles(theme, 'small')}>{new Date(supplier.created_at).toLocaleDateString()}</span></div>
+              <div className="flex gap-2 mt-auto">
+                <button onClick={() => handleEditSupplier(supplier)} style={{ ...getButtonStyles(theme, 'primary'), flex: 1, padding: '8px 12px', fontSize: '0.75rem' }} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><Edit className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'EDITAR' : 'Editar'}</button>
+                <button onClick={() => handleDeleteSupplier(supplier)} style={{ ...getButtonStyles(theme, 'secondary'), background: 'var(--destructive)', color: 'var(--destructive-foreground)', padding: '8px 12px' }} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
-            <div className="flex gap-2 mt-auto">
-              <button onClick={() => handleEditSupplier(supplier)} style={{ ...getButtonStyles(theme, 'primary'), flex: 1, padding: '8px 12px', fontSize: '0.75rem' }} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><Edit className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'EDITAR' : 'Editar'}</button>
-              <button onClick={() => handleDeleteSupplier(supplier)} style={{ ...getButtonStyles(theme, 'secondary'), background: 'var(--destructive)', color: 'var(--destructive-foreground)', padding: '8px 12px' }} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><Trash2 className="w-4 h-4" /></button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -183,7 +210,8 @@ const SuppliersPage = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
-              <button onClick={handleSearch} style={{...getButtonStyles(theme, 'primary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'BUSCAR' : 'Buscar'}</button>
+              <select onChange={(e) => setStatusFilter(e.target.value)} defaultValue="active" className="p-3 border rounded-md bg-background" style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="all">Todos los Estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select>
+              <button onClick={handleSearch} disabled={!searchTerm} style={{...getButtonStyles(theme, 'primary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'BUSCAR' : 'Buscar'}</button>
               <button onClick={handleClearSearch} style={{...getButtonStyles(theme, 'secondary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}</button>
             </div>
           </div>
@@ -192,6 +220,13 @@ const SuppliersPage = () => {
             <div className="border-t pt-6">
               <div className="mb-3" style={getTypographyStyles(theme, 'subheading')}>{isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : 'Filtrar Resultados Actuales'}</div>
               <div className="grid md:grid-cols-2 gap-4">
+                <Input
+                  leftIcon={<Filter className="w-5 h-5 text-muted-foreground" />}
+                  type="text"
+                  placeholder={isNeoBrutalism ? 'FILTRAR POR NOMBRE...' : 'Filtrar por nombre...'}
+                  value={localSearchTerm}
+                  onChange={(e) => setLocalSearchTerm(e.target.value)}
+                />
                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="p-3 border rounded-md bg-background" style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="all">Todos los Estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select>
                 <div className="text-center p-3" style={isNeoBrutalism ? {border: '3px solid var(--border)'} : {}}><div style={getTypographyStyles(theme, 'heading')}>{filteredSuppliers.length}</div><div style={getTypographyStyles(theme, 'small')}>PROVEEDORES MOSTRADOS</div></div>
               </div>
@@ -201,7 +236,7 @@ const SuppliersPage = () => {
 
         <section>{renderMainContent()}</section>
 
-        {pagination.total_pages > 1 && (
+        {pagination && pagination.total_pages > 1 && (
           <footer className="text-center py-8">
             <div className="flex justify-center items-center gap-2 flex-wrap">
               <button onClick={() => handlePageChange(1)} disabled={pagination.current_page <= 1 || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 12px', opacity: pagination.current_page <= 1 ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Primera</button>

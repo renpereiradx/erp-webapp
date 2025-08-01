@@ -46,7 +46,7 @@ const useClientStore = create(
           const isPaginated = response.data && response.pagination;
           
           set({
-            clients: isPaginated ? response.data : response,
+            clients: isPaginated ? (response.data || []).filter(c => c) : (response || []).filter(c => c),
             currentPage: isPaginated ? response.pagination.current_page : 1,
             totalPages: isPaginated ? response.pagination.total_pages : 1,
             totalClients: isPaginated ? response.pagination.total : response.length,

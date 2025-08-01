@@ -48,16 +48,13 @@ const getBadgeStyles = (theme, status) => {
 const ClientsPage = () => {
   const { theme } = useTheme();
   const { toasts, success, error: showError, removeToast } = useToast();
-  const isNeoBrutalism = theme?.includes('neo-brutalism');
-
   const {
-    clients, loading, error, currentPage, totalPages, totalClients, pageSize, lastSearchTerm,
-    searchClients, loadPage, changePageSize, clearClients, deleteClient, clearError
+    searchClients, clearClients, clients, loading, error, clearError, totalPages, currentPage, loadPage, totalClients, lastSearchTerm, pageSize, changePageSize, deleteClient
   } = useClientStore();
 
   const [apiSearchTerm, setApiSearchTerm] = useState('');
   const [localSearchTerm, setLocalSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('active');
   
   const [showClientModal, setShowClientModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -65,13 +62,26 @@ const ClientsPage = () => {
   const [selectedClient, setSelectedClient] = useState(null);
   const [editingClient, setEditingClient] = useState(null);
 
-  useEffect(() => {
-    // Limpia los clientes al montar la página para un inicio limpio
-    clearClients();
-  }, [clearClients]);
+  const isNeoBrutalism = theme?.includes('neo-brutalism');
 
-  const handleApiSearch = () => searchClients(apiSearchTerm, 1, pageSize);
-  const handleClearSearch = () => { setApiSearchTerm(''); setLocalSearchTerm(''); clearClients(); };
+  const filteredClients = (clients || []).filter(client => {
+    const search = localSearchTerm.toLowerCase();
+    const fullName = `${client.name || ''} ${client.last_name || ''}`.toLowerCase();
+    const matchesSearch = fullName.includes(search) || (client.document_id || '').toLowerCase().includes(search);
+    const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' && client.status) || (statusFilter === 'inactive' && !client.status);
+    return matchesSearch && matchesStatus;
+  });
+
+  useEffect(() => {
+    clearClients();
+  }, []);
+
+  const handleApiSearch = () => {
+    if (apiSearchTerm.trim() !== '') {
+      searchClients(apiSearchTerm, 1, pageSize);
+    }
+  };
+  const handleClearSearch = () => { setApiSearchTerm(''); clearClients(); };
   const handlePageChange = (page) => loadPage(page);
   const handlePageSizeChange = (size) => changePageSize(parseInt(size));
 
@@ -91,14 +101,6 @@ const ClientsPage = () => {
     setShowClientModal(false);
     success('Operación de cliente completada.');
   };
-
-  const filteredClients = (clients || []).filter(client => {
-    const search = localSearchTerm.toLowerCase();
-    const fullName = `${client.name || ''} ${client.last_name || ''}`.toLowerCase();
-    const matchesSearch = fullName.includes(search) || (client.document_id || '').toLowerCase().includes(search);
-    const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' && client.status) || (statusFilter === 'inactive' && !client.status);
-    return matchesSearch && matchesStatus;
-  });
 
   const handleButtonHover = (e) => { if (isNeoBrutalism) { e.target.style.transform = 'translate(-2px, -2px)'; e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)'; } };
   const handleButtonLeave = (e) => { if (isNeoBrutalism) { e.target.style.transform = 'translate(0px, 0px)'; e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)'; } };
@@ -121,7 +123,7 @@ const ClientsPage = () => {
       );
     }
 
-    if (totalClients === 0 && !lastSearchTerm) {
+    if (clients.length === 0 && apiSearchTerm.trim() === '') {
       return (
         <div className="text-center py-20 p-6" style={getCardStyles(theme)}>
           <User className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
@@ -131,12 +133,12 @@ const ClientsPage = () => {
       );
     }
 
-    if (totalClients === 0 && lastSearchTerm) {
+    if (filteredClients.length === 0) {
         return (
             <div className="text-center py-20 p-6" style={getCardStyles(theme)}>
                 <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-muted-foreground mb-4" style={getTypographyStyles(theme, 'heading')}>{isNeoBrutalism ? 'SIN RESULTADOS' : 'Sin Resultados'}</p>
-                <p className="text-muted-foreground" style={getTypographyStyles(theme, 'base')}>{isNeoBrutalism ? `NO SE ENCONTRARON CLIENTES PARA "${lastSearchTerm.toUpperCase()}"` : `No se encontraron clientes para "${lastSearchTerm}"`}</p>
+                <p className="text-muted-foreground" style={getTypographyStyles(theme, 'base')}>{isNeoBrutalism ? `NO SE ENCONTRARON CLIENTES PARA TU FILTRO` : `No se encontraron clientes para tu filtro`}</p>
             </div>
         );
     }
@@ -151,10 +153,10 @@ const ClientsPage = () => {
                                 <div style={getBadgeStyles(theme, client.status)}>{client.status ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}<span>{client.status ? (isNeoBrutalism ? 'ACTIVO' : 'Activo') : (isNeoBrutalism ? 'INACTIVO' : 'Inactivo')}</span></div>
               </div>
               <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>DOCUMENTO:</span><span style={getTypographyStyles(theme, 'small')}>{client.document_id || 'N/A'}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>CONTACTO:</span><span style={getTypographyStyles(theme, 'small')}>{client.contact || 'N/A'}</span></div>
-                <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>REGISTRO:</span><span style={getTypographyStyles(theme, 'small')}>{new Date(client.created_at).toLocaleDateString()}</span></div>
-              </div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>DOCUMENTO:</span><span style={getTypographyStyles(theme, 'small')}>{client.document_id || 'N/A'}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>CONTACTO:</span><span style={getTypographyStyles(theme, 'small')}>{client.contact || 'N/A'}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>REGISTRO:</span><span style={getTypographyStyles(theme, 'small')}>{new Date(client.created_at).toLocaleDateString()}</span></div>
+                </div>
             </div>
             <div className="flex gap-2 mt-auto">
               <button onClick={() => handleViewClient(client)} style={{ ...getButtonStyles(theme, 'secondary'), flex: 1, padding: '8px 12px', fontSize: '0.75rem' }} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><Eye className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'VER' : 'Ver'}</button>
@@ -191,7 +193,8 @@ const ClientsPage = () => {
                 onChange={(e) => setApiSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleApiSearch()}
               />
-              <button onClick={handleApiSearch} style={{...getButtonStyles(theme, 'primary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'BUSCAR' : 'Buscar'}</button>
+              <select onChange={(e) => setStatusFilter(e.target.value)} defaultValue="active" className="p-3 border rounded-md bg-background" style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="all">Todos los Estados</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select>
+              <button onClick={handleApiSearch} disabled={!apiSearchTerm} style={{...getButtonStyles(theme, 'primary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'BUSCAR' : 'Buscar'}</button>
               <button onClick={handleClearSearch} style={{...getButtonStyles(theme, 'secondary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}</button>
             </div>
             <div className="flex items-center gap-3"><label htmlFor="pageSize" style={getTypographyStyles(theme, 'small')}>CLIENTES POR PÁGINA:</label><select id="pageSize" value={pageSize} onChange={(e) => handlePageSizeChange(e.target.value)} className="px-3 py-2 border rounded-md bg-background" style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></div>
