@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from './api';
+import BusinessManagementAPI from './BusinessManagementAPI';
 
 export const productService = {
   // =================== PRODUCTOS ===================
@@ -16,6 +17,32 @@ export const productService = {
   // Obtener un producto por ID
   getProductById: async (productId) => {
     return await apiClient.getProductById(productId);
+  },
+
+  // Obtener un producto enriquecido por ID (con precios, stock, descripción)
+  getProductByIdEnriched: async (productId) => {
+    try {
+      // El endpoint /products/{id} ya devuelve datos enriquecidos según el ejemplo de Postman
+      const product = await apiClient.getProductById(productId);
+      
+      // Si el producto no está marcado como enriquecido pero tiene datos enriquecidos, usar getProductWithDetails
+      if (product && !product._enriched) {
+        const hasEnrichedData = product.has_unit_pricing !== undefined || 
+                               product.stock_status !== undefined ||
+                               product.price_formatted !== undefined ||
+                               product.has_valid_price !== undefined ||
+                               product.unit_prices !== undefined;
+        
+        if (!hasEnrichedData) {
+          // Solo usar getProductWithDetails si no hay datos enriquecidos
+          return await apiClient.getProductWithDetails(productId);
+        }
+      }
+      
+      return product;
+    } catch (error) {
+      throw new Error(`Error al obtener producto enriquecido: ${error.message}`);
+    }
   },
 
   // Buscar productos por nombre
@@ -128,6 +155,12 @@ export const productService = {
   // Obtener categorías de productos
   getCategories: async () => {
     return await apiClient.getCategories();
+  },
+
+  // Obtener todas las categorías
+  getAllCategories: async () => {
+    const api = new BusinessManagementAPI();
+    return api.getAllCategories();
   },
 
   // Validar estructura de datos antes de envío

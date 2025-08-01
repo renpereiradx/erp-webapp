@@ -62,31 +62,55 @@ const useProductStore = create(
       // =================== API CALLS ===================
 
       fetchCategories: async () => {
-        const currentCategories = get().categories;
-        if (currentCategories && currentCategories.length > 0) {
-          return currentCategories;
-        }
-
         set({ loading: true, error: null });
-        
         try {
-          const categories = await categoryCacheService.getCategories(apiClient);
+          const response = await productService.getAllCategories();
+          console.log('Respuesta cruda de categorías en store:', response);
           
-          if (categories && categories.length > 0) {
-            set({ categories: categories, loading: false });
-            return categories;
+          let categories = [];
+          
+          // Manejar diferentes formatos de respuesta
+          if (Array.isArray(response)) {
+            categories = response;
+          } else if (response && typeof response === 'object' && Array.isArray(response.data)) {
+            categories = response.data;
+          } else if (response && typeof response === 'object' && Array.isArray(response.categories)) {
+            categories = response.categories;
           } else {
-            throw new Error('No se pudieron cargar categorías');
+            console.warn('Formato de respuesta de categorías no reconocido:', response);
           }
-        } catch (error) {
-          const fallbackCategories = categoryCacheService.getFallbackCategories();
-          set({ 
-            categories: fallbackCategories, 
-            loading: false, 
-            error: 'Usando categorías offline - ' + error.message 
-          });
           
-          return fallbackCategories;
+          set({ categories, loading: false });
+          console.log(`${categories.length} categorías cargadas en store`);
+          return categories;
+        } catch (error) {
+          console.error('Error detallado en fetchCategories:', error);
+          
+          // En caso de error del servidor, usar categorías por defecto
+          const fallbackCategories = [
+            { id: 1, name: 'Alimentos', description: 'Productos alimenticios' },
+            { id: 2, name: 'Bebidas', description: 'Bebidas variadas' },
+            { id: 3, name: 'Limpieza', description: 'Productos de limpieza' },
+            { id: 4, name: 'Cuidado Personal', description: 'Productos de higiene' },
+            { id: 5, name: 'Hogar', description: 'Artículos para el hogar' }
+          ];
+          
+          if (error.message.includes('500')) {
+            console.warn('Error 500 en categorías, usando categorías por defecto');
+            set({ 
+              categories: fallbackCategories, 
+              loading: false, 
+              error: 'Usando categorías por defecto debido a error del servidor'
+            });
+            return fallbackCategories;
+          }
+          
+          set({ 
+            categories: [], 
+            loading: false, 
+            error: 'Error al cargar categorías: ' + (error.message || 'Error desconocido') 
+          });
+          return [];
         }
       },
 
@@ -215,12 +239,41 @@ const useProductStore = create(
             totalProducts: 0, 
             totalPages: 0,
             currentPage: 1,
-            lastSearchTerm: ''
+            lastSearchTerm: '',
+            error: null
           });
           return { data: [], total: 0 };
         }
 
-        return await get().fetchProducts(1, 10, searchTerm);
+        try {
+          return await get().fetchProducts(1, 10, searchTerm);
+        } catch (error) {
+          // Manejo específico de errores de búsqueda
+          console.error('Error en searchProducts:', error);
+          
+          let errorMessage = 'Error al buscar productos';
+          if (error.message.includes('500')) {
+            errorMessage = 'Error interno del servidor al buscar. Intenta con términos diferentes.';
+          } else if (error.message.includes('404')) {
+            errorMessage = 'No se encontraron productos con ese término de búsqueda.';
+          } else if (error.message.includes('network') || error.message.includes('fetch')) {
+            errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+          } else {
+            errorMessage = error.message || 'Error desconocido al buscar productos';
+          }
+
+          set({ 
+            products: [], 
+            totalProducts: 0, 
+            totalPages: 0,
+            currentPage: 1,
+            loading: false,
+            error: errorMessage
+          });
+
+          // No re-lanzar el error para que no se propague al componente
+          return { error: errorMessage, data: [], total: 0 };
+        }
       },
 
       // Función para cargar página específica

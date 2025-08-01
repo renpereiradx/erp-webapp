@@ -480,10 +480,12 @@ const ProductModal = ({
                 style={{
                   ...inputStyles,
                   width: '100%',
-                  opacity: (categoriesLoading || categoriesError) ? 0.6 : 1
+                  opacity: (categoriesLoading || categoriesError) ? 0.6 : 1,
+                  backgroundColor: 'var(--background)',
+                  color: 'var(--foreground)'
                 }}
               >
-                <option value="">
+                <option value="" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
                   {categoriesLoading 
                     ? (isNeoBrutalism ? 'CARGANDO CATEGORÍAS...' : 'Cargando categorías...')
                     : categoriesError
@@ -494,7 +496,11 @@ const ProductModal = ({
                   }
                 </option>
                 {categories.length > 0 && categories.map(category => (
-                  <option key={category.id} value={category.id}>
+                  <option 
+                    key={category.id} 
+                    value={category.id}
+                    style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+                  >
                     {category.name}
                     {category.description && ` - ${category.description}`}
                   </option>

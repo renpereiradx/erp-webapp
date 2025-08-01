@@ -11,6 +11,8 @@ import Products from '@/pages/Products';
 import Clients from '@/pages/Clients';
 import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
+import ProductDetailTest from '@/components/ProductDetailTest';
+import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import useAuthStore from '@/store/useAuthStore';
 import { apiClient } from '@/services/api';
 import './App.css';
@@ -124,6 +126,8 @@ function App() {
                   <Route path="/pedidos" element={<Orders />} />
                   <Route path="/reportes" element={<Reports />} />
                   <Route path="/configuracion" element={<Settings />} />
+                  <Route path="/test-products" element={<ProductDetailTest />} />
+                  <Route path="/debug-products" element={<ProductComparisonDebug />} />
                   
                   {/* Ruta 404 */}
                   <Route path="*" element={

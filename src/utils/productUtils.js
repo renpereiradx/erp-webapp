@@ -144,12 +144,14 @@ export const getStockStatus = (product) => {
         return { text: 'Sin stock', status: 'out', color: 'red' };
       case 'low_stock':
         return { text: 'Stock bajo', status: 'low', color: 'orange' };
+      case 'medium_stock':
+        return { text: 'Stock medio', status: 'medium', color: 'blue' };
       case 'in_stock':
         return { text: 'En stock', status: 'in-stock', color: 'green' };
       case 'available':
         return { text: 'Disponible', status: 'available', color: 'blue' };
       default:
-        return { text: product.stock_status, status: 'custom', color: 'blue' };
+        return { text: product.stock_status.replace('_', ' '), status: 'custom', color: 'blue' };
     }
   }
   

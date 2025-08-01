@@ -132,6 +132,20 @@ class BusinessManagementAPI {
           if (endpoint.includes('/products/') && !endpoint.includes('/products/products/')) {
             throw new Error('Producto no encontrado');
           }
+          if (endpoint.includes('/categories')) {
+            throw new Error('No hay categorías disponibles');
+          }
+        }
+
+        // Para errores 500, dar información más específica
+        if (response.status === 500) {
+          if (endpoint.includes('/search')) {
+            throw new Error('Error interno del servidor al buscar. Intenta con términos diferentes o contacta al administrador.');
+          }
+          if (endpoint.includes('/categories')) {
+            throw new Error('Error interno del servidor al cargar categorías. Intenta recargar la página.');
+          }
+          throw new Error(`Error interno del servidor (${response.status}). Contacta al administrador.`);
         }
         
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -207,6 +221,11 @@ class BusinessManagementAPI {
     return this.makeRequest('/categories');
   }
 
+  // Obtener todas las categorías
+  async getAllCategories() {
+    return this.makeRequest('/categories');
+  }
+
   // ============================================================================
   // PRODUCTS
   // ============================================================================
@@ -224,7 +243,30 @@ class BusinessManagementAPI {
   }
 
   async getProductById(id) {
-    return this.makeRequest(`/products/${id}`);
+    try {
+      const product = await this.makeRequest(`/products/${id}`);
+      
+      // Normalizar el producto para asegurar que tenga la estructura enriquecida correcta
+      if (product) {
+        const hasEnrichedData = product.has_unit_pricing !== undefined || 
+                               product.stock_status !== undefined ||
+                               product.price_formatted !== undefined ||
+                               product.has_valid_price !== undefined ||
+                               product.unit_prices !== undefined;
+        
+        if (hasEnrichedData) {
+          // Si ya tiene datos enriquecidos, normalizarlo para consistencia
+          return this.normalizeEnrichedProduct(product);
+        } else {
+          // Si no tiene datos enriquecidos, devolverlo tal como está
+          return product;
+        }
+      }
+      
+      return product;
+    } catch (error) {
+      throw error;
+    }
   }
 
   async searchProductsByName(name) {
@@ -406,8 +448,8 @@ class BusinessManagementAPI {
       product_type: product.product_type,
       user_id: product.user_id,
       
-      // Datos de precios - priorizando unit_prices
-      price: product.purchase_price,
+      // Datos de precios - priorizando purchase_price y considerando unit_prices
+      price: product.price || product.purchase_price,
       purchase_price: product.purchase_price,
       price_id: product.price_id,
       price_updated_at: product.price_updated_at,
@@ -415,6 +457,7 @@ class BusinessManagementAPI {
       price_formatted: product.price_formatted,
       has_valid_price: product.has_valid_price,
       has_unit_pricing: product.has_unit_pricing,
+      unit_prices: product.unit_prices, // Incluir unit_prices del endpoint por ID
       
       // Datos de stock
       stock_quantity: product.stock_quantity,
@@ -467,9 +510,25 @@ class BusinessManagementAPI {
 
   async getProductWithDetails(id) {
     try {
-      return await this.makeRequest(`/products/${id}/details`);
+      // El endpoint /products/{id} ya devuelve datos enriquecidos según el ejemplo de Postman
+      const product = await this.getProductById(id);
+      
+      // getProductById ya se encarga de la normalización, solo asegurar que esté enriquecido
+      if (product && !product._enriched) {
+        const hasEnrichedData = product.has_unit_pricing !== undefined || 
+                               product.stock_status !== undefined ||
+                               product.price_formatted !== undefined ||
+                               product.has_valid_price !== undefined ||
+                               product.unit_prices !== undefined;
+        
+        if (hasEnrichedData) {
+          return this.normalizeEnrichedProduct(product);
+        }
+      }
+      
+      return product;
     } catch (error) {
-      return await this.getProductById(id);
+      throw error;
     }
   }
 

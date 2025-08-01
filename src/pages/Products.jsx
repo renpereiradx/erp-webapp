@@ -273,7 +273,17 @@ const Products = () => {
   // Funciones para búsqueda en API
   const handleApiSearch = async () => {
     if (apiSearchTerm.trim()) {
-      await searchProducts(apiSearchTerm.trim());
+      try {
+        const result = await searchProducts(apiSearchTerm.trim());
+        // El store ya maneja los errores internamente
+        // Solo mostramos un mensaje si hay un error específico
+        if (result && result.error) {
+          console.warn('Búsqueda completada con advertencias:', result.error);
+        }
+      } catch (error) {
+        // Esto ya no debería ocurrir con el nuevo searchProducts
+        console.error('Error inesperado en handleApiSearch:', error);
+      }
     } else {
       clearProducts();
     }
@@ -661,17 +671,29 @@ const Products = () => {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="p-3 border rounded-md bg-background"
+                  className="p-3 border rounded-md"
                   style={isNeoBrutalism ? {
                     border: '3px solid var(--border)',
                     borderRadius: '0px',
                     textTransform: 'uppercase',
-                    fontWeight: '600'
-                  } : {}}
+                    fontWeight: '600',
+                    backgroundColor: 'var(--background)',
+                    color: 'var(--foreground)'
+                  } : {
+                    backgroundColor: 'var(--background)',
+                    color: 'var(--foreground)',
+                    borderColor: 'var(--border)'
+                  }}
                 >
-                  <option value="all">{isNeoBrutalism ? 'TODAS LAS CATEGORÍAS' : 'Todas las categorías'}</option>
+                  <option value="all" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+                    {isNeoBrutalism ? 'TODAS LAS CATEGORÍAS' : 'Todas las categorías'}
+                  </option>
                   {categories.map(category => (
-                    <option key={category.id} value={category.id}>
+                    <option 
+                      key={category.id} 
+                      value={category.id}
+                      style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
+                    >
                       {isNeoBrutalism ? category.name.toUpperCase() : category.name}
                     </option>
                   ))}
@@ -680,17 +702,29 @@ const Products = () => {
                 <select
                   value={selectedStock}
                   onChange={(e) => setSelectedStock(e.target.value)}
-                  className="p-3 border rounded-md bg-background"
+                  className="p-3 border rounded-md"
                   style={isNeoBrutalism ? {
                     border: '3px solid var(--border)',
                     borderRadius: '0px',
                     textTransform: 'uppercase',
-                    fontWeight: '600'
-                  } : {}}
+                    fontWeight: '600',
+                    backgroundColor: 'var(--background)',
+                    color: 'var(--foreground)'
+                  } : {
+                    backgroundColor: 'var(--background)',
+                    color: 'var(--foreground)',
+                    borderColor: 'var(--border)'
+                  }}
                 >
-                  <option value="all">{isNeoBrutalism ? 'TODOS LOS ESTADOS' : 'Todos los estados'}</option>
-                  <option value="active">{isNeoBrutalism ? 'ACTIVOS' : 'Activos'}</option>
-                  <option value="inactive">{isNeoBrutalism ? 'INACTIVOS' : 'Inactivos'}</option>
+                  <option value="all" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+                    {isNeoBrutalism ? 'TODOS LOS ESTADOS' : 'Todos los estados'}
+                  </option>
+                  <option value="active" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+                    {isNeoBrutalism ? 'ACTIVOS' : 'Activos'}
+                  </option>
+                  <option value="inactive" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+                    {isNeoBrutalism ? 'INACTIVOS' : 'Inactivos'}
+                  </option>
                 </select>
 
                 <div className="text-center">
@@ -981,10 +1015,18 @@ const Products = () => {
                             className="font-medium"
                           >
                             {stockStatus.text}
+                            {/* Mostrar cantidad si está disponible */}
+                            {product.stock_quantity !== undefined && product.stock_quantity !== null && (
+                              <span className="ml-1 text-xs opacity-75">
+                                ({product.stock_quantity})
+                              </span>
+                            )}
                           </span>
                           {stockStatus.status === 'out' && <AlertTriangle className="w-3 h-3 text-red-500" />}
                           {stockStatus.status === 'low' && <AlertCircle className="w-3 h-3 text-orange-500" />}
+                          {stockStatus.status === 'medium' && <Package className="w-3 h-3 text-blue-500" />}
                           {stockStatus.status === 'in-stock' && <CheckCircle className="w-3 h-3 text-green-500" />}
+                          {stockStatus.status === 'available' && <Package className="w-3 h-3 text-blue-500" />}
                         </div>
                       </div>
                       
