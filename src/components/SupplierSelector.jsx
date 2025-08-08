@@ -1,0 +1,285 @@
+/**
+ * Componente SupplierSelector
+ * Selector de proveedores reutilizable con búsqueda y validación
+ * Integra con useSupplierLogic para manejo de estado
+ * Reutilizable en compras, reportes, etc.
+ */
+
+import React, { useState, useEffect } from 'react';
+import { Search, Building, User, Phone, Mail } from 'lucide-react';
+import { useSupplierLogic } from '../hooks/useSupplierLogic';
+import { useThemeStyles } from '../hooks/useThemeStyles';
+
+const SupplierSelector = ({ 
+  selectedSupplier, 
+  onSupplierChange, 
+  theme = 'neo-brutalism',
+  placeholder = 'Seleccionar proveedor...',
+  showSearch = true,
+  showDetails = true,
+  onlyActive = true,
+  required = false,
+  className = '',
+  error = null
+}) => {
+  const styles = useThemeStyles(theme);
+  const supplierLogic = useSupplierLogic();
+  
+  const [localSearch, setLocalSearch] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState(null);
+
+  // Destructuring del hook de proveedores
+  const {
+    filteredSuppliers,
+    activeSuppliers,
+    loading,
+    error: supplierError,
+    searchSuppliers,
+    getSelectedSupplierInfo,
+    isSupplierActive
+  } = supplierLogic;
+
+  // Usar solo proveedores activos si se especifica
+  const availableSuppliers = onlyActive ? activeSuppliers : filteredSuppliers;
+
+  // Buscar con debounce
+  useEffect(() => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    const timeout = setTimeout(() => {
+      if (localSearch.trim()) {
+        searchSuppliers(localSearch);
+      }
+    }, 500);
+
+    setSearchTimeout(timeout);
+
+    return () => {
+      if (searchTimeout) clearTimeout(searchTimeout);
+    };
+  }, [localSearch, searchSuppliers]);
+
+  // Obtener información del proveedor seleccionado
+  const selectedSupplierInfo = getSelectedSupplierInfo();
+
+  // Manejar selección de proveedor
+  const handleSupplierSelect = (supplier) => {
+    onSupplierChange(supplier);
+    setIsOpen(false);
+    setLocalSearch('');
+  };
+
+  // Manejar búsqueda local
+  const handleSearchChange = (e) => {
+    setLocalSearch(e.target.value);
+    setIsOpen(true);
+  };
+
+  // Filtrar proveedores por búsqueda local también
+  const searchFilteredSuppliers = availableSuppliers.filter(supplier => {
+    if (!localSearch.trim()) return true;
+    const term = localSearch.toLowerCase();
+    return (
+      supplier.name.toLowerCase().includes(term) ||
+      supplier.email?.toLowerCase().includes(term) ||
+      supplier.contact_person?.toLowerCase().includes(term)
+    );
+  });
+
+  // Estilos dinámicos
+  const containerClasses = `relative ${className}`;
+  const inputClasses = `${styles.input()} ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`;
+  const dropdownClasses = `absolute top-full left-0 right-0 z-50 mt-1 max-h-64 overflow-auto ${styles.card()} border`;
+
+  return (
+    <div className={containerClasses}>
+      {/* Label */}
+      <label className={styles.label()}>
+        <Building className="inline w-4 h-4 mr-2" />
+        Proveedor{required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+
+      {/* Búsqueda */}
+      {showSearch && (
+        <div className="relative mb-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Buscar proveedor..."
+              value={localSearch}
+              onChange={handleSearchChange}
+              onFocus={() => setIsOpen(true)}
+              className={`w-full pl-10 ${inputClasses}`}
+            />
+            {loading && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Dropdown de resultados */}
+          {isOpen && searchFilteredSuppliers.length > 0 && (
+            <div className={dropdownClasses}>
+              {searchFilteredSuppliers.map((supplier) => (
+                <div
+                  key={supplier.id}
+                  onClick={() => handleSupplierSelect(supplier)}
+                  className={`p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${
+                    selectedSupplier?.id === supplier.id ? 'bg-blue-50' : ''
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">
+                        {supplier.name}
+                        {!isSupplierActive(supplier) && (
+                          <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-600 rounded">
+                            Inactivo
+                          </span>
+                        )}
+                      </div>
+                      {supplier.contact_person && (
+                        <div className="text-sm text-gray-600 flex items-center mt-1">
+                          <User className="w-3 h-3 mr-1" />
+                          {supplier.contact_person}
+                        </div>
+                      )}
+                      <div className="text-sm text-gray-500 flex items-center mt-1">
+                        {supplier.email && (
+                          <span className="flex items-center mr-3">
+                            <Mail className="w-3 h-3 mr-1" />
+                            {supplier.email}
+                          </span>
+                        )}
+                        {supplier.phone && (
+                          <span className="flex items-center">
+                            <Phone className="w-3 h-3 mr-1" />
+                            {supplier.phone}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No hay resultados */}
+          {isOpen && searchFilteredSuppliers.length === 0 && localSearch.trim() && (
+            <div className={dropdownClasses}>
+              <div className="p-3 text-center text-gray-500">
+                No se encontraron proveedores que coincidan con "{localSearch}"
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Selector principal (fallback) */}
+      {!showSearch && (
+        <select
+          value={selectedSupplier?.id || ''}
+          onChange={(e) => {
+            const supplier = availableSuppliers.find(s => s.id === e.target.value);
+            onSupplierChange(supplier || null);
+          }}
+          className={inputClasses}
+        >
+          <option value="">{placeholder}</option>
+          {availableSuppliers.map((supplier) => (
+            <option key={supplier.id} value={supplier.id}>
+              {supplier.name} {supplier.contact_person ? `(${supplier.contact_person})` : ''}
+            </option>
+          ))}
+        </select>
+      )}
+
+      {/* Información del proveedor seleccionado */}
+      {showDetails && selectedSupplierInfo && (
+        <div className={`mt-3 ${styles.card('p-3')}`}>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="font-medium text-gray-900 flex items-center">
+                <Building className="w-4 h-4 mr-2" />
+                {selectedSupplierInfo.displayName}
+                {!isSupplierActive(selectedSupplier) && (
+                  <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-600 rounded">
+                    Inactivo
+                  </span>
+                )}
+              </div>
+              
+              {selectedSupplier.contact_person && (
+                <div className="text-sm text-gray-600 flex items-center mt-2">
+                  <User className="w-3 h-3 mr-1" />
+                  Contacto: {selectedSupplier.contact_person}
+                </div>
+              )}
+              
+              <div className="text-sm text-gray-600 mt-2 space-y-1">
+                {selectedSupplier.email && (
+                  <div className="flex items-center">
+                    <Mail className="w-3 h-3 mr-1" />
+                    {selectedSupplier.email}
+                  </div>
+                )}
+                {selectedSupplier.phone && (
+                  <div className="flex items-center">
+                    <Phone className="w-3 h-3 mr-1" />
+                    {selectedSupplier.phone}
+                  </div>
+                )}
+              </div>
+
+              {selectedSupplier.notes && (
+                <div className="text-sm text-gray-500 mt-2 italic">
+                  {selectedSupplier.notes}
+                </div>
+              )}
+            </div>
+            
+            <button
+              onClick={() => handleSupplierSelect(null)}
+              className="text-gray-400 hover:text-gray-600 ml-2"
+              title="Limpiar selección"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mensajes de error */}
+      {(error || supplierError) && (
+        <div className="mt-2 text-sm text-red-600 flex items-center">
+          <span className="mr-1">⚠️</span>
+          {error || supplierError}
+        </div>
+      )}
+
+      {/* Advertencia para proveedor inactivo */}
+      {selectedSupplier && !isSupplierActive(selectedSupplier) && (
+        <div className="mt-2 text-sm text-orange-600 flex items-center">
+          <span className="mr-1">⚠️</span>
+          El proveedor seleccionado está inactivo
+        </div>
+      )}
+
+      {/* Cerrar dropdown al hacer clic fuera */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default SupplierSelector;

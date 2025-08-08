@@ -13,6 +13,7 @@ import Suppliers from '@/pages/Suppliers';
 import Orders from '@/pages/Orders';
 import Reports from '@/pages/Reports';
 import BookingSales from '@/pages/BookingSales';
+import Purchases from '@/pages/Purchases';
 import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
 import ProductDetailTest from '@/components/ProductDetailTest';
@@ -110,6 +111,7 @@ function App() {
                   <Route path="/productos" element={<Products />} />
                   <Route path="/clientes" element={<Clients />} />
                   <Route path="/proveedores" element={<Suppliers />} />
+                  <Route path="/compras" element={<Purchases />} />
                   <Route path="/reservas-ventas" element={<BookingSales />} />
                   <Route path="/pedidos" element={<Orders />} />
                   <Route path="/reportes" element={<Reports />} />

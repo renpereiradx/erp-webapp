@@ -12,7 +12,8 @@ import {
   Package, 
   Users, 
   Truck,
-  ShoppingCart, 
+  ShoppingCart,
+  ShoppingBag,
   Calendar,
   BarChart3, 
   Settings,
@@ -181,18 +182,25 @@ const MainLayout = ({ children }) => {
       badge: '4'
     },
     { 
+      name: 'Compras', 
+      href: '/compras', 
+      icon: ShoppingBag, 
+      color: 'indigo',
+      badge: '5'
+    },
+    { 
       name: 'Reservas y Ventas', 
       href: '/reservas-ventas', 
       icon: Calendar, 
       color: 'purple',
-      badge: '5'
+      badge: '6'
     },
     { 
       name: 'Pedidos', 
       href: '/pedidos', 
       icon: ShoppingCart, 
       color: 'green',
-      badge: '6'
+      badge: '7'
     },
     { 
       name: 'Reportes', 
