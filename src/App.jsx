@@ -21,24 +21,6 @@ import useAuthStore from '@/store/useAuthStore';
 import { apiClient } from '@/services/api';
 import './App.css';
 
-// Componente de página de pedidos (placeholder)
-const Orders = () => (
-  <div className="space-y-6">
-    <div>
-      <h1 className="text-3xl font-bold tracking-tight">Pedidos</h1>
-      <p className="text-muted-foreground">
-        Gestiona los pedidos de tus clientes
-      </p>
-    </div>
-    <div className="bg-card rounded-lg border p-8 text-center">
-      <h2 className="text-xl font-semibold mb-2">Página en Desarrollo</h2>
-      <p className="text-muted-foreground">
-        La funcionalidad de pedidos estará disponible próximamente.
-      </p>
-    </div>
-  </div>
-);
-
 // Componente de página de reportes (placeholder)
 const Reports = () => (
   <div className="space-y-6">

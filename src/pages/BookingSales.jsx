@@ -335,7 +335,8 @@ const BookingSales = () => {
                 onDateSelect={handleDateSelect}
                 selectedTime={selectedTime}
                 onTimeSelect={handleTimeSelect}
-                reservations={mockReservations}
+                selectedProduct={services.find(s => s.id === selectedService)}
+                className="w-full"
               />
             </div>
           </div>

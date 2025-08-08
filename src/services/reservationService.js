@@ -106,6 +106,48 @@ export const reservationService = {
     return await apiService.get(`/reservas/disponibles/${productId}/${date}`);
   },
 
+  // Obtener horarios (schedules) para un producto específico
+  getSchedules: async (productId, params = {}) => {
+    const queryParams = new URLSearchParams({
+      start_date: params.startDate || '',
+      end_date: params.endDate || '',
+      is_available: params.isAvailable !== undefined ? params.isAvailable : '',
+    }).toString();
+
+    return await apiService.get(`/productos/${productId}/horarios?${queryParams}`);
+  },
+
+  // Crear un nuevo horario (schedule) para un producto
+  createSchedule: async (productId, scheduleData) => {
+    return await apiService.post(`/productos/${productId}/horarios`, {
+      action: 'create',
+      product_id: productId,
+      start_time: scheduleData.startTime,
+      end_time: scheduleData.endTime,
+      is_available: scheduleData.isAvailable !== false
+    });
+  },
+
+  // Actualizar disponibilidad de un horario
+  updateScheduleAvailability: async (scheduleId, isAvailable) => {
+    return await apiService.put(`/horarios/${scheduleId}`, {
+      action: 'update_availability',
+      schedule_id: parseInt(scheduleId),
+      is_available: isAvailable
+    });
+  },
+
+  // Verificar disponibilidad de un horario específico
+  checkScheduleAvailability: async (productId, startTime, endTime) => {
+    const queryParams = new URLSearchParams({
+      product_id: productId,
+      start_time: startTime,
+      end_time: endTime
+    }).toString();
+
+    return await apiService.get(`/horarios/verificar-disponibilidad?${queryParams}`);
+  },
+
   // Obtener estadísticas de reservas
   getReservationStats: async (params = {}) => {
     const queryParams = new URLSearchParams({
