@@ -5,22 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { use      {/* Tabs principales */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className={`grid w-full grid-cols-2 h-12 ${getContainerStyle()}`}>
-          <TabsTrigger 
-            value="reservas" 
-            className={`${getTabStyle()} ${isNeoBrutalism ? 'font-black uppercase' : isMaterial ? materialTypography.button : fluentTypography.caption1}`}
-          >
-            <Calendar className="w-4 h-4 mr-2" />
-            Reservas
-          </TabsTrigger>
-          <TabsTrigger 
-            value="ventas" 
-            className={`${getTabStyle()} ${isNeoBrutalism ? 'font-black uppercase' : isMaterial ? materialTypography.button : fluentTypography.caption1}`}
-          >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Ventasxt-themes';
+import { useTheme } from 'next-themes';
 import { Calendar, Clock, Users, ShoppingCart, Plus, Minus, X, Check, Save } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
@@ -306,17 +291,17 @@ const BookingSales = () => {
 
       {/* Tabs principales */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-12 bg-white border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+        <TabsList className={`grid w-full grid-cols-2 h-12 ${getContainerStyle()}`}>
           <TabsTrigger 
             value="reservas" 
-            className="data-[state=active]:bg-brutalist-blue data-[state=active]:text-white font-black uppercase"
+            className={`${getTabStyle()} ${isNeoBrutalism ? 'font-black uppercase' : isMaterial ? materialTypography.button : fluentTypography.caption1}`}
           >
             <Calendar className="w-4 h-4 mr-2" />
             Reservas
           </TabsTrigger>
           <TabsTrigger 
             value="ventas"
-            className="data-[state=active]:bg-brutalist-green data-[state=active]:text-white font-black uppercase"
+            className={`${getTabStyle()} ${isNeoBrutalism ? 'font-black uppercase' : isMaterial ? materialTypography.button : fluentTypography.caption1}`}
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
             Ventas
