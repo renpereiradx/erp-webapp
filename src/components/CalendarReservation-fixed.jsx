@@ -1,18 +1,14 @@
 /**
  * Componente de calendario compacto y minimalista para reservas
- * Soporte completo para Neo-Brutalism, Material Design y Fluent Design
+ * Diseñado con estilo neo-brutalista para mayor impacto visual
  * Integrado con la estructura de schedules de la base de datos
  */
 
 import React, { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
 import { ChevronLeft, ChevronRight, Clock, User, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { BrutalistBadge } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/badge';
 import useReservationStore from '@/store/useReservationStore';
-import { materialColors, materialTypography, materialSpacing, materialCorners, materialElevation } from '@/utils/materialDesignUtils';
-import { fluentColors, fluentTypography, fluentSpacing, fluentCorners, fluentElevation } from '@/utils/fluentDesignUtils';
 import { cn } from '@/lib/utils';
 
 const CalendarReservation = ({ 
@@ -23,11 +19,6 @@ const CalendarReservation = ({
   selectedProduct = null, // Producto/servicio seleccionado
   className = ""
 }) => {
-  const { theme } = useTheme();
-  const isNeoBrutalism = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
-  const isMaterial = theme === 'material-light' || theme === 'material-dark';
-  const isFluent = theme === 'fluent-light' || theme === 'fluent-dark';
-  
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [timeSlots, setTimeSlots] = useState([]);
 
@@ -61,85 +52,6 @@ const CalendarReservation = ({
       });
     }
   }, [selectedProduct, fetchSchedules, fetchReservations]);
-
-  // Helper functions para diferentes sistemas de diseño
-  const getContainerStyle = () => {
-    if (isNeoBrutalism) {
-      return "bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]";
-    } else if (isMaterial) {
-      return `bg-white ${materialElevation.level2} ${materialCorners.medium}`;
-    } else if (isFluent) {
-      return `bg-white ${fluentElevation.card} ${fluentCorners.medium}`;
-    }
-    return "bg-white border shadow-lg rounded-lg";
-  };
-
-  const getCalendarHeaderStyle = () => {
-    if (isNeoBrutalism) {
-      return "text-lg font-black uppercase tracking-wide";
-    } else if (isMaterial) {
-      return materialTypography.h6;
-    } else if (isFluent) {
-      return fluentTypography.subtitle1;
-    }
-    return "text-lg font-semibold";
-  };
-
-  const getDayStyle = (isSelected, isToday, isPast, isCurrentMonth, hasAvailableSchedules) => {
-    let baseStyle = "relative h-10 border-2 text-sm font-bold transition-all duration-150";
-    
-    if (isNeoBrutalism) {
-      baseStyle += " border-black";
-      if (isCurrentMonth) {
-        if (isPast) {
-          baseStyle += " bg-gray-100 text-gray-400 cursor-not-allowed";
-        } else if (isToday) {
-          baseStyle += " bg-brutalist-yellow text-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]";
-        } else if (hasAvailableSchedules) {
-          baseStyle += " bg-white text-black hover:bg-gray-50 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]";
-        } else {
-          baseStyle += " bg-gray-100 text-gray-400 cursor-not-allowed";
-        }
-      } else {
-        baseStyle += " bg-gray-50 text-gray-300";
-      }
-      if (isSelected) {
-        baseStyle += " bg-brutalist-blue text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]";
-      }
-    } else if (isMaterial) {
-      baseStyle += ` ${materialCorners.small}`;
-      if (isCurrentMonth) {
-        if (isPast) {
-          baseStyle += " bg-gray-100 text-gray-400 cursor-not-allowed";
-        } else if (isSelected) {
-          baseStyle += ` ${materialColors.primary.main} text-white`;
-        } else if (isToday) {
-          baseStyle += ` ${materialColors.secondary.main} text-white`;
-        } else {
-          baseStyle += " bg-white hover:bg-gray-50";
-        }
-      } else {
-        baseStyle += " bg-gray-50 text-gray-300";
-      }
-    } else if (isFluent) {
-      baseStyle += ` ${fluentCorners.small}`;
-      if (isCurrentMonth) {
-        if (isPast) {
-          baseStyle += " bg-gray-100 text-gray-400 cursor-not-allowed";
-        } else if (isSelected) {
-          baseStyle += ` ${fluentColors.accent} text-white`;
-        } else if (isToday) {
-          baseStyle += ` ${fluentColors.brand} text-white`;
-        } else {
-          baseStyle += " bg-white hover:bg-gray-50";
-        }
-      } else {
-        baseStyle += " bg-gray-50 text-gray-300";
-      }
-    }
-    
-    return baseStyle;
-  };
 
   // Generar slots de tiempo de 9 AM a 6 PM cada 30 minutos
   useEffect(() => {

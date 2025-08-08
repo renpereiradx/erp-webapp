@@ -1,9 +1,26 @@
 /**
- * Página unificada de Reservas y Ventas con diseño minimalista
+ * Página unificada de Reservas y Ventas con diseño multitema
+ * Soporte completo para Neo-Brutalism, Material Design y Fluent Design
  * Permite gestionar reservas de servicios y ventas de productos de forma integrada
  */
 
 import React, { useState, useEffect } from 'react';
+import { use      {/* Tabs principales */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className={`grid w-full grid-cols-2 h-12 ${getContainerStyle()}`}>
+          <TabsTrigger 
+            value="reservas" 
+            className={`${getTabStyle()} ${isNeoBrutalism ? 'font-black uppercase' : isMaterial ? materialTypography.button : fluentTypography.caption1}`}
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Reservas
+          </TabsTrigger>
+          <TabsTrigger 
+            value="ventas" 
+            className={`${getTabStyle()} ${isNeoBrutalism ? 'font-black uppercase' : isMaterial ? materialTypography.button : fluentTypography.caption1}`}
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Ventasxt-themes';
 import { Calendar, Clock, Users, ShoppingCart, Plus, Minus, X, Check, Save } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
@@ -16,8 +33,14 @@ import CalendarReservation from '@/components/CalendarReservation';
 import SaleItemsManager from '@/components/SaleItemsManager';
 import useClientStore from '@/store/useClientStore';
 import useProductStore from '@/store/useProductStore';
+import { materialColors, materialTypography, materialSpacing, materialCorners, materialElevation } from '@/utils/materialDesignUtils';
+import { fluentColors, fluentTypography, fluentSpacing, fluentCorners, fluentElevation } from '@/utils/fluentDesignUtils';
 
 const BookingSales = () => {
+  const { theme } = useTheme();
+  const isNeoBrutalism = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
+  const isMaterial = theme === 'material-light' || theme === 'material-dark';
+  const isFluent = theme === 'fluent-light' || theme === 'fluent-dark';
   const [activeTab, setActiveTab] = useState('reservas');
   const [selectedClient, setSelectedClient] = useState('');
   const [selectedService, setSelectedService] = useState('');
@@ -28,6 +51,71 @@ const BookingSales = () => {
   const [total, setTotal] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
   const [tax, setTax] = useState(0);
+
+  // Helper functions para diferentes sistemas de diseño
+  const getContainerStyle = () => {
+    if (isNeoBrutalism) {
+      return "bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]";
+    } else if (isMaterial) {
+      return `bg-white ${materialElevation.level2} ${materialCorners.medium}`;
+    } else if (isFluent) {
+      return `bg-white ${fluentElevation.card} ${fluentCorners.medium}`;
+    }
+    return "bg-white border shadow-lg rounded-lg";
+  };
+
+  const getCardStyle = () => {
+    if (isNeoBrutalism) {
+      return "bg-white border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]";
+    } else if (isMaterial) {
+      return `bg-white ${materialElevation.level1} ${materialCorners.small}`;
+    } else if (isFluent) {
+      return `bg-white ${fluentElevation.subtle} ${fluentCorners.small}`;
+    }
+    return "bg-white border shadow rounded";
+  };
+
+  const getButtonStyle = (variant = 'primary') => {
+    if (isNeoBrutalism) {
+      if (variant === 'primary') {
+        return "bg-brutalist-blue text-white border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]";
+      }
+      return "bg-white text-black border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px]";
+    } else if (isMaterial) {
+      if (variant === 'primary') {
+        return `${materialColors.primary.main} text-white ${materialElevation.level1} ${materialCorners.small}`;
+      }
+      return `${materialColors.surface.main} ${materialColors.onSurface.main} ${materialElevation.level0} ${materialCorners.small}`;
+    } else if (isFluent) {
+      if (variant === 'primary') {
+        return `${fluentColors.accent} text-white ${fluentElevation.subtle} ${fluentCorners.small}`;
+      }
+      return `${fluentColors.surface} ${fluentColors.onSurface} ${fluentElevation.subtle} ${fluentCorners.small}`;
+    }
+    return variant === 'primary' ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900";
+  };
+
+  const getHeaderStyle = () => {
+    if (isNeoBrutalism) {
+      return "text-3xl font-black uppercase tracking-wide";
+    } else if (isMaterial) {
+      return `${materialTypography.h4} font-medium`;
+    } else if (isFluent) {
+      return `${fluentTypography.title1} font-semibold`;
+    }
+    return "text-2xl font-bold";
+  };
+
+  const getTabStyle = () => {
+    if (isNeoBrutalism) {
+      return "border-4 border-black bg-white data-[state=active]:bg-brutalist-blue data-[state=active]:text-white";
+    } else if (isMaterial) {
+      return `${materialCorners.small} data-[state=active]:${materialColors.primary.main} data-[state=active]:text-white`;
+    } else if (isFluent) {
+      return `${fluentCorners.small} data-[state=active]:${fluentColors.accent} data-[state=active]:text-white`;
+    }
+    return "data-[state=active]:bg-blue-500 data-[state=active]:text-white";
+  };
 
   // Datos de simulación mejorados
   const [clients] = useState([
@@ -188,18 +276,31 @@ const BookingSales = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reservas y Ventas</h1>
-          <p className="text-muted-foreground">
+          <h1 className={getHeaderStyle()}>Reservas y Ventas</h1>
+          <p className={`${isMaterial ? materialTypography.body1 : isFluent ? fluentTypography.body1 : 'text-muted-foreground'} ${isNeoBrutalism ? 'font-bold' : ''}`}>
             Sistema unificado para gestionar reservas de servicios y ventas de productos
           </p>
         </div>
         <div className="flex space-x-2">
-          <BrutalistBadge color="blue">
-            {saleItems.length} productos
-          </BrutalistBadge>
-          <BrutalistBadge color="green">
-            ${total.toFixed(2)}
-          </BrutalistBadge>
+          {isNeoBrutalism ? (
+            <>
+              <BrutalistBadge color="blue">
+                {saleItems.length} productos
+              </BrutalistBadge>
+              <BrutalistBadge color="green">
+                ${total.toFixed(2)}
+              </BrutalistBadge>
+            </>
+          ) : (
+            <>
+              <Badge variant="secondary" className={getCardStyle()}>
+                {saleItems.length} productos
+              </Badge>
+              <Badge variant="default" className={getButtonStyle('primary')}>
+                ${total.toFixed(2)}
+              </Badge>
+            </>
+          )}
         </div>
       </div>
 
@@ -226,9 +327,9 @@ const BookingSales = () => {
         <TabsContent value="reservas" className="space-y-6">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Formulario de Reserva */}
-            <Card className="bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <CardHeader className="border-b-4 border-black">
-                <CardTitle className="flex items-center text-xl font-black uppercase">
+            <Card className={getContainerStyle()}>
+              <CardHeader className={isNeoBrutalism ? "border-b-4 border-black" : "border-b"}>
+                <CardTitle className={`flex items-center ${isNeoBrutalism ? 'text-xl font-black uppercase' : isMaterial ? materialTypography.h6 : fluentTypography.subtitle1}`}>
                   <Calendar className="w-5 h-5 mr-2" />
                   Nueva Reserva
                 </CardTitle>
@@ -236,7 +337,7 @@ const BookingSales = () => {
               <CardContent className="space-y-6">
                 {/* Selección de Cliente */}
                 <div className="space-y-2">
-                  <label className="text-sm font-black uppercase tracking-wide">Cliente *</label>
+                  <label className={`text-sm ${isNeoBrutalism ? 'font-black uppercase tracking-wide' : isMaterial ? materialTypography.caption : fluentTypography.caption1}`}>Cliente *</label>
                   <Select value={selectedClient} onValueChange={setSelectedClient}>
                     <SelectTrigger className="border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                       <SelectValue placeholder="Selecciona un cliente" />
