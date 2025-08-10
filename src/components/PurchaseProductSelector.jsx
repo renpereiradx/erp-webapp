@@ -15,7 +15,8 @@ const PurchaseProductSelector = ({
   supplierId = null,
   className = ''
 }) => {
-  const styles = useThemeStyles(theme);
+  const themeStyles = useThemeStyles(theme);
+  const styles = themeStyles.styles || themeStyles;
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);

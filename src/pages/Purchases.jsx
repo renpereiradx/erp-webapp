@@ -47,7 +47,8 @@ import {
 
 const Purchases = () => {
   const { theme } = useTheme();
-  const styles = useThemeStyles(theme);
+  const themeStyles = useThemeStyles();
+  const styles = themeStyles.styles || themeStyles;
 
   // Estado local para UI
   const [activeTab, setActiveTab] = useState('new-purchase');

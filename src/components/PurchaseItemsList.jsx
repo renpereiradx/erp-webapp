@@ -17,7 +17,8 @@ const PurchaseItemsList = ({
   errors = {},
   className = ''
 }) => {
-  const styles = useThemeStyles(theme);
+  const themeStyles = useThemeStyles(theme);
+  const styles = themeStyles.styles || themeStyles;
 
   if (items.length === 0) {
     return (

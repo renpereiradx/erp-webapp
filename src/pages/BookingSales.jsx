@@ -34,7 +34,8 @@ import { saleService } from '@/services/saleService';
 
 const BookingSales = () => {
   const { theme } = useTheme();
-  const styles = useThemeStyles(theme);
+  const themeStyles = useThemeStyles(theme);
+  const styles = themeStyles.styles || themeStyles;
   
   // Estado local para UI
   const [activeTab, setActiveTab] = useState('reservas');

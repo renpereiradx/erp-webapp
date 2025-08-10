@@ -22,7 +22,8 @@ const SupplierSelector = ({
   className = '',
   error = null
 }) => {
-  const styles = useThemeStyles(theme);
+  const themeStyles = useThemeStyles(theme);
+  const styles = themeStyles.styles || themeStyles;
   const supplierLogic = useSupplierLogic();
   
   const [localSearch, setLocalSearch] = useState('');

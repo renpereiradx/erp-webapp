@@ -25,7 +25,8 @@ const PurchaseSummary = ({
   theme = 'neo-brutalism',
   className = ''
 }) => {
-  const styles = useThemeStyles(theme);
+  const themeStyles = useThemeStyles(theme);
+  const styles = themeStyles.styles || themeStyles;
 
   if (!summary) {
     return (

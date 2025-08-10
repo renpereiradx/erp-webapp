@@ -4,13 +4,13 @@
  * Integra con los endpoints definidos en swagger.yaml
  */
 
-import { api } from './api';
+import { apiClient } from './api';
 
 class PurchaseService {
   // Crear nueva compra
   async createPurchase(purchaseData) {
     try {
-      const response = await api.post('/purchase/', {
+      const response = await apiClient.post('/purchase/', {
         supplier_id: purchaseData.supplierId,
         items: purchaseData.items.map(item => ({
           product_id: item.productId,
@@ -44,7 +44,7 @@ class PurchaseService {
   // Obtener compra por ID
   async getPurchaseById(id) {
     try {
-      const response = await api.get(`/purchase/${id}`);
+      const response = await apiClient.get(`/purchase/${id}`);
       return {
         success: true,
         data: response.data
@@ -61,7 +61,7 @@ class PurchaseService {
   // Cancelar compra
   async cancelPurchase(id, reason = '') {
     try {
-      const response = await api.put(`/purchase/cancel/${id}`, {
+      const response = await apiClient.put(`/purchase/cancel/${id}`, {
         cancellation_reason: reason,
         cancelled_at: new Date().toISOString()
       });
@@ -83,7 +83,7 @@ class PurchaseService {
   // Obtener compras por proveedor ID
   async getPurchasesBySupplier(supplierId) {
     try {
-      const response = await api.get(`/purchase/supplier_id/${supplierId}`);
+      const response = await apiClient.get(`/purchase/supplier_id/${supplierId}`);
       return {
         success: true,
         data: response.data
@@ -100,7 +100,7 @@ class PurchaseService {
   // Obtener compras por nombre de proveedor
   async getPurchasesBySupplierName(supplierName) {
     try {
-      const response = await api.get(`/purchase/supplier_name/${encodeURIComponent(supplierName)}`);
+      const response = await apiClient.get(`/purchase/supplier_name/${encodeURIComponent(supplierName)}`);
       return {
         success: true,
         data: response.data
@@ -123,7 +123,7 @@ class PurchaseService {
         ...filters
       });
 
-      const response = await api.get(`/purchase/date_range/?${params}`);
+      const response = await apiClient.get(`/purchase/date_range/?${params}`);
       return {
         success: true,
         data: response.data

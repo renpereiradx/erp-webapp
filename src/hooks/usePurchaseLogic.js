@@ -13,6 +13,7 @@ import {
   PURCHASE_STATES,
   PURCHASE_MESSAGES 
 } from '../constants/purchaseData';
+import { DELIVERY_METHODS } from '../constants/purchaseData';
 
 export const usePurchaseLogic = () => {
   // Estado principal
@@ -27,6 +28,17 @@ export const usePurchaseLogic = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Helper para obtener método de entrega
+  const getDeliveryMethod = useCallback((methodId) => {
+    return DELIVERY_METHODS.find(method => method.id === methodId);
+  }, []);
+
+  // Obtener costo de entrega
+  const getDeliveryCost = useCallback(() => {
+    const deliveryOption = getDeliveryMethod(deliveryMethod);
+    return deliveryOption ? deliveryOption.cost : 0;
+  }, [deliveryMethod]);
 
   // Cálculos automáticos - memoizados para optimización
   const calculations = useMemo(() => {
@@ -67,18 +79,6 @@ export const usePurchaseLogic = () => {
       isValidDeliveryDate: expectedDelivery ? new Date(expectedDelivery) > new Date() : true
     };
   }, [selectedSupplier, purchaseItems, calculations.total, expectedDelivery]);
-
-  // Obtener costo de entrega
-  const getDeliveryCost = useCallback(() => {
-    const deliveryOption = getDeliveryMethod(deliveryMethod);
-    return deliveryOption ? deliveryOption.cost : 0;
-  }, [deliveryMethod]);
-
-  // Helper para obtener método de entrega
-  const getDeliveryMethod = useCallback((methodId) => {
-    const { DELIVERY_METHODS } = require('../constants/purchaseData');
-    return DELIVERY_METHODS.find(method => method.id === methodId);
-  }, []);
 
   // Agregar producto al pedido
   const addPurchaseItem = useCallback((product, quantity = 1, unitPrice = null) => {

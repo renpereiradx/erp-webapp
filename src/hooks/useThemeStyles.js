@@ -6,8 +6,6 @@
 
 import { useTheme } from 'next-themes';
 import { useMemo } from 'react';
-import { materialColors, materialTypography, materialCorners, materialElevation } from '@/utils/materialDesignUtils';
-import { fluentColors, fluentTypography, fluentCorners, fluentElevation } from '@/utils/fluentDesignUtils';
 
 export const useThemeStyles = () => {
   const { theme } = useTheme();
@@ -16,50 +14,51 @@ export const useThemeStyles = () => {
     isNeoBrutalism: theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark',
     isMaterial: theme === 'material-light' || theme === 'material-dark',
     isFluent: theme === 'fluent-light' || theme === 'fluent-dark',
+    mode: theme?.endsWith('dark') ? 'dark' : 'light',
   }), [theme]);
 
   const styles = useMemo(() => ({
     // Contenedores principales
     container: () => {
       if (themeConfig.isNeoBrutalism) {
-        return "bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]";
+        return "bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 rounded-none";
       } else if (themeConfig.isMaterial) {
-        return `bg-white ${materialElevation.level2} ${materialCorners.medium}`;
+        return "bg-white shadow-md rounded-md";
       } else if (themeConfig.isFluent) {
-        return `bg-white ${fluentElevation.card} ${fluentCorners.medium}`;
+        return "bg-white shadow-sm rounded-lg";
       }
       return "bg-white border shadow-lg rounded-lg";
     },
 
     // Tarjetas y paneles
-    card: () => {
+    card: (extra = '') => {
       if (themeConfig.isNeoBrutalism) {
-        return "bg-white border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]";
+        return `bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${extra}`.trim();
       } else if (themeConfig.isMaterial) {
-        return `bg-white ${materialElevation.level1} ${materialCorners.small}`;
+        return `bg-white shadow-sm rounded-md ${extra}`.trim();
       } else if (themeConfig.isFluent) {
-        return `bg-white ${fluentElevation.subtle} ${fluentCorners.small}`;
+        return `bg-white shadow-sm rounded-lg ${extra}`.trim();
       }
-      return "bg-white border shadow rounded";
+      return `bg-white border shadow rounded ${extra}`.trim();
     },
 
     // Botones con variantes
     button: (variant = 'primary') => {
       if (themeConfig.isNeoBrutalism) {
         if (variant === 'primary') {
-          return "bg-brutalist-blue text-white border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-150";
+          return "bg-brutalist-blue text-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-150";
         }
-        return "bg-white text-black border-3 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150";
+        return "bg-white text-black border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all duration-150";
       } else if (themeConfig.isMaterial) {
         if (variant === 'primary') {
-          return `${materialColors.primary.main} text-white ${materialElevation.level1} ${materialCorners.small} hover:shadow-md transition-all duration-200`;
+          return "bg-blue-600 text-white shadow-sm rounded-md hover:bg-blue-700 transition-all duration-200";
         }
-        return `${materialColors.surface.main} ${materialColors.onSurface.main} ${materialElevation.level0} ${materialCorners.small} hover:shadow-sm transition-all duration-200`;
+        return "bg-gray-50 text-gray-900 border rounded-md hover:bg-gray-100 transition-all duration-200";
       } else if (themeConfig.isFluent) {
         if (variant === 'primary') {
-          return `${fluentColors.accent} text-white ${fluentElevation.subtle} ${fluentCorners.small} hover:opacity-90 transition-all duration-200`;
+          return "bg-sky-600 text-white shadow-sm rounded-lg hover:bg-sky-700 transition-all duration-200";
         }
-        return `${fluentColors.surface} ${fluentColors.onSurface} ${fluentElevation.subtle} ${fluentCorners.small} hover:bg-gray-50 transition-all duration-200`;
+        return "bg-white text-gray-900 border rounded-lg hover:bg-gray-50 transition-all duration-200";
       }
       return variant === 'primary' ? "bg-blue-500 text-white hover:bg-blue-600 transition-colors" : "bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors";
     },
@@ -74,53 +73,26 @@ export const useThemeStyles = () => {
           h4: "text-lg font-black uppercase tracking-wide",
         };
         return sizes[level] || sizes.h1;
-      } else if (themeConfig.isMaterial) {
+      } else {
         const sizes = {
-          h1: `${materialTypography.h4} font-medium`,
-          h2: `${materialTypography.h5} font-medium`,
-          h3: `${materialTypography.h6} font-medium`,
-          h4: `${materialTypography.subtitle1} font-medium`,
-        };
-        return sizes[level] || sizes.h1;
-      } else if (themeConfig.isFluent) {
-        const sizes = {
-          h1: `${fluentTypography.title1} font-semibold`,
-          h2: `${fluentTypography.title2} font-semibold`,
-          h3: `${fluentTypography.subtitle1} font-semibold`,
-          h4: `${fluentTypography.subtitle2} font-semibold`,
+          h1: "text-3xl font-bold",
+          h2: "text-2xl font-bold",
+          h3: "text-xl font-semibold",
+          h4: "text-lg font-semibold",
         };
         return sizes[level] || sizes.h1;
       }
-      const sizes = {
-        h1: "text-3xl font-bold",
-        h2: "text-2xl font-bold",
-        h3: "text-xl font-semibold",
-        h4: "text-lg font-semibold",
-      };
-      return sizes[level] || sizes.h1;
     },
 
     // Labels y texto
     label: () => {
-      if (themeConfig.isNeoBrutalism) {
-        return "text-sm font-black uppercase tracking-wide";
-      } else if (themeConfig.isMaterial) {
-        return materialTypography.caption;
-      } else if (themeConfig.isFluent) {
-        return fluentTypography.caption1;
-      }
+      if (themeConfig.isNeoBrutalism) return "text-sm font-black uppercase tracking-wide";
       return "text-sm font-medium";
     },
 
     // Texto del cuerpo
     body: () => {
-      if (themeConfig.isNeoBrutalism) {
-        return "font-bold";
-      } else if (themeConfig.isMaterial) {
-        return materialTypography.body1;
-      } else if (themeConfig.isFluent) {
-        return fluentTypography.body1;
-      }
+      if (themeConfig.isNeoBrutalism) return "font-bold";
       return "text-muted-foreground";
     },
 
@@ -129,9 +101,9 @@ export const useThemeStyles = () => {
       if (themeConfig.isNeoBrutalism) {
         return "border-4 border-black bg-white data-[state=active]:bg-brutalist-blue data-[state=active]:text-white font-black uppercase transition-all duration-150";
       } else if (themeConfig.isMaterial) {
-        return `${materialCorners.small} data-[state=active]:${materialColors.primary.main} data-[state=active]:text-white transition-all duration-200`;
+        return "rounded-md data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all duration-200";
       } else if (themeConfig.isFluent) {
-        return `${fluentCorners.small} data-[state=active]:${fluentColors.accent} data-[state=active]:text-white transition-all duration-200`;
+        return "rounded-lg data-[state=active]:bg-sky-600 data-[state=active]:text-white transition-all duration-200";
       }
       return "data-[state=active]:bg-blue-500 data-[state=active]:text-white transition-all duration-200";
     },
@@ -139,11 +111,11 @@ export const useThemeStyles = () => {
     // Input fields
     input: () => {
       if (themeConfig.isNeoBrutalism) {
-        return "border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[-1px] focus:translate-y-[-1px] transition-all duration-150";
+        return "border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:-translate-x-0.5 focus:-translate-y-0.5 transition-all duration-150";
       } else if (themeConfig.isMaterial) {
-        return `border border-gray-300 ${materialCorners.small} focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200`;
+        return "border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200";
       } else if (themeConfig.isFluent) {
-        return `border border-gray-300 ${fluentCorners.small} focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all duration-200`;
+        return "border border-gray-300 rounded-lg focus:border-sky-600 focus:ring-1 focus:ring-sky-600 transition-all duration-200";
       }
       return "border border-gray-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-200";
     },
@@ -159,6 +131,9 @@ export const useThemeStyles = () => {
 
   return {
     ...themeConfig,
+    // Exposición en nivel superior para retrocompatibilidad
+    ...styles,
+    // Objeto agrupado
     styles
   };
 };
