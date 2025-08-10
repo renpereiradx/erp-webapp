@@ -4,34 +4,53 @@
  * En producción, estos datos vendrían de la API
  */
 
-// Estados de compras
+// Estados de compras - Alineados con la especificación
 export const PURCHASE_STATES = {
-  DRAFT: 'draft',
-  PENDING: 'pending',
-  CONFIRMED: 'confirmed',
-  RECEIVED: 'received',
-  CANCELLED: 'cancelled',
-  PARTIALLY_RECEIVED: 'partially_received'
+  PENDING: 'PENDING',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  DRAFT: 'DRAFT',
+  CONFIRMED: 'CONFIRMED',
+  RECEIVED: 'RECEIVED',
+  PARTIALLY_RECEIVED: 'PARTIALLY_RECEIVED'
 };
 
 // Estados con etiquetas en español
 export const PURCHASE_STATE_LABELS = {
-  [PURCHASE_STATES.DRAFT]: 'Borrador',
   [PURCHASE_STATES.PENDING]: 'Pendiente',
+  [PURCHASE_STATES.COMPLETED]: 'Completada',
+  [PURCHASE_STATES.CANCELLED]: 'Cancelada',
+  [PURCHASE_STATES.DRAFT]: 'Borrador',
   [PURCHASE_STATES.CONFIRMED]: 'Confirmada',
   [PURCHASE_STATES.RECEIVED]: 'Recibida',
-  [PURCHASE_STATES.CANCELLED]: 'Cancelada',
   [PURCHASE_STATES.PARTIALLY_RECEIVED]: 'Parcialmente Recibida'
 };
 
 // Colores para estados
 export const PURCHASE_STATE_COLORS = {
-  [PURCHASE_STATES.DRAFT]: 'gray',
   [PURCHASE_STATES.PENDING]: 'yellow',
+  [PURCHASE_STATES.COMPLETED]: 'green',
+  [PURCHASE_STATES.CANCELLED]: 'red',
+  [PURCHASE_STATES.DRAFT]: 'gray',
   [PURCHASE_STATES.CONFIRMED]: 'blue',
   [PURCHASE_STATES.RECEIVED]: 'green',
-  [PURCHASE_STATES.CANCELLED]: 'red',
   [PURCHASE_STATES.PARTIALLY_RECEIVED]: 'orange'
+};
+
+// Configuración de tasas de impuestos
+export const TAX_RATES = {
+  DEFAULT: { id: null, rate: 0, name: 'Sin impuesto' },
+  IVA_16: { id: 1, rate: 0.16, name: 'IVA 16%' },
+  IVA_8: { id: 2, rate: 0.08, name: 'IVA 8%' },
+  IEPS: { id: 3, rate: 0.25, name: 'IEPS 25%' }
+};
+
+// Tipos de productos para impuestos
+export const PRODUCT_TAX_CATEGORIES = {
+  MEDICINE: 'medicine',      // Medicamentos - IVA 0%
+  EQUIPMENT: 'equipment',    // Equipos - IVA 16%
+  SUPPLIES: 'supplies',      // Insumos - IVA 16%
+  CONTROLLED: 'controlled'   // Controlados - IVA + IEPS
 };
 
 // Datos mock de proveedores (complementa supplierService)

@@ -10,6 +10,7 @@
 
 import React, { useState } from 'react';
 import { useTheme } from 'next-themes';
+// Importar iconos necesarios
 import { 
   ShoppingCart, 
   Package, 
@@ -34,9 +35,10 @@ import { usePurchaseLogic } from '@/hooks/usePurchaseLogic';
 
 // Componentes Especializados
 import SupplierSelector from '@/components/SupplierSelector';
-import PurchaseProductSelector from '@/components/PurchaseProductSelector';
+import EnhancedPurchaseProductSelector from '@/components/EnhancedPurchaseProductSelector';
 import PurchaseItemsList from '@/components/PurchaseItemsList';
 import PurchaseSummary from '@/components/PurchaseSummary';
+import PurchaseOrdersList from '@/components/PurchaseOrdersList';
 
 // Constantes
 import { 
@@ -51,7 +53,7 @@ const Purchases = () => {
   const styles = themeStyles.styles || themeStyles;
 
   // Estado local para UI
-  const [activeTab, setActiveTab] = useState('new-purchase');
+  const [activeTab, setActiveTab] = useState('new-purchase'); // Volver a nueva compra como default
   const [notification, setNotification] = useState(null);
 
   // Lógica de compras mediante custom hook
@@ -212,48 +214,72 @@ const Purchases = () => {
     </Card>
   );
 
-  // Estadísticas rápidas
-  const QuickStats = () => (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <Card className={styles.card('p-4')}>
+  // Estadísticas compactas (minimalista)
+  const CompactStats = () => (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className={styles.card('p-3')}>
         <div className="flex items-center">
-          <Package className="w-8 h-8 text-blue-600 mr-3" />
+          <Package className={`w-5 h-5 mr-2 ${
+            styles.isNeoBrutalism ? 'text-black' : 
+            styles.isMaterial ? 'text-blue-600' : 
+            styles.isFluent ? 'text-sky-600' : 'text-blue-600'
+          }`} />
           <div>
-            <div className="text-2xl font-bold">{uniqueProducts}</div>
-            <div className="text-sm text-gray-600">Productos</div>
+            <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
+              {uniqueProducts}
+            </div>
+            <div className="text-xs text-muted-foreground">Productos</div>
           </div>
         </div>
-      </Card>
+      </div>
       
-      <Card className={styles.card('p-4')}>
+      <div className={styles.card('p-3')}>
         <div className="flex items-center">
-          <ShoppingCart className="w-8 h-8 text-green-600 mr-3" />
+          <Calculator className={`w-5 h-5 mr-2 ${
+            styles.isNeoBrutalism ? 'text-black' : 
+            styles.isMaterial ? 'text-green-600' : 
+            styles.isFluent ? 'text-emerald-600' : 'text-green-600'
+          }`} />
           <div>
-            <div className="text-2xl font-bold">{itemCount}</div>
-            <div className="text-sm text-gray-600">Cantidad Total</div>
+            <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
+              {itemCount}
+            </div>
+            <div className="text-xs text-muted-foreground">Cantidad</div>
           </div>
         </div>
-      </Card>
+      </div>
       
-      <Card className={styles.card('p-4')}>
+      <div className={styles.card('p-3')}>
         <div className="flex items-center">
-          <Calculator className="w-8 h-8 text-purple-600 mr-3" />
+          <FileText className={`w-5 h-5 mr-2 ${
+            styles.isNeoBrutalism ? 'text-black' : 
+            styles.isMaterial ? 'text-purple-600' : 
+            styles.isFluent ? 'text-violet-600' : 'text-purple-600'
+          }`} />
           <div>
-            <div className="text-2xl font-bold">${subtotal}</div>
-            <div className="text-sm text-gray-600">Subtotal</div>
+            <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
+              ${subtotal}
+            </div>
+            <div className="text-xs text-muted-foreground">Subtotal</div>
           </div>
         </div>
-      </Card>
+      </div>
       
-      <Card className={styles.card('p-4')}>
+      <div className={styles.card('p-3')}>
         <div className="flex items-center">
-          <FileText className="w-8 h-8 text-orange-600 mr-3" />
+          <ShoppingCart className={`w-5 h-5 mr-2 ${
+            styles.isNeoBrutalism ? 'text-black' : 
+            styles.isMaterial ? 'text-orange-600' : 
+            styles.isFluent ? 'text-amber-600' : 'text-orange-600'
+          }`} />
           <div>
-            <div className="text-2xl font-bold">${total}</div>
-            <div className="text-sm text-gray-600">Total</div>
+            <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
+              ${total}
+            </div>
+            <div className="text-xs text-muted-foreground">Total</div>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 
@@ -282,12 +308,12 @@ const Purchases = () => {
         </TabsList>
 
         {/* Tab de Nueva Compra */}
-        <TabsContent value="new-purchase" className="space-y-6">
-          <QuickStats />
+        <TabsContent value="new-purchase" className="space-y-4">
+          <CompactStats />
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Panel principal - Configuración */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4">
               {/* Selección de proveedor */}
               <Card className={styles.card()}>
                 <CardHeader>
@@ -316,7 +342,7 @@ const Purchases = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <PurchaseProductSelector
+                    <EnhancedPurchaseProductSelector
                       onProductAdd={addPurchaseItem}
                       theme={theme}
                       supplierId={selectedSupplier.id}
@@ -353,7 +379,7 @@ const Purchases = () => {
             </div>
 
             {/* Panel lateral - Resumen */}
-            <div className="space-y-6">
+            <div className="space-y-4">
               <PurchaseSummary
                 summary={getPurchaseSummary()}
                 theme={theme}
@@ -383,42 +409,27 @@ const Purchases = () => {
                 </div>
               )}
 
-              {/* Validaciones */}
+              {/* Validaciones minimalistas */}
               {!validations.canProceed && (
-                <Card className={styles.card('border-orange-200 bg-orange-50')}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center text-orange-800">
-                      <AlertCircle className="w-5 h-5 mr-2" />
-                      <span className="font-medium">Completar para continuar:</span>
-                    </div>
-                    <ul className="mt-2 text-sm text-orange-700 space-y-1">
-                      {!validations.hasSupplier && <li>• Seleccionar proveedor</li>}
-                      {!validations.hasItems && <li>• Agregar al menos un producto</li>}
-                      {!validations.hasValidItems && <li>• Verificar cantidades y precios</li>}
-                    </ul>
-                  </CardContent>
-                </Card>
+                <div className={`p-3 ${styles.card('border-orange-200 bg-orange-50')}`}>
+                  <div className="flex items-center text-orange-800">
+                    <AlertCircle className="w-4 h-4 mr-2" />
+                    <span className="text-sm font-medium">Por completar:</span>
+                  </div>
+                  <ul className="mt-1 text-xs text-orange-700 space-y-0.5">
+                    {!validations.hasSupplier && <li>• Seleccionar proveedor</li>}
+                    {!validations.hasItems && <li>• Agregar productos</li>}
+                    {!validations.hasValidItems && <li>• Verificar cantidades</li>}
+                  </ul>
+                </div>
               )}
             </div>
           </div>
         </TabsContent>
 
         {/* Tab de Lista de Compras */}
-        <TabsContent value="purchases-list" className="space-y-6">
-          <Card className={styles.card()}>
-            <CardHeader>
-              <CardTitle className={styles.cardHeader()}>
-                Lista de Compras
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>Lista de compras - Próximamente</p>
-                <p className="text-sm">Esta funcionalidad se implementará en la siguiente fase</p>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="purchases-list" className="space-y-4">
+          <PurchaseOrdersList theme={theme} />
         </TabsContent>
       </Tabs>
     </div>

@@ -7,36 +7,60 @@
 import { apiClient } from './api';
 
 class PurchaseService {
-  // Crear nueva compra
+  // Crear nueva compra usando el procedimiento register_purchase_order
   async createPurchase(purchaseData) {
     try {
-      const response = await apiClient.post('/purchase/', {
+      // Validar datos antes del envío
+      const validation = this.validatePurchaseData(purchaseData);
+      if (!validation.isValid) {
+        return {
+          success: false,
+          error: 'Datos inválidos: ' + validation.errors.join(', ')
+        };
+      }
+
+      // Preparar datos según la especificación del procedimiento
+      const requestData = {
         supplier_id: purchaseData.supplierId,
-        items: purchaseData.items.map(item => ({
+        status: purchaseData.status || 'PENDING',
+        purchase_items: purchaseData.items.map(item => ({
           product_id: item.productId,
           quantity: item.quantity,
           unit_price: item.unitPrice,
-          total_price: item.quantity * item.unitPrice
-        })),
-        total_amount: purchaseData.totalAmount,
-        notes: purchaseData.notes || '',
-        purchase_date: purchaseData.purchaseDate || new Date().toISOString(),
-        status: 'pending' // Estado inicial
+          exp_date: item.expDate || null,
+          tax_rate_id: item.taxRateId || null,
+          profit_pct: item.profitPct || null
+        }))
+      };
+
+      const response = await apiClient.post('/purchase/', requestData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token') || ''
+        }
       });
 
       if (response.data) {
         return {
           success: true,
           data: response.data,
-          message: 'Compra creada exitosamente'
+          message: 'Orden de compra creada exitosamente',
+          purchaseOrderId: response.data.id
         };
       }
     } catch (error) {
-      console.error('Error creating purchase:', error);
+      console.error('Error creating purchase order:', error);
+      
+      // Manejo mejorado de errores de la API
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          'Error al crear la orden de compra';
+      
       return {
         success: false,
-        error: error.response?.data?.error || 'Error al crear la compra',
-        status: error.response?.status
+        error: errorMessage,
+        status: error.response?.status,
+        details: error.response?.data
       };
     }
   }
@@ -214,17 +238,101 @@ class PurchaseService {
         if (!item.unitPrice || item.unitPrice <= 0) {
           errors.push(`Producto ${index + 1}: Precio debe ser mayor a 0`);
         }
+        // Validación de fecha de expiración si está presente
+        if (item.expDate && new Date(item.expDate) <= new Date()) {
+          errors.push(`Producto ${index + 1}: Fecha de expiración debe ser futura`);
+        }
       });
-    }
-
-    if (!purchaseData.totalAmount || purchaseData.totalAmount <= 0) {
-      errors.push('El total debe ser mayor a 0');
     }
 
     return {
       isValid: errors.length === 0,
       errors
     };
+  }
+
+  // Obtener tasas de impuestos disponibles
+  async getTaxRates() {
+    try {
+      const response = await apiClient.get('/tax-rates/');
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Error fetching tax rates:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Error al obtener tasas de impuestos',
+        data: [] // Fallback a array vacío
+      };
+    }
+  }
+
+  // Obtener detalles de una orden de compra específica
+  async getPurchaseOrderDetails(purchaseOrderId) {
+    try {
+      const response = await apiClient.get(`/purchase/${purchaseOrderId}/details`);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Error fetching purchase order details:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Error al obtener detalles de la orden'
+      };
+    }
+  }
+
+  // Actualizar estado de orden de compra
+  async updatePurchaseOrderStatus(purchaseOrderId, newStatus, notes = '') {
+    try {
+      const response = await apiClient.put(`/purchase/${purchaseOrderId}/status`, {
+        status: newStatus,
+        notes,
+        updated_at: new Date().toISOString()
+      });
+      
+      return {
+        success: true,
+        data: response.data,
+        message: `Estado actualizado a ${newStatus}`
+      };
+    } catch (error) {
+      console.error('Error updating purchase order status:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Error al actualizar estado'
+      };
+    }
+  }
+
+  // Recibir productos de orden de compra (actualizar inventario)
+  async receivePurchaseOrder(purchaseOrderId, receivedItems) {
+    try {
+      const response = await apiClient.post(`/purchase/${purchaseOrderId}/receive`, {
+        received_items: receivedItems.map(item => ({
+          product_id: item.productId,
+          quantity_received: item.quantityReceived,
+          exp_date: item.expDate,
+          received_at: new Date().toISOString()
+        }))
+      });
+      
+      return {
+        success: true,
+        data: response.data,
+        message: 'Productos recibidos correctamente'
+      };
+    } catch (error) {
+      console.error('Error receiving purchase order:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Error al recibir productos'
+      };
+    }
   }
 
   // Calcular totales de compra

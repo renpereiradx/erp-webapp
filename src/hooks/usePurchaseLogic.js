@@ -8,10 +8,10 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import purchaseService from '../services/purchaseService';
 import supplierService from '../services/supplierService';
 import { 
-  PURCHASE_TAX_CONFIG, 
   PURCHASE_VALIDATION_RULES, 
   PURCHASE_STATES,
-  PURCHASE_MESSAGES 
+  PURCHASE_MESSAGES,
+  TAX_RATES 
 } from '../constants/purchaseData';
 import { DELIVERY_METHODS } from '../constants/purchaseData';
 
@@ -40,19 +40,31 @@ export const usePurchaseLogic = () => {
     return deliveryOption ? deliveryOption.cost : 0;
   }, [deliveryMethod]);
 
-  // Cálculos automáticos - memoizados para optimización
+  // Cálculos automáticos mejorados con tasas de impuestos por producto
   const calculations = useMemo(() => {
-    const subtotal = purchaseItems.reduce((sum, item) => {
-      return sum + (item.quantity * item.unitPrice);
-    }, 0);
+    let subtotal = 0;
+    let totalTax = 0;
 
-    const tax = subtotal * PURCHASE_TAX_CONFIG.rate;
+    // Calcular subtotal y impuestos por producto
+    purchaseItems.forEach(item => {
+      const itemSubtotal = item.quantity * item.unitPrice;
+      subtotal += itemSubtotal;
+
+      // Obtener tasa de impuesto del producto (si aplica)
+      if (item.taxRateId && TAX_RATES) {
+        const taxRate = Object.values(TAX_RATES).find(rate => rate.id === item.taxRateId);
+        if (taxRate) {
+          totalTax += itemSubtotal * taxRate.rate;
+        }
+      }
+    });
+
     const deliveryCost = getDeliveryCost();
-    const total = subtotal + tax + deliveryCost;
+    const total = subtotal + totalTax + deliveryCost;
 
     return {
       subtotal: Number(subtotal.toFixed(2)),
-      tax: Number(tax.toFixed(2)),
+      tax: Number(totalTax.toFixed(2)),
       deliveryCost: Number(deliveryCost.toFixed(2)),
       total: Number(total.toFixed(2)),
       itemCount: purchaseItems.reduce((sum, item) => sum + item.quantity, 0),
@@ -80,7 +92,7 @@ export const usePurchaseLogic = () => {
     };
   }, [selectedSupplier, purchaseItems, calculations.total, expectedDelivery]);
 
-  // Agregar producto al pedido
+  // Agregar producto al pedido con soporte para tasas de impuestos
   const addPurchaseItem = useCallback((product, quantity = 1, unitPrice = null) => {
     if (!product) return;
 
@@ -99,23 +111,31 @@ export const usePurchaseLogic = () => {
             : item
         );
       } else {
-        // Agregar nuevo producto
+        // Agregar nuevo producto con toda la información requerida
         const newItem = {
           productId: product.id,
           productName: product.name,
+          productCode: product.code,
           quantity: finalQuantity,
           unitPrice: price,
           category: product.category,
           supplierCode: product.supplier_code,
           minOrderQuantity: product.min_order_quantity || 1,
           packaging: product.packaging || 'Unidad',
-          unit: product.unit || 'pieza'
+          unit: product.unit || 'pieza',
+          // Nuevos campos según especificación
+          expDate: product.expDate || null,
+          taxRateId: product.taxRateId || null,
+          profitPct: product.profitPct || 0,
+          taxCategory: product.tax_category || product.category
         };
         
         return [...prevItems, newItem];
       }
     });
   }, []);
+
+
 
   // Actualizar cantidad de un producto
   const updateItemQuantity = useCallback((productId, newQuantity) => {
