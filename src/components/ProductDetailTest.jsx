@@ -3,9 +3,9 @@
  * y los mensajes de éxito/error mejorados
  */
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
+const ProductDetailModal = React.lazy(() => import('@/components/ProductDetailModal'));
 import { useProduct } from '@/hooks/useProductDetail';
-import ProductDetailModal from '@/components/ProductDetailModal';
 
 const ProductDetailTest = () => {
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -107,7 +107,8 @@ const ProductDetailTest = () => {
 
       {/* Modal de Detalles */}
       {showModal && product && (
-        <ProductDetailModal
+          <Suspense fallback={null}>
+            <ProductDetailModal
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           product={product}
@@ -115,7 +116,8 @@ const ProductDetailTest = () => {
             // Refresh logic if needed
             console.log('Refrescando producto...');
           }}
-        />
+            />
+          </Suspense>
       )}
 
       <div style={{ 

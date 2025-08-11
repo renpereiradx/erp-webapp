@@ -5,7 +5,7 @@ import { X, AlertTriangle } from 'lucide-react';
 
 const DeleteClientModal = ({ isOpen, onClose, client, onConfirm, loading }) => {
   const { theme } = useTheme();
-  const isNeoBrutalism = theme.includes('neo-brutalism');
+  const isNeoBrutalism = theme?.includes?.('neo-brutalism');
 
   if (!isOpen) return null;
 

@@ -12,4 +12,32 @@ export default defineConfig({
       "@": fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          radix: [
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-tooltip'
+          ],
+          virtuoso: ['react-virtuoso'],
+          lucide: ['lucide-react']
+        }
+      }
+    }
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./vitest.setup.ts'],
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    }
+  }
 })

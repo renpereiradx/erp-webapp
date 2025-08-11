@@ -1,6 +1,7 @@
 // 🚀 Business Management API Client
 // Archivo adaptado para nuestra aplicación ERP
 // Basado en la documentación del equipo de backend
+import { ApiError, toApiError } from '@/utils/ApiError';
 
 class BusinessManagementAPI {
   constructor(config = {}) {
@@ -63,7 +64,7 @@ class BusinessManagementAPI {
           return data.token;
         }
       }
-    } catch (error) {
+    } catch {
       // Auto-login falló silenciosamente
     }
     return null;
@@ -85,88 +86,96 @@ class BusinessManagementAPI {
       ...options
     };
 
+    let response;
     try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          // Intentar auto-login una vez más
-          const newToken = await this.autoLogin();
-          if (newToken) {
-            // Reintentar con el nuevo token
-            const retryConfig = {
-              ...config,
-              headers: {
-                ...config.headers,
-                ...this.getAuthHeaders()
-              }
-            };
-            const retryResponse = await fetch(url, retryConfig);
-            if (retryResponse.ok) {
-              const contentType = retryResponse.headers.get('content-type');
-              if (contentType && contentType.includes('application/json')) {
-                return await retryResponse.json();
-              }
-              
-              // Si es texto plano, verificar si es un mensaje de error conocido
-              const textResponse = await retryResponse.text();
-              if (textResponse === 'Product not found' || textResponse.includes('not found')) {
-                throw new Error('Producto no encontrado');
-              }
-              
-              return textResponse;
-            }
-          }
-          this.handleUnauthorized();
-          throw new Error('Token expirado o inválido');
-        }
-        
-        // Para errores 404 en endpoints específicos, dar información más clara
-        if (response.status === 404) {
-          if (endpoint.includes('/descriptions')) {
-            throw new Error('No hay descripciones disponibles para este producto');
-          }
-          if (endpoint.includes('/details')) {
-            throw new Error('Detalles del producto no disponibles');
-          }
-          if (endpoint.includes('/products/') && !endpoint.includes('/products/products/')) {
-            throw new Error('Producto no encontrado');
-          }
-          if (endpoint.includes('/categories')) {
-            throw new Error('No hay categorías disponibles');
-          }
-        }
-
-        // Para errores 500, dar información más específica
-        if (response.status === 500) {
-          if (endpoint.includes('/search')) {
-            throw new Error('Error interno del servidor al buscar. Intenta con términos diferentes o contacta al administrador.');
-          }
-          if (endpoint.includes('/categories')) {
-            throw new Error('Error interno del servidor al cargar categorías. Intenta recargar la página.');
-          }
-          throw new Error(`Error interno del servidor (${response.status}). Contacta al administrador.`);
-        }
-        
-        throw new Error(`HTTP error! status: ${response.status}`);
+      response = await fetch(url, config);
+    } catch (err) {
+      // Normalizar errores de red/abort
+      const message = err?.message || 'Network error';
+      if (message.toLowerCase().includes('abort')) {
+        const abort = new Error('AbortError');
+        abort.name = 'AbortError';
+        throw abort;
       }
-
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        return data;
-      }
-      
-      // Si es texto plano, verificar si es un mensaje de error conocido
-      const textResponse = await response.text();
-      if (textResponse === 'Product not found' || textResponse.includes('not found')) {
-        throw new Error('Producto no encontrado');
-      }
-      
-      return textResponse;
-    } catch (error) {
-      throw error;
+      throw toApiError(err, 'Error de red');
     }
+    
+    if (!response.ok) {
+  if (response.status === 401) {
+        // Intentar auto-login una vez más
+        const newToken = await this.autoLogin();
+        if (newToken) {
+          // Reintentar con el nuevo token
+          const retryConfig = {
+            ...config,
+            headers: {
+              ...config.headers,
+              ...this.getAuthHeaders()
+            }
+          };
+          const retryResponse = await fetch(url, retryConfig);
+          if (retryResponse.ok) {
+            const contentType = retryResponse.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              return await retryResponse.json();
+            }
+            
+            // Si es texto plano, verificar si es un mensaje de error conocido
+            const textResponse = await retryResponse.text();
+            if (textResponse === 'Product not found' || textResponse.includes('not found')) {
+              throw new Error('Producto no encontrado');
+            }
+            
+            return textResponse;
+          }
+        }
+        this.handleUnauthorized();
+        throw new ApiError('UNAUTHORIZED', 'Token expirado o inválido');
+      }
+      
+      // Para errores 404 en endpoints específicos, dar información más clara
+    if (response.status === 404) {
+        if (endpoint.includes('/descriptions')) {
+      throw new ApiError('NOT_FOUND', 'No hay descripciones disponibles para este producto');
+        }
+        if (endpoint.includes('/details')) {
+      throw new ApiError('NOT_FOUND', 'Detalles del producto no disponibles');
+        }
+        if (endpoint.includes('/products/') && !endpoint.includes('/products/products/')) {
+      throw new ApiError('NOT_FOUND', 'Producto no encontrado');
+        }
+        if (endpoint.includes('/categories')) {
+      throw new ApiError('NOT_FOUND', 'No hay categorías disponibles');
+        }
+      }
+
+      // Para errores 500, dar información más específica
+      if (response.status === 500) {
+        if (endpoint.includes('/search')) {
+          throw new ApiError('INTERNAL', 'Error interno del servidor al buscar. Intenta con términos diferentes o contacta al administrador.');
+        }
+        if (endpoint.includes('/categories')) {
+          throw new ApiError('INTERNAL', 'Error interno del servidor al cargar categorías. Intenta recargar la página.');
+        }
+        throw new ApiError('INTERNAL', `Error interno del servidor (${response.status}). Contacta al administrador.`);
+      }
+      
+      throw new ApiError('HTTP_ERROR', `HTTP error! status: ${response.status}`);
+    }
+
+    const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      return data;
+    }
+    
+    // Si es texto plano, verificar si es un mensaje de error conocido
+    const textResponse = await response.text();
+    if (textResponse === 'Product not found' || textResponse.includes('not found')) {
+      throw new ApiError('NOT_FOUND', 'Producto no encontrado');
+    }
+    
+    return textResponse;
   }
 
   handleUnauthorized() {
@@ -233,8 +242,8 @@ class BusinessManagementAPI {
   async getProducts(page = 1, pageSize = 10, enriched = true) {
     if (enriched) {
       try {
-        return this.getProductsWithEnrichedDetails(page, pageSize);
-      } catch (error) {
+        return await this.getProductsWithEnrichedDetails(page, pageSize);
+      } catch {
         // Fallback a productos básicos
         return this.getProductsWithBasicDetails(page, pageSize);
       }
@@ -242,31 +251,27 @@ class BusinessManagementAPI {
     return this.getProductsWithBasicDetails(page, pageSize);
   }
 
-  async getProductById(id) {
-    try {
-      const product = await this.makeRequest(`/products/${id}`);
+  async getProductById(id, options = {}) {
+    const product = await this.makeRequest(`/products/${id}`, options);
+    
+    // Normalizar el producto para asegurar que tenga la estructura enriquecida correcta
+    if (product) {
+      const hasEnrichedData = product.has_unit_pricing !== undefined || 
+                             product.stock_status !== undefined ||
+                             product.price_formatted !== undefined ||
+                             product.has_valid_price !== undefined ||
+                             product.unit_prices !== undefined;
       
-      // Normalizar el producto para asegurar que tenga la estructura enriquecida correcta
-      if (product) {
-        const hasEnrichedData = product.has_unit_pricing !== undefined || 
-                               product.stock_status !== undefined ||
-                               product.price_formatted !== undefined ||
-                               product.has_valid_price !== undefined ||
-                               product.unit_prices !== undefined;
-        
-        if (hasEnrichedData) {
-          // Si ya tiene datos enriquecidos, normalizarlo para consistencia
-          return this.normalizeEnrichedProduct(product);
-        } else {
-          // Si no tiene datos enriquecidos, devolverlo tal como está
-          return product;
-        }
+      if (hasEnrichedData) {
+        // Si ya tiene datos enriquecidos, normalizarlo para consistencia
+        return this.normalizeEnrichedProduct(product);
+      } else {
+        // Si no tiene datos enriquecidos, devolverlo tal como está
+        return product;
       }
-      
-      return product;
-    } catch (error) {
-      throw error;
     }
+    
+    return product;
   }
 
   async searchProductsByName(name) {
@@ -274,10 +279,10 @@ class BusinessManagementAPI {
     return this.makeRequest(`/products/name/${encodeURIComponent(name)}`);
   }
 
-  async searchProductsByNameEnriched(name) {
+  async searchProductsByNameEnriched(name, options = {}) {
     // Método específico para obtener datos enriquecidos por nombre
     try {
-      const products = await this.makeRequest(`/products/name/${encodeURIComponent(name)}`);
+      const products = await this.makeRequest(`/products/name/${encodeURIComponent(name)}`, options);
       
       // Los productos ya vienen con estructura enriquecida del backend
       if (Array.isArray(products)) {
@@ -291,7 +296,7 @@ class BusinessManagementAPI {
     }
   }
 
-  async searchProducts(searchTerm) {
+  async searchProducts(searchTerm, options = {}) {
     // Detectar si parece un ID: entre 8-30 caracteres alfanuméricos/guiones
     const looksLikeId = /^[a-zA-Z0-9_-]{8,30}$/.test(searchTerm) && 
                        !/\s/.test(searchTerm) && 
@@ -300,15 +305,15 @@ class BusinessManagementAPI {
     if (looksLikeId) {
       try {
         // Para búsquedas por ID, usar el endpoint de detalles enriquecidos
-        const product = await this.getProductWithDetails(searchTerm);
+        const product = await this.getProductWithDetails(searchTerm, options);
         return Array.isArray(product) ? product : [product];
       } catch (error) {
         // Solo hacer fallback a nombre si el error NO indica que es un ID válido pero inexistente
         if (!error.message.includes('Producto no encontrado') && !error.message.includes('not found')) {
           try {
             // Usar el nuevo endpoint enriquecido
-            return await this.searchProductsByNameEnriched(searchTerm);
-          } catch (nameError) {
+            return await this.searchProductsByNameEnriched(searchTerm, options);
+          } catch {
             return [];
           }
         } else {
@@ -318,7 +323,7 @@ class BusinessManagementAPI {
     } else {
       try {
         // Para búsquedas por nombre, usar el nuevo endpoint enriquecido
-        return await this.searchProductsByNameEnriched(searchTerm);
+        return await this.searchProductsByNameEnriched(searchTerm, options);
       } catch (error) {
         console.warn('Error en búsqueda por nombre:', error.message);
         return [];
@@ -376,7 +381,7 @@ class BusinessManagementAPI {
 
   async getProductsWithEnrichedDetails(page = 1, pageSize = 10) {
     // Intentar obtener productos con detalles enriquecidos si está disponible
-    try {
+  try {
       // Este endpoint no existe aún pero podría implementarse en el futuro
       // return this.makeRequest(`/products/products/enriched/${page}/${pageSize}`);
       
@@ -393,7 +398,7 @@ class BusinessManagementAPI {
       }
       
       return products;
-    } catch (error) {
+    } catch {
       // Fallback al método básico
       return this.getProductsWithBasicDetails(page, pageSize);
     }
@@ -425,11 +430,11 @@ class BusinessManagementAPI {
   }
 
   async enrichSingleProduct(product) {
-    try {
+  try {
       // Intentar obtener el producto con todos los detalles
       const enrichedProduct = await this.getProductWithDetails(product.id);
       return enrichedProduct;
-    } catch (error) {
+  } catch {
       // En caso de error, intentar enriquecer con requests individuales
       return this.enrichProductManually(product);
     }
@@ -508,34 +513,30 @@ class BusinessManagementAPI {
     return enrichedProduct;
   }
 
-  async getProductWithDetails(id) {
-    try {
-      // El endpoint /products/{id} ya devuelve datos enriquecidos según el ejemplo de Postman
-      const product = await this.getProductById(id);
+  async getProductWithDetails(id, options = {}) {
+    // El endpoint /products/{id} ya devuelve datos enriquecidos según el ejemplo de Postman
+    const product = await this.getProductById(id, options);
+    
+    // getProductById ya se encarga de la normalización, solo asegurar que esté enriquecido
+    if (product && !product._enriched) {
+      const hasEnrichedData = product.has_unit_pricing !== undefined || 
+                             product.stock_status !== undefined ||
+                             product.price_formatted !== undefined ||
+                             product.has_valid_price !== undefined ||
+                             product.unit_prices !== undefined;
       
-      // getProductById ya se encarga de la normalización, solo asegurar que esté enriquecido
-      if (product && !product._enriched) {
-        const hasEnrichedData = product.has_unit_pricing !== undefined || 
-                               product.stock_status !== undefined ||
-                               product.price_formatted !== undefined ||
-                               product.has_valid_price !== undefined ||
-                               product.unit_prices !== undefined;
-        
-        if (hasEnrichedData) {
-          return this.normalizeEnrichedProduct(product);
-        }
+      if (hasEnrichedData) {
+        return this.normalizeEnrichedProduct(product);
       }
-      
-      return product;
-    } catch (error) {
-      throw error;
     }
+    
+    return product;
   }
 
   async searchProductsWithDetails(name) {
-    try {
+  try {
       return await this.makeRequest(`/products/search/details/${encodeURIComponent(name)}`);
-    } catch (error) {
+  } catch {
       // Fallback: buscar productos básicos y enriquecerlos
       const basicProducts = await this.searchProductsByName(name);
       if (Array.isArray(basicProducts)) {

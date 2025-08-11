@@ -1,0 +1,187 @@
+import React from 'react';
+import ProductCard from '@/features/products/components/ProductCard';
+import { VirtuosoGrid } from 'react-virtuoso';
+
+// Grid virtualizado para listas grandes.
+// Props:
+// - products: Array de productos
+// - isNeoBrutalism: boolean
+// - getCategoryName: (id) => string
+// - onView/onEdit/onDelete: handlers
+// - itemMinWidth: ancho mínimo de card en la grilla (default 260px)
+// - gap: separación entre items (default 1.5rem)
+export default function ProductGrid({
+  products,
+  isNeoBrutalism,
+  getCategoryName,
+  onView,
+  onEdit,
+  onDelete,
+  itemMinWidth = 260,
+  gap = '1.5rem',
+}) {
+  const [focusedIndex, setFocusedIndex] = React.useState(0);
+  const itemRefs = React.useRef({});
+  const listContainerRef = React.useRef(null);
+  const [cols, setCols] = React.useState(1);
+
+  React.useEffect(() => {
+    if (products.length === 0) {
+      setFocusedIndex(0);
+      return;
+    }
+    // Clamp el índice si cambia el largo
+    setFocusedIndex((idx) => Math.max(0, Math.min(idx, products.length - 1)));
+  }, [products.length]);
+
+  const setRef = React.useCallback((index, el) => {
+    if (el) itemRefs.current[index] = el;
+  }, []);
+
+  const focusIndex = React.useCallback((index) => {
+    setFocusedIndex(index);
+    // Encolar focus para que el nodo exista tras virtualización
+    requestAnimationFrame(() => {
+      const node = itemRefs.current[index];
+      if (node && typeof node.focus === 'function') {
+        node.focus();
+        if (typeof node.scrollIntoView === 'function') {
+          node.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        }
+      }
+    });
+  }, []);
+
+  const handleKeyDown = React.useCallback((e, index) => {
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown': {
+        e.preventDefault();
+        // Down avanza por filas según número de columnas
+        const next = e.key === 'ArrowDown' ? index + cols : index + 1;
+        if (next <= products.length - 1) focusIndex(next);
+        break;
+      }
+      case 'ArrowLeft':
+      case 'ArrowUp': {
+        e.preventDefault();
+        const prev = e.key === 'ArrowUp' ? index - cols : index - 1;
+        if (prev >= 0) focusIndex(prev);
+        break;
+      }
+      case 'Home': {
+        e.preventDefault();
+        focusIndex(0);
+        break;
+      }
+      case 'End': {
+        e.preventDefault();
+        focusIndex(products.length - 1);
+        break;
+      }
+      case 'Enter':
+      case ' ': {
+        // Abrir vista rápida del producto
+        e.preventDefault();
+        onView?.(products[index]);
+        break;
+      }
+      default:
+        break;
+    }
+  }, [focusIndex, onView, products, cols]);
+
+  // Observa el contenedor de la grilla para calcular columnas visibles
+  React.useEffect(() => {
+    const el = listContainerRef.current;
+    if (!el) return;
+
+    const computeCols = () => {
+      const width = el.clientWidth;
+      const styles = getComputedStyle(el);
+      const colGapPx = parseFloat(styles.columnGap || styles.gap || '0') || 0;
+      const total = Math.max(1, Math.floor((width + colGapPx) / (itemMinWidth + colGapPx)));
+      setCols(total);
+    };
+
+    computeCols();
+
+    const ro = new ResizeObserver(() => computeCols());
+    ro.observe(el);
+    window.addEventListener('orientationchange', computeCols);
+    window.addEventListener('resize', computeCols);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('orientationchange', computeCols);
+      window.removeEventListener('resize', computeCols);
+    };
+  }, [itemMinWidth]);
+  const List = React.useMemo(() => {
+    return React.forwardRef(function ListComponent({ style, children, className }, ref) {
+      return (
+        <div
+          ref={(node) => {
+            // Referencia para Virtuoso
+            if (typeof ref === 'function') ref(node);
+            else if (ref) ref.current = node;
+            // Referencia local para calcular columnas
+            listContainerRef.current = node;
+          }}
+          style={{
+            ...style,
+            display: 'grid',
+            gridTemplateColumns: `repeat(auto-fill, minmax(${itemMinWidth}px, 1fr))`,
+            gap,
+          }}
+          className={className}
+          role="list"
+          aria-label="Listado de productos"
+        >
+          {children}
+        </div>
+      );
+    });
+  }, [itemMinWidth, gap]);
+
+  const Item = React.useMemo(() => {
+    return function ItemComponent({ children, ...rest }) {
+      return (
+        <div {...rest} style={{ width: '100%' }}>
+          {children}
+        </div>
+      );
+    };
+  }, []);
+
+  return (
+    <VirtuosoGrid
+      useWindowScroll
+      totalCount={products.length}
+      overscan={300}
+      itemContent={(index) => (
+        <div
+          ref={(el) => setRef(index, el)}
+          tabIndex={focusedIndex === index ? 0 : -1}
+          role="listitem"
+          aria-current={focusedIndex === index ? 'true' : undefined}
+          aria-label={`Producto ${products[index]?.name || products[index]?.id || index + 1}`}
+          onFocus={() => setFocusedIndex(index)}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+          style={{ outline: 'none' }}
+        >
+          <ProductCard
+            key={products[index].id}
+            product={products[index]}
+            isNeoBrutalism={isNeoBrutalism}
+            getCategoryName={getCategoryName}
+            onView={onView}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        </div>
+      )}
+      components={{ List, Item }}
+      computeItemKey={(index) => products[index].id}
+    />
+  );
+}

@@ -48,19 +48,30 @@ export const useThemeStyles = () => {
         if (variant === 'primary') {
           return "bg-brutalist-blue text-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-150";
         }
+        if (variant === 'destructive') {
+          return "bg-red-600 text-white border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-700 hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all duration-150";
+        }
         return "bg-white text-black border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all duration-150";
       } else if (themeConfig.isMaterial) {
         if (variant === 'primary') {
           return "bg-blue-600 text-white shadow-sm rounded-md hover:bg-blue-700 transition-all duration-200";
+        }
+        if (variant === 'destructive') {
+          return "bg-red-600 text-white shadow-sm rounded-md hover:bg-red-700 transition-all duration-200";
         }
         return "bg-gray-50 text-gray-900 border rounded-md hover:bg-gray-100 transition-all duration-200";
       } else if (themeConfig.isFluent) {
         if (variant === 'primary') {
           return "bg-sky-600 text-white shadow-sm rounded-lg hover:bg-sky-700 transition-all duration-200";
         }
+        if (variant === 'destructive') {
+          return "bg-red-600 text-white shadow-sm rounded-lg hover:bg-red-700 transition-all duration-200";
+        }
         return "bg-white text-gray-900 border rounded-lg hover:bg-gray-50 transition-all duration-200";
       }
-      return variant === 'primary' ? "bg-blue-500 text-white hover:bg-blue-600 transition-colors" : "bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors";
+      if (variant === 'primary') return "bg-blue-500 text-white hover:bg-blue-600 transition-colors";
+      if (variant === 'destructive') return "bg-red-600 text-white hover:bg-red-700 transition-colors";
+      return "bg-gray-100 text-gray-900 hover:bg-gray-200 transition-colors";
     },
 
     // Headers y títulos

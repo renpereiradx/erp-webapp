@@ -20,7 +20,9 @@ import DeleteClientModal from '@/components/DeleteClientModal';
 import ClientDetailModal from '@/components/ClientDetailModal';
 import ToastContainer from '@/components/ui/ToastContainer';
 import { useToast } from '@/hooks/useToast';
+import { telemetry } from '@/utils/telemetry';
 import { Input } from '@/components/ui/Input';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 import {
   Select,
   SelectContent,
@@ -29,18 +31,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-// NOTE: Se asume que estas funciones de estilo son importadas o definidas en un utility
-// y son idénticas a las de Products.jsx para mantener consistencia.
-const getCardStyles = (theme) => {
-    const isNeoBrutalism = theme?.includes('neo-brutalism');
-    if (isNeoBrutalism) return { background: 'var(--background)', border: '4px solid var(--border)', borderRadius: '0px', boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)', transition: 'all 200ms ease', overflow: 'hidden', padding: '24px' };
-    return { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: '0px 2px 4px rgba(0,0,0,0.1)', transition: 'all 200ms ease', overflow: 'hidden', padding: '24px' };
-};
-const getTypographyStyles = (theme, level = 'base') => {
-    const isNeoBrutalism = theme?.includes('neo-brutalism');
-    if (isNeoBrutalism) return { title: { fontSize: '3.5rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: '1.1', textShadow: '3px 3px 0px rgba(0,0,0,0.8)', marginBottom: '1.5rem' }, heading: { fontSize: '1.875rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.025em', lineHeight: '1.2', marginBottom: '1rem' }, subheading: { fontSize: '1.25rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.025em', marginBottom: '0.5rem' }, base: { fontSize: '1rem', fontWeight: '600', letterSpacing: '0.01em' }, small: { fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.01em' } }[level] || { fontSize: '1rem', fontWeight: '600' };
-    return { title: { fontSize: '2.5rem', fontWeight: '700', marginBottom: '1rem' }, heading: { fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.75rem' }, subheading: { fontSize: '1.125rem', fontWeight: '500', marginBottom: '0.5rem' }, base: { fontSize: '0.875rem', fontWeight: '400' }, small: { fontSize: '0.75rem', fontWeight: '400' } }[level] || { fontSize: '0.875rem' };
-};
 const getButtonStyles = (theme, variant = 'primary') => {
     const isNeoBrutalism = theme?.includes('neo-brutalism');
     if (isNeoBrutalism) return { primary: { background: 'var(--brutalist-lime)', color: '#000000', border: '3px solid var(--border)', borderRadius: '0px', padding: '12px 24px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.025em', boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)', transition: 'all 150ms ease', cursor: 'pointer' }, secondary: { background: 'var(--background)', color: 'var(--foreground)', border: '3px solid var(--border)', borderRadius: '0px', padding: '12px 24px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.025em', boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)', transition: 'all 150ms ease', cursor: 'pointer' } }[variant];
@@ -54,7 +44,8 @@ const getBadgeStyles = (theme, status) => {
 
 const ClientsPage = () => {
   const { theme } = useTheme();
-  const { toasts, success, error: showError, removeToast } = useToast();
+  const { button: themeButton, input: themeInput, card, header: themeHeader, label: themeLabel } = useThemeStyles();
+  const { toasts, success, error: showError, errorFrom, removeToast } = useToast();
   const {
     searchClients, clearClients, clients, loading, error, clearError, totalPages, currentPage, loadPage, totalClients, lastSearchTerm, pageSize, changePageSize, deleteClient
   } = useClientStore();
@@ -71,6 +62,14 @@ const ClientsPage = () => {
 
   const isNeoBrutalism = theme?.includes('neo-brutalism');
 
+  // Emitir toast cuando el store exponga un error
+  useEffect(() => {
+    if (error) {
+      errorFrom(new Error(error));
+      telemetry.record('clients.error.store', { message: error });
+    }
+  }, [error, errorFrom]);
+
   const filteredClients = (clients || []).filter(client => {
     const search = localSearchTerm.toLowerCase();
     const fullName = `${client.name || ''} ${client.last_name || ''}`.toLowerCase();
@@ -80,12 +79,24 @@ const ClientsPage = () => {
   });
 
   useEffect(() => {
+    // Limpiar clientes al montar la página
     clearClients();
+    // clearClients es estable en nuestro store, se ignora warning por diseño
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleApiSearch = () => {
     if (apiSearchTerm.trim() !== '') {
-      searchClients(apiSearchTerm, 1, pageSize);
+      const t = telemetry.startTimer('clients.search');
+      searchClients(apiSearchTerm, 1, pageSize)
+        .then(() => {
+          const ms = telemetry.endTimer(t, { term: apiSearchTerm });
+          telemetry.record('clients.search.success', { ms });
+        })
+        .catch((err) => {
+          telemetry.endTimer(t);
+          telemetry.record('clients.search.error', { message: err?.message });
+        });
       setLocalSearchTerm(''); // Limpiar el filtro local al realizar una búsqueda API
     }
   };
@@ -100,14 +111,21 @@ const ClientsPage = () => {
 
   const handleConfirmDelete = async () => {
     if (!selectedClient) return;
-    await deleteClient(selectedClient.id);
-    setShowDeleteModal(false);
-    success('Cliente eliminado');
+    try {
+      await deleteClient(selectedClient.id);
+      setShowDeleteModal(false);
+      success('Cliente eliminado');
+  telemetry.record('clients.delete.success', { id: selectedClient.id });
+    } catch (err) {
+  telemetry.record('clients.delete.error', { id: selectedClient.id, message: err?.message });
+      errorFrom(err, { fallback: 'Error al eliminar cliente' });
+    }
   };
 
   const handleModalSuccess = () => {
     setShowClientModal(false);
     success('Operación de cliente completada.');
+  telemetry.record('clients.modal.success');
   };
 
   const handleButtonHover = (e) => { if (isNeoBrutalism) { e.target.style.transform = 'translate(-2px, -2px)'; e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)'; } };
@@ -116,37 +134,42 @@ const ClientsPage = () => {
   const renderMainContent = () => {
     if (loading) {
       return (
-        <div className="text-center py-20"><Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" /><p style={getTypographyStyles(theme, 'heading')}>{isNeoBrutalism ? 'BUSCANDO...' : 'Buscando...'}</p></div>
+        <div className="text-center py-20">
+          <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" />
+          <div className={`text-muted-foreground ${themeHeader('h2')}`}>
+            {isNeoBrutalism ? 'BUSCANDO...' : 'Buscando...'}
+          </div>
+        </div>
       );
     }
 
-    if (error) {
+  if (error) {
       return (
-        <div className="text-center py-20 p-6" style={getCardStyles(theme)}>
+        <div className={card('text-center py-20 p-6')}>
           <AlertCircle className="w-16 h-16 mx-auto mb-4 text-destructive" />
-          <p className="text-destructive mb-4" style={getTypographyStyles(theme, 'heading')}>{isNeoBrutalism ? 'ERROR' : 'Error'}</p>
-          <p className="text-muted-foreground mb-4">{error}</p>
-          <button onClick={() => searchClients(lastSearchTerm)} style={getButtonStyles(theme, 'primary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'REINTENTAR' : 'Reintentar'}</button>
+          <p className={`text-destructive mb-4 ${themeHeader('h2')}`}>{isNeoBrutalism ? 'ERROR' : 'Error'}</p>
+          <p className={`text-muted-foreground mb-4 ${themeLabel()}`}>{error}</p>
+          <button className={themeButton('primary')} onClick={() => searchClients(lastSearchTerm)} style={getButtonStyles(theme, 'primary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'REINTENTAR' : 'Reintentar'}</button>
         </div>
       );
     }
 
     if (clients.length === 0 && apiSearchTerm.trim() === '') {
       return (
-        <div className="text-center py-20 p-6" style={getCardStyles(theme)}>
+        <div className={card('text-center py-20 p-6')}>
           <User className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <p className="text-muted-foreground mb-4" style={getTypographyStyles(theme, 'heading')}>{isNeoBrutalism ? 'INICIA UNA BÚSQUEDA' : 'Inicia una Búsqueda'}</p>
-          <p className="text-muted-foreground" style={getTypographyStyles(theme, 'base')}>{isNeoBrutalism ? 'UTILIZA LA BARRA SUPERIOR PARA ENCONTRAR CLIENTES' : 'Utiliza la barra superior para encontrar clientes.'}</p>
+          <p className={`text-muted-foreground mb-4 ${themeHeader('h2')}`}>{isNeoBrutalism ? 'INICIA UNA BÚSQUEDA' : 'Inicia una Búsqueda'}</p>
+          <p className={`text-muted-foreground ${themeLabel()}`}>{isNeoBrutalism ? 'UTILIZA LA BARRA SUPERIOR PARA ENCONTRAR CLIENTES' : 'Utiliza la barra superior para encontrar clientes.'}</p>
         </div>
       );
     }
 
     if (filteredClients.length === 0) {
         return (
-            <div className="text-center py-20 p-6" style={getCardStyles(theme)}>
+            <div className={card('text-center py-20 p-6')}>
                 <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground mb-4" style={getTypographyStyles(theme, 'heading')}>{isNeoBrutalism ? 'SIN RESULTADOS' : 'Sin Resultados'}</p>
-                <p className="text-muted-foreground" style={getTypographyStyles(theme, 'base')}>{isNeoBrutalism ? `NO SE ENCONTRARON CLIENTES PARA TU FILTRO` : `No se encontraron clientes para tu filtro`}</p>
+                <p className={`text-muted-foreground mb-4 ${themeHeader('h2')}`}>{isNeoBrutalism ? 'SIN RESULTADOS' : 'Sin Resultados'}</p>
+                <p className={`text-muted-foreground ${themeLabel()}`}>{isNeoBrutalism ? `NO SE ENCONTRARON CLIENTES PARA TU FILTRO` : `No se encontraron clientes para tu filtro`}</p>
             </div>
         );
     }
@@ -154,16 +177,16 @@ const ClientsPage = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredClients.map(client => (
-          <div key={client.id} style={{...getCardStyles(theme), display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}} className="hover:shadow-lg transition-shadow">
+          <div key={client.id} className={card('hover:shadow-lg transition-shadow p-6 flex flex-col justify-between')}>
             <div>
               <div className="flex justify-between items-start mb-4">
-                <h3 className="font-semibold mb-2 truncate" style={getTypographyStyles(theme, 'subheading')}>{client.name} {client.last_name || ''}</h3>
+                <h3 className={`${themeHeader('h3')} mb-2 truncate`}>{client.name} {client.last_name || ''}</h3>
                                 <div style={getBadgeStyles(theme, !!client.status)}>{!!client.status ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}<span>{!!client.status ? (isNeoBrutalism ? 'ACTIVO' : 'Activo') : (isNeoBrutalism ? 'INACTIVO' : 'Inactivo')}</span></div>
               </div>
               <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>DOCUMENTO:</span><span style={getTypographyStyles(theme, 'small')}>{client.document_id || 'N/A'}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>CONTACTO:</span><span style={getTypographyStyles(theme, 'small')}>{client.contact || 'N/A'}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>REGISTRO:</span><span style={getTypographyStyles(theme, 'small')}>{new Date(client.created_at).toLocaleDateString()}</span></div>
+                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>DOCUMENTO:</span><span className={themeLabel()}>{client.document_id || 'N/A'}</span></div>
+                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>CONTACTO:</span><span className={themeLabel()}>{client.contact || 'N/A'}</span></div>
+                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>REGISTRO:</span><span className={themeLabel()}>{new Date(client.created_at).toLocaleDateString()}</span></div>
                 </div>
             </div>
             <div className="flex gap-2 mt-auto">
@@ -181,19 +204,20 @@ const ClientsPage = () => {
     <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         <header className="text-center py-8">
-          <h1 className="text-primary mb-4" style={getTypographyStyles(theme, 'title')}>{isNeoBrutalism ? 'GESTIÓN DE CLIENTES' : 'Gestión de Clientes'}</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto mb-8" style={getTypographyStyles(theme, 'base')}>{isNeoBrutalism ? 'BUSCA, CREA Y ADMINISTRA TUS CLIENTES EFICIENTEMENTE' : 'Busca, crea y administra tus clientes eficientemente.'}</p>
+          <h1 className={`${themeHeader('h1')} text-primary mb-4`}>{isNeoBrutalism ? 'GESTIÓN DE CLIENTES' : 'Gestión de Clientes'}</h1>
+          <p className={`text-muted-foreground max-w-2xl mx-auto mb-8 ${themeLabel()}`}>{isNeoBrutalism ? 'BUSCA, CREA Y ADMINISTRA TUS CLIENTES EFICIENTEMENTE' : 'Busca, crea y administra tus clientes eficientemente.'}</p>
           <div className="flex flex-wrap justify-center gap-4">
-            <button style={getButtonStyles(theme, 'primary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave} onClick={handleCreateClient}><Plus className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'NUEVO CLIENTE' : 'Nuevo Cliente'}</button>
-            <button style={getButtonStyles(theme, 'secondary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><BarChart3 className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'ANALYTICS' : 'Analytics'}</button>
+            <button className={themeButton('primary')} style={getButtonStyles(theme, 'primary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave} onClick={handleCreateClient}><Plus className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'NUEVO CLIENTE' : 'Nuevo Cliente'}</button>
+            <button className={themeButton('secondary')} style={getButtonStyles(theme, 'secondary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><BarChart3 className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'ANALYTICS' : 'Analytics'}</button>
           </div>
         </header>
 
-        <section className="p-6" style={getCardStyles(theme)}>
+        <section className={card('p-6')}>
           <div className="mb-6">
-            <div className="mb-3" style={getTypographyStyles(theme, 'subheading')}>{isNeoBrutalism ? 'BUSCAR EN BASE DE DATOS' : 'Buscar en Base de Datos'}</div>
+            <div className={`${themeHeader('h3')} mb-3`}>{isNeoBrutalism ? 'BUSCAR EN BASE DE DATOS' : 'Buscar en Base de Datos'}</div>
             <div className="flex gap-3 mb-4">
               <Input
+                className={themeInput()}
                 leftIcon={<Search className="w-5 h-5 text-muted-foreground" />}
                 type="text"
                 placeholder={isNeoBrutalism ? 'BUSCAR POR NOMBRE, DOCUMENTO O ID...' : 'Buscar por nombre, documento o ID...'}
@@ -201,17 +225,18 @@ const ClientsPage = () => {
                 onChange={(e) => setApiSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleApiSearch()}
               />
-              <button onClick={handleApiSearch} disabled={!apiSearchTerm} style={{...getButtonStyles(theme, 'primary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'BUSCAR' : 'Buscar'}</button>
-              <button onClick={handleClearSearch} style={{...getButtonStyles(theme, 'secondary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}</button>
+              <button className={themeButton('primary')} onClick={handleApiSearch} disabled={!apiSearchTerm} style={{...getButtonStyles(theme, 'primary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'BUSCAR' : 'Buscar'}</button>
+              <button className={themeButton('secondary')} onClick={handleClearSearch} style={{...getButtonStyles(theme, 'secondary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}</button>
             </div>
-            <div className="flex items-center gap-3"><label htmlFor="pageSize" style={getTypographyStyles(theme, 'small')}>CLIENTES POR PÁGINA:</label><select id="pageSize" value={pageSize} onChange={(e) => handlePageSizeChange(e.target.value)} className="px-3 py-2 border rounded-md bg-background" style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></div>
+            <div className="flex items-center gap-3"><label htmlFor="pageSize" className={themeLabel()}>CLIENTES POR PÁGINA:</label><select id="pageSize" value={pageSize} onChange={(e) => handlePageSizeChange(e.target.value)} className={`px-3 py-2 bg-background ${themeInput()}`} style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></div>
           </div>
 
           {clients && clients.length > 0 && (
             <div className="border-t pt-6">
-              <div className="mb-3" style={getTypographyStyles(theme, 'subheading')}>{isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : 'Filtrar Resultados Actuales'}</div>
+              <div className={`${themeHeader('h3')} mb-3`}>{isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : 'Filtrar Resultados Actuales'}</div>
               <div className="grid md:grid-cols-3 gap-4">
               <Input
+                className={themeInput()}
                   leftIcon={<Filter className="w-5 h-5 text-muted-foreground" />}
                 type="text"
                   placeholder={isNeoBrutalism ? 'FILTRAR POR NOMBRE...' : 'Filtrar por nombre...'}
@@ -232,7 +257,7 @@ const ClientsPage = () => {
                     <SelectItem value="inactive">Inactivos</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className="text-center p-3" style={isNeoBrutalism ? {border: '3px solid var(--border)'} : {}}><div style={getTypographyStyles(theme, 'heading')}>{filteredClients.length}</div><div style={getTypographyStyles(theme, 'small')}>CLIENTES MOSTRADOS</div></div>
+                <div className="text-center p-3" style={isNeoBrutalism ? {border: '3px solid var(--border)'} : {}}><div className={themeHeader('h2')}>{filteredClients.length}</div><div className={themeLabel()}>CLIENTES MOSTRADOS</div></div>
               </div>
             </div>
           )}
@@ -242,13 +267,13 @@ const ClientsPage = () => {
 
         {totalClients > 0 && totalPages > 1 && (
           <footer className="text-center py-8">
-            <div className="flex flex-wrap justify-center gap-4 mb-4"><div style={getTypographyStyles(theme, 'small')}>{`Mostrando ${filteredClients.length} de ${totalClients} clientes`}</div></div>
+            <div className="flex flex-wrap justify-center gap-4 mb-4"><div className={themeLabel()}>{`Mostrando ${filteredClients.length} de ${totalClients} clientes`}</div></div>
             <div className="flex justify-center items-center gap-2 flex-wrap">
-              <button onClick={() => handlePageChange(1)} disabled={currentPage <= 1 || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 12px', opacity: currentPage <= 1 ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Primera</button>
-              <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1 || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 16px', opacity: currentPage <= 1 ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Anterior</button>
-              <span style={getTypographyStyles(theme, 'small')}>{`Página ${currentPage} de ${totalPages}`}</span>
-              <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 16px', opacity: currentPage >= totalPages ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Siguiente</button>
-              <button onClick={() => handlePageChange(totalPages)} disabled={currentPage >= totalPages || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 12px', opacity: currentPage >= totalPages ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Última</button>
+              <button className={themeButton('secondary')} onClick={() => handlePageChange(1)} disabled={currentPage <= 1 || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 12px', opacity: currentPage <= 1 ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Primera</button>
+              <button className={themeButton('secondary')} onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1 || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 16px', opacity: currentPage <= 1 ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Anterior</button>
+              <span className={themeLabel()}>{`Página ${currentPage} de ${totalPages}`}</span>
+              <button className={themeButton('secondary')} onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 16px', opacity: currentPage >= totalPages ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Siguiente</button>
+              <button className={themeButton('secondary')} onClick={() => handlePageChange(totalPages)} disabled={currentPage >= totalPages || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 12px', opacity: currentPage >= totalPages ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Última</button>
             </div>
           </footer>
         )}

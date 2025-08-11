@@ -190,8 +190,8 @@ class SupplierService {
 
   isValidPhone(phone) {
     // Acepta varios formatos de teléfono
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    const phoneRegex = /^[+]?[1-9][\d]{0,15}$/;
+    const cleanPhone = phone.replace(/[\s\-()]/g, '');
     return phoneRegex.test(cleanPhone);
   }
 

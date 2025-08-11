@@ -8,6 +8,8 @@ import { devtools } from 'zustand/middleware';
 import { productService } from '@/services/productService';
 import { categoryCacheService } from '@/services/categoryCacheService';
 import { apiClient } from '@/services/api';
+import { toApiError } from '@/utils/ApiError';
+import { telemetry } from '@/utils/telemetry';
 
 const useProductStore = create(
   devtools(
@@ -17,6 +19,9 @@ const useProductStore = create(
       selectedProduct: null,
       loading: false,
       error: null,
+  // Caché simple para búsquedas (SWR-like)
+  searchCache: {}, // { [cacheKey]: { ts: number, data: array } }
+  cacheTTL: 120000, // 2 minutos
       
       // Categories (inicialmente vacías, se cargan desde API)
       categories: [],
@@ -217,7 +222,8 @@ const useProductStore = create(
             return { data: products, total: totalCount };
           }
         } catch (apiError) {
-          const errorMessage = `Error al cargar productos: ${apiError.message}`;
+          const norm = toApiError(apiError, 'Error al cargar productos');
+          const errorMessage = `Error al cargar productos: ${norm.message}`;
           set({
             products: [],
             totalProducts: 0,
@@ -226,12 +232,12 @@ const useProductStore = create(
             error: errorMessage
           });
 
-          throw apiError;
+          throw norm;
         }
       },
 
-      // Nueva función para búsqueda específica
-      searchProducts: async (searchTerm) => {
+      // Nueva función para búsqueda específica (con caché y cancelación)
+  searchProducts: async (searchTerm, options = {}) => {
         if (!searchTerm.trim()) {
           // Si no hay término, limpiar productos
           set({ 
@@ -246,32 +252,140 @@ const useProductStore = create(
         }
 
         try {
-          return await get().fetchProducts(1, 10, searchTerm);
-        } catch (error) {
-          // Manejo específico de errores de búsqueda
-          console.error('Error en searchProducts:', error);
-          
-          let errorMessage = 'Error al buscar productos';
-          if (error.message.includes('500')) {
-            errorMessage = 'Error interno del servidor al buscar. Intenta con términos diferentes.';
-          } else if (error.message.includes('404')) {
-            errorMessage = 'No se encontraron productos con ese término de búsqueda.';
-          } else if (error.message.includes('network') || error.message.includes('fetch')) {
-            errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
-          } else {
-            errorMessage = error.message || 'Error desconocido al buscar productos';
+          const term = searchTerm.trim();
+          const state = get();
+          const { searchCache, cacheTTL } = state;
+          const now = Date.now();
+          const pageSize = state.pageSize || 10;
+          // Expandir clave de caché para cubrir filtros y tamaño
+          const cacheKey = JSON.stringify({ term, pageSize, category: state.filters?.category || 'all', status: state.filters?.status || 'all' });
+          const cached = searchCache[cacheKey];
+          const isValidCache = cached && now - cached.ts < cacheTTL;
+
+          // Si hay caché válida y no se fuerza refresco, devolver de caché
+          if (isValidCache && !options.force) {
+            const totalCount = cached.data.length;
+            const paginated = cached.data.slice(0, pageSize);
+
+            set({
+              products: paginated,
+              totalProducts: totalCount,
+              totalPages: Math.ceil(totalCount / pageSize),
+              currentPage: 1,
+              pageSize,
+              loading: false,
+              lastSearchTerm: term,
+              error: null
+            });
+
+            // Revalidación opcional en background cuando no hay signal
+            if (options.revalidate && !options.signal) {
+              (async () => {
+                try {
+                  const fresh = await productService.searchProducts(term);
+                  const freshArr = Array.isArray(fresh) ? fresh : [fresh];
+                  // Si cambió el tamaño, actualizar estado y caché
+                  if (freshArr.length !== totalCount) {
+                    const pag = freshArr.slice(0, pageSize);
+                    set({
+                      products: pag,
+                      totalProducts: freshArr.length,
+                      totalPages: Math.ceil(freshArr.length / pageSize),
+                      currentPage: 1,
+                      pageSize,
+                      lastSearchTerm: term,
+                    });
+                  }
+                  // Actualizar caché
+                  set((s) => ({
+                    searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: freshArr } }
+                  }));
+                } catch (_) { /* silencioso */ }
+              })();
+            }
+
+            return { data: paginated, total: totalCount };
           }
 
-          set({ 
-            products: [], 
-            totalProducts: 0, 
+          // Si llega un AbortController signal, usar ruta directa con cancelación
+          if (options.signal) {
+            const response = await productService.searchProducts(term, { signal: options.signal });
+            const products = Array.isArray(response) ? response : [response];
+            const totalCount = products.length;
+            const paginated = products.slice(0, pageSize);
+
+            // Guardar en caché
+            set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: products } } }));
+
+            set({
+              products: paginated,
+              totalProducts: totalCount,
+              totalPages: Math.ceil(totalCount / pageSize),
+              currentPage: 1,
+              pageSize,
+              loading: false,
+              lastSearchTerm: term,
+              error: null
+            });
+            return { data: paginated, total: totalCount };
+          }
+
+          // Camino estándar (sin signal): reutiliza fetchProducts
+          // Obtener resultados completos para cachear correctamente y luego paginar en memoria
+          const t = telemetry.startTimer('products.search');
+          const response = await productService.searchProducts(term);
+          const products = Array.isArray(response) ? response : [response];
+          const totalCount = products.length;
+          const paginated = products.slice(0, pageSize);
+
+          // Guardar en caché el conjunto completo
+          set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: products } } }));
+
+          set({
+            products: paginated,
+            totalProducts: totalCount,
+            totalPages: Math.ceil(totalCount / pageSize),
+            currentPage: 1,
+            pageSize,
+            loading: false,
+            lastSearchTerm: term,
+            error: null
+          });
+
+          const ms = telemetry.endTimer(t, { total: totalCount });
+          telemetry.record('products.search.success', { ms, total: totalCount });
+          return { data: paginated, total: totalCount };
+        } catch (error) {
+          // Manejo específico de errores de búsqueda con normalización
+          console.error('Error en searchProducts:', error);
+
+          if (error?.name === 'AbortError') {
+            // No actualizar estado en cancelación; salir silenciosamente
+            telemetry.record('products.search.abort');
+            return { data: [], total: 0, aborted: true };
+          }
+
+          const norm = toApiError(error, 'Error al buscar productos');
+          let errorMessage = norm.message || 'Error al buscar productos';
+          if (norm.code === 'INTERNAL') {
+            errorMessage = 'Error interno del servidor al buscar. Intenta con términos diferentes.';
+          } else if (norm.code === 'NOT_FOUND') {
+            errorMessage = 'No se encontraron productos con ese término de búsqueda.';
+          } else if (norm.code === 'NETWORK') {
+            errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+          }
+
+          set({
+            products: [],
+            totalProducts: 0,
             totalPages: 0,
             currentPage: 1,
             loading: false,
-            error: errorMessage
+            error: errorMessage,
           });
 
-          // No re-lanzar el error para que no se propague al componente
+          telemetry.record('products.search.error', { code: norm.code, message: norm.message });
+
           return { error: errorMessage, data: [], total: 0 };
         }
       },
@@ -286,7 +400,7 @@ const useProductStore = create(
       changePageSize: async (newPageSize) => {
         const state = get();
         get().setPageSize(newPageSize);
-        return await get().fetchProducts(1, newPageSize, state.lastSearchTerm || '');
+  return await get().fetchProducts(1, newPageSize, state.lastSearchTerm || '');
       },
 
       // Limpiar productos (para estado inicial)
@@ -422,6 +536,7 @@ const useProductStore = create(
         selectedProduct: null,
         loading: false,
         error: null,
+  searchCache: {},
         currentPage: 1,
         pageSize: 10,
         totalProducts: 0,
@@ -434,7 +549,21 @@ const useProductStore = create(
           sortBy: 'name',
           sortOrder: 'asc'
         }
-      })
+      }),
+
+      // Selectores memoizados (para consumo en componentes)
+      selectors: {
+        selectProducts: (state) => state.products,
+        selectBasicMeta: (state) => ({
+          totalProducts: state.totalProducts,
+          currentPage: state.currentPage,
+          totalPages: state.totalPages,
+          pageSize: state.pageSize,
+        }),
+        selectCategories: (state) => state.categories,
+        selectLoadingError: (state) => ({ loading: state.loading, error: state.error }),
+        selectLastSearchTerm: (state) => state.lastSearchTerm,
+      }
     }),
     {
       name: 'product-store',

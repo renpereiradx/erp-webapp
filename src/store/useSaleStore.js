@@ -392,7 +392,7 @@ const useSaleStore = create(
         });
       },
 
-      clearCurrentSale: () => {
+  clearCurrentSale: () => {
         set({
           currentSaleData: {
             clientId: '',
@@ -457,9 +457,10 @@ const useSaleStore = create(
         });
       },
 
-      clearError: () => set({ error: null }),
+  clearError: () => set({ error: null }),
 
-      clearCurrentSale: () => set({ currentSale: null }),
+  // Limpiar entidad de venta actual (distinto a carrito en curso)
+  clearCurrentSaleEntity: () => set({ currentSale: null }),
 
       // Selectores
       getSalesByStatus: (status) => {
