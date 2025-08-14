@@ -136,25 +136,23 @@ console.log('Caché edad:', info.ageMinutes, 'minutos');
 - Revalidación respeta circuito y usa retry con backoff exponencial (2 intentos).
 
 ### Retry & Backoff
-- Estrategia _withRetry(fn): intentos=3 (fetch principal), baseDelay=300ms, factor=2 (300, 600, 1200ms) sin jitter por ahora.
-- Telemetría: products.fetch.attempt, .success.afterRetry, .giveup; similar para search y revalidate.
+- Estrategia _withRetry(fn): intentos=3 (fetch principal), baseDelay=300ms, factor=2 (300, 600, 1200ms) **con jitter +/-30%** para evitar sincronización.
+- Soporte AbortController en fetchProducts (cancelación al disparar nueva petición).
 
-### Circuit Breaker
-- Umbral fallos: 4. Cooldown 30s. Bloquea fetch/search mientras esté abierto.
-- Revalidaciones no fuerzan apertura si circuito ya abierto.
+### Offline Awareness
+- Estado isOffline se activa ante errores de conexión y listeners globales online/offline.
+- Banner UI en Products avisa modo offline y permite reintento manual.
 
-### Telemetría Clave
+### Telemetría Adicional
 | Evento | Descripción |
 |--------|-------------|
-| products.pageCache.hit | Cache hit directo (página) |
-| products.pageCache.trim | Trimming aplicado (LRU) |
-| products.fetch.revalidate.success/error | Resultado de SWR background |
-| products.search.cache.hit/miss | Hit/miss de búsqueda |
-| products.search.revalidate.auto.success/error | SWR automática búsqueda |
-| products.searchCache.trim | Trimming de caché de búsqueda |
-| products.fetch.attempt/giveup | Intentos y abandono tras retries |
-| products.perf.snapshot | FPS promedio, último FPS, renders acumulados |
-| products.render.batch | Tamaño de lote renderizado (aprox) |
+| products.bulkActivate.rollback | Rollback de activación masiva |
+| products.bulkDeactivate.rollback | Rollback de desactivación masiva |
+| products.inlineUpdate.rollback | Rollback de edición inline |
+| app.online / app.offline | Cambios de conectividad |
+
+### Error Counters
+- errorCounters acumula conteos por código (NETWORK, UNAUTHORIZED, etc.) para panel futuro.
 
 ### Beneficios
 - Respuesta inmediata (cached) + actualización silenciosa.

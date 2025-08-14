@@ -12,6 +12,12 @@ import { toApiError } from '@/utils/ApiError';
 import { telemetry } from '@/utils/telemetry';
 import { isConnectionError, getConnectionErrorMessage } from '@/utils/connectionUtils';
 
+// Jitter helper
+const _jitter = (base) => {
+  const rand = Math.random();
+  return base + (rand * 0.3 * base); // +-30%
+};
+
 const useProductStore = create(
   devtools(
     (set, get) => ({
@@ -188,8 +194,19 @@ const useProductStore = create(
         return categoryCacheService.getCacheInfo();
       },
 
-      fetchProducts: async (page = null, pageSize = null, searchTerm = '') => {
+      fetchProducts: async (page = null, pageSize = null, searchTerm = '', options = {}) => {
         const correlationId = `fetch_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+        // Abort previous
+        try {
+          if (get().fetchAbortController) {
+            get().fetchAbortController.abort();
+          }
+          if (!options.signal && typeof AbortController !== 'undefined') {
+            const ac = new AbortController();
+            set({ fetchAbortController: ac });
+            options.signal = ac.signal;
+          }
+        } catch {}
         // ...existing code...
         try {
           let response;
@@ -287,6 +304,8 @@ const useProductStore = create(
           if (prev.length) set({ lastOfflineSnapshot: prev });
           if (prev.length) get()._persistOfflineSnapshot(prev);
           throw norm;
+        } finally {
+          set({ fetchAbortController: null });
         }
       },
 
@@ -420,6 +439,8 @@ const useProductStore = create(
             return { data: [], total: 0, aborted: true };
           }
           const norm = toApiError(error, 'Error al buscar productos', correlationId);
+          // Increment counter
+          set((s) => ({ errorCounters: { ...s.errorCounters, [norm.code]: (s.errorCounters[norm.code] || 0) + 1 } }));
           let errorMessage = norm.message || 'Error al buscar productos';
           if (isConnectionError(error)) {
             errorMessage = getConnectionErrorMessage(error);
@@ -434,6 +455,8 @@ const useProductStore = create(
             error: errorMessage,
           });
           telemetry.record('products.search.error', { code: norm.code, message: norm.message, correlationId });
+          // Detectar errores de conexión
+          try { if (isConnectionError(error)) set({ isOffline: true }); } catch {}
           return { error: errorMessage, data: [], total: 0 };
         }
       },
@@ -679,6 +702,7 @@ const useProductStore = create(
         const ids = get().selectedIds;
         if (!ids.length) return;
         const correlationId = `bulkAct_${Date.now()}_${ids.length}`;
+        const prevSnapshot = get().productsById; // snapshot for rollback event
         // Optimista
         const prev = get().productsById;
         set((state) => {
@@ -692,8 +716,8 @@ const useProductStore = create(
           telemetry.record('products.bulkActivate.success', { count: ids.length, correlationId });
         } catch (e) {
           // Rollback
-          set({ productsById: prev, products: Object.values(prev).slice(0, get().products.length) });
-          telemetry.record('products.bulkActivate.error', { count: ids.length, correlationId });
+          set({ productsById: prevSnapshot, products: Object.values(prevSnapshot).slice(0, get().products.length) });
+          telemetry.record('products.bulkActivate.rollback', { count: ids.length, correlationId });
           set({ error: 'Error en activación masiva' });
         } finally { get().clearSelection(); }
       },
@@ -701,19 +725,14 @@ const useProductStore = create(
         const ids = get().selectedIds;
         if (!ids.length) return;
         const correlationId = `bulkDeact_${Date.now()}_${ids.length}`;
-        const prev = get().productsById;
-        set((state) => {
-          const products = state.products.map(p => ids.includes(p.id) ? { ...p, is_active: false } : p);
-          const productsById = { ...state.productsById };
-          ids.forEach(id => { if (productsById[id]) productsById[id] = { ...productsById[id], is_active: false }; });
-          return { products, productsById };
-        });
+        const prevSnapshot = get().productsById;
+        // ...existing code...
         try {
           await Promise.all(ids.map(id => productService.updateProduct(id, { is_active: false })));
           telemetry.record('products.bulkDeactivate.success', { count: ids.length, correlationId });
         } catch (e) {
-          set({ productsById: prev, products: Object.values(prev).slice(0, get().products.length) });
-          telemetry.record('products.bulkDeactivate.error', { count: ids.length, correlationId });
+          set({ productsById: prevSnapshot, products: Object.values(prevSnapshot).slice(0, get().products.length) });
+          telemetry.record('products.bulkDeactivate.rollback', { count: ids.length, correlationId });
           set({ error: 'Error en desactivación masiva' });
         } finally { get().clearSelection(); }
       },
@@ -734,12 +753,12 @@ const useProductStore = create(
           return true;
         } catch (e) {
           // Rollback
-          set((state) => {
-            const productsById = { ...state.productsById, [id]: prev };
-            const products = state.products.map((p) => (p.id === id ? prev : p));
-            return { productsById, products, error: 'Error al guardar cambios inline' };
-          });
-          telemetry.record('products.inlineUpdate.error', { id, correlationId });
+            set((state) => {
+              const productsById = { ...state.productsById, [id]: prev };
+              const products = state.products.map((p) => (p.id === id ? prev : p));
+              return { productsById, products, error: 'Error al guardar cambios inline' };
+            });
+          telemetry.record('products.inlineUpdate.rollback', { id, correlationId });
           return false;
         }
       },
@@ -758,5 +777,15 @@ const useProductStore = create(
     }
   )
 );
+
+// Global offline listeners
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    try { useProductStore.getState().setIsOffline(false); telemetry.record('app.online'); } catch {}
+  });
+  window.addEventListener('offline', () => {
+    try { useProductStore.getState().setIsOffline(true); telemetry.record('app.offline'); } catch {}
+  });
+}
 
 export default useProductStore;

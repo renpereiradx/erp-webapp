@@ -91,11 +91,11 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
     const price = localPrice === '' ? null : parseFloat(localPrice);
     const stock = localStock === '' ? null : parseInt(localStock, 10);
     if (price != null && (isNaN(price) || price < 0)) {
-      setErrorMsg('Precio inválido');
+      setErrorMsg(t('validation.price.invalid') || 'Precio inválido');
       return;
     }
     if (stock != null && (isNaN(stock) || stock < 0)) {
-      setErrorMsg('Stock inválido');
+      setErrorMsg(t('validation.stock.invalid') || 'Stock inválido');
       return;
     }
     setSaving(true);
@@ -144,43 +144,44 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
                       <EditableField
                         value={product.name}
                         name="name"
-                        label="Nombre"
+                        label={t('field.name') || 'Nombre'}
                         onSave={async (val) => onInlineSave?.(product.id, { name: val })}
-                        validate={(v) => !v.trim() ? 'Requerido' : ''}
+                        validate={(v) => !v.trim() ? (t('validation.required') || 'Requerido') : ''}
                       />
                       <EditableField
                         value={product.price}
                         name="price"
-                        label="Precio"
+                        label={t('field.price') || 'Precio'}
                         type="number"
                         onSave={async (val) => {
                           const num = parseFloat(val);
                           if (isNaN(num) || num < 0) return false;
                           return onInlineSave?.(product.id, { price: num });
                         }}
-                        validate={(v) => v !== '' && (isNaN(parseFloat(v)) || parseFloat(v) < 0) ? 'Inválido' : ''}
+                        validate={(v) => v !== '' && (isNaN(parseFloat(v)) || parseFloat(v) < 0) ? (t('validation.price.invalid.short') || 'Inválido') : ''}
                       />
                       <EditableField
                         value={product.stock_quantity}
                         name="stock"
-                        label="Stock"
+                        label={t('field.stock') || 'Stock'}
                         type="number"
                         onSave={async (val) => {
                           const num = parseInt(val, 10);
                           if (isNaN(num) || num < 0) return false;
                           return onInlineSave?.(product.id, { stock_quantity: num });
                         }}
-                        validate={(v) => v !== '' && (isNaN(parseInt(v,10)) || parseInt(v,10) < 0) ? 'Inválido' : ''}
+                        validate={(v) => v !== '' && (isNaN(parseInt(v,10)) || parseInt(v,10) < 0) ? (t('validation.stock.invalid.short') || 'Inválido') : ''}
                       />
                       <button type="button" onClick={onCancelInlineEdit} className="text-red-500 text-xs font-medium">{t('products.inline.cancel')}</button>
                     </div>
+                    {errorMsg && <div className="text-xs text-red-500" role="alert" aria-live="assertive">{errorMsg}</div>}
                   </div>
                 ) : (
-                  product.name || 'Sin nombre'
+                  product.name || (t('field.no_name') || 'Sin nombre')
                 )}
               </h3>
               <div className={`text-xs text-muted-foreground ${themeLabel()}`}>
-                {product.code ? `Código: ${product.code}` : `ID: ${product.id}`}
+                {product.code ? `${t('field.code') || 'Código'}: ${product.code}` : `${t('field.id') || 'ID'}: ${product.id}`}
               </div>
             </div>
           </div>
@@ -191,7 +192,7 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
               {!!product.is_active && product.stock_quantity != null && product.stock_quantity < 10 && (
                 <span style={lowStockChipStyle}>
                   <AlertCircle className="w-3 h-3" />
-                  <span>{isNeoBrutalism ? 'BAJO STOCK' : 'Bajo stock'}</span>
+                  <span>{isNeoBrutalism ? (t('badge.low_stock.upper') || 'BAJO STOCK') : (t('badge.low_stock') || 'Bajo stock')}</span>
                 </span>
               )}
             </div>
@@ -202,7 +203,7 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
         <div className="space-y-3">
           {/* Category */}
           <div className="flex justify-between items-center">
-            <span className={`text-muted-foreground text-xs ${themeLabel()}`}>Categoría:</span>
+            <span className={`text-muted-foreground text-xs ${themeLabel()}`}>{t('field.category') || 'Categoría'}:</span>
             <span className={`text-xs ${themeLabel()}`}>
               {productSummary.category?.name || getCategoryName(product.category_id)}
             </span>
@@ -211,7 +212,7 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
           {/* Price */}
           <div className="flex justify-between items-center">
             <span className={`text-muted-foreground text-xs ${themeLabel()}`}>
-              {productSummary.hasUnitPricing ? 'Precio/Unidad:' : 'Precio:'}
+              {productSummary.hasUnitPricing ? (t('field.unit_price') || 'Precio/Unidad:') : (t('field.price') || 'Precio:')}
             </span>
             <div className="flex items-center gap-1">
               {productSummary.priceFormatted ? (
@@ -232,7 +233,7 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
 
           {/* Stock */}
           <div className="flex justify-between items-center">
-            <span className={`text-muted-foreground text-xs ${themeLabel()}`}>Stock:</span>
+            <span className={`text-muted-foreground text-xs ${themeLabel()}`}>{t('field.stock') || 'Stock'}:</span>
             <div className="flex items-center gap-1">
               <span
                 className={`font-medium text-xs ${themeLabel()}`}
@@ -266,17 +267,17 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
       {/* Actions */}
       <div className="flex gap-2 mt-3">
         <Button onClick={() => onView?.(product)} variant="secondary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50">
-          <Eye className="w-4 h-4 mr-1" /> Ver
+          <Eye className="w-4 h-4 mr-1" /> {t('action.view') || 'Ver'}
         </Button>
         <Button onClick={() => onEdit?.(product)} variant="primary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50">
-          <Edit className="w-4 h-4 mr-1" /> Editar
+          <Edit className="w-4 h-4 mr-1" /> {t('action.edit') || 'Editar'}
         </Button>
         {enableInlineEdit && !inlineEditing && (
           <Button onClick={() => onStartInlineEdit?.(product.id)} variant="outline" size="sm" className="flex-1 text-xs">
-            Inline
+            {t('action.inline') || 'Inline'}
           </Button>
         )}
-        <Button onClick={() => onDelete?.(product)} variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" aria-label="Eliminar producto">
+        <Button onClick={() => onDelete?.(product)} variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" aria-label={t('action.delete_product') || 'Eliminar producto'}>
           <Trash2 className="w-4 h-4" />
         </Button>
       </div>

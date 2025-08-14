@@ -67,6 +67,8 @@ const Products = () => {
   const categories = useProductStore((s) => s.categories);
   const lastSearchTerm = useProductStore((s) => s.lastSearchTerm);
   const selectedIds = useProductStore((s) => s.selectedIds);
+  const isOffline = useProductStore((s) => s.isOffline);
+  const errorCounters = useProductStore((s) => s.errorCounters);
 
   // Acciones separadas para evitar problemas de snapshot
   const fetchCategories = useProductStore((s) => s.fetchCategories);
@@ -170,6 +172,7 @@ const Products = () => {
   // Inline editing (mínimo)
   const [inlineEditingId, setInlineEditingId] = useState(null);
   const [inlineFlag] = useFeatureFlag('newInlineEdit', true);
+  const [lastInlineSaved, setLastInlineSaved] = useState(null);
 
   const announce = (msg) => setLiveMessage(msg);
 
@@ -209,8 +212,19 @@ const Products = () => {
 
   const handleInlineSave = async (id, patchOrValue) => {
     const patch = typeof patchOrValue === 'object' && patchOrValue !== null ? patchOrValue : { name: patchOrValue };
-    await optimisticUpdateProduct(id, patch);
-    announce(`Producto ${id} actualizado`);
+    const ok = await optimisticUpdateProduct(id, patch);
+    if (ok) {
+      announce(`Producto ${id} actualizado`);
+      setLastInlineSaved({ id, ts: Date.now() });
+      // flash highlight card
+      requestAnimationFrame(() => {
+        const node = document.querySelector(`[aria-label="Producto ${products.find(p=>p.id===id)?.name || id}"] .group`);
+        if (node) {
+          node.classList.add('ring-2','ring-green-400');
+          setTimeout(()=> node.classList.remove('ring-2','ring-green-400'), 1200);
+        }
+      });
+    }
     setInlineEditingId(null);
   };
 
@@ -292,6 +306,7 @@ const Products = () => {
     if (storeError && !storeError.includes('No se encontraron productos')) {
       errorFrom(new Error(storeError));
       telemetry.record('products.error.store', { message: storeError });
+      announce(`Error: ${storeError}`);
     }
   }, [storeError, errorFrom]);
 
@@ -372,6 +387,15 @@ const Products = () => {
     <div className="min-h-screen bg-background text-foreground p-6">
       <div className="sr-only" aria-live="polite" aria-atomic="true" role="status">{liveMessage}</div>
       <div className="max-w-7xl mx-auto space-y-8">
+        {isOffline && (
+          <div className="bg-amber-100 border border-amber-300 text-amber-800 px-4 py-2 rounded flex items-center gap-3" role="status" aria-live="polite">
+            <AlertTriangle className="w-4 h-4" />
+            <span>Modo offline: mostrando datos locales. Reintenta cuando vuelva la conexión.</span>
+            <Button size="sm" variant="outline" onClick={() => {
+              if (lastSearchTerm) searchProducts(lastSearchTerm, { force: true }); else loadPage(1);
+            }}>Reintentar</Button>
+          </div>
+        )}
         
         {/* Header */}
         <PageHeader
