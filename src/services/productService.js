@@ -8,6 +8,42 @@ import BusinessManagementAPI from './BusinessManagementAPI';
 import { ApiError, toApiError } from '@/utils/ApiError';
 
 /**
+ * Helper para retry con backoff exponencial en errores de red
+ */
+const retryWithBackoff = async (fn, maxRetries = 2, baseDelay = 1000) => {
+  let lastError;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      
+      // No hacer retry si es AbortError o si es el último intento
+      if (error?.name === 'AbortError' || attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Solo hacer retry en errores de red
+      const isNetworkError = error.message?.includes('ERR_CONNECTION_TIMED_OUT') || 
+                            error.message?.includes('Network Error') ||
+                            error.message?.includes('Failed to fetch') ||
+                            error.code === 'NETWORK_ERROR';
+      
+      if (!isNetworkError) {
+        throw error;
+      }
+      
+      // Esperar antes del siguiente intento (backoff exponencial)
+      const delay = baseDelay * Math.pow(2, attempt);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+};
+
+/**
  * @typedef {import('@/types').Product} Product
  * @typedef {import('@/types').ProductDescription} ProductDescription
  * @typedef {import('@/types').ProductPrice} ProductPrice
@@ -96,7 +132,9 @@ export const productService = {
    */
   searchProducts: async (searchTerm, { signal } = {}) => {
     try {
-      return await apiClient.searchProducts(searchTerm, { signal });
+      return await retryWithBackoff(async () => {
+        return await apiClient.searchProducts(searchTerm, { signal });
+      });
     } catch (error) {
       // Permitimos que AbortError se propague tal cual
       if (error?.name === 'AbortError') throw error;
@@ -334,8 +372,14 @@ export const productService = {
    * @returns {Promise<any[]>}
    */
   getAllCategories: async () => {
-    const api = new BusinessManagementAPI();
-    return api.getAllCategories();
+    try {
+      return await retryWithBackoff(async () => {
+        const api = new BusinessManagementAPI();
+        return api.getAllCategories();
+      });
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener categorías');
+    }
   },
 
   // Validar estructura de datos antes de envío

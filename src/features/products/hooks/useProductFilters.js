@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 // Optional debounce for future auto-search; not used by default to avoid behavior changes
 import { useDebouncedValue } from './useDebouncedValue';
 
@@ -12,6 +12,14 @@ import { useDebouncedValue } from './useDebouncedValue';
  * - outputs: state + handlers + filteredProducts
  */
 export function useProductFilters({ products = [], onApiSearch, onClear, persistKey = 'products.filters.v1', autoSearch = false, debounceMs = 350, minChars = 1 }) {
+  // Refs para estabilizar callbacks
+  const onApiSearchRef = useRef(onApiSearch);
+  const onClearRef = useRef(onClear);
+  const abortControllerRef = useRef(null);
+  
+  // Actualizar refs cuando cambien las props
+  onApiSearchRef.current = onApiSearch;
+  onClearRef.current = onClear;
   // Estado UI (igual que en Products.jsx para mantener compatibilidad)
   const getInitial = () => {
     if (typeof window === 'undefined') return null;
@@ -46,16 +54,19 @@ export function useProductFilters({ products = [], onApiSearch, onClear, persist
   const { value: debouncedApiSearchTerm } = useDebouncedValue(apiSearchTerm, debounceMs);
 
   const handleApiSearch = useCallback(async () => {
-    if (!onApiSearch) return;
+    const apiSearchFn = onApiSearchRef.current;
+    const clearFn = onClearRef.current;
+    
+    if (!apiSearchFn) return;
     const term = apiSearchTerm.trim();
     if (term.length >= minChars) {
-      await onApiSearch(term);
+      await apiSearchFn(term);
     } else if (term.length === 0) {
-      onClear?.();
+      clearFn?.();
     } else {
       // No dispares búsqueda si no alcanza el umbral mínimo
     }
-  }, [apiSearchTerm, onApiSearch, onClear, minChars]);
+  }, [apiSearchTerm, minChars]);
 
   const handleApiSearchKeyPress = useCallback((e) => {
     if (e.key === 'Enter') {
@@ -63,43 +74,67 @@ export function useProductFilters({ products = [], onApiSearch, onClear, persist
     } else if (e.key === 'Escape') {
       // limpiar búsqueda rápida
       setApiSearchTerm('');
-      onClear?.();
+      onClearRef.current?.();
     }
-  }, [handleApiSearch, onClear]);
+  }, [handleApiSearch]);
 
   const handleClearSearch = useCallback(() => {
     setApiSearchTerm('');
     setLocalSearchTerm('');
     setSelectedCategory('all');
     setSelectedStock('all');
-    onClear?.();
+    onClearRef.current?.();
     try { localStorage.removeItem(persistKey); } catch {
       // ignore storage remove errors
     }
-  }, [onClear, persistKey]);
+  }, [persistKey]);
 
   // Búsqueda automática con debounce y cancelación (opcional)
   useEffect(() => {
     if (!autoSearch) return;
-    if (!onApiSearch) return;
 
     const term = debouncedApiSearchTerm?.trim?.() || '';
-    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-
-    if (term.length >= minChars) {
-      Promise.resolve(onApiSearch(term, { signal: controller?.signal })).catch(() => {
-        // Ignorar errores de cancelación u otros
-      });
-    } else if (term.length === 0) {
-      onClear?.();
-    } else {
-      // Si no alcanza el umbral, no hacer nada (mantener resultados actuales)
+    
+    // Cancelar búsqueda anterior si existe
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Solo crear AbortController si está disponible
+    if (typeof AbortController !== 'undefined') {
+      abortControllerRef.current = new AbortController();
     }
 
-    return () => {
-      controller?.abort?.();
+    const executeSearch = async () => {
+      try {
+        const apiSearchFn = onApiSearchRef.current;
+        const clearFn = onClearRef.current;
+        const controller = abortControllerRef.current;
+        
+        if (term.length >= minChars) {
+          await apiSearchFn?.(term, { signal: controller?.signal });
+        } else if (term.length === 0) {
+          clearFn?.();
+        }
+      } catch (error) {
+        // Ignorar errores de cancelación u otros
+        if (error?.name !== 'AbortError') {
+          console.warn('Error en búsqueda automática:', error);
+        }
+      }
     };
-  }, [autoSearch, debouncedApiSearchTerm, onApiSearch, onClear, minChars]);
+
+    // Ejecutar la búsqueda
+    executeSearch();
+
+    // Cleanup function
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, [autoSearch, debouncedApiSearchTerm, minChars]); // Removed onApiSearch and onClear from deps
 
   const filteredProducts = useMemo(() => {
     const term = localSearchTerm.toLowerCase();
@@ -113,6 +148,15 @@ export function useProductFilters({ products = [], onApiSearch, onClear, persist
       return matchesLocalSearch && matchesCategory && matchesStock;
     });
   }, [products, localSearchTerm, selectedCategory, selectedStock]);
+
+  // Cleanup cuando se desmonta el componente
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   return {
     // estado expuesto

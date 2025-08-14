@@ -291,6 +291,10 @@ class BusinessManagementAPI {
       
       return [];
     } catch (error) {
+      // Silenciar errores de cancelación (AbortError) en desarrollo
+      if (error.name === 'AbortError') {
+        return [];
+      }
       console.warn('Error en búsqueda enriquecida por nombre:', error.message);
       return [];
     }
@@ -325,6 +329,10 @@ class BusinessManagementAPI {
         // Para búsquedas por nombre, usar el nuevo endpoint enriquecido
         return await this.searchProductsByNameEnriched(searchTerm, options);
       } catch (error) {
+        // Silenciar errores de cancelación (AbortError) en desarrollo
+        if (error.name === 'AbortError') {
+          return [];
+        }
         console.warn('Error en búsqueda por nombre:', error.message);
         return [];
       }

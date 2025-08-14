@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 /**
  * useDebouncedValue
@@ -12,34 +12,50 @@ import { useEffect, useRef, useState } from 'react';
 export function useDebouncedValue(value, delayMs = 400) {
   const [debounced, setDebounced] = useState(value);
   const timerRef = useRef(null);
+  const valueRef = useRef(value);
+
+  // Actualizar la ref cuando cambie el valor
+  valueRef.current = value;
 
   useEffect(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
+    // Limpiar timer anterior si existe
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    
     // Actualización inmediata cuando delay <= 0 para facilitar tests y casos instantáneos
     if (delayMs <= 0) {
-      setDebounced(value);
-      return () => {};
+      setDebounced(valueRef.current);
+      return;
     }
-    timerRef.current = setTimeout(() => setDebounced(value), delayMs);
+    
+    // Configurar nuevo timer
+    timerRef.current = setTimeout(() => {
+      setDebounced(valueRef.current);
+    }, delayMs);
+
+    // Cleanup function
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
     };
   }, [value, delayMs]);
 
-  const flush = () => {
+  const flush = useCallback(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-    setDebounced(value);
-  };
+    setDebounced(valueRef.current);
+  }, []);
 
-  const cancel = () => {
+  const cancel = useCallback(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-  };
+  }, []);
 
   return { value: debounced, flush, cancel };
 }

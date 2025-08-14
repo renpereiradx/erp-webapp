@@ -22,6 +22,7 @@ import { productService } from '@/services/productService';
 import BusinessManagementAPI from '@/services/BusinessManagementAPI';
 import { isEnrichedProduct } from '@/utils/productUtils';
 import { analyzeProductData, extractSafeProductData } from '@/utils/productDataUtils';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 const ProductDetailModal = ({ 
   isOpen, 
@@ -628,15 +629,8 @@ const ProductDetailModal = ({
                     </div>
                     <div>
                       <strong>Estado:</strong><br />
-                      <span style={{ 
-                        color: (product.is_active !== undefined ? product.is_active : product.state) ? '#059669' : '#ef4444',
-                        fontWeight: '600'
-                      }}>
-                        {(product.is_active !== undefined ? product.is_active : product.state) ? 
-                          (isNeoBrutalism ? 'ACTIVO' : 'Activo') : 
-                          (isNeoBrutalism ? 'INACTIVO' : 'Inactivo')
-                        }
-                      </span>
+                      {/* Reemplazo de texto por StatusBadge consistente */}
+                      <StatusBadge active={!!(product.is_active !== undefined ? product.is_active : product.state)} />
                     </div>
                   </div>
                 </div>

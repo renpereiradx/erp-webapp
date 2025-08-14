@@ -10,18 +10,26 @@ import { categoryCacheService } from '@/services/categoryCacheService';
 import { apiClient } from '@/services/api';
 import { toApiError } from '@/utils/ApiError';
 import { telemetry } from '@/utils/telemetry';
+import { isConnectionError, getConnectionErrorMessage } from '@/utils/connectionUtils';
 
 const useProductStore = create(
   devtools(
     (set, get) => ({
       // =================== ESTADO ===================
       products: [],
+      productsById: {}, // Normalización por id
+      pageCache: {}, // { pageNumber: { ts, products } }
+      pageCacheTTL: 120000,
+      selectedIds: [], // Selección múltiple para acciones bulk
       selectedProduct: null,
       loading: false,
       error: null,
   // Caché simple para búsquedas (SWR-like)
   searchCache: {}, // { [cacheKey]: { ts: number, data: array } }
   cacheTTL: 120000, // 2 minutos
+      cacheHits: 0,
+      cacheMisses: 0,
+      circuit: { openUntil: 0, failures: 0, threshold: 4, cooldownMs: 30000 },
       
       // Categories (inicialmente vacías, se cargan desde API)
       categories: [],
@@ -49,6 +57,20 @@ const useProductStore = create(
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
       clearError: () => set({ error: null }),
+      _recordFailure: () => set((state) => {
+        const now = Date.now();
+        const failures = state.circuit.failures + 1;
+        let openUntil = state.circuit.openUntil;
+        if (failures >= state.circuit.threshold) {
+          openUntil = now + state.circuit.cooldownMs;
+        }
+        return { circuit: { ...state.circuit, failures, openUntil } };
+      }),
+      _recordSuccess: () => set((state) => ({ circuit: { ...state.circuit, failures: 0 } })),
+      _circuitOpen: () => {
+        const { circuit } = get();
+        return Date.now() < circuit.openUntil;
+      },
 
       setFilters: (newFilters) => 
         set((state) => ({
@@ -67,10 +89,13 @@ const useProductStore = create(
       // =================== API CALLS ===================
 
       fetchCategories: async () => {
+        const currentState = get();
+        // Evitar llamadas múltiples simultáneas
+        if (currentState.loading) return currentState.categories;
+        
         set({ loading: true, error: null });
         try {
           const response = await productService.getAllCategories();
-          console.log('Respuesta cruda de categorías en store:', response);
           
           let categories = [];
           
@@ -86,36 +111,42 @@ const useProductStore = create(
           }
           
           set({ categories, loading: false });
-          console.log(`${categories.length} categorías cargadas en store`);
+          // Registrar evento en telemetry en lugar de logs de depuración
+          try { telemetry.record('categories.fetch.success', { count: categories.length }); } catch (e) { /* noop */ }
           return categories;
         } catch (error) {
           console.error('Error detallado en fetchCategories:', error);
           
-          // En caso de error del servidor, usar categorías por defecto
-          const fallbackCategories = [
-            { id: 1, name: 'Alimentos', description: 'Productos alimenticios' },
-            { id: 2, name: 'Bebidas', description: 'Bebidas variadas' },
-            { id: 3, name: 'Limpieza', description: 'Productos de limpieza' },
-            { id: 4, name: 'Cuidado Personal', description: 'Productos de higiene' },
-            { id: 5, name: 'Hogar', description: 'Artículos para el hogar' }
-          ];
+           // En caso de error del servidor, usar categorías por defecto
+           const fallbackCategories = [
+             { id: 1, name: 'Alimentos', description: 'Productos alimenticios' },
+             { id: 2, name: 'Bebidas', description: 'Bebidas variadas' },
+             { id: 3, name: 'Limpieza', description: 'Productos de limpieza' },
+             { id: 4, name: 'Cuidado Personal', description: 'Productos de higiene' },
+             { id: 5, name: 'Hogar', description: 'Artículos para el hogar' }
+           ];
           
-          if (error.message.includes('500')) {
-            console.warn('Error 500 en categorías, usando categorías por defecto');
+          // Detectar errores de conexión y otros tipos de error
+          if (error.message.includes('500') || isConnectionError(error)) {
+            const errorMsg = isConnectionError(error) 
+              ? getConnectionErrorMessage(error)
+              : 'Error del servidor. Usando categorías por defecto.';
+            
+            console.warn(errorMsg);
             set({ 
               categories: fallbackCategories, 
               loading: false, 
-              error: 'Usando categorías por defecto debido a error del servidor'
+              error: errorMsg
             });
             return fallbackCategories;
           }
           
           set({ 
-            categories: [], 
+            categories: fallbackCategories, 
             loading: false, 
-            error: 'Error al cargar categorías: ' + (error.message || 'Error desconocido') 
+            error: 'Error al cargar categorías. Usando categorías por defecto: ' + (error.message || 'Error desconocido') 
           });
-          return [];
+          return fallbackCategories;
         }
       },
 
@@ -158,12 +189,8 @@ const useProductStore = create(
       },
 
       fetchProducts: async (page = null, pageSize = null, searchTerm = '') => {
-        const state = get();
-        const currentPage = page || state.currentPage;
-        const currentPageSize = pageSize || state.pageSize;
-
-        set({ loading: true, error: null });
-
+        const correlationId = `fetch_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+        // ...existing code...
         try {
           let response;
           let products = [];
@@ -173,10 +200,10 @@ const useProductStore = create(
             response = await productService.searchProducts(searchTerm.trim());
             products = Array.isArray(response) ? response : [response];
             totalCount = products.length;
-            
             if (totalCount === 0) {
               set({
                 products: [],
+                productsById: {},
                 totalProducts: 0,
                 totalPages: 0,
                 currentPage: 1,
@@ -185,15 +212,16 @@ const useProductStore = create(
                 lastSearchTerm: searchTerm.trim(),
                 error: null
               });
+              telemetry.endTimer(t, { total: 0, empty: true });
               return { data: [], total: 0, message: `No se encontraron productos para "${searchTerm.trim()}"` };
             }
-            
             const startIndex = (currentPage - 1) * currentPageSize;
             const endIndex = startIndex + currentPageSize;
             const paginatedProducts = products.slice(startIndex, endIndex);
-            
+            const byId = Object.fromEntries(products.map(p => [p.id, p]));
             set({
               products: paginatedProducts,
+              productsById: byId,
               totalProducts: totalCount,
               totalPages: Math.ceil(totalCount / currentPageSize),
               currentPage: currentPage,
@@ -202,15 +230,16 @@ const useProductStore = create(
               lastSearchTerm: searchTerm.trim(),
               error: null
             });
-
+            telemetry.endTimer(t, { total: totalCount, search: true });
             return { data: paginatedProducts, total: totalCount };
           } else {
-            response = await productService.getProducts(currentPage, currentPageSize);
+            const response = await get()._withRetry(() => productService.getProducts(currentPage, currentPageSize), { telemetryKey: 'products.fetch' });
             products = Array.isArray(response) ? response : [response];
             totalCount = products.length;
-            
+            const byId = Object.fromEntries(products.map(p => [p.id, p]));
             set({
               products: products,
+              productsById: byId,
               totalProducts: totalCount,
               totalPages: Math.ceil(totalCount / currentPageSize),
               currentPage: currentPage,
@@ -218,57 +247,72 @@ const useProductStore = create(
               loading: false,
               lastSearchTerm: searchTerm
             });
-
+            // cache page
+            set((s) => ({ pageCache: { ...s.pageCache, [currentPage]: { ts: Date.now(), products } } }));
+            // Trim pageCache (LRU-ish by timestamp) si excede 20 páginas
+            set((s) => {
+              const keys = Object.keys(s.pageCache);
+              if (keys.length <= 20) return {};
+              const sorted = keys
+                .map(k => ({ k, ts: s.pageCache[k].ts }))
+                .sort((a,b) => a.ts - b.ts);
+              const toRemove = sorted.slice(0, keys.length - 20);
+              if (!toRemove.length) return {};
+              const clone = { ...s.pageCache };
+              toRemove.forEach(r => { delete clone[r.k]; });
+              return { pageCache: clone };
+            });
+            telemetry.record('products.pageCache.trim');
+            telemetry.endTimer(t, { total: totalCount });
             return { data: products, total: totalCount };
           }
         } catch (apiError) {
-          const norm = toApiError(apiError, 'Error al cargar productos');
-          const errorMessage = `Error al cargar productos: ${norm.message}`;
+          get()._recordFailure();
+          const norm = toApiError(apiError, 'Error al cargar productos', correlationId);
+          let errorMessage = `Error al cargar productos: ${norm.message}`;
+          if (isConnectionError(apiError)) {
+            errorMessage = getConnectionErrorMessage(apiError);
+          }
           set({
             products: [],
+            productsById: {},
             totalProducts: 0,
             totalPages: 0,
             loading: false,
             error: errorMessage
           });
-
+          telemetry.record('products.fetch.error', { message: errorMessage, code: norm.code, correlationId });
+          // Offline snapshot si había datos previos
+          const prev = get().products;
+          if (prev.length) set({ lastOfflineSnapshot: prev });
+          if (prev.length) get()._persistOfflineSnapshot(prev);
           throw norm;
         }
       },
 
       // Nueva función para búsqueda específica (con caché y cancelación)
   searchProducts: async (searchTerm, options = {}) => {
-        if (!searchTerm.trim()) {
-          // Si no hay término, limpiar productos
-          set({ 
-            products: [], 
-            totalProducts: 0, 
-            totalPages: 0,
-            currentPage: 1,
-            lastSearchTerm: '',
-            error: null
-          });
-          return { data: [], total: 0 };
-        }
-
+        const correlationId = `search_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+        // ...existing code...
         try {
           const term = searchTerm.trim();
           const state = get();
           const { searchCache, cacheTTL } = state;
           const now = Date.now();
           const pageSize = state.pageSize || 10;
-          // Expandir clave de caché para cubrir filtros y tamaño
           const cacheKey = JSON.stringify({ term, pageSize, category: state.filters?.category || 'all', status: state.filters?.status || 'all' });
           const cached = searchCache[cacheKey];
           const isValidCache = cached && now - cached.ts < cacheTTL;
 
-          // Si hay caché válida y no se fuerza refresco, devolver de caché
           if (isValidCache && !options.force) {
+            set((s)=>({ cacheHits: s.cacheHits + 1 }));
+            telemetry.record('products.search.cache.hit', { term, age: now - cached.ts });
             const totalCount = cached.data.length;
             const paginated = cached.data.slice(0, pageSize);
-
+            const byId = Object.fromEntries(cached.data.map(p => [p.id, p]));
             set({
               products: paginated,
+              productsById: byId,
               totalProducts: totalCount,
               totalPages: Math.ceil(totalCount / pageSize),
               currentPage: 1,
@@ -277,48 +321,52 @@ const useProductStore = create(
               lastSearchTerm: term,
               error: null
             });
-
-            // Revalidación opcional en background cuando no hay signal
-            if (options.revalidate && !options.signal) {
+            // Auto revalidación si la entrada está envejecida
+            if ((now - cached.ts) > cacheTTL * 0.5 && !options.revalidate) {
               (async () => {
                 try {
-                  const fresh = await productService.searchProducts(term);
+                  const fresh = await get()._withRetry(() => productService.searchProducts(term), { attempts: 2, telemetryKey: 'products.search.revalidate' });
                   const freshArr = Array.isArray(fresh) ? fresh : [fresh];
-                  // Si cambió el tamaño, actualizar estado y caché
+                  set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: freshArr } } }));
+                  telemetry.record('products.search.revalidate.auto.success', { term, total: freshArr.length });
+                  // Si cambió el tamaño, actualizar vista
                   if (freshArr.length !== totalCount) {
                     const pag = freshArr.slice(0, pageSize);
-                    set({
-                      products: pag,
-                      totalProducts: freshArr.length,
-                      totalPages: Math.ceil(freshArr.length / pageSize),
-                      currentPage: 1,
-                      pageSize,
-                      lastSearchTerm: term,
-                    });
+                    const freshById = Object.fromEntries(freshArr.map(p => [p.id, p]));
+                    set({ products: pag, productsById: freshById, totalProducts: freshArr.length, totalPages: Math.ceil(freshArr.length / pageSize) });
                   }
-                  // Actualizar caché
-                  set((s) => ({
-                    searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: freshArr } }
-                  }));
-                } catch (_) { /* silencioso */ }
+                } catch {
+                  telemetry.record('products.search.revalidate.auto.error', { term });
+                }
               })();
             }
-
             return { data: paginated, total: totalCount };
           }
 
-          // Si llega un AbortController signal, usar ruta directa con cancelación
           if (options.signal) {
+            set((s)=>({ cacheMisses: s.cacheMisses + 1 }));
+            telemetry.record('products.search.cache.miss', { term });
             const response = await productService.searchProducts(term, { signal: options.signal });
             const products = Array.isArray(response) ? response : [response];
             const totalCount = products.length;
             const paginated = products.slice(0, pageSize);
-
-            // Guardar en caché
+            const byId = Object.fromEntries(products.map(p => [p.id, p]));
             set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: products } } }));
-
+            // Trim searchCache si excede 30 entradas
+            set((s) => {
+              const keys = Object.keys(s.searchCache);
+              if (keys.length <= 30) return {};
+              const sorted = keys.map(k => ({ k, ts: s.searchCache[k].ts })).sort((a,b) => a.ts - b.ts);
+              const toRemove = sorted.slice(0, keys.length - 30);
+              if (!toRemove.length) return {};
+              const clone = { ...s.searchCache };
+              toRemove.forEach(r => { delete clone[r.k]; });
+              return { searchCache: clone };
+            });
+            telemetry.record('products.searchCache.trim');
             set({
               products: paginated,
+              productsById: byId,
               totalProducts: totalCount,
               totalPages: Math.ceil(totalCount / pageSize),
               currentPage: 1,
@@ -330,19 +378,30 @@ const useProductStore = create(
             return { data: paginated, total: totalCount };
           }
 
-          // Camino estándar (sin signal): reutiliza fetchProducts
-          // Obtener resultados completos para cachear correctamente y luego paginar en memoria
           const t = telemetry.startTimer('products.search');
+          set((s)=>({ cacheMisses: s.cacheMisses + 1 }));
+          telemetry.record('products.search.cache.miss', { term });
           const response = await productService.searchProducts(term);
           const products = Array.isArray(response) ? response : [response];
           const totalCount = products.length;
           const paginated = products.slice(0, pageSize);
-
-          // Guardar en caché el conjunto completo
+          const byId = Object.fromEntries(products.map(p => [p.id, p]));
           set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: products } } }));
-
+          // Trim searchCache si excede 30 entradas
+          set((s) => {
+            const keys = Object.keys(s.searchCache);
+            if (keys.length <= 30) return {};
+            const sorted = keys.map(k => ({ k, ts: s.searchCache[k].ts })).sort((a,b) => a.ts - b.ts);
+            const toRemove = sorted.slice(0, keys.length - 30);
+            if (!toRemove.length) return {};
+            const clone = { ...s.searchCache };
+            toRemove.forEach(r => { delete clone[r.k]; });
+            return { searchCache: clone };
+          });
+          telemetry.record('products.searchCache.trim');
           set({
             products: paginated,
+            productsById: byId,
             totalProducts: totalCount,
             totalPages: Math.ceil(totalCount / pageSize),
             currentPage: 1,
@@ -351,41 +410,30 @@ const useProductStore = create(
             lastSearchTerm: term,
             error: null
           });
-
           const ms = telemetry.endTimer(t, { total: totalCount });
           telemetry.record('products.search.success', { ms, total: totalCount });
+          get()._recordSuccess();
           return { data: paginated, total: totalCount };
         } catch (error) {
-          // Manejo específico de errores de búsqueda con normalización
-          console.error('Error en searchProducts:', error);
-
           if (error?.name === 'AbortError') {
-            // No actualizar estado en cancelación; salir silenciosamente
             telemetry.record('products.search.abort');
             return { data: [], total: 0, aborted: true };
           }
-
-          const norm = toApiError(error, 'Error al buscar productos');
+          const norm = toApiError(error, 'Error al buscar productos', correlationId);
           let errorMessage = norm.message || 'Error al buscar productos';
-          if (norm.code === 'INTERNAL') {
-            errorMessage = 'Error interno del servidor al buscar. Intenta con términos diferentes.';
-          } else if (norm.code === 'NOT_FOUND') {
-            errorMessage = 'No se encontraron productos con ese término de búsqueda.';
-          } else if (norm.code === 'NETWORK') {
-            errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+          if (isConnectionError(error)) {
+            errorMessage = getConnectionErrorMessage(error);
           }
-
           set({
             products: [],
+            productsById: {},
             totalProducts: 0,
             totalPages: 0,
             currentPage: 1,
             loading: false,
             error: errorMessage,
           });
-
-          telemetry.record('products.search.error', { code: norm.code, message: norm.message });
-
+          telemetry.record('products.search.error', { code: norm.code, message: norm.message, correlationId });
           return { error: errorMessage, data: [], total: 0 };
         }
       },
@@ -393,20 +441,43 @@ const useProductStore = create(
       // Función para cargar página específica
       loadPage: async (page) => {
         const state = get();
+        // usar cache si existe y válida
+        if (!state.lastSearchTerm && state.pageCache[page] && Date.now() - state.pageCache[page].ts < state.pageCacheTTL) {
+          const pc = state.pageCache[page];
+          set({
+            products: pc.products,
+            productsById: Object.fromEntries(pc.products.map(p => [p.id, p])),
+            currentPage: page
+          });
+          telemetry.record('products.pageCache.direct.hit', { page });
+          return { data: pc.products, total: state.totalProducts };
+        }
         return await get().fetchProducts(page, state.pageSize, state.lastSearchTerm || '');
       },
 
-      // Función para cambiar tamaño de página y recargar
-      changePageSize: async (newPageSize) => {
+      // Función para prefetch de la siguiente página
+      prefetchNextPage: async () => {
         const state = get();
-        get().setPageSize(newPageSize);
-  return await get().fetchProducts(1, newPageSize, state.lastSearchTerm || '');
+        if (state.lastSearchTerm) return; // solo prefetch sin búsqueda
+        const next = state.currentPage + 1;
+        if (next > state.totalPages) return;
+        if (state.pageCache[next] && Date.now() - state.pageCache[next].ts < state.pageCacheTTL) return;
+        try {
+          const res = await productService.getProducts(next, state.pageSize);
+          const arr = Array.isArray(res) ? res : [res];
+          set((s) => ({ pageCache: { ...s.pageCache, [next]: { ts: Date.now(), products: arr } } }));
+          telemetry.record('products.prefetch.success', { page: next });
+        } catch (e) {
+          telemetry.record('products.prefetch.error', { page: next });
+        }
       },
 
       // Limpiar productos (para estado inicial)
       clearProducts: () => {
         set({ 
           products: [], 
+          productsById: {},
+          selectedIds: [],
           totalProducts: 0, 
           totalPages: 0,
           currentPage: 1,
@@ -440,75 +511,80 @@ const useProductStore = create(
 
       createProduct: async (productData) => {
         set({ loading: true, error: null });
-
+        const t = telemetry.startTimer('products.create');
         try {
           productService.validateProductData(productData);
           const response = await productService.createProduct(productData);
           const newProduct = response.data || response;
-
-          set((state) => ({
-            products: [newProduct, ...state.products],
-            totalProducts: state.totalProducts + 1,
-            loading: false
-          }));
-
+          set((state) => {
+            const productsById = { ...state.productsById, [newProduct.id]: newProduct };
+            return {
+              products: [newProduct, ...state.products],
+              productsById,
+              totalProducts: state.totalProducts + 1,
+              loading: false
+            };
+          });
+          telemetry.endTimer(t, { ok: true });
+          telemetry.record('products.create.success');
           return newProduct;
         } catch (error) {
-          set({
-            error: error.message || 'Error al crear producto',
-            loading: false
-          });
+          telemetry.record('products.create.error', { message: error?.message });
+          set({ error: error.message || 'Error al crear producto', loading: false });
           throw error;
         }
       },
 
       updateProduct: async (productId, productData) => {
         set({ loading: true, error: null });
-
+        const t = telemetry.startTimer('products.update');
         try {
           productService.validateProductData(productData);
           const response = await productService.updateProduct(productId, productData);
           const updatedProduct = response.data || response;
-
-          set((state) => ({
-            products: state.products.map(product =>
-              product.id === productId ? { ...product, ...updatedProduct } : product
-            ),
-            selectedProduct: state.selectedProduct?.id === productId 
-              ? { ...state.selectedProduct, ...updatedProduct }
-              : state.selectedProduct,
-            loading: false
-          }));
-
+          set((state) => {
+            const products = state.products.map(product => product.id === productId ? { ...product, ...updatedProduct } : product);
+            const productsById = { ...state.productsById, [productId]: { ...state.productsById[productId], ...updatedProduct } };
+            return {
+              products,
+              productsById,
+              selectedProduct: state.selectedProduct?.id === productId ? { ...state.selectedProduct, ...updatedProduct } : state.selectedProduct,
+              loading: false
+            };
+          });
+          telemetry.endTimer(t, { ok: true });
+          telemetry.record('products.update.success');
           return updatedProduct;
         } catch (error) {
-          set({
-            error: error.message || 'Error al actualizar producto',
-            loading: false
-          });
+          telemetry.record('products.update.error', { message: error?.message });
+          set({ error: error.message || 'Error al actualizar producto', loading: false });
           throw error;
         }
       },
 
       deleteProduct: async (productId) => {
         set({ loading: true, error: null });
-
+        const t = telemetry.startTimer('products.delete');
         try {
           await productService.deleteProduct(productId);
-
-          set((state) => ({
-            products: state.products.filter(product => product.id !== productId),
-            totalProducts: Math.max(0, state.totalProducts - 1),
-            selectedProduct: state.selectedProduct?.id === productId ? null : state.selectedProduct,
-            loading: false
-          }));
-
+          set((state) => {
+            const products = state.products.filter(product => product.id !== productId);
+            const { [productId]: _removed, ...rest } = state.productsById;
+            return {
+              products,
+              productsById: rest,
+              totalProducts: Math.max(0, state.totalProducts - 1),
+              selectedProduct: state.selectedProduct?.id === productId ? null : state.selectedProduct,
+              selectedIds: state.selectedIds.filter(id => id !== productId),
+              loading: false
+            };
+          });
+          telemetry.endTimer(t, { ok: true });
+          telemetry.record('products.delete.success');
           return true;
         } catch (error) {
-          set({
-            error: error.message || 'Error al eliminar producto',
-            loading: false
-          });
+          telemetry.record('products.delete.error', { message: error?.message });
+          set({ error: error.message || 'Error al eliminar producto', loading: false });
           throw error;
         }
       },
@@ -517,10 +593,9 @@ const useProductStore = create(
       setSelectedProduct: (product) => set({ selectedProduct: product }),
       
       // Filtro local (para productos ya cargados)
-      setLocalFilters: (newFilters) => 
-        set((state) => ({
-          filters: { ...state.filters, ...newFilters }
-        })),
+      setLocalFilters: (newFilters) => set((state) => ({
+        filters: { ...state.filters, ...newFilters }
+      })), // fixed
 
       refresh: async () => {
         const state = get();
@@ -533,10 +608,15 @@ const useProductStore = create(
 
       reset: () => set({
         products: [],
+        productsById: {},
+        pageCache: {},
+        selectedIds: [],
         selectedProduct: null,
         loading: false,
         error: null,
   searchCache: {},
+        cacheHits: 0,
+        cacheMisses: 0,
         currentPage: 1,
         pageSize: 10,
         totalProducts: 0,
@@ -548,12 +628,27 @@ const useProductStore = create(
           status: '',
           sortBy: 'name',
           sortOrder: 'asc'
-        }
+        },
+        circuit: { openUntil: 0, failures: 0, threshold: 4, cooldownMs: 30000 }
       }),
+      // Attempt to hydrate offline snapshot on startup
+      hydrateFromStorage: () => {
+        try {
+          const raw = window.localStorage.getItem('products_last_offline_snapshot');
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          set({ products: parsed, productsById: Object.fromEntries(parsed.map(p => [p.id, p])), totalProducts: parsed.length });
+          return parsed;
+        } catch (e) {
+          return null;
+        }
+      },
 
       // Selectores memoizados (para consumo en componentes)
       selectors: {
         selectProducts: (state) => state.products,
+        selectProductsById: (state) => state.productsById,
+        selectSelectedIds: (state) => state.selectedIds,
         selectBasicMeta: (state) => ({
           totalProducts: state.totalProducts,
           currentPage: state.currentPage,
@@ -563,7 +658,99 @@ const useProductStore = create(
         selectCategories: (state) => state.categories,
         selectLoadingError: (state) => ({ loading: state.loading, error: state.error }),
         selectLastSearchTerm: (state) => state.lastSearchTerm,
-      }
+        selectCacheStats: (state) => {
+          const hits = state.cacheHits;
+            const misses = state.cacheMisses;
+            const ratio = hits + misses === 0 ? 0 : hits / (hits + misses);
+            return { hits, misses, ratio };
+        },
+      },
+
+      // =================== BULK & OPTIMISTIC ===================
+      toggleSelect: (id) => set((state) => ({
+        selectedIds: state.selectedIds.includes(id)
+          ? state.selectedIds.filter(x => x !== id)
+          : [...state.selectedIds, id]
+      })),
+      clearSelection: () => set({ selectedIds: [] }),
+      selectAllCurrent: () => set((state) => ({ selectedIds: state.products.map(p => p.id) })),
+
+      bulkActivate: async () => {
+        const ids = get().selectedIds;
+        if (!ids.length) return;
+        const correlationId = `bulkAct_${Date.now()}_${ids.length}`;
+        // Optimista
+        const prev = get().productsById;
+        set((state) => {
+          const products = state.products.map(p => ids.includes(p.id) ? { ...p, is_active: true } : p);
+          const productsById = { ...state.productsById };
+          ids.forEach(id => { if (productsById[id]) productsById[id] = { ...productsById[id], is_active: true }; });
+          return { products, productsById };
+        });
+        try {
+          await Promise.all(ids.map((id) => productService.updateProduct(id, { is_active: true })));
+          telemetry.record('products.bulkActivate.success', { count: ids.length, correlationId });
+        } catch (e) {
+          // Rollback
+          set({ productsById: prev, products: Object.values(prev).slice(0, get().products.length) });
+          telemetry.record('products.bulkActivate.error', { count: ids.length, correlationId });
+          set({ error: 'Error en activación masiva' });
+        } finally { get().clearSelection(); }
+      },
+      bulkDeactivate: async () => {
+        const ids = get().selectedIds;
+        if (!ids.length) return;
+        const correlationId = `bulkDeact_${Date.now()}_${ids.length}`;
+        const prev = get().productsById;
+        set((state) => {
+          const products = state.products.map(p => ids.includes(p.id) ? { ...p, is_active: false } : p);
+          const productsById = { ...state.productsById };
+          ids.forEach(id => { if (productsById[id]) productsById[id] = { ...productsById[id], is_active: false }; });
+          return { products, productsById };
+        });
+        try {
+          await Promise.all(ids.map(id => productService.updateProduct(id, { is_active: false })));
+          telemetry.record('products.bulkDeactivate.success', { count: ids.length, correlationId });
+        } catch (e) {
+          set({ productsById: prev, products: Object.values(prev).slice(0, get().products.length) });
+          telemetry.record('products.bulkDeactivate.error', { count: ids.length, correlationId });
+          set({ error: 'Error en desactivación masiva' });
+        } finally { get().clearSelection(); }
+      },
+      optimisticUpdateProduct: async (id, patch) => {
+        const prev = get().productsById[id];
+        if (!prev) return false;
+        const correlationId = `inline_${id}_${Date.now()}`;
+        // Optimista
+        set((state) => {
+            const updated = { ...prev, ...patch };
+            const productsById = { ...state.productsById, [id]: updated };
+            const products = state.products.map((p) => (p.id === id ? updated : p));
+            return { productsById, products };
+        });
+        try {
+          await productService.updateProduct(id, patch);
+          telemetry.record('products.inlineUpdate.success', { id, correlationId });
+          return true;
+        } catch (e) {
+          // Rollback
+          set((state) => {
+            const productsById = { ...state.productsById, [id]: prev };
+            const products = state.products.map((p) => (p.id === id ? prev : p));
+            return { productsById, products, error: 'Error al guardar cambios inline' };
+          });
+          telemetry.record('products.inlineUpdate.error', { id, correlationId });
+          return false;
+        }
+      },
+      // Persistir snapshot offline en localStorage
+      _persistOfflineSnapshot: (snapshot) => {
+        try {
+          window.localStorage.setItem('products_last_offline_snapshot', JSON.stringify(snapshot));
+        } catch (e) {
+          // ignore
+        }
+      },
     }),
     {
       name: 'product-store',

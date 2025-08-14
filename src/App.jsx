@@ -66,7 +66,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <div className="text-lg">Inicializando aplicación...</div>
       </div>
     );
@@ -75,7 +75,7 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-background text-foreground">
           <Routes>
             {/* Ruta de login - siempre accesible */}
             <Route path="/login" element={
@@ -104,13 +104,13 @@ function App() {
                       <div className="space-y-6">
                         <div>
                           <h1 className="text-3xl font-black uppercase tracking-wide">Página no encontrada</h1>
-                          <p className="text-lg font-bold text-gray-600 uppercase tracking-wide">
+                          <p className="text-lg font-bold text-muted-foreground uppercase tracking-wide">
                             La página que buscas no existe.
                           </p>
                         </div>
-                        <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 text-center">
+                        <div className="bg-card text-card-foreground border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 text-center">
                           <h2 className="text-xl font-black uppercase mb-2">Error 404</h2>
-                          <p className="text-gray-600 font-bold mb-4">
+                          <p className="text-muted-foreground font-bold mb-4">
                             Verifica la URL o regresa al dashboard.
                           </p>
                           <a 

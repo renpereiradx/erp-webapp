@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Building, User, Phone, Mail } from 'lucide-react';
 import { useSupplierLogic } from '../hooks/useSupplierLogic';
 import { useThemeStyles } from '../hooks/useThemeStyles';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 const SupplierSelector = ({ 
   selectedSupplier, 
@@ -139,9 +140,7 @@ const SupplierSelector = ({
                       <div className="font-medium text-gray-900">
                         {supplier.name}
                         {!isSupplierActive(supplier) && (
-                          <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-600 rounded">
-                            Inactivo
-                          </span>
+                          <StatusBadge active={false} className="ml-2 align-middle" label="Inactivo" />
                         )}
                       </div>
                       {supplier.contact_person && (
@@ -210,9 +209,7 @@ const SupplierSelector = ({
                 <Building className="w-4 h-4 mr-2" />
                 {selectedSupplierInfo.displayName}
                 {!isSupplierActive(selectedSupplier) && (
-                  <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-600 rounded">
-                    Inactivo
-                  </span>
+                  <StatusBadge active={false} className="ml-2" label="Inactivo" />
                 )}
               </div>
               

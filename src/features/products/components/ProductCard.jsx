@@ -1,7 +1,12 @@
 import React from 'react';
-import { Edit, Trash2, Eye, AlertTriangle, AlertCircle, CheckCircle, DollarSign, Tag, Package } from 'lucide-react';
+import { Edit, Trash2, Eye, AlertTriangle, AlertCircle, CheckCircle, DollarSign, Tag, Package, XCircle } from 'lucide-react';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { createProductSummary, isEnrichedProduct, getStockStatus as computeStockStatus } from '@/utils/productUtils';
+import StatusBadge from '@/components/ui/StatusBadge';
+import { Button } from '@/components/ui/Button';
+import { useI18n } from '@/lib/i18n';
+import EditableField from '@/components/EditableField';
+import { trackRender } from '@/utils/perfMetrics';
 
 /**
  * ProductCard - tarjeta compacta para listado de productos
@@ -11,10 +16,13 @@ import { createProductSummary, isEnrichedProduct, getStockStatus as computeStock
  * - getCategoryName: (id) => string
  * - onView(product), onEdit(product), onDelete(product)
  */
-function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView, onEdit, onDelete }) {
-  const { card, button: themeButton } = useThemeStyles();
+function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView, onEdit, onDelete, onToggleSelect, selected, enableInlineEdit, inlineEditing, onStartInlineEdit, onCancelInlineEdit, onInlineSave }) {
+  const { card, button: themeButton, header: themeHeader, label: themeLabel } = useThemeStyles();
   const productSummary = createProductSummary(product);
   const stockStatus = computeStockStatus(product);
+  const { t } = useI18n();
+
+  trackRender('ProductCard');
 
   const getStockIcon = (status) => {
     switch (status) {
@@ -31,54 +39,79 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
     }
   };
 
-  const statusBadge = () => {
-    const isActive = product.is_active;
-    const type = !isActive ? 'inactive' : (product.stock_quantity && product.stock_quantity < 10 ? 'low-stock' : 'active');
-
-    const style = (() => {
-      if (isNeoBrutalism) {
-        return {
-          background: type === 'inactive' ? 'var(--brutalist-pink)' : type === 'low-stock' ? 'var(--brutalist-orange)' : 'var(--brutalist-lime)',
-          color: '#000000',
-          border: '2px solid var(--border)',
-          borderRadius: '0px',
-          textTransform: 'uppercase',
-          fontWeight: 'bold',
-          fontSize: '0.75rem',
-          padding: '8px 12px',
-          display: 'inline-block',
-          minWidth: '80px',
-          textAlign: 'center'
-        };
-      }
+  // Estilos para chip de bajo stock (mantiene semántica de warning y coherencia con temas)
+  const lowStockChipStyle = (() => {
+    if (isNeoBrutalism) {
       return {
-        background: type === 'inactive' ? 'var(--destructive)' : type === 'low-stock' ? 'var(--warning)' : 'var(--success)',
-        color: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        fontWeight: '500',
-        fontSize: '0.75rem',
-        padding: '4px 8px',
-        display: 'inline-block',
-        minWidth: '80px',
-        textAlign: 'center'
+        background: 'var(--warning)',
+        color: 'var(--warning-foreground)',
+        border: '3px solid var(--border)',
+        borderRadius: '0px',
+        textTransform: 'uppercase',
+        fontWeight: 900,
+        fontSize: '0.65rem',
+        padding: '6px 8px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        minWidth: 'fit-content'
       };
-    })();
+    }
+    return {
+      background: 'var(--warning)',
+      color: 'var(--warning-foreground)',
+      borderRadius: '9999px',
+      fontWeight: 600,
+      fontSize: '0.65rem',
+      padding: '2px 8px',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '4px',
+      minWidth: 'fit-content'
+    };
+  })();
 
-    const icon = !isActive ? <CheckCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />;
+  const [localPrice, setLocalPrice] = React.useState(product.price || '');
+  const [localStock, setLocalStock] = React.useState(product.stock_quantity ?? '');
+  const [saving, setSaving] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState('');
 
-    return (
-      <div style={style}>
-        <div className="flex items-center gap-1">
-          {icon}
-          <span>{isActive ? (isNeoBrutalism ? 'ACTIVO' : 'Activo') : (isNeoBrutalism ? 'INACTIVO' : 'Inactivo')}</span>
-        </div>
-      </div>
-    );
+  React.useEffect(() => {
+    if (inlineEditing) {
+      setLocalPrice(product.price || '');
+      setLocalStock(product.stock_quantity ?? '');
+      setErrorMsg('');
+    }
+  }, [inlineEditing, product.price, product.stock_quantity]);
+
+  const handleSubmitInline = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    const name = e.currentTarget.name.value.trim();
+    const price = localPrice === '' ? null : parseFloat(localPrice);
+    const stock = localStock === '' ? null : parseInt(localStock, 10);
+    if (price != null && (isNaN(price) || price < 0)) {
+      setErrorMsg('Precio inválido');
+      return;
+    }
+    if (stock != null && (isNaN(stock) || stock < 0)) {
+      setErrorMsg('Stock inválido');
+      return;
+    }
+    setSaving(true);
+    await onInlineSave?.(product.id, { name, price, stock_quantity: stock });
+    setSaving(false);
   };
 
   return (
-    <div className={`${card()} hover:shadow-lg transition-shadow relative`}>
+    <div className={`${card('p-4 sm:p-5')} group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 flex flex-col`}>
+      {/* Accent bar */}
+      {!isNeoBrutalism ? (
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60 opacity-80 rounded-t-md" aria-hidden="true" />
+      ) : (
+        <div className="absolute inset-x-0 top-0 h-[3px] bg-border" aria-hidden="true" />
+      )}
+
       {/* Enriched Product Indicators */}
       <div className="absolute top-2 right-2 flex flex-col gap-1">
         {isEnrichedProduct(product) && (
@@ -89,107 +122,176 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
         )}
       </div>
 
-      {/* Header */}
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex-1">
-          <h3 className="font-semibold mb-2 truncate">
-            {product.name || 'Sin nombre'}
-          </h3>
-          <div className="text-xs text-muted-foreground mb-2">
-            {product.code ? `Código: ${product.code}` : `ID: ${product.id}`}
+      {/* Header + Body */}
+      <div className="flex-1">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-start gap-2 flex-1 pr-2 min-w-0">
+            {onToggleSelect && (
+              <input
+                type="checkbox"
+                aria-label={`Seleccionar producto ${product.name || product.id}`}
+                checked={!!selected}
+                onChange={() => onToggleSelect(product.id)}
+                className="mt-1 accent-primary"
+              />
+            )}
+            <div className="flex-1">
+              <h3 className={`${themeHeader('h3')} mb-1 line-clamp-2`} title={product.name || product.id} aria-label={product.name || product.id}>
+                {inlineEditing ? (
+                  <div className="flex flex-col gap-2" aria-label={`Editar producto ${product.name || product.id}`}> 
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <EditableField
+                        value={product.name}
+                        name="name"
+                        label="Nombre"
+                        onSave={async (val) => onInlineSave?.(product.id, { name: val })}
+                        validate={(v) => !v.trim() ? 'Requerido' : ''}
+                      />
+                      <EditableField
+                        value={product.price}
+                        name="price"
+                        label="Precio"
+                        type="number"
+                        onSave={async (val) => {
+                          const num = parseFloat(val);
+                          if (isNaN(num) || num < 0) return false;
+                          return onInlineSave?.(product.id, { price: num });
+                        }}
+                        validate={(v) => v !== '' && (isNaN(parseFloat(v)) || parseFloat(v) < 0) ? 'Inválido' : ''}
+                      />
+                      <EditableField
+                        value={product.stock_quantity}
+                        name="stock"
+                        label="Stock"
+                        type="number"
+                        onSave={async (val) => {
+                          const num = parseInt(val, 10);
+                          if (isNaN(num) || num < 0) return false;
+                          return onInlineSave?.(product.id, { stock_quantity: num });
+                        }}
+                        validate={(v) => v !== '' && (isNaN(parseInt(v,10)) || parseInt(v,10) < 0) ? 'Inválido' : ''}
+                      />
+                      <button type="button" onClick={onCancelInlineEdit} className="text-red-500 text-xs font-medium">{t('products.inline.cancel')}</button>
+                    </div>
+                  </div>
+                ) : (
+                  product.name || 'Sin nombre'
+                )}
+              </h3>
+              <div className={`text-xs text-muted-foreground ${themeLabel()}`}>
+                {product.code ? `Código: ${product.code}` : `ID: ${product.id}`}
+              </div>
+            </div>
           </div>
-        </div>
-        {statusBadge()}
-      </div>
-
-      {/* Body */}
-      <div className="space-y-3 mb-4">
-        {/* Category */}
-        <div className="flex justify-between items-center">
-          <span className="text-muted-foreground text-xs">Categoría:</span>
-          <span className="text-xs">
-            {productSummary.category?.name || getCategoryName(product.category_id)}
-          </span>
-        </div>
-
-        {/* Price */}
-        <div className="flex justify-between items-center">
-          <span className="text-muted-foreground text-xs">
-            {productSummary.hasUnitPricing ? 'Precio/Unidad:' : 'Precio:'}
-          </span>
-          <div className="flex items-center gap-1">
-            {productSummary.priceFormatted ? (
-              <span className="text-xs font-medium text-green-600">{productSummary.priceFormatted}</span>
-            ) : productSummary.price ? (
-              <span className="text-xs font-medium text-green-600">{productSummary.price.formatted}</span>
-            ) : (
-              <span className="text-xs text-muted-foreground">{product.price ? `$${parseFloat(product.price).toFixed(2)}` : 'N/A'}</span>
-            )}
-            {(productSummary.priceFormatted || productSummary.price) && (
-              <DollarSign className="w-3 h-3 text-green-600" />
-            )}
-            {productSummary.hasUnitPricing && (
-              <Tag className="w-3 h-3 text-blue-500" title="Múltiples unidades disponibles" />
-            )}
-          </div>
-        </div>
-
-        {/* Stock */}
-        <div className="flex justify-between items-center">
-          <span className="text-muted-foreground text-xs">Stock:</span>
-          <div className="flex items-center gap-1">
-            <span
-              className="font-medium text-xs"
-              style={{
-                color: stockStatus.color === 'red' ? '#ef4444' :
-                  stockStatus.color === 'orange' ? '#f97316' :
-                  stockStatus.color === 'blue' ? '#3b82f6' :
-                  stockStatus.color === 'green' ? '#10b981' : '#6b7280'
-              }}
-            >
-              {stockStatus.text}
-              {product.stock_quantity !== undefined && product.stock_quantity !== null && (
-                <span className="ml-1 text-xs opacity-75">({product.stock_quantity})</span>
+          {/* Move badges absolute to avoid title width issues */}
+          <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <StatusBadge active={!!product.is_active} />
+              {!!product.is_active && product.stock_quantity != null && product.stock_quantity < 10 && (
+                <span style={lowStockChipStyle}>
+                  <AlertCircle className="w-3 h-3" />
+                  <span>{isNeoBrutalism ? 'BAJO STOCK' : 'Bajo stock'}</span>
+                </span>
               )}
-            </span>
-            {getStockIcon(stockStatus.status)}
+            </div>
           </div>
         </div>
 
-        {/* Description */}
-        {productSummary.description && (
-          <div className="border-t pt-2">
-            <p className="text-xs text-muted-foreground line-clamp-2" title={productSummary.description.text}>
-              {productSummary.description.text}
-            </p>
+        {/* Body */}
+        <div className="space-y-3">
+          {/* Category */}
+          <div className="flex justify-between items-center">
+            <span className={`text-muted-foreground text-xs ${themeLabel()}`}>Categoría:</span>
+            <span className={`text-xs ${themeLabel()}`}>
+              {productSummary.category?.name || getCategoryName(product.category_id)}
+            </span>
           </div>
-        )}
+
+          {/* Price */}
+          <div className="flex justify-between items-center">
+            <span className={`text-muted-foreground text-xs ${themeLabel()}`}>
+              {productSummary.hasUnitPricing ? 'Precio/Unidad:' : 'Precio:'}
+            </span>
+            <div className="flex items-center gap-1">
+              {productSummary.priceFormatted ? (
+                <span className="text-xs font-medium text-green-600">{productSummary.priceFormatted}</span>
+              ) : productSummary.price ? (
+                <span className="text-xs font-medium text-green-600">{productSummary.price.formatted}</span>
+              ) : (
+                <span className="text-xs text-muted-foreground">{product.price ? `$${parseFloat(product.price).toFixed(2)}` : 'N/A'}</span>
+              )}
+              {(productSummary.priceFormatted || productSummary.price) && (
+                <DollarSign className="w-3 h-3 text-green-600" />
+              )}
+              {productSummary.hasUnitPricing && (
+                <Tag className="w-3 h-3 text-blue-500" title="Múltiples unidades disponibles" />
+              )}
+            </div>
+          </div>
+
+          {/* Stock */}
+          <div className="flex justify-between items-center">
+            <span className={`text-muted-foreground text-xs ${themeLabel()}`}>Stock:</span>
+            <div className="flex items-center gap-1">
+              <span
+                className={`font-medium text-xs ${themeLabel()}`}
+                style={{
+                  color: stockStatus.color === 'red' ? '#ef4444' :
+                    stockStatus.color === 'orange' ? '#f97316' :
+                    stockStatus.color === 'blue' ? '#3b82f6' :
+                    stockStatus.color === 'green' ? '#10b981' : '#6b7280'
+                }}
+              >
+                {stockStatus.text}
+                {product.stock_quantity !== undefined && product.stock_quantity !== null && (
+                  <span className="ml-1 text-xs opacity-75">({product.stock_quantity})</span>
+                )}
+              </span>
+              {getStockIcon(stockStatus.status)}
+            </div>
+          </div>
+
+          {/* Description */}
+          {productSummary.description && (
+            <div className="border-t pt-2">
+              <p className={`text-xs text-muted-foreground line-clamp-2 ${themeLabel()}`} title={productSummary.description.text}>
+                {productSummary.description.text}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
-        <button onClick={() => onView?.(product)} className={`${themeButton('secondary')} flex-1 px-3 py-2 text-xs`}>
+      <div className="flex gap-2 mt-3">
+        <Button onClick={() => onView?.(product)} variant="secondary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50">
           <Eye className="w-4 h-4 mr-1" /> Ver
-        </button>
-        <button onClick={() => onEdit?.(product)} className={`${themeButton('primary')} flex-1 px-3 py-2 text-xs`}>
+        </Button>
+        <Button onClick={() => onEdit?.(product)} variant="primary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50">
           <Edit className="w-4 h-4 mr-1" /> Editar
-        </button>
-  <button onClick={() => onDelete?.(product)} className={`${themeButton('destructive')} px-3 py-2`}>
+        </Button>
+        {enableInlineEdit && !inlineEditing && (
+          <Button onClick={() => onStartInlineEdit?.(product.id)} variant="outline" size="sm" className="flex-1 text-xs">
+            Inline
+          </Button>
+        )}
+        <Button onClick={() => onDelete?.(product)} variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" aria-label="Eliminar producto">
           <Trash2 className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );
 }
 
 const ProductCard = React.memo(ProductCardComponent, (prev, next) => {
-  // Memoizar en base a id y flags clave
   return (
     prev.product?.id === next.product?.id &&
     prev.product?.is_active === next.product?.is_active &&
     prev.product?.stock_quantity === next.product?.stock_quantity &&
     prev.product?.price === next.product?.price &&
-    prev.isNeoBrutalism === next.isNeoBrutalism
+    prev.isNeoBrutalism === next.isNeoBrutalism &&
+    prev.selected === next.selected
   );
 });
 

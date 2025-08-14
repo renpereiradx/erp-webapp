@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import PageHeader from '@/components/ui/PageHeader';
 
 // Custom hooks para lógica de negocio
 import { useThemeStyles } from '@/hooks/useThemeStyles';
@@ -245,12 +246,11 @@ const BookingSales = () => {
 
   return (
     <div className={styles.container()}>
-      <div className="mb-8">
-        <h1 className={styles.header()}>Sistema de Reservas y Ventas</h1>
-        <p className={styles.body()}>
-          Gestiona reservas de servicios y ventas de productos de forma integrada
-        </p>
-      </div>
+      <PageHeader
+        title="Reservas y Ventas"
+        subtitle="Gestiona reservas de servicios y ventas de productos de forma integrada"
+        breadcrumb={[{ label: 'Operaciones', href: '/dashboard' }, { label: 'Reservas y Ventas' }]}
+      />
 
       <NotificationBanner />
 

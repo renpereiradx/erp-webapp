@@ -11,7 +11,8 @@ import {
   PURCHASE_VALIDATION_RULES, 
   PURCHASE_STATES,
   PURCHASE_MESSAGES,
-  TAX_RATES 
+  TAX_RATES,
+  PURCHASE_TAX_CONFIG 
 } from '../constants/purchaseData';
 import { DELIVERY_METHODS } from '../constants/purchaseData';
 

@@ -15,38 +15,69 @@ const useSupplierStore = create(
       fetchSuppliers: async (page = 1, pageSize = 10, search = '') => {
         set({ loading: true, error: null });
         try {
-          let response = await supplierService.getSuppliers({ page, limit: pageSize, search });
-          // Si la búsqueda no devuelve nada, la API puede retornar null. Lo normalizamos a un array vacío.
-          if (!response) {
-            response = [];
+          let result = await supplierService.getSuppliers({ page, limit: pageSize, search });
+          // Asegurar estructura consistente del servicio
+          if (!result) {
+            result = { success: false, data: null, error: 'Respuesta vacía del servicio' };
           }
 
-          // Si la respuesta tiene una propiedad 'data' y 'pagination', la usamos
-          // de lo contrario, asumimos que la respuesta es directamente el array de proveedores
-          const isPaginated = response.data && response.pagination;
-          
+          if (result.success === false) {
+            set({ error: result.error || 'Error al obtener proveedores', loading: false });
+            return;
+          }
+
+          const raw = result.data;
+
+          // Detectar si viene paginado con { data, pagination }
+          const hasPagination = raw && typeof raw === 'object' && Array.isArray(raw.data) && raw.pagination;
+
+          // Normalizar la lista de proveedores
+          let list = [];
+          if (hasPagination) {
+            list = Array.isArray(raw.data) ? raw.data : [];
+          } else if (Array.isArray(raw)) {
+            list = raw;
+          } else if (raw && Array.isArray(raw.results)) {
+            list = raw.results;
+          } else if (raw && typeof raw === 'object') {
+            // A veces el backend puede devolver un único objeto
+            list = [raw];
+          } else {
+            list = [];
+          }
+
+          // Filtrar nulos/indefinidos
+          const safeList = list.filter(Boolean);
+
           set({
-            suppliers: isPaginated ? response.data.filter(s => s) : response.filter(s => s),
-            pagination: isPaginated ? response.pagination : {
-              current_page: 1,
-              per_page: response.length,
-              total: response.length,
-              total_pages: 1,
-            },
+            suppliers: safeList,
+            pagination: hasPagination
+              ? raw.pagination
+              : {
+                  current_page: page,
+                  per_page: safeList.length,
+                  total: safeList.length,
+                  total_pages: 1,
+                },
             loading: false,
           });
         } catch (error) {
-          set({ error: error.message, loading: false });
+          set({ error: error.message || 'Error inesperado al obtener proveedores', loading: false });
         }
       },
 
       createSupplier: async (supplierData) => {
         set({ loading: true });
         try {
-          const newSupplier = await supplierService.createSupplier(supplierData);
+          const result = await supplierService.createSupplier(supplierData);
+          if (result && result.success === false) {
+            throw new Error(result.error || 'Error al crear el proveedor');
+          }
+          const newSupplier = result?.data ?? result; // compat
           set((state) => ({ suppliers: [...state.suppliers, newSupplier], loading: false }));
+          return newSupplier;
         } catch (error) {
-          set({ loading: false, error: error.message });
+          set({ loading: false, error: error.message || 'Error al crear el proveedor' });
           throw error;
         }
       },
@@ -54,13 +85,18 @@ const useSupplierStore = create(
       updateSupplier: async (id, supplierData) => {
         set({ loading: true });
         try {
-          const updatedSupplier = await supplierService.updateSupplier(id, supplierData);
+          const result = await supplierService.updateSupplier(id, supplierData);
+          if (result && result.success === false) {
+            throw new Error(result.error || 'Error al actualizar el proveedor');
+          }
+          const updatedSupplier = result?.data ?? result; // compat
           set((state) => ({
             suppliers: state.suppliers.map((s) => (s.id === id ? updatedSupplier : s)),
             loading: false,
           }));
+          return updatedSupplier;
         } catch (error) {
-          set({ loading: false, error: error.message });
+          set({ loading: false, error: error.message || 'Error al actualizar el proveedor' });
           throw error;
         }
       },
@@ -68,13 +104,17 @@ const useSupplierStore = create(
       deleteSupplier: async (id) => {
         set({ loading: true });
         try {
-          await supplierService.deleteSupplier(id);
-          set((state) => ({ 
+          const result = await supplierService.deleteSupplier(id);
+          if (result && result.success === false) {
+            throw new Error(result.error || 'Error al eliminar el proveedor');
+          }
+          set((state) => ({
             suppliers: state.suppliers.filter((s) => s.id !== id),
-            loading: false 
+            loading: false,
           }));
+          return true;
         } catch (error) {
-          set({ loading: false, error: error.message });
+          set({ loading: false, error: error.message || 'Error al eliminar el proveedor' });
           throw error;
         }
       },

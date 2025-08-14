@@ -303,7 +303,7 @@ const PurchaseOrdersList = ({ theme }) => {
             <Button
               onClick={() => handleViewOrder(order)}
               size="sm"
-              variant="outline"
+              variant="secondary"
             >
               <Eye className="w-4 h-4" />
             </Button>
@@ -312,16 +312,14 @@ const PurchaseOrdersList = ({ theme }) => {
                 <Button
                   onClick={() => updateOrderStatus(order.id, PURCHASE_STATES.CONFIRMED)}
                   size="sm"
-                  variant="outline"
-                  className="text-green-600"
+                  variant="green"
                 >
                   <Check className="w-4 h-4" />
                 </Button>
                 <Button
                   onClick={() => cancelOrder(order.id, 'Cancelado por usuario')}
                   size="sm"
-                  variant="outline"
-                  className="text-red-600"
+                  variant="destructive"
                 >
                   <X className="w-4 h-4" />
                 </Button>
