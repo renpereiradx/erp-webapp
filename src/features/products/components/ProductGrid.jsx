@@ -17,8 +17,14 @@ export default function ProductGrid({
   onView,
   onEdit,
   onDelete,
-  itemMinWidth = 260,
+  itemMinWidth = 300,
   gap = '1.5rem',
+  onToggleSelect,
+  selectedIds = [],
+  inlineEditingId,
+  onStartInlineEdit,
+  onCancelInlineEdit,
+  onInlineSave,
 }) {
   const [focusedIndex, setFocusedIndex] = React.useState(0);
   const itemRefs = React.useRef({});
@@ -132,8 +138,10 @@ export default function ProductGrid({
             display: 'grid',
             gridTemplateColumns: `repeat(auto-fill, minmax(${itemMinWidth}px, 1fr))`,
             gap,
+            alignContent: 'start',
+            paddingTop: '0.25rem',
           }}
-          className={className}
+          className={`${className || ''} virtuoso-grid-list`.trim()}
           role="list"
           aria-label="Listado de productos"
         >
@@ -145,8 +153,9 @@ export default function ProductGrid({
 
   const Item = React.useMemo(() => {
     return function ItemComponent({ children, ...rest }) {
+      const cls = rest.className ? `${rest.className} virtuoso-grid-item` : 'virtuoso-grid-item';
       return (
-        <div {...rest} style={{ width: '100%' }}>
+        <div {...rest} className={cls} style={{ width: '100%' }}>
           {children}
         </div>
       );
@@ -177,11 +186,25 @@ export default function ProductGrid({
             onView={onView}
             onEdit={onEdit}
             onDelete={onDelete}
+            onToggleSelect={onToggleSelect}
+            selected={selectedIds.includes(products[index].id)}
+            enableInlineEdit
+            inlineEditing={inlineEditingId === products[index].id}
+            onStartInlineEdit={() => onStartInlineEdit?.(products[index].id)}
+            onCancelInlineEdit={onCancelInlineEdit}
+            onInlineSave={onInlineSave}
           />
         </div>
       )}
       components={{ List, Item }}
       computeItemKey={(index) => products[index].id}
+      endReached={() => {
+        try {
+          // batch size metric (approx: items rendered length)
+          const batch = products.length;
+          import('@/utils/telemetry').then(m => m.telemetry.record('products.render.batch', { batch }));
+        } catch {}
+      }}
     />
   );
 }

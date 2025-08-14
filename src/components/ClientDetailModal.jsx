@@ -1,6 +1,8 @@
 import React from 'react';
 import { useTheme } from 'next-themes';
 import { X, User, Mail, Phone, Hash, Calendar, Info } from 'lucide-react';
+import StatusBadge from '@/components/ui/StatusBadge';
+import { Button } from '@/components/ui/Button';
 
 // Se asume que los helpers de estilo están disponibles o se importan
 const getTypographyStyles = (theme, level) => { /* ... */ };
@@ -52,9 +54,9 @@ const ClientDetailModal = ({ isOpen, onClose, client }) => {
   return (
     <div style={modalStyles.overlay} onClick={onClose}>
       <div style={modalStyles.content} onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
+        <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-4 right-4">
           <X />
-        </button>
+        </Button>
         
         <div className="flex items-center mb-6">
           <div className="w-16 h-16 rounded-full flex items-center justify-center bg-primary text-primary-foreground mr-4">
@@ -62,9 +64,8 @@ const ClientDetailModal = ({ isOpen, onClose, client }) => {
           </div>
           <div>
             <h2 style={getTypographyStyles(theme, 'heading')}>{client.name} {client.last_name}</h2>
-            <div style={getBadgeStyles(theme, client.status)}>
-              {client.status ? 'Activo' : 'Inactivo'}
-            </div>
+            {/* Reemplazo de badge manual por StatusBadge */}
+            <StatusBadge active={!!client.status} />
           </div>
         </div>
 

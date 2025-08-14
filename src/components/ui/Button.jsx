@@ -33,9 +33,9 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
         fontWeight: '600',
         textTransform: 'none',
         letterSpacing: 'normal',
-        borderRadius: 'var(--fluent-corner-radius-medium)',
+        borderRadius: 'var(--fluent-corner-radius-medium, 4px)',
         boxShadow: variant === 'ghost' || variant === 'link' ? 'none' : 'var(--fluent-shadow-2)',
-        transition: 'all 0.1s var(--fluent-curve-easy-ease, cubic-bezier(0.33, 0, 0.67, 1))',
+        transition: 'all var(--fluent-duration-fast, 0.1s) var(--fluent-curve-easy-ease, cubic-bezier(0.33, 0, 0.67, 1))',
         fontFamily: 'var(--fluent-font-family-base, "Segoe UI", system-ui, sans-serif)',
         position: 'relative',
         overflow: 'hidden'
@@ -103,13 +103,14 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
         },
         outline: { 
           backgroundColor: 'transparent', 
-          color: 'var(--fluent-text-primary)',
+          color: 'var(--fluent-brand-primary)',
           border: '1px solid var(--fluent-border-neutral)',
           boxShadow: 'none'
         },
         secondary: { 
-          backgroundColor: 'var(--fluent-surface-tertiary)', 
-          color: 'var(--fluent-text-primary)',
+          // Celeste background with white text, using brand secondary
+          backgroundColor: 'var(--fluent-brand-secondary, var(--fluent-brand-primary-hover))', 
+          color: 'var(--fluent-text-on-accent)',
           boxShadow: 'var(--fluent-shadow-2)'
         },
         ghost: { 
@@ -120,7 +121,7 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
         },
         link: { 
           backgroundColor: 'transparent', 
-          color: 'var(--fluent-text-accent)', 
+          color: 'var(--fluent-brand-primary)', 
           border: 'none', 
           boxShadow: 'none', 
           textDecoration: 'underline' 
@@ -248,6 +249,15 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
   };
   
   const getSizeStyles = () => {
+    if (isFluent) {
+      const sizes = {
+        default: { height: '2rem', padding: '0 1rem', fontSize: '0.875rem' }, // 32px
+        sm: { height: '1.5rem', padding: '0 0.75rem', fontSize: '0.75rem' }, // 24px
+        lg: { height: '2.5rem', padding: '0 1.25rem', fontSize: '0.875rem' }, // 40px
+        icon: { height: '2rem', width: '2rem', padding: '0' }, // 32px
+      };
+      return sizes[size] || sizes.default;
+    }
     const sizes = {
       default: { height: '2.5rem', padding: '0 1.5rem' },
       sm: { height: '2rem', padding: '0 1rem', fontSize: '0.875rem' },
@@ -275,11 +285,17 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
       onMouseEnter={(e) => {
         if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
           e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
-        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--fluent-shadow-4)';
-          e.target.style.transform = 'translateY(-1px)';
+        } else if (isFluent && variant !== 'link') {
+          e.target.style.boxShadow = variant === 'ghost' ? 'none' : 'var(--fluent-shadow-4)';
+          e.target.style.transform = variant === 'ghost' ? 'none' : 'translateY(-1px)';
           if (variant === 'outline') {
             e.target.style.backgroundColor = 'var(--fluent-surface-card-hover)';
+          }
+          if (variant === 'secondary') {
+            e.target.style.backgroundColor = 'var(--fluent-brand-secondary-hover, var(--fluent-brand-primary))';
+          }
+          if (variant === 'ghost') {
+            e.target.style.backgroundColor = 'var(--fluent-surface-subtle-hover, transparent)';
           }
         } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
           e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
@@ -292,10 +308,16 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
       onMouseLeave={(e) => {
         if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
           e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)';
-        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--fluent-shadow-2)';
+        } else if (isFluent && variant !== 'link') {
+          e.target.style.boxShadow = variant === 'ghost' ? 'none' : 'var(--fluent-shadow-2)';
           e.target.style.transform = 'translateY(0px)';
           if (variant === 'outline') {
+            e.target.style.backgroundColor = 'transparent';
+          }
+          if (variant === 'secondary') {
+            e.target.style.backgroundColor = 'var(--fluent-brand-secondary, var(--fluent-brand-primary-hover))';
+          }
+          if (variant === 'ghost') {
             e.target.style.backgroundColor = 'transparent';
           }
         } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
@@ -309,11 +331,17 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
       onMouseDown={(e) => {
         if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
           e.target.style.boxShadow = 'none';
-        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--fluent-shadow-2)';
+        } else if (isFluent && variant !== 'link') {
+          e.target.style.boxShadow = variant === 'ghost' ? 'none' : 'var(--fluent-shadow-2)';
           e.target.style.transform = 'translateY(0px)';
           if (variant === 'outline') {
             e.target.style.backgroundColor = 'var(--fluent-surface-card-pressed)';
+          }
+          if (variant === 'secondary') {
+            e.target.style.backgroundColor = 'var(--fluent-brand-secondary-pressed, var(--fluent-brand-primary-pressed, var(--fluent-brand-primary)))';
+          }
+          if (variant === 'ghost') {
+            e.target.style.backgroundColor = 'var(--fluent-surface-subtle-pressed, transparent)';
           }
         } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
           e.target.style.boxShadow = '0 6px 12px rgba(0,0,0,0.3)';
@@ -326,11 +354,17 @@ const Button = React.forwardRef(({ className, variant = "default", size = "defau
       onMouseUp={(e) => {
         if (isNeoBrutalist && variant !== 'ghost' && variant !== 'link') {
           e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
-        } else if (isFluent && variant !== 'ghost' && variant !== 'link') {
-          e.target.style.boxShadow = 'var(--fluent-shadow-4)';
-          e.target.style.transform = 'translateY(-1px)';
+        } else if (isFluent && variant !== 'link') {
+          e.target.style.boxShadow = variant === 'ghost' ? 'none' : 'var(--fluent-shadow-4)';
+          e.target.style.transform = variant === 'ghost' ? 'none' : 'translateY(-1px)';
           if (variant === 'outline') {
             e.target.style.backgroundColor = 'var(--fluent-surface-card-hover)';
+          }
+          if (variant === 'secondary') {
+            e.target.style.backgroundColor = 'var(--fluent-brand-secondary-hover, var(--fluent-brand-primary))';
+          }
+          if (variant === 'ghost') {
+            e.target.style.backgroundColor = 'var(--fluent-surface-subtle-hover, transparent)';
           }
         } else if (isMaterial && variant !== 'ghost' && variant !== 'link') {
           e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';

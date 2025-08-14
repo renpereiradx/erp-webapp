@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import PageHeader from '@/components/ui/PageHeader';
 
 // Custom Hooks
 import { useThemeStyles } from '@/hooks/useThemeStyles';
@@ -285,13 +286,11 @@ const Purchases = () => {
 
   return (
     <div className={styles.container()}>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className={styles.header()}>Gestión de Compras</h1>
-        <p className={styles.body()}>
-          Administra compras a proveedores, controla inventario y gestiona órdenes de compra
-        </p>
-      </div>
+      <PageHeader
+        title="Compras"
+        subtitle="Administra compras a proveedores, controla inventario y órdenes de compra"
+        breadcrumb={[{ label: 'Operaciones', href: '/dashboard' }, { label: 'Compras' }]}
+      />
 
       <NotificationBanner />
 

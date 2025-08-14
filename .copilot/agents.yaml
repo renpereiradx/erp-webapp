@@ -1,0 +1,35 @@
+agents:
+  - name: fast_ui_helper
+    model: gpt-5-mini
+    tasks: [generate_skeletons, validate_jsx, suggest_tailwind_classes]
+    files:
+      - path: /src/components/
+        purpose: "Generar estructuras básicas y sugerencias rápidas de estilo"
+
+  - name: visual_builder
+    model: gpt-4o
+    tasks: [generate_ui, improve_accessibility, create_examples]
+    files:
+      - path: /src/
+        purpose: "Crear componentes visuales y mejorar experiencia de usuario"
+
+  - name: semantic_ui_refactorer
+    model: claude-3.5-sonnet-4
+    tasks: [rename_props, refactor_flows, enforce_naming_conventions]
+    files:
+      - path: /src/
+        purpose: "Refactorizar semánticamente componentes y lógica de UI"
+
+  - name: strategic_ui_planner
+    model: claude-3.7-thinking
+    tasks: [design_hooks, simulate_edge_cases, plan_ui_architecture]
+    files:
+      - path: /src/
+        purpose: "Diseñar arquitectura de componentes y flujos complejos"
+
+  - name: deep_ui_architect
+    model: gpt-5
+    tasks: [refactor_state_logic, optimize_rendering, restructure_components]
+    files:
+      - path: /src/
+        purpose: "Refactorizar lógica de estado y arquitectura React"

@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/label';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
   const { theme } = useTheme();
@@ -168,10 +169,12 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: isNeoBrutalism ? '0px' : '8px', border: isNeoBrutalism ? '2px solid var(--border)' : '1px solid var(--border)', background: 'var(--muted)' }}>
               <Label htmlFor="status" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none' }}>Estado</Label>
-              <Button type="button" variant={'ghost'} onClick={handleStatusToggle} style={{ color: formData.status ? 'var(--success)' : 'var(--destructive)' }}>
+              <div className="flex items-center gap-2">
+                <StatusBadge active={!!formData.status} />
+                <Button type="button" variant={'ghost'} onClick={handleStatusToggle} aria-label="Alternar estado">
                   {formData.status ? <ToggleRight className="h-6 w-6" /> : <ToggleLeft className="h-6 w-6" />}
-                  <span style={{ fontWeight: 'bold' }}>{formData.status ? 'Activo' : 'Inactivo'}</span>
-              </Button>
+                </Button>
+              </div>
             </div>
           </div>
 

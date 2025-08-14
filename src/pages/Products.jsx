@@ -4,7 +4,7 @@
  * Incluye CRUD completo con modales y gestión de descripciones, precios y stock
  */
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useTheme } from 'next-themes';
 import { 
   Plus, 
@@ -33,10 +33,11 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import useProductStore from '@/store/useProductStore';
-import { shallow } from 'zustand/shallow';
 import { useProductFilters } from '@/features/products/hooks/useProductFilters';
 import useAuthStore from '@/store/useAuthStore';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useI18n } from '@/lib/i18n';
+import { startFPS, getPerfSnapshot } from '@/utils/perfMetrics';
 const ProductModal = React.lazy(() => import('@/components/ProductModal'));
 const ProductDetailModal = React.lazy(() => import('@/components/ProductDetailModal'));
 const DeleteProductModal = React.lazy(() => import('@/components/DeleteProductModal'));
@@ -46,176 +47,191 @@ import { useToast } from '@/hooks/useToast';
 import ProductGrid from '@/features/products/components/ProductGrid';
 import ProductSkeletonGrid from '@/features/products/components/ProductSkeletonGrid';
 import { telemetry } from '@/utils/telemetry';
+import PageHeader from '@/components/ui/PageHeader';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 const Products = () => {
   const { theme } = useTheme();
   const { button: themeButton, input: themeInput, card, header: themeHeader, label: themeLabel, body: themeBody } = useThemeStyles();
   const { toasts, success, error: showError, errorFrom, removeToast } = useToast();
   const { isAuthenticated, login } = useAuthStore();
-  const {
-    products,
-    isLoading,
-    storeError,
-    totalProducts,
-    currentPage,
-    totalPages,
-    pageSize,
-    categories,
-    lastSearchTerm,
-    fetchCategories,
-    searchProducts,
-    loadPage,
-    changePageSize,
-    clearProducts,
-    deleteProduct,
-    clearError,
-  } = useProductStore((s) => ({
-    products: s.products,
-    isLoading: s.loading,
-    storeError: s.error,
-    totalProducts: s.totalProducts,
-    currentPage: s.currentPage,
-    totalPages: s.totalPages,
-    pageSize: s.pageSize,
-    categories: s.categories,
-    lastSearchTerm: s.lastSearchTerm,
-    fetchCategories: s.fetchCategories,
-    searchProducts: s.searchProducts,
-    loadPage: s.loadPage,
-    changePageSize: s.changePageSize,
-    clearProducts: s.clearProducts,
-    deleteProduct: s.deleteProduct,
-    clearError: s.clearError,
-  }), shallow);
+  const { t } = useI18n();
+  // Usar selectores específicos para evitar problemas de snapshot
+  const products = useProductStore((s) => s.products);
+  const isLoading = useProductStore((s) => s.loading);
+  const storeError = useProductStore((s) => s.error);
+  const totalProducts = useProductStore((s) => s.totalProducts);
+  const currentPage = useProductStore((s) => s.currentPage);
+  const totalPages = useProductStore((s) => s.totalPages);
+  const pageSize = useProductStore((s) => s.pageSize);
+  const categories = useProductStore((s) => s.categories);
+  const lastSearchTerm = useProductStore((s) => s.lastSearchTerm);
+  const selectedIds = useProductStore((s) => s.selectedIds);
 
-  // Estados y handlers de búsqueda/filtros centralizados en hook feature
-  const {
-    apiSearchTerm,
-    setApiSearchTerm,
-    localSearchTerm,
-    setLocalSearchTerm,
-    selectedCategory,
-    setSelectedCategory,
-    selectedStock,
-    setSelectedStock,
-    filteredProducts,
-    handleApiSearch,
-    handleApiSearchKeyPress,
-    handleClearSearch,
-    minChars,
-  } = useProductFilters({
-    products,
-    categories,
-    onApiSearch: searchProducts,
-  onClear: clearProducts,
-  persistKey: 'products.filters.v1',
-  autoSearch: true,
-  minChars: 4,
-  });
+  // Acciones separadas para evitar problemas de snapshot
+  const fetchCategories = useProductStore((s) => s.fetchCategories);
+  const searchProducts = useProductStore((s) => s.searchProducts);
+  const loadPage = useProductStore((s) => s.loadPage);
+  const changePageSize = useProductStore((s) => s.changePageSize);
+  const clearProducts = useProductStore((s) => s.clearProducts);
+  const deleteProduct = useProductStore((s) => s.deleteProduct);
+  const clearError = useProductStore((s) => s.clearError);
+  const toggleSelect = useProductStore((s) => s.toggleSelect);
+  const clearSelection = useProductStore((s) => s.clearSelection);
+  const selectAllCurrent = useProductStore((s) => s.selectAllCurrent);
+  const bulkActivate = useProductStore((s) => s.bulkActivate);
+  const bulkDeactivate = useProductStore((s) => s.bulkDeactivate);
+  const optimisticUpdateProduct = useProductStore((s) => s.optimisticUpdateProduct);
+  const hydrateFromStorage = useProductStore((s) => s.hydrateFromStorage);
 
-  // Atajos de teclado: '/' enfoca la búsqueda, 'Escape' limpia búsqueda local
-  useEffect(() => {
-    const handler = (e) => {
-      // Evitar interferir si se escribe en un input/textarea
-      const tag = (e.target?.tagName || '').toLowerCase();
-      const typing = tag === 'input' || tag === 'textarea' || e.target?.isContentEditable;
-      if (typing) return;
-      if (e.key === '/') {
-        e.preventDefault();
-        const el = document.getElementById('api-search-input');
-        if (el) el.focus();
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, []);
-  
-  // Estados para modales
+  // Modal & selection states (faltaban, causaban ReferenceError)
   const [showProductModal, setShowProductModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
 
-  const isNeoBrutalism = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
-  const isMaterial = theme === 'material-light' || theme === 'material-dark';
-  // const isFluent = theme === 'fluent-light' || theme === 'fluent-dark';
+  // Local/UI state for search, filters and small config
+  const [apiSearchTerm, setApiSearchTerm] = useState('');
+  const [localSearchTerm, setLocalSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStock, setSelectedStock] = useState('all');
+  const minChars = 3;
+  const isNeoBrutalism = false; // feature switch for special visual styles
+  const isMaterial = theme === 'material';
 
-  // Helper de tarjeta reemplazado por card() de useThemeStyles
+  // Utility handlers
+  const handlePageSizeChange = (value) => changePageSize(Number(value));
+  const handlePageChange = (page) => loadPage(page);
 
-  // Tipografías ahora se manejan vía useThemeStyles (themeHeader/themeBody/themeLabel)
-
-  // getBadgeStyles reemplazado por ProductCard
-
-  // Helper de botones reemplazado por button() de useThemeStyles
-
-  // useEffect para cargar categorías cuando hay autenticación
-  useEffect(() => {
-    const loadCategoriesIfNeeded = async () => {
-      if (categories.length === 0) {
-        try {
-          await fetchCategories();
-  } catch {
-          // Silent fallback handled by cache system
-        }
+  const handleApiSearch = () => {
+    if (!apiSearchTerm || apiSearchTerm.length < minChars) return;
+    // Cancel previous controller
+    try {
+      if (apiSearchAbortRef.current) {
+        apiSearchAbortRef.current.abort();
       }
-    };
-
-    loadCategoriesIfNeeded();
-  }, [categories.length, fetchCategories]);
-
-  // console.log('🎯 Products: Rendering with', { 
-  //   productsCount: products?.length || 0, 
-  //   isLoading, 
-  //   hasError: !!storeError 
-  // });
-
-  // Get category name by ID
-  const getCategoryName = (categoryId) => {
-    if (!categoryId) return 'Sin categoría';
-    const category = categories.find(cat => cat.id === parseInt(categoryId));
-    return category ? category.name : `Categoría ${categoryId}`;
-  };
-
-  // Búsqueda en API y enter key ahora gestionados por el hook
-
-  // Funciones para paginación
-  const handlePageChange = async (page) => {
-    if (page >= 1 && page <= totalPages && page !== currentPage) {
-      await loadPage(page);
+      if (typeof AbortController !== 'undefined') {
+        apiSearchAbortRef.current = new AbortController();
+      }
+      const signal = apiSearchAbortRef.current?.signal;
+      // call store search with abort signal
+      searchProducts(apiSearchTerm, { signal }).catch((r) => {
+        // ignore AbortError
+        if (r?.name === 'AbortError') return;
+        return r;
+      });
+    } catch (e) {
+      // fallback simple call
+      searchProducts(apiSearchTerm);
     }
   };
-
-  const handlePageSizeChange = async (newPageSize) => {
-    await changePageSize(parseInt(newPageSize));
+  const handleApiSearchKeyPress = (e) => {
+    if (e.key === 'Enter') handleApiSearch();
+    if (e.key === '/') {
+      const el = document.getElementById('api-search-input');
+      if (el) el.focus();
+    }
+  };
+  const handleClearSearch = () => {
+    setApiSearchTerm('');
+    clearProducts();
   };
 
-  // Limpieza de búsqueda gestionada por el hook useProductFilters
+  // Hydrate offline snapshot from localStorage on mount
+  useEffect(() => {
+    try {
+      hydrateFromStorage?.();
+    } catch (e) {
+      // ignore
+    }
+  }, [hydrateFromStorage]);
 
-  // Funciones de utilidad
+  const getCategoryName = (id) => {
+    const c = categories.find((c) => c.id === id);
+    return c ? c.name : '';
+  };
 
-  // getStockIcon reemplazado por ProductCard
+  // Aplicar filtros locales sobre products
+  const filteredProducts = products.filter((p) => {
+    if (localSearchTerm && !String(p.name || '').toLowerCase().includes(localSearchTerm.toLowerCase())) return false;
+    if (selectedCategory !== 'all' && String(p.category_id) !== String(selectedCategory)) return false;
+    if (selectedStock === 'active' && !p.is_active) return false;
+    if (selectedStock === 'inactive' && p.is_active) return false;
+    return true;
+  });
 
-  // Funciones de eventos
-  // Efectos hover manuales ya no necesarios; themeButton aplica los estilos correspondientes
+  // Accesibilidad: región aria-live y focus restore
+  const [liveMessage, setLiveMessage] = useState('');
+  const lastFocusRef = useRef(null);
+  const prevModalsRef = useRef({ product: false, detail: false, delete: false });
+  const apiSearchAbortRef = useRef(null);
 
-  // Funciones para modales
+  // Inline editing (mínimo)
+  const [inlineEditingId, setInlineEditingId] = useState(null);
+  const [inlineFlag] = useFeatureFlag('newInlineEdit', true);
+
+  const announce = (msg) => setLiveMessage(msg);
+
+  // Observa cambios de resultados para anunciar
+  useEffect(() => {
+    if (!isLoading) {
+      if (lastSearchTerm) {
+        announce(`${totalProducts} productos encontrados para "${lastSearchTerm}"`);
+      } else {
+        announce(`${totalProducts} productos en listado`);
+      }
+    }
+  }, [isLoading, totalProducts, lastSearchTerm]);
+
+  // Restaurar foco al cerrar modales
+  useEffect(() => {
+    const prev = prevModalsRef.current;
+    if (prev.product && !showProductModal && lastFocusRef.current) lastFocusRef.current.focus();
+    if (prev.detail && !showDetailModal && lastFocusRef.current) lastFocusRef.current.focus();
+    if (prev.delete && !showDeleteModal && lastFocusRef.current) lastFocusRef.current.focus();
+    prevModalsRef.current = { product: showProductModal, detail: showDetailModal, delete: showDeleteModal };
+  }, [showProductModal, showDetailModal, showDeleteModal]);
+
+  // Wrappers para acciones bulk con anuncio
+  const handleBulkActivate = async () => {
+    const count = selectedIds.length;
+    if (!count) return;
+    await bulkActivate();
+    announce(`${count} productos activados`);
+  };
+  const handleBulkDeactivate = async () => {
+    const count = selectedIds.length;
+    if (!count) return;
+    await bulkDeactivate();
+    announce(`${count} productos desactivados`);
+  };
+
+  const handleInlineSave = async (id, patchOrValue) => {
+    const patch = typeof patchOrValue === 'object' && patchOrValue !== null ? patchOrValue : { name: patchOrValue };
+    await optimisticUpdateProduct(id, patch);
+    announce(`Producto ${id} actualizado`);
+    setInlineEditingId(null);
+  };
+
+  // Modificar handlers para guardar elemento con foco previo
   const handleCreateProduct = () => {
+    lastFocusRef.current = document.activeElement;
     setEditingProduct(null);
     setShowProductModal(true);
   };
-
   const handleEditProduct = (product) => {
+    lastFocusRef.current = document.activeElement;
     setEditingProduct(product);
     setShowProductModal(true);
   };
-
   const handleViewProduct = (product) => {
+    lastFocusRef.current = document.activeElement;
     setSelectedProduct(product);
     setShowDetailModal(true);
   };
-
   const handleDeleteProduct = (product) => {
+    lastFocusRef.current = document.activeElement;
     setSelectedProduct(product);
     setShowDeleteModal(true);
   };
@@ -271,6 +287,24 @@ const Products = () => {
 
   // Filtrado local gestionado por el hook useProductFilters
 
+  // Emitir toast cuando el store exponga un error (evitar side-effects en render)
+  useEffect(() => {
+    if (storeError && !storeError.includes('No se encontraron productos')) {
+      errorFrom(new Error(storeError));
+      telemetry.record('products.error.store', { message: storeError });
+    }
+  }, [storeError, errorFrom]);
+
+  // Iniciar muestreo de FPS y registro de snapshots
+  useEffect(() => {
+    startFPS();
+    const id = setInterval(() => {
+      const snap = getPerfSnapshot();
+      telemetry.record('products.perf.snapshot', snap);
+    }, 15000);
+    return () => clearInterval(id);
+  }, []);
+
   // Estados de carga y error
   if (isLoading) {
     return (
@@ -290,9 +324,6 @@ const Products = () => {
   }
 
   if (storeError && !storeError.includes('No se encontraron productos')) {
-    // Mostrar un toast de error estandarizado (además del fallback UI)
-    errorFrom(new Error(storeError));
-    telemetry.record('products.error.store', { message: storeError });
     return (
       <div className="min-h-screen bg-background text-foreground p-6">
         <div className="max-w-7xl mx-auto">
@@ -305,32 +336,29 @@ const Products = () => {
                 {isNeoBrutalism ? 'ERROR AL CARGAR' : 'Error al cargar'}
               </div>
               <p className="text-muted-foreground mb-4">{storeError}</p>
-              
-              {/* Debug: Mostrar botón de login si no está autenticado */}
               {!isAuthenticated && (
                 <div className="mb-4">
-                  <button
+                  <Button
                     onClick={handleDevLogin}
-                    className={`${themeButton('secondary')} mr-3`}
+                    variant="secondary"
+                    className="mr-3"
                   >
                     <LogIn className="w-4 h-4 mr-2" />
                     {isNeoBrutalism ? 'LOGIN RÁPIDO' : 'Login Rápido'}
-                  </button>
+                  </Button>
                 </div>
               )}
-              
-              <button
+              <Button
                 onClick={() => {
                   clearError();
-                  // Usar la última búsqueda si existe
                   if (lastSearchTerm) {
                     searchProducts(lastSearchTerm);
                   }
                 }}
-                className={themeButton('primary')}
+                variant="primary"
               >
                 {isNeoBrutalism ? 'REINTENTAR' : 'Reintentar'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -338,43 +366,32 @@ const Products = () => {
     );
   }
 
+  const featureFlags = { productsNewUI: true };
+
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
+      <div className="sr-only" aria-live="polite" aria-atomic="true" role="status">{liveMessage}</div>
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
-        <header className="text-center py-8">
-          <h1 
-            className={`${themeHeader('h1')} text-primary mb-4`}
-          >
-            {isNeoBrutalism ? 'GESTIÓN DE PRODUCTOS' : 
-             isMaterial ? 'Gestión de Productos' : 
-             'Product Management'}
-          </h1>
-          <p 
-            className={`text-muted-foreground max-w-2xl mx-auto mb-4`}
-          >
-            {isNeoBrutalism ? 'ADMINISTRA TU INVENTARIO CON LA BUSINESS MANAGEMENT API' :
-             isMaterial ? 'Administra tu inventario con Material Design' :
-             'Manage your inventory with the Business Management API'}
-          </p>
-          
-          <div className="flex flex-wrap justify-center gap-4">
-            <button
-              className={themeButton('primary')}
-              onClick={handleCreateProduct}
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              {isNeoBrutalism ? 'NUEVO PRODUCTO' : 'Nuevo Producto'}
-            </button>
-            <button
-              className={themeButton('secondary')}
-            >
-              <BarChart3 className="w-5 h-5 mr-2" />
-              {isNeoBrutalism ? 'ANALYTICS' : 'Analytics'}
-            </button>
-          </div>
-        </header>
+        <PageHeader
+          title={isNeoBrutalism ? 'GESTIÓN DE PRODUCTOS' : isMaterial ? t('products.title') : t('products.title')}
+          subtitle={isNeoBrutalism ? 'ADMINISTRA TU INVENTARIO CON LA BUSINESS MANAGEMENT API' : isMaterial ? 'Administra tu inventario con Material Design' : 'Manage your inventory with the Business Management API'}
+          actions={(
+            <>
+              <Button variant="primary" onClick={handleCreateProduct}>
+                <Plus className="w-5 h-5 mr-2" />
+                {isNeoBrutalism ? 'NUEVO PRODUCTO' : t('products.new')}
+              </Button>
+              <Button variant="secondary">
+                <BarChart3 className="w-5 h-5 mr-2" />
+                {isNeoBrutalism ? 'ANALYTICS' : 'Analytics'}
+              </Button>
+            </>
+          )}
+          compact
+          breadcrumb={isMaterial ? 'Inventario · Productos' : undefined}
+        />
 
         {/* Filtros y Búsqueda */}
         <section 
@@ -383,7 +400,7 @@ const Products = () => {
           {/* Búsqueda en API */}
           <div className="mb-6">
             <div className={`${themeHeader('h3')} mb-3`}>
-              {isNeoBrutalism ? 'BUSCAR EN BASE DE DATOS' : 'Buscar en Base de Datos'}
+              {isNeoBrutalism ? 'BUSCAR EN BASE DE DATOS' : t('products.search.db')}
             </div>
             <div className="flex gap-3 mb-4">
               <div className="relative flex-1">
@@ -391,7 +408,7 @@ const Products = () => {
                 <input
                   id="api-search-input"
                   type="text"
-                  placeholder={isNeoBrutalism ? "BUSCAR POR NOMBRE O ID..." : "Buscar por nombre o ID..."}
+                  placeholder={isNeoBrutalism ? "BUSCAR POR NOMBRE O ID..." : t('products.search.placeholder')}
                   value={apiSearchTerm}
                   onChange={(e) => setApiSearchTerm(e.target.value)}
                   onKeyPress={handleApiSearchKeyPress}
@@ -405,32 +422,31 @@ const Products = () => {
                   aria-label={isNeoBrutalism ? 'Buscar productos por nombre o ID' : 'Buscar productos por nombre o ID'}
                 />
               </div>
-              <button
+              <Button
                 onClick={handleApiSearch}
-                className={`${themeButton('primary')} px-6 py-3`}
+                variant="primary"
+                size="lg"
               >
-                {isNeoBrutalism ? 'BUSCAR' : 'Buscar'}
-              </button>
-              <button
+                {isNeoBrutalism ? 'BUSCAR' : t('products.search')}
+              </Button>
+              <Button
                 onClick={handleClearSearch}
-                className={`${themeButton('secondary')} px-6 py-3`}
+                variant="secondary"
+                size="lg"
               >
-                {isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}
-              </button>
+                {isNeoBrutalism ? 'LIMPIAR' : t('products.clear')}
+              </Button>
             </div>
 
             {/* Ayuda para búsqueda */}
             <div className="text-xs text-muted-foreground mb-4 flex flex-col gap-1">
               <span>
-                {isNeoBrutalism ? 
-                  'PUEDES BUSCAR POR NOMBRE (EJ: "PUMA") O POR ID COMPLETO (EJ: "BCYDWDKNR")' :
-                  'Puedes buscar por nombre (ej: "Puma") o por ID completo (ej: "bcYdWdKNR")'
-                }
+                {isNeoBrutalism ?
+                  t('products.search.help1') :
+                  t('products.search.help1')}
               </span>
               <span>
-                {isNeoBrutalism ?
-                  `BÚSQUEDA AUTOMÁTICA: MÍNIMO ${minChars} CARACTERES. ATAJO: '/' PARA ENFOCAR.` :
-                  `Búsqueda automática: mínimo ${minChars} caracteres. Atajo: '/' para enfocar.`}
+                {t('products.search.help2').replace('{minChars}', String(minChars))}
               </span>
             </div>
             
@@ -440,8 +456,8 @@ const Products = () => {
                 htmlFor="pageSize"
                 className={`text-sm text-muted-foreground ${themeLabel()}`}
               >
-                {isNeoBrutalism ? 'PRODUCTOS POR PÁGINA:' : 'Productos por página:'}
-              </label>
+                {t('products.page_size_label')}
+               </label>
               <select
                 id="pageSize"
                 value={pageSize}
@@ -466,8 +482,22 @@ const Products = () => {
           {/* Filtros locales - solo si hay productos cargados */}
           {products.length > 0 && (
             <div className="border-t pt-6">
-              <div className={`${themeHeader('h3')} mb-3`}>
-                {isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : 'Filtrar Resultados Actuales'}
+              <div className={`${themeHeader('h3')} mb-3 flex items-center justify-between`}> 
+                <span>{isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : 'Filtrar Resultados Actuales'}</span>
+                {featureFlags.productsNewUI && (
+                  <div className="flex gap-2 items-center text-xs">
+                    {selectedIds.length > 0 ? (
+                      <>
+                        <span className="text-muted-foreground">{selectedIds.length} seleccionados</span>
+                        <Button size="sm" variant="secondary" onClick={bulkActivate}>{isNeoBrutalism ? 'ACTIVAR' : 'Activar'}</Button>
+                        <Button size="sm" variant="secondary" onClick={bulkDeactivate}>{isNeoBrutalism ? 'DESACTIVAR' : 'Desactivar'}</Button>
+                        <Button size="sm" variant="ghost" onClick={clearSelection}>{isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}</Button>
+                      </>
+                    ) : (
+                      <Button size="sm" variant="outline" onClick={selectAllCurrent}>{isNeoBrutalism ? 'SELECCIONAR TODO' : 'Seleccionar todo'}</Button>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="grid md:grid-cols-4 gap-4">
                 <div className="relative">
@@ -576,21 +606,18 @@ const Products = () => {
             >
               <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
               <div className={`text-muted-foreground mb-4 ${themeHeader('h2')}`}>
-                {isNeoBrutalism ? 'NO HAY PRODUCTOS CARGADOS' : 'No hay productos cargados'}
-              </div>
+                {t('products.no_products_loaded')}
+               </div>
               <div className={`text-muted-foreground mb-6 ${themeBody()}`}>
-                {isNeoBrutalism ? 
-                  'UTILIZA LA BÚSQUEDA PARA ENCONTRAR PRODUCTOS EN LA BASE DE DATOS' : 
-                  'Utiliza la búsqueda para encontrar productos en la base de datos'
-                }
+                {t('products.search.help1')}
               </div>
-              <button
+              <Button
                 onClick={handleCreateProduct}
-                className={themeButton('primary')}
+                variant="primary"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                {isNeoBrutalism ? 'CREAR PRIMER PRODUCTO' : 'Crear Primer Producto'}
-              </button>
+                {t('products.create_first')}
+              </Button>
             </div>
           )}
 
@@ -610,19 +637,19 @@ const Products = () => {
                 }
               </div>
               <div className="flex gap-4 justify-center">
-                <button
+                <Button
                   onClick={handleClearSearch}
-                  className={themeButton('secondary')}
+                  variant="secondary"
                 >
                   {isNeoBrutalism ? 'LIMPIAR BÚSQUEDA' : 'Limpiar búsqueda'}
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleCreateProduct}
-                  className={themeButton('primary')}
+                  variant="primary"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   {isNeoBrutalism ? 'CREAR PRODUCTO' : 'Crear producto'}
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -656,6 +683,12 @@ const Products = () => {
               onView={handleViewProduct}
               onEdit={handleEditProduct}
               onDelete={handleDeleteProduct}
+              onToggleSelect={toggleSelect}
+              selectedIds={selectedIds}
+              inlineEditingId={inlineEditingId}
+              onStartInlineEdit={(id) => inlineFlag && setInlineEditingId(id)}
+              onCancelInlineEdit={() => setInlineEditingId(null)}
+              onInlineSave={handleInlineSave}
             />
           )}
         </section>
@@ -703,21 +736,23 @@ const Products = () => {
             {/* Controles de paginación */}
             {totalPages > 1 && (
               <div className="flex justify-center items-center gap-2 flex-wrap">
-                <button
+                <Button
                   onClick={() => handlePageChange(1)}
                   disabled={currentPage <= 1 || isLoading}
-                  className={`${themeButton('secondary')} px-3 py-2 ${currentPage <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  variant="secondary"
+                  size="sm"
                 >
                   {isNeoBrutalism ? 'PRIMERA' : 'Primera'}
-                </button>
+                </Button>
                 
-                <button
+                <Button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage <= 1 || isLoading}
-                  className={`${themeButton('secondary')} px-4 py-2 ${currentPage <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  variant="secondary"
+                  size="sm"
                 >
                   {isNeoBrutalism ? 'ANTERIOR' : 'Anterior'}
-                </button>
+                </Button>
                 
                 {/* Números de página */}
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -733,32 +768,36 @@ const Products = () => {
                   }
 
                   return (
-                    <button
+                    <Button
                       key={pageNumber}
                       onClick={() => handlePageChange(pageNumber)}
                       disabled={isLoading}
-                      className={`${themeButton(pageNumber === currentPage ? 'primary' : 'secondary')} px-3 py-2 min-w-[40px] ${pageNumber === currentPage ? 'font-bold' : ''}`}
+                      variant={pageNumber === currentPage ? 'primary' : 'secondary'}
+                      size="sm"
+                      className={pageNumber === currentPage ? 'font-bold' : ''}
                     >
                       {pageNumber}
-                    </button>
+                    </Button>
                   );
                 })}
 
-                <button
+                <Button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage >= totalPages || isLoading}
-                  className={`${themeButton('secondary')} px-4 py-2 ${currentPage >= totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  variant="secondary"
+                  size="sm"
                 >
                   {isNeoBrutalism ? 'SIGUIENTE' : 'Siguiente'}
-                </button>
+                </Button>
 
-                <button
+                <Button
                   onClick={() => handlePageChange(totalPages)}
                   disabled={currentPage >= totalPages || isLoading}
-                  className={`${themeButton('secondary')} px-3 py-2 ${currentPage >= totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  variant="secondary"
+                  size="sm"
                 >
                   {isNeoBrutalism ? 'ÚLTIMA' : 'Última'}
-                </button>
+                </Button>
 
                 {/* Información de página actual */}
                 <div className={`text-muted-foreground ml-4 ${themeLabel()}`}>

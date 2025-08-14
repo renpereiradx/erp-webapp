@@ -125,6 +125,47 @@ console.log('Caché edad:', info.ageMinutes, 'minutos');
 - **Estado en tiempo real** del caché
 - **Controles para testing** manual
 
+## 🗂️ Caché de Productos (Listado & Búsqueda)
+
+### Capas
+- Page Cache: clave = número de página (sin término de búsqueda). TTL 120s. Límite 20 páginas (LRU simplificada por timestamp: elimina más antiguas al superar el límite).
+- Search Cache: clave hash de (term, pageSize, category, status). TTL 120s. Límite 30 entradas (LRU simplificada).
+
+### Revalidación (Stale-While-Revalidate)
+- Si se accede a una página/búsqueda y su edad > 50% TTL, se sirve contenido en caché inmediatamente y se lanza revalidación en background.
+- Revalidación respeta circuito y usa retry con backoff exponencial (2 intentos).
+
+### Retry & Backoff
+- Estrategia _withRetry(fn): intentos=3 (fetch principal), baseDelay=300ms, factor=2 (300, 600, 1200ms) sin jitter por ahora.
+- Telemetría: products.fetch.attempt, .success.afterRetry, .giveup; similar para search y revalidate.
+
+### Circuit Breaker
+- Umbral fallos: 4. Cooldown 30s. Bloquea fetch/search mientras esté abierto.
+- Revalidaciones no fuerzan apertura si circuito ya abierto.
+
+### Telemetría Clave
+| Evento | Descripción |
+|--------|-------------|
+| products.pageCache.hit | Cache hit directo (página) |
+| products.pageCache.trim | Trimming aplicado (LRU) |
+| products.fetch.revalidate.success/error | Resultado de SWR background |
+| products.search.cache.hit/miss | Hit/miss de búsqueda |
+| products.search.revalidate.auto.success/error | SWR automática búsqueda |
+| products.searchCache.trim | Trimming de caché de búsqueda |
+| products.fetch.attempt/giveup | Intentos y abandono tras retries |
+| products.perf.snapshot | FPS promedio, último FPS, renders acumulados |
+| products.render.batch | Tamaño de lote renderizado (aprox) |
+
+### Beneficios
+- Respuesta inmediata (cached) + actualización silenciosa.
+- Previene degradación silenciosa con métricas visibles.
+- Control de memoria estable por límites y trimming.
+
+### Futuras Mejoras
+- Jitter aleatorio para evitar thundering herd.
+- Persistencia opcional en sessionStorage.
+- Prewarming predictivo basado en scroll.
+
 ## 🎉 Resultado Final
 
 - ✅ **Sin más errores 401** en categorías

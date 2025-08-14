@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from 'next-themes';
 import { X, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
 const DeleteSupplierModal = ({ isOpen, onClose, supplier, onConfirm, loading }) => {
   if (!isOpen) return null;
@@ -14,10 +15,10 @@ const DeleteSupplierModal = ({ isOpen, onClose, supplier, onConfirm, loading }) 
         <h2 className="text-2xl font-bold mb-4">¿Estás seguro?</h2>
         <p className="mb-6">Estás a punto de eliminar al proveedor "{supplier?.name}". Esta acción no se puede deshacer.</p>
         <div className="flex justify-center space-x-4">
-          <button onClick={onClose} className="px-4 py-2 rounded bg-secondary text-secondary-foreground" disabled={loading}>Cancelar</button>
-          <button onClick={() => onConfirm(supplier)} className="px-4 py-2 rounded bg-destructive text-destructive-foreground" disabled={loading}>
+          <Button onClick={onClose} variant="secondary" disabled={loading}>Cancelar</Button>
+          <Button onClick={() => onConfirm(supplier)} variant="destructive" disabled={loading}>
             {loading ? 'Eliminando...' : 'Eliminar'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

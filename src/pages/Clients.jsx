@@ -30,17 +30,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import PageHeader from '@/components/ui/PageHeader';
+import StatusBadge from '@/components/ui/StatusBadge';
+import { Button } from '@/components/ui/Button';
 
-const getButtonStyles = (theme, variant = 'primary') => {
-    const isNeoBrutalism = theme?.includes('neo-brutalism');
-    if (isNeoBrutalism) return { primary: { background: 'var(--brutalist-lime)', color: '#000000', border: '3px solid var(--border)', borderRadius: '0px', padding: '12px 24px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.025em', boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)', transition: 'all 150ms ease', cursor: 'pointer' }, secondary: { background: 'var(--background)', color: 'var(--foreground)', border: '3px solid var(--border)', borderRadius: '0px', padding: '12px 24px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.025em', boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)', transition: 'all 150ms ease', cursor: 'pointer' } }[variant];
-    return { padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', border: variant === 'primary' ? 'none' : '1px solid var(--border)', background: variant === 'primary' ? 'var(--primary)' : 'var(--background)', color: variant === 'primary' ? 'var(--primary-foreground)' : 'var(--foreground)', transition: 'all 150ms ease' };
-};
-const getBadgeStyles = (theme, status) => {
-    const isNeoBrutalism = theme?.includes('neo-brutalism');
-    const backgroundColor = status === true ? (isNeoBrutalism ? 'var(--brutalist-lime)' : 'var(--success)') : (isNeoBrutalism ? 'var(--brutalist-pink)' : 'var(--destructive)');
-    return { background: backgroundColor, color: isNeoBrutalism ? '#000000' : 'white', border: isNeoBrutalism ? '2px solid var(--border)' : 'none', borderRadius: isNeoBrutalism ? '0px' : '4px', textTransform: isNeoBrutalism ? 'uppercase' : 'none', fontWeight: isNeoBrutalism ? 'bold' : '500', fontSize: '0.75rem', padding: isNeoBrutalism ? '8px 12px' : '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', minWidth: '80px', textAlign: 'center' };
-};
+// Unificado: badge de estado por tokens
+// const getBadgeStyles = (theme, isActive) => {
+//   const isNeoBrutalism = theme?.includes('neo-brutalism');
+//   const background = isActive ? 'var(--success)' : 'var(--destructive)';
+//   const color = isActive ? 'var(--primary-foreground)' : 'var(--destructive-foreground)';
+//   return {
+//     background,
+//     color,
+//     border: isNeoBrutalism ? '3px solid var(--border)' : 'none',
+//     borderRadius: isNeoBrutalism ? '0px' : '9999px',
+//     textTransform: isNeoBrutalism ? 'uppercase' : 'none',
+//     fontWeight: isNeoBrutalism ? 900 : 600,
+//     fontSize: '0.75rem',
+//     padding: isNeoBrutalism ? '8px 12px' : '4px 10px',
+//     display: 'inline-flex',
+//     alignItems: 'center',
+//     gap: '6px',
+//     minWidth: 'fit-content',
+//   };
+// };
 
 const ClientsPage = () => {
   const { theme } = useTheme();
@@ -61,6 +74,7 @@ const ClientsPage = () => {
   const [editingClient, setEditingClient] = useState(null);
 
   const isNeoBrutalism = theme?.includes('neo-brutalism');
+  const isMaterial = theme?.includes('material');
 
   // Emitir toast cuando el store exponga un error
   useEffect(() => {
@@ -128,9 +142,6 @@ const ClientsPage = () => {
   telemetry.record('clients.modal.success');
   };
 
-  const handleButtonHover = (e) => { if (isNeoBrutalism) { e.target.style.transform = 'translate(-2px, -2px)'; e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)'; } };
-  const handleButtonLeave = (e) => { if (isNeoBrutalism) { e.target.style.transform = 'translate(0px, 0px)'; e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)'; } };
-
   const renderMainContent = () => {
     if (loading) {
       return (
@@ -149,7 +160,9 @@ const ClientsPage = () => {
           <AlertCircle className="w-16 h-16 mx-auto mb-4 text-destructive" />
           <p className={`text-destructive mb-4 ${themeHeader('h2')}`}>{isNeoBrutalism ? 'ERROR' : 'Error'}</p>
           <p className={`text-muted-foreground mb-4 ${themeLabel()}`}>{error}</p>
-          <button className={themeButton('primary')} onClick={() => searchClients(lastSearchTerm)} style={getButtonStyles(theme, 'primary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'REINTENTAR' : 'Reintentar'}</button>
+          <Button variant="primary" onClick={() => searchClients(lastSearchTerm)}>
+            {isNeoBrutalism ? 'REINTENTAR' : 'Reintentar'}
+          </Button>
         </div>
       );
     }
@@ -177,11 +190,18 @@ const ClientsPage = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredClients.map(client => (
-          <div key={client.id} className={card('hover:shadow-lg transition-shadow p-6 flex flex-col justify-between')}>
-            <div>
+          <div key={client.id} className={`${card('p-4 sm:p-5')} group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 flex flex-col`}>
+            {/* Accent bar */}
+            {!isNeoBrutalism ? (
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60 opacity-80 rounded-t-md" aria-hidden="true" />
+            ) : (
+              <div className="absolute inset-x-0 top-0 h-[3px] bg-border" aria-hidden="true" />
+            )}
+
+            <div className="flex-1">
               <div className="flex justify-between items-start mb-4">
                 <h3 className={`${themeHeader('h3')} mb-2 truncate`}>{client.name} {client.last_name || ''}</h3>
-                                <div style={getBadgeStyles(theme, !!client.status)}>{!!client.status ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}<span>{!!client.status ? (isNeoBrutalism ? 'ACTIVO' : 'Activo') : (isNeoBrutalism ? 'INACTIVO' : 'Inactivo')}</span></div>
+                <StatusBadge active={!!client.status} />
               </div>
               <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>DOCUMENTO:</span><span className={themeLabel()}>{client.document_id || 'N/A'}</span></div>
@@ -189,10 +209,10 @@ const ClientsPage = () => {
                   <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>REGISTRO:</span><span className={themeLabel()}>{new Date(client.created_at).toLocaleDateString()}</span></div>
                 </div>
             </div>
-            <div className="flex gap-2 mt-auto">
-              <button onClick={() => handleViewClient(client)} style={{ ...getButtonStyles(theme, 'secondary'), flex: 1, padding: '8px 12px', fontSize: '0.75rem' }} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><Eye className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'VER' : 'Ver'}</button>
-              <button onClick={() => handleEditClient(client)} style={{ ...getButtonStyles(theme, 'primary'), flex: 1, padding: '8px 12px', fontSize: '0.75rem' }} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><Edit className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'EDITAR' : 'Editar'}</button>
-              <button onClick={() => handleDeleteClient(client)} style={{ ...getButtonStyles(theme, 'secondary'), background: 'var(--destructive)', color: 'var(--destructive-foreground)', padding: '8px 12px' }} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><Trash2 className="w-4 h-4" /></button>
+            <div className="flex gap-2 mt-3">
+              <Button onClick={() => handleViewClient(client)} variant="secondary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50"><Eye className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'VER' : 'Ver'}</Button>
+              <Button onClick={() => handleEditClient(client)} variant="primary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50"><Edit className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'EDITAR' : 'Editar'}</Button>
+              <Button onClick={() => handleDeleteClient(client)} variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" aria-label="Eliminar cliente"><Trash2 className="w-4 h-4" /></Button>
             </div>
           </div>
         ))}
@@ -203,14 +223,22 @@ const ClientsPage = () => {
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        <header className="text-center py-8">
-          <h1 className={`${themeHeader('h1')} text-primary mb-4`}>{isNeoBrutalism ? 'GESTIÓN DE CLIENTES' : 'Gestión de Clientes'}</h1>
-          <p className={`text-muted-foreground max-w-2xl mx-auto mb-8 ${themeLabel()}`}>{isNeoBrutalism ? 'BUSCA, CREA Y ADMINISTRA TUS CLIENTES EFICIENTEMENTE' : 'Busca, crea y administra tus clientes eficientemente.'}</p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <button className={themeButton('primary')} style={getButtonStyles(theme, 'primary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave} onClick={handleCreateClient}><Plus className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'NUEVO CLIENTE' : 'Nuevo Cliente'}</button>
-            <button className={themeButton('secondary')} style={getButtonStyles(theme, 'secondary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><BarChart3 className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'ANALYTICS' : 'Analytics'}</button>
-          </div>
-        </header>
+        <PageHeader
+          title={isNeoBrutalism ? 'GESTIÓN DE CLIENTES' : 'Gestión de Clientes'}
+          subtitle={isNeoBrutalism ? 'BUSCA, CREA Y ADMINISTRA TUS CLIENTES EFICIENTEMENTE' : 'Busca, crea y administra tus clientes eficientemente.'}
+          actions={(
+            <>
+              <Button variant="primary" onClick={handleCreateClient}>
+                <Plus className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'NUEVO CLIENTE' : 'Nuevo Cliente'}
+              </Button>
+              <Button variant="secondary">
+                <BarChart3 className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'ANALYTICS' : 'Analytics'}
+              </Button>
+            </>
+          )}
+          compact
+          breadcrumb={isMaterial ? 'CRM · Clientes' : undefined}
+        />
 
         <section className={card('p-6')}>
           <div className="mb-6">
@@ -225,8 +253,8 @@ const ClientsPage = () => {
                 onChange={(e) => setApiSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleApiSearch()}
               />
-              <button className={themeButton('primary')} onClick={handleApiSearch} disabled={!apiSearchTerm} style={{...getButtonStyles(theme, 'primary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'BUSCAR' : 'Buscar'}</button>
-              <button className={themeButton('secondary')} onClick={handleClearSearch} style={{...getButtonStyles(theme, 'secondary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}</button>
+              <Button variant="primary" onClick={handleApiSearch} disabled={!apiSearchTerm}>{isNeoBrutalism ? 'BUSCAR' : 'Buscar'}</Button>
+              <Button variant="secondary" onClick={handleClearSearch}>{isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}</Button>
             </div>
             <div className="flex items-center gap-3"><label htmlFor="pageSize" className={themeLabel()}>CLIENTES POR PÁGINA:</label><select id="pageSize" value={pageSize} onChange={(e) => handlePageSizeChange(e.target.value)} className={`px-3 py-2 bg-background ${themeInput()}`} style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></div>
           </div>
@@ -257,7 +285,7 @@ const ClientsPage = () => {
                     <SelectItem value="inactive">Inactivos</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className="text-center p-3" style={isNeoBrutalism ? {border: '3px solid var(--border)'} : {}}><div className={themeHeader('h2')}>{filteredClients.length}</div><div className={themeLabel()}>CLIENTES MOSTRADOS</div></div>
+                <div className={card('p-3 text-center')}><div className={themeHeader('h2')}>{filteredClients.length}</div><div className={themeLabel()}>CLIENTES MOSTRADOS</div></div>
               </div>
             </div>
           )}
@@ -269,11 +297,11 @@ const ClientsPage = () => {
           <footer className="text-center py-8">
             <div className="flex flex-wrap justify-center gap-4 mb-4"><div className={themeLabel()}>{`Mostrando ${filteredClients.length} de ${totalClients} clientes`}</div></div>
             <div className="flex justify-center items-center gap-2 flex-wrap">
-              <button className={themeButton('secondary')} onClick={() => handlePageChange(1)} disabled={currentPage <= 1 || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 12px', opacity: currentPage <= 1 ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Primera</button>
-              <button className={themeButton('secondary')} onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1 || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 16px', opacity: currentPage <= 1 ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Anterior</button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(1)} disabled={currentPage <= 1 || loading}>Primera</Button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1 || loading}>Anterior</Button>
               <span className={themeLabel()}>{`Página ${currentPage} de ${totalPages}`}</span>
-              <button className={themeButton('secondary')} onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 16px', opacity: currentPage >= totalPages ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Siguiente</button>
-              <button className={themeButton('secondary')} onClick={() => handlePageChange(totalPages)} disabled={currentPage >= totalPages || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 12px', opacity: currentPage >= totalPages ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Última</button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages || loading}>Siguiente</Button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(totalPages)} disabled={currentPage >= totalPages || loading}>Última</Button>
             </div>
           </footer>
         )}

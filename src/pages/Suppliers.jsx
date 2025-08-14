@@ -29,17 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-const getButtonStyles = (theme, variant = 'primary') => {
-    const isNeoBrutalism = theme?.includes('neo-brutalism');
-    if (isNeoBrutalism) return { primary: { background: 'var(--brutalist-lime)', color: '#000000', border: '3px solid var(--border)', borderRadius: '0px', padding: '12px 24px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.025em', boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)', transition: 'all 150ms ease', cursor: 'pointer' }, secondary: { background: 'var(--background)', color: 'var(--foreground)', border: '3px solid var(--border)', borderRadius: '0px', padding: '12px 24px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.025em', boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)', transition: 'all 150ms ease', cursor: 'pointer' } }[variant];
-    return { padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', border: variant === 'primary' ? 'none' : '1px solid var(--border)', background: variant === 'primary' ? 'var(--primary)' : 'var(--background)', color: variant === 'primary' ? 'var(--primary-foreground)' : 'var(--foreground)', transition: 'all 150ms ease' };
-};
-const getBadgeStyles = (theme, status) => {
-    const isNeoBrutalism = theme?.includes('neo-brutalism');
-    const backgroundColor = status ? (isNeoBrutalism ? 'var(--brutalist-lime)' : 'var(--success)') : (isNeoBrutalism ? 'var(--brutalist-pink)' : 'var(--destructive)');
-    return { background: backgroundColor, color: isNeoBrutalism ? '#000000' : 'white', border: isNeoBrutalism ? '2px solid var(--border)' : 'none', borderRadius: isNeoBrutalism ? '0px' : '4px', textTransform: isNeoBrutalism ? 'uppercase' : 'none', fontWeight: isNeoBrutalism ? 'bold' : '500', fontSize: '0.75rem', padding: isNeoBrutalism ? '8px 12px' : '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', minWidth: '80px', textAlign: 'center' };
-};
+import PageHeader from '@/components/ui/PageHeader';
+import StatusBadge from '@/components/ui/StatusBadge';
+import { Button } from '@/components/ui/Button';
 
 const SuppliersPage = () => {
   const { theme } = useTheme();
@@ -59,12 +51,13 @@ const SuppliersPage = () => {
   const [editingSupplier, setEditingSupplier] = useState(null);
 
   const isNeoBrutalism = theme?.includes('neo-brutalism');
+  const isMaterial = theme?.includes('material');
 
   // Emitir toast cuando el store expone un error
   useEffect(() => {
     if (error) {
-  errorFrom(new Error(error));
-  telemetry.record('suppliers.error.store', { message: error });
+      errorFrom(new Error(error));
+      telemetry.record('suppliers.error.store', { message: error });
     }
   }, [error, errorFrom]);
 
@@ -130,9 +123,6 @@ const SuppliersPage = () => {
   telemetry.record('suppliers.modal.success');
   };
 
-  const handleButtonHover = (e) => { if (isNeoBrutalism) { e.target.style.transform = 'translate(-2px, -2px)'; e.target.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,1)'; } };
-  const handleButtonLeave = (e) => { if (isNeoBrutalism) { e.target.style.transform = 'translate(0px, 0px)'; e.target.style.boxShadow = '4px 4px 0px 0px rgba(0,0,0,1)'; } };
-
   const renderMainContent = () => {
     if (loading && !suppliers.length) {
       return (
@@ -143,13 +133,15 @@ const SuppliersPage = () => {
       );
     }
 
-  if (error) {
+    if (error) {
       return (
         <div className={card('text-center py-20 p-6')}>
           <AlertCircle className="w-16 h-16 mx-auto mb-4 text-destructive" />
           <p className={`text-destructive mb-4 ${themeHeader('h2')}`}>{isNeoBrutalism ? 'ERROR' : 'Error'}</p>
           <p className={`text-muted-foreground mb-4 ${themeLabel()}`}>{error}</p>
-          <button className={themeButton('primary')} onClick={handleSearch} style={getButtonStyles(theme, 'primary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'REINTENTAR' : 'Reintentar'}</button>
+          <Button variant="primary" onClick={handleSearch}>
+            {isNeoBrutalism ? 'REINTENTAR' : 'Reintentar'}
+          </Button>
         </div>
       );
     }
@@ -190,23 +182,34 @@ const SuppliersPage = () => {
           if (!supplier) return null;
           const contactInfo = parseContactInfo(supplier.contact_info);
           return (
-    <div key={supplier.id} className={card('hover:shadow-lg transition-shadow p-6 flex flex-col justify-between')}>
-              <div>
+            <div key={supplier.id} className={`${card('p-4 sm:p-5')} group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 flex flex-col`}>
+              {/* Accent bar */}
+              {!isNeoBrutalism ? (
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60 opacity-80 rounded-t-md" aria-hidden="true" />
+              ) : (
+                <div className="absolute inset-x-0 top-0 h-[3px] bg-border" aria-hidden="true" />
+              )}
+
+              <div className="flex-1">
                 <div className="flex justify-between items-start mb-4">
-      <h3 className={`${themeHeader('h3')} mb-2 truncate`}>{supplier.name}</h3>
-                  <div style={getBadgeStyles(theme, supplier.status)}>{supplier.status ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}<span>{supplier.status ? (isNeoBrutalism ? 'ACTIVO' : 'Activo') : (isNeoBrutalism ? 'INACTIVO' : 'Inactivo')}</span></div>
+                  <h3 className={`${themeHeader('h3')} mb-2 truncate`}>{supplier.name}</h3>
+                  <StatusBadge active={!!supplier.status} />
                 </div>
                 <div className="space-y-2 mb-4">
-      <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>RUC:</span><span className={themeLabel()}>{supplier.tax_id || 'N/A'}</span></div>
-      {contactInfo.phone && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>TELÉFONO:</span><span className={themeLabel()}>{contactInfo.phone}</span></div>}
-      {contactInfo.fax && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>FAX:</span><span className={themeLabel()}>{contactInfo.fax}</span></div>}
-      {contactInfo.address && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>DIRECCIÓN:</span><span className={themeLabel()}>{contactInfo.address}</span></div>}
-      <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>REGISTRO:</span><span className={themeLabel()}>{new Date(supplier.created_at).toLocaleDateString()}</span></div>
+                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>RUC:</span><span className={themeLabel()}>{supplier.tax_id || 'N/A'}</span></div>
+                  {contactInfo.phone && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>TELÉFONO:</span><span className={themeLabel()}>{contactInfo.phone}</span></div>}
+                  {contactInfo.fax && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>FAX:</span><span className={themeLabel()}>{contactInfo.fax}</span></div>}
+                  {contactInfo.address && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>DIRECCIÓN:</span><span className={themeLabel()}>{contactInfo.address}</span></div>}
+                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>REGISTRO:</span><span className={themeLabel()}>{new Date(supplier.created_at).toLocaleDateString()}</span></div>
                 </div>
               </div>
-              <div className="flex gap-2 mt-auto">
-                <button className={themeButton('primary')} onClick={() => handleEditSupplier(supplier)} style={{ ...getButtonStyles(theme, 'primary'), flex: 1, padding: '8px 12px', fontSize: '0.75rem' }} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><Edit className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'EDITAR' : 'Editar'}</button>
-                <button className={themeButton('secondary')} onClick={() => handleDeleteSupplier(supplier)} style={{ ...getButtonStyles(theme, 'secondary'), background: 'var(--destructive)', color: 'var(--destructive-foreground)', padding: '8px 12px' }} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><Trash2 className="w-4 h-4" /></button>
+              <div className="flex gap-2 mt-3">
+                <Button variant="primary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50" onClick={() => handleEditSupplier(supplier)}>
+                  <Edit className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'EDITAR' : 'Editar'}
+                </Button>
+                <Button variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" onClick={() => handleDeleteSupplier(supplier)} aria-label="Eliminar proveedor">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           );
@@ -218,14 +221,22 @@ const SuppliersPage = () => {
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        <header className="text-center py-8">
-          <h1 className={`${themeHeader('h1')} text-primary mb-4`}>{isNeoBrutalism ? 'GESTIÓN DE PROVEEDORES' : 'Gestión de Proveedores'}</h1>
-          <p className={`text-muted-foreground max-w-2xl mx-auto mb-8 ${themeLabel()}`}>{isNeoBrutalism ? 'BUSCA, CREA Y ADMINISTRA TUS PROVEEDORES' : 'Busca, crea y administra tus proveedores.'}</p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <button className={themeButton('primary')} style={getButtonStyles(theme, 'primary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave} onClick={handleCreateSupplier}><Plus className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'NUEVO PROVEEDOR' : 'Nuevo Proveedor'}</button>
-            <button className={themeButton('secondary')} style={getButtonStyles(theme, 'secondary')} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}><BarChart3 className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'ANALYTICS' : 'Analytics'}</button>
-          </div>
-        </header>
+        <PageHeader
+          title={isNeoBrutalism ? 'GESTIÓN DE PROVEEDORES' : 'Gestión de Proveedores'}
+          subtitle={isNeoBrutalism ? 'BUSCA, CREA Y ADMINISTRA TUS PROVEEDORES' : 'Busca, crea y administra tus proveedores.'}
+          actions={(
+            <>
+              <Button variant="primary" onClick={handleCreateSupplier}>
+                <Plus className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'NUEVO PROVEEDOR' : 'Nuevo Proveedor'}
+              </Button>
+              <Button variant="secondary">
+                <BarChart3 className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'ANALYTICS' : 'Analytics'}
+              </Button>
+            </>
+          )}
+          compact
+          breadcrumb={isMaterial ? 'Compras · Proveedores' : undefined}
+        />
 
         <section className={card('p-6')}>
           <div className="mb-6">
@@ -240,8 +251,12 @@ const SuppliersPage = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
-              <button className={themeButton('primary')} onClick={handleSearch} disabled={!searchTerm} style={{...getButtonStyles(theme, 'primary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'BUSCAR' : 'Buscar'}</button>
-              <button className={themeButton('secondary')} onClick={handleClearSearch} style={{...getButtonStyles(theme, 'secondary'), padding: '12px 24px'}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>{isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}</button>
+              <Button variant="primary" onClick={handleSearch} disabled={!searchTerm}>
+                {isNeoBrutalism ? 'BUSCAR' : 'Buscar'}
+              </Button>
+              <Button variant="secondary" onClick={handleClearSearch}>
+                {isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}
+              </Button>
             </div>
           </div>
 
@@ -258,11 +273,7 @@ const SuppliersPage = () => {
                   onChange={(e) => setLocalSearchTerm(e.target.value)}
                 />
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className={`
-                    flex h-9 w-full min-w-0 rounded-md border bg-background px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none
-                    focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]
-                    ${isNeoBrutalism ? 'border-[3px] border-[var(--border)] rounded-none uppercase font-semibold' : 'border-input'}
-                  `}>
+                  <SelectTrigger className={themeInput()}>
                     <SelectValue placeholder="Filtrar por estado" />
                   </SelectTrigger>
                   <SelectContent>
@@ -271,7 +282,10 @@ const SuppliersPage = () => {
                     <SelectItem value="inactive">Inactivos</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className="text-center p-3" style={isNeoBrutalism ? {border: '3px solid var(--border)'} : {}}><div className={themeHeader('h2')}>{filteredSuppliers.length}</div><div className={themeLabel()}>PROVEEDORES MOSTRADOS</div></div>
+                <div className={card('p-3 text-center')}>
+                  <div className={themeHeader('h2')}>{filteredSuppliers.length}</div>
+                  <div className={themeLabel()}>PROVEEDORES MOSTRADOS</div>
+                </div>
               </div>
             </div>
           )}
@@ -282,11 +296,19 @@ const SuppliersPage = () => {
         {pagination && pagination.total_pages > 1 && (
           <footer className="text-center py-8">
             <div className="flex justify-center items-center gap-2 flex-wrap">
-              <button className={themeButton('secondary')} onClick={() => handlePageChange(1)} disabled={pagination.current_page <= 1 || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 12px', opacity: pagination.current_page <= 1 ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Primera</button>
-              <button className={themeButton('secondary')} onClick={() => handlePageChange(pagination.current_page - 1)} disabled={pagination.current_page <= 1 || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 16px', opacity: pagination.current_page <= 1 ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Anterior</button>
-              <span className={themeLabel()}>{`Página ${pagination.current_page} de ${pagination.total_pages}`}</span>
-              <button className={themeButton('secondary')} onClick={() => handlePageChange(pagination.current_page + 1)} disabled={pagination.current_page >= pagination.total_pages || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 16px', opacity: pagination.current_page >= pagination.total_pages ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Siguiente</button>
-              <button className={themeButton('secondary')} onClick={() => handlePageChange(pagination.total_pages)} disabled={pagination.current_page >= pagination.total_pages || loading} style={{...getButtonStyles(theme, 'secondary'), padding: '8px 12px', opacity: pagination.current_page >= pagination.total_pages ? 0.5 : 1}} onMouseEnter={handleButtonHover} onMouseLeave={handleButtonLeave}>Última</button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(1)} disabled={pagination.current_page <= 1 || loading}>
+                Primera
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(pagination.current_page - 1)} disabled={pagination.current_page <= 1 || loading}>
+                Anterior
+              </Button>
+               <span className={themeLabel()}>{`Página ${pagination.current_page} de ${pagination.total_pages}`}</span>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(pagination.current_page + 1)} disabled={pagination.current_page >= pagination.total_pages || loading}>
+                Siguiente
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(pagination.total_pages)} disabled={pagination.current_page >= pagination.total_pages || loading}>
+                Última
+              </Button>
             </div>
           </footer>
         )}
