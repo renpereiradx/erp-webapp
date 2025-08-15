@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18n } from '@/lib/i18n';
 import ProductCard from '@/features/products/components/ProductCard';
 import { VirtuosoGrid } from 'react-virtuoso';
 
@@ -30,6 +31,7 @@ export default function ProductGrid({
   const itemRefs = React.useRef({});
   const listContainerRef = React.useRef(null);
   const [cols, setCols] = React.useState(1);
+  const { t } = useI18n();
 
   React.useEffect(() => {
     if (products.length === 0) {
@@ -143,7 +145,7 @@ export default function ProductGrid({
           }}
           className={`${className || ''} virtuoso-grid-list`.trim()}
           role="list"
-          aria-label="Listado de productos"
+          aria-label={t('products.list_label')}
         >
           {children}
         </div>
@@ -173,7 +175,7 @@ export default function ProductGrid({
           tabIndex={focusedIndex === index ? 0 : -1}
           role="listitem"
           aria-current={focusedIndex === index ? 'true' : undefined}
-          aria-label={`Producto ${products[index]?.name || products[index]?.id || index + 1}`}
+          aria-label={t('products.item_aria', { nameOrId: products[index]?.name || products[index]?.id || index + 1 })}
           onFocus={() => setFocusedIndex(index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
           style={{ outline: 'none' }}

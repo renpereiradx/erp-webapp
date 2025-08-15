@@ -43,7 +43,79 @@ const DICTIONARY = {
     'action.inline': 'Inline',
     'action.delete_product': 'Eliminar producto',
     'badge.low_stock': 'Bajo stock',
-    'badge.low_stock.upper': 'BAJO STOCK'
+    'badge.low_stock.upper': 'BAJO STOCK',
+
+    // Error hints
+    'errors.hint.INTERNAL': 'Problema interno, intenta más tarde.',
+    'errors.hint.NETWORK': 'Verifica tu conexión a internet.',
+    'errors.hint.UNAUTHORIZED': 'Reinicia sesión para continuar.',
+    'errors.hint.NOT_FOUND': 'El recurso no existe o fue eliminado.',
+    'errors.hint.VALIDATION': 'Revisa los datos ingresados.',
+    'errors.hint.RATE_LIMIT': 'Demasiadas solicitudes, espera e intenta de nuevo.',
+    'errors.hint.CONFLICT': 'Conflicto de estado, refresca los datos.',
+    'errors.hint.UNKNOWN': 'Ocurrió un error inesperado.',
+
+    'errors.toast.copy_code': 'Copiar código',
+    'errors.toast.retry': 'Reintentar',
+    'errors.toast.diagnostics': 'Diagnóstico',
+
+    // Añadir keys adicionales para modales
+    'products.edit_title': 'Editar Producto',
+    'products.new_title': 'Nuevo Producto',
+    'products.name_placeholder': 'Ingrese el nombre del producto',
+    'products.description_label': 'Descripción',
+    'products.description_placeholder': 'Descripción detallada del producto...',
+    'products.category_label': 'Categoría *',
+    'products.categories_loading': 'Cargando categorías...',
+    'products.categories_error': 'Error al cargar categorías',
+    'products.categories_none': 'No hay categorías disponibles',
+    'products.categories_select': 'Seleccionar categoría...',
+    'products.type_label': 'Tipo de Producto',
+    'products.active_label': 'Producto Activo',
+    'products.cancel': 'Cancelar',
+    'products.saving': 'Guardando...',
+    'products.categories_first': 'Cargar categorías primero',
+    'products.save': 'Guardar',
+    'products.name_placeholder': 'Ingrese el nombre del producto',
+
+    'products.delete_title': 'Eliminar Producto',
+    'products.delete_subtitle': 'Esta acción no se puede deshacer',
+    'products.id_label': 'ID Producto',
+    'products.info_title': 'Información Importante',
+    'products.delete_hint.soft': 'El producto será marcado como eliminado (soft delete)',
+    'products.deleting': 'Eliminando...',
+    'products.delete_action': 'Eliminar',
+
+    // Claves adicionales para ProductDetailModal
+    'products.no_description': 'Sin descripción disponible',
+    'products.error.load_details': 'Error al cargar detalles del producto',
+    'products.description_updated': 'Descripción actualizada exitosamente',
+    'products.error.save_description': 'Error al guardar descripción',
+    'products.prices_updated': 'Precios actualizados exitosamente',
+    'products.error.save_price': 'Error al guardar precio',
+    'products.stock_updated': 'Stock actualizado exitosamente',
+    'products.error.save_stock': 'Error al guardar stock',
+    'products.id_label': 'ID',
+    'products.tabs.info': 'Información',
+    'products.tabs.description': 'Descripción',
+    'products.tabs.price': 'Precios',
+    'products.tabs.stock': 'Stock',
+    'products.info_general': 'Información General',
+    'products.description_info': 'Información de Descripción',
+    'products.description_heading': 'Descripción del Producto',
+    'products.price_info': 'Información de Precios',
+    'products.configure_prices': 'Configurar Precios',
+    'products.stock_info': 'Información de Stock',
+    'products.configure_stock': 'Configurar Inventario',
+    'products.enriched_title': 'Producto con datos enriquecidos',
+    'products.unit_pricing_title': 'Producto con precios por unidad (kg, caja, etc.)',
+    'products.multiple_units_title': 'Múltiples unidades disponibles',
+    'products.list_label': 'Listado de productos',
+    'products.item_aria': 'Producto {nameOrId}',
+
+    // Announcements
+    'announce.error_validation': 'Error de validación: {msg}',
+    'announce.error_network': 'Error de red: {msg}',
   },
   en: {
     'products.title': 'Product Management',
@@ -85,7 +157,78 @@ const DICTIONARY = {
     'action.inline': 'Inline',
     'action.delete_product': 'Delete product',
     'badge.low_stock': 'Low stock',
-    'badge.low_stock.upper': 'LOW STOCK'
+    'badge.low_stock.upper': 'LOW STOCK',
+
+    // Error hints
+    'errors.hint.INTERNAL': 'Internal server issue, try again later.',
+    'errors.hint.NETWORK': 'Check your internet connection.',
+    'errors.hint.UNAUTHORIZED': 'Please sign in again to continue.',
+    'errors.hint.NOT_FOUND': 'The resource does not exist or was removed.',
+    'errors.hint.VALIDATION': 'Check the entered data.',
+    'errors.hint.RATE_LIMIT': 'Too many requests, wait and retry.',
+    'errors.hint.CONFLICT': 'State conflict, refresh the data.',
+    'errors.hint.UNKNOWN': 'An unexpected error occurred.',
+
+    'errors.toast.copy_code': 'Copy code',
+    'errors.toast.retry': 'Retry',
+    'errors.toast.diagnostics': 'Diagnostics',
+
+    'products.edit_title': 'Edit Product',
+    'products.new_title': 'New Product',
+    'products.name_placeholder': 'Enter product name',
+    'products.description_label': 'Description',
+    'products.description_placeholder': 'Detailed product description...',
+    'products.category_label': 'Category *',
+    'products.categories_loading': 'Loading categories...',
+    'products.categories_error': 'Error loading categories',
+    'products.categories_none': 'No categories available',
+    'products.categories_select': 'Select category...',
+    'products.type_label': 'Product type',
+    'products.active_label': 'Product active',
+    'products.cancel': 'Cancel',
+    'products.saving': 'Saving...',
+    'products.categories_first': 'Load categories first',
+    'products.save': 'Save',
+    'products.name_placeholder': 'Enter product name',
+
+    'products.delete_title': 'Delete Product',
+    'products.delete_subtitle': 'This action cannot be undone',
+    'products.id_label': 'Product ID',
+    'products.info_title': 'Important information',
+    'products.delete_hint.soft': 'The product will be marked as deleted (soft delete)',
+    'products.deleting': 'Deleting...',
+    'products.delete_action': 'Delete',
+
+    // EN
+    'products.no_description': 'No description available',
+    'products.error.load_details': 'Error loading product details',
+    'products.description_updated': 'Description updated successfully',
+    'products.error.save_description': 'Error saving description',
+    'products.prices_updated': 'Prices updated successfully',
+    'products.error.save_price': 'Error saving price',
+    'products.stock_updated': 'Stock updated successfully',
+    'products.error.save_stock': 'Error saving stock',
+    'products.id_label': 'ID',
+    'products.tabs.info': 'Information',
+    'products.tabs.description': 'Description',
+    'products.tabs.price': 'Prices',
+    'products.tabs.stock': 'Stock',
+    'products.info_general': 'General Information',
+    'products.description_info': 'Description Information',
+    'products.description_heading': 'Product Description',
+    'products.price_info': 'Price Information',
+    'products.configure_prices': 'Configure Prices',
+    'products.stock_info': 'Stock Information',
+    'products.configure_stock': 'Configure Inventory',
+    'products.enriched_title': 'Product with enriched data',
+    'products.unit_pricing_title': 'Product with unit pricing (kg, box, etc.)',
+    'products.multiple_units_title': 'Multiple units available',
+    'products.list_label': 'Product list',
+    'products.item_aria': 'Product {nameOrId}',
+
+    // Announcements
+    'announce.error_validation': 'Validation error: {msg}',
+    'announce.error_network': 'Network error: {msg}',
   }
 };
 
@@ -96,6 +239,11 @@ export const tRaw = (key) => DICTIONARY[currentLang][key] || key;
 export function useI18n() {
   const [lang, setLangState] = useState(currentLang);
   const setLang = useCallback((l) => { if (DICTIONARY[l]) { currentLang = l; setLangState(l); } }, []);
-  const t = useCallback((key) => DICTIONARY[lang][key] || key, [lang]);
+  // soporta interpolación simple: t('key', { a: 1 }) -> reemplaza {a}
+  const t = useCallback((key, vars) => {
+    const template = (DICTIONARY[lang] && DICTIONARY[lang][key]) || key;
+    if (!vars) return template;
+    return String(template).replace(/\{(\w+)\}/g, (_, k) => (Object.prototype.hasOwnProperty.call(vars, k) ? String(vars[k]) : `{${k}}`));
+  }, [lang]);
   return { t, lang, setLang };
 }

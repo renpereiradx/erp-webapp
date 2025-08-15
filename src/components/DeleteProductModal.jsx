@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { useTheme } from 'next-themes';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 
 const DeleteProductModal = ({ 
   isOpen, 
@@ -15,6 +16,7 @@ const DeleteProductModal = ({
   loading = false
 }) => {
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   const isNeoBrutalism = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
   const isMaterial = theme === 'material-light' || theme === 'material-dark';
@@ -247,14 +249,14 @@ const DeleteProductModal = ({
               margin: 0,
               color: 'var(--foreground)'
             }}>
-              {isNeoBrutalism ? 'ELIMINAR PRODUCTO' : 'Eliminar Producto'}
+              {isNeoBrutalism ? (t('products.delete_title') || 'ELIMINAR PRODUCTO') : (t('products.delete_title') || 'Eliminar Producto')}
             </h2>
             <p style={{
               fontSize: '0.875rem',
               color: 'var(--muted-foreground)',
               margin: '4px 0 0 0'
             }}>
-              {isNeoBrutalism ? 'ESTA ACCIÓN NO SE PUEDE DESHACER' : 'Esta acción no se puede deshacer'}
+              {isNeoBrutalism ? (t('products.delete_subtitle') || 'ESTA ACCIÓN NO SE PUEDE DESHACER') : (t('products.delete_subtitle') || 'Esta acción no se puede deshacer')}
             </p>
           </div>
         </div>
@@ -288,7 +290,7 @@ const DeleteProductModal = ({
                 color: isNeoBrutalism ? '#ffffff' : 'var(--foreground)',
                 textTransform: isNeoBrutalism ? 'uppercase' : 'none'
               }}>
-                {isNeoBrutalism ? 'INFORMACIÓN IMPORTANTE' : 'Información Importante'}
+                {isNeoBrutalism ? (t('products.info_title') || 'INFORMACIÓN IMPORTANTE') : (t('products.info_title') || 'Información Importante')}
               </span>
             </div>
             <ul style={{
@@ -299,22 +301,13 @@ const DeleteProductModal = ({
               lineHeight: '1.4'
             }}>
               <li>
-                {isNeoBrutalism ? 
-                  'EL PRODUCTO SERÁ MARCADO COMO ELIMINADO (SOFT DELETE)' :
-                  'El producto será marcado como eliminado (soft delete)'
-                }
+                {isNeoBrutalism ? (t('products.delete_hint.soft') || 'EL PRODUCTO SERÁ MARCADO COMO ELIMINADO (SOFT DELETE)') : (t('products.delete_hint.soft') || 'El producto será marcado como eliminado (soft delete)')}
               </li>
               <li>
-                {isNeoBrutalism ? 
-                  'PODRÁS REACTIVARLO DESDE LA ADMINISTRACIÓN' :
-                  'Podrás reactivarlo desde la administración'
-                }
+                {isNeoBrutalism ? (t('products.delete_hint.reactivate') || 'PODRÁS REACTIVARLO DESDE LA ADMINISTRACIÓN') : (t('products.delete_hint.reactivate') || 'Podrás reactivarlo desde la administración')}
               </li>
               <li>
-                {isNeoBrutalism ? 
-                  'LOS DATOS RELACIONADOS SE MANTENDRÁN' :
-                  'Los datos relacionados se mantendrán'
-                }
+                {isNeoBrutalism ? (t('products.delete_hint.data_retention') || 'LOS DATOS RELACIONADOS SE MANTENDRÁN') : (t('products.delete_hint.data_retention') || 'Los datos relacionados se mantendrán')}
               </li>
             </ul>
           </div>
@@ -335,7 +328,7 @@ const DeleteProductModal = ({
                   textTransform: isNeoBrutalism ? 'uppercase' : 'none',
                   fontWeight: '600'
                 }}>
-                  {isNeoBrutalism ? 'ID PRODUCTO' : 'ID Producto'}
+                  {isNeoBrutalism ? (t('products.id_label') || 'ID PRODUCTO') : (t('products.id_label') || 'ID Producto')}
                 </span>
                 <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>{product.id}</p>
               </div>
@@ -346,7 +339,7 @@ const DeleteProductModal = ({
                   textTransform: isNeoBrutalism ? 'uppercase' : 'none',
                   fontWeight: '600'
                 }}>
-                  {isNeoBrutalism ? 'CATEGORÍA' : 'Categoría'}
+                  {isNeoBrutalism ? (t('products.category_label') || 'CATEGORÍA') : (t('products.category_label') || 'Categoría')}
                 </span>
                 <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>{product.id_category}</p>
               </div>
@@ -365,7 +358,7 @@ const DeleteProductModal = ({
             style={getButtonStyles('secondary')}
             disabled={loading}
           >
-            {isNeoBrutalism ? 'CANCELAR' : 'Cancelar'}
+            {isNeoBrutalism ? (t('products.cancel') || 'CANCELAR') : (t('products.cancel') || 'Cancelar')}
           </button>
           <button
             onClick={() => onConfirm(product)}
@@ -373,11 +366,11 @@ const DeleteProductModal = ({
             disabled={loading}
           >
             {loading ? (
-              isNeoBrutalism ? 'ELIMINANDO...' : 'Eliminando...'
+              isNeoBrutalism ? (t('products.deleting') || 'ELIMINANDO...') : (t('products.deleting') || 'Eliminando...')
             ) : (
               <>
                 <Trash2 className="w-4 h-4 mr-2" />
-                {isNeoBrutalism ? 'ELIMINAR' : 'Eliminar'}
+                {isNeoBrutalism ? (t('products.delete_action') || 'ELIMINAR') : (t('products.delete_action') || 'Eliminar')}
               </>
             )}
           </button>

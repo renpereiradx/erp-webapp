@@ -30,12 +30,17 @@ const useProductStore = create(
       selectedProduct: null,
       loading: false,
       error: null,
+      fetchAbortController: null,
+      errorCounters: {},
+      isOffline: false,
   // Caché simple para búsquedas (SWR-like)
   searchCache: {}, // { [cacheKey]: { ts: number, data: array } }
   cacheTTL: 120000, // 2 minutos
       cacheHits: 0,
       cacheMisses: 0,
       circuit: { openUntil: 0, failures: 0, threshold: 4, cooldownMs: 30000 },
+      circuitOpen: false,
+      circuitTimeoutId: null,
       
       // Categories (inicialmente vacías, se cargan desde API)
       categories: [],
@@ -63,21 +68,76 @@ const useProductStore = create(
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
       clearError: () => set({ error: null }),
-      _recordFailure: () => set((state) => {
-        const now = Date.now();
+      _recordFailure: () => {
+        const state = get();
         const failures = state.circuit.failures + 1;
         let openUntil = state.circuit.openUntil;
+        let timeoutId = state.circuitTimeoutId;
         if (failures >= state.circuit.threshold) {
-          openUntil = now + state.circuit.cooldownMs;
+          openUntil = Date.now() + state.circuit.cooldownMs;
+          // reset any previous timeout
+          try { if (timeoutId) clearTimeout(timeoutId); } catch (e) {}
+          // schedule a new timeout that will reliably close the circuit
+          const id = setTimeout(() => {
+            try {
+              set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
+            } catch (e) {}
+          }, state.circuit.cooldownMs);
+          timeoutId = id;
+          // mark circuit open flag
+          set({ circuit: { ...state.circuit, failures, openUntil }, circuitTimeoutId: timeoutId, circuitOpen: true });
+          return;
         }
-        return { circuit: { ...state.circuit, failures, openUntil } };
-      }),
-      _recordSuccess: () => set((state) => ({ circuit: { ...state.circuit, failures: 0 } })),
+        set({ circuit: { ...state.circuit, failures, openUntil } });
+      },
+      _recordSuccess: () => {
+        const state = get();
+        try { if (state.circuitTimeoutId) { clearTimeout(state.circuitTimeoutId); } } catch (e) {}
+        set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
+      },
       _circuitOpen: () => {
-        const { circuit } = get();
-        return Date.now() < circuit.openUntil;
+        const state = get();
+        const openUntil = state.circuit?.openUntil || 0;
+        if (openUntil && Date.now() >= openUntil) {
+          try { if (state.circuitTimeoutId) clearTimeout(state.circuitTimeoutId); } catch (e) {}
+          set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
+          return false;
+        }
+        return !!state.circuitOpen && openUntil && Date.now() < openUntil;
       },
 
+      // Helper para ejecutar una función con reintentos (backoff + jitter)
+      _withRetry: async (fn, opts = {}) => {
+        const attempts = opts.attempts ?? 3;
+        const baseDelay = opts.baseDelay ?? 300;
+        const telemetryKey = opts.telemetryKey;
+
+        let lastErr;
+        for (let attempt = 0; attempt < attempts; attempt++) {
+          try {
+            const res = await fn();
+            // registro de éxito y reseteo de circuito
+            get()._recordSuccess?.();
+            return res;
+          } catch (err) {
+            lastErr = err;
+            // record failure for circuit
+            try { get()._recordFailure(); } catch (e) {}
+            // No reintentar en AbortError
+            if (err?.name === 'AbortError') throw err;
+            // Si es el último intento, volver a lanzar
+            if (attempt === attempts - 1) break;
+            // Esperar con backoff exponencial y jitter
+            const delay = Math.round(baseDelay * Math.pow(2, attempt) * (1 + (Math.random() - 0.5) * 0.3));
+            // Registrar intento en telemetry si aplica
+            try { if (telemetryKey) telemetry.record(`${telemetryKey}.retry`, { attempt: attempt + 1 }); } catch (e) {}
+            await new Promise(r => setTimeout(r, delay));
+          }
+        }
+        // después de agotar intentos, lanzar último error
+        throw lastErr;
+      },
+      
       setFilters: (newFilters) => 
         set((state) => ({
           filters: { ...state.filters, ...newFilters },
@@ -196,6 +256,9 @@ const useProductStore = create(
 
       fetchProducts: async (page = null, pageSize = null, searchTerm = '', options = {}) => {
         const correlationId = `fetch_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+        const state = get();
+        const currentPage = page || state.currentPage;
+        const currentPageSize = pageSize || state.pageSize;
         // Abort previous
         try {
           if (get().fetchAbortController) {
@@ -207,8 +270,22 @@ const useProductStore = create(
             options.signal = ac.signal;
           }
         } catch {}
-        // ...existing code...
+
+        set({ loading: true, error: null });
+        const t = telemetry.startTimer('products.fetch');
         try {
+          // Short-circuit if circuit open
+          if (get()._circuitOpen()) {
+            const stateNow = get();
+            const openUntil = stateNow.circuit?.openUntil || 0;
+            if (openUntil && Date.now() >= openUntil) {
+              // cooldown passed: close circuit and continue
+              try { if (stateNow.circuitTimeoutId) clearTimeout(stateNow.circuitTimeoutId); } catch (e) {}
+              set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
+            } else {
+              return { data: [], total: 0, circuitOpen: true };
+            }
+          }
           let response;
           let products = [];
           let totalCount = 0;
@@ -311,9 +388,12 @@ const useProductStore = create(
 
       // Nueva función para búsqueda específica (con caché y cancelación)
   searchProducts: async (searchTerm, options = {}) => {
-        const correlationId = `search_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+         const correlationId = `search_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
         // ...existing code...
         try {
+          if (get()._circuitOpen()) {
+            return { data: [], total: 0, circuitOpen: true };
+          }
           const term = searchTerm.trim();
           const state = get();
           const { searchCache, cacheTTL } = state;
@@ -400,7 +480,7 @@ const useProductStore = create(
           const t = telemetry.startTimer('products.search');
           set((s)=>({ cacheMisses: s.cacheMisses + 1 }));
           telemetry.record('products.search.cache.miss', { term });
-          const response = await productService.searchProducts(term);
+          const response = await get()._withRetry(() => productService.searchProducts(term), { telemetryKey: 'products.search' });
           const products = Array.isArray(response) ? response : [response];
           const totalCount = products.length;
           const paginated = products.slice(0, pageSize);
@@ -434,30 +514,32 @@ const useProductStore = create(
           get()._recordSuccess();
           return { data: paginated, total: totalCount };
         } catch (error) {
-          if (error?.name === 'AbortError') {
-            telemetry.record('products.search.abort');
-            return { data: [], total: 0, aborted: true };
-          }
-          const norm = toApiError(error, 'Error al buscar productos', correlationId);
-          // Increment counter
-          set((s) => ({ errorCounters: { ...s.errorCounters, [norm.code]: (s.errorCounters[norm.code] || 0) + 1 } }));
-          let errorMessage = norm.message || 'Error al buscar productos';
-          if (isConnectionError(error)) {
-            errorMessage = getConnectionErrorMessage(error);
-          }
-          set({
-            products: [],
-            productsById: {},
-            totalProducts: 0,
-            totalPages: 0,
-            currentPage: 1,
-            loading: false,
-            error: errorMessage,
-          });
-          telemetry.record('products.search.error', { code: norm.code, message: norm.message, correlationId });
-          // Detectar errores de conexión
-          try { if (isConnectionError(error)) set({ isOffline: true }); } catch {}
-          return { error: errorMessage, data: [], total: 0 };
+          // count failure for circuit behavior
+          try { get()._recordFailure(); } catch (e) {}
+           if (error?.name === 'AbortError') {
+             telemetry.record('products.search.abort');
+             return { data: [], total: 0, aborted: true };
+           }
+           const norm = toApiError(error, 'Error al buscar productos', correlationId);
+           // Increment counter
+           set((s) => ({ errorCounters: { ...s.errorCounters, [norm.code]: (s.errorCounters[norm.code] || 0) + 1 } }));
+           let errorMessage = norm.message || 'Error al buscar productos';
+           if (isConnectionError(error)) {
+             errorMessage = getConnectionErrorMessage(error);
+           }
+           set({
+             products: [],
+             productsById: {},
+             totalProducts: 0,
+             totalPages: 0,
+             currentPage: 1,
+             loading: false,
+             error: errorMessage,
+           });
+           telemetry.record('products.search.error', { code: norm.code, message: norm.message, correlationId });
+           // Detectar errores de conexión
+           try { if (isConnectionError(error)) set({ isOffline: true }); } catch {}
+           return { error: errorMessage, data: [], total: 0 };
         }
       },
 
@@ -652,7 +734,9 @@ const useProductStore = create(
           sortBy: 'name',
           sortOrder: 'asc'
         },
-        circuit: { openUntil: 0, failures: 0, threshold: 4, cooldownMs: 30000 }
+        circuit: { openUntil: 0, failures: 0, threshold: 4, cooldownMs: 30000 },
+        circuitOpen: false,
+        circuitTimeoutId: null
       }),
       // Attempt to hydrate offline snapshot on startup
       hydrateFromStorage: () => {
@@ -726,7 +810,14 @@ const useProductStore = create(
         if (!ids.length) return;
         const correlationId = `bulkDeact_${Date.now()}_${ids.length}`;
         const prevSnapshot = get().productsById;
-        // ...existing code...
+        // Optimista
+        const prev = get().productsById;
+        set((state) => {
+          const products = state.products.map(p => ids.includes(p.id) ? { ...p, is_active: false } : p);
+          const productsById = { ...state.productsById };
+          ids.forEach(id => { if (productsById[id]) productsById[id] = { ...productsById[id], is_active: false }; });
+          return { products, productsById };
+        });
         try {
           await Promise.all(ids.map(id => productService.updateProduct(id, { is_active: false })));
           telemetry.record('products.bulkDeactivate.success', { count: ids.length, correlationId });

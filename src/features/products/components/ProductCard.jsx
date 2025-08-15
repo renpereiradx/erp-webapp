@@ -75,6 +75,7 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
   const [localStock, setLocalStock] = React.useState(product.stock_quantity ?? '');
   const [saving, setSaving] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState('');
+  const [errorType, setErrorType] = React.useState('validation');
 
   React.useEffect(() => {
     if (inlineEditing) {
@@ -115,10 +116,10 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
       {/* Enriched Product Indicators */}
       <div className="absolute top-2 right-2 flex flex-col gap-1">
         {isEnrichedProduct(product) && (
-          <div className="w-2 h-2 bg-green-400 rounded-full" title="Producto con datos enriquecidos" />
+          <div className="w-2 h-2 bg-green-400 rounded-full" title={t('products.enriched_title') || 'Producto con datos enriquecidos'} />
         )}
         {productSummary.hasUnitPricing && (
-          <div className="w-2 h-2 bg-blue-500 rounded-full" title="Producto con precios por unidad (kg, caja, etc.)" />
+          <div className="w-2 h-2 bg-blue-500 rounded-full" title={t('products.unit_pricing_title') || 'Producto con precios por unidad (kg, caja, etc.)'} />
         )}
       </div>
 
@@ -144,37 +145,46 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
                       <EditableField
                         value={product.name}
                         name="name"
+                        editing={inlineEditing}
                         label={t('field.name') || 'Nombre'}
-                        onSave={async (val) => onInlineSave?.(product.id, { name: val })}
+                        onSave={async (val) => { await onInlineSave?.(product.id, { name: val }); return true; }}
                         validate={(v) => !v.trim() ? (t('validation.required') || 'Requerido') : ''}
                       />
                       <EditableField
                         value={product.price}
                         name="price"
+                        editing={inlineEditing}
                         label={t('field.price') || 'Precio'}
+                        allowEnterSubmit
                         type="number"
                         onSave={async (val) => {
                           const num = parseFloat(val);
-                          if (isNaN(num) || num < 0) return false;
-                          return onInlineSave?.(product.id, { price: num });
+                          const res = await onInlineSave?.(product.id, { price: num });
+                          return res === undefined ? true : res;
                         }}
-                        validate={(v) => v !== '' && (isNaN(parseFloat(v)) || parseFloat(v) < 0) ? (t('validation.price.invalid.short') || 'Inválido') : ''}
+                        validate={(v) => v !== '' && (isNaN(parseFloat(v)) || parseFloat(v) < 0) ? (t('validation.price.invalid') || 'Precio inválido') : ''}
                       />
                       <EditableField
                         value={product.stock_quantity}
                         name="stock"
+                        editing={inlineEditing}
                         label={t('field.stock') || 'Stock'}
                         type="number"
                         onSave={async (val) => {
                           const num = parseInt(val, 10);
                           if (isNaN(num) || num < 0) return false;
-                          return onInlineSave?.(product.id, { stock_quantity: num });
+                          await onInlineSave?.(product.id, { stock_quantity: num });
+                          return true;
                         }}
-                        validate={(v) => v !== '' && (isNaN(parseInt(v,10)) || parseInt(v,10) < 0) ? (t('validation.stock.invalid.short') || 'Inválido') : ''}
+                        validate={(v) => v !== '' && (isNaN(parseInt(v,10)) || parseInt(v,10) < 0) ? (t('validation.stock.invalid') || 'Stock inválido') : ''}
                       />
                       <button type="button" onClick={onCancelInlineEdit} className="text-red-500 text-xs font-medium">{t('products.inline.cancel')}</button>
                     </div>
-                    {errorMsg && <div className="text-xs text-red-500" role="alert" aria-live="assertive">{errorMsg}</div>}
+                    {errorMsg && (
+                      <div className="text-xs text-red-500" role={errorType === 'validation' ? 'alert' : 'status'} aria-live={errorType === 'validation' ? 'assertive' : 'polite'}>
+                        {errorType === 'validation' ? t('announce.error_validation', { msg: errorMsg }) : t('announce.error_network', { msg: errorMsg })}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   product.name || (t('field.no_name') || 'Sin nombre')
@@ -226,7 +236,7 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
                 <DollarSign className="w-3 h-3 text-green-600" />
               )}
               {productSummary.hasUnitPricing && (
-                <Tag className="w-3 h-3 text-blue-500" title="Múltiples unidades disponibles" />
+                <Tag className="w-3 h-3 text-blue-500" title={t('products.multiple_units_title') || 'Múltiples unidades disponibles'} />
               )}
             </div>
           </div>

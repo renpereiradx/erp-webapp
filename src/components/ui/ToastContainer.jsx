@@ -27,7 +27,7 @@ const ToastContainer = ({ toasts, onRemoveToast }) => {
           key={toast.id}
           style={{
             pointerEvents: 'auto',
-            transform: `translateY(${index * 4}px)`,
+            transform: `translateY(${index * 6}px)`,
             transition: 'transform 200ms ease'
           }}
         >
@@ -35,6 +35,7 @@ const ToastContainer = ({ toasts, onRemoveToast }) => {
             message={toast.message}
             type={toast.type}
             duration={toast.duration}
+            actions={toast.actions}
             onClose={() => onRemoveToast(toast.id)}
           />
         </div>

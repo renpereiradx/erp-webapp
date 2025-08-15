@@ -11,7 +11,8 @@ const Toast = ({
   message, 
   type = 'success', // 'success' | 'error' | 'info'
   duration = 3000,
-  onClose 
+  onClose,
+  actions = []
 }) => {
   const { theme } = useTheme();
   const [isVisible, setIsVisible] = useState(true);
@@ -94,16 +95,12 @@ const Toast = ({
   return (
     <div
       style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        padding: '16px 20px',
-        minWidth: '300px',
-        maxWidth: '400px',
+        padding: '12px 16px',
+        minWidth: '280px',
+        maxWidth: '420px',
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
         transition: 'all 300ms ease',
@@ -112,22 +109,42 @@ const Toast = ({
     >
       {getIcon()}
       <span style={{ flex: 1 }}>{message}</span>
+
+      {actions && actions.length > 0 && (
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {actions.map((a, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                try { a.onClick && a.onClick(); } catch {}
+              }}
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: 'none',
+                color: 'inherit',
+                padding: '6px 8px',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <button
         onClick={() => {
           setIsVisible(false);
-          setTimeout(() => onClose && onClose(), 300);
+          setTimeout(() => onClose && onClose(), 200);
         }}
         style={{
           background: 'none',
           border: 'none',
           color: 'inherit',
           cursor: 'pointer',
-          padding: '4px',
-          opacity: 0.8,
-          transition: 'opacity 150ms ease'
+          padding: '4px'
         }}
-        onMouseEnter={(e) => e.target.style.opacity = 1}
-        onMouseLeave={(e) => e.target.style.opacity = 0.8}
       >
         <X className="w-4 h-4" />
       </button>

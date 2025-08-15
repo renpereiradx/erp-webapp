@@ -14,10 +14,10 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 ## 1. Accesibilidad (A11y)
 | Estado | Ítem | Detalle | Prioridad |
 |--------|------|---------|-----------|
-| ⏳ | Anuncios de error específicos | Mensajes aria-live diferenciando error de red vs validación | P1 |
-| ⏳ | Focus trap modales mejorado | Asegurar ciclo focus dentro de diálogo y retorno consistente | P1 |
-| ⏳ | Orden de tab optimizado | Revisar tabIndex en grid virtualizado y acciones inline | P2 |
-| 🚧 | Aria offline/hidratación | Banner offline listo, falta aria-label más descriptivo + announce reconexión | P2 |
+| ⏳ | Anuncios de error específicos | Mensajes aria-live diferenciando error de red vs validación — Parcial: se añadieron claves i18n y mejoras en aria-labels/inputs; falta separar y anunciar explícitamente errores de red vs validación y reconexión | P1 |
+| ⏳ | Focus trap modales mejorado | Asegurar ciclo focus dentro de diálogo y retorno consistente — Modales actuales respetan trap básico; queda cerrar la restauración de foco y pruebas de teclado | P1 |
+| ⏳ | Orden de tab optimizado | Revisar tabIndex en grid virtualizado y acciones inline — Pendiente auditoría de tabIndex y navegación en lista virtualizada | P2 |
+| ⏳ | Aria offline/hidratación | Banner offline implementado (visual + retry); falta aria-label más descriptivo y announce de reconexión para ATs | P2 |
 
 ## 2. Edición Inline
 | Estado | Ítem | Detalle | Prioridad |
@@ -31,6 +31,7 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 | Estado | Ítem | Detalle | Prioridad |
 |--------|------|---------|-----------|
 | ✅ | Jitter en backoff | +/-30% agregado a retry | - |
+| ⏳ | Circuit breaker | Circuit breaker implementado en el store; ajustes de cooldown/timers y sincronización con fake-timers en tests en curso (se observan falseos en test de cierre) | P1 |
 | ⏳ | Test expiración TTL real | Test que espere > TTL y verifique refetch | P1 |
 | ⏳ | Panel métricas UI | Mini panel (hits/misses, ratio, FPS, fallos circuito) | P2 |
 | ⏳ | Prefetch predictivo | Basado en scroll / near end para siguiente página | P2 |
@@ -82,6 +83,7 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 | ⏳ | E2E flujo completo (Playwright) | Crear, buscar, editar inline, bulk, offline | P1 |
 | ⏳ | Auditoría AXE automatizada | Validar aria, roles, contraste | P1 |
 | ⏳ | Test infinite scroll | Una vez implementado | P2 |
+| ✅ | Test harness: archivo vacío corregido | Se añadió placeholder para `inlineEdit.rollback.test.jsx` para evitar fallo de ejecución; revisar si debe transformarse en caso de prueba real | - |
 
 ## 10. Documentación
 | Estado | Ítem | Detalle | Prioridad |

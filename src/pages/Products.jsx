@@ -45,7 +45,7 @@ const DeleteProductModal = React.lazy(() => import('@/components/DeleteProductMo
 import ToastContainer from '@/components/ui/ToastContainer';
 import { useToast } from '@/hooks/useToast';
 import ProductGrid from '@/features/products/components/ProductGrid';
-import ProductSkeletonGrid from '@/features/products/components/ProductSkeletonGrid';
+import { EmptyState, ErrorState, ProductSkeletonGrid } from '@/components/ui/products-states';
 import { telemetry } from '@/utils/telemetry';
 import PageHeader from '@/components/ui/PageHeader';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
@@ -66,7 +66,7 @@ const Products = () => {
   const pageSize = useProductStore((s) => s.pageSize);
   const categories = useProductStore((s) => s.categories);
   const lastSearchTerm = useProductStore((s) => s.lastSearchTerm);
-  const selectedIds = useProductStore((s) => s.selectedIds);
+  const selectedIds = useProductStore((s) => s.selectedIds ?? []);
   const isOffline = useProductStore((s) => s.isOffline);
   const errorCounters = useProductStore((s) => s.errorCounters);
 
@@ -180,9 +180,9 @@ const Products = () => {
   useEffect(() => {
     if (!isLoading) {
       if (lastSearchTerm) {
-        announce(`${totalProducts} productos encontrados para "${lastSearchTerm}"`);
+        announce(t('announce.results_for', { total: totalProducts, term: lastSearchTerm }));
       } else {
-        announce(`${totalProducts} productos en listado`);
+        announce(t('announce.total_results', { total: totalProducts }));
       }
     }
   }, [isLoading, totalProducts, lastSearchTerm]);
@@ -306,7 +306,8 @@ const Products = () => {
     if (storeError && !storeError.includes('No se encontraron productos')) {
       errorFrom(new Error(storeError));
       telemetry.record('products.error.store', { message: storeError });
-      announce(`Error: ${storeError}`);
+      // Diferenciar error de red vs validación si ApiError disponible
+      announce(t('announce.error', { msg: storeError }));
     }
   }, [storeError, errorFrom]);
 
@@ -329,7 +330,7 @@ const Products = () => {
             <div className="text-center">
               <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" />
               <div className={`text-muted-foreground ${themeHeader('h2')}`}>
-                {isNeoBrutalism ? 'CARGANDO PRODUCTOS...' : 'Cargando productos...'}
+                {t('products.loading')}
               </div>
             </div>
           </div>
@@ -343,37 +344,20 @@ const Products = () => {
       <div className="min-h-screen bg-background text-foreground p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center py-20">
-            <div 
-              className={card('text-center p-6')}
-            >
-              <AlertCircle className="w-16 h-16 mx-auto mb-4 text-destructive" />
-              <div className={`text-destructive mb-4 ${themeHeader('h2')}`}>
-                {isNeoBrutalism ? 'ERROR AL CARGAR' : 'Error al cargar'}
-              </div>
-              <p className="text-muted-foreground mb-4">{storeError}</p>
-              {!isAuthenticated && (
-                <div className="mb-4">
-                  <Button
-                    onClick={handleDevLogin}
-                    variant="secondary"
-                    className="mr-3"
-                  >
-                    <LogIn className="w-4 h-4 mr-2" />
-                    {isNeoBrutalism ? 'LOGIN RÁPIDO' : 'Login Rápido'}
-                  </Button>
-                </div>
-              )}
-              <Button
-                onClick={() => {
+            <div className={card('text-center p-6')}>
+              <ErrorState
+                title={t('products.error.loading')}
+                message={storeError}
+                code={''}
+                onRetry={() => {
                   clearError();
                   if (lastSearchTerm) {
                     searchProducts(lastSearchTerm);
+                  } else {
+                    loadPage(1);
                   }
                 }}
-                variant="primary"
-              >
-                {isNeoBrutalism ? 'REINTENTAR' : 'Reintentar'}
-              </Button>
+              />
             </div>
           </div>
         </div>
@@ -390,10 +374,10 @@ const Products = () => {
         {isOffline && (
           <div className="bg-amber-100 border border-amber-300 text-amber-800 px-4 py-2 rounded flex items-center gap-3" role="status" aria-live="polite">
             <AlertTriangle className="w-4 h-4" />
-            <span>Modo offline: mostrando datos locales. Reintenta cuando vuelva la conexión.</span>
+            <span>{t('products.offline_banner')}</span>
             <Button size="sm" variant="outline" onClick={() => {
               if (lastSearchTerm) searchProducts(lastSearchTerm, { force: true }); else loadPage(1);
-            }}>Reintentar</Button>
+            }}>{t('products.retry')}</Button>
           </div>
         )}
         
@@ -628,20 +612,12 @@ const Products = () => {
             <div 
               className={card('text-center py-20')}
             >
-              <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <div className={`text-muted-foreground mb-4 ${themeHeader('h2')}`}>
-                {t('products.no_products_loaded')}
-               </div>
-              <div className={`text-muted-foreground mb-6 ${themeBody()}`}>
-                {t('products.search.help1')}
-              </div>
-              <Button
-                onClick={handleCreateProduct}
-                variant="primary"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                {t('products.create_first')}
-              </Button>
+              <EmptyState
+                title={t('products.no_products_loaded')}
+                description={t('products.search.help1')}
+                actionLabel={t('products.create_first')}
+                onAction={handleCreateProduct}
+              />
             </div>
           )}
 
@@ -650,31 +626,12 @@ const Products = () => {
             <div 
               className={card('text-center py-20')}
             >
-              <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <div className={`text-muted-foreground mb-4 ${themeHeader('h2')}`}>
-                {isNeoBrutalism ? 'NO SE ENCONTRARON PRODUCTOS' : 'No se encontraron productos'}
-              </div>
-              <div className={`text-muted-foreground mb-6 ${themeBody()}`}>
-                {isNeoBrutalism ? 
-                  `NO HAY PRODUCTOS QUE COINCIDAN CON "${lastSearchTerm.toUpperCase()}"` : 
-                  `No hay productos que coincidan con "${lastSearchTerm}"`
-                }
-              </div>
-              <div className="flex gap-4 justify-center">
-                <Button
-                  onClick={handleClearSearch}
-                  variant="secondary"
-                >
-                  {isNeoBrutalism ? 'LIMPIAR BÚSQUEDA' : 'Limpiar búsqueda'}
-                </Button>
-                <Button
-                  onClick={handleCreateProduct}
-                  variant="primary"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {isNeoBrutalism ? 'CREAR PRODUCTO' : 'Crear producto'}
-                </Button>
-              </div>
+              <EmptyState
+                title={t('products.no_results')}
+                description={t('products.no_results_for').replace('{term}', lastSearchTerm)}
+                actionLabel={t('products.create_first')}
+                onAction={handleCreateProduct}
+              />
             </div>
           )}
 
@@ -683,18 +640,10 @@ const Products = () => {
             <div 
               className={card('text-center py-20')}
             >
-              <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <div 
-                className={`text-muted-foreground mb-4 ${themeHeader('h2')}`}
-              >
-                {isNeoBrutalism ? 'NO SE ENCONTRARON PRODUCTOS' : 'No se encontraron productos'}
-              </div>
-              <div className={`text-muted-foreground ${themeBody()}`}>
-                {isNeoBrutalism ? 
-                  `NO HAY PRODUCTOS QUE COINCIDAN CON "${localSearchTerm.toUpperCase()}"` : 
-                  `No hay productos que coincidan con "${localSearchTerm}"`
-                }
-              </div>
+              <EmptyState
+                title={t('products.no_results')}
+                description={t('products.no_results_for').replace('{term}', localSearchTerm)}
+              />
             </div>
           )}
 

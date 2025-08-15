@@ -5,17 +5,20 @@
 
 import { useState, useCallback } from 'react';
 import { toApiError } from '@/utils/ApiError';
+import { useI18n } from '@/lib/i18n';
 
 export const useToast = () => {
+  const { t } = useI18n();
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = 'info', duration = 3000) => {
+  const addToast = useCallback((message, type = 'info', duration = 3000, actions = []) => {
     const id = Date.now() + Math.random();
     const newToast = {
       id,
       message,
       type,
-      duration
+      duration,
+      actions
     };
 
     setToasts(prev => [...prev, newToast]);
@@ -34,12 +37,12 @@ export const useToast = () => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   }, []);
 
-  const success = useCallback((message, duration) => {
-    return addToast(message, 'success', duration);
+  const success = useCallback((message, duration, actions) => {
+    return addToast(message, 'success', duration, actions);
   }, [addToast]);
 
-  const error = useCallback((message, duration) => {
-    return addToast(message, 'error', duration);
+  const error = useCallback((message, duration, actions) => {
+    return addToast(message, 'error', duration, actions);
   }, [addToast]);
 
   // Muestra un toast de error a partir de un objeto Error/ApiError, con fallback y mapping por código
@@ -47,16 +50,41 @@ export const useToast = () => {
     try {
       const norm = toApiError(err, fallback);
       let msg = norm.message || fallback;
-      // Mensajes consistentes por código
-      if (norm.code === 'INTERNAL') msg = 'Error interno del servidor. Intenta nuevamente.';
-      else if (norm.code === 'NETWORK') msg = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
-      else if (norm.code === 'UNAUTHORIZED') msg = 'Sesión expirada o inválida. Inicia sesión nuevamente.';
-      // NOT_FOUND se queda con el mensaje original para contexto
-      return addToast(msg, 'error', duration);
+      // Prefer hint from i18n keys if available
+      const hintKey = `errors.hint.${norm.code}`;
+      const hint = t(hintKey) !== hintKey ? t(hintKey) : norm.hint;
+      const toastMessage = `${msg}` + (norm.code ? ` (${norm.code})` : '');
+
+      const actions = [
+        {
+          label: t('errors.toast.copy_code'),
+          onClick: () => {
+            try { navigator.clipboard.writeText(norm.code || ''); } catch {}
+          }
+        },
+        {
+          label: t('errors.toast.retry'),
+          onClick: () => {
+            // broadcast intent to retry — listeners (pages) may handle
+            try { window.dispatchEvent(new CustomEvent('toast:retry', { detail: { code: norm.code, correlationId: norm.correlationId } })); } catch {}
+          }
+        },
+        {
+          label: t('errors.toast.diagnostics'),
+          onClick: () => {
+            try { window.dispatchEvent(new CustomEvent('toast:diagnostics', { detail: { code: norm.code, correlationId: norm.correlationId } })); } catch {}
+          }
+        }
+      ];
+
+      // Compose message with hint when available
+      const fullMessage = hint ? `${toastMessage} — ${hint}` : toastMessage;
+
+      return addToast(fullMessage, 'error', duration, actions);
     } catch {
       return addToast(fallback, 'error', duration);
     }
-  }, [addToast]);
+  }, [addToast, t]);
 
   const info = useCallback((message, duration) => {
     return addToast(message, 'info', duration);

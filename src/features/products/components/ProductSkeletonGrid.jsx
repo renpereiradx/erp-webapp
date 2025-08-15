@@ -1,7 +1,9 @@
 import React from 'react';
+import { useI18n } from '@/lib/i18n';
 
 // Grid de skeletons para mantener layout estable mientras carga
 export default function ProductSkeletonGrid({ count = 12, itemMinWidth = 260, gap = '1.5rem' }) {
+  const { t } = useI18n();
   const items = Array.from({ length: count });
   return (
     <div
@@ -11,7 +13,7 @@ export default function ProductSkeletonGrid({ count = 12, itemMinWidth = 260, ga
         gap,
       }}
       role="list"
-      aria-label="Cargando productos"
+      aria-label={t('products.loading')}
     >
       {items.map((_, i) => (
         <div key={i} role="listitem">

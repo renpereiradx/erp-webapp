@@ -23,6 +23,7 @@ import BusinessManagementAPI from '@/services/BusinessManagementAPI';
 import { isEnrichedProduct } from '@/utils/productUtils';
 import { analyzeProductData, extractSafeProductData } from '@/utils/productDataUtils';
 import StatusBadge from '@/components/ui/StatusBadge';
+import { useI18n } from '@/lib/i18n';
 
 const ProductDetailModal = ({ 
   isOpen, 
@@ -31,6 +32,7 @@ const ProductDetailModal = ({
   onRefresh
 }) => {
   const { theme } = useTheme();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('info');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -102,12 +104,12 @@ const ProductDetailModal = ({
         try {
           const descriptions = await productService.getProductDescriptions(product.id);
           if (descriptions && descriptions.length > 0) {
-            setDescription(descriptions[0].description || 'Sin descripción disponible');
+            setDescription(descriptions[0].description || t('products.no_description'));
           } else {
-            setDescription('Sin descripción disponible');
+            setDescription(t('products.no_description'));
           }
         } catch (error) {
-          setDescription('Sin descripción disponible');
+          setDescription(t('products.no_description'));
         }
       }
 
@@ -146,11 +148,11 @@ const ProductDetailModal = ({
       }
       
     } catch (error) {
-      setError('Error al cargar detalles del producto: ' + error.message);
+      setError(t('products.error.load_details') + ': ' + error.message);
       
       // Fallback usando datos seguros (sin más API calls)
       const safeData = extractSafeProductData(product);
-      setDescription(safeData.description || 'Sin descripción disponible');
+      setDescription(safeData.description || t('products.no_description'));
       setPriceData(safeData.priceData);
       setStock(safeData.stockData.current !== null ? safeData.stockData : {
         current: 0,
@@ -296,7 +298,7 @@ const ProductDetailModal = ({
       }
       
       setEditingDescription(false);
-      setSuccessMessage('Descripción actualizada exitosamente');
+      setSuccessMessage(t('products.description_updated'));
       
       // Limpiar el mensaje de éxito después de 5 segundos (aumentado para mejor visibilidad)
       setTimeout(() => setSuccessMessage(''), 5000);
@@ -304,7 +306,7 @@ const ProductDetailModal = ({
       // Refrescar la lista si es necesario
       onRefresh && onRefresh();
     } catch (err) {
-      setError('Error al guardar descripción: ' + (err.message || 'Error desconocido'));
+      setError(t('products.error.save_description') + ': ' + (err.message || 'Error desconocido'));
     } finally {
       setLoading(false);
     }
@@ -334,14 +336,14 @@ const ProductDetailModal = ({
       }
       
       setEditingPrice(false);
-      setSuccessMessage('Precios actualizados exitosamente');
+      setSuccessMessage(t('products.prices_updated'));
       
       // Limpiar el mensaje de éxito después de 3 segundos
       setTimeout(() => setSuccessMessage(''), 3000);
       
       onRefresh && onRefresh();
     } catch (err) {
-      setError('Error al guardar precio: ' + (err.message || 'Error desconocido'));
+      setError(t('products.error.save_price') + ': ' + (err.message || 'Error desconocido'));
     } finally {
       setLoading(false);
     }
@@ -369,14 +371,14 @@ const ProductDetailModal = ({
       }
       
       setEditingStock(false);
-      setSuccessMessage('Stock actualizado exitosamente');
+      setSuccessMessage(t('products.stock_updated'));
       
       // Limpiar el mensaje de éxito después de 3 segundos
       setTimeout(() => setSuccessMessage(''), 3000);
       
       onRefresh && onRefresh();
     } catch (err) {
-      setError('Error al guardar stock: ' + (err.message || 'Error desconocido'));
+      setError(t('products.error.save_stock') + ': ' + (err.message || 'Error desconocido'));
     } finally {
       setLoading(false);
     }
@@ -472,16 +474,16 @@ const ProductDetailModal = ({
               }}>
                 {product.name}
               </h2>
-              <p style={{
-                fontSize: '0.875rem',
-                color: 'var(--muted-foreground)',
-                margin: '4px 0 0 0'
-              }}>
-                ID: {product.id}
-              </p>
-            </div>
-          </div>
-          <button
+               <p style={{
+                 fontSize: '0.875rem',
+                 color: 'var(--muted-foreground)',
+                 margin: '4px 0 0 0'
+               }}>
+                {t('products.id_label')}: {product.id}
+               </p>
+             </div>
+           </div>
+           <button
             onClick={onClose}
             style={{
               background: 'none',
@@ -506,28 +508,28 @@ const ProductDetailModal = ({
               onClick={() => setActiveTab('info')}
             >
               <Package className="w-4 h-4 mr-2" />
-              {isNeoBrutalism ? 'INFO' : 'Información'}
+              {isNeoBrutalism ? t('products.tabs.info').toUpperCase() : t('products.tabs.info')}
             </button>
             <button 
               style={getTabStyles('description')}
               onClick={() => setActiveTab('description')}
             >
               <FileText className="w-4 h-4 mr-2" />
-              {isNeoBrutalism ? 'DESCRIPCIÓN' : 'Descripción'}
+              {isNeoBrutalism ? t('products.tabs.description').toUpperCase() : t('products.tabs.description')}
             </button>
             <button 
               style={getTabStyles('price')}
               onClick={() => setActiveTab('price')}
             >
               <DollarSign className="w-4 h-4 mr-2" />
-              {isNeoBrutalism ? 'PRECIOS' : 'Precios'}
+              {isNeoBrutalism ? t('products.tabs.price').toUpperCase() : t('products.tabs.price')}
             </button>
             <button 
               style={getTabStyles('stock')}
               onClick={() => setActiveTab('stock')}
             >
               <Layers className="w-4 h-4 mr-2" />
-              {isNeoBrutalism ? 'STOCK' : 'Stock'}
+              {isNeoBrutalism ? t('products.tabs.stock').toUpperCase() : t('products.tabs.stock')}
             </button>
           </div>
         </div>
@@ -593,20 +595,20 @@ const ProductDetailModal = ({
                     fontSize: '1rem',
                     fontWeight: '600'
                   }}>
-                    {isNeoBrutalism ? 'INFORMACIÓN GENERAL' : 'Información General'}
+                    {isNeoBrutalism ? t('products.info_general').toUpperCase() : t('products.info_general')}
                   </h4>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.875rem' }}>
                     <div>
                       <strong>Nombre:</strong><br />
                       <span style={{ color: '#4338ca', fontWeight: '600' }}>
-                        {product.name || 'Sin nombre'}
+                        {product.name || t('products.no_name')}
                       </span>
                     </div>
                     <div>
                       <strong>Categoría:</strong><br />
                       <span style={{ color: '#4338ca', fontWeight: '600' }}>
-                        {product.category_id || product.id_category || 'Sin categoría'}
+                        {product.category_id || product.id_category || t('products.no_category')}
                       </span>
                     </div>
                     <div>
@@ -672,23 +674,23 @@ const ProductDetailModal = ({
                     fontSize: '1rem',
                     fontWeight: '600'
                   }}>
-                    {isNeoBrutalism ? 'INFORMACIÓN DE DESCRIPCIÓN' : 'Información de Descripción'}
+                    {isNeoBrutalism ? t('products.description_info').toUpperCase() : t('products.description_info')}
                   </h4>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.875rem' }}>
                     <div>
                       <strong>Descripción Disponible:</strong><br />
                       <span style={{ 
-                        color: (description && description.length > 0 && description !== 'Sin descripción disponible') ? '#059669' : '#ef4444',
+                        color: (description && description.length > 0 && description !== t('products.no_description')) ? '#059669' : '#ef4444',
                         fontWeight: '600'
                       }}>
-                        {(description && description.length > 0 && description !== 'Sin descripción disponible') ? 'Sí' : 'No'}
+                        {(description && description.length > 0 && description !== t('products.no_description')) ? 'Sí' : 'No'}
                       </span>
                     </div>
                     <div>
                       <strong>Longitud:</strong><br />
                       <span style={{ color: '#7c3aed', fontWeight: '600' }}>
-                        {(description && description !== 'Sin descripción disponible') ? `${description.length} caracteres` : '0 caracteres'}
+                        {(description && description !== t('products.no_description')) ? `${description.length} caracteres` : '0 caracteres'}
                       </span>
                     </div>
                     <div style={{ gridColumn: '1 / -1' }}>
@@ -696,11 +698,11 @@ const ProductDetailModal = ({
                       <span style={{ 
                         color: '#6b7280', 
                         fontSize: '0.875rem',
-                        fontStyle: (description && description !== 'Sin descripción disponible') ? 'normal' : 'italic'
+                        fontStyle: (description && description !== t('products.no_description')) ? 'normal' : 'italic'
                       }}>
-                        {(description && description !== 'Sin descripción disponible') ? 
+                        {(description && description !== t('products.no_description')) ? 
                           description : 
-                          'Sin descripción disponible'
+                          t('products.no_description')
                         }
                       </span>
                     </div>
@@ -715,8 +717,8 @@ const ProductDetailModal = ({
                   textTransform: isNeoBrutalism ? 'uppercase' : 'none',
                   margin: 0
                 }}>
-                  {isNeoBrutalism ? 'DESCRIPCIÓN DEL PRODUCTO' : 'Descripción del Producto'}
-                </h3>
+                  {isNeoBrutalism ? t('products.description_heading').toUpperCase() : t('products.description_heading')}
+                 </h3>
                 {!editingDescription && (
                   <button
                     onClick={() => setEditingDescription(true)}
@@ -733,7 +735,7 @@ const ProductDetailModal = ({
                     }}
                   >
                     <Edit className="w-4 h-4" />
-                    {isNeoBrutalism ? 'EDITAR' : 'Editar'}
+                    {isNeoBrutalism ? t('products.edit').toUpperCase() : t('products.edit')}
                   </button>
                 )}
               </div>
@@ -763,7 +765,7 @@ const ProductDetailModal = ({
                         cursor: 'pointer'
                       }}
                     >
-                      {isNeoBrutalism ? 'CANCELAR' : 'Cancelar'}
+                      {isNeoBrutalism ? t('products.cancel').toUpperCase() : t('products.cancel')}
                     </button>
                     <button
                       onClick={handleSaveDescription}
@@ -781,7 +783,7 @@ const ProductDetailModal = ({
                       }}
                     >
                       <Save className="w-4 h-4" />
-                      {loading ? (isNeoBrutalism ? 'GUARDANDO...' : 'Guardando...') : (isNeoBrutalism ? 'GUARDAR' : 'Guardar')}
+                      {loading ? (isNeoBrutalism ? t('products.saving').toUpperCase() : t('products.saving')) : (isNeoBrutalism ? t('products.save').toUpperCase() : t('products.save'))}
                     </button>
                   </div>
                 </div>
@@ -808,8 +810,8 @@ const ProductDetailModal = ({
                     fontSize: '1rem',
                     fontWeight: '600'
                   }}>
-                    {isNeoBrutalism ? 'INFORMACIÓN DE PRECIOS' : 'Información de Precios'}
-                  </h4>
+                    {isNeoBrutalism ? t('products.price_info').toUpperCase() : t('products.price_info')}
+                   </h4>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.875rem' }}>
                     <div>
@@ -847,7 +849,7 @@ const ProductDetailModal = ({
                   textTransform: isNeoBrutalism ? 'uppercase' : 'none',
                   margin: 0
                 }}>
-                  {isNeoBrutalism ? 'CONFIGURAR PRECIOS' : 'Configurar Precios'}
+                  {isNeoBrutalism ? t('products.configure_prices').toUpperCase() : t('products.configure_prices')}
                 </h3>
                 {!editingPrice && (
                   <button
@@ -865,7 +867,7 @@ const ProductDetailModal = ({
                     }}
                   >
                     <Plus className="w-4 h-4" />
-                    {isNeoBrutalism ? 'CONFIGURAR' : 'Configurar'}
+                    {isNeoBrutalism ? t('products.configure').toUpperCase() : t('products.configure')}
                   </button>
                 )}
               </div>
@@ -943,7 +945,7 @@ const ProductDetailModal = ({
                         cursor: 'pointer'
                       }}
                     >
-                      {isNeoBrutalism ? 'CANCELAR' : 'Cancelar'}
+                      {isNeoBrutalism ? t('products.cancel').toUpperCase() : t('products.cancel')}
                     </button>
                     <button
                       onClick={handleSavePrice}
@@ -961,7 +963,7 @@ const ProductDetailModal = ({
                       }}
                     >
                       <Save className="w-4 h-4" />
-                      {loading ? (isNeoBrutalism ? 'GUARDANDO...' : 'Guardando...') : (isNeoBrutalism ? 'GUARDAR' : 'Guardar')}
+                      {loading ? (isNeoBrutalism ? t('products.saving').toUpperCase() : t('products.saving')) : (isNeoBrutalism ? t('products.save').toUpperCase() : t('products.save'))}
                     </button>
                   </div>
                 </div>
@@ -988,8 +990,8 @@ const ProductDetailModal = ({
                     fontSize: '1rem',
                     fontWeight: '600'
                   }}>
-                    {isNeoBrutalism ? 'INFORMACIÓN DE STOCK' : 'Información de Stock'}
-                  </h4>
+                    {isNeoBrutalism ? t('products.stock_info').toUpperCase() : t('products.stock_info')}
+                   </h4>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.875rem' }}>
                     <div>
@@ -1033,7 +1035,7 @@ const ProductDetailModal = ({
                   textTransform: isNeoBrutalism ? 'uppercase' : 'none',
                   margin: 0
                 }}>
-                  {isNeoBrutalism ? 'CONFIGURAR INVENTARIO' : 'Configurar Inventario'}
+                  {isNeoBrutalism ? t('products.configure_stock').toUpperCase() : t('products.configure_stock')}
                 </h3>
                 {!editingStock && (
                   <button
@@ -1051,7 +1053,7 @@ const ProductDetailModal = ({
                     }}
                   >
                     <Plus className="w-4 h-4" />
-                    {isNeoBrutalism ? 'CONFIGURAR' : 'Configurar'}
+                    {isNeoBrutalism ? t('products.configure').toUpperCase() : t('products.configure')}
                   </button>
                 )}
               </div>
@@ -1128,7 +1130,7 @@ const ProductDetailModal = ({
                         cursor: 'pointer'
                       }}
                     >
-                      {isNeoBrutalism ? 'CANCELAR' : 'Cancelar'}
+                      {isNeoBrutalism ? t('products.cancel').toUpperCase() : t('products.cancel')}
                     </button>
                     <button
                       onClick={handleSaveStock}
@@ -1146,7 +1148,7 @@ const ProductDetailModal = ({
                       }}
                     >
                       <Save className="w-4 h-4" />
-                      {loading ? (isNeoBrutalism ? 'GUARDANDO...' : 'Guardando...') : (isNeoBrutalism ? 'GUARDAR' : 'Guardar')}
+                      {loading ? (isNeoBrutalism ? t('products.saving').toUpperCase() : t('products.saving')) : (isNeoBrutalism ? t('products.save').toUpperCase() : t('products.save'))}
                     </button>
                   </div>
                 </div>

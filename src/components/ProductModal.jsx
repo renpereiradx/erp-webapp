@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { productService } from '@/services/productService';
 import useProductStore from '@/store/useProductStore';
+import { useI18n } from '@/lib/i18n';
 
 const ProductModal = ({ 
   isOpen, 
@@ -19,6 +20,7 @@ const ProductModal = ({
 }) => {
   const { theme } = useTheme();
   const { categories, fetchCategories } = useProductStore();
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     name: '',
     id_category: '',
@@ -348,8 +350,8 @@ const ProductModal = ({
               margin: 0
             }}>
               {product ? 
-                (isNeoBrutalism ? 'EDITAR PRODUCTO' : 'Editar Producto') : 
-                (isNeoBrutalism ? 'NUEVO PRODUCTO' : 'Nuevo Producto')
+                (isNeoBrutalism ? t('products.edit_title') || 'EDITAR PRODUCTO' : t('products.edit_title') || 'Editar Producto') : 
+                (isNeoBrutalism ? t('products.new_title') || 'NUEVO PRODUCTO' : t('products.new_title') || 'Nuevo Producto')
               }
             </h2>
           </div>
@@ -417,7 +419,7 @@ const ProductModal = ({
                 fontWeight: '600',
                 textTransform: isNeoBrutalism ? 'uppercase' : 'none'
               }}>
-                {isNeoBrutalism ? 'NOMBRE DEL PRODUCTO *' : 'Nombre del Producto *'}
+                {isNeoBrutalism ? (t('field.name') || 'NOMBRE DEL PRODUCTO *') : (t('field.name') || 'Nombre del Producto *')}
               </label>
               <input
                 type="text"
@@ -429,7 +431,7 @@ const ProductModal = ({
                   ...inputStyles,
                   width: '100%'
                 }}
-                placeholder={isNeoBrutalism ? 'INGRESE EL NOMBRE...' : 'Ingrese el nombre del producto'}
+                placeholder={isNeoBrutalism ? (t('products.name_placeholder') || 'INGRESE EL NOMBRE...') : (t('products.name_placeholder') || 'Ingrese el nombre del producto')}
               />
             </div>
 
@@ -442,7 +444,7 @@ const ProductModal = ({
                 fontWeight: '600',
                 textTransform: isNeoBrutalism ? 'uppercase' : 'none'
               }}>
-                {isNeoBrutalism ? 'DESCRIPCIÓN' : 'Descripción'}
+                {isNeoBrutalism ? (t('products.description_label') || 'DESCRIPCIÓN') : (t('products.description_label') || 'Descripción')}
               </label>
               <textarea
                 name="description"
@@ -456,7 +458,7 @@ const ProductModal = ({
                   minHeight: '80px',
                   fontFamily: 'inherit'
                 }}
-                placeholder={isNeoBrutalism ? 'DESCRIPCIÓN DEL PRODUCTO...' : 'Descripción detallada del producto...'}
+                placeholder={isNeoBrutalism ? (t('products.description_placeholder') || 'DESCRIPCIÓN DEL PRODUCTO...') : (t('products.description_placeholder') || 'Descripción detallada del producto...')}
               />
             </div>
 
@@ -469,7 +471,7 @@ const ProductModal = ({
                 fontWeight: '600',
                 textTransform: isNeoBrutalism ? 'uppercase' : 'none'
               }}>
-                {isNeoBrutalism ? 'CATEGORÍA *' : 'Categoría *'}
+                {isNeoBrutalism ? (t('products.category_label') || 'CATEGORÍA *') : (t('products.category_label') || 'Categoría *')}
               </label>
               <select
                 name="id_category"
@@ -487,12 +489,12 @@ const ProductModal = ({
               >
                 <option value="" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
                   {categoriesLoading 
-                    ? (isNeoBrutalism ? 'CARGANDO CATEGORÍAS...' : 'Cargando categorías...')
+                    ? (isNeoBrutalism ? (t('products.categories_loading') || 'CARGANDO CATEGORÍAS...') : (t('products.categories_loading') || 'Cargando categorías...'))
                     : categoriesError
-                    ? (isNeoBrutalism ? 'ERROR AL CARGAR CATEGORÍAS' : 'Error al cargar categorías')
+                    ? (isNeoBrutalism ? (t('products.categories_error') || 'ERROR AL CARGAR CATEGORÍAS') : (t('products.categories_error') || 'Error al cargar categorías'))
                     : categories.length === 0
-                    ? (isNeoBrutalism ? 'NO HAY CATEGORÍAS DISPONIBLES' : 'No hay categorías disponibles')
-                    : (isNeoBrutalism ? 'SELECCIONAR CATEGORÍA...' : 'Seleccionar categoría...')
+                    ? (isNeoBrutalism ? (t('products.categories_none') || 'NO HAY CATEGORÍAS DISPONIBLES') : (t('products.categories_none') || 'No hay categorías disponibles'))
+                    : (isNeoBrutalism ? (t('products.categories_select') || 'SELECCIONAR CATEGORÍA...') : (t('products.categories_select') || 'Seleccionar categoría...'))
                   }
                 </option>
                 {categories.length > 0 && categories.map(category => (
@@ -552,7 +554,7 @@ const ProductModal = ({
                 fontWeight: '600',
                 textTransform: isNeoBrutalism ? 'uppercase' : 'none'
               }}>
-                {isNeoBrutalism ? 'TIPO DE PRODUCTO' : 'Tipo de Producto'}
+                {isNeoBrutalism ? (t('products.type_label') || 'TIPO DE PRODUCTO') : (t('products.type_label') || 'Tipo de Producto')}
               </label>
               <select
                 name="product_type"
@@ -582,7 +584,7 @@ const ProductModal = ({
                 fontWeight: '600',
                 textTransform: isNeoBrutalism ? 'uppercase' : 'none'
               }}>
-                {isNeoBrutalism ? 'PRODUCTO ACTIVO' : 'Producto Activo'}
+                {isNeoBrutalism ? (t('products.active_label') || 'PRODUCTO ACTIVO') : (t('products.active_label') || 'Producto Activo')}
               </label>
             </div>
           </div>
@@ -602,7 +604,7 @@ const ProductModal = ({
               style={getButtonStyles('secondary')}
               disabled={loading}
             >
-              {isNeoBrutalism ? 'CANCELAR' : 'Cancelar'}
+              {isNeoBrutalism ? (t('products.cancel') || 'CANCELAR') : (t('products.cancel') || 'Cancelar')}
             </button>
             <button
               type="submit"
@@ -610,13 +612,13 @@ const ProductModal = ({
               disabled={loading || (categoriesError && categories.length === 0)}
             >
               {loading ? (
-                isNeoBrutalism ? 'GUARDANDO...' : 'Guardando...'
+                isNeoBrutalism ? (t('products.saving') || 'GUARDANDO...') : (t('products.saving') || 'Guardando...')
               ) : (categoriesError && categories.length === 0) ? (
-                isNeoBrutalism ? 'CARGAR CATEGORÍAS PRIMERO' : 'Cargar categorías primero'
+                isNeoBrutalism ? (t('products.categories_first') || 'CARGAR CATEGORÍAS PRIMERO') : (t('products.categories_first') || 'Cargar categorías primero')
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  {isNeoBrutalism ? 'GUARDAR' : 'Guardar'}
+                  {isNeoBrutalism ? (t('products.save') || 'GUARDAR') : (t('products.save') || 'Guardar')}
                 </>
               )}
             </button>
@@ -628,3 +630,27 @@ const ProductModal = ({
 };
 
 export default ProductModal;
+
+/**
+ * Claves i18n por defecto para ProductModal
+ */
+
+export const productModalI18nDefaults = {
+  'products.edit_title': 'Editar Producto',
+  'products.new_title': 'Nuevo Producto',
+  'products.name_placeholder': 'Ingrese el nombre del producto',
+  'products.description_label': 'Descripción',
+  'products.description_placeholder': 'Descripción detallada del producto...',
+  'products.category_label': 'Categoría',
+  'products.categories_loading': 'Cargando categorías...',
+  'products.categories_error': 'Error al cargar categorías',
+  'products.categories_none': 'No hay categorías disponibles',
+  'products.categories_select': 'Seleccionar categoría...',
+  'products.type_label': 'Tipo de Producto',
+  'products.active_label': 'Producto Activo',
+  'products.cancel': 'Cancelar',
+  'products.save': 'Guardar',
+  'products.saving': 'Guardando...',
+  'products.categories_first': 'Cargar categorías primero',
+  'field.name': 'NOMBRE DEL PRODUCTO *'
+};
