@@ -3,7 +3,7 @@
  * Incluye variantes para Neo-Brutalist, Material y Fluent Design
  */
 
-import React from 'react';
+import React, { useId } from 'react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 
@@ -15,9 +15,14 @@ const Input = React.forwardRef(({
   helperText,
   leftIcon,
   rightIcon,
+  id,
+  name,
   ...props 
 }, ref) => {
   const { theme } = useTheme();
+  const generatedId = useId();
+  const inputId = id || (name ? `${name}-${generatedId}` : `input-${generatedId}`);
+  const helperId = `${inputId}-helper`;
   const isNeoBrutalist = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
   
   const getInputStyles = () => {
@@ -54,10 +59,10 @@ const Input = React.forwardRef(({
   };
 
   return (
-    <div className="erp-input-wrapper w-full">
+    <div className="erp-input-wrapper w-full" data-testid={props['data-testid'] ?? `input-wrapper-${name || generatedId}`}>
       {/* Label */}
       {label && (
-        <label className={cn(
+        <label htmlFor={inputId} className={cn(
           "erp-input-label block text-sm mb-3",
           isNeoBrutalist ? "font-black uppercase tracking-wide" : "font-medium"
         )} style={{ color: 'var(--foreground)' }}>
@@ -81,7 +86,11 @@ const Input = React.forwardRef(({
         
         {/* Input Field */}
         <input
+          id={inputId}
+          name={name}
           type={type}
+          aria-invalid={!!error}
+          aria-describedby={helperText ? helperId : undefined}
           className={cn(
             "erp-input flex h-12 w-full px-4 py-3 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium transition-all duration-150 placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
             isNeoBrutalist && "brutalist-input font-bold focus-visible:translate-x-[2px] focus-visible:translate-y-[2px]",
@@ -129,7 +138,7 @@ const Input = React.forwardRef(({
       
       {/* Helper Text */}
       {helperText && (
-        <p className={cn(
+        <p id={helperId} className={cn(
           "erp-input-helper text-sm mt-2",
           isNeoBrutalist ? "font-bold uppercase tracking-wide" : "font-medium",
           error && "text-destructive"

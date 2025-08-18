@@ -6,7 +6,7 @@
 import React from 'react';
 
 const AuthBypass = ({ children }) => {
-  return children;
+  return <div data-testid="auth-bypass">{children}</div>;
 };
 
 export default AuthBypass;

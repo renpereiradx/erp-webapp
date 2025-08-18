@@ -108,23 +108,23 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div>
               <Label htmlFor="name" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Nombre</Label>
-              <Input leftIcon={<User />} id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Ej: Juan" required data-testid="client-name-input" />
+              <Input leftIcon={<User />} id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Ej: Juan" required data-testid="client-name-input" aria-required="true" />
             </div>
             <div>
               <Label htmlFor="last_name" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Apellido</Label>
-              <Input leftIcon={<User />} id="last_name" name="last_name" value={formData.last_name} onChange={handleChange} placeholder="Ej: Pérez" />
+              <Input leftIcon={<User />} id="last_name" name="last_name" value={formData.last_name} onChange={handleChange} placeholder="Ej: Pérez" data-testid="client-last-name-input" aria-required="false" />
             </div>
             <div>
               <Label htmlFor="document_id" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Documento</Label>
-              <Input leftIcon={<FileText />} id="document_id" name="document_id" value={formData.document_id} onChange={handleChange} placeholder="Ej: 1234567-8" data-testid="client-document-input" />
+              <Input leftIcon={<FileText />} id="document_id" name="document_id" value={formData.document_id} onChange={handleChange} placeholder="Ej: 1234567-8" data-testid="client-document-input" aria-required="false" />
             </div>
             <div>
               <Label htmlFor="address" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Dirección</Label>
-              <Input leftIcon={<MapPin />} id="address" name="address" value={formData.address} onChange={handleChange} placeholder="Ej: Av. Siempre Viva 123" />
+              <Input leftIcon={<MapPin />} id="address" name="address" value={formData.address} onChange={handleChange} placeholder="Ej: Av. Siempre Viva 123" data-testid="client-address-input" aria-required="false" />
             </div>
             <div>
               <Label htmlFor="contact" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Contacto</Label>
-              <Input leftIcon={<Phone />} id="contact" name="contact" value={formData.contact} onChange={handleChange} placeholder="Ej: 987-654-321 o juan.perez@example.com" />
+              <Input leftIcon={<Phone />} id="contact" name="contact" value={formData.contact} onChange={handleChange} placeholder="Ej: 987-654-321 o juan.perez@example.com" data-testid="client-contact-input" aria-required="false" />
             </div>
           </div>
 
