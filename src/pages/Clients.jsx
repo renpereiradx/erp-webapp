@@ -33,6 +33,8 @@ import {
 import PageHeader from '@/components/ui/PageHeader';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/Button';
+import DataState from '@/components/ui/DataState';
+import { useI18n } from '@/lib/i18n';
 
 // Unificado: badge de estado por tokens
 // const getBadgeStyles = (theme, isActive) => {
@@ -75,6 +77,8 @@ const ClientsPage = () => {
 
   const isNeoBrutalism = theme?.includes('neo-brutalism');
   const isMaterial = theme?.includes('material');
+
+  const { t } = useI18n();
 
   // Emitir toast cuando el store exponga un error
   useEffect(() => {
@@ -142,55 +146,52 @@ const ClientsPage = () => {
   telemetry.record('clients.modal.success');
   };
 
+  // Reemplazamos la implementación previa por DataState para estandarizar estados
   const renderMainContent = () => {
     if (loading) {
+      return <DataState variant="loading" testId="clients-loading" skeletonProps={{ count: 6 }} />;
+    }
+
+    if (error) {
       return (
-        <div className="text-center py-20">
-          <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" />
-          <div className={`text-muted-foreground ${themeHeader('h2')}`}>
-            {isNeoBrutalism ? 'BUSCANDO...' : 'Buscando...'}
-          </div>
-        </div>
+        <DataState
+          variant="error"
+          title={isNeoBrutalism ? 'ERROR' : 'Error'}
+          message={error}
+          onRetry={() => searchClients(lastSearchTerm)}
+          testId="clients-error"
+        />
       );
     }
 
-  if (error) {
+    if ((clients || []).length === 0 && apiSearchTerm.trim() === '') {
       return (
-        <div className={card('text-center py-20 p-6')}>
-          <AlertCircle className="w-16 h-16 mx-auto mb-4 text-destructive" />
-          <p className={`text-destructive mb-4 ${themeHeader('h2')}`}>{isNeoBrutalism ? 'ERROR' : 'Error'}</p>
-          <p className={`text-muted-foreground mb-4 ${themeLabel()}`}>{error}</p>
-          <Button variant="primary" onClick={() => searchClients(lastSearchTerm)}>
-            {isNeoBrutalism ? 'REINTENTAR' : 'Reintentar'}
-          </Button>
-        </div>
-      );
-    }
-
-    if (clients.length === 0 && apiSearchTerm.trim() === '') {
-      return (
-        <div className={card('text-center py-20 p-6')}>
-          <User className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <p className={`text-muted-foreground mb-4 ${themeHeader('h2')}`}>{isNeoBrutalism ? 'INICIA UNA BÚSQUEDA' : 'Inicia una Búsqueda'}</p>
-          <p className={`text-muted-foreground ${themeLabel()}`}>{isNeoBrutalism ? 'UTILIZA LA BARRA SUPERIOR PARA ENCONTRAR CLIENTES' : 'Utiliza la barra superior para encontrar clientes.'}</p>
-        </div>
+        <DataState
+          variant="empty"
+          title={isNeoBrutalism ? 'INICIA UNA BÚSQUEDA' : 'Inicia una Búsqueda'}
+          description={isNeoBrutalism ? 'UTILIZA LA BARRA SUPERIOR PARA ENCONTRAR CLIENTES' : 'Utiliza la barra superior para encontrar clientes.'}
+          actionLabel={isNeoBrutalism ? 'NUEVO CLIENTE' : 'Nuevo Cliente'}
+          onAction={handleCreateClient}
+          testId="clients-empty-initial"
+        />
       );
     }
 
     if (filteredClients.length === 0) {
-        return (
-            <div className={card('text-center py-20 p-6')}>
-                <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                <p className={`text-muted-foreground mb-4 ${themeHeader('h2')}`}>{isNeoBrutalism ? 'SIN RESULTADOS' : 'Sin Resultados'}</p>
-                <p className={`text-muted-foreground ${themeLabel()}`}>{isNeoBrutalism ? `NO SE ENCONTRARON CLIENTES PARA TU FILTRO` : `No se encontraron clientes para tu filtro`}</p>
-            </div>
-        );
+      return (
+        <DataState
+          variant="empty"
+          title={isNeoBrutalism ? 'SIN RESULTADOS' : 'Sin Resultados'}
+          description={isNeoBrutalism ? 'NO SE ENCONTRARON CLIENTES PARA TU FILTRO' : 'No se encontraron clientes para tu filtro'}
+          testId="clients-empty-filter"
+        />
+      );
     }
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredClients.map(client => (
-          <div key={client.id} className={`${card('p-4 sm:p-5')} group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 flex flex-col`}>
+          <div key={client.id} className={`${card('p-4 sm:p-5')} group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 flex flex-col`} data-testid={`client-card-${client.id}`}>
             {/* Accent bar */}
             {!isNeoBrutalism ? (
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60 opacity-80 rounded-t-md" aria-hidden="true" />
@@ -210,9 +211,9 @@ const ClientsPage = () => {
                 </div>
             </div>
             <div className="flex gap-2 mt-3">
-              <Button onClick={() => handleViewClient(client)} variant="secondary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50"><Eye className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'VER' : 'Ver'}</Button>
-              <Button onClick={() => handleEditClient(client)} variant="primary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50"><Edit className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'EDITAR' : 'Editar'}</Button>
-              <Button onClick={() => handleDeleteClient(client)} variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" aria-label="Eliminar cliente"><Trash2 className="w-4 h-4" /></Button>
+              <Button onClick={() => handleViewClient(client)} variant="secondary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50" data-testid={`client-view-${client.id}`}><Eye className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'VER' : 'Ver'}</Button>
+              <Button onClick={() => handleEditClient(client)} variant="primary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50" data-testid={`client-edit-${client.id}`}><Edit className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'EDITAR' : 'Editar'}</Button>
+              <Button onClick={() => handleDeleteClient(client)} variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" aria-label="Eliminar cliente" data-testid={`client-delete-${client.id}`}><Trash2 className="w-4 h-4" /></Button>
             </div>
           </div>
         ))}
@@ -221,7 +222,7 @@ const ClientsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-background text-foreground p-6" data-testid="clients-page">
       <div className="max-w-7xl mx-auto space-y-8">
         <PageHeader
           title={isNeoBrutalism ? 'GESTIÓN DE CLIENTES' : 'Gestión de Clientes'}
@@ -291,7 +292,7 @@ const ClientsPage = () => {
           )}
         </section>
 
-        <section>{renderMainContent()}</section>
+        <section data-testid="clients-main">{renderMainContent()}</section>
 
         {totalClients > 0 && totalPages > 1 && (
           <footer className="text-center py-8">

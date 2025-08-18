@@ -32,6 +32,8 @@ import {
 import PageHeader from '@/components/ui/PageHeader';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/Button';
+import DataState from '@/components/ui/DataState';
+import { useI18n } from '@/lib/i18n';
 
 const SuppliersPage = () => {
   const { theme } = useTheme();
@@ -52,6 +54,8 @@ const SuppliersPage = () => {
 
   const isNeoBrutalism = theme?.includes('neo-brutalism');
   const isMaterial = theme?.includes('material');
+
+  const { t } = useI18n();
 
   // Emitir toast cuando el store expone un error
   useEffect(() => {
@@ -123,66 +127,59 @@ const SuppliersPage = () => {
   telemetry.record('suppliers.modal.success');
   };
 
+  // Use DataState for standard states
   const renderMainContent = () => {
     if (loading && !suppliers.length) {
-      return (
-        <div className="text-center py-20">
-          <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" />
-          <div className={`text-muted-foreground ${themeHeader('h2')}`}>{isNeoBrutalism ? 'CARGANDO...' : 'Cargando...'}</div>
-        </div>
-      );
+      return <DataState variant="loading" testId="suppliers-loading" skeletonProps={{ count: 6 }} />;
     }
 
     if (error) {
       return (
-        <div className={card('text-center py-20 p-6')}>
-          <AlertCircle className="w-16 h-16 mx-auto mb-4 text-destructive" />
-          <p className={`text-destructive mb-4 ${themeHeader('h2')}`}>{isNeoBrutalism ? 'ERROR' : 'Error'}</p>
-          <p className={`text-muted-foreground mb-4 ${themeLabel()}`}>{error}</p>
-          <Button variant="primary" onClick={handleSearch}>
-            {isNeoBrutalism ? 'REINTENTAR' : 'Reintentar'}
-          </Button>
-        </div>
+        <DataState
+          variant="error"
+          title={isNeoBrutalism ? 'ERROR' : 'Error'}
+          message={error}
+          onRetry={handleSearch}
+          testId="suppliers-error"
+        />
       );
     }
 
     if (suppliers.length === 0 && searchTerm.trim() === '') {
       return (
-        <div className={card('text-center py-20 p-6')}>
-          <Truck className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <p className={`text-muted-foreground mb-4 ${themeHeader('h2')}`}>{isNeoBrutalism ? 'SIN PROVEEDORES' : 'Sin Proveedores'}</p>
-          <p className={`text-muted-foreground ${themeLabel()}`}>{isNeoBrutalism ? 'REALIZA UNA BÚSQUEDA PARA EMPEZAR' : 'Realiza una búsqueda para empezar.'}</p>
-        </div>
+        <DataState
+          variant="empty"
+          title={isNeoBrutalism ? 'SIN PROVEEDORES' : 'Sin Proveedores'}
+          description={isNeoBrutalism ? 'REALIZA UNA BÚSQUEDA PARA EMPEZAR' : 'Realiza una búsqueda para empezar.'}
+          actionLabel={isNeoBrutalism ? 'NUEVO PROVEEDOR' : 'Nuevo Proveedor'}
+          onAction={handleCreateSupplier}
+          testId="suppliers-empty-initial"
+        />
       );
     }
-    
-    if (filteredSuppliers.length === 0 && searchTerm) {
-        return (
-            <div className={card('text-center py-20 p-6')}>
-                <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                <p className={`text-muted-foreground mb-4 ${themeHeader('h2')}`}>{isNeoBrutalism ? 'SIN RESULTADOS' : 'Sin Resultados'}</p>
-                <p className={`text-muted-foreground ${themeLabel()}`}>{isNeoBrutalism ? `NO SE ENCONTRARON PROVEEDORES PARA "${searchTerm.toUpperCase()}"` : `No se encontraron proveedores para "${searchTerm}"`}</p>
-            </div>
-        );
-    }
 
-    const parseContactInfo = (contactInfo) => {
-      if (!contactInfo) return {};
-      if (typeof contactInfo === 'object') return contactInfo;
-      try {
-        return JSON.parse(contactInfo);
-      } catch (error) {
-        return {};
-      }
-    };
+    if (filteredSuppliers.length === 0 && searchTerm) {
+      return (
+        <DataState
+          variant="empty"
+          title={isNeoBrutalism ? 'SIN RESULTADOS' : 'Sin Resultados'}
+          description={isNeoBrutalism ? `NO SE ENCONTRARON PROVEEDORES PARA "${searchTerm.toUpperCase()}"` : `No se encontraron proveedores para "${searchTerm}"`}
+          testId="suppliers-empty-filter"
+        />
+      );
+    }
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredSuppliers.map(supplier => {
           if (!supplier) return null;
-          const contactInfo = parseContactInfo(supplier.contact_info);
+          const contactInfo = (() => {
+            if (!supplier.contact_info) return {};
+            if (typeof supplier.contact_info === 'object') return supplier.contact_info;
+            try { return JSON.parse(supplier.contact_info); } catch { return {}; }
+          })();
           return (
-            <div key={supplier.id} className={`${card('p-4 sm:p-5')} group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 flex flex-col`}>
+            <div key={supplier.id} className={`${card('p-4 sm:p-5')} group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 flex flex-col`} data-testid={`supplier-card-${supplier.id}`}>
               {/* Accent bar */}
               {!isNeoBrutalism ? (
                 <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60 opacity-80 rounded-t-md" aria-hidden="true" />
@@ -204,10 +201,10 @@ const SuppliersPage = () => {
                 </div>
               </div>
               <div className="flex gap-2 mt-3">
-                <Button variant="primary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50" onClick={() => handleEditSupplier(supplier)}>
+                <Button variant="primary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50" onClick={() => handleEditSupplier(supplier)} data-testid={`supplier-edit-${supplier.id}`}>
                   <Edit className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'EDITAR' : 'Editar'}
                 </Button>
-                <Button variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" onClick={() => handleDeleteSupplier(supplier)} aria-label="Eliminar proveedor">
+                <Button variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" onClick={() => handleDeleteSupplier(supplier)} aria-label="Eliminar proveedor" data-testid={`supplier-delete-${supplier.id}`}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -219,7 +216,7 @@ const SuppliersPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-background text-foreground p-6" data-testid="suppliers-page">
       <div className="max-w-7xl mx-auto space-y-8">
         <PageHeader
           title={isNeoBrutalism ? 'GESTIÓN DE PROVEEDORES' : 'Gestión de Proveedores'}
@@ -291,7 +288,7 @@ const SuppliersPage = () => {
           )}
         </section>
 
-        <section>{renderMainContent()}</section>
+        <section data-testid="suppliers-main">{renderMainContent()}</section>
 
         {pagination && pagination.total_pages > 1 && (
           <footer className="text-center py-8">

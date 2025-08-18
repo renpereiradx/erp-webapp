@@ -52,6 +52,8 @@ describe('Circuit breaker & prefetch', () => {
 
   test('circuit closes after cooldown time passes', async () => {
     vi.useFakeTimers();
+    // Enable fast retries in store for deterministic test behavior with fake timers
+    useProductStore.getState().setTestingFastRetries(true);
     productService.getProducts.mockImplementation(fail);
     const { circuit: { threshold, cooldownMs } } = useProductStore.getState();
     for (let i = 0; i < threshold; i++) {

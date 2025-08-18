@@ -453,8 +453,15 @@ const ProductDetailModal = ({
   if (!isOpen || !product) return null;
 
   return (
-    <div style={modalStyles.overlay} onClick={onClose}>
-      <div style={modalStyles.modal} onClick={(e) => e.stopPropagation()}>
+    <div style={modalStyles.overlay} onClick={onClose} data-testid="product-detail-modal-overlay">
+      <div
+        style={modalStyles.modal}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-detail-title"
+        data-testid="product-detail-modal"
+      >
         {/* Header */}
         <div style={{ 
           padding: '24px', 
@@ -466,7 +473,7 @@ const ProductDetailModal = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Package className="w-6 h-6" />
             <div>
-              <h2 style={{
+              <h2 id="product-detail-title" data-testid="product-detail-title" style={{
                 fontSize: isNeoBrutalism ? '1.5rem' : '1.25rem',
                 fontWeight: isNeoBrutalism ? '800' : '600',
                 textTransform: isNeoBrutalism ? 'uppercase' : 'none',
@@ -474,7 +481,7 @@ const ProductDetailModal = ({
               }}>
                 {product.name}
               </h2>
-               <p style={{
+               <p data-testid="product-detail-id" style={{
                  fontSize: '0.875rem',
                  color: 'var(--muted-foreground)',
                  margin: '4px 0 0 0'
@@ -485,6 +492,8 @@ const ProductDetailModal = ({
            </div>
            <button
             onClick={onClose}
+            aria-label={isNeoBrutalism ? 'Cerrar' : 'Close'}
+            data-testid="product-detail-close"
             style={{
               background: 'none',
               border: 'none',
@@ -501,11 +510,13 @@ const ProductDetailModal = ({
         <div style={{ 
           padding: '16px 24px 0 24px',
           borderBottom: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)'
-        }}>
+        }} data-testid="product-detail-tabs">
           <div style={{ display: 'flex', gap: '8px' }}>
             <button 
               style={getTabStyles('info')}
               onClick={() => setActiveTab('info')}
+              data-testid="product-detail-tab-info"
+              aria-selected={activeTab === 'info'}
             >
               <Package className="w-4 h-4 mr-2" />
               {isNeoBrutalism ? t('products.tabs.info').toUpperCase() : t('products.tabs.info')}
@@ -513,6 +524,8 @@ const ProductDetailModal = ({
             <button 
               style={getTabStyles('description')}
               onClick={() => setActiveTab('description')}
+              data-testid="product-detail-tab-description"
+              aria-selected={activeTab === 'description'}
             >
               <FileText className="w-4 h-4 mr-2" />
               {isNeoBrutalism ? t('products.tabs.description').toUpperCase() : t('products.tabs.description')}
@@ -520,6 +533,8 @@ const ProductDetailModal = ({
             <button 
               style={getTabStyles('price')}
               onClick={() => setActiveTab('price')}
+              data-testid="product-detail-tab-price"
+              aria-selected={activeTab === 'price'}
             >
               <DollarSign className="w-4 h-4 mr-2" />
               {isNeoBrutalism ? t('products.tabs.price').toUpperCase() : t('products.tabs.price')}
@@ -527,6 +542,8 @@ const ProductDetailModal = ({
             <button 
               style={getTabStyles('stock')}
               onClick={() => setActiveTab('stock')}
+              data-testid="product-detail-tab-stock"
+              aria-selected={activeTab === 'stock'}
             >
               <Layers className="w-4 h-4 mr-2" />
               {isNeoBrutalism ? t('products.tabs.stock').toUpperCase() : t('products.tabs.stock')}
@@ -535,9 +552,9 @@ const ProductDetailModal = ({
         </div>
 
         {/* Content */}
-        <div style={{ padding: '24px', minHeight: '300px' }}>
+        <div style={{ padding: '24px', minHeight: '300px' }} data-testid="product-detail-content">
           {error && (
-            <div style={{
+            <div data-testid="product-detail-error" style={{
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
@@ -557,7 +574,7 @@ const ProductDetailModal = ({
           )}
 
           {successMessage && (
-            <div style={{
+            <div data-testid="product-detail-success" style={{
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
@@ -578,7 +595,7 @@ const ProductDetailModal = ({
 
           {/* Tab: Información */}
           {activeTab === 'info' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} data-testid="product-detail-info">
               
               {/* Información general enriquecida */}
               {product._enriched && (
@@ -657,7 +674,7 @@ const ProductDetailModal = ({
 
           {/* Tab: Descripción */}
           {activeTab === 'description' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} data-testid="product-detail-description">
               
               {/* Información de descripción enriquecida */}
               {product._enriched && (
@@ -711,7 +728,7 @@ const ProductDetailModal = ({
               )}
               
               <div style={{ display: 'flex', justifyContent: 'between', alignItems: 'center' }}>
-                <h3 style={{
+                <h3 data-testid="product-detail-description-heading" style={{
                   fontSize: '1.125rem',
                   fontWeight: '600',
                   textTransform: isNeoBrutalism ? 'uppercase' : 'none',
@@ -722,6 +739,7 @@ const ProductDetailModal = ({
                 {!editingDescription && (
                   <button
                     onClick={() => setEditingDescription(true)}
+                    data-testid="product-detail-edit-description"
                     style={{
                       background: 'var(--primary)',
                       color: 'var(--primary-foreground)',
@@ -746,6 +764,7 @@ const ProductDetailModal = ({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={6}
+                    data-testid="product-detail-description-input"
                     style={{
                       ...inputStyles,
                       resize: 'vertical',
@@ -756,6 +775,7 @@ const ProductDetailModal = ({
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                     <button
                       onClick={() => setEditingDescription(false)}
+                      data-testid="product-detail-description-cancel"
                       style={{
                         background: 'var(--background)',
                         color: 'var(--foreground)',
@@ -770,6 +790,7 @@ const ProductDetailModal = ({
                     <button
                       onClick={handleSaveDescription}
                       disabled={loading}
+                      data-testid="product-detail-description-save"
                       style={{
                         background: 'var(--primary)',
                         color: 'var(--primary-foreground)',
@@ -793,7 +814,7 @@ const ProductDetailModal = ({
 
           {/* Tab: Precios */}
           {activeTab === 'price' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} data-testid="product-detail-price">
               
               {/* Información de precios enriquecida */}
               {product._enriched && (
@@ -890,6 +911,7 @@ const ProductDetailModal = ({
                         step="0.01"
                         value={priceData.cost_price}
                         onChange={(e) => setPriceData(prev => ({ ...prev, cost_price: e.target.value }))}
+                        data-testid="product-detail-price-cost"
                         style={inputStyles}
                         placeholder="0.00"
                       />
@@ -909,6 +931,7 @@ const ProductDetailModal = ({
                         step="0.01"
                         value={priceData.sale_price}
                         onChange={(e) => setPriceData(prev => ({ ...prev, sale_price: e.target.value }))}
+                        data-testid="product-detail-price-sale"
                         style={inputStyles}
                         placeholder="0.00"
                       />
@@ -928,6 +951,7 @@ const ProductDetailModal = ({
                         step="0.01"
                         value={priceData.tax}
                         onChange={(e) => setPriceData(prev => ({ ...prev, tax: e.target.value }))}
+                        data-testid="product-detail-price-tax"
                         style={inputStyles}
                         placeholder="0.00"
                       />
@@ -936,6 +960,7 @@ const ProductDetailModal = ({
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                     <button
                       onClick={() => setEditingPrice(false)}
+                      data-testid="product-detail-price-cancel"
                       style={{
                         background: 'var(--background)',
                         color: 'var(--foreground)',
@@ -950,6 +975,7 @@ const ProductDetailModal = ({
                     <button
                       onClick={handleSavePrice}
                       disabled={loading || !priceData.cost_price}
+                      data-testid="product-detail-price-save"
                       style={{
                         background: 'var(--primary)',
                         color: 'var(--primary-foreground)',
@@ -973,7 +999,7 @@ const ProductDetailModal = ({
 
           {/* Tab: Stock */}
           {activeTab === 'stock' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }} data-testid="product-detail-stock">
               
               {/* Información de stock enriquecida */}
               {product._enriched && (
@@ -1075,6 +1101,7 @@ const ProductDetailModal = ({
                         type="number"
                         value={stockData.quantity}
                         onChange={(e) => setStockData(prev => ({ ...prev, quantity: e.target.value }))}
+                        data-testid="product-detail-stock-quantity"
                         style={inputStyles}
                         placeholder="0"
                       />
@@ -1093,6 +1120,7 @@ const ProductDetailModal = ({
                         type="date"
                         value={stockData.exp}
                         onChange={(e) => setStockData(prev => ({ ...prev, exp: e.target.value }))}
+                        data-testid="product-detail-stock-exp"
                         style={inputStyles}
                       />
                     </div>
@@ -1113,6 +1141,7 @@ const ProductDetailModal = ({
                           ...prev, 
                           entity: { ...prev.entity, name: e.target.value }
                         }))}
+                        data-testid="product-detail-stock-entity"
                         style={inputStyles}
                         placeholder={isNeoBrutalism ? 'NOMBRE ENTIDAD' : 'Nombre de la entidad'}
                       />
@@ -1121,6 +1150,7 @@ const ProductDetailModal = ({
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                     <button
                       onClick={() => setEditingStock(false)}
+                      data-testid="product-detail-stock-cancel"
                       style={{
                         background: 'var(--background)',
                         color: 'var(--foreground)',
@@ -1135,6 +1165,7 @@ const ProductDetailModal = ({
                     <button
                       onClick={handleSaveStock}
                       disabled={loading || !stockData.quantity}
+                      data-testid="product-detail-stock-save"
                       style={{
                         background: 'var(--primary)',
                         color: 'var(--primary-foreground)',

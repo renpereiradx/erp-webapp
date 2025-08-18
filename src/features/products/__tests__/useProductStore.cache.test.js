@@ -41,7 +41,7 @@ describe('useProductStore searchProducts cache', () => {
     });
 
     await act(async () => {
-      const res1 = await getState().searchProducts(term);
+      const res1 = await getState().searchProducts(term, {});
       expect(res1.total).toBe(2);
       expect(getState().products).toHaveLength(1);
     });

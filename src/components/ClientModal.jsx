@@ -90,25 +90,25 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
   };
 
   const modalContent = (
-    <div style={modalStyles.overlay} onClick={onClose}>
-      <div style={modalStyles.modal} onClick={(e) => e.stopPropagation()}>
+    <div style={modalStyles.overlay} onClick={onClose} data-testid="client-modal-overlay">
+      <div style={modalStyles.modal} onClick={(e) => e.stopPropagation()} data-testid="client-modal">
         <div style={{ padding: '24px', borderBottom: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <User className="w-6 h-6 text-primary" />
-            <h2 style={{ fontSize: isNeoBrutalism ? '1.5rem' : '1.25rem', fontWeight: isNeoBrutalism ? '800' : '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', margin: 0 }}>
+            <h2 style={{ fontSize: isNeoBrutalism ? '1.5rem' : '1.25rem', fontWeight: isNeoBrutalism ? '800' : '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', margin: 0 }} data-testid="client-modal-title">
               {client ? 'Editar Cliente' : 'Nuevo Cliente'}
             </h2>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={onClose} data-testid="client-modal-close">
             <X className="h-6 w-6" />
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
+        <form onSubmit={handleSubmit} style={{ padding: '24px' }} data-testid="client-modal-form">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div>
               <Label htmlFor="name" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Nombre</Label>
-              <Input leftIcon={<User />} id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Ej: Juan" required />
+              <Input leftIcon={<User />} id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Ej: Juan" required data-testid="client-name-input" />
             </div>
             <div>
               <Label htmlFor="last_name" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Apellido</Label>
@@ -116,7 +116,7 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
             </div>
             <div>
               <Label htmlFor="document_id" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Documento</Label>
-              <Input leftIcon={<FileText />} id="document_id" name="document_id" value={formData.document_id} onChange={handleChange} placeholder="Ej: 1234567-8" />
+              <Input leftIcon={<FileText />} id="document_id" name="document_id" value={formData.document_id} onChange={handleChange} placeholder="Ej: 1234567-8" data-testid="client-document-input" />
             </div>
             <div>
               <Label htmlFor="address" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Dirección</Label>
@@ -128,11 +128,11 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '24px', borderTop: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)' }}>
-            <Button type="button" variant={isNeoBrutalism ? 'secondary' : 'outline'} onClick={onClose} disabled={loading}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '24px', borderTop: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)' }} data-testid="client-modal-actions">
+            <Button type="button" variant={isNeoBrutalism ? 'secondary' : 'outline'} onClick={onClose} disabled={loading} data-testid="client-modal-cancel">
               Cancelar
             </Button>
-            <Button type="submit" variant="default" disabled={loading} className="min-w-[150px]">
+            <Button type="submit" variant="default" disabled={loading} className="min-w-[150px]" data-testid="client-modal-submit">
               {loading ? <Loader className="animate-spin" /> : <Save className="mr-2" />} 
               {client ? 'Guardar Cambios' : 'Crear'}
             </Button>

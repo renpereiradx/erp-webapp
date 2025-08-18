@@ -50,16 +50,16 @@ export default function EditableField({ value, label, type='text', name, onSave,
   };
 
   return (
-    <div className="inline-flex items-center gap-1 text-xs" aria-live="polite">
+    <div className="inline-flex items-center gap-1 text-xs" aria-live="polite" data-testid={isEditing ? `editable-${name}-editing` : `editable-${name}-display`}>
       {!isEditing && (
         <>
           <span>{value === null || value === undefined || value === '' ? '—' : value}</span>
-          <button type="button" onClick={start} disabled={disabled} className="underline text-primary focus:outline-none focus:ring-2 focus:ring-ring/50">{t('action.edit') || 'Editar'}</button>
+          <button type="button" onClick={start} disabled={disabled} className="underline text-primary focus:outline-none focus:ring-2 focus:ring-ring/50" data-testid={`editable-${name}-edit`}>{t('action.edit') || 'Editar'}</button>
         </>
       )}
       {isEditing && (
         <div className="flex items-center gap-1">
-          <form onSubmit={(e) => { e.preventDefault(); commit(); }} className="flex items-center gap-1">
+          <form onSubmit={(e) => { e.preventDefault(); commit(); }} className="flex items-center gap-1" data-testid={`editable-${name}-form`}>
             <input
               ref={inputRef}
               aria-label={resolvedLabel}
@@ -71,12 +71,13 @@ export default function EditableField({ value, label, type='text', name, onSave,
               className="px-1 py-0.5 border rounded focus:outline-none focus:ring w-24"
               disabled={saving}
               autoFocus
+              data-testid={`editable-${name}-input`}
             />
-            <button type="submit" disabled={saving} className="text-green-600 font-medium">{saving ? '...' : (t('products.inline.save') || 'OK')}</button>
-            <button type="button" onClick={cancel} disabled={saving} className="text-red-500 font-medium">{t('products.inline.cancel') || 'X'}</button>
-            {error && <span role="alert" className="text-red-500 ml-1">{error}</span>}
+            <button type="submit" disabled={saving} className="text-green-600 font-medium" data-testid={`editable-${name}-save`}>{saving ? '...' : (t('products.inline.save') || 'OK')}</button>
+            <button type="button" onClick={cancel} disabled={saving} className="text-red-500 font-medium" data-testid={`editable-${name}-cancel`}>{t('products.inline.cancel') || 'X'}</button>
+            {error && <span role="alert" className="text-red-500 ml-1" data-testid={`editable-${name}-error`}>{error}</span>}
           </form>
-          <button type="button" onClick={handleEditButtonClick} className="underline text-primary focus:outline-none focus:ring-2 focus:ring-ring/50">{t('action.edit') || 'Editar'}</button>
+          <button type="button" onClick={handleEditButtonClick} className="underline text-primary focus:outline-none focus:ring-2 focus:ring-ring/50" data-testid={`editable-${name}-focus`}>{t('action.edit') || 'Editar'}</button>
         </div>
       )}
     </div>

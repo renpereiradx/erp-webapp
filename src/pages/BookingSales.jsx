@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import PageHeader from '@/components/ui/PageHeader';
+import DataState from '@/components/ui/DataState';
 
 // Custom hooks para lógica de negocio
 import { useThemeStyles } from '@/hooks/useThemeStyles';
@@ -245,7 +246,7 @@ const BookingSales = () => {
   };
 
   return (
-    <div className={styles.container()}>
+    <div className={styles.container()} data-testid="booking-sales-page">
       <PageHeader
         title="Reservas y Ventas"
         subtitle="Gestiona reservas de servicios y ventas de productos de forma integrada"
@@ -253,7 +254,7 @@ const BookingSales = () => {
       />
 
       <NotificationBanner />
-
+ 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className={styles.tab()}>
           <TabsTrigger value="reservas" className="flex items-center gap-2">
@@ -267,94 +268,102 @@ const BookingSales = () => {
         </TabsList>
 
         {/* Tab de Reservas */}
-        <TabsContent value="reservas" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Panel de configuración de reserva */}
-            <div className="space-y-6">
-              <Card className={styles.card()}>
-                <CardHeader>
-                  <CardTitle className={styles.cardHeader()}>Nueva Reserva</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <ClientSelector
-                    selectedClient={reservationClient}
-                    onClientChange={setReservationClient}
-                    theme={theme}
-                  />
-                  
-                  <ServiceSelector />
-                  
-                  {selectedService && (
-                    <CalendarReservation
-                      selectedService={selectedService}
+        <TabsContent value="reservas" className="space-y-6" data-testid="booking-reservas-tab">
+          {loading && !reservationClient && !selectedService ? (
+            <DataState variant="loading" testId="booking-sales-loading" skeletonProps={{ count: 4 }} />
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Panel de configuración de reserva */}
+              <div className="space-y-6">
+                <Card className={styles.card()}>
+                  <CardHeader>
+                    <CardTitle className={styles.cardHeader()}>Nueva Reserva</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <ClientSelector
+                      selectedClient={reservationClient}
+                      onClientChange={setReservationClient}
                       theme={theme}
-                      {...reservationLogic}
                     />
-                  )}
-                </CardContent>
-              </Card>
+                    
+                    <ServiceSelector />
+                    
+                    {selectedService && (
+                      <CalendarReservation
+                        selectedService={selectedService}
+                        theme={theme}
+                        {...reservationLogic}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
 
-              {/* Botón de confirmar reserva */}
-              {reservationValidations.canProceed && (
-                <Button
-                  onClick={handleReservationSubmit}
-                  disabled={loading}
-                  className={`w-full ${styles.button()}`}
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {loading ? 'Procesando...' : 'Confirmar Reserva'}
-                </Button>
-              )}
+                {/* Botón de confirmar reserva */}
+                {reservationValidations.canProceed && (
+                  <Button
+                    onClick={handleReservationSubmit}
+                    disabled={loading}
+                    className={`w-full ${styles.button()}`}
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {loading ? 'Procesando...' : 'Confirmar Reserva'}
+                  </Button>
+                )}
+              </div>
+
+              {/* Panel de resumen */}
+              <div className="space-y-6">
+                <ReservationSummary />
+              </div>
             </div>
+          )}
+          </TabsContent>
 
-            {/* Panel de resumen */}
-            <div className="space-y-6">
-              <ReservationSummary />
+          {/* Tab de Ventas */}
+          <TabsContent value="ventas" className="space-y-6" data-testid="booking-ventas-tab">
+          {loading && saleItems.length === 0 && !saleClient ? (
+            <DataState variant="loading" testId="booking-sales-sales-loading" skeletonProps={{ count: 4 }} />
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Panel de productos */}
+              <div className="space-y-6">
+                <Card className={styles.card()}>
+                  <CardHeader>
+                    <CardTitle className={styles.cardHeader()}>Nueva Venta</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <ClientSelector
+                      selectedClient={saleClient}
+                      onClientChange={setSaleClient}
+                      theme={theme}
+                    />
+                    
+                    <SaleItemsManager
+                      theme={theme}
+                      {...salesLogic}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Botón de completar venta */}
+                {salesValidations.canProceed && (
+                  <Button
+                    onClick={handleSaleSubmit}
+                    disabled={loading}
+                    className={`w-full ${styles.button()}`}
+                  >
+                    <Check className="w-4 h-4 mr-2" />
+                    {loading ? 'Procesando...' : 'Completar Venta'}
+                  </Button>
+                )}
+              </div>
+
+              {/* Panel de resumen */}
+              <div className="space-y-6">
+                <SaleSummary />
+              </div>
             </div>
-          </div>
-        </TabsContent>
-
-        {/* Tab de Ventas */}
-        <TabsContent value="ventas" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Panel de productos */}
-            <div className="space-y-6">
-              <Card className={styles.card()}>
-                <CardHeader>
-                  <CardTitle className={styles.cardHeader()}>Nueva Venta</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <ClientSelector
-                    selectedClient={saleClient}
-                    onClientChange={setSaleClient}
-                    theme={theme}
-                  />
-                  
-                  <SaleItemsManager
-                    theme={theme}
-                    {...salesLogic}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Botón de completar venta */}
-              {salesValidations.canProceed && (
-                <Button
-                  onClick={handleSaleSubmit}
-                  disabled={loading}
-                  className={`w-full ${styles.button()}`}
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  {loading ? 'Procesando...' : 'Completar Venta'}
-                </Button>
-              )}
-            </div>
-
-            {/* Panel de resumen */}
-            <div className="space-y-6">
-              <SaleSummary />
-            </div>
-          </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

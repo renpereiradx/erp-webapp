@@ -33,6 +33,8 @@ import PageHeader from '@/components/ui/PageHeader';
 // Custom Hooks
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { usePurchaseLogic } from '@/hooks/usePurchaseLogic';
+import DataState from '@/components/ui/DataState';
+import { useI18n } from '@/lib/i18n';
 
 // Componentes Especializados
 import SupplierSelector from '@/components/SupplierSelector';
@@ -100,6 +102,8 @@ const Purchases = () => {
     createPurchase,
     getPurchaseSummary
   } = purchaseLogic;
+
+  const { t } = useI18n();
 
   // Mostrar notificación
   const showNotification = (message, type = 'success') => {
@@ -285,7 +289,7 @@ const Purchases = () => {
   );
 
   return (
-    <div className={styles.container()}>
+    <div className={styles.container()} data-testid="purchases-page">
       <PageHeader
         title="Compras"
         subtitle="Administra compras a proveedores, controla inventario y órdenes de compra"
@@ -310,121 +314,143 @@ const Purchases = () => {
         <TabsContent value="new-purchase" className="space-y-4">
           <CompactStats />
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Panel principal - Configuración */}
-            <div className="lg:col-span-2 space-y-4">
-              {/* Selección de proveedor */}
-              <Card className={styles.card()}>
-                <CardHeader>
-                  <CardTitle className={styles.cardHeader()}>
-                    Información del Proveedor
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SupplierSelector
-                    selectedSupplier={selectedSupplier}
-                    onSupplierChange={setSelectedSupplier}
-                    theme={theme}
-                    required={true}
-                    error={errors.supplier}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Selección de productos */}
-              {selectedSupplier && (
-                <Card className={styles.card()}>
+          {loading && !purchaseItems.length && !selectedSupplier ? (
+            <DataState variant="loading" testId="purchases-loading" skeletonProps={{ count: 4 }} />
+          ) : (!selectedSupplier && purchaseItems.length === 0) ? (
+            <DataState
+              variant="empty"
+              title={t('purchases.empty.title') || 'Comienza una compra'}
+              description={t('purchases.empty.description') || 'Selecciona un proveedor para empezar o crea uno nuevo.'}
+              actionLabel={t('purchases.empty.action') || 'Seleccionar Proveedor'}
+              onAction={() => {
+                // foco/abrir selector — fallback: abrir modal de proveedor si existe
+                try { document.querySelector('[data-testid="supplier-selector"]')?.focus(); } catch (e) {}
+              }}
+              testId="purchases-empty-initial"
+            />
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Panel principal - Configuración */}
+              <div className="lg:col-span-2 space-y-4">
+                {/* Selección de proveedor */}
+                <Card className={styles.card()} data-testid="supplier-card-wrapper">
                   <CardHeader>
                     <CardTitle className={styles.cardHeader()}>
-                      <Package className="w-5 h-5 mr-2" />
-                      Productos
+                      Información del Proveedor
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <EnhancedPurchaseProductSelector
-                      onProductAdd={addPurchaseItem}
-                      theme={theme}
-                      supplierId={selectedSupplier.id}
-                    />
+                    <div data-testid="supplier-selector">
+                      <SupplierSelector
+                        selectedSupplier={selectedSupplier}
+                        onSupplierChange={setSelectedSupplier}
+                        theme={theme}
+                        required={true}
+                        error={errors.supplier}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
-              )}
 
-              {/* Lista de productos agregados */}
-              {purchaseItems.length > 0 && (
-                <Card className={styles.card()}>
-                  <CardHeader>
-                    <CardTitle className={styles.cardHeader()}>
-                      Items del Pedido ({purchaseItems.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <PurchaseItemsList
-                      items={purchaseItems}
-                      onQuantityChange={updateItemQuantity}
-                      onPriceChange={updateItemPrice}
-                      onRemoveItem={removeItem}
-                      theme={theme}
-                      errors={errors}
-                    />
-                  </CardContent>
-                </Card>
-              )}
+                {/* Selección de productos */}
+                {selectedSupplier && (
+                  <Card className={styles.card()} data-testid="product-selector-card">
+                    <CardHeader>
+                      <CardTitle className={styles.cardHeader()}>
+                        <Package className="w-5 h-5 mr-2" />
+                        Productos
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <EnhancedPurchaseProductSelector
+                        onProductAdd={addPurchaseItem}
+                        theme={theme}
+                        supplierId={selectedSupplier.id}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
 
-              {/* Configuración adicional */}
-              {purchaseItems.length > 0 && (
-                <PurchaseConfiguration />
-              )}
-            </div>
+                {/* Lista de productos agregados */}
+                {purchaseItems.length > 0 && (
+                  <Card className={styles.card()} data-testid="purchase-items-card">
+                    <CardHeader>
+                      <CardTitle className={styles.cardHeader()}>
+                        Items del Pedido ({purchaseItems.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div data-testid="purchase-items-list">
+                        <PurchaseItemsList
+                          items={purchaseItems}
+                          onQuantityChange={updateItemQuantity}
+                          onPriceChange={updateItemPrice}
+                          onRemoveItem={removeItem}
+                          theme={theme}
+                          errors={errors}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
-            {/* Panel lateral - Resumen */}
-            <div className="space-y-4">
-              <PurchaseSummary
-                summary={getPurchaseSummary()}
-                theme={theme}
-              />
+                {/* Configuración adicional */}
+                {purchaseItems.length > 0 && (
+                  <PurchaseConfiguration />
+                )}
+              </div>
 
-              {/* Botones de acción */}
-              {validations.canProceed && (
-                <div className="space-y-3">
-                  <Button
-                    onClick={handleSubmitPurchase}
-                    disabled={saving}
-                    className={`w-full ${styles.button()}`}
-                    size="lg"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    {saving ? 'Creando Compra...' : 'Crear Compra'}
-                  </Button>
-                  
-                  <Button
-                    onClick={clearPurchase}
-                    variant="outline"
-                    className="w-full"
-                    disabled={saving}
-                  >
-                    Limpiar Todo
-                  </Button>
-                </div>
-              )}
+              {/* Panel lateral - Resumen */}
+              <div className="space-y-4">
+                <PurchaseSummary
+                  summary={getPurchaseSummary()}
+                  theme={theme}
+                />
 
-              {/* Validaciones minimalistas */}
-              {!validations.canProceed && (
-                <div className={`p-3 ${styles.card('border-orange-200 bg-orange-50')}`}>
-                  <div className="flex items-center text-orange-800">
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                    <span className="text-sm font-medium">Por completar:</span>
+                {/* Botones de acción */}
+                {validations.canProceed && (
+                  <div className="space-y-3">
+                    <Button
+                      onClick={handleSubmitPurchase}
+                      disabled={saving}
+                      className={`w-full ${styles.button()}`}
+                      size="lg"
+                      data-testid="purchase-save-button"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      {saving ? (t('purchases.saving') || 'Creando Compra...') : (t('purchases.create') || 'Crear Compra')}
+                    </Button>
+                    
+                    <Button
+                      onClick={clearPurchase}
+                      variant="outline"
+                      className="w-full"
+                      disabled={saving}
+                      data-testid="purchase-clear-button"
+                    >
+                      {t('purchases.clear') || 'Limpiar Todo'}
+                    </Button>
                   </div>
-                  <ul className="mt-1 text-xs text-orange-700 space-y-0.5">
-                    {!validations.hasSupplier && <li>• Seleccionar proveedor</li>}
-                    {!validations.hasItems && <li>• Agregar productos</li>}
-                    {!validations.hasValidItems && <li>• Verificar cantidades</li>}
-                  </ul>
-                </div>
-              )}
+                )}
+
+                {/* Validaciones minimalistas */}
+                {!validations.canProceed && (
+                  <div className={`p-3 ${styles.card('border-orange-200 bg-orange-50')}`}>
+                    <div className="flex items-center text-orange-800">
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      <span className="text-sm font-medium">Por completar:</span>
+                    </div>
+                    <ul className="mt-1 text-xs text-orange-700 space-y-0.5">
+                      {!validations.hasSupplier && <li>• Seleccionar proveedor</li>}
+                      {!validations.hasItems && <li>• Agregar productos</li>}
+                      {!validations.hasValidItems && <li>• Verificar cantidades</li>}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </TabsContent>
+          )}
+         </TabsContent>
 
         {/* Tab de Lista de Compras */}
         <TabsContent value="purchases-list" className="space-y-4">

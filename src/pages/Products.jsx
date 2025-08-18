@@ -46,9 +46,11 @@ import ToastContainer from '@/components/ui/ToastContainer';
 import { useToast } from '@/hooks/useToast';
 import ProductGrid from '@/features/products/components/ProductGrid';
 import { EmptyState, ErrorState, ProductSkeletonGrid } from '@/components/ui/products-states';
+import DataState from '@/components/ui/DataState';
 import { telemetry } from '@/utils/telemetry';
 import PageHeader from '@/components/ui/PageHeader';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import MetricsPanel from '@/components/MetricsPanel';
 
 const Products = () => {
   const { theme } = useTheme();
@@ -60,6 +62,8 @@ const Products = () => {
   const products = useProductStore((s) => s.products);
   const isLoading = useProductStore((s) => s.loading);
   const storeError = useProductStore((s) => s.error);
+  const lastErrorCode = useProductStore((s) => s.lastErrorCode);
+  const lastErrorHint = useProductStore((s) => s.lastErrorHintKey);
   const totalProducts = useProductStore((s) => s.totalProducts);
   const currentPage = useProductStore((s) => s.currentPage);
   const totalPages = useProductStore((s) => s.totalPages);
@@ -92,6 +96,7 @@ const Products = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [showMetrics] = useFeatureFlag('productsMetricsPanel', false);
 
   // Local/UI state for search, filters and small config
   const [apiSearchTerm, setApiSearchTerm] = useState('');
@@ -214,7 +219,7 @@ const Products = () => {
     const patch = typeof patchOrValue === 'object' && patchOrValue !== null ? patchOrValue : { name: patchOrValue };
     const ok = await optimisticUpdateProduct(id, patch);
     if (ok) {
-      announce(`Producto ${id} actualizado`);
+      announce(t('products.updated_notice', { id }));
       setLastInlineSaved({ id, ts: Date.now() });
       // flash highlight card
       requestAnimationFrame(() => {
@@ -268,10 +273,10 @@ const Products = () => {
   const handleDevLogin = async () => {
     try {
       await login({ username: 'myemail', password: 'mypassword' });
-      success('Auto-login exitoso! Recargando categorías...');
+      success(t('products.auto_login_success'));
       await fetchCategories();
     } catch (err) {
-      errorFrom(err, { fallback: 'Error en auto-login' });
+      errorFrom(err, { fallback: t('products.auto_login_error') });
     }
   };
 
@@ -280,7 +285,7 @@ const Products = () => {
       await deleteProduct(product.id);
       setShowDeleteModal(false);
       setSelectedProduct(null);
-      success(`Producto "${product.name}" eliminado exitosamente`);
+      success(t('products.deleted_success', { name: product.name }));
   telemetry.record('products.delete.success', { id: product.id });
     } catch (err) {
   telemetry.record('products.delete.error', { id: product.id, message: err?.message });
@@ -293,7 +298,7 @@ const Products = () => {
     if (lastSearchTerm) {
       searchProducts(lastSearchTerm);
     }
-    success('Operación completada exitosamente');
+    success(t('products.operation_success'));
     setShowProductModal(false);
     setEditingProduct(null);
   telemetry.record('products.modal.success');
@@ -303,13 +308,18 @@ const Products = () => {
 
   // Emitir toast cuando el store exponga un error (evitar side-effects en render)
   useEffect(() => {
-    if (storeError && !storeError.includes('No se encontraron productos')) {
-      errorFrom(new Error(storeError));
+    if (storeError) {
       telemetry.record('products.error.store', { message: storeError });
-      // Diferenciar error de red vs validación si ApiError disponible
-      announce(t('announce.error', { msg: storeError }));
+      try { errorFrom && errorFrom(storeError); } catch (e) { /* noop */ }
+      if (lastErrorCode === 'NETWORK') {
+        announce(t('announce.error_network', { msg: storeError }));
+      } else if (lastErrorCode === 'VALIDATION') {
+        announce(t('announce.error_validation', { msg: storeError }));
+      } else {
+        announce(storeError);
+      }
     }
-  }, [storeError, errorFrom]);
+  }, [storeError, lastErrorCode, t]);
 
   // Iniciar muestreo de FPS y registro de snapshots
   useEffect(() => {
@@ -322,53 +332,12 @@ const Products = () => {
   }, []);
 
   // Estados de carga y error
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background text-foreground p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" />
-              <div className={`text-muted-foreground ${themeHeader('h2')}`}>
-                {t('products.loading')}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (storeError && !storeError.includes('No se encontraron productos')) {
-    return (
-      <div className="min-h-screen bg-background text-foreground p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center py-20">
-            <div className={card('text-center p-6')}>
-              <ErrorState
-                title={t('products.error.loading')}
-                message={storeError}
-                code={''}
-                onRetry={() => {
-                  clearError();
-                  if (lastSearchTerm) {
-                    searchProducts(lastSearchTerm);
-                  } else {
-                    loadPage(1);
-                  }
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // loading & error are handled in the main JSX return via DataState component
 
   const featureFlags = { productsNewUI: true };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-background text-foreground p-6" data-testid="products-page">
       <div className="sr-only" aria-live="polite" aria-atomic="true" role="status">{liveMessage}</div>
       <div className="max-w-7xl mx-auto space-y-8">
         {isOffline && (
@@ -383,27 +352,29 @@ const Products = () => {
         
         {/* Header */}
         <PageHeader
-          title={isNeoBrutalism ? 'GESTIÓN DE PRODUCTOS' : isMaterial ? t('products.title') : t('products.title')}
-          subtitle={isNeoBrutalism ? 'ADMINISTRA TU INVENTARIO CON LA BUSINESS MANAGEMENT API' : isMaterial ? 'Administra tu inventario con Material Design' : 'Manage your inventory with the Business Management API'}
-          actions={(
-            <>
-              <Button variant="primary" onClick={handleCreateProduct}>
-                <Plus className="w-5 h-5 mr-2" />
-                {isNeoBrutalism ? 'NUEVO PRODUCTO' : t('products.new')}
-              </Button>
-              <Button variant="secondary">
-                <BarChart3 className="w-5 h-5 mr-2" />
-                {isNeoBrutalism ? 'ANALYTICS' : 'Analytics'}
-              </Button>
-            </>
-          )}
-          compact
-          breadcrumb={isMaterial ? 'Inventario · Productos' : undefined}
+          title={isNeoBrutalism ? 'GESTIÓN DE PRODUCTOS' : t('products.title')}
+          subtitle={isNeoBrutalism ? 'ADMINISTRA TU INVENTARIO CON LA BUSINESS MANAGEMENT API' : t('products.subtitle')}
+           actions={(
+             <>
+               <Button variant="primary" onClick={handleCreateProduct}>
+                 <Plus className="w-5 h-5 mr-2" />
+                 {isNeoBrutalism ? 'NUEVO PRODUCTO' : t('products.new')}
+               </Button>
+             </>
+           )}
         />
+        {showMetrics && (
+          <div className="w-full flex justify-end">
+            <div className="w-64">
+              <MetricsPanel />
+            </div>
+          </div>
+        )}
 
         {/* Filtros y Búsqueda */}
         <section 
           className={card('p-6')}
+          data-testid="products-filters"
         >
           {/* Búsqueda en API */}
           <div className="mb-6">
@@ -491,15 +462,15 @@ const Products = () => {
           {products.length > 0 && (
             <div className="border-t pt-6">
               <div className={`${themeHeader('h3')} mb-3 flex items-center justify-between`}> 
-                <span>{isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : 'Filtrar Resultados Actuales'}</span>
+                <span>{isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : t('products.filter.current_results_title')}</span>
                 {featureFlags.productsNewUI && (
                   <div className="flex gap-2 items-center text-xs">
                     {selectedIds.length > 0 ? (
-                      <>
-                        <span className="text-muted-foreground">{selectedIds.length} seleccionados</span>
-                        <Button size="sm" variant="secondary" onClick={bulkActivate}>{isNeoBrutalism ? 'ACTIVAR' : 'Activar'}</Button>
-                        <Button size="sm" variant="secondary" onClick={bulkDeactivate}>{isNeoBrutalism ? 'DESACTIVAR' : 'Desactivar'}</Button>
-                        <Button size="sm" variant="ghost" onClick={clearSelection}>{isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}</Button>
+                      <> 
+                        <span className="text-muted-foreground">{t('products.bulk.selected_count', { count: selectedIds.length })}</span>
+                        <Button size="sm" variant="secondary" onClick={bulkActivate}>{isNeoBrutalism ? 'ACTIVAR' : t('products.bulk.activate')}</Button>
+                        <Button size="sm" variant="secondary" onClick={bulkDeactivate}>{isNeoBrutalism ? 'DESACTIVAR' : t('products.bulk.deactivate')}</Button>
+                        <Button size="sm" variant="ghost" onClick={clearSelection}>{isNeoBrutalism ? 'LIMPIAR' : t('products.bulk.clear')}</Button>
                       </>
                     ) : (
                       <Button size="sm" variant="outline" onClick={selectAllCurrent}>{isNeoBrutalism ? 'SELECCIONAR TODO' : 'Seleccionar todo'}</Button>
@@ -512,7 +483,7 @@ const Products = () => {
                   <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     type="text"
-                    placeholder={isNeoBrutalism ? "FILTRAR POR NOMBRE..." : "Filtrar por nombre..."}
+                    placeholder={isNeoBrutalism ? "FILTRAR POR NOMBRE..." : t('products.filter.name_placeholder')}
                     value={localSearchTerm}
                     onChange={(e) => setLocalSearchTerm(e.target.value)}
                     onKeyDown={(e) => {
@@ -546,7 +517,7 @@ const Products = () => {
                   }}
                 >
                   <option value="all" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
-                    {isNeoBrutalism ? 'TODAS LAS CATEGORÍAS' : 'Todas las categorías'}
+                    {isNeoBrutalism ? 'TODAS LAS CATEGORÍAS' : t('products.filter.all_categories')}
                   </option>
                   {categories.map(category => (
                     <option 
@@ -577,13 +548,13 @@ const Products = () => {
                   }}
                 >
                   <option value="all" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
-                    {isNeoBrutalism ? 'TODOS LOS ESTADOS' : 'Todos los estados'}
+                    {isNeoBrutalism ? 'TODOS LOS ESTADOS' : t('products.filter.all_status')}
                   </option>
                   <option value="active" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
-                    {isNeoBrutalism ? 'ACTIVOS' : 'Activos'}
+                    {isNeoBrutalism ? 'ACTIVOS' : t('products.filter.status.active')}
                   </option>
                   <option value="inactive" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
-                    {isNeoBrutalism ? 'INACTIVOS' : 'Inactivos'}
+                    {isNeoBrutalism ? 'INACTIVOS' : t('products.filter.status.inactive')}
                   </option>
                 </select>
 
@@ -592,7 +563,7 @@ const Products = () => {
                     {filteredProducts.length}
                   </div>
                   <div className={`text-muted-foreground text-sm ${themeLabel()}`}>
-                    {isNeoBrutalism ? 'PRODUCTOS' : 'Productos'}
+                    {isNeoBrutalism ? 'PRODUCTOS' : t('products.filter.products_label')}
                   </div>
                 </div>
               </div>
@@ -601,50 +572,44 @@ const Products = () => {
         </section>
 
         {/* Lista de Productos */}
-        <section>
+        <section data-testid="products-list">
           {/* Estado de carga */}
           {isLoading && (
-            <ProductSkeletonGrid />
+            <DataState variant="loading" testId="products-loading" />
           )}
 
           {/* Mensaje cuando no hay productos cargados */}
           {!isLoading && products.length === 0 && !lastSearchTerm && (
-            <div 
-              className={card('text-center py-20')}
-            >
-              <EmptyState
-                title={t('products.no_products_loaded')}
-                description={t('products.search.help1')}
-                actionLabel={t('products.create_first')}
-                onAction={handleCreateProduct}
-              />
-            </div>
+            <DataState
+              variant="empty"
+              title={t('products.no_products_loaded')}
+              description={t('products.search.help1')}
+              actionLabel={t('products.create_first')}
+              onAction={handleCreateProduct}
+              testId="products-empty-initial"
+            />
           )}
 
           {/* Mensaje cuando la búsqueda no devuelve resultados */}
           {!isLoading && products.length === 0 && lastSearchTerm && (
-            <div 
-              className={card('text-center py-20')}
-            >
-              <EmptyState
-                title={t('products.no_results')}
-                description={t('products.no_results_for').replace('{term}', lastSearchTerm)}
-                actionLabel={t('products.create_first')}
-                onAction={handleCreateProduct}
-              />
-            </div>
+            <DataState
+              variant="empty"
+              title={t('products.no_results')}
+              description={t('products.no_results_for').replace('{term}', lastSearchTerm)}
+              actionLabel={t('products.create_first')}
+              onAction={handleCreateProduct}
+              testId="products-empty-search"
+            />
           )}
 
           {/* Mensaje cuando hay productos pero el filtro local no encuentra nada */}
           {!isLoading && products.length > 0 && filteredProducts.length === 0 && localSearchTerm && (
-            <div 
-              className={card('text-center py-20')}
-            >
-              <EmptyState
-                title={t('products.no_results')}
-                description={t('products.no_results_for').replace('{term}', localSearchTerm)}
-              />
-            </div>
+            <DataState
+              variant="empty"
+              title={t('products.no_results')}
+              description={t('products.no_results_for').replace('{term}', localSearchTerm)}
+              testId="products-empty-filter"
+            />
           )}
 
           {/* Grid de productos */}
@@ -668,12 +633,12 @@ const Products = () => {
 
         {/* Footer con paginación */}
         {!isLoading && products.length > 0 && (
-          <footer className="text-center py-8">
+          <footer className="text-center py-8" data-testid="products-footer">
             <div className="flex flex-wrap justify-center gap-4 mb-4">
               <div className={`text-muted-foreground ${themeLabel()}`}>
                 {isNeoBrutalism ? 
                   `MOSTRANDO ${filteredProducts.length} DE ${products.length} PRODUCTOS EN ESTA PÁGINA` :
-                  `Mostrando ${filteredProducts.length} de ${products.length} productos en esta página`
+                  t('products.pagination.showing_page_count', { shown: filteredProducts.length, pageCount: products.length })
                 }
               </div>
               {lastSearchTerm && (
@@ -683,13 +648,13 @@ const Products = () => {
                   >
                     {isNeoBrutalism ? 
                       `BUSQUEDA: "${lastSearchTerm.toUpperCase()}"` :
-                      `Búsqueda: "${lastSearchTerm}"`
+                      `${t('products.pagination.search_prefix')} "${lastSearchTerm}"`
                     }
                   </div>
                   <div className={`text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 ${themeLabel()}`}>
                     {/^[a-zA-Z0-9_-]{10,}$/.test(lastSearchTerm) 
-                      ? (isNeoBrutalism ? 'POR ID' : 'por ID')
-                      : (isNeoBrutalism ? 'POR NOMBRE' : 'por nombre')
+                      ? (isNeoBrutalism ? 'POR ID' : t('products.pagination.by_id'))
+                      : (isNeoBrutalism ? 'POR NOMBRE' : t('products.pagination.by_name'))
                     }
                   </div>
                 </div>
@@ -700,7 +665,7 @@ const Products = () => {
                 >
                   {isNeoBrutalism ? 
                     `TOTAL ENCONTRADOS: ${totalProducts}` :
-                    `Total encontrados: ${totalProducts}`
+                    t('products.pagination.total_found', { total: totalProducts })
                   }
                 </div>
               )}
@@ -715,7 +680,7 @@ const Products = () => {
                   variant="secondary"
                   size="sm"
                 >
-                  {isNeoBrutalism ? 'PRIMERA' : 'Primera'}
+                  {isNeoBrutalism ? 'PRIMERA' : t('products.pagination.first')}
                 </Button>
                 
                 <Button
@@ -724,7 +689,7 @@ const Products = () => {
                   variant="secondary"
                   size="sm"
                 >
-                  {isNeoBrutalism ? 'ANTERIOR' : 'Anterior'}
+                  {isNeoBrutalism ? 'ANTERIOR' : t('products.pagination.prev')}
                 </Button>
                 
                 {/* Números de página */}
@@ -760,7 +725,7 @@ const Products = () => {
                   variant="secondary"
                   size="sm"
                 >
-                  {isNeoBrutalism ? 'SIGUIENTE' : 'Siguiente'}
+                  {isNeoBrutalism ? 'SIGUIENTE' : t('products.pagination.next')}
                 </Button>
 
                 <Button
@@ -769,14 +734,14 @@ const Products = () => {
                   variant="secondary"
                   size="sm"
                 >
-                  {isNeoBrutalism ? 'ÚLTIMA' : 'Última'}
+                  {isNeoBrutalism ? 'ÚLTIMA' : t('products.pagination.last')}
                 </Button>
 
                 {/* Información de página actual */}
                 <div className={`text-muted-foreground ml-4 ${themeLabel()}`}>
                   {isNeoBrutalism ? 
                     `PÁGINA ${currentPage} DE ${totalPages}` :
-                    `Página ${currentPage} de ${totalPages}`
+                    t('products.pagination.page_of', { page: currentPage, totalPages })
                   }
                 </div>
               </div>

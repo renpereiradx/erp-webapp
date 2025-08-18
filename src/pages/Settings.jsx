@@ -11,7 +11,7 @@ const Settings = () => {
   const isFluent = theme === 'fluent-light' || theme === 'fluent-dark';
 
   return (
-    <div className="p-6 bg-background text-foreground min-h-screen">
+    <div className="p-6 bg-background text-foreground min-h-screen" data-testid="settings-page">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
           <h1 className="text-4xl font-bold text-primary mb-2">Configuración</h1>

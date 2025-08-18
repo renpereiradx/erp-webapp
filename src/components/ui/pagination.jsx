@@ -17,6 +17,7 @@ function Pagination({
       role="navigation"
       aria-label="pagination"
       data-slot="pagination"
+      data-testid="pagination"
       className={cn("mx-auto flex w-full justify-center", className)}
       {...props} />
   );
@@ -29,6 +30,7 @@ function PaginationContent({
   return (
     <ul
       data-slot="pagination-content"
+      data-testid="pagination-content"
       className={cn("flex flex-row items-center gap-1", className)}
       {...props} />
   );
@@ -37,7 +39,7 @@ function PaginationContent({
 function PaginationItem({
   ...props
 }) {
-  return <li data-slot="pagination-item" {...props} />;
+  return <li data-slot="pagination-item" data-testid="pagination-item" {...props} />;
 }
 
 function PaginationLink({
@@ -50,6 +52,7 @@ function PaginationLink({
     <a
       aria-current={isActive ? "page" : undefined}
       data-slot="pagination-link"
+      data-testid="pagination-link"
       data-active={isActive}
       className={cn(buttonVariants({
         variant: isActive ? "outline" : "ghost",
@@ -66,6 +69,7 @@ function PaginationPrevious({
   return (
     <PaginationLink
       aria-label="Go to previous page"
+      data-testid="pagination-prev"
       size="default"
       className={cn("gap-1 px-2.5 sm:pl-2.5", className)}
       {...props}>
@@ -82,6 +86,7 @@ function PaginationNext({
   return (
     <PaginationLink
       aria-label="Go to next page"
+      data-testid="pagination-next"
       size="default"
       className={cn("gap-1 px-2.5 sm:pr-2.5", className)}
       {...props}>
@@ -99,6 +104,7 @@ function PaginationEllipsis({
     <span
       aria-hidden
       data-slot="pagination-ellipsis"
+      data-testid="pagination-ellipsis"
       className={cn("flex size-9 items-center justify-center", className)}
       {...props}>
       <MoreHorizontalIcon className="size-4" />

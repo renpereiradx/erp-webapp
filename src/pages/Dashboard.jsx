@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { useTheme } from 'next-themes';
+import DataState from '@/components/ui/DataState';
 import { 
   DollarSign, 
   Users, 
@@ -26,7 +27,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieCha
 import { materialColors, materialTypography, materialSpacing, materialCorners, materialElevation } from '@/utils/materialDesignUtils';
 import { fluentColors, fluentTypography, fluentSpacing, fluentCorners, fluentElevation } from '@/utils/fluentDesignUtils';
 
-const Dashboard = () => {
+const Dashboard = ({ dataState } = {}) => {
+  // If a dataState prop is provided, delegate rendering to the unified DataState
+  if (dataState && dataState.variant) {
+    return <DataState {...dataState} testId={dataState.testId || 'dashboard-data-state'} />;
+  }
   const { theme } = useTheme();
   const isNeoBrutalism = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
   const isMaterial = theme === 'material-light' || theme === 'material-dark';
@@ -576,11 +581,11 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="min-h-screen bg-background text-foreground p-6" data-testid="dashboard-page">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header Neo-Brutalist */}
-        <header className="text-center py-8">
+        <header className="text-center py-8" data-testid="dashboard-header">
           <h1 
             className="text-primary mb-4"
             style={getTypography('title')}
@@ -793,7 +798,7 @@ const Dashboard = () => {
         </section>
 
         {/* Dashboard de actividad reciente con estilo brutal */}
-        <section className="grid lg:grid-cols-2 gap-8">
+        <section className="grid lg:grid-cols-2 gap-8" data-testid="dashboard-activity-stock">
           
           {/* Actividad reciente */}
           <div 
@@ -941,7 +946,7 @@ const Dashboard = () => {
         </section>
 
         {/* Gráficos con estilo Neo-Brutalist */}
-        <section className="grid lg:grid-cols-2 gap-8">
+        <section className="grid lg:grid-cols-2 gap-8" data-testid="dashboard-charts">
           
           {/* Gráfico de ventas */}
           <div 
@@ -1056,8 +1061,8 @@ const Dashboard = () => {
         </section>
 
         {/* Footer de acciones rápidas */}
-        <footer className="text-center py-8">
-          <div className="flex flex-wrap justify-center gap-4">
+        <footer className="text-center py-8" data-testid="dashboard-footer">
+           <div className="flex flex-wrap justify-center gap-4">
             <button
               style={{
                 ...getButtonStyles(), 
@@ -1127,9 +1132,9 @@ const Dashboard = () => {
           </div>
         </footer>
 
-      </div>
-    </div>
-  );
-};
+       </div>
+     </div>
+   );
+ };
 
-export default Dashboard;
+ export default Dashboard;

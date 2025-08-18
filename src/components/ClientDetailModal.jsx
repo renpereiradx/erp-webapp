@@ -42,19 +42,45 @@ const ClientDetailModal = ({ isOpen, onClose, client }) => {
   };
 
   const DetailItem = ({ icon, label, value }) => (
-    <div className="flex items-start space-x-4 py-3 border-b border-border">
+    <div
+      className="flex items-start space-x-4 py-3 border-b border-border"
+      data-testid={"client-detail-item-" + String(label).replace(/\s+/g, '-').toLowerCase()}
+    >
       <div className="text-primary">{icon}</div>
       <div>
         <p className="text-muted-foreground" style={getTypographyStyles(theme, 'small')}>{label}</p>
-        <p style={getTypographyStyles(theme, 'base')}>{value || 'N/A'}</p>
+        <p
+          style={getTypographyStyles(theme, 'base')}
+          data-testid={"client-detail-item-value-" + String(label).replace(/\s+/g, '-').toLowerCase()}
+        >
+          {value || 'N/A'}
+        </p>
       </div>
     </div>
   );
 
   return (
-    <div style={modalStyles.overlay} onClick={onClose}>
-      <div style={modalStyles.content} onClick={(e) => e.stopPropagation()}>
-        <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-4 right-4">
+    <div
+      style={modalStyles.overlay}
+      onClick={onClose}
+      data-testid="client-detail-modal-overlay"
+    >
+      <div
+        style={modalStyles.content}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Detalles de cliente ${client.name}`}
+        data-testid="client-detail-modal"
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="absolute top-4 right-4"
+          aria-label="Cerrar modal de cliente"
+          data-testid="client-detail-modal-close"
+        >
           <X />
         </Button>
         
@@ -63,9 +89,9 @@ const ClientDetailModal = ({ isOpen, onClose, client }) => {
             <User size={32} />
           </div>
           <div>
-            <h2 style={getTypographyStyles(theme, 'heading')}>{client.name} {client.last_name}</h2>
+            <h2 data-testid="client-detail-modal-title" style={getTypographyStyles(theme, 'heading')}>{client.name} {client.last_name}</h2>
             {/* Reemplazo de badge manual por StatusBadge */}
-            <StatusBadge active={!!client.status} />
+            <StatusBadge active={!!client.status} data-testid="client-detail-modal-status" />
           </div>
         </div>
 

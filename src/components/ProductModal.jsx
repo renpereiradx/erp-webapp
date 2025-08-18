@@ -331,8 +331,15 @@ const ProductModal = ({
   if (!isOpen) return null;
 
   return (
-    <div style={modalStyles.overlay} onClick={onClose}>
-      <div style={modalStyles.modal} onClick={(e) => e.stopPropagation()}>
+    <div style={modalStyles.overlay} onClick={onClose} data-testid="product-modal-overlay">
+      <div
+        style={modalStyles.modal}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-modal-title"
+        data-testid="product-modal"
+      >
         {/* Header */}
         <div style={{ 
           padding: '24px', 
@@ -343,12 +350,16 @@ const ProductModal = ({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Package className="w-6 h-6" />
-            <h2 style={{
-              fontSize: isNeoBrutalism ? '1.5rem' : '1.25rem',
-              fontWeight: isNeoBrutalism ? '800' : '600',
-              textTransform: isNeoBrutalism ? 'uppercase' : 'none',
-              margin: 0
-            }}>
+            <h2
+              id="product-modal-title"
+              data-testid="product-modal-title"
+              style={{
+                fontSize: isNeoBrutalism ? '1.5rem' : '1.25rem',
+                fontWeight: isNeoBrutalism ? '800' : '600',
+                textTransform: isNeoBrutalism ? 'uppercase' : 'none',
+                margin: 0
+              }}
+            >
               {product ? 
                 (isNeoBrutalism ? t('products.edit_title') || 'EDITAR PRODUCTO' : t('products.edit_title') || 'Editar Producto') : 
                 (isNeoBrutalism ? t('products.new_title') || 'NUEVO PRODUCTO' : t('products.new_title') || 'Nuevo Producto')
@@ -357,6 +368,8 @@ const ProductModal = ({
           </div>
           <button
             onClick={onClose}
+            aria-label={isNeoBrutalism ? 'Cerrar' : 'Close'}
+            data-testid="product-modal-close"
             style={{
               background: 'none',
               border: 'none',
@@ -370,36 +383,42 @@ const ProductModal = ({
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
+        <form onSubmit={handleSubmit} style={{ padding: '24px' }} data-testid="product-modal-form">
           {error && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px',
-              background: 'var(--destructive)',
-              color: 'var(--destructive-foreground)',
-              borderRadius: isNeoBrutalism ? '0px' : '4px',
-              border: isNeoBrutalism ? '2px solid var(--border)' : 'none',
-              marginBottom: '16px'
-            }}>
+            <div
+              data-testid="product-modal-error"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '12px',
+                background: 'var(--destructive)',
+                color: 'var(--destructive-foreground)',
+                borderRadius: isNeoBrutalism ? '0px' : '4px',
+                border: isNeoBrutalism ? '2px solid var(--border)' : 'none',
+                marginBottom: '16px'
+              }}
+            >
               <AlertCircle className="w-4 h-4" />
               {error}
             </div>
           )}
 
           {categoriesError && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '12px',
-              background: 'hsl(var(--warning))',
-              color: 'hsl(var(--warning-foreground))',
-              borderRadius: isNeoBrutalism ? '0px' : '4px',
-              border: isNeoBrutalism ? '2px solid var(--border)' : 'none',
-              marginBottom: '16px'
-            }}>
+            <div
+              data-testid="product-modal-categories-error"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '12px',
+                background: 'hsl(var(--warning))',
+                color: 'hsl(var(--warning-foreground))',
+                borderRadius: isNeoBrutalism ? '0px' : '4px',
+                border: isNeoBrutalism ? '2px solid var(--border)' : 'none',
+                marginBottom: '16px'
+              }}
+            >
               <AlertCircle className="w-4 h-4" />
               <div>
                 <strong>{isNeoBrutalism ? 'PROBLEMA CON CATEGORÍAS:' : 'Problema con categorías:'}</strong>
@@ -427,6 +446,7 @@ const ProductModal = ({
                 value={formData.name}
                 onChange={handleInputChange}
                 required
+                data-testid="product-name-input"
                 style={{
                   ...inputStyles,
                   width: '100%'
@@ -451,6 +471,7 @@ const ProductModal = ({
                 value={formData.description}
                 onChange={handleInputChange}
                 rows={3}
+                data-testid="product-description-input"
                 style={{
                   ...inputStyles,
                   width: '100%',
@@ -479,6 +500,7 @@ const ProductModal = ({
                 onChange={handleInputChange}
                 required
                 disabled={categoriesLoading || categoriesError}
+                data-testid="product-category-select"
                 style={{
                   ...inputStyles,
                   width: '100%',
@@ -528,6 +550,7 @@ const ProductModal = ({
                       });
                   }}
                   disabled={categoriesLoading}
+                  data-testid="product-categories-retry"
                   style={{
                     marginTop: '8px',
                     padding: '8px 12px',
@@ -560,6 +583,7 @@ const ProductModal = ({
                 name="product_type"
                 value={formData.product_type}
                 onChange={handleInputChange}
+                data-testid="product-type-select"
                 style={{
                   ...inputStyles,
                   width: '100%'
@@ -577,6 +601,7 @@ const ProductModal = ({
                 name="state"
                 checked={formData.state}
                 onChange={handleInputChange}
+                data-testid="product-active-checkbox"
                 style={{ marginRight: '8px' }}
               />
               <label style={{
@@ -603,6 +628,7 @@ const ProductModal = ({
               onClick={onClose}
               style={getButtonStyles('secondary')}
               disabled={loading}
+              data-testid="product-cancel-button"
             >
               {isNeoBrutalism ? (t('products.cancel') || 'CANCELAR') : (t('products.cancel') || 'Cancelar')}
             </button>
@@ -610,6 +636,7 @@ const ProductModal = ({
               type="submit"
               style={getButtonStyles('primary')}
               disabled={loading || (categoriesError && categories.length === 0)}
+              data-testid="product-save-button"
             >
               {loading ? (
                 isNeoBrutalism ? (t('products.saving') || 'GUARDANDO...') : (t('products.saving') || 'Guardando...')

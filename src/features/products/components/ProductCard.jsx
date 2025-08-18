@@ -105,7 +105,7 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
   };
 
   return (
-    <div className={`${card('p-4 sm:p-5')} group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 flex flex-col`}>
+    <div data-testid={`product-card-${product.id}`} className={`${card('p-4 sm:p-5')} group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 flex flex-col`}>
       {/* Accent bar */}
       {!isNeoBrutalism ? (
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60 opacity-80 rounded-t-md" aria-hidden="true" />
@@ -135,6 +135,7 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
                 checked={!!selected}
                 onChange={() => onToggleSelect(product.id)}
                 className="mt-1 accent-primary"
+                data-testid={`product-select-${product.id}`}
               />
             )}
             <div className="flex-1">
@@ -276,18 +277,18 @@ function ProductCardComponent({ product, isNeoBrutalism, getCategoryName, onView
 
       {/* Actions */}
       <div className="flex gap-2 mt-3">
-        <Button onClick={() => onView?.(product)} variant="secondary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50">
+        <Button onClick={() => onView?.(product)} variant="secondary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50" data-testid="product-view-button" data-e2e={`product-view-${product.id}`} aria-label={t('action.view') || 'Ver'}>
           <Eye className="w-4 h-4 mr-1" /> {t('action.view') || 'Ver'}
         </Button>
-        <Button onClick={() => onEdit?.(product)} variant="primary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50">
+        <Button onClick={() => onEdit?.(product)} variant="primary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50" data-testid="product-edit-button" data-e2e={`product-edit-${product.id}`} aria-label={t('action.edit') || 'Editar'}>
           <Edit className="w-4 h-4 mr-1" /> {t('action.edit') || 'Editar'}
         </Button>
         {enableInlineEdit && !inlineEditing && (
-          <Button onClick={() => onStartInlineEdit?.(product.id)} variant="outline" size="sm" className="flex-1 text-xs">
+          <Button onClick={() => onStartInlineEdit?.(product.id)} variant="outline" size="sm" className="flex-1 text-xs" data-testid="product-inline-button" data-e2e={`product-inline-${product.id}`} aria-label={t('action.inline') || 'Inline'}>
             {t('action.inline') || 'Inline'}
           </Button>
         )}
-        <Button onClick={() => onDelete?.(product)} variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" aria-label={t('action.delete_product') || 'Eliminar producto'}>
+        <Button onClick={() => onDelete?.(product)} variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" aria-label={t('action.delete_product') || 'Eliminar producto'} data-testid="product-delete-button" data-e2e={`product-delete-${product.id}`}>
           <Trash2 className="w-4 h-4" />
         </Button>
       </div>

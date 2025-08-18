@@ -7,6 +7,7 @@ export default function ProductSkeletonGrid({ count = 12, itemMinWidth = 260, ga
   const items = Array.from({ length: count });
   return (
     <div
+      data-testid="products-skeleton-grid"
       style={{
         display: 'grid',
         gridTemplateColumns: `repeat(auto-fill, minmax(${itemMinWidth}px, 1fr))`,
@@ -16,7 +17,7 @@ export default function ProductSkeletonGrid({ count = 12, itemMinWidth = 260, ga
       aria-label={t('products.loading')}
     >
       {items.map((_, i) => (
-        <div key={i} role="listitem">
+        <div key={i} role="listitem" data-testid={`product-skeleton-${i}`}>
           <div className="bg-white border rounded-md p-4 animate-pulse">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">

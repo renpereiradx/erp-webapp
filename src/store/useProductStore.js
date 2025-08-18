@@ -26,22 +26,22 @@ const useProductStore = create(
       productsById: {}, // Normalización por id
       pageCache: {}, // { pageNumber: { ts, products } }
       pageCacheTTL: 120000,
+      searchCache: {}, // { cacheKey: { ts, data } }
+      cacheTTL: 120000,
+      cacheHits: 0,
+      cacheMisses: 0,
       selectedIds: [], // Selección múltiple para acciones bulk
       selectedProduct: null,
       loading: false,
       error: null,
       fetchAbortController: null,
       errorCounters: {},
+      lastErrorCode: null,
+      lastErrorHintKey: null,
       isOffline: false,
-  // Caché simple para búsquedas (SWR-like)
-  searchCache: {}, // { [cacheKey]: { ts: number, data: array } }
-  cacheTTL: 120000, // 2 minutos
-      cacheHits: 0,
-      cacheMisses: 0,
-      circuit: { openUntil: 0, failures: 0, threshold: 4, cooldownMs: 30000 },
-      circuitOpen: false,
-      circuitTimeoutId: null,
-      
+      // para pruebas podemos ajustar TTL
+      _testing: { overrideTTL: null, fastRetries: false, overrideRetryConfig: null },
+
       // Categories (inicialmente vacías, se cargan desde API)
       categories: [],
       
@@ -67,7 +67,8 @@ const useProductStore = create(
 
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
-      clearError: () => set({ error: null }),
+      clearError: () => set({ error: null, lastErrorCode: null, lastErrorHintKey: null }),
+      setIsOffline: (flag) => set({ isOffline: !!flag }),
       _recordFailure: () => {
         const state = get();
         const failures = state.circuit.failures + 1;
@@ -108,9 +109,21 @@ const useProductStore = create(
 
       // Helper para ejecutar una función con reintentos (backoff + jitter)
       _withRetry: async (fn, opts = {}) => {
-        const attempts = opts.attempts ?? 3;
-        const baseDelay = opts.baseDelay ?? 300;
+        let attempts = opts.attempts ?? 3;
+        let baseDelay = opts.baseDelay ?? 300;
         const telemetryKey = opts.telemetryKey;
+
+        // Apply testing overrides if present to make retry behavior deterministic in tests
+        try {
+          const testing = get()._testing || {};
+          if (testing.fastRetries) {
+            attempts = 1;
+            baseDelay = 0;
+          } else if (testing.overrideRetryConfig) {
+            attempts = testing.overrideRetryConfig.attempts ?? attempts;
+            baseDelay = testing.overrideRetryConfig.baseDelay ?? baseDelay;
+          }
+        } catch (e) {}
 
         let lastErr;
         for (let attempt = 0; attempt < attempts; attempt++) {
@@ -256,6 +269,7 @@ const useProductStore = create(
 
       fetchProducts: async (page = null, pageSize = null, searchTerm = '', options = {}) => {
         const correlationId = `fetch_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+        try { if (process && process.env && process.env.DEBUG_FETCH) console.debug('[store] fetchProducts called', { page, pageSize, searchTerm }); } catch (e) {}
         const state = get();
         const currentPage = page || state.currentPage;
         const currentPageSize = pageSize || state.pageSize;
@@ -364,18 +378,24 @@ const useProductStore = create(
           get()._recordFailure();
           const norm = toApiError(apiError, 'Error al cargar productos', correlationId);
           let errorMessage = `Error al cargar productos: ${norm.message}`;
+          let code = norm.code || null;
           if (isConnectionError(apiError)) {
             errorMessage = getConnectionErrorMessage(apiError);
+            code = 'NETWORK';
           }
+          const hintKey = code ? get()._mapErrorCodeToHintKey(code) : null;
           set({
             products: [],
             productsById: {},
             totalProducts: 0,
             totalPages: 0,
             loading: false,
-            error: errorMessage
+            error: errorMessage,
+            lastErrorCode: code,
+            lastErrorHintKey: hintKey
           });
-          telemetry.record('products.fetch.error', { message: errorMessage, code: norm.code, correlationId });
+          // Ensure global telemetry records store-level errors so UI and tests can react
+          try { telemetry.record('products.error.store', { message: errorMessage, code }); } catch (e) {}
           // Offline snapshot si había datos previos
           const prev = get().products;
           if (prev.length) set({ lastOfflineSnapshot: prev });
@@ -388,166 +408,185 @@ const useProductStore = create(
 
       // Nueva función para búsqueda específica (con caché y cancelación)
   searchProducts: async (searchTerm, options = {}) => {
-         const correlationId = `search_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-        // ...existing code...
-        try {
-          if (get()._circuitOpen()) {
-            return { data: [], total: 0, circuitOpen: true };
-          }
-          const term = searchTerm.trim();
-          const state = get();
-          const { searchCache, cacheTTL } = state;
-          const now = Date.now();
-          const pageSize = state.pageSize || 10;
-          const cacheKey = JSON.stringify({ term, pageSize, category: state.filters?.category || 'all', status: state.filters?.status || 'all' });
-          const cached = searchCache[cacheKey];
-          const isValidCache = cached && now - cached.ts < cacheTTL;
+    const correlationId = `search_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+    const termRaw = (searchTerm || '').trim();
+    if (!termRaw) {
+      return { data: [], total: 0 };
+    }
+    // Short-circuit if circuit is open (same behavior as fetchProducts)
+    if (get()._circuitOpen()) {
+      const stateNow = get();
+      const openUntil = stateNow.circuit?.openUntil || 0;
+      if (openUntil && Date.now() >= openUntil) {
+        try { if (stateNow.circuitTimeoutId) clearTimeout(stateNow.circuitTimeoutId); } catch (e) {}
+        set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
+      } else {
+        return { data: [], total: 0, circuitOpen: true };
+      }
+    }
+    try {
+      const term = termRaw;
+      const state = get();
+      const { searchCache, cacheTTL } = state;
+      const now = Date.now();
+      const pageSize = state.pageSize || 10;
+      const cacheKey = JSON.stringify({ term, pageSize, category: state.filters?.category || 'all', status: state.filters?.status || 'all' });
+      const cached = searchCache[cacheKey];
+      const isValidCache = cached && now - cached.ts < cacheTTL;
 
-          if (isValidCache && !options.force) {
-            set((s)=>({ cacheHits: s.cacheHits + 1 }));
-            telemetry.record('products.search.cache.hit', { term, age: now - cached.ts });
-            const totalCount = cached.data.length;
-            const paginated = cached.data.slice(0, pageSize);
-            const byId = Object.fromEntries(cached.data.map(p => [p.id, p]));
-            set({
-              products: paginated,
-              productsById: byId,
-              totalProducts: totalCount,
-              totalPages: Math.ceil(totalCount / pageSize),
-              currentPage: 1,
-              pageSize,
-              loading: false,
-              lastSearchTerm: term,
-              error: null
-            });
-            // Auto revalidación si la entrada está envejecida
-            if ((now - cached.ts) > cacheTTL * 0.5 && !options.revalidate) {
-              (async () => {
-                try {
-                  const fresh = await get()._withRetry(() => productService.searchProducts(term), { attempts: 2, telemetryKey: 'products.search.revalidate' });
-                  const freshArr = Array.isArray(fresh) ? fresh : [fresh];
-                  set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: freshArr } } }));
-                  telemetry.record('products.search.revalidate.auto.success', { term, total: freshArr.length });
-                  // Si cambió el tamaño, actualizar vista
-                  if (freshArr.length !== totalCount) {
-                    const pag = freshArr.slice(0, pageSize);
-                    const freshById = Object.fromEntries(freshArr.map(p => [p.id, p]));
-                    set({ products: pag, productsById: freshById, totalProducts: freshArr.length, totalPages: Math.ceil(freshArr.length / pageSize) });
-                  }
-                } catch {
-                  telemetry.record('products.search.revalidate.auto.error', { term });
-                }
-              })();
+      if (isValidCache && !options.force) {
+        set((s)=>({ cacheHits: s.cacheHits + 1 }));
+        telemetry.record('products.search.cache.hit', { term, age: now - cached.ts });
+        const totalCount = cached.data.length;
+        const paginated = cached.data.slice(0, pageSize);
+        const byId = Object.fromEntries(cached.data.map(p => [p.id, p]));
+        set({
+          products: paginated,
+          productsById: byId,
+          totalProducts: totalCount,
+          totalPages: Math.ceil(totalCount / pageSize),
+          currentPage: 1,
+          pageSize,
+          loading: false,
+          lastSearchTerm: term,
+          error: null
+        });
+        // Auto revalidación si la entrada está envejecida
+        if ((now - cached.ts) > cacheTTL * 0.5 && !options.revalidate) {
+          (async () => {
+            try {
+              const fresh = await get()._withRetry(() => productService.searchProducts(term), { attempts: 2, telemetryKey: 'products.search.revalidate' });
+              const freshArr = Array.isArray(fresh) ? fresh : [fresh];
+              set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: freshArr } } }));
+              telemetry.record('products.search.revalidate.auto.success', { term, total: freshArr.length });
+              // Si cambió el tamaño, actualizar vista
+              if (freshArr.length !== totalCount) {
+                const pag = freshArr.slice(0, pageSize);
+                const freshById = Object.fromEntries(freshArr.map(p => [p.id, p]));
+                set({ products: pag, productsById: freshById, totalProducts: freshArr.length, totalPages: Math.ceil(freshArr.length / pageSize) });
+              }
+            } catch {
+              telemetry.record('products.search.revalidate.auto.error', { term });
             }
-            return { data: paginated, total: totalCount };
-          }
-
-          if (options.signal) {
-            set((s)=>({ cacheMisses: s.cacheMisses + 1 }));
-            telemetry.record('products.search.cache.miss', { term });
-            const response = await productService.searchProducts(term, { signal: options.signal });
-            const products = Array.isArray(response) ? response : [response];
-            const totalCount = products.length;
-            const paginated = products.slice(0, pageSize);
-            const byId = Object.fromEntries(products.map(p => [p.id, p]));
-            set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: products } } }));
-            // Trim searchCache si excede 30 entradas
-            set((s) => {
-              const keys = Object.keys(s.searchCache);
-              if (keys.length <= 30) return {};
-              const sorted = keys.map(k => ({ k, ts: s.searchCache[k].ts })).sort((a,b) => a.ts - b.ts);
-              const toRemove = sorted.slice(0, keys.length - 30);
-              if (!toRemove.length) return {};
-              const clone = { ...s.searchCache };
-              toRemove.forEach(r => { delete clone[r.k]; });
-              return { searchCache: clone };
-            });
-            telemetry.record('products.searchCache.trim');
-            set({
-              products: paginated,
-              productsById: byId,
-              totalProducts: totalCount,
-              totalPages: Math.ceil(totalCount / pageSize),
-              currentPage: 1,
-              pageSize,
-              loading: false,
-              lastSearchTerm: term,
-              error: null
-            });
-            return { data: paginated, total: totalCount };
-          }
-
-          const t = telemetry.startTimer('products.search');
-          set((s)=>({ cacheMisses: s.cacheMisses + 1 }));
-          telemetry.record('products.search.cache.miss', { term });
-          const response = await get()._withRetry(() => productService.searchProducts(term), { telemetryKey: 'products.search' });
-          const products = Array.isArray(response) ? response : [response];
-          const totalCount = products.length;
-          const paginated = products.slice(0, pageSize);
-          const byId = Object.fromEntries(products.map(p => [p.id, p]));
-          set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: products } } }));
-          // Trim searchCache si excede 30 entradas
-          set((s) => {
-            const keys = Object.keys(s.searchCache);
-            if (keys.length <= 30) return {};
-            const sorted = keys.map(k => ({ k, ts: s.searchCache[k].ts })).sort((a,b) => a.ts - b.ts);
-            const toRemove = sorted.slice(0, keys.length - 30);
-            if (!toRemove.length) return {};
-            const clone = { ...s.searchCache };
-            toRemove.forEach(r => { delete clone[r.k]; });
-            return { searchCache: clone };
-          });
-          telemetry.record('products.searchCache.trim');
-          set({
-            products: paginated,
-            productsById: byId,
-            totalProducts: totalCount,
-            totalPages: Math.ceil(totalCount / pageSize),
-            currentPage: 1,
-            pageSize,
-            loading: false,
-            lastSearchTerm: term,
-            error: null
-          });
-          const ms = telemetry.endTimer(t, { total: totalCount });
-          telemetry.record('products.search.success', { ms, total: totalCount });
-          get()._recordSuccess();
-          return { data: paginated, total: totalCount };
-        } catch (error) {
-          // count failure for circuit behavior
-          try { get()._recordFailure(); } catch (e) {}
-           if (error?.name === 'AbortError') {
-             telemetry.record('products.search.abort');
-             return { data: [], total: 0, aborted: true };
-           }
-           const norm = toApiError(error, 'Error al buscar productos', correlationId);
-           // Increment counter
-           set((s) => ({ errorCounters: { ...s.errorCounters, [norm.code]: (s.errorCounters[norm.code] || 0) + 1 } }));
-           let errorMessage = norm.message || 'Error al buscar productos';
-           if (isConnectionError(error)) {
-             errorMessage = getConnectionErrorMessage(error);
-           }
-           set({
-             products: [],
-             productsById: {},
-             totalProducts: 0,
-             totalPages: 0,
-             currentPage: 1,
-             loading: false,
-             error: errorMessage,
-           });
-           telemetry.record('products.search.error', { code: norm.code, message: norm.message, correlationId });
-           // Detectar errores de conexión
-           try { if (isConnectionError(error)) set({ isOffline: true }); } catch {}
-           return { error: errorMessage, data: [], total: 0 };
+          })();
         }
-      },
+        return { data: paginated, total: totalCount };
+      }
+
+      if (options.signal) {
+        set((s)=>({ cacheMisses: s.cacheMisses + 1 }));
+        telemetry.record('products.search.cache.miss', { term });
+        const response = await productService.searchProducts(term, { signal: options.signal });
+        const products = Array.isArray(response) ? response : [response];
+        const totalCount = products.length;
+        const paginated = products.slice(0, pageSize);
+        const byId = Object.fromEntries(products.map(p => [p.id, p]));
+        set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: products } } }));
+        // Trim searchCache si excede 30 entradas
+        set((s) => {
+          const keys = Object.keys(s.searchCache);
+          if (keys.length <= 30) return {};
+          const sorted = keys.map(k => ({ k, ts: s.searchCache[k].ts })).sort((a,b) => a.ts - b.ts);
+          const toRemove = sorted.slice(0, keys.length - 30);
+          if (!toRemove.length) return {};
+          const clone = { ...s.searchCache };
+          toRemove.forEach(r => { delete clone[r.k]; });
+          return { searchCache: clone };
+        });
+        telemetry.record('products.searchCache.trim');
+        set({
+          products: paginated,
+          productsById: byId,
+          totalProducts: totalCount,
+          totalPages: Math.ceil(totalCount / pageSize),
+          currentPage: 1,
+          pageSize,
+          loading: false,
+          lastSearchTerm: term,
+          error: null
+        });
+        return { data: paginated, total: totalCount };
+      }
+
+      const t = telemetry.startTimer('products.search');
+      set((s)=>({ cacheMisses: s.cacheMisses + 1 }));
+      telemetry.record('products.search.cache.miss', { term });
+      const response = await get()._withRetry(() => productService.searchProducts(term), { telemetryKey: 'products.search' });
+      const products = Array.isArray(response) ? response : [response];
+      const totalCount = products.length;
+      const paginated = products.slice(0, pageSize);
+      const byId = Object.fromEntries(products.map(p => [p.id, p]));
+      set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: products } } }));
+      // Trim searchCache si excede 30 entradas
+      set((s) => {
+        const keys = Object.keys(s.searchCache);
+        if (keys.length <= 30) return {};
+        const sorted = keys.map(k => ({ k, ts: s.searchCache[k].ts })).sort((a,b) => a.ts - b.ts);
+        const toRemove = sorted.slice(0, keys.length - 30);
+        if (!toRemove.length) return {};
+        const clone = { ...s.searchCache };
+        toRemove.forEach(r => { delete clone[r.k]; });
+        return { searchCache: clone };
+      });
+      telemetry.record('products.searchCache.trim');
+      set({
+        products: paginated,
+        productsById: byId,
+        totalProducts: totalCount,
+        totalPages: Math.ceil(totalCount / pageSize),
+        currentPage: 1,
+        pageSize,
+        loading: false,
+        lastSearchTerm: term,
+        error: null
+      });
+      const ms = telemetry.endTimer(t, { total: totalCount });
+      telemetry.record('products.search.success', { ms, total: totalCount });
+      get()._recordSuccess();
+      return { data: paginated, total: totalCount };
+    } catch (error) {
+      // count failure for circuit behavior only if not abort
+      if (!(error?.name === 'AbortError')) {
+        try { get()._recordFailure(); } catch (e) {}
+      }
+       if (error?.name === 'AbortError') {
+         telemetry.record('products.search.abort');
+         return { data: [], total: 0, aborted: true };
+       }
+       const norm = toApiError(error, 'Error al buscar productos', correlationId);
+       const code = norm.code || (isConnectionError(error) ? 'NETWORK' : null);
+       const hintKey = code ? get()._mapErrorCodeToHintKey(code) : null;
+       // Increment counter
+       set((s) => ({ errorCounters: { ...s.errorCounters, [norm.code]: (s.errorCounters[norm.code] || 0) + 1 } }));
+       let errorMessage = norm.message || 'Error al buscar productos';
+       if (isConnectionError(error)) {
+         errorMessage = getConnectionErrorMessage(error);
+       }
+       set({
+         products: [],
+         productsById: {},
+         totalProducts: 0,
+         totalPages: 0,
+         currentPage: 1,
+         loading: false,
+         error: errorMessage,
+         lastErrorCode: code,
+         lastErrorHintKey: hintKey,
+       });
+      // Also record store-level error telemetry for UI/tests
+      try { telemetry.record('products.error.store', { message: errorMessage, code }); } catch (e) {}
+       telemetry.record('products.search.error', { code: norm.code, message: norm.message, correlationId });
+       // Detectar errores de conexión
+       try { if (isConnectionError(error)) set({ isOffline: true }); } catch {}
+       return { error: errorMessage, data: [], total: 0 };
+    }
+  },
 
       // Función para cargar página específica
       loadPage: async (page) => {
         const state = get();
-        // usar cache si existe y válida
-        if (!state.lastSearchTerm && state.pageCache[page] && Date.now() - state.pageCache[page].ts < state.pageCacheTTL) {
+        const ttl = get()._testing.overrideTTL ?? state.pageCacheTTL;
+        if (!state.lastSearchTerm && state.pageCache[page] && Date.now() - state.pageCache[page].ts < ttl) {
           const pc = state.pageCache[page];
           set({
             products: pc.products,
@@ -588,7 +627,9 @@ const useProductStore = create(
           currentPage: 1,
           lastSearchTerm: '',
           loading: false,
-          error: null
+          error: null,
+          lastErrorCode: null,
+          lastErrorHintKey: null,
         });
       },
 
@@ -715,11 +756,13 @@ const useProductStore = create(
         products: [],
         productsById: {},
         pageCache: {},
+        searchCache: {},
         selectedIds: [],
         selectedProduct: null,
         loading: false,
         error: null,
-  searchCache: {},
+        lastErrorCode: null,
+        lastErrorHintKey: null,
         cacheHits: 0,
         cacheMisses: 0,
         currentPage: 1,
@@ -727,6 +770,7 @@ const useProductStore = create(
         totalProducts: 0,
         totalPages: 0,
         lastSearchTerm: '',
+        isOffline: false,
         filters: {
           search: '',
           category: '',
@@ -736,7 +780,10 @@ const useProductStore = create(
         },
         circuit: { openUntil: 0, failures: 0, threshold: 4, cooldownMs: 30000 },
         circuitOpen: false,
-        circuitTimeoutId: null
+        circuitTimeoutId: null,
+        _testing: { overrideTTL: null },
+        pageCacheTTL: 120000,
+        cacheTTL: 120000,
       }),
       // Attempt to hydrate offline snapshot on startup
       hydrateFromStorage: () => {
@@ -861,6 +908,23 @@ const useProductStore = create(
           // ignore
         }
       },
+      _mapErrorCodeToHintKey: (code) => {
+        switch (code) {
+          case 'NETWORK': return 'errors.hint.NETWORK';
+          case 'UNAUTHORIZED': return 'errors.hint.UNAUTHORIZED';
+          case 'NOT_FOUND': return 'errors.hint.NOT_FOUND';
+          case 'VALIDATION': return 'errors.hint.VALIDATION';
+          case 'RATE_LIMIT': return 'errors.hint.RATE_LIMIT';
+          case 'CONFLICT': return 'errors.hint.CONFLICT';
+          case 'INTERNAL': return 'errors.hint.INTERNAL';
+          default: return 'errors.hint.UNKNOWN';
+        }
+      },
+      setTestingTTL: (ms) => set({ pageCacheTTL: ms, cacheTTL: ms, _testing: { overrideTTL: ms } }),
+      // Toggle fast retry mode (1 attempt, 0 delay) for tests
+      setTestingFastRetries: (flag) => set((s) => ({ _testing: { ...s._testing, fastRetries: !!flag } })),
+      // Provide custom retry config for tests: { attempts: N, baseDelay: ms }
+      setTestingRetryConfig: (cfg) => set((s) => ({ _testing: { ...s._testing, overrideRetryConfig: cfg } })),
     }),
     {
       name: 'product-store',
@@ -877,6 +941,13 @@ if (typeof window !== 'undefined') {
   window.addEventListener('offline', () => {
     try { useProductStore.getState().setIsOffline(true); telemetry.record('app.offline'); } catch {}
   });
+
+  // Expose store for debugging and test helpers
+  try {
+    window.useProductStore = useProductStore;
+  } catch (e) {
+    // ignore in restricted environments
+  }
 }
 
 export default useProductStore;

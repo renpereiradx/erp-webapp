@@ -116,6 +116,11 @@ const DICTIONARY = {
     // Announcements
     'announce.error_validation': 'Error de validación: {msg}',
     'announce.error_network': 'Error de red: {msg}',
+    'announce.results_for': 'Resultados: {total} para "{term}"',
+    'announce.total_results': 'Total resultados: {total}',
+
+    'errors.code_label': 'Código: {code}',
+    'errors.hint.label': 'Sugerencia',
   },
   en: {
     'products.title': 'Product Management',
@@ -229,12 +234,74 @@ const DICTIONARY = {
     // Announcements
     'announce.error_validation': 'Validation error: {msg}',
     'announce.error_network': 'Network error: {msg}',
+    'announce.results_for': 'Results: {total} for "{term}"',
+    'announce.total_results': 'Total results: {total}',
+
+    'errors.code_label': 'Error code: {code}',
+    'errors.hint.label': 'Hint',
   }
 };
 
+// Add additional product-level messages and banners
+// (kept after DICTIONARY to avoid large duplicate blocks)
+Object.assign(DICTIONARY.es, {
+  'products.offline_banner': 'Estás sin conexión. Los datos pueden estar desactualizados.',
+  'products.auto_login_success': 'Auto-login exitoso! Recargando categorías...',
+  'products.auto_login_error': 'Error en auto-login',
+  'products.operation_success': 'Operación completada exitosamente',
+  'products.deleted_success': 'Producto "{name}" eliminado exitosamente',
+  'products.updated_notice': 'Producto {id} actualizado',
+  'products.subtitle': 'Administra tu inventario con la Business Management API',
+  'products.filter.current_results_title': 'Filtrar Resultados Actuales',
+  'products.filter.name_placeholder': 'Filtrar por nombre...',
+  'products.filter.all_categories': 'Todas las categorías',
+  'products.filter.all_status': 'Todos los estados',
+  'products.filter.status.active': 'Activos',
+  'products.filter.status.inactive': 'Inactivos',
+  'products.filter.products_label': 'Productos',
+  'products.bulk.selected_count': '{count} seleccionados',
+  'products.pagination.showing_page_count': 'Mostrando {shown} de {pageCount} productos en esta página',
+  'products.pagination.search_prefix': 'Búsqueda:',
+  'products.pagination.by_id': 'por ID',
+  'products.pagination.by_name': 'por nombre',
+  'products.pagination.total_found': 'Total encontrados: {total}',
+  'products.pagination.first': 'Primera',
+  'products.pagination.prev': 'Anterior',
+  'products.pagination.next': 'Siguiente',
+  'products.pagination.last': 'Última',
+  'products.pagination.page_of': 'Página {page} de {totalPages}',
+});
+Object.assign(DICTIONARY.en, {
+  'products.offline_banner': 'You are offline. Data may be stale.',
+  'products.auto_login_success': 'Auto-login successful! Reloading categories...',
+  'products.auto_login_error': 'Auto-login error',
+  'products.operation_success': 'Operation completed successfully',
+  'products.deleted_success': 'Product "{name}" deleted successfully',
+  'products.updated_notice': 'Product {id} updated',
+  'products.subtitle': 'Manage your inventory with the Business Management API',
+  'products.filter.current_results_title': 'Filter Current Results',
+  'products.filter.name_placeholder': 'Filter by name...',
+  'products.filter.all_categories': 'All categories',
+  'products.filter.all_status': 'All statuses',
+  'products.filter.status.active': 'Active',
+  'products.filter.status.inactive': 'Inactive',
+  'products.filter.products_label': 'Products',
+  'products.bulk.selected_count': '{count} selected',
+  'products.pagination.showing_page_count': 'Showing {shown} of {pageCount} products on this page',
+  'products.pagination.search_prefix': 'Search:',
+  'products.pagination.by_id': 'by ID',
+  'products.pagination.by_name': 'by name',
+  'products.pagination.total_found': 'Total found: {total}',
+  'products.pagination.first': 'First',
+  'products.pagination.prev': 'Previous',
+  'products.pagination.next': 'Next',
+  'products.pagination.last': 'Last',
+  'products.pagination.page_of': 'Page {page} of {totalPages}',
+});
+
 let currentLang = 'es';
 export const setI18nLang = (l) => { if (DICTIONARY[l]) currentLang = l; };
-export const tRaw = (key) => DICTIONARY[currentLang][key] || key;
+export const tRaw = (key) => (DICTIONARY[currentLang] && DICTIONARY[currentLang][key]) || key;
 
 export function useI18n() {
   const [lang, setLangState] = useState(currentLang);

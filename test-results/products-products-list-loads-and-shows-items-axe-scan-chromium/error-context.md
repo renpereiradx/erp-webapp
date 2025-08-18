@@ -1,0 +1,84 @@
+# Page snapshot
+
+```yaml
+- heading "ERP System" [level=1]
+- navigation:
+  - link "Dashboard 1":
+    - /url: /dashboard
+  - link "Productos 2":
+    - /url: /productos
+  - link "Clientes 3":
+    - /url: /clientes
+  - link "Proveedores 4":
+    - /url: /proveedores
+  - link "Compras 5":
+    - /url: /compras
+  - link "Reservas y Ventas 6":
+    - /url: /reservas-ventas
+  - link "Pedidos 7":
+    - /url: /pedidos
+  - link "Reportes 7":
+    - /url: /reportes
+  - link "Configuración 7":
+    - /url: /configuracion
+- heading "Upgrade to Pro" [level=3]
+- paragraph: Are you looking for more features? Check out our Pro version.
+- button "→ Upgrade Now 22"
+- button
+- textbox "Buscar productos, clientes..."
+- button "3"
+- button "1"
+- main:
+  - heading "DASHBOARD ERP" [level=1]
+  - paragraph: SISTEMA DE GESTIÓN EMPRESARIAL CON DISEÑO NEO-BRUTALIST
+  - button "NUEVA VENTA"
+  - button "AÑADIR CLIENTE"
+  - button "GESTIONAR STOCK"
+  - heading "MÉTRICAS PRINCIPALES" [level=2]
+  - heading "VENTAS TOTALES" [level=3]
+  - paragraph: Comparado con el mes anterior
+  - text: $125,430 +12.5%
+  - heading "CLIENTES ACTIVOS" [level=3]
+  - paragraph: Usuarios únicos este mes
+  - text: 2,847 +8.2%
+  - heading "PRODUCTOS" [level=3]
+  - paragraph: Items en inventario
+  - text: 1,253 -2.1%
+  - heading "PEDIDOS HOY" [level=3]
+  - paragraph: Órdenes procesadas hoy
+  - text: 147 +25.8%
+  - heading "ACTIVIDAD RECIENTE" [level=3]
+  - paragraph: Nueva venta por $2,450
+  - paragraph: hace 5 min
+  - paragraph: "Stock crítico: iPhone 15"
+  - paragraph: hace 12 min
+  - paragraph: Nuevo cliente registrado
+  - paragraph: hace 28 min
+  - paragraph: "Pedido #1847 completado"
+  - paragraph: hace 1 hora
+  - heading "STOCK CRÍTICO" [level=3]
+  - paragraph: iPhone 15
+  - paragraph: "Actual: 3 | Mínimo: 10"
+  - text: CRÍTICO
+  - paragraph: Laptop Dell
+  - paragraph: "Actual: 5 | Mínimo: 15"
+  - text: ALTO
+  - paragraph: Mouse Gaming
+  - paragraph: "Actual: 8 | Mínimo: 20"
+  - text: MEDIO
+  - paragraph: Teclado RGB
+  - paragraph: "Actual: 12 | Mínimo: 25"
+  - text: BAJO
+  - heading "VENTAS MENSUALES" [level=3]
+  - img: Ene Feb Mar Abr May Jun 0 6500 13000 19500 26000
+  - heading "CATEGORÍAS DE PRODUCTOS" [level=3]
+  - img:
+    - img
+    - img
+    - img
+    - img
+    - img
+  - text: Electrónicos (35%) Ropa (25%) Hogar (20%) Deportes (15%) Otros (5%)
+  - button "VER REPORTES"
+  - button "CONFIGURAR METAS"
+```

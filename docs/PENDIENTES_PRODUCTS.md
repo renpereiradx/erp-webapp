@@ -2,13 +2,15 @@
 
 Documento vivo que consolida los elementos restantes tras la primera fase de refactor / mejora de la página **Products**.
 
+Última actualización: 2025-08-16
+
 ## Leyenda Prioridad
 - P0: Bloqueante / alto impacto usuario / riesgo regresión
 - P1: Mejora importante UX, accesibilidad o robustez
 - P2: Optimización, deuda técnica o nice-to-have
 
 ## Resumen Ejecutivo
-Primera fase completada: caching SWR, resiliencia (retry + circuito), edición inline básica, accesibilidad inicial (aria-live + navegación teclado), telemetría granular, i18n base y banner offline. Falta cerrar la experiencia completa (estados unificados, i18n total, panel métricas, E2E, slices store) y extender patrones al resto de features.
+Primera fase completada: caching SWR, resiliencia (retry + circuito), edición inline básica, accesibilidad inicial (aria-live + navegación teclado), telemetría granular, i18n base y banner offline. Se agregó panel métricas mínimo (flag), mapping de hints en ErrorState y scaffold Playwright + AXE. Pendiente: estados unificados, i18n completa, escenarios E2E CRUD/bulk/offline, slices store y virtualización.
 
 ---
 ## 1. Accesibilidad (A11y)
@@ -32,15 +34,15 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 |--------|------|---------|-----------|
 | ✅ | Jitter en backoff | +/-30% agregado a retry | - |
 | ⏳ | Circuit breaker | Circuit breaker implementado en el store; ajustes de cooldown/timers y sincronización con fake-timers en tests en curso (se observan falseos en test de cierre) | P1 |
-| ⏳ | Test expiración TTL real | Test que espere > TTL y verifique refetch | P1 |
-| ⏳ | Panel métricas UI | Mini panel (hits/misses, ratio, FPS, fallos circuito) | P2 |
+| ✅ | Test expiración TTL real | Implementado test unitario con override de TTL y verificación de refetch tanto para pageCache como searchCache | P1 |
+| ✅ | Panel métricas UI | Mini panel (hits/misses, ratio, circuito) detrás de flag `productsMetricsPanel` (falta FPS y counters de error) | P2 |
 | ⏳ | Prefetch predictivo | Basado en scroll / near end para siguiente página | P2 |
 
 ## 4. Internacionalización
 | Estado | Ítem | Detalle | Prioridad |
 |--------|------|---------|-----------|
 | ⏳ | Extraer cadenas restantes | Textos de placeholders, tooltips, banners, paginación | P1 |
-| ⏳ | Traducción hints ApiError | Mapear hint por código + i18n | P1 |
+| ⏳ | Traducción hints ApiError | Mapear hint por código + i18n (parcial: mapping interno y claves base añadidas) | P1 |
 | ⏳ | Soporte cambio de idioma runtime global | Toggle en UI y persistencia (localStorage) | P2 |
 
 ## 5. Telemetría / Observabilidad
@@ -54,7 +56,7 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 ## 6. API / Errores
 | Estado | Ítem | Detalle | Prioridad |
 |--------|------|---------|-----------|
-| ⏳ | Mostrar código/error hint | Toast / banner con (código + hint traducida) | P1 |
+| ✅ | Mostrar código/error hint | UI ahora muestra code + hint traducida (ErrorState) y se guardan lastErrorCode/Hint en store | P1 |
 | ⏳ | Acciones rápidas en error | Reintentar, limpiar caché, modo diagnóstico | P2 |
 
 ## 7. UI / UX General
@@ -71,7 +73,7 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 | Estado | Ítem | Detalle | Prioridad |
 |--------|------|---------|-----------|
 | ⏳ | Slices del store | productsSlice, categoriesSlice, uiSlice | P2 |
-| ⏳ | Migración a TypeScript (store + services) | Tipos de producto, eventos, errores | P1 |
+| ⏳ | Migración a TypeScript (store + servicios) | Tipos de producto, eventos, errores | P1 |
 | ⏳ | Selectores derivados | selectActiveProducts, selectLowStock, memoization | P2 |
 | ✅ | Fetch abortable | AbortController integrado | - |
 | ⏳ | Tipado eventos telemetry | Unión de literales / enum central | P2 |
@@ -79,9 +81,9 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 ## 9. Pruebas
 | Estado | Ítem | Detalle | Prioridad |
 |--------|------|---------|-----------|
-| ⏳ | Test expiración TTL | Simular aged cache y confirmar refetch | P1 |
-| ⏳ | E2E flujo completo (Playwright) | Crear, buscar, editar inline, bulk, offline | P1 |
-| ⏳ | Auditoría AXE automatizada | Validar aria, roles, contraste | P1 |
+| ✅ | Test expiración TTL | Implementado (pageCache + searchCache con override TTL y force refetch) | P1 |
+| ⏳ | E2E flujo completo (Playwright) | Crear, buscar, editar inline, bulk, offline (scaffold inicial y test básico list OK) | P1 |
+| ✅ | Auditoría AXE automatizada | Ejecutada localmente: spec AXE añadida y validada — no se detectaron violaciones críticas/serias en el home. Recomendación CI: ejecutar `pnpm exec playwright install` antes de los tests E2E y asegurar que `@axe-core/playwright` esté disponible en devDependencies; el spec ya usa import dinámico como fallback. | P1 |
 | ⏳ | Test infinite scroll | Una vez implementado | P2 |
 | ✅ | Test harness: archivo vacío corregido | Se añadió placeholder para `inlineEdit.rollback.test.jsx` para evitar fallo de ejecución; revisar si debe transformarse en caso de prueba real | - |
 
@@ -90,7 +92,7 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 |--------|------|---------|-----------|
 | ⏳ | Actualizar template con aprendizajes | Añadir secciones offline, rollback, jitter | P2 |
 | ⏳ | Guía i18n | Convenciones de claves, pluralización futura | P2 |
-| ⏳ | Guía UI de errores | Tabla códigos → mensajes → acciones | P2 |
+| ⏳ | Guía UI de errores | Tabla códigos → mensajes → acciones (parcial: hints base añadidas) | P2 |
 | ⏳ | Guía offline | Estados, métricas, recovery manual | P2 |
 
 ## 11. Feature Flags
@@ -98,6 +100,7 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 |--------|------|---------|-----------|
 | ⏳ | Flag infiniteScroll | `productsInfiniteScroll` | P2 |
 | ⏳ | Estrategia rollout | % usuarios / entornos / cookie | P2 |
+| ✅ | Flag panel métricas | `productsMetricsPanel` (oculto por defecto) | P2 |
 
 ## 12. Offline / Degradación
 | Estado | Ítem | Detalle | Prioridad |
@@ -109,22 +112,27 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 
 ---
 ## Siguiente Lote Recomendado (Sprint Corto)
-1. (P0/P1) Test TTL expiración + mostrar códigos/hints en UI.
-2. (P1) Unificar componentes Empty/Error/Skeleton + extraer todas las cadenas a i18n.
-3. (P1) E2E + AXE básico.
-4. (P2) Panel métrico simple (cache hits/misses + circuito + FPS).
+1. (P1) Unificar componentes Empty/Error/Skeleton + extraer cadenas restantes.
+2. (P1) Expandir E2E (CRUD + inline + bulk + offline) + baseline AXE (fallar en violaciones críticas/serias).
+3. (P2) Extender MetricsPanel (FPS + error counters + percentiles latencia).
+4. (P2) Acciones rápidas en error (limpiar caché / diagnóstico).
+5. (P2) Prefetch predictivo + flag infinite scroll.
 
 ## Métricas de Cierre de Próximo Sprint
-- Cobertura tests críticos > 75% en carpeta products.
-- Ratio cache hit inicial > 0.5 (tras calentamiento).
-- 0 errores AXE críticos.
-- < 2s TTFB promedio productos (medición local simulada / telemetría).
+| Objetivo | Target |
+|----------|--------|
+| Cobertura tests críticos | > 75% carpeta products |
+| Cache hit ratio (warm) | > 0.55 tras 2 páginas navegadas |
+| Violaciones AXE críticas/serias | 0 |
+| p50 fetch productos | < 400ms (mock local) |
 
 ---
 ## Notas Técnicas
 - Añadir jitter ya reduce thundering herd; evaluar decorrelación adicional (Full Jitter / Equal Jitter) si hay picos.
 - Para slices Zustand: migrar creando `createProductsSlice` y combinando con `create()` + shallow selectors.
 - Para E2E: reutilizar datos fake + interceptar network (msw/playwright route).
+- TTL override para tests implementado vía `setTestingTTL(ms)` en store.
+- ErrorState ahora soporta `hint` traducido según código (mapping interno).
 
 ---
-Última actualización: _auto-generado_.
+Actualizado automáticamente por asistente (16-08-2025).

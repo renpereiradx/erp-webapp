@@ -221,8 +221,15 @@ const DeleteProductModal = ({
   if (!isOpen || !product) return null;
 
   return (
-    <div style={modalStyles.overlay} onClick={onClose}>
-      <div style={modalStyles.modal} onClick={(e) => e.stopPropagation()}>
+    <div style={modalStyles.overlay} onClick={onClose} data-testid="product-delete-modal-overlay">
+      <div
+        style={modalStyles.modal}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-delete-title"
+        data-testid="product-delete-modal"
+      >
         {/* Header */}
         <div style={{ 
           display: 'flex', 
@@ -242,7 +249,7 @@ const DeleteProductModal = ({
             <AlertTriangle className="w-6 h-6" style={{ color: '#ffffff' }} />
           </div>
           <div>
-            <h2 style={{
+            <h2 id="product-delete-title" data-testid="product-delete-title" style={{
               fontSize: isNeoBrutalism ? '1.5rem' : '1.25rem',
               fontWeight: isNeoBrutalism ? '800' : '600',
               textTransform: isNeoBrutalism ? 'uppercase' : 'none',
@@ -251,7 +258,7 @@ const DeleteProductModal = ({
             }}>
               {isNeoBrutalism ? (t('products.delete_title') || 'ELIMINAR PRODUCTO') : (t('products.delete_title') || 'Eliminar Producto')}
             </h2>
-            <p style={{
+            <p data-testid="product-delete-subtitle" style={{
               fontSize: '0.875rem',
               color: 'var(--muted-foreground)',
               margin: '4px 0 0 0'
@@ -263,7 +270,7 @@ const DeleteProductModal = ({
 
         {/* Content */}
         <div style={{ marginBottom: '32px' }}>
-          <p style={{
+          <p data-testid="product-delete-question" style={{
             fontSize: '1rem',
             color: 'var(--foreground)',
             lineHeight: '1.5',
@@ -275,7 +282,7 @@ const DeleteProductModal = ({
             }
           </p>
           
-          <div style={{
+          <div data-testid="product-delete-info" style={{
             background: isNeoBrutalism ? 'var(--brutalist-orange)' : 'var(--muted)',
             border: isNeoBrutalism ? '2px solid var(--border)' : '1px solid var(--border)',
             borderRadius: isNeoBrutalism ? '0px' : '4px',
@@ -289,31 +296,31 @@ const DeleteProductModal = ({
                 fontWeight: '600',
                 color: isNeoBrutalism ? '#ffffff' : 'var(--foreground)',
                 textTransform: isNeoBrutalism ? 'uppercase' : 'none'
-              }}>
+              }} data-testid="product-delete-info-title">
                 {isNeoBrutalism ? (t('products.info_title') || 'INFORMACIÓN IMPORTANTE') : (t('products.info_title') || 'Información Importante')}
               </span>
             </div>
-            <ul style={{
+            <ul data-testid="product-delete-list" style={{
               margin: 0,
               paddingLeft: '20px',
               fontSize: '0.875rem',
               color: isNeoBrutalism ? '#ffffff' : 'var(--foreground)',
               lineHeight: '1.4'
             }}>
-              <li>
+              <li data-testid="product-delete-hint-soft">
                 {isNeoBrutalism ? (t('products.delete_hint.soft') || 'EL PRODUCTO SERÁ MARCADO COMO ELIMINADO (SOFT DELETE)') : (t('products.delete_hint.soft') || 'El producto será marcado como eliminado (soft delete)')}
               </li>
-              <li>
+              <li data-testid="product-delete-hint-reactivate">
                 {isNeoBrutalism ? (t('products.delete_hint.reactivate') || 'PODRÁS REACTIVARLO DESDE LA ADMINISTRACIÓN') : (t('products.delete_hint.reactivate') || 'Podrás reactivarlo desde la administración')}
               </li>
-              <li>
+              <li data-testid="product-delete-hint-retention">
                 {isNeoBrutalism ? (t('products.delete_hint.data_retention') || 'LOS DATOS RELACIONADOS SE MANTENDRÁN') : (t('products.delete_hint.data_retention') || 'Los datos relacionados se mantendrán')}
               </li>
             </ul>
           </div>
 
           {/* Product Details */}
-          <div style={{
+          <div data-testid="product-delete-details" style={{
             background: 'var(--card)',
             border: '1px solid var(--border)',
             borderRadius: isNeoBrutalism ? '0px' : '4px',
@@ -330,7 +337,7 @@ const DeleteProductModal = ({
                 }}>
                   {isNeoBrutalism ? (t('products.id_label') || 'ID PRODUCTO') : (t('products.id_label') || 'ID Producto')}
                 </span>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>{product.id}</p>
+                <p data-testid="product-delete-id" style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>{product.id}</p>
               </div>
               <div>
                 <span style={{
@@ -341,7 +348,7 @@ const DeleteProductModal = ({
                 }}>
                   {isNeoBrutalism ? (t('products.category_label') || 'CATEGORÍA') : (t('products.category_label') || 'Categoría')}
                 </span>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>{product.id_category}</p>
+                <p data-testid="product-delete-category" style={{ margin: '4px 0 0 0', fontSize: '0.875rem' }}>{product.id_category}</p>
               </div>
             </div>
           </div>
@@ -357,6 +364,7 @@ const DeleteProductModal = ({
             onClick={onClose}
             style={getButtonStyles('secondary')}
             disabled={loading}
+            data-testid="product-delete-cancel-button"
           >
             {isNeoBrutalism ? (t('products.cancel') || 'CANCELAR') : (t('products.cancel') || 'Cancelar')}
           </button>
@@ -364,6 +372,8 @@ const DeleteProductModal = ({
             onClick={() => onConfirm(product)}
             style={getButtonStyles('primary')}
             disabled={loading}
+            data-testid="product-delete-confirm-button"
+            aria-label={isNeoBrutalism ? 'Confirmar eliminación' : 'Confirm delete'}
           >
             {loading ? (
               isNeoBrutalism ? (t('products.deleting') || 'ELIMINANDO...') : (t('products.deleting') || 'Eliminando...')

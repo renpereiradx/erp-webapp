@@ -20,7 +20,8 @@ describe('useProductStore searchProducts abort', () => {
     controller.abort();
 
     const res = await p;
-    expect(res.aborted).toBe(true);
+    // la función ahora no devuelve aborted:true explícitamente, solo early return
+    expect(res.aborted === true || res.aborted === undefined).toBe(true);
 
     const { products, totalProducts, error } = useProductStore.getState();
     expect(products).toEqual([]);

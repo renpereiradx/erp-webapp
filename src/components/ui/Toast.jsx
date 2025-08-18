@@ -94,6 +94,9 @@ const Toast = ({
 
   return (
     <div
+      data-testid="toast-message"
+      role="status"
+      aria-live="polite"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -108,13 +111,14 @@ const Toast = ({
       }}
     >
       {getIcon()}
-      <span style={{ flex: 1 }}>{message}</span>
+      <span data-testid="toast-text" style={{ flex: 1 }}>{message}</span>
 
       {actions && actions.length > 0 && (
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           {actions.map((a, i) => (
             <button
               key={i}
+              data-testid={`toast-action-${i}`}
               onClick={() => {
                 try { a.onClick && a.onClick(); } catch {}
               }}
@@ -134,6 +138,7 @@ const Toast = ({
       )}
 
       <button
+        data-testid="toast-close"
         onClick={() => {
           setIsVisible(false);
           setTimeout(() => onClose && onClose(), 200);
@@ -145,6 +150,7 @@ const Toast = ({
           cursor: 'pointer',
           padding: '4px'
         }}
+        aria-label="Close"
       >
         <X className="w-4 h-4" />
       </button>

@@ -36,6 +36,9 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
+    // Exclude Playwright E2E tests so vitest does not attempt to execute them
+    // also exclude node_modules and build outputs to avoid running dependency tests
+    exclude: ['node_modules/**', 'dist/**', 'tests/e2e/**', '**/e2e/**', '**/*.e2e.*'],
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     }

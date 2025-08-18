@@ -135,6 +135,7 @@ export default function ProductGrid({
             // Referencia local para calcular columnas
             listContainerRef.current = node;
           }}
+          data-testid="product-grid-list"
           style={{
             ...style,
             display: 'grid',
@@ -172,6 +173,7 @@ export default function ProductGrid({
       itemContent={(index) => (
         <div
           ref={(el) => setRef(index, el)}
+          data-testid={products[index] ? `product-grid-item-${products[index].id}` : undefined}
           tabIndex={focusedIndex === index ? 0 : -1}
           role="listitem"
           aria-current={focusedIndex === index ? 'true' : undefined}

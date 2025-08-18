@@ -2,7 +2,8 @@
 
 Fecha: 2025-08-10
 Responsable: Equipo Frontend
-Estado: Propuesto
+- Estado: Propuesto
++ Estado: En progreso (última actualización: 2025-08-16)
 
 ## Objetivo
 Elevar la página de Productos a un estándar profesional: arquitectura limpia, UI minimalista y accesible, rendimiento consistente, multitema unificado y DX robusta, manteniendo paridad funcional y mejorando la experiencia operativa.
@@ -101,18 +102,59 @@ Patrones a emplear:
   - Tipos principales, tests unitarios/integración, fixtures MSW.
   - Lint/CI, métricas básicas, documentación.
 
-## Entregables
-- Nueva estructura `src/features/products/` y migración inicial.
-- UI compacta, multitema y accesible en la página de Productos.
-- Hooks reutilizables y servicios con mappers/validadores.
-- Pruebas mínimas y documentación de uso.
+## Progreso reciente (Sprint actual)
+Lista de hitos completados o parcialmente entregados desde estado "Propuesto":
 
-## Criterios de éxito (aceptación)
-- UX: La tabla/lista muestra 50+ productos sin jank (FPS estable) gracias a virtualización.
-- Búsqueda: Responde < 400ms con debounce y no bloquea la UI; cancelable.
-- Accesibilidad: Navegable por teclado, roles/aria correctos, contraste AA.
-- Multitema: Conmutación de tema mantiene legibilidad y jerarquía visual.
-- Calidad: Lint/Typecheck sin errores; tests clave en verde.
+### Hecho ✅
+ - Circuit breaker funcional en store con métricas de fallos y cierre tras cooldown.
+ - Backoff con jitter (+/-30%) integrado en _withRetry.
+ - Telemetría granular: cache hits/misses, retries, errores store, inlineUpdate rollback/success, prefetch.
+ - TTL override & tests de expiración (pageCache + searchCache) con helpers de testing (setTestingTTL, fast retries).
+ - i18n base ampliada (claves de validación, hints de error, acciones principales, inline edit UI).
+ - Exposición de hint traducible en ErrorState (mapping code→hint key) y toasts unificados.
+ - Panel métrico mínimo (`MetricsPanel` – hits, misses, ratio, circuito abierto/cerrado) detrás de flag `productsMetricsPanel`.
+ - Scaffold Playwright + script `test:e2e` + workflow CI + test inicial con intercept de /api/products y integración condicional AXE.
+ - Selectores `data-testid` estables en `ProductCard` para E2E (card, view, edit, inline).
+ - Mejora accesibilidad inline edit (roles/aria-labels, mensajes de validación en aria-live cuando aplica).
+ - Refuerzo de pruebas unitarias (store resiliencia, TTL, circuit breaker, inline edit rollback) y nuevo test de panel métricas.
+
+### Parcial ⏳
+ - AXE integrado de forma opcional (import dinámico) pero faltan suites dedicadas y baseline de violaciones.
+ - Extracción completa de cadenas restantes (placeholders, tooltips, paginación) pendiente.
+ - Unificación de estados Skeleton / Empty / Error aún no implementada (diseño pendiente).
+ - Prefetch predictivo solo soportado manualmente vía `prefetchNextPage` (no trigger por scroll todavía).
+ - Slices detallados (products/categories/ui) no creados; store sigue monolítico.
+
+### Riesgos / Observaciones
+ - Necesario endurecer tests de circuit breaker con timers fake para validar reapertura determinista.
+ - Panel métricas carece aún de FPS / counters por código de error (planificado siguiente iteración).
+
+## Estado por Fase (Roadmap revisado)
+| Fase | Estado | Comentario |
+|------|--------|------------|
+| 0 Auditoría | ✅ | Mapeo inicial completado |
+| 1 Infra / Skeleton | ✅ | Helpers testing + selectors + panel básico añadidos |
+| 2 UI compacta + A11y | ⏳ | Inline edit y labels mejorados; faltan unified states & focus mgmt completo |
+| 3 Datos & Rendimiento | ⏳ | Cache SWR-like, TTL, retry jitter, circuit breaker listos; falta virtualización y prefetch predictivo automático |
+| 4 Calidad | ⏳ | Unit coverage elevada en store; E2E scaffold listo, faltan escenarios CRUD/bulk/offline y AXE baseline |
+
+## Próximos pasos inmediatos (re-priorizados)
+1) (P1) Unificar componentes Empty / Error / Skeleton + extraer strings remanentes a i18n.
+2) (P1) Ampliar suite Playwright: crear, búsqueda, inline edit, bulk toggle, offline banner, rollback.
+3) (P1) Añadir report AXE (fail build si violaciones críticas/serias) y test de live-region announcements.
+4) (P2) Extender MetricsPanel: FPS (rAF sampler), error counters por código, latencias percentiles.
+5) (P2) Implementar prefetch predictivo por near-end scroll + flag `productsInfiniteScroll` (inicial desactivado).
+6) (P2) Refactor store → slices (products/categories/ui) manteniendo API pública estable.
+7) (P1) Completar internacionalización (placeholders, tooltips, paginación, toasts pendientes) + toggle idioma runtime.
+
+## Métricas objetivo siguientes iteraciones
+| Métrica | Objetivo | Nota |
+|---------|----------|------|
+| AXE violaciones críticas/serias | 0 | Falla pipeline si >0 |
+| Cache hit ratio (warm) | ≥ 0.55 | Después de 2 páginas navegadas |
+| Latencia fetch (p50) | < 400ms local (mock) | Telemetría actual p50 ~ <300ms |
+| Tiempo reapertura circuito | Igual a cooldown configurado ±5% | Validado con fake timers |
+| Cobertura tests store | > 80% líneas | Actual ~ alto (por revisar con cobertura) |
 
 ## Riesgos y mitigaciones
 - Incremento de complejidad por virtualización: encapsular en componente `VirtualizedList`.
@@ -120,8 +162,4 @@ Patrones a emplear:
 - Migración progresiva: feature flag `products.newUI` para rollout seguro.
 
 ## Próximos pasos inmediatos
-1) Crear carpeta `src/features/products/` con skeleton (components/hooks/services).
-2) Extraer búsqueda+filtros de `Products.jsx` a `useProductFilters` + `useDebouncedValue`.
-3) Integrar `useThemeStyles` y reemplazar estilos inline por utilidades comunes.
-4) Implementar tabla/lista compacta y opcionalmente virtualizada.
-5) Lazy-load de modales y pruebas mínimas de regresión.
+- Reemplazado por sección "Próximos pasos inmediatos (re-priorizados)" más arriba.
