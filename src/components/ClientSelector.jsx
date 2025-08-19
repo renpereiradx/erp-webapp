@@ -4,7 +4,7 @@
  * Separado del componente principal para mejor mantenimiento
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useId } from 'react';
 import { Search, User, Users } from 'lucide-react';
 import { MOCK_CLIENTS } from '../constants/mockData';
 
@@ -78,10 +78,13 @@ const ClientSelector = ({
   };
 
   const styles = getThemeStyles();
+  const generatedId = useId();
+  const searchId = `client-search-${generatedId}`;
+  const selectId = `client-select-${generatedId}`;
 
   return (
-    <div className={`${styles.container} ${className}`}>
-      <label className={styles.label}>
+    <div className={`${styles.container} ${className}`} data-testid={props?.['data-testid'] ?? 'client-selector'}>
+      <label className={styles.label} htmlFor={selectId} data-testid="client-label">
         <Users className="inline w-4 h-4 mr-2" />
         Cliente
       </label>
@@ -91,11 +94,14 @@ const ClientSelector = ({
           <div className="relative">
             <Search className={`${styles.searchIcon} w-4 h-4`} />
             <input
+              id={searchId}
               type="text"
               placeholder="Buscar cliente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={styles.searchInput}
+              data-testid="client-search-input"
+              aria-label="Buscar cliente"
             />
           </div>
         </div>
@@ -103,13 +109,16 @@ const ClientSelector = ({
 
       <div className={styles.selectContainer}>
         <select
+          id={selectId}
           value={selectedClient}
           onChange={(e) => onClientChange(e.target.value)}
           className={styles.select}
+          data-testid="client-select"
+          aria-label="Selector de cliente"
         >
           <option value="">{placeholder}</option>
           {filteredClients.map((client) => (
-            <option key={client.id} value={client.id}>
+            <option key={client.id} value={client.id} data-testid={`client-option-${client.id}`}>
               {client.name} - {client.phone}
             </option>
           ))}
@@ -117,12 +126,12 @@ const ClientSelector = ({
       </div>
 
       {selectedClientData && (
-        <div className={styles.clientInfo}>
-          <div className={styles.clientName}>
+        <div className={styles.clientInfo} data-testid="client-info">
+          <div className={styles.clientName} data-testid="client-name">
             <User className="inline w-4 h-4 mr-2" />
             {selectedClientData.name}
           </div>
-          <div className={styles.clientDetails}>
+          <div className={styles.clientDetails} data-testid="client-details">
             <div>📧 {selectedClientData.email}</div>
             <div>📞 {selectedClientData.phone}</div>
           </div>
@@ -130,7 +139,7 @@ const ClientSelector = ({
       )}
 
       {searchTerm && filteredClients.length === 0 && (
-        <div className="text-center py-4 text-gray-500">
+        <div className="text-center py-4 text-gray-500" data-testid="client-search-no-results">
           No se encontraron clientes que coincidan con "{searchTerm}"
         </div>
       )}

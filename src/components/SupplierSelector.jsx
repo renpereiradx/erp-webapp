@@ -5,7 +5,7 @@
  * Reutilizable en compras, reportes, etc.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { Search, Building, User, Phone, Mail } from 'lucide-react';
 import { useSupplierLogic } from '../hooks/useSupplierLogic';
 import { useThemeStyles } from '../hooks/useThemeStyles';
@@ -95,11 +95,14 @@ const SupplierSelector = ({
   const containerClasses = `relative ${className}`;
   const inputClasses = `${styles.input()} ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`;
   const dropdownClasses = `absolute top-full left-0 right-0 z-50 mt-1 max-h-64 overflow-auto ${styles.card()} border`;
+  const generatedId = useId();
+  const searchInputId = `supplier-search-${generatedId}`;
+  const fallbackSelectId = `supplier-select-${generatedId}`;
 
   return (
-    <div className={containerClasses}>
+    <div className={containerClasses} data-testid={props?.['data-testid'] ?? 'supplier-selector'}>
       {/* Label */}
-      <label className={styles.label()}>
+      <label className={styles.label()} htmlFor={fallbackSelectId} data-testid="supplier-label">
         <Building className="inline w-4 h-4 mr-2" />
         Proveedor{required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -110,15 +113,18 @@ const SupplierSelector = ({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
+              id={searchInputId}
               type="text"
               placeholder="Buscar proveedor..."
               value={localSearch}
               onChange={handleSearchChange}
               onFocus={() => setIsOpen(true)}
               className={`w-full pl-10 ${inputClasses}`}
+              data-testid="supplier-search-input"
+              aria-label="Buscar proveedor"
             />
             {loading && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2" data-testid="supplier-search-loading">
                 <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
               </div>
             )}
@@ -126,11 +132,14 @@ const SupplierSelector = ({
 
           {/* Dropdown de resultados */}
           {isOpen && searchFilteredSuppliers.length > 0 && (
-            <div className={dropdownClasses}>
+            <div className={dropdownClasses} role="listbox" aria-label="Resultados de proveedores" data-testid="supplier-dropdown">
               {searchFilteredSuppliers.map((supplier) => (
                 <div
                   key={supplier.id}
                   onClick={() => handleSupplierSelect(supplier)}
+                  role="option"
+                  aria-selected={selectedSupplier?.id === supplier.id}
+                  data-testid={`supplier-option-${supplier.id}`}
                   className={`p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${
                     selectedSupplier?.id === supplier.id ? 'bg-blue-50' : ''
                   }`}
@@ -140,7 +149,7 @@ const SupplierSelector = ({
                       <div className="font-medium text-gray-900">
                         {supplier.name}
                         {!isSupplierActive(supplier) && (
-                          <StatusBadge active={false} className="ml-2 align-middle" label="Inactivo" />
+                          <StatusBadge active={false} className="ml-2 align-middle" label="Inactivo" data-testid={`supplier-status-${supplier.id}`} />
                         )}
                       </div>
                       {supplier.contact_person && (
@@ -172,7 +181,7 @@ const SupplierSelector = ({
 
           {/* No hay resultados */}
           {isOpen && searchFilteredSuppliers.length === 0 && localSearch.trim() && (
-            <div className={dropdownClasses}>
+            <div className={dropdownClasses} data-testid="supplier-no-results">
               <div className="p-3 text-center text-gray-500">
                 No se encontraron proveedores que coincidan con "{localSearch}"
               </div>
@@ -184,16 +193,19 @@ const SupplierSelector = ({
       {/* Selector principal (fallback) */}
       {!showSearch && (
         <select
+          id={fallbackSelectId}
           value={selectedSupplier?.id || ''}
           onChange={(e) => {
             const supplier = availableSuppliers.find(s => s.id === e.target.value);
             onSupplierChange(supplier || null);
           }}
           className={inputClasses}
+          data-testid="supplier-select"
+          aria-label="Selector de proveedor"
         >
           <option value="">{placeholder}</option>
           {availableSuppliers.map((supplier) => (
-            <option key={supplier.id} value={supplier.id}>
+            <option key={supplier.id} value={supplier.id} data-testid={`supplier-option-${supplier.id}`}>
               {supplier.name} {supplier.contact_person ? `(${supplier.contact_person})` : ''}
             </option>
           ))}
@@ -202,14 +214,14 @@ const SupplierSelector = ({
 
       {/* Información del proveedor seleccionado */}
       {showDetails && selectedSupplierInfo && (
-        <div className={`mt-3 ${styles.card('p-3')}`}>
+        <div className={`mt-3 ${styles.card('p-3')}`} data-testid="supplier-info">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="font-medium text-gray-900 flex items-center">
                 <Building className="w-4 h-4 mr-2" />
                 {selectedSupplierInfo.displayName}
                 {!isSupplierActive(selectedSupplier) && (
-                  <StatusBadge active={false} className="ml-2" label="Inactivo" />
+                  <StatusBadge active={false} className="ml-2" label="Inactivo" data-testid="supplier-selected-status" />
                 )}
               </div>
               
@@ -236,7 +248,7 @@ const SupplierSelector = ({
               </div>
 
               {selectedSupplier.notes && (
-                <div className="text-sm text-gray-500 mt-2 italic">
+                <div className="text-sm text-gray-500 mt-2 italic" data-testid="supplier-notes">
                   {selectedSupplier.notes}
                 </div>
               )}
@@ -246,6 +258,7 @@ const SupplierSelector = ({
               onClick={() => handleSupplierSelect(null)}
               className="text-gray-400 hover:text-gray-600 ml-2"
               title="Limpiar selección"
+              data-testid="supplier-clear-selection"
             >
               ×
             </button>
@@ -255,7 +268,7 @@ const SupplierSelector = ({
 
       {/* Mensajes de error */}
       {(error || supplierError) && (
-        <div className="mt-2 text-sm text-red-600 flex items-center">
+        <div className="mt-2 text-sm text-red-600 flex items-center" data-testid="supplier-error" role="alert">
           <span className="mr-1">⚠️</span>
           {error || supplierError}
         </div>
@@ -263,7 +276,7 @@ const SupplierSelector = ({
 
       {/* Advertencia para proveedor inactivo */}
       {selectedSupplier && !isSupplierActive(selectedSupplier) && (
-        <div className="mt-2 text-sm text-orange-600 flex items-center">
+        <div className="mt-2 text-sm text-orange-600 flex items-center" data-testid="supplier-warning" role="status">
           <span className="mr-1">⚠️</span>
           El proveedor seleccionado está inactivo
         </div>
@@ -274,6 +287,8 @@ const SupplierSelector = ({
         <div 
           className="fixed inset-0 z-40" 
           onClick={() => setIsOpen(false)}
+          data-testid="supplier-overlay"
+          aria-hidden="true"
         />
       )}
     </div>

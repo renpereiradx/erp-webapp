@@ -39,14 +39,14 @@ const PageHeader = ({ title, subtitle, actions = null, compact = true, breadcrum
   };
   
   return (
-    <header className={`text-center ${compact ? 'py-4' : 'py-8'}`}>
+    <header className={`text-center ${compact ? 'py-4' : 'py-8'}`} data-testid={props?.['data-testid'] ?? 'page-header'}>
       {renderBreadcrumb()}
-      <h1 className={`${themeHeader('h1')} text-primary mb-1`}>{title}</h1>
+      <h1 className={`${themeHeader('h1')} text-primary mb-1`} data-testid="page-header-title">{title}</h1>
       {subtitle && (
-        <p className={`text-muted-foreground max-w-2xl mx-auto ${compact ? 'mb-4' : 'mb-6'} ${themeLabel()}`}>{subtitle}</p>
+        <p className={`text-muted-foreground max-w-2xl mx-auto ${compact ? 'mb-4' : 'mb-6'} ${themeLabel()}`} data-testid="page-header-subtitle">{subtitle}</p>
       )}
       {actions && (
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3" data-testid="page-header-actions">
           {actions}
         </div>
       )}

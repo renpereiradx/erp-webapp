@@ -59,10 +59,10 @@ const Input = React.forwardRef(({
   };
 
   return (
-    <div className="erp-input-wrapper w-full" data-testid={props['data-testid'] ?? `input-wrapper-${name || generatedId}`}>
+    <div className="erp-input-wrapper w-full" data-testid={props['data-testid'] ? `${props['data-testid']}-wrapper` : `input-wrapper-${name || generatedId}`}>
       {/* Label */}
       {label && (
-        <label htmlFor={inputId} className={cn(
+        <label htmlFor={inputId} data-testid={props?.['data-testidLabel'] ?? `input-label-${name || generatedId}`} className={cn(
           "erp-input-label block text-sm mb-3",
           isNeoBrutalist ? "font-black uppercase tracking-wide" : "font-medium"
         )} style={{ color: 'var(--foreground)' }}>
@@ -77,7 +77,7 @@ const Input = React.forwardRef(({
       <div className="erp-input-container relative">
         {/* Left Icon */}
         {leftIcon && (
-          <div className="erp-input-left-icon absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+          <div className="erp-input-left-icon absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10" data-testid={props?.['data-testidLeftIcon'] ?? `input-left-icon-${name || generatedId}`}>
             <div className="h-5 w-5" style={{ color: 'var(--muted-foreground)' }}>
               {leftIcon}
             </div>
@@ -89,6 +89,7 @@ const Input = React.forwardRef(({
           id={inputId}
           name={name}
           type={type}
+          data-testid={props['data-testid'] ?? `input-field-${name || generatedId}`}
           aria-invalid={!!error}
           aria-describedby={helperText ? helperId : undefined}
           className={cn(
@@ -128,7 +129,7 @@ const Input = React.forwardRef(({
         
         {/* Right Icon */}
         {rightIcon && (
-          <div className="erp-input-right-icon absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none z-10">
+          <div className="erp-input-right-icon absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none z-10" data-testid={props?.['data-testidRightIcon'] ?? `input-right-icon-${name || generatedId}`}>
             <div className="h-5 w-5" style={{ color: 'var(--muted-foreground)' }}>
               {rightIcon}
             </div>
@@ -138,7 +139,7 @@ const Input = React.forwardRef(({
       
       {/* Helper Text */}
       {helperText && (
-        <p id={helperId} className={cn(
+        <p id={helperId} data-testid={props?.['data-testidHelper'] ?? `input-helper-${name || generatedId}`} role={error ? 'alert' : 'status'} aria-live={error ? 'assertive' : 'polite'} className={cn(
           "erp-input-helper text-sm mt-2",
           isNeoBrutalist ? "font-bold uppercase tracking-wide" : "font-medium",
           error && "text-destructive"
