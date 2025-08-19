@@ -41,7 +41,8 @@ const SuppliersPage = () => {
   const { toasts, success, error: showError, errorFrom, removeToast } = useToast();
   const {
     suppliers, loading, error, pagination,
-    fetchSuppliers, deleteSupplier, clearSuppliers
+    fetchSuppliers, deleteSupplier, clearSuppliers,
+    lastErrorHintKey
   } = useSupplierStore();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,10 +63,11 @@ const SuppliersPage = () => {
   // Emitir toast cuando el store expone un error
   useEffect(() => {
     if (error) {
-      errorFrom(new Error(error));
-      telemetry.record('suppliers.error.store', { message: error });
+      const hint = lastErrorHintKey ? t(lastErrorHintKey) : undefined;
+      errorFrom(new Error(hint ? `${error} (${hint})` : error));
+      telemetry.record('suppliers.error.store', { message: error, hint: lastErrorHintKey });
     }
-  }, [error, errorFrom]);
+  }, [error, lastErrorHintKey, errorFrom, t]);
 
   const filteredSuppliers = (suppliers || []).filter(supplier => {
     const search = localSearchTerm.toLowerCase();
@@ -164,12 +166,12 @@ const SuppliersPage = () => {
       return <DataState variant="loading" skeletonVariant="list" testId="suppliers-loading" skeletonProps={{ count: 6 }} />;
     }
 
-    if (error) {
+  if (error) {
       return (
         <DataState
           variant="error"
           title={isNeoBrutalism ? 'ERROR' : 'Error'}
-          message={error}
+      message={lastErrorHintKey ? `${error} — ${t(lastErrorHintKey)}` : error}
           onRetry={handleSearch}
           testId="suppliers-error"
         />

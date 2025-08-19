@@ -34,16 +34,18 @@ async function withRetry(fn, { retries = 2, baseDelay = 180 } = {}) {
 const useSupplierStore = create(
   devtools(
     (set, get) => ({
-      suppliers: [],
+  suppliers: [],
       loading: false,
       error: null,
+  lastErrorCode: null,
+  lastErrorHintKey: null,
       pagination: {},
 
       clearSuppliers: () => set({ suppliers: [], pagination: {}, error: null }),
 
       fetchSuppliers: async (page = 1, pageSize = 10, search = '') => {
         const started = performance.now?.() || Date.now();
-        set({ loading: true, error: null });
+  set({ loading: true, error: null, lastErrorCode: null, lastErrorHintKey: null });
         try {
           const result = await withRetry(() => supplierService.getSuppliers({ page, limit: pageSize, search }));
           let normalized = result;
@@ -51,7 +53,7 @@ const useSupplierStore = create(
           if (normalized.success === false) {
             const code = classifyError(normalized.error);
             telemetry.record?.('feature.suppliers.error', { code, page, search: !!search, latencyMs: (performance.now?.() || Date.now()) - started });
-            set({ error: normalized.error || 'Error al obtener proveedores', loading: false });
+            set({ error: normalized.error || 'Error al obtener proveedores', loading: false, lastErrorCode: code, lastErrorHintKey: `errors.hint.${code}` });
             return;
           }
           const raw = normalized.data;
@@ -71,12 +73,12 @@ const useSupplierStore = create(
         } catch (err) {
           const code = classifyError(err.message);
             telemetry.record?.('feature.suppliers.error', { code, page, search: !!search, latencyMs: (performance.now?.() || Date.now()) - started });
-          set({ error: err.message || 'Error inesperado al obtener proveedores', loading: false });
+          set({ error: err.message || 'Error inesperado al obtener proveedores', loading: false, lastErrorCode: code, lastErrorHintKey: `errors.hint.${code}` });
         }
       },
 
       createSupplier: async (supplierData) => {
-        set({ loading: true });
+  set({ loading: true, lastErrorCode: null, lastErrorHintKey: null });
         const started = performance.now?.() || Date.now();
         try {
           const result = await withRetry(() => supplierService.createSupplier(supplierData));
@@ -87,13 +89,13 @@ const useSupplierStore = create(
           return newSupplier;
         } catch (error) {
           telemetry.record?.('feature.suppliers.error', { code: classifyError(error.message), op: 'create', latencyMs: (performance.now?.() || Date.now()) - started });
-          set({ loading: false, error: error.message || 'Error al crear el proveedor' });
+          set({ loading: false, error: error.message || 'Error al crear el proveedor', lastErrorCode: classifyError(error.message), lastErrorHintKey: `errors.hint.${classifyError(error.message)}` });
           throw error;
         }
       },
 
       updateSupplier: async (id, supplierData) => {
-        set({ loading: true });
+  set({ loading: true, lastErrorCode: null, lastErrorHintKey: null });
         const started = performance.now?.() || Date.now();
         try {
           const result = await withRetry(() => supplierService.updateSupplier(id, supplierData));
@@ -104,13 +106,13 @@ const useSupplierStore = create(
           return updatedSupplier;
         } catch (error) {
           telemetry.record?.('feature.suppliers.error', { code: classifyError(error.message), op: 'update', latencyMs: (performance.now?.() || Date.now()) - started });
-          set({ loading: false, error: error.message || 'Error al actualizar el proveedor' });
+          set({ loading: false, error: error.message || 'Error al actualizar el proveedor', lastErrorCode: classifyError(error.message), lastErrorHintKey: `errors.hint.${classifyError(error.message)}` });
           throw error;
         }
       },
 
       deleteSupplier: async (id) => {
-        set({ loading: true });
+  set({ loading: true, lastErrorCode: null, lastErrorHintKey: null });
         const started = performance.now?.() || Date.now();
         try {
           const result = await withRetry(() => supplierService.deleteSupplier(id));
@@ -120,7 +122,7 @@ const useSupplierStore = create(
           return true;
         } catch (error) {
           telemetry.record?.('feature.suppliers.error', { code: classifyError(error.message), op: 'delete', latencyMs: (performance.now?.() || Date.now()) - started });
-          set({ loading: false, error: error.message || 'Error al eliminar el proveedor' });
+          set({ loading: false, error: error.message || 'Error al eliminar el proveedor', lastErrorCode: classifyError(error.message), lastErrorHintKey: `errors.hint.${classifyError(error.message)}` });
           throw error;
         }
       },

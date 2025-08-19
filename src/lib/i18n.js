@@ -558,6 +558,7 @@ Object.assign(DICTIONARY.es, {
   'suppliers.delete_hint': 'El proveedor será marcado como eliminado',
   'suppliers.form.required': 'Requerido',
   'suppliers.error.generic': 'Error al procesar la operación',
+  // Hints ya presentes en errors.hint.* se reutilizan vía lastErrorHintKey
   'suppliers.filter.current_results_title': 'Filtrar Resultados Actuales',
   'suppliers.filter.name_placeholder': 'Filtrar por nombre...',
   'suppliers.filter.all_status': 'Todos los estados',
@@ -598,6 +599,7 @@ Object.assign(DICTIONARY.en, {
   'suppliers.delete_hint': 'The supplier will be marked as deleted',
   'suppliers.form.required': 'Required',
   'suppliers.error.generic': 'Error processing the operation',
+  // Reuse generic errors.hint.* keys for supplier hints
   'suppliers.filter.current_results_title': 'Filter Current Results',
   'suppliers.filter.name_placeholder': 'Filter by name...',
   'suppliers.filter.all_status': 'All statuses',
