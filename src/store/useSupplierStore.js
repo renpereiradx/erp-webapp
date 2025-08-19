@@ -43,12 +43,80 @@ const useSupplierStore = create(
   // Cache simple por (search||'__') + page -> { suppliers, pagination, ts }
   pageCache: {},
   pageCacheTTL: 60000, // 60s
+  // Circuit breaker (similar a products)
+  circuit: { openUntil: 0, failures: 0, threshold: 4, cooldownMs: 30000 },
+  circuitOpen: false,
+  circuitTimeoutId: null,
+  // Offline state & snapshot
+  isOffline: false,
+  lastOfflineSnapshot: null,
 
       clearSuppliers: () => set({ suppliers: [], pagination: {}, error: null }),
+
+  // ================= CIRCUIT BREAKER HELPERS =================
+  _recordFailure: () => {
+    const state = get();
+    const failures = state.circuit.failures + 1;
+    let openUntil = state.circuit.openUntil;
+    let timeoutId = state.circuitTimeoutId;
+    if (failures >= state.circuit.threshold) {
+      openUntil = Date.now() + state.circuit.cooldownMs;
+      try { if (timeoutId) clearTimeout(timeoutId); } catch (e) {}
+      const id = setTimeout(() => { try { get()._closeCircuit('timeout'); } catch (e) {} }, state.circuit.cooldownMs);
+      timeoutId = id;
+      set({ circuit: { ...state.circuit, failures, openUntil }, circuitTimeoutId: timeoutId, circuitOpen: true });
+      telemetry.record?.('circuit.open', { component: 'suppliers', failures, openUntil });
+      return;
+    }
+    set({ circuit: { ...state.circuit, failures, openUntil } });
+  },
+  _recordSuccess: () => {
+    const state = get();
+    try { if (state.circuitTimeoutId) clearTimeout(state.circuitTimeoutId); } catch (e) {}
+    get()._closeCircuit('success');
+  },
+  _circuitOpen: () => {
+    const state = get();
+    const openUntil = state.circuit.openUntil;
+    if (openUntil && Date.now() >= openUntil) {
+      try { if (state.circuitTimeoutId) clearTimeout(state.circuitTimeoutId); } catch (e) {}
+      get()._closeCircuit('cooldown-expired');
+      return false;
+    }
+    return !!state.circuitOpen && openUntil && Date.now() < openUntil;
+  },
+  _closeCircuit: (reason = 'manual') => {
+    set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
+    telemetry.record?.('circuit.close', { component: 'suppliers', reason });
+  },
+
+  // ================= OFFLINE SNAPSHOT HELPERS =================
+  _persistOfflineSnapshot: (snapshot) => {
+    try {
+      window.localStorage.setItem('suppliers_last_offline_snapshot', JSON.stringify(snapshot));
+      telemetry.record?.('feature.suppliers.offline.snapshot.persist', { count: snapshot.length });
+    } catch (e) {}
+  },
+  hydrateFromStorage: () => {
+    try {
+      const raw = window.localStorage.getItem('suppliers_last_offline_snapshot');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      set({ suppliers: parsed, lastOfflineSnapshot: parsed });
+      telemetry.record?.('feature.suppliers.offline.snapshot.hydrate', { count: parsed.length });
+      return parsed;
+    } catch (e) { return null; }
+  },
+  setIsOffline: (flag) => set({ isOffline: !!flag }),
 
   // Carga directa desde API (respeta retry). No chequea cache.
   fetchSuppliers: async (page = 1, pageSize = 10, search = '') => {
         const started = performance.now?.() || Date.now();
+  // Circuit short-circuit
+        if (get()._circuitOpen()) {
+          telemetry.record?.('feature.suppliers.circuit.skip', { page, search: !!search });
+          return { data: [], circuitOpen: true };
+        }
   set({ loading: true, error: null, lastErrorCode: null, lastErrorHintKey: null });
         try {
           const result = await withRetry(() => supplierService.getSuppliers({ page, limit: pageSize, search }));
@@ -58,6 +126,12 @@ const useSupplierStore = create(
             const code = classifyError(normalized.error);
             telemetry.record?.('feature.suppliers.error', { code, page, search: !!search, latencyMs: (performance.now?.() || Date.now()) - started });
             set({ error: normalized.error || 'Error al obtener proveedores', loading: false, lastErrorCode: code, lastErrorHintKey: `errors.hint.${code}` });
+            if (code === 'NETWORK') {
+              const snapshot = get().suppliers || [];
+              if (snapshot.length) get()._persistOfflineSnapshot(snapshot);
+              set({ isOffline: true, lastOfflineSnapshot: snapshot });
+            }
+            get()._recordFailure();
             return;
           }
           const raw = normalized.data;
@@ -105,10 +179,17 @@ const useSupplierStore = create(
             }
           }
           telemetry.record?.('feature.suppliers.load', { page, count: safeList.length, search: !!search, latencyMs: (performance.now?.() || Date.now()) - started });
+          get()._recordSuccess();
         } catch (err) {
           const code = classifyError(err.message);
             telemetry.record?.('feature.suppliers.error', { code, page, search: !!search, latencyMs: (performance.now?.() || Date.now()) - started });
           set({ error: err.message || 'Error inesperado al obtener proveedores', loading: false, lastErrorCode: code, lastErrorHintKey: `errors.hint.${code}` });
+          if (code === 'NETWORK') {
+            const snapshot = get().suppliers || [];
+            if (snapshot.length) get()._persistOfflineSnapshot(snapshot);
+            set({ isOffline: true, lastOfflineSnapshot: snapshot });
+          }
+          if (err?.name !== 'AbortError') get()._recordFailure();
         }
       },
 
@@ -117,6 +198,10 @@ const useSupplierStore = create(
         const key = `${search || '__'}|${page}`;
         const cached = get().pageCache[key];
         const ttl = get().pageCacheTTL;
+        if (get()._circuitOpen()) {
+          telemetry.record?.('feature.suppliers.circuit.skip', { page, search: !!search, context: 'loadPage' });
+          return { data: [], circuitOpen: true };
+        }
         if (cached && Date.now() - cached.ts < ttl) {
           set({ suppliers: cached.suppliers, pagination: cached.pagination, loading: false, error: null });
           telemetry.record?.('feature.suppliers.cache.hit', { page, search: !!search });
@@ -192,3 +277,14 @@ const useSupplierStore = create(
 );
 
 export default useSupplierStore;
+
+// Global offline listeners (solo en navegador)
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    try { useSupplierStore.getState().setIsOffline(false); telemetry.record?.('app.online'); } catch {}
+  });
+  window.addEventListener('offline', () => {
+    try { useSupplierStore.getState().setIsOffline(true); telemetry.record?.('app.offline'); } catch {}
+  });
+  try { window.useSupplierStore = useSupplierStore; } catch {}
+}

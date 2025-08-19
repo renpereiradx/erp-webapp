@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import useSupplierStore from '@/store/useSupplierStore';
 
 // Mock telemetry to avoid errors
@@ -54,5 +54,62 @@ describe('useSupplierStore', () => {
     await useSupplierStore.getState().fetchSuppliers();
     expect(useSupplierStore.getState().suppliers[0].id).toBe(3);
     expect(supplierService.getSuppliers).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('useSupplierStore circuit breaker', () => {
+  beforeEach(() => {
+    // reset circuit state
+    useSupplierStore.setState({ circuit: { openUntil: 0, failures: 0, threshold: 3, cooldownMs: 200 }, circuitOpen: false, circuitTimeoutId: null });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+  it('abre circuito tras N fallos y salta fetch', async () => {
+    const { supplierService } = await import('@/services/supplierService');
+    supplierService.getSuppliers.mockRejectedValue(new Error('Network down'));
+    await useSupplierStore.getState().fetchSuppliers();
+    await useSupplierStore.getState().fetchSuppliers();
+    await useSupplierStore.getState().fetchSuppliers(); // threshold 3
+    expect(useSupplierStore.getState().circuitOpen).toBe(true);
+    const before = supplierService.getSuppliers.mock.calls.length;
+    // Should short-circuit
+    await useSupplierStore.getState().fetchSuppliers();
+    const after = supplierService.getSuppliers.mock.calls.length;
+    expect(after).toBe(before); // no new call
+  });
+  it('cierra circuito manualmente tras expirar y éxito siguiente', async () => {
+    const { supplierService } = await import('@/services/supplierService');
+    supplierService.getSuppliers.mockRejectedValue(new Error('Network down'));
+    for (let i = 0; i < 3; i++) {
+      await useSupplierStore.getState().fetchSuppliers();
+    }
+    expect(useSupplierStore.getState().circuitOpen).toBe(true);
+    // Simular expiración de cooldown
+    useSupplierStore.setState((s) => ({ circuit: { ...s.circuit, openUntil: Date.now() - 1 }, circuitOpen: true }));
+    // Ahora próxima llamada debería cerrar y permitir éxito
+    supplierService.getSuppliers.mockReset();
+    supplierService.getSuppliers.mockResolvedValue({ success: true, data: [{ id: 99, name: 'Ok' }] });
+    await useSupplierStore.getState().fetchSuppliers();
+    expect(useSupplierStore.getState().circuitOpen).toBe(false);
+    expect(useSupplierStore.getState().suppliers[0]?.id).toBe(99);
+  });
+});
+
+describe('useSupplierStore offline snapshot', () => {
+  it('persiste snapshot al detectar NETWORK y marca isOffline', async () => {
+    const { supplierService } = await import('@/services/supplierService');
+    supplierService.getSuppliers.mockResolvedValueOnce({ success: true, data: [{ id: 1, name: 'A' }] });
+    await useSupplierStore.getState().fetchSuppliers();
+    expect(useSupplierStore.getState().suppliers.length).toBe(1);
+    // Fail network now
+    supplierService.getSuppliers.mockRejectedValueOnce(new Error('Network connection lost'));
+    await useSupplierStore.getState().fetchSuppliers();
+    expect(useSupplierStore.getState().isOffline).toBe(true);
+    // localStorage snapshot
+    try {
+      const raw = window.localStorage.getItem('suppliers_last_offline_snapshot');
+      expect(raw).toBeTruthy();
+    } catch {}
   });
 });

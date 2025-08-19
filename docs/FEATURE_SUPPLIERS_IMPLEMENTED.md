@@ -2,7 +2,7 @@
 
 Fecha de corte: 2025-08-19  
 Responsable: Frontend  
-Fase actual: Hardening (Waves 1 & 2 completadas, iniciando Wave 3)
+Fase actual: Hardening avanzado (Waves 1–5 completadas)
 
 ## 1. Resumen Ejecutivo
 La página **Suppliers** (Proveedores) alcanzó un MVP funcional con búsqueda, filtrado, paginación básica (normalizada desde respuestas heterogéneas), creación / edición / eliminación mediante modales y estados de datos unificados vía `DataState`. Se integró i18n para cadenas visibles (incluyendo labels internos de tarjetas) y telemetría mínima en operaciones clave. Aún no cuenta con caching avanzado, circuit breaker propio ni retries centralizados; hereda lineamientos desde Products pero se mantiene ligera. El próximo foco es robustecer resiliencia, pruebas E2E y soporte offline básico.
@@ -62,13 +62,14 @@ Actualmente minimalista:
 - Sin circuit breaker; adecuado mientras la carga y criticidad sean menores.
 Próximo paso: introducir wrapper `_withRetry` (2 intentos + jitter) y telemetría `suppliers.error` uniforme.
 
-## 8. Caching & Prefetch
+## 8. Caching & Prefetch (Wave 4)
 | Aspecto | Estado | Notas |
 |---------|--------|-------|
-| Cache page TTL | No | Cada búsqueda refresca completamente; suficiente por ahora |
-| Prefetch siguiente página | No | Diferido; evaluar tras métricas de navegación |
-| Predictivo | No | No necesario (baja complejidad) |
-| Cache local filtrada | Parcial | Filtrado in-memory de lista cargada |
+| Cache page TTL | Sí (60s) | `pageCache` clave `search|page`, TTL configurable (`pageCacheTTL`) |
+| Prefetch siguiente página | Sí | Prefetch asíncrono si existe página siguiente y no está en cache |
+| Revalidación background | Sí | Revalidate cuando edad > 50% TTL sin bloquear UI |
+| Predictivo | No | No necesario (baja complejidad actual) |
+| Cache local filtrada | Sí | Filtros client-side sobre lista en memoria |
 
 ## 9. Telemetría (Waves 1 & 2)
 Implementado:
@@ -107,19 +108,26 @@ Pendiente:
 | 1 | Resiliencia mínima + i18n modales + tests base store | Completado | Retry `_withRetry`, telemetría `feature.suppliers.load/error`, extracción i18n modales, tests store + modal |
 | 2 | Accesibilidad y bridge telemetría | Completado | Focus management, live region resultados, eventos bridge `feature.suppliers.*` |
 | 3 | Asegurar calidad + hints de error | Iniciando | Tests DataState (agregado), próximos: hints, consolidar legacy eventos |
-| 4 | Optimización UX (prefetch/caching liviano) | Pendiente | Prefetch página siguiente condicional, memorizar búsqueda reciente |
-| 5 | Offline & circuit breaker opcional | Pendiente | Circuit breaker alineado a Products, cola offline básica |
+| 4 | Optimización UX (prefetch/caching liviano) | Completado | Cache TTL 60s + prefetch next page + revalidate background + telemetría cache/prefetch |
+| 5 | Offline & circuit breaker | Completado | Circuit breaker (threshold 4, cooldown 30s), snapshot offline, listeners online/offline |
 
-## 13.1 Backlog Wave 3 Detallado
-1. Mapear `error` → `code` → hint i18n (`errors.hint.<CODE>`) y exponer `lastErrorHintKey` para UI.
-2. Consolidar telemetría: deprecar eventos legacy una vez panel soporte `feature.suppliers.*`.
-3. Tests adicionales: delete error path (simular primer fallo → retry recupera), anuncio live region tras búsqueda (assert contenido `suppliers-live-region`).
-4. Script verificación i18n (opcional) para detectar literales pendientes.
+## 13.1 Resumen Waves 4 & 5
+Wave 4 (Cache & Prefetch):
+- `loadPage()` con hit/miss + telemetry `feature.suppliers.cache.*`.
+- Prefetch condicional siguiente página (`feature.suppliers.prefetch.*`).
+- Revalidación background tras mitad TTL.
 
-KPIs Wave 3:
-- Cobertura tests Suppliers (unit+RTL) ≥ 6.
-- 100% eventos migrados al prefijo unificado.
-- 1 hint mostrado correctamente en error simulado.
+Wave 5 (Circuit Breaker & Offline):
+- Circuit breaker inspirado en Products (`circuit.open` / `circuit.close`, skip fetch `feature.suppliers.circuit.skip`).
+- Persistencia snapshot offline al detectar error NETWORK (`feature.suppliers.offline.snapshot.persist`).
+- Hidratación manual posible (`hydrateFromStorage`) con telemetry `feature.suppliers.offline.snapshot.hydrate`.
+
+Backlog pendiente post Wave 5:
+1. Eliminar eventos legacy `suppliers.*` (mantener sólo `feature.suppliers.*`).
+2. Añadir tests específicos de cache: hit/miss, revalidate success/error, prefetch skip reasons.
+3. Banner offline UI + botón reintentar (forzar revalidate immediate).
+4. Panel métricas (cache hit ratio, circuit open count, offline snapshots). 
+5. Auditoría i18n final + script verificación.
 
 ## 14. Riesgos Activos
 | Riesgo | Impacto | Mitigación |
@@ -145,7 +153,7 @@ KPIs Wave 3:
 - Store: mantener normalización defensiva, evitar sobre-optimizar (sin normalizar byId hasta mutaciones complejas).  
 
 ## 17. TL;DR
-Suppliers ahora cuenta con CRUD, búsqueda, retry ligero, telemetría estandarizada `feature.suppliers.*`, accesibilidad mejorada (focus + live region) e i18n completo en modales. Wave 3 se centra en hints de error, limpieza de eventos legacy y ampliación de pruebas antes de optimizaciones (prefetch, offline, circuit breaker).
+Suppliers ahora cuenta con CRUD, búsqueda, retry ligero, caching + prefetch con revalidación, circuit breaker, soporte offline básico (snapshot + flag), telemetría estandarizada `feature.suppliers.*`, hints de error, accesibilidad (focus + live region) e i18n completo en modales. Próximo foco: limpieza de eventos legacy, ampliar pruebas cache/circuit, UI offline y panel de métricas.
 
 ---
-Última actualización: 2025-08-19
+Última actualización: 2025-08-19 (post Waves 4 & 5)
