@@ -1,212 +1,130 @@
-# Feature Page Improvement Template
+# Feature Page Improvement Template (Versión Simplificada)
 
 Fecha: YYYY-MM-DD  
 Responsable: Equipo Frontend  
-Estado: Propuesto
+Estado: Plantilla activa simplificada
 
-## Objetivo
-Elevar cualquier página de feature (ej: Pedidos, Clientes, Inventario, Compras) a un estándar profesional: arquitectura limpia, UI accesible y consistente, rendimiento estable, multitema unificado, observabilidad básica y DX robusta conservando la paridad funcional.
+Objetivo
+Permitir crear / mejorar páginas rápido (MVP) sin bloqueo por complejidad avanzada, dejando claro qué se hace después (Hardening / Optimización) sólo si aporta valor.
 
-## Alcance
-- Refactor UI/UX (densidad, jerarquía visual, accesibilidad, estados vacíos y errores)
-- Arquitectura feature-first (aislar vista / lógica / datos)
-- Estado y datos: fetching, caché, normalización, paginación o virtualización
-- Integración multitema (tokens + utilidades compartidas)
-- Calidad: tipado, pruebas, linting, métricas básicas
+Fases
+| Fase | Meta | Incluye | Evita |
+|------|------|---------|-------|
+| MVP | Página usable | Listado + acción primaria + errores básicos + i18n visible | Virtualización, cache compleja, bulk, inline avanzado |
+| Hardening | Robustez | Estados UI unificados, mejores errores/hints, accesibilidad base, 2 tests extra | Perf micro, panel métricas extendido |
+| Optimización | Escala | Virtualización, cache TTL, prefetch, métricas avanzadas | Nuevas features funcionales |
 
-## Situación Actual (ejemplo de análisis)
-Resumir:
-- Tamaño y responsabilidades del componente principal
-- Estado actual (store central / hooks dispersos / efectos duplicados)
-- Patrones de UI (modales, tablas, formularios, toasts)
-- Deuda técnica (estilos inline, falta de separación, re-renders, accesibilidad)
-- Métricas de rendimiento (FPS en listas, TTFB, tiempo de búsqueda, tamaño bundle)
+Checklist MVP (Obligatorio)
+- Carpeta `src/features/<feature>/` con `components/`, `hooks/`, `services/`, `__tests__/`
+- Listado o vista principal (tabla/lista/cards) + acción primaria (crear o actualizar)
+- Fetch simple con retry ligero (máx 2) y abort (AbortController)
+- Mensaje de error genérico + botón Reintentar
+- Todas las cadenas visibles en i18n (`<feature>.*`)
+- Accesibilidad mínima: role correcto + labels en inputs + foco visible
+- Telemetría básica: `feature.<feature>.load` (duración) y `feature.<feature>.error`
+- 1 test smoke render + (si hay mutación) 1 test de éxito/fracaso
+- Linter / build pasan
+ - (Opcional pero recomendado) Uso inicial de `DataState` para evitar duplicar placeholders
 
-## Principios
-- Single Responsibility y separación clara (vista vs. lógica vs. datos)
-- Composición > herencia
-- Flujos declarativos y predecibles (side-effects encapsulados)
-- Adaptadores / mappers para aislar API de dominio UI
-- Accesibilidad WCAG AA (roles, aria, focus, atajos)
-- Rendimiento por defecto (memo, virtualización, debounce, lazy, suspense)
-- Theming unificado vía tokens (CSS vars) + `useThemeStyles`
-- Errores consistentes (objeto ApiError { code, message, hint })
+Checklist Hardening (Cuando MVP estable)
+- Estados: Loading / Empty / Error reutilizando componentes compartidos
+  - Implementar `DataState` (+ `skeletonVariant="productGrid|list"`) en lugar de estados ad-hoc
+  - Usar wrapper tokenizado `.data-state-wrapper` (spacing vía `--ds-spacing-y`)
+- Hints de error (mapear código → mensaje recuperable)
+- Focus management (tras cerrar modal vuelve al trigger)
+- i18n: placeholders y tooltips restantes extraídos
+- Telemetría: añadir `latencyMs` y `errorCode`
+- Tests: añadir caso de error HTTP + caso de lista vacía
 
-## Arquitectura Feature-First
-`srv/features/<feature>/`
-- `components/` (Toolbar, Filters, Table/Grid, EmptyState, Stats, BulkActions)
-- `modals/` (Create/Edit, Detail/Preview, ConfirmDelete)
-- `hooks/` (`use<Feature>Filters`, `use<Feature>Search`, `use<Feature>Page`, `useBulkSelection`, `useDebouncedValue`)
-- `services/` (apiClient, mappers, validators, normalizers)
-- `store/` (slice Zustand/Redux con acciones atómicas + selectores memoizados)
-- `types/` (Modelos dominio, DTO, mappers inversos)
-- `__tests__/` (unit + integración ligera con MSW)
-- `README.md` (contratos, dependencias internas)
+Checklist Optimización (Sólo si señales)
+- Virtualización si >300 ítems o FPS < 50
+- Cache TTL si el mismo fetch se repite >30% en 2 min
+- Prefetch siguiente página al 80% scroll
+- Métricas panel: hitRatio, p50/p95 si flag activo
 
-Página en `src/pages/<Feature>.jsx` actúa como shell orquestador (layout, Suspense boundaries, ErrorBoundary local, lazy imports).
+Preguntas Rápidas de Decisión
+| Pregunta | Sí | No |
+|----------|----|----|
+| ¿Lista grande (>300)? | Virtualizar (Optimización) | Mantener simple |
+| ¿Fetch repetido? | Añadir cache TTL | Ignorar |
+| ¿Ediciones muy frecuentes? | Inline básico (Hardening) | Modal |
+| ¿Errores confunden usuarios? | Añadir hints | Dejar genérico |
 
-## UI/UX: Mejoras Clave
-- Densidad compacta (inputs/botones sm, paddings reducidos)
-- Listado escalable: tabla virtualizada o grid virtualizado si > 50 ítems
-- Filtros persistentes (localStorage + versión)
-- Acciones masivas (bulk select + confirmación)
-- Edición inline opcional (optimista + rollback en error)
-- Accesibilidad: navegación teclado (Arrow / Home / End / Esc / /), focus visible
-- Estados: skeletons, vacíos con CTA, errores con retry y diagnósticos
-- Lazy-load de modales / paneles pesados
-- Preparado para i18n (strings key-based)
+Estructura Mínima
+```
+src/features/<feature>/
+  components/
+    <Feature>MainView.jsx
+  hooks/
+    use<Feature>Data.js
+  services/
+    <feature>Api.js
+  __tests__/
+    <feature>.smoke.test.jsx
+```
 
-## Estado y Datos
-- Búsqueda con debounce y cancelación (AbortController)
-- Caché SWR-like: strategy stale-while-revalidate (timestamp + background refetch)
-- Normalización por id (diccionario + listas ordenadas/paginadas)
-- Paginación o infinite scroll parametrizable
-- Selectores memoizados (`useShallow` / Reselect) para evitar renders
-- Retries con backoff para errores transitorios
-- Telemetría: latencia endpoints, ratio error, tiempos interacción
+Convenciones
+- i18n: `<feature>.title`, `<feature>.error.generic`, `<feature>.action.primary`
+- Telemetría: `feature.<feature>.load|error|update-success`
+- No normalizar datos hasta necesitar filtros complejos o updates parciales
+- Estados unificados: usar `<DataState variant="loading|empty|error" skeletonVariant="list|productGrid" />`
 
-## Multitema
-- Reemplazar estilos ad-hoc por tokens globales (colors, spacing, radii, shadows)
-- Hook `useThemeStyles` para variantes tipográficas y contenedores (card, button, input)
-- Validar contraste (modo claro/oscuro y variantes de tema)
+Ejemplo rápido DataState
+```jsx
+import DataState from '@/components/ui/DataState';
 
-## Calidad y DX
-- Tipos dominio (TS o JSDoc) + DTO externos (separación API/UI)
-- ESLint + reglas de accesibilidad (`jsx-a11y`), complejidad y exhaustiveness hooks
-- Tests:
-  - Unit: hooks puros, utils, mappers
-  - Integración: flujo CRUD principal usando MSW
-  - (Opcional) e2e ligera: escenarios críticos
-- MSW para mocks en tests y Storybook (si aplica)
-- Scripts de verificación: lint, typecheck, test, size-limit
+// Loading (lista genérica)
+{loading && <DataState variant="loading" skeletonVariant="list" skeletonProps={{ count: 6 }} />}
 
-## Roadmap Fases (Adaptar Duraciones)
-- Fase 0 Auditoría (0.5–1d)
-  - Inventario de responsabilidades, métricas actuales, deuda crítica
-- Fase 1 Infraestructura (1–2d)
-  - Crear carpeta feature + skeleton, extraer hooks base (filtros/debounce)
-  - Integrar theming tokens
-- Fase 2 UI/Accesibilidad (2–3d)
-  - Componentes compactos, navegación teclado, estados vacíos/errores
-  - Lazy de modales/paneles
-- Fase 3 Datos/Rendimiento (2–3d)
-  - Debounce + cancelación, caché SWR-like, virtualización, normalización store
-  - Errores estandarizados + toasts coherentes
-- Fase 4 Calidad (1–2d)
-  - Tipos, tests, métricas básicas, documentación, verificación final
+// Empty (sin resultados)
+{!loading && items.length === 0 && (
+  <DataState
+    variant="empty"
+    title={t('orders.empty.title')}
+    description={t('orders.empty.desc')}
+    actionLabel={t('orders.empty.create')}
+    onAction={handleCreate}
+  />
+)}
 
-## Entregables
-- Carpeta feature completa y page shell simplificada
-- UI accesible y responsive con virtualización cuando aplica
-- Hooks reutilizables y servicios aislando API
-- Caché y manejo de errores consistentes
-- Tests clave + documentación
+// Error (con hint)
+{error && (
+  <DataState
+    variant="error"
+    code={error.code}
+    hint={error.hintKey}
+    onRetry={refetch}
+  />
+)}
+```
 
-## Criterios de Éxito
-- Rendimiento: lista > 50 ítems sin jank (scroll suave / FPS estable)
-- Búsqueda: < 400ms respuesta percibida tras debounce, cancelable
-- Accesibilidad: Navegación teclado completa, roles/aria, contraste AA
-- Multitema: Cambios tema sin pérdida jerarquía visual
-- Calidad: Lint + Typecheck cero errores, tests verdes (>80% crítico), tamaño bundle controlado
+Contrato Básico de Datos (Recomendado)
+`fetch<Feature>List(params) -> { items: [], total }`  (Error lanza ApiError { code?, message })
 
-## Riesgos y Mitigaciones
-- Complejidad virtualización → componente wrapper `Virtualized[List|Grid]` aislado
-- Cambios API → mappers + validadores minimizan reescritura
-- Migración progresiva → feature flag `<feature>.newUI`
-- Rendimiento selectors → memo + normalización anticipada
+Criterios Salida de MVP
+- Listado operativo + acción primaria funcional
+- Errores manejados (sin pantalla rota)
+- i18n completo para textos visibles
+- 1–2 eventos telemetry enviados
+- Smoke test pasa en CI
 
-## Próximos Pasos Inmediatos (Checklist)
-1. Auditoría presente (snapshot métricas + deuda)
-2. Crear estructura feature + README de contratos
-3. Extraer filtros / debounce / selección múltiple
-4. Integrar tokens de tema y eliminar estilos inline
-5. Implementar lista/tabla virtualizada (si aplica)
-6. Añadir caché SWR-like + normalización
-7. Centralizar errores y telemetría mínima
-8. Añadir tests unitarios e integración
-9. Documentar patrones y ejemplos de uso
+Guía de Evolución
+1. Entregar MVP rápido (1–3 días)
+2. Registrar fricciones reales de usuarios / QA
+3. Aplicar Hardening sólo a problemas observados
+4. Optimizar únicamente tras detectar señal (perf/logs)
 
-## Métricas Sugeridas a Monitorear
-- Tiempo primera interacción (TTI) page
-- Tiempo búsqueda (usuario → resultados)
-- Re-renders promedio por item
-- Latencia API promedio / p95
-- Errores de fetch por 100 requests
-- FPS scroll lista (sample > 60fps ideal / > 50fps aceptable)
+Formato de Estado por Feature (añadir al doc global si se desea)
+```
+<Feature>: Fase=MVP|Hardening|Optimización | Próximo Paso=... | Riesgo=...
+```
 
-## Recomendaciones Temáticas y Extensiones Opcionales
-Adaptar según el tipo de feature y complejidad de datos.
+Avanzado (Mover a docs especializadas si se reintroduce)
+- Virtualización, cola offline, circuit breaker, bulk avanzado, panel métricas detallado, mappers formales, storybook states.
 
-### Theming / UI
-- Variantes adicionales según tema (ej: barras de énfasis, estilo de chips) controladas por tokens, no condicionales dispersos.
-- Componente `ThemedBadge` para estados (active/inactive/warning) reutilizable en features.
-- Modo denso (compact density) con toggles por usuario almacenado en preferencias.
-
-### Accesibilidad Avanzada
-- Anunciar resultados de búsqueda con `aria-live="polite"` (ej: "8 resultados para 'zapatos'").
-- Focus trap consistente en modales y retorno de foco al origen al cerrar.
-- Atajos configurables (registrar en una tabla central de comandos).
-
-### Estado y Datos
-- Implementar controlador global de abort para cancelar requests al navegar.
-- TTL dinámico por tipo de dato (ej: categorías vs. productos activos).
-- Prefetch anticipado de la siguiente página al 70% del scroll (si es lista extensa).
-
-### Rendimiento
-- Medir y registrar re-renders por item en desarrollo (custom hook `useRenderCountDev`).
-- Memo granular: usar `memo` + selectors focalizados + `useSyncExternalStore` si se requieren actualizaciones masivas.
-- Split de bundle: separar modales/paneles avanzados, gráficos, y editor enriquecido.
-
-### Inline Editing
-- Componente `EditableField` con estados: view, edit, saving, error (rollback automático).
-- Validación en blur + confirmación con Enter / cancel con Esc.
-- Buffer local de cambios masivos con botón "Aplicar todo".
-
-### Bulk Operations
-- Acciones encadenadas (activar + asignar categoría) con pipeline y feedback incremental.
-- Vista de progreso (modal bottom-sheet) para operaciones > 1s.
-
-### Errores y Observabilidad
-- Normalizar ApiError y mapear códigos a hints de recuperación.
-- Canal de logs silenciosos para diagnósticos (telemetry.debug) activable por flag.
-- Correlación de request mediante header `x-request-id` expuesto en toasts si hay fallo.
-
-### Seguridad / Resiliencia
-- Sanitizar input de búsqueda (trim, limitar longitud, whitelist de caracteres opcional).
-- Circuit breaker simple para endpoints inestables (desactiva intentos 30s tras N fallos).
-
-### Internacionalización
-- Tabla de claves: `feature.<entity>.<action>`.
-- Extracción automática de cadenas con script de verificación.
-
-### Testing Ampliado
-- Tests de selección masiva (activar/desactivar) y rollback.
-- Tests de inline edit optimista (éxito y error).
-- Contract tests de mappers (API -> dominio) con fixtures congeladas.
-- Pruebas de accesibilidad automatizadas (axe) en componentes clave.
-- Smoke e2e flujo CRUD completo + búsqueda + bulk action.
-
-### Métricas Operativas Extras
-- Tiempo medio entre cambios inline y persistencia.
-- Porcentaje de búsquedas abortadas vs. completadas.
-- Ratio de cache hits (searchCache) y ahorro estimado.
-
-### Feature Flags
-- Estructura: `featureFlags = { productsNewUI: true, productsInlineEdit: false, productsBulkPipeline: false }`.
-- Hook `useFeatureFlag(key)` para lectura reactiva (context + localStorage override dev).
-
-### DX / Tooling
-- Script `analyze-products-performance` que recolecta métricas de render y peso de componentes.
-- Storybook stories para estados vacíos, loading, error, >50 items virtualizados.
+Notas
+- Evitar crecimiento de este template; ampliar siempre en documentos específicos.
+- El contenido completo anterior está disponible en historial git si se necesita.
 
 ---
-Este template sirve como guía reutilizable; ajustar tiempos, componentes y estrategias según la complejidad de cada feature.
-
-## Estado Actual Products (Progreso Fases)
-- Fase 0 Auditoría: COMPLETADA
-- Fase 1 Infraestructura: COMPLETADA (feature folder, hooks base, theming)
-- Fase 2 UI/Accesibilidad: AVANCE (>70%) (virtualización, teclas, estados, bulk UI) Falta: aria-live, focus return modales
-- Fase 3 Datos/Rendimiento: PARCIAL (normalización, caché básica, telemetry; falta SWR background categories completo, prefetch next page, circuit breaker)
-- Fase 4 Calidad: EN CURSO (tests adicionales agregados: filtros, grid A11y/teclado, store abort/cache, bulk, optimista, normalization, mappers)
-
-Nuevos entregables añadidos: mappers (`productMappers.js`), tipos dominio (`types/index.d
+Última simplificación: 2025-08-19

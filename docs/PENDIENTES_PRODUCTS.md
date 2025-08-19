@@ -2,7 +2,7 @@
 
 Documento vivo que consolida los elementos restantes tras la primera fase de refactor / mejora de la página **Products**.
 
-Última actualización: 2025-08-16
+Última actualización: 2025-08-19
 
 ## Leyenda Prioridad
 - P0: Bloqueante / alto impacto usuario / riesgo regresión
@@ -11,6 +11,47 @@ Documento vivo que consolida los elementos restantes tras la primera fase de ref
 
 ## Resumen Ejecutivo
 Primera fase completada: caching SWR, resiliencia (retry + circuito), edición inline básica, accesibilidad inicial (aria-live + navegación teclado), telemetría granular, i18n base y banner offline. Se agregó panel métricas mínimo (flag), mapping de hints en ErrorState y scaffold Playwright + AXE. Pendiente: estados unificados, i18n completa, escenarios E2E CRUD/bulk/offline, slices store y virtualización.
+
+### Estado de Fase (Corte 19-08-2025)
+En transición de la Fase 1 (cimientos) a una Fase 1.5 de consolidación: cerrar P1 abiertos (unificación estados UI, i18n restante, circuit breaker estable, CRUD/bulk/offline E2E) antes de iniciar optimizaciones avanzadas (prefetch predictivo, infinite scroll, métricas extendidas, virtualización). Objetivo: reducir riesgo de regresiones y coste cognitivo previo a expansión de superficie.
+
+### Mapa de Madurez por Dominio
+| Dominio | Madurez | Comentario breve |
+|---------|---------|------------------|
+| Data Fetching / Cache | Medio-Alto | Cache + TTL + panel básico; falta prefetch predictivo y unificación de estados visuales |
+| Resiliencia | Medio | Retry+jitter OK; circuit breaker requiere ajustes finos y eliminar flakiness tests |
+| Accesibilidad | Medio | Fundamentos presentes; falta diferenciación anuncios error y gestión foco completa |
+| Inline Edit UX | Básico | Guardado + flash; falta undo y foco post-guardar |
+| i18n | Básico-Medio | Claves base listas; faltan placeholders/tooltips/paginación y toggle runtime |
+| Telemetría | Básico | Eventos clave + hints; faltan contadores UI y tipado estricto eventos |
+| Offline | Básico | Snapshot + banner; falta cola optimista, etiqueta stale, retry automático reconexión |
+| Testing | Medio | Unit + TTL + AXE baseline; faltan flujos CRUD/bulk/offline completos |
+| Arquitectura Store | Básico | Migrar a slices tipadas y selectores derivados |
+
+### Riesgos Principales
+| Riesgo | Impacto | Mitigación inmediata |
+|--------|---------|--------------------|
+| Circuit breaker flaky (timers) | Falsos negativos CI / bloqueo releases | Normalizar fake timers + parametrizar cooldown + test determinista |
+| Brechas i18n (errores/hints) | UX inconsistente multi-idioma | Extraer cadenas residuales + mapping hints completo antes nuevas features |
+| Falta E2E CRUD+offline | Regresiones silenciosas | Priorizar suite CRUD→inline→bulk→offline con intercept routes/mock data |
+| Ausencia cola offline | Pérdida de cambios en desconexión | Diseñar contrato cola (persist + replay) e implementar MVP |
+| Estados UI duplicados | Inconsistencia visual / deuda | Unificar Skeleton/Empty/Error previo a infinite scroll |
+
+### Secuencia Recomendada Próximo Sprint
+1. Cerrar P1: unificación estados + i18n restante + estabilizar circuit breaker.
+2. Completar E2E CRUD/inline/bulk/offline + reforzar AXE (fail crítico/serio).
+3. Implementar cola offline mínima + métricas replay.
+4. Añadir contadores de error y tipado eventos telemetry.
+5. Preparar feature flags para prefetch predictivo e infinite scroll (no activar aún en prod).
+
+### Criterios Salida Fase 1.5
+| Criterio | Done |
+|----------|------|
+| P1 abiertos <= 1 | Sólo un P1 residual documentado |
+| Suite E2E CRUD+offline estable | Pasa en CI 3 corridas consecutivas |
+| Circuit breaker sin flakiness | 5 corridas locales deterministas |
+| Cobertura i18n ≥ 95% | Auditoría cadenas literales < 5% |
+
 
 ---
 ## 1. Accesibilidad (A11y)
@@ -62,7 +103,7 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 ## 7. UI / UX General
 | Estado | Ítem | Detalle | Prioridad |
 |--------|------|---------|-----------|
-| ⏳ | Skeletons / Empty / Error unificados | Componentes reutilizables y theming | P1 |
+| ✅ | Skeletons / Empty / Error unificados | DataState extendido + GenericSkeletonList + páginas Products/Clients/Purchases/BookingSales/Suppliers migradas + tests list/product + wrapper tokenizado (.data-state-wrapper / --ds-spacing-y) y spacing unificado | - |
 | ⏳ | Infinite scroll opcional | Flag para sustituir paginación manual | P2 |
 | ⏳ | Persistencia selección | Mantener selectedIds al cambiar página / refetch | P2 |
 | ⏳ | Limpieza backups | Remover archivos *_backup / _old redundantes | P2 |
@@ -133,6 +174,7 @@ Primera fase completada: caching SWR, resiliencia (retry + circuito), edición i
 - Para E2E: reutilizar datos fake + interceptar network (msw/playwright route).
 - TTL override para tests implementado vía `setTestingTTL(ms)` en store.
 - ErrorState ahora soporta `hint` traducido según código (mapping interno).
+- Circuit breaker refactor: centralizado `_closeCircuit` + eventos telemetry (`circuit.open` / `circuit.close`) y guardas en `prefetchNextPage`.
 
 ---
-Actualizado automáticamente por asistente (16-08-2025).
+Actualizado automáticamente por asistente (19-08-2025).

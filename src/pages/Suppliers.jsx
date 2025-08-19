@@ -130,7 +130,7 @@ const SuppliersPage = () => {
   // Use DataState for standard states
   const renderMainContent = () => {
     if (loading && !suppliers.length) {
-      return <DataState variant="loading" testId="suppliers-loading" skeletonProps={{ count: 6 }} />;
+      return <DataState variant="loading" skeletonVariant="list" testId="suppliers-loading" skeletonProps={{ count: 6 }} />;
     }
 
     if (error) {
@@ -193,11 +193,11 @@ const SuppliersPage = () => {
                   <StatusBadge active={!!supplier.status} />
                 </div>
                 <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>RUC:</span><span className={themeLabel()}>{supplier.tax_id || 'N/A'}</span></div>
-                  {contactInfo.phone && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>TELÉFONO:</span><span className={themeLabel()}>{contactInfo.phone}</span></div>}
-                  {contactInfo.fax && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>FAX:</span><span className={themeLabel()}>{contactInfo.fax}</span></div>}
-                  {contactInfo.address && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>DIRECCIÓN:</span><span className={themeLabel()}>{contactInfo.address}</span></div>}
-                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>REGISTRO:</span><span className={themeLabel()}>{new Date(supplier.created_at).toLocaleDateString()}</span></div>
+                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>{t('suppliers.card.ruc') || 'RUC:'}</span><span className={themeLabel()}>{supplier.tax_id || 'N/A'}</span></div>
+                  {contactInfo.phone && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>{t('suppliers.card.phone') || 'TELÉFONO:'}</span><span className={themeLabel()}>{contactInfo.phone}</span></div>}
+                  {contactInfo.fax && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>{t('suppliers.card.fax') || 'FAX:'}</span><span className={themeLabel()}>{contactInfo.fax}</span></div>}
+                  {contactInfo.address && <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>{t('suppliers.card.address') || 'DIRECCIÓN:'}</span><span className={themeLabel()}>{contactInfo.address}</span></div>}
+                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>{t('suppliers.card.registered') || 'REGISTRO:'}</span><span className={themeLabel()}>{new Date(supplier.created_at).toLocaleDateString()}</span></div>
                 </div>
               </div>
               <div className="flex gap-2 mt-3">
@@ -237,51 +237,51 @@ const SuppliersPage = () => {
 
         <section className={card('p-6')}>
           <div className="mb-6">
-            <div className={`${themeHeader('h3')} mb-3`}>{isNeoBrutalism ? 'BUSCAR PROVEEDORES' : 'Buscar Proveedores'}</div>
+            <div className={`${themeHeader('h3')} mb-3`}>{isNeoBrutalism ? 'BUSCAR PROVEEDORES' : t('suppliers.search.db')}</div>
             <div className="flex gap-3 mb-4">
               <Input
                 className={themeInput()}
                 leftIcon={<Search className="w-5 h-5 text-muted-foreground" />}
                 type="text"
-                placeholder={isNeoBrutalism ? 'BUSCAR POR NOMBRE O CONTACTO...' : 'Buscar por nombre o contacto...'}
+                placeholder={isNeoBrutalism ? 'BUSCAR POR NOMBRE O CONTACTO...' : t('suppliers.search.placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               />
               <Button variant="primary" onClick={handleSearch} disabled={!searchTerm}>
-                {isNeoBrutalism ? 'BUSCAR' : 'Buscar'}
+                {isNeoBrutalism ? 'BUSCAR' : t('suppliers.search')}
               </Button>
               <Button variant="secondary" onClick={handleClearSearch}>
-                {isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}
+                {isNeoBrutalism ? 'LIMPIAR' : t('suppliers.clear')}
               </Button>
             </div>
           </div>
 
           {suppliers && suppliers.length > 0 && (
             <div className="border-t pt-6">
-              <div className={`${themeHeader('h3')} mb-3`}>{isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : 'Filtrar Resultados Actuales'}</div>
+              <div className={`${themeHeader('h3')} mb-3`}>{isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : t('suppliers.filter.current_results_title')}</div>
               <div className="grid md:grid-cols-2 gap-4">
                 <Input
                   className={themeInput()}
                   leftIcon={<Filter className="w-5 h-5 text-muted-foreground" />}
                   type="text"
-                  placeholder={isNeoBrutalism ? 'FILTRAR POR NOMBRE...' : 'Filtrar por nombre...'}
+                  placeholder={isNeoBrutalism ? 'FILTRAR POR NOMBRE...' : t('suppliers.filter.name_placeholder')}
                   value={localSearchTerm}
                   onChange={(e) => setLocalSearchTerm(e.target.value)}
                 />
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className={themeInput()}>
-                    <SelectValue placeholder="Filtrar por estado" />
+                    <SelectValue placeholder={t('suppliers.filter.all_status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos los Estados</SelectItem>
-                    <SelectItem value="active">Activos</SelectItem>
-                    <SelectItem value="inactive">Inactivos</SelectItem>
+                    <SelectItem value="all">{t('suppliers.filter.all_status')}</SelectItem>
+                    <SelectItem value="active">{t('suppliers.filter.status.active')}</SelectItem>
+                    <SelectItem value="inactive">{t('suppliers.filter.status.inactive')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className={card('p-3 text-center')}>
                   <div className={themeHeader('h2')}>{filteredSuppliers.length}</div>
-                  <div className={themeLabel()}>PROVEEDORES MOSTRADOS</div>
+                  <div className={themeLabel()}>{t('suppliers.stats.shown') || 'PROVEEDORES MOSTRADOS'}</div>
                 </div>
               </div>
             </div>
@@ -293,19 +293,11 @@ const SuppliersPage = () => {
         {pagination && pagination.total_pages > 1 && (
           <footer className="text-center py-8">
             <div className="flex justify-center items-center gap-2 flex-wrap">
-              <Button variant="secondary" size="sm" onClick={() => handlePageChange(1)} disabled={pagination.current_page <= 1 || loading}>
-                Primera
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => handlePageChange(pagination.current_page - 1)} disabled={pagination.current_page <= 1 || loading}>
-                Anterior
-              </Button>
-               <span className={themeLabel()}>{`Página ${pagination.current_page} de ${pagination.total_pages}`}</span>
-              <Button variant="secondary" size="sm" onClick={() => handlePageChange(pagination.current_page + 1)} disabled={pagination.current_page >= pagination.total_pages || loading}>
-                Siguiente
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => handlePageChange(pagination.total_pages)} disabled={pagination.current_page >= pagination.total_pages || loading}>
-                Última
-              </Button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(1)} disabled={pagination.current_page <= 1 || loading}>{t('suppliers.pagination.first')}</Button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(pagination.current_page - 1)} disabled={pagination.current_page <= 1 || loading}>{t('suppliers.pagination.prev')}</Button>
+               <span className={themeLabel()}>{t('suppliers.pagination.page_of', { page: pagination.current_page, totalPages: pagination.total_pages })}</span>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(pagination.current_page + 1)} disabled={pagination.current_page >= pagination.total_pages || loading}>{t('suppliers.pagination.next')}</Button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(pagination.total_pages)} disabled={pagination.current_page >= pagination.total_pages || loading}>{t('suppliers.pagination.last')}</Button>
             </div>
           </footer>
         )}

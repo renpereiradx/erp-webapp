@@ -156,6 +156,8 @@
 
 :root {
   --radius: 4px;
+  /* Spacing token para envoltorio de estados de datos (DataState) */
+  --ds-spacing-y: 5rem; /* equivale a py-20 */
   
   /* Neo-Brutalist specific variables */
   --brutalist-lime: #84cc16;
@@ -179,6 +181,12 @@
     border-color: var(--border);
     outline-color: var(--ring);
     outline-offset: 2px;
+  }
+  /* Wrapper unificado para estados Loading/Empty/Error */
+  .data-state-wrapper {
+    text-align: center;
+    padding-top: var(--ds-spacing-y);
+    padding-bottom: var(--ds-spacing-y);
   }
   body {
     font-weight: bold;

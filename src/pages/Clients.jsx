@@ -149,7 +149,7 @@ const ClientsPage = () => {
   // Reemplazamos la implementación previa por DataState para estandarizar estados
   const renderMainContent = () => {
     if (loading) {
-      return <DataState variant="loading" testId="clients-loading" skeletonProps={{ count: 6 }} />;
+  return <DataState variant="loading" skeletonVariant="list" testId="clients-loading" skeletonProps={{ count: 6 }} />;
     }
 
     if (error) {
@@ -205,9 +205,9 @@ const ClientsPage = () => {
                 <StatusBadge active={!!client.status} />
               </div>
               <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>DOCUMENTO:</span><span className={themeLabel()}>{client.document_id || 'N/A'}</span></div>
-                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>CONTACTO:</span><span className={themeLabel()}>{client.contact || 'N/A'}</span></div>
-                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>REGISTRO:</span><span className={themeLabel()}>{new Date(client.created_at).toLocaleDateString()}</span></div>
+                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>{t('clients.card.document') || 'DOCUMENTO:'}</span><span className={themeLabel()}>{client.document_id || 'N/A'}</span></div>
+                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>{t('clients.card.contact') || 'CONTACTO:'}</span><span className={themeLabel()}>{client.contact || 'N/A'}</span></div>
+                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>{t('clients.card.registered') || 'REGISTRO:'}</span><span className={themeLabel()}>{new Date(client.created_at).toLocaleDateString()}</span></div>
                 </div>
             </div>
             <div className="flex gap-2 mt-3">
@@ -225,8 +225,8 @@ const ClientsPage = () => {
     <div className="min-h-screen bg-background text-foreground p-6" data-testid="clients-page">
       <div className="max-w-7xl mx-auto space-y-8">
         <PageHeader
-          title={isNeoBrutalism ? 'GESTIÓN DE CLIENTES' : 'Gestión de Clientes'}
-          subtitle={isNeoBrutalism ? 'BUSCA, CREA Y ADMINISTRA TUS CLIENTES EFICIENTEMENTE' : 'Busca, crea y administra tus clientes eficientemente.'}
+          title={isNeoBrutalism ? 'GESTIÓN DE CLIENTES' : t('clients.title', { default: 'Gestión de Clientes' })}
+          subtitle={isNeoBrutalism ? 'BUSCA, CREA Y ADMINISTRA TUS CLIENTES EFICIENTEMENTE' : t('clients.subtitle', { default: 'Busca, crea y administra tus clientes eficientemente.' })}
           actions={(
             <>
               <Button variant="primary" onClick={handleCreateClient}>
@@ -243,32 +243,32 @@ const ClientsPage = () => {
 
         <section className={card('p-6')}>
           <div className="mb-6">
-            <div className={`${themeHeader('h3')} mb-3`}>{isNeoBrutalism ? 'BUSCAR EN BASE DE DATOS' : 'Buscar en Base de Datos'}</div>
+            <div className={`${themeHeader('h3')} mb-3`}>{isNeoBrutalism ? 'BUSCAR EN BASE DE DATOS' : t('clients.search.db')}</div>
             <div className="flex gap-3 mb-4">
               <Input
                 className={themeInput()}
                 leftIcon={<Search className="w-5 h-5 text-muted-foreground" />}
                 type="text"
-                placeholder={isNeoBrutalism ? 'BUSCAR POR NOMBRE, DOCUMENTO O ID...' : 'Buscar por nombre, documento o ID...'}
+                placeholder={isNeoBrutalism ? 'BUSCAR POR NOMBRE, DOCUMENTO O ID...' : t('clients.search.placeholder')}
                 value={apiSearchTerm}
                 onChange={(e) => setApiSearchTerm(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleApiSearch()}
               />
-              <Button variant="primary" onClick={handleApiSearch} disabled={!apiSearchTerm}>{isNeoBrutalism ? 'BUSCAR' : 'Buscar'}</Button>
-              <Button variant="secondary" onClick={handleClearSearch}>{isNeoBrutalism ? 'LIMPIAR' : 'Limpiar'}</Button>
+              <Button variant="primary" onClick={handleApiSearch} disabled={!apiSearchTerm}>{isNeoBrutalism ? 'BUSCAR' : t('clients.search')}</Button>
+              <Button variant="secondary" onClick={handleClearSearch}>{isNeoBrutalism ? 'LIMPIAR' : t('clients.clear')}</Button>
             </div>
-            <div className="flex items-center gap-3"><label htmlFor="pageSize" className={themeLabel()}>CLIENTES POR PÁGINA:</label><select id="pageSize" value={pageSize} onChange={(e) => handlePageSizeChange(e.target.value)} className={`px-3 py-2 bg-background ${themeInput()}`} style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></div>
+            <div className="flex items-center gap-3"><label htmlFor="pageSize" className={themeLabel()}>{isNeoBrutalism ? 'CLIENTES POR PÁGINA:' : t('clients.page_size_label')}</label><select id="pageSize" value={pageSize} onChange={(e) => handlePageSizeChange(e.target.value)} className={`px-3 py-2 bg-background ${themeInput()}`} style={isNeoBrutalism ? { border: '3px solid var(--border)', borderRadius: '0px', textTransform: 'uppercase', fontWeight: '600' } : {}}><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></div>
           </div>
 
           {clients && clients.length > 0 && (
             <div className="border-t pt-6">
-              <div className={`${themeHeader('h3')} mb-3`}>{isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : 'Filtrar Resultados Actuales'}</div>
+              <div className={`${themeHeader('h3')} mb-3`}>{isNeoBrutalism ? 'FILTRAR RESULTADOS ACTUALES' : t('clients.filter.current_results_title')}</div>
               <div className="grid md:grid-cols-3 gap-4">
               <Input
                 className={themeInput()}
                   leftIcon={<Filter className="w-5 h-5 text-muted-foreground" />}
                 type="text"
-                  placeholder={isNeoBrutalism ? 'FILTRAR POR NOMBRE...' : 'Filtrar por nombre...'}
+                  placeholder={isNeoBrutalism ? 'FILTRAR POR NOMBRE...' : t('clients.filter.name_placeholder')}
                 value={localSearchTerm}
                 onChange={(e) => setLocalSearchTerm(e.target.value)}
               />
@@ -278,15 +278,15 @@ const ClientsPage = () => {
                     focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]
                     ${isNeoBrutalism ? 'border-[3px] border-[var(--border)] rounded-none uppercase font-semibold' : 'border-input'}
                   `}>
-                    <SelectValue placeholder="Filtrar por estado" />
+                    <SelectValue placeholder={t('clients.filter.all_status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos los Estados</SelectItem>
-                    <SelectItem value="active">Activos</SelectItem>
-                    <SelectItem value="inactive">Inactivos</SelectItem>
+                    <SelectItem value="all">{t('clients.filter.all_status')}</SelectItem>
+                    <SelectItem value="active">{t('clients.filter.status.active')}</SelectItem>
+                    <SelectItem value="inactive">{t('clients.filter.status.inactive')}</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className={card('p-3 text-center')}><div className={themeHeader('h2')}>{filteredClients.length}</div><div className={themeLabel()}>CLIENTES MOSTRADOS</div></div>
+                <div className={card('p-3 text-center')}><div className={themeHeader('h2')}>{filteredClients.length}</div><div className={themeLabel()}>{t('clients.stats.shown') || 'CLIENTES MOSTRADOS'}</div></div>
               </div>
             </div>
           )}
@@ -296,13 +296,13 @@ const ClientsPage = () => {
 
         {totalClients > 0 && totalPages > 1 && (
           <footer className="text-center py-8">
-            <div className="flex flex-wrap justify-center gap-4 mb-4"><div className={themeLabel()}>{`Mostrando ${filteredClients.length} de ${totalClients} clientes`}</div></div>
+            <div className="flex flex-wrap justify-center gap-4 mb-4"><div className={themeLabel()}>{t('clients.pagination.showing_page_count', { shown: filteredClients.length, total: totalClients })}</div></div>
             <div className="flex justify-center items-center gap-2 flex-wrap">
-              <Button variant="secondary" size="sm" onClick={() => handlePageChange(1)} disabled={currentPage <= 1 || loading}>Primera</Button>
-              <Button variant="secondary" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1 || loading}>Anterior</Button>
-              <span className={themeLabel()}>{`Página ${currentPage} de ${totalPages}`}</span>
-              <Button variant="secondary" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages || loading}>Siguiente</Button>
-              <Button variant="secondary" size="sm" onClick={() => handlePageChange(totalPages)} disabled={currentPage >= totalPages || loading}>Última</Button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(1)} disabled={currentPage <= 1 || loading}>{t('clients.pagination.first')}</Button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1 || loading}>{t('clients.pagination.prev')}</Button>
+              <span className={themeLabel()}>{t('clients.pagination.page_of', { page: currentPage, totalPages })}</span>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages || loading}>{t('clients.pagination.next')}</Button>
+              <Button variant="secondary" size="sm" onClick={() => handlePageChange(totalPages)} disabled={currentPage >= totalPages || loading}>{t('clients.pagination.last')}</Button>
             </div>
           </footer>
         )}

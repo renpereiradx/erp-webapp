@@ -20,11 +20,13 @@ import { Input } from '@/components/ui/Input';
 import useAuthStore from '@/store/useAuthStore';
 import { materialColors, materialTypography, materialSpacing, materialCorners, materialElevation } from '@/utils/materialDesignUtils';
 import { fluentColors, fluentTypography, fluentSpacing, fluentCorners, fluentElevation } from '@/utils/fluentDesignUtils';
+import { useI18n } from '@/lib/i18n';
 
 const Login = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { login, loading, error, clearError } = useAuthStore();
+  const { t } = useI18n();
   
   const [formData, setFormData] = useState({
     username: '',
@@ -103,15 +105,15 @@ const Login = () => {
     const errors = {};
     
     if (!formData.username) {
-      errors.username = 'El email o usuario es requerido';
+  errors.username = t('login.validation.username.required');
     } else if (formData.username.length < 3) {
-      errors.username = 'Debe tener al menos 3 caracteres';
+  errors.username = t('login.validation.username.min');
     }
     
     if (!formData.password) {
-      errors.password = 'La contraseña es requerida';
+  errors.password = t('login.validation.password.required');
     } else if (formData.password.length < 6) {
-      errors.password = 'La contraseña debe tener al menos 6 caracteres';
+  errors.password = t('login.validation.password.min');
     }
     
     setFormErrors(errors);
@@ -222,22 +224,18 @@ const Login = () => {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className={`text-white mb-2 ${getTitleClass('display')}`}>
-            ERP System
-          </h1>
+          <h1 className={`text-white mb-2 ${getTitleClass('display')}`}>ERP System</h1>
           <p className={`text-white/90 ${getTitleClass('body-large')}`}>
-            {isNeoBrutalism ? 'ACCESO AL SISTEMA' : 'Acceso al sistema'}
+            {isNeoBrutalism ? t('login.access').toUpperCase() : t('login.access')}
           </p>
         </div>
 
         {/* Formulario de Login */}
         <div className={`p-8 ${getCardClass()}`}>
           <div className="text-center mb-8">
-            <h2 className={`text-foreground mb-2 ${getTitleClass('large-title')}`}>
-              {isNeoBrutalism ? 'INICIAR SESIÓN' : 'Iniciar Sesión'}
-            </h2>
+            <h2 className={`text-foreground mb-2 ${getTitleClass('large-title')}`}>{isNeoBrutalism ? t('login.sign_in').toUpperCase() : t('login.sign_in')}</h2>
             <p className={`text-muted-foreground ${getTitleClass('body')}`}>
-              {isNeoBrutalism ? 'INGRESA TUS CREDENCIALES' : 'Ingresa tus credenciales para continuar'}
+              {isNeoBrutalism ? t('login.credentials.prompt').toUpperCase() : t('login.credentials.prompt')}
             </p>
             
             {/* Credenciales de prueba */}
@@ -245,7 +243,7 @@ const Login = () => {
               isNeoBrutalism ? 'border-4 border-blue-600' : 'rounded-lg'
             }`}>
               <p className={`text-blue-800 dark:text-blue-200 text-sm mb-2 ${getTitleClass('caption-strong')}`}>
-                {isNeoBrutalism ? 'CREDENCIALES DE PRUEBA:' : 'Credenciales de prueba:'}
+                {isNeoBrutalism ? t('login.test_credentials.title').toUpperCase() : t('login.test_credentials.title')}
               </p>
               <div className={`text-blue-700 dark:text-blue-300 text-xs space-y-1 ${getTitleClass('caption')}`}>
                 <div>admin / admin123</div>
@@ -273,9 +271,7 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Campo de Usuario */}
             <div>
-              <label className={`block text-foreground mb-2 ${getTitleClass('caption-strong')}`}>
-                {isNeoBrutalism ? 'USUARIO O EMAIL' : 'Usuario o Email'}
-              </label>
+              <label className={`block text-foreground mb-2 ${getTitleClass('caption-strong')}`}>{isNeoBrutalism ? t('login.username.label').toUpperCase() : t('login.username.label')}</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
@@ -283,7 +279,7 @@ const Login = () => {
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  placeholder={isNeoBrutalism ? "INGRESA TU USUARIO" : "Ingresa tu usuario"}
+                  placeholder={isNeoBrutalism ? t('login.username.placeholder').toUpperCase() : t('login.username.placeholder')}
                   className={`pl-10 ${getInputClass()} ${formErrors.username ? 'border-red-500' : ''}`}
                   style={isFluent ? { 
                     border: formErrors.username ? '2px solid var(--fluent-danger-primary)' : '1px solid var(--fluent-neutral-grey-60)'
@@ -299,9 +295,7 @@ const Login = () => {
 
             {/* Campo de Contraseña */}
             <div>
-              <label className={`block text-foreground mb-2 ${getTitleClass('caption-strong')}`}>
-                {isNeoBrutalism ? 'CONTRASEÑA' : 'Contraseña'}
-              </label>
+              <label className={`block text-foreground mb-2 ${getTitleClass('caption-strong')}`}>{isNeoBrutalism ? t('login.password.label').toUpperCase() : t('login.password.label')}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
@@ -309,7 +303,7 @@ const Login = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder={isNeoBrutalism ? "INGRESA TU CONTRASEÑA" : "Ingresa tu contraseña"}
+                  placeholder={isNeoBrutalism ? t('login.password.placeholder').toUpperCase() : t('login.password.placeholder')}
                   className={`pl-10 pr-10 ${getInputClass()} ${formErrors.password ? 'border-red-500' : ''}`}
                   style={isFluent ? { 
                     border: formErrors.password ? '2px solid var(--fluent-danger-primary)' : '1px solid var(--fluent-neutral-grey-60)'
@@ -339,9 +333,7 @@ const Login = () => {
                   isFluent ? 'fluent-checkbox' : ''
                 }`}
               />
-              <label htmlFor="remember" className={`text-muted-foreground ${getTitleClass('body')}`}>
-                {isNeoBrutalism ? 'RECORDAR SESIÓN' : 'Recordar sesión'}
-              </label>
+              <label htmlFor="remember" className={`text-muted-foreground ${getTitleClass('body')}`}>{isNeoBrutalism ? t('login.remember').toUpperCase() : t('login.remember')}</label>
             </div>
 
             {/* Botón de Login */}
@@ -354,13 +346,11 @@ const Login = () => {
             >
               {loading ? (
                 <span className={getTitleClass('body')}>
-                  {isNeoBrutalism ? 'INICIANDO...' : 'Iniciando...'}
+                  {isNeoBrutalism ? t('login.processing').toUpperCase() : t('login.processing')}
                 </span>
               ) : (
                 <>
-                  <span className={getTitleClass('body')}>
-                    {isNeoBrutalism ? 'INICIAR SESIÓN' : 'Iniciar Sesión'}
-                  </span>
+                  <span className={getTitleClass('body')}>{isNeoBrutalism ? t('login.submit').toUpperCase() : t('login.submit')}</span>
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </>
               )}
@@ -373,16 +363,16 @@ const Login = () => {
               href="#" 
               className={`text-muted-foreground hover:text-foreground transition-colors ${getTitleClass('body')}`}
             >
-              {isNeoBrutalism ? '¿OLVIDASTE TU CONTRASEÑA?' : '¿Olvidaste tu contraseña?'}
+              {isNeoBrutalism ? t('login.forgot_password').toUpperCase() : t('login.forgot_password')}
             </a>
             
             <div className={`pt-4 border-t text-muted-foreground ${
               isFluent ? '' : 'border-gray-200 dark:border-gray-700'
             }`} style={isFluent ? { borderColor: 'var(--fluent-neutral-grey-30)' } : {}}>
               <p className={getTitleClass('caption')}>
-                {isNeoBrutalism ? '¿NO TIENES CUENTA?' : '¿No tienes cuenta?'}{' '}
+                {isNeoBrutalism ? t('login.no_account').toUpperCase() : t('login.no_account')}{' '}
                 <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
-                  {isNeoBrutalism ? 'REGISTRARSE' : 'Regístrate'}
+                  {isNeoBrutalism ? t('login.register').toUpperCase() : t('login.register')}
                 </a>
               </p>
             </div>
@@ -391,9 +381,7 @@ const Login = () => {
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className={`text-white/70 ${getTitleClass('caption')}`}>
-            © 2024 ERP System. {isNeoBrutalism ? 'TODOS LOS DERECHOS RESERVADOS.' : 'Todos los derechos reservados.'}
-          </p>
+          <p className={`text-white/70 ${getTitleClass('caption')}`}>© 2024 ERP System. {isNeoBrutalism ? t('login.footer.rights').toUpperCase() : t('login.footer.rights')}</p>
         </div>
       </div>
     </div>

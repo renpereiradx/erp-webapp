@@ -12,6 +12,15 @@ describe('DataState component', () => {
     expect(list).toBeInTheDocument();
   });
 
+  test('renders list variant skeleton', () => {
+    render(<DataState variant="loading" skeletonVariant="list" testId="list-loading" skeletonProps={{ count: 3 }} />);
+    const container = screen.getByTestId('list-loading');
+    expect(container).toBeInTheDocument();
+    const list = within(container).getByRole('list');
+    expect(list).toBeInTheDocument();
+    expect(within(list).getAllByTestId(/generic-skeleton-/).length).toBe(3);
+  });
+
   test('renders empty state and calls action', () => {
     const onAction = vi.fn();
     render(

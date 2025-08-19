@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import PageHeader from '@/components/ui/PageHeader';
+import { useI18n } from '@/lib/i18n';
 import DataState from '@/components/ui/DataState';
 
 // Custom hooks para lógica de negocio
@@ -38,6 +39,7 @@ const BookingSales = () => {
   const { theme } = useTheme();
   const themeStyles = useThemeStyles(theme);
   const styles = themeStyles.styles || themeStyles;
+  const { t } = useI18n();
   
   // Estado local para UI
   const [activeTab, setActiveTab] = useState('reservas');
@@ -144,7 +146,7 @@ const BookingSales = () => {
     <div className="space-y-3">
       <label className={styles.label()}>
         <Calendar className="inline w-4 h-4 mr-2" />
-        Servicio
+        {t('booking.reservation.service.label') || 'Servicio'}
       </label>
       <select
         value={selectedService?.id || ''}
@@ -154,10 +156,10 @@ const BookingSales = () => {
         }}
         className={styles.input()}
       >
-        <option value="">Seleccionar servicio...</option>
+  <option value="">{t('booking.reservation.select_service.placeholder') || 'Seleccionar servicio...'}</option>
         {MOCK_SERVICES.map((service) => (
           <option key={service.id} value={service.id}>
-            {service.name} - ${service.price} ({service.duration}min)
+            {service.name} - ${service.price} ({t('booking.reservation.duration.minutes', { minutes: service.duration }) || `${service.duration}min`})
           </option>
         ))}
       </select>
@@ -183,30 +185,30 @@ const BookingSales = () => {
     return (
       <Card className={styles.card()}>
         <CardHeader>
-          <CardTitle className={styles.cardHeader()}>Resumen de Reserva</CardTitle>
+          <CardTitle className={styles.cardHeader()}>{t('booking.reservation.summary') || 'Resumen de Reserva'}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {selectedService && (
             <div className="flex justify-between">
-              <span>Servicio:</span>
+              <span>{t('booking.summary.service') || 'Servicio:'}</span>
               <span className="font-medium">{selectedService.name}</span>
             </div>
           )}
           {selectedDate && (
             <div className="flex justify-between">
-              <span>Fecha:</span>
+              <span>{t('booking.summary.date') || 'Fecha:'}</span>
               <span className="font-medium">{selectedDate.toLocaleDateString('es-ES')}</span>
             </div>
           )}
           {selectedTime && (
             <div className="flex justify-between">
-              <span>Hora:</span>
+              <span>{t('booking.summary.time') || 'Hora:'}</span>
               <span className="font-medium">{selectedTime}</span>
             </div>
           )}
           {selectedService && (
             <div className="flex justify-between border-t pt-3">
-              <span className="font-medium">Total:</span>
+              <span className="font-medium">{t('booking.summary.total') || 'Total:'}</span>
               <span className="font-bold text-lg">${selectedService.price}</span>
             </div>
           )}
@@ -222,19 +224,19 @@ const BookingSales = () => {
     return (
       <Card className={styles.card()}>
         <CardHeader>
-          <CardTitle className={styles.cardHeader()}>Resumen de Venta</CardTitle>
+          <CardTitle className={styles.cardHeader()}>{t('booking.sales.summary') || 'Resumen de Venta'}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between">
-            <span>Subtotal:</span>
+            <span>{t('booking.summary.subtotal') || 'Subtotal:'}</span>
             <span>${subtotal}</span>
           </div>
           <div className="flex justify-between">
-            <span>IVA (16%):</span>
+            <span>{t('booking.summary.tax') || 'IVA (16%):'}</span>
             <span>${tax}</span>
           </div>
           <div className="flex justify-between border-t pt-3">
-            <span className="font-medium">Total:</span>
+            <span className="font-medium">{t('booking.summary.total') || 'Total:'}</span>
             <span className="font-bold text-lg">${total}</span>
           </div>
           <Badge variant="outline" className="w-full justify-center">
@@ -248,9 +250,9 @@ const BookingSales = () => {
   return (
     <div className={styles.container()} data-testid="booking-sales-page">
       <PageHeader
-        title="Reservas y Ventas"
-        subtitle="Gestiona reservas de servicios y ventas de productos de forma integrada"
-        breadcrumb={[{ label: 'Operaciones', href: '/dashboard' }, { label: 'Reservas y Ventas' }]}
+        title={t('booking.title') || 'Reservas y Ventas'}
+        subtitle={t('booking.subtitle') || 'Gestiona reservas de servicios y ventas de productos de forma integrada'}
+        breadcrumb={[{ label: 'Operaciones', href: '/dashboard' }, { label: t('booking.title') || 'Reservas y Ventas' }]}
       />
 
       <NotificationBanner />
@@ -259,25 +261,25 @@ const BookingSales = () => {
         <TabsList className={styles.tab()}>
           <TabsTrigger value="reservas" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            Reservas
+            {t('booking.tab.reservations') || 'Reservas'}
           </TabsTrigger>
           <TabsTrigger value="ventas" className="flex items-center gap-2">
             <ShoppingCart className="w-4 h-4" />
-            Ventas
+            {t('booking.tab.sales') || 'Ventas'}
           </TabsTrigger>
         </TabsList>
 
         {/* Tab de Reservas */}
         <TabsContent value="reservas" className="space-y-6" data-testid="booking-reservas-tab">
           {loading && !reservationClient && !selectedService ? (
-            <DataState variant="loading" testId="booking-sales-loading" skeletonProps={{ count: 4 }} />
+            <DataState variant="loading" skeletonVariant="list" testId="booking-sales-loading" skeletonProps={{ count: 4 }} />
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Panel de configuración de reserva */}
               <div className="space-y-6">
                 <Card className={styles.card()}>
                   <CardHeader>
-                    <CardTitle className={styles.cardHeader()}>Nueva Reserva</CardTitle>
+                    <CardTitle className={styles.cardHeader()}>{t('booking.reservation.new') || 'Nueva Reserva'}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <ClientSelector
@@ -306,7 +308,7 @@ const BookingSales = () => {
                     className={`w-full ${styles.button()}`}
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    {loading ? 'Procesando...' : 'Confirmar Reserva'}
+                    {loading ? (t('booking.common.processing') || 'Procesando...') : (t('booking.reservation.confirm') || 'Confirmar Reserva')}
                   </Button>
                 )}
               </div>
@@ -322,14 +324,14 @@ const BookingSales = () => {
           {/* Tab de Ventas */}
           <TabsContent value="ventas" className="space-y-6" data-testid="booking-ventas-tab">
           {loading && saleItems.length === 0 && !saleClient ? (
-            <DataState variant="loading" testId="booking-sales-sales-loading" skeletonProps={{ count: 4 }} />
+            <DataState variant="loading" skeletonVariant="list" testId="booking-sales-sales-loading" skeletonProps={{ count: 4 }} />
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Panel de productos */}
               <div className="space-y-6">
                 <Card className={styles.card()}>
                   <CardHeader>
-                    <CardTitle className={styles.cardHeader()}>Nueva Venta</CardTitle>
+                    <CardTitle className={styles.cardHeader()}>{t('booking.sales.new') || 'Nueva Venta'}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <ClientSelector
@@ -353,7 +355,7 @@ const BookingSales = () => {
                     className={`w-full ${styles.button()}`}
                   >
                     <Check className="w-4 h-4 mr-2" />
-                    {loading ? 'Procesando...' : 'Completar Venta'}
+                    {loading ? (t('booking.common.processing') || 'Procesando...') : (t('booking.sales.complete') || 'Completar Venta')}
                   </Button>
                 )}
               </div>

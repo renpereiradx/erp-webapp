@@ -80,13 +80,12 @@ const useProductStore = create(
           try { if (timeoutId) clearTimeout(timeoutId); } catch (e) {}
           // schedule a new timeout that will reliably close the circuit
           const id = setTimeout(() => {
-            try {
-              set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
-            } catch (e) {}
+            try { get()._closeCircuit('timeout'); } catch (e) {}
           }, state.circuit.cooldownMs);
           timeoutId = id;
           // mark circuit open flag
           set({ circuit: { ...state.circuit, failures, openUntil }, circuitTimeoutId: timeoutId, circuitOpen: true });
+          try { telemetry.record('circuit.open', { component: 'products', failures, openUntil }); } catch {}
           return;
         }
         set({ circuit: { ...state.circuit, failures, openUntil } });
@@ -94,17 +93,22 @@ const useProductStore = create(
       _recordSuccess: () => {
         const state = get();
         try { if (state.circuitTimeoutId) { clearTimeout(state.circuitTimeoutId); } } catch (e) {}
-        set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
+        get()._closeCircuit('success');
       },
       _circuitOpen: () => {
         const state = get();
         const openUntil = state.circuit?.openUntil || 0;
         if (openUntil && Date.now() >= openUntil) {
           try { if (state.circuitTimeoutId) clearTimeout(state.circuitTimeoutId); } catch (e) {}
-          set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
+          get()._closeCircuit('cooldown-expired');
           return false;
         }
         return !!state.circuitOpen && openUntil && Date.now() < openUntil;
+      },
+      // Helper centralizado para cerrar circuito (DRY)
+      _closeCircuit: (reason = 'manual') => {
+        set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
+        try { telemetry.record('circuit.close', { component: 'products', reason }); } catch {}
       },
 
       // Helper para ejecutar una función con reintentos (backoff + jitter)
@@ -295,7 +299,7 @@ const useProductStore = create(
             if (openUntil && Date.now() >= openUntil) {
               // cooldown passed: close circuit and continue
               try { if (stateNow.circuitTimeoutId) clearTimeout(stateNow.circuitTimeoutId); } catch (e) {}
-              set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
+              get()._closeCircuit('cooldown-fetchProducts');
             } else {
               return { data: [], total: 0, circuitOpen: true };
             }
@@ -419,7 +423,7 @@ const useProductStore = create(
       const openUntil = stateNow.circuit?.openUntil || 0;
       if (openUntil && Date.now() >= openUntil) {
         try { if (stateNow.circuitTimeoutId) clearTimeout(stateNow.circuitTimeoutId); } catch (e) {}
-        set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
+  get()._closeCircuit('cooldown-search');
       } else {
         return { data: [], total: 0, circuitOpen: true };
       }
@@ -606,6 +610,8 @@ const useProductStore = create(
         const next = state.currentPage + 1;
         if (next > state.totalPages) return;
         if (state.pageCache[next] && Date.now() - state.pageCache[next].ts < state.pageCacheTTL) return;
+  if (state.loading) return; // evitar competir con fetch principal
+  if (get()._circuitOpen()) return; // no prefetch si circuito abierto
         try {
           const res = await productService.getProducts(next, state.pageSize);
           const arr = Array.isArray(res) ? res : [res];

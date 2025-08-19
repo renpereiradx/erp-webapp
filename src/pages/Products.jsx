@@ -45,7 +45,7 @@ const DeleteProductModal = React.lazy(() => import('@/components/DeleteProductMo
 import ToastContainer from '@/components/ui/ToastContainer';
 import { useToast } from '@/hooks/useToast';
 import ProductGrid from '@/features/products/components/ProductGrid';
-import { EmptyState, ErrorState, ProductSkeletonGrid } from '@/components/ui/products-states';
+import { EmptyState, ErrorState } from '@/components/ui/products-states';
 import DataState from '@/components/ui/DataState';
 import { telemetry } from '@/utils/telemetry';
 import PageHeader from '@/components/ui/PageHeader';
@@ -575,7 +575,7 @@ const Products = () => {
         <section data-testid="products-list">
           {/* Estado de carga */}
           {isLoading && (
-            <DataState variant="loading" testId="products-loading" />
+            <DataState variant="loading" testId="products-loading" skeletonVariant="productGrid" />
           )}
 
           {/* Mensaje cuando no hay productos cargados */}

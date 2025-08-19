@@ -153,7 +153,7 @@ const Purchases = () => {
       <CardHeader>
         <CardTitle className={styles.cardHeader()}>
           <FileText className="w-5 h-5 mr-2" />
-          Configuración de Compra
+          {t('purchases.config.title') || 'Configuración de Compra'}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -161,7 +161,7 @@ const Purchases = () => {
         <div>
           <label className={styles.label()}>
             <Truck className="inline w-4 h-4 mr-2" />
-            Fecha de Entrega Esperada
+            {t('purchases.config.expected_delivery') || 'Fecha de Entrega Esperada'}
           </label>
           <input
             type="date"
@@ -174,7 +174,7 @@ const Purchases = () => {
 
         {/* Términos de pago */}
         <div>
-          <label className={styles.label()}>Términos de Pago</label>
+          <label className={styles.label()}>{t('purchases.config.payment_terms') || 'Términos de Pago'}</label>
           <select
             value={paymentTerms}
             onChange={(e) => setPaymentTerms(e.target.value)}
@@ -190,7 +190,7 @@ const Purchases = () => {
 
         {/* Método de entrega */}
         <div>
-          <label className={styles.label()}>Método de Entrega</label>
+          <label className={styles.label()}>{t('purchases.config.delivery_method') || 'Método de Entrega'}</label>
           <select
             value={deliveryMethod}
             onChange={(e) => setDeliveryMethod(e.target.value)}
@@ -206,11 +206,11 @@ const Purchases = () => {
 
         {/* Notas */}
         <div>
-          <label className={styles.label()}>Notas</label>
+          <label className={styles.label()}>{t('purchases.config.notes') || 'Notas'}</label>
           <textarea
             value={purchaseNotes}
             onChange={(e) => setPurchaseNotes(e.target.value)}
-            placeholder="Notas adicionales sobre la compra..."
+            placeholder={t('purchases.config.notes.placeholder') || 'Notas adicionales sobre la compra...'}
             rows={3}
             className={styles.input()}
           />
@@ -233,7 +233,7 @@ const Purchases = () => {
             <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
               {uniqueProducts}
             </div>
-            <div className="text-xs text-muted-foreground">Productos</div>
+            <div className="text-xs text-muted-foreground">{t('purchases.stats.products') || 'Productos'}</div>
           </div>
         </div>
       </div>
@@ -249,7 +249,7 @@ const Purchases = () => {
             <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
               {itemCount}
             </div>
-            <div className="text-xs text-muted-foreground">Cantidad</div>
+            <div className="text-xs text-muted-foreground">{t('purchases.stats.quantity') || 'Cantidad'}</div>
           </div>
         </div>
       </div>
@@ -265,7 +265,7 @@ const Purchases = () => {
             <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
               ${subtotal}
             </div>
-            <div className="text-xs text-muted-foreground">Subtotal</div>
+            <div className="text-xs text-muted-foreground">{t('purchases.stats.subtotal') || 'Subtotal'}</div>
           </div>
         </div>
       </div>
@@ -281,7 +281,7 @@ const Purchases = () => {
             <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
               ${total}
             </div>
-            <div className="text-xs text-muted-foreground">Total</div>
+            <div className="text-xs text-muted-foreground">{t('purchases.stats.total') || 'Total'}</div>
           </div>
         </div>
       </div>
@@ -291,9 +291,9 @@ const Purchases = () => {
   return (
     <div className={styles.container()} data-testid="purchases-page">
       <PageHeader
-        title="Compras"
-        subtitle="Administra compras a proveedores, controla inventario y órdenes de compra"
-        breadcrumb={[{ label: 'Operaciones', href: '/dashboard' }, { label: 'Compras' }]}
+        title={t('purchases.title') || 'Compras'}
+        subtitle={t('purchases.subtitle') || 'Administra compras a proveedores, controla inventario y órdenes de compra'}
+        breadcrumb={[{ label: 'Operaciones', href: '/dashboard' }, { label: t('purchases.title') || 'Compras' }]}
       />
 
       <NotificationBanner />
@@ -302,11 +302,11 @@ const Purchases = () => {
         <TabsList className={styles.tab()}>
           <TabsTrigger value="new-purchase" className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
-            Nueva Compra
+            {t('purchases.tab.new') || 'Nueva Compra'}
           </TabsTrigger>
           <TabsTrigger value="purchases-list" className="flex items-center gap-2">
             <ShoppingCart className="w-4 h-4" />
-            Lista de Compras
+            {t('purchases.tab.list') || 'Lista de Compras'}
           </TabsTrigger>
         </TabsList>
 
@@ -315,7 +315,7 @@ const Purchases = () => {
           <CompactStats />
           
           {loading && !purchaseItems.length && !selectedSupplier ? (
-            <DataState variant="loading" testId="purchases-loading" skeletonProps={{ count: 4 }} />
+            <DataState variant="loading" skeletonVariant="list" testId="purchases-loading" skeletonProps={{ count: 4 }} />
           ) : (!selectedSupplier && purchaseItems.length === 0) ? (
             <DataState
               variant="empty"
@@ -336,7 +336,7 @@ const Purchases = () => {
                 <Card className={styles.card()} data-testid="supplier-card-wrapper">
                   <CardHeader>
                     <CardTitle className={styles.cardHeader()}>
-                      Información del Proveedor
+                      {t('purchases.supplier.info') || 'Información del Proveedor'}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -358,7 +358,7 @@ const Purchases = () => {
                     <CardHeader>
                       <CardTitle className={styles.cardHeader()}>
                         <Package className="w-5 h-5 mr-2" />
-                        Productos
+                        {t('purchases.products.title') || 'Productos'}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -376,7 +376,7 @@ const Purchases = () => {
                   <Card className={styles.card()} data-testid="purchase-items-card">
                     <CardHeader>
                       <CardTitle className={styles.cardHeader()}>
-                        Items del Pedido ({purchaseItems.length})
+                        {(t('purchases.items.title') || 'Items del Pedido ({count})').replace('{count}', purchaseItems.length)}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -438,12 +438,12 @@ const Purchases = () => {
                   <div className={`p-3 ${styles.card('border-orange-200 bg-orange-50')}`}>
                     <div className="flex items-center text-orange-800">
                       <AlertCircle className="w-4 h-4 mr-2" />
-                      <span className="text-sm font-medium">Por completar:</span>
+                      <span className="text-sm font-medium">{t('purchases.todo.title') || 'Por completar:'}</span>
                     </div>
                     <ul className="mt-1 text-xs text-orange-700 space-y-0.5">
-                      {!validations.hasSupplier && <li>• Seleccionar proveedor</li>}
-                      {!validations.hasItems && <li>• Agregar productos</li>}
-                      {!validations.hasValidItems && <li>• Verificar cantidades</li>}
+                      {!validations.hasSupplier && <li>• {t('purchases.todo.supplier') || 'Seleccionar proveedor'}</li>}
+                      {!validations.hasItems && <li>• {t('purchases.todo.items') || 'Agregar productos'}</li>}
+                      {!validations.hasValidItems && <li>• {t('purchases.todo.valid_items') || 'Verificar cantidades'}</li>}
                     </ul>
                   </div>
                 )}
