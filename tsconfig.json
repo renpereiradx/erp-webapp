@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "allowJs": true,
+    "checkJs": false,
+    "strict": false,
+    "noEmit": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": [
+    "src",
+    "tests",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
+    "vitest.setup.ts",
+    "playwright.config.*"
+  ],
+  "exclude": [
+    "src/utils/themeUtils_backup.js",
+    "src/utils/themeUtils_broken.js",
+    "src/components/ui/button.jsx",
+    "src/components/ui/card.jsx",
+    "src/components/ui/input.jsx"
+  ]
+}

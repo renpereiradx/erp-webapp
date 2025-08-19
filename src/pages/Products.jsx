@@ -340,6 +340,18 @@ const Products = () => {
     <div className="min-h-screen bg-background text-foreground p-6" data-testid="products-page">
       <div className="sr-only" aria-live="polite" aria-atomic="true" role="status">{liveMessage}</div>
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Error global */}
+        {!isLoading && storeError && (
+          <DataState
+            variant="error"
+            title={t('products.error.loading')}
+            message={storeError}
+            code={lastErrorCode}
+            hint={lastErrorHint}
+            onRetry={() => lastSearchTerm ? searchProducts(lastSearchTerm) : loadPage(1)}
+            testId="error-main"
+          />
+        )}
         {isOffline && (
           <div className="bg-amber-100 border border-amber-300 text-amber-800 px-4 py-2 rounded flex items-center gap-3" role="status" aria-live="polite">
             <AlertTriangle className="w-4 h-4" />

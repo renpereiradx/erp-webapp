@@ -4,7 +4,7 @@ import { useTheme } from 'next-themes';
 import { X, Save, User, Phone, MapPin, Loader, FileText } from 'lucide-react';
 import useClientStore from '@/store/useClientStore';
 import { useToast } from '@/hooks/useToast';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/label';
 
@@ -61,7 +61,6 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
   if (!isOpen) return null;
 
   const isNeoBrutalism = theme?.includes('neo-brutalism');
-  const isMaterial = theme?.includes('material');
 
   const modalStyles = {
     overlay: {
@@ -80,7 +79,7 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
     modal: {
       background: 'var(--card)',
       border: isNeoBrutalism ? '4px solid var(--border)' : '1px solid var(--border)',
-      borderRadius: isNeoBrutalism ? '0px' : (isMaterial ? '16px' : '8px'),
+      borderRadius: isNeoBrutalism ? '0px' : '8px',
       boxShadow: isNeoBrutalism ? '8px 8px 0px 0px rgba(0,0,0,1)' : '0px 4px 8px rgba(0, 0, 0, 0.1)',
       width: '100%',
       maxWidth: '500px',
@@ -90,8 +89,8 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
   };
 
   const modalContent = (
-    <div style={modalStyles.overlay} onClick={onClose} data-testid="client-modal-overlay">
-      <div style={modalStyles.modal} onClick={(e) => e.stopPropagation()} data-testid="client-modal">
+    <div style={modalStyles.overlay} onClick={onClose} data-testid="client-modal-overlay" role="presentation">
+      <div style={modalStyles.modal} onClick={(e) => e.stopPropagation()} data-testid="client-modal" role="dialog" aria-modal="true">
         <div style={{ padding: '24px', borderBottom: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <User className="w-6 h-6 text-primary" />

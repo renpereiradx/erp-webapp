@@ -12,21 +12,19 @@ import { useTheme } from 'next-themes';
 import { Calendar, ShoppingCart, Save, Check, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import PageHeader from '@/components/ui/PageHeader';
 import { useI18n } from '@/lib/i18n';
 import DataState from '@/components/ui/DataState';
+import ClientSelector from '@/components/ClientSelector';
+import CalendarReservation from '@/components/CalendarReservation';
+import SaleItemsManager from '@/components/SaleItemsManager';
 
 // Custom hooks para lógica de negocio
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useReservationLogic } from '@/hooks/useReservationLogic';
 import { useSalesLogic } from '@/hooks/useSalesLogic';
-
-// Componentes especializados
-import ClientSelector from '@/components/ClientSelector';
-import CalendarReservation from '@/components/CalendarReservation';
-import SaleItemsManager from '@/components/SaleItemsManager';
 
 // Constantes centralizadas
 import { MOCK_SERVICES, SYSTEM_MESSAGES } from '@/constants/mockData';

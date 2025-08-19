@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'fs/promises';
 import path from 'path';
-import { autoLogin } from './auth-helpers';
+import { autoLogin } from './auth-helpers.js';
 
 test('products list loads and shows items + axe scan', async ({ page }) => {
   // Load fixture using process.cwd() to avoid import.meta / __dirname issues in different runtimes

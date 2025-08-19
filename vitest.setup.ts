@@ -4,8 +4,8 @@ import '@testing-library/jest-dom';
 // We keep handlers per test file to avoid global intercepts unless needed.
 
 // Mock a basic i18n used across components to simplify tests: t(key, vars) returns interpolated string
-import * as i18nModule from '@/lib/i18n';
-import { tRaw } from '@/lib/i18n';
+import * as i18nModule from './src/lib/i18n.js';
+import { tRaw } from './src/lib/i18n.js';
 
 const fakeT = (key, vars) => {
   if (!key) return '';

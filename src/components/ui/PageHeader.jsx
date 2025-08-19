@@ -7,7 +7,7 @@ import { useThemeStyles } from '@/hooks/useThemeStyles';
  * - Respeta el sistema de diseño (Material 3 / Fluent 2 / Neo-Brutalism)
  * - Usa tokens (bg-background, text-foreground, primary, muted-foreground)
  */
-const PageHeader = ({ title, subtitle, actions = null, compact = true, breadcrumb = null }) => {
+const PageHeader = ({ title, subtitle, actions = null, compact = true, breadcrumb = null, 'data-testid': testId }) => {
   const { header: themeHeader, label: themeLabel } = useThemeStyles();
 
   const renderBreadcrumb = () => {
@@ -39,7 +39,7 @@ const PageHeader = ({ title, subtitle, actions = null, compact = true, breadcrum
   };
   
   return (
-    <header className={`text-center ${compact ? 'py-4' : 'py-8'}`} data-testid={props?.['data-testid'] ?? 'page-header'}>
+    <header className={`text-center ${compact ? 'py-4' : 'py-8'}`} data-testid={testId ?? 'page-header'}>
       {renderBreadcrumb()}
       <h1 className={`${themeHeader('h1')} text-primary mb-1`} data-testid="page-header-title">{title}</h1>
       {subtitle && (
