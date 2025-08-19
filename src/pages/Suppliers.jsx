@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from 'next-themes';
 import {
   Plus,
@@ -51,6 +51,8 @@ const SuppliersPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [editingSupplier, setEditingSupplier] = useState(null);
+  const lastFocusedRef = useRef(null);
+  const liveRegionRef = useRef(null);
 
   const isNeoBrutalism = theme?.includes('neo-brutalism');
   const isMaterial = theme?.includes('material');
@@ -75,6 +77,26 @@ const SuppliersPage = () => {
   });
 
   useEffect(() => {
+    if (!liveRegionRef.current) return;
+    if (loading) return;
+    if (searchTerm) {
+      liveRegionRef.current.textContent = t('announce.results_for', { total: filteredSuppliers.length, term: searchTerm });
+    } else {
+      liveRegionRef.current.textContent = t('announce.total_results', { total: filteredSuppliers.length });
+    }
+  }, [filteredSuppliers.length, searchTerm, loading, t]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape' && (showSupplierModal || showDeleteModal)) {
+        setShowSupplierModal(false); setShowDeleteModal(false); restoreFocus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showSupplierModal, showDeleteModal]);
+
+  useEffect(() => {
     // Limpiar proveedores al montar la página
     clearSuppliers();
     // clearSuppliers es estable en nuestro store
@@ -88,10 +110,12 @@ const SuppliersPage = () => {
         .then(() => {
           const ms = telemetry.endTimer(t, { term: searchTerm });
           telemetry.record('suppliers.search.success', { ms });
+          telemetry.record?.('feature.suppliers.search.success', { latencyMs: ms, term: searchTerm });
         })
         .catch((err) => {
           telemetry.endTimer(t);
           telemetry.record('suppliers.search.error', { message: err?.message });
+          telemetry.record?.('feature.suppliers.error', { op: 'search', message: err?.message });
         });
     }
   };
@@ -103,9 +127,11 @@ const SuppliersPage = () => {
 
   const handlePageChange = (page) => fetchSuppliers(page, pagination.per_page, searchTerm);
 
-  const handleCreateSupplier = () => { setEditingSupplier(null); setShowSupplierModal(true); };
-  const handleEditSupplier = (supplier) => { setEditingSupplier(supplier); setShowSupplierModal(true); };
-  const handleDeleteSupplier = (supplier) => { setSelectedSupplier(supplier); setShowDeleteModal(true); };
+  const captureFocus = () => { lastFocusedRef.current = document.activeElement; };
+  const restoreFocus = () => { if (lastFocusedRef.current && typeof lastFocusedRef.current.focus === 'function') lastFocusedRef.current.focus(); };
+  const handleCreateSupplier = () => { captureFocus(); setEditingSupplier(null); setShowSupplierModal(true); };
+  const handleEditSupplier = (supplier) => { captureFocus(); setEditingSupplier(supplier); setShowSupplierModal(true); };
+  const handleDeleteSupplier = (supplier) => { captureFocus(); setSelectedSupplier(supplier); setShowDeleteModal(true); };
 
   const handleConfirmDelete = async () => {
     if (!selectedSupplier) return;
@@ -113,9 +139,12 @@ const SuppliersPage = () => {
       await deleteSupplier(selectedSupplier.id);
       setShowDeleteModal(false);
       success('Proveedor eliminado');
-  telemetry.record('suppliers.delete.success', { id: selectedSupplier.id });
+      telemetry.record('suppliers.delete.success', { id: selectedSupplier.id });
+      telemetry.record?.('feature.suppliers.delete-success', { id: selectedSupplier.id });
+      restoreFocus();
     } catch (err) {
-  telemetry.record('suppliers.delete.error', { id: selectedSupplier.id, message: err?.message });
+      telemetry.record('suppliers.delete.error', { id: selectedSupplier.id, message: err?.message });
+      telemetry.record?.('feature.suppliers.error', { op: 'delete', message: err?.message });
       errorFrom(err, { fallback: 'Error al eliminar proveedor' });
     }
   };
@@ -124,7 +153,9 @@ const SuppliersPage = () => {
     setShowSupplierModal(false);
     fetchSuppliers(pagination.current_page || 1, pagination.per_page || 10, searchTerm);
     success('Operación de proveedor completada.');
-  telemetry.record('suppliers.modal.success');
+    telemetry.record('suppliers.modal.success');
+    telemetry.record?.('feature.suppliers.update-success');
+    restoreFocus();
   };
 
   // Use DataState for standard states
@@ -223,7 +254,7 @@ const SuppliersPage = () => {
           subtitle={isNeoBrutalism ? 'BUSCA, CREA Y ADMINISTRA TUS PROVEEDORES' : 'Busca, crea y administra tus proveedores.'}
           actions={(
             <>
-              <Button variant="primary" onClick={handleCreateSupplier}>
+              <Button variant="primary" onClick={handleCreateSupplier} data-testid="suppliers-create-btn">
                 <Plus className="w-5 h-5 mr-2" />{isNeoBrutalism ? 'NUEVO PROVEEDOR' : 'Nuevo Proveedor'}
               </Button>
               <Button variant="secondary">
@@ -303,9 +334,10 @@ const SuppliersPage = () => {
         )}
       </div>
 
-      <SupplierModal isOpen={showSupplierModal} onClose={() => setShowSupplierModal(false)} supplier={editingSupplier} onSuccess={handleModalSuccess} />
-      <DeleteSupplierModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} supplier={selectedSupplier} onConfirm={handleConfirmDelete} loading={loading} />
-      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
+  <SupplierModal isOpen={showSupplierModal} onClose={() => { setShowSupplierModal(false); restoreFocus(); }} supplier={editingSupplier} onSuccess={handleModalSuccess} />
+  <DeleteSupplierModal isOpen={showDeleteModal} onClose={() => { setShowDeleteModal(false); restoreFocus(); }} supplier={selectedSupplier} onConfirm={handleConfirmDelete} loading={loading} />
+  <div ref={liveRegionRef} aria-live="polite" role="status" className="sr-only" data-testid="suppliers-live-region" />
+  <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   );
 };
