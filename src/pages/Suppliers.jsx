@@ -41,7 +41,7 @@ const SuppliersPage = () => {
   const { toasts, success, error: showError, errorFrom, removeToast } = useToast();
   const {
     suppliers, loading, error, pagination,
-    fetchSuppliers, deleteSupplier, clearSuppliers,
+  fetchSuppliers, loadPage, deleteSupplier, clearSuppliers,
     lastErrorHintKey
   } = useSupplierStore();
 
@@ -108,7 +108,7 @@ const SuppliersPage = () => {
   const handleSearch = () => {
     if (searchTerm.trim() !== '') {
       const t = telemetry.startTimer('suppliers.search');
-      Promise.resolve(fetchSuppliers(1, 10, searchTerm))
+      Promise.resolve(loadPage(1, 10, searchTerm))
         .then(() => {
           const ms = telemetry.endTimer(t, { term: searchTerm });
           telemetry.record('suppliers.search.success', { ms });
@@ -127,7 +127,7 @@ const SuppliersPage = () => {
     clearSuppliers(); 
   };
 
-  const handlePageChange = (page) => fetchSuppliers(page, pagination.per_page, searchTerm);
+  const handlePageChange = (page) => loadPage(page, pagination.per_page, searchTerm);
 
   const captureFocus = () => { lastFocusedRef.current = document.activeElement; };
   const restoreFocus = () => { if (lastFocusedRef.current && typeof lastFocusedRef.current.focus === 'function') lastFocusedRef.current.focus(); };
@@ -153,7 +153,7 @@ const SuppliersPage = () => {
 
   const handleModalSuccess = () => {
     setShowSupplierModal(false);
-    fetchSuppliers(pagination.current_page || 1, pagination.per_page || 10, searchTerm);
+    loadPage(pagination.current_page || 1, pagination.per_page || 10, searchTerm);
     success('Operación de proveedor completada.');
     telemetry.record('suppliers.modal.success');
     telemetry.record?.('feature.suppliers.update-success');

@@ -40,10 +40,14 @@ const useSupplierStore = create(
   lastErrorCode: null,
   lastErrorHintKey: null,
       pagination: {},
+  // Cache simple por (search||'__') + page -> { suppliers, pagination, ts }
+  pageCache: {},
+  pageCacheTTL: 60000, // 60s
 
       clearSuppliers: () => set({ suppliers: [], pagination: {}, error: null }),
 
-      fetchSuppliers: async (page = 1, pageSize = 10, search = '') => {
+  // Carga directa desde API (respeta retry). No chequea cache.
+  fetchSuppliers: async (page = 1, pageSize = 10, search = '') => {
         const started = performance.now?.() || Date.now();
   set({ loading: true, error: null, lastErrorCode: null, lastErrorHintKey: null });
         try {
@@ -64,17 +68,73 @@ const useSupplierStore = create(
           else if (raw && Array.isArray(raw.results)) list = raw.results;
           else if (raw && typeof raw === 'object') list = [raw];
           const safeList = list.filter(Boolean);
-          set({
-            suppliers: safeList,
-            pagination: hasPagination ? raw.pagination : { current_page: page, per_page: safeList.length, total: safeList.length, total_pages: 1 },
-            loading: false,
-          });
+          const paginationObj = hasPagination ? raw.pagination : { current_page: page, per_page: safeList.length, total: safeList.length, total_pages: 1 };
+          set({ suppliers: safeList, pagination: paginationObj, loading: false });
+          // cachear
+          const key = `${search || '__'}|${page}`;
+          get().pageCache[key] = { suppliers: safeList, pagination: paginationObj, ts: Date.now() };
+          // prefetch siguiente página si procede
+          if (paginationObj.total_pages > page) {
+            const nextKey = `${search || '__'}|${page + 1}`;
+            if (!get().pageCache[nextKey]) {
+              // lanzar prefetch sin bloquear
+              (async () => {
+                try {
+                  const r2 = await withRetry(() => supplierService.getSuppliers({ page: page + 1, limit: pageSize, search }));
+                  if (r2 && r2.success !== false) {
+                    const raw2 = r2.data;
+                    const hasPag2 = raw2 && typeof raw2 === 'object' && Array.isArray(raw2.data) && raw2.pagination;
+                    let list2 = [];
+                    if (hasPag2) list2 = Array.isArray(raw2.data) ? raw2.data : [];
+                    else if (Array.isArray(raw2)) list2 = raw2;
+                    else if (raw2 && Array.isArray(raw2.results)) list2 = raw2.results;
+                    else if (raw2 && typeof raw2 === 'object') list2 = [raw2];
+                    const safe2 = list2.filter(Boolean);
+                    const pag2 = hasPag2 ? raw2.pagination : { current_page: page + 1, per_page: safe2.length, total: safe2.length, total_pages: (paginationObj.total_pages || page + 1) };
+                    get().pageCache[nextKey] = { suppliers: safe2, pagination: pag2, ts: Date.now() };
+                    telemetry.record?.('feature.suppliers.prefetch.success', { page: page + 1, count: safe2.length });
+                  } else {
+                    telemetry.record?.('feature.suppliers.prefetch.skip', { reason: 'failed', page: page + 1 });
+                  }
+                } catch (e) {
+                  telemetry.record?.('feature.suppliers.prefetch.error', { page: page + 1, message: e.message });
+                }
+              })();
+            } else {
+              telemetry.record?.('feature.suppliers.prefetch.skip', { reason: 'cached', page: page + 1 });
+            }
+          }
           telemetry.record?.('feature.suppliers.load', { page, count: safeList.length, search: !!search, latencyMs: (performance.now?.() || Date.now()) - started });
         } catch (err) {
           const code = classifyError(err.message);
             telemetry.record?.('feature.suppliers.error', { code, page, search: !!search, latencyMs: (performance.now?.() || Date.now()) - started });
           set({ error: err.message || 'Error inesperado al obtener proveedores', loading: false, lastErrorCode: code, lastErrorHintKey: `errors.hint.${code}` });
         }
+      },
+
+      // Intenta usar cache; si stale o no existe, recurre a fetchSuppliers.
+      loadPage: async (page = 1, pageSize = 10, search = '') => {
+        const key = `${search || '__'}|${page}`;
+        const cached = get().pageCache[key];
+        const ttl = get().pageCacheTTL;
+        if (cached && Date.now() - cached.ts < ttl) {
+          set({ suppliers: cached.suppliers, pagination: cached.pagination, loading: false, error: null });
+          telemetry.record?.('feature.suppliers.cache.hit', { page, search: !!search });
+          // si se acerca expiración, revalidar en background
+          if (Date.now() - cached.ts > ttl / 2) {
+            (async () => {
+              try {
+                await get().fetchSuppliers(page, pageSize, search);
+                telemetry.record?.('feature.suppliers.cache.revalidate.success', { page });
+              } catch (e) {
+                telemetry.record?.('feature.suppliers.cache.revalidate.error', { page, message: e.message });
+              }
+            })();
+          }
+          return;
+        }
+        telemetry.record?.('feature.suppliers.cache.miss', { page, search: !!search });
+        await get().fetchSuppliers(page, pageSize, search);
       },
 
       createSupplier: async (supplierData) => {
