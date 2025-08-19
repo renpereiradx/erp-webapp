@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useTheme } from 'next-themes';
 import { X, Save, User, Phone, MapPin, ToggleLeft, ToggleRight, Loader, Building, FileText, MessageSquare } from 'lucide-react';
 import useSupplierStore from '@/store/useSupplierStore';
+import { useI18n } from '@/lib/i18n';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
@@ -12,6 +13,7 @@ import StatusBadge from '@/components/ui/StatusBadge';
 const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
   const { theme } = useTheme();
   const { createSupplier, updateSupplier, loading } = useSupplierStore();
+  const { t } = useI18n();
   const { success, error: showError } = useToast();
 
   const [formData, setFormData] = useState({
@@ -136,7 +138,7 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Building className="w-6 h-6 text-primary" />
             <h2 style={{ fontSize: isNeoBrutalism ? '1.5rem' : '1.25rem', fontWeight: isNeoBrutalism ? '800' : '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', margin: 0 }} data-testid="supplier-modal-title">
-              {supplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}
+              {supplier ? t('suppliers.edit_title') : t('suppliers.new_title')}
             </h2>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} data-testid="supplier-modal-close">
@@ -147,28 +149,28 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
         <form onSubmit={handleSubmit} style={{ padding: '24px' }} data-testid="supplier-modal-form">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div>
-              <Label htmlFor="name" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Nombre del Proveedor</Label>
-              <Input leftIcon={<User />} id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Ej: Tech Supplies Inc." required data-testid="supplier-name-input" aria-required="true" />
+              <Label htmlFor="name" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>{t('suppliers.name_label')}</Label>
+              <Input leftIcon={<User />} id="name" name="name" value={formData.name} onChange={handleChange} placeholder={t('suppliers.name_placeholder')} required data-testid="supplier-name-input" aria-required="true" />
             </div>
             <div>
-              <Label htmlFor="tax_id" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>RUC</Label>
-              <Input leftIcon={<FileText />} id="tax_id" name="tax_id" value={formData.tax_id} onChange={handleChange} placeholder="Ej: 12345678-9" data-testid="supplier-tax-id-input" aria-required="false" />
+              <Label htmlFor="tax_id" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>{t('suppliers.ruc_label')}</Label>
+              <Input leftIcon={<FileText />} id="tax_id" name="tax_id" value={formData.tax_id} onChange={handleChange} placeholder={t('suppliers.ruc_placeholder')} data-testid="supplier-tax-id-input" aria-required="false" />
             </div>
             <div>
-              <Label htmlFor="phone" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Teléfono</Label>
-              <Input leftIcon={<Phone />} id="phone" name="phone" value={formData.contact_info.phone} onChange={handleContactInfoChange} placeholder="Ej: +595 983 111 222" data-testid="supplier-phone-input" aria-required="false" />
+              <Label htmlFor="phone" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>{t('suppliers.phone_label')}</Label>
+              <Input leftIcon={<Phone />} id="phone" name="phone" value={formData.contact_info.phone} onChange={handleContactInfoChange} placeholder={t('suppliers.phone_placeholder')} data-testid="supplier-phone-input" aria-required="false" />
             </div>
             <div>
               <Label htmlFor="fax" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Fax</Label>
               <Input leftIcon={<MessageSquare />} id="fax" name="fax" value={formData.contact_info.fax} onChange={handleContactInfoChange} placeholder="Ej: FAX-PAR-6356" data-testid="supplier-fax-input" aria-required="false" />
             </div>
             <div>
-              <Label htmlFor="address" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Dirección</Label>
-              <Input leftIcon={<MapPin />} id="address" name="address" value={formData.contact_info.address} onChange={handleContactInfoChange} placeholder="Ej: Av. Mcal. López 1234, Asunción, Paraguay" data-testid="supplier-address-input" aria-required="false" />
+              <Label htmlFor="address" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>{t('suppliers.address_label')}</Label>
+              <Input leftIcon={<MapPin />} id="address" name="address" value={formData.contact_info.address} onChange={handleContactInfoChange} placeholder={t('suppliers.address_placeholder')} data-testid="supplier-address-input" aria-required="false" />
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: isNeoBrutalism ? '0px' : '8px', border: isNeoBrutalism ? '2px solid var(--border)' : '1px solid var(--border)', background: 'var(--muted)' }}>
-              <Label htmlFor="status" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none' }}>Estado</Label>
+              <Label htmlFor="status" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none' }}>{t('field.status') || 'Estado'}</Label>
               <div className="flex items-center gap-2">
                 <StatusBadge active={!!formData.status} />
                 <Button type="button" variant={'ghost'} onClick={handleStatusToggle} aria-label="Alternar estado">
@@ -180,11 +182,11 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '24px', borderTop: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)' }} data-testid="supplier-modal-actions">
             <Button type="button" variant={isNeoBrutalism ? 'secondary' : 'outline'} onClick={onClose} disabled={loading} data-testid="supplier-modal-cancel">
-              Cancelar
+              {t('suppliers.cancel')}
             </Button>
             <Button type="submit" variant="default" disabled={loading} className="min-w-[150px]" data-testid="supplier-modal-submit">
               {loading ? <Loader className="animate-spin" /> : <Save className="mr-2" />} 
-              {supplier ? 'Guardar Cambios' : 'Crear'}
+              {supplier ? t('suppliers.save') : t('suppliers.save')}
             </Button>
           </div>
         </form>

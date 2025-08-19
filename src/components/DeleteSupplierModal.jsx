@@ -2,8 +2,10 @@ import React from 'react';
 import { useTheme } from 'next-themes';
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useI18n } from '@/lib/i18n';
 
 const DeleteSupplierModal = ({ isOpen, onClose, supplier, onConfirm, loading }) => {
+  const { t } = useI18n();
   if (!isOpen) return null;
 
   return (
@@ -12,12 +14,12 @@ const DeleteSupplierModal = ({ isOpen, onClose, supplier, onConfirm, loading }) 
         <div className="flex justify-center mb-4">
             <AlertTriangle className="w-16 h-16 text-destructive" />
         </div>
-        <h2 className="text-2xl font-bold mb-4">¿Estás seguro?</h2>
-        <p className="mb-6">Estás a punto de eliminar al proveedor "{supplier?.name}". Esta acción no se puede deshacer.</p>
+        <h2 className="text-2xl font-bold mb-4">{t('suppliers.delete_title')}</h2>
+        <p className="mb-6">{t('suppliers.delete_subtitle')} "{supplier?.name}".</p>
         <div className="flex justify-center space-x-4">
-          <Button onClick={onClose} variant="secondary" disabled={loading}>Cancelar</Button>
+          <Button onClick={onClose} variant="secondary" disabled={loading}>{t('suppliers.cancel')}</Button>
           <Button onClick={() => onConfirm(supplier)} variant="destructive" disabled={loading}>
-            {loading ? 'Eliminando...' : 'Eliminar'}
+            {loading ? t('suppliers.deleting') : t('suppliers.delete_confirm')}
           </Button>
         </div>
       </div>
