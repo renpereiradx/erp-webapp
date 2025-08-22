@@ -89,6 +89,9 @@ const SuppliersPage = () => {
 
   const { t } = useI18n();
 
+  // Flag configurable: por defecto no autoload (activar poniendo VITE_SUPPLIERS_AUTOLOAD=true)
+  const AUTOLOAD_SUPPLIERS = import.meta.env?.VITE_SUPPLIERS_AUTOLOAD === 'true';
+
   // Emitir toast cuando el store expone un error
   useEffect(() => {
     if (error) {
@@ -128,15 +131,15 @@ const SuppliersPage = () => {
   }, [showSupplierModal, showDeleteModal]);
 
   useEffect(() => {
-    // Cargar primera página si la lista está vacía
+    // (Auto load deshabilitado por defecto para evitar llamada inicial.)
+    if (!AUTOLOAD_SUPPLIERS) return;
     try {
       const storeRef = useSupplierStore.getState ? useSupplierStore.getState() : null;
       if (storeRef && !storeRef.suppliers.length) {
         storeRef.loadPage?.(1, 10, '');
       }
     } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [AUTOLOAD_SUPPLIERS]);
 
   const handleSearch = () => {
     if (searchTerm.trim() !== '') {
