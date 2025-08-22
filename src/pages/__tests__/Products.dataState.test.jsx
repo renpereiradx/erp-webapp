@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
+import { act } from 'react';
 
 // Mock toast
 const errorFrom = vi.fn();
@@ -37,7 +38,7 @@ describe('Products DataState integrations', () => {
     vi.clearAllMocks();
   });
 
-  test('shows loading DataState when store.loading is true', () => {
+  test('shows loading DataState when store.loading is true', async () => {
     STORE_STATE = {
       products: [],
       loading: true,
@@ -57,7 +58,7 @@ describe('Products DataState integrations', () => {
       clearError: vi.fn(),
     };
 
-    render(<Products />);
+    await act(async () => { render(<Products />); });
     const loadingById = screen.queryByTestId('products-loading');
     if (loadingById) {
       expect(loadingById).toBeInTheDocument();

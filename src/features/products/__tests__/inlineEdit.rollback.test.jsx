@@ -1,7 +1,9 @@
+import { describe, test, expect } from 'vitest';
+import { act } from 'react';
+
 describe('inlineEdit.rollback (placeholder)', () => {
-  test('placeholder', () => {
-    // Este archivo existía vacío y Vitest fallaba con "No test suite found in file".
-    // Mantenemos un test trivial para que la suite continúe. No se pretende cubrir lógica.
+  test('placeholder', async () => {
+    await act(async () => {});
     expect(true).toBe(true);
   });
 });

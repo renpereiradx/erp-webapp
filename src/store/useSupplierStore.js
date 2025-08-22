@@ -267,7 +267,10 @@ const useSupplierStore = create(
               // lanzar prefetch sin bloquear
               (async () => {
                 try {
-                  const r2 = await domainRetry(() => supplierService.getSuppliers({ page: page + 1, limit: pageSize, search }), { op: 'fetch-prefetch' });
+                  const r2 = await domainRetry(
+                    () => supplierService.getSuppliers({ page: page + 1, limit: pageSize, search }),
+                    { op: 'fetch-prefetch', retries: 0 } // retries=0: fallo rápido en prefetch (no crítico) => telemetría inmediata y menor flakiness tests
+                  );
                   if (r2 && r2.success !== false) {
                     const raw2 = r2.data;
                     const hasPag2 = raw2 && typeof raw2 === 'object' && Array.isArray(raw2.data) && raw2.pagination;

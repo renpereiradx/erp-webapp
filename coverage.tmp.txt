@@ -1,0 +1,181 @@
+
+> erp-webapp@0.0.0 test /home/darthrpm/dev/web-project/erp-webapp
+> vitest --run -- --coverage --reporter=basic --coverage.reporter=json-summary --coverage.reporter=text-summary
+
+
+ RUN  v2.1.9 /home/darthrpm/dev/web-project/erp-webapp
+
+ ✓ tests/store/useSupplierStore.selectors.test.js (4 tests) 9ms
+ ✓ tests/store/useSupplierStore.coverageExtras.test.js (6 tests) 31ms
+ ✓ tests/store/useSupplierStore.prefetch.test.js (1 test) 6ms
+ ✓ tests/store/useSupplierStore.invalidate.test.js (2 tests) 8ms
+stdout | src/features/products/__tests__/circuitBreaker.test.jsx > Circuit breaker & prefetch > opens circuit after threshold of failures on fetchProducts
+[telemetry] products.error.store { message: 'Error al cargar productos: Network fail', code: 'NETWORK' }
+[telemetry] circuit.open { component: 'products', failures: 4, openUntil: 1755892954619 }
+[telemetry] products.error.store { message: 'Error al cargar productos: Network fail', code: 'NETWORK' }
+
+stdout | src/features/products/__tests__/circuitBreaker.test.jsx > Circuit breaker & prefetch > circuit closes after cooldown time passes
+[telemetry] products.error.store { message: 'Error al cargar productos: Network fail', code: 'NETWORK' }
+[telemetry] circuit.open { component: 'products', failures: 4, openUntil: 1755892954624 }
+[telemetry] products.error.store { message: 'Error al cargar productos: Network fail', code: 'NETWORK' }
+
+stdout | src/features/products/__tests__/circuitBreaker.test.jsx > Circuit breaker & prefetch > circuit closes after cooldown time passes
+[telemetry] circuit.close { component: 'products', reason: 'timeout' }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+
+stdout | src/features/products/__tests__/circuitBreaker.test.jsx > Circuit breaker & prefetch > search uses circuit breaker similarly
+[telemetry] products.search.cache.miss { term: 'abc' }
+[telemetry] products.error.store { message: 'Network fail', code: 'NETWORK' }
+[telemetry] products.search.error {
+  code: 'NETWORK',
+  message: 'Network fail',
+  correlationId: 'search_1755892954533_3xjtx8'
+}
+[telemetry] products.search.cache.miss { term: 'abc' }
+[telemetry] circuit.open { component: 'products', failures: 4, openUntil: 1755892954635 }
+[telemetry] products.error.store { message: 'Network fail', code: 'NETWORK' }
+[telemetry] products.search.error {
+  code: 'NETWORK',
+  message: 'Network fail',
+  correlationId: 'search_1755892954535_eo9qjw'
+}
+
+stdout | src/features/products/__tests__/circuitBreaker.test.jsx > Circuit breaker & prefetch > prefetchNextPage stores next page in cache
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.prefetch.success { page: 2 }
+
+ ✓ src/features/products/__tests__/circuitBreaker.test.jsx (4 tests) 27ms
+stdout | src/features/products/__tests__/cacheRevalidation.test.jsx > Cache revalidation & trimming > page cache revalidates in background when half TTL passed
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+
+stdout | src/features/products/__tests__/cacheRevalidation.test.jsx > Cache revalidation & trimming > search cache auto revalidates when stale (half TTL)
+[telemetry] products.search.cache.miss { term: 'term' }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.searchCache.trim {}
+[telemetry] products.search.success { ms: 0.8993639999998777, total: 1 }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.search.cache.hit { term: 'term', age: 90000 }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.search.revalidate.auto.success { term: 'term', total: 1 }
+
+stdout | src/features/products/__tests__/cacheRevalidation.test.jsx > Cache revalidation & trimming > page cache trimming removes old entries beyond limit
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.pageCache.trim { removed: 5, remaining: 20, limit: 20 }
+
+stdout | src/features/products/__tests__/useProductStore.ttl.expiration.test.js > TTL expiration behaviour > pageCache entry expires after overridden TTL and triggers refetch
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.pageCache.direct.hit { page: 1 }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+
+stdout | src/features/products/__tests__/useProductStore.ttl.expiration.test.js > TTL expiration behaviour > searchCache expires and triggers refetch
+[telemetry] products.search.cache.miss { term: 'abc' }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.searchCache.trim {}
+[telemetry] products.search.success { ms: 5.896447999999964, total: 1 }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.search.cache.hit { term: 'abc', age: 0 }
+[telemetry] products.search.cache.miss { term: 'abc' }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.searchCache.trim {}
+[telemetry] products.search.success { ms: 0.4949450000001434, total: 2 }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+
+stdout | src/features/products/__tests__/cacheRevalidation.test.jsx > Cache revalidation & trimming > search cache trimming removes old entries beyond limit
+[telemetry] products.search.cache.miss { term: 'term2' }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.searchCache.trim {}
+[telemetry] products.search.success { ms: 0.9987009999999827, total: 1 }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+
+ ✓ src/features/products/__tests__/useProductStore.ttl.expiration.test.js (2 tests) 39ms
+ ✓ src/features/products/__tests__/cacheRevalidation.test.jsx (4 tests) 48ms
+ ✓ src/components/ui/DataState.test.jsx (4 tests) 241ms
+ ✓ src/features/products/__tests__/ProductGrid.keyboard.test.jsx (2 tests) 316ms
+stderr | src/pages/__tests__/Products.dataState.test.jsx > Products DataState integrations > shows loading DataState when store.loading is true
+`ReactDOMTestUtils.act` is deprecated in favor of `React.act`. Import `act` from `react` instead of `react-dom/test-utils`. See https://react.dev/warnings/react-dom-test-utils for more info.
+
+ ✓ src/pages/__tests__/Suppliers.toasts.test.jsx (1 test) 111ms
+ ✓ src/pages/__tests__/Products.delete.test.jsx (1 test) 304ms
+   ✓ Products delete flow > emite products.delete.success y muestra toast al eliminar 302ms
+stderr | src/features/products/__tests__/inlineEdit.test.jsx > Inline edit minimal flow > enter edit, modify name and save triggers callback
+An update to EditableField inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ ✓ src/pages/__tests__/Products.dataState.test.jsx (4 tests) 410ms
+stdout | src/features/products/__tests__/inlineEdit.test.jsx > Inline edit minimal flow > rollback on failure
+[telemetry] products.inlineUpdate.rollback { id: 'P1', correlationId: 'inline_P1_1755892955258' }
+
+ ✓ src/features/products/__tests__/inlineEdit.test.jsx (5 tests) 623ms
+   ✓ Inline edit minimal flow > enter edit, modify name and save triggers callback 333ms
+ ✓ src/pages/__tests__/Suppliers.dataState.test.jsx (3 tests) 317ms
+stdout | src/features/products/__tests__/bulkActions.test.jsx > Bulk actions > bulkActivate sets items active and clears selection
+[telemetry] products.bulkActivate.success { count: 2, correlationId: 'bulkAct_1755892956130_2' }
+
+stdout | src/features/products/__tests__/bulkActions.test.jsx > Bulk actions > bulkDeactivate sets items inactive and clears selection
+[telemetry] products.bulkDeactivate.success { count: 1, correlationId: 'bulkDeact_1755892956148_1' }
+
+ ✓ src/features/products/__tests__/bulkActions.test.jsx (2 tests) 38ms
+ ✓ tests/store/useSupplierStore.revalidate.test.js (1 test) 25ms
+ ✓ tests/store/useSupplierStore.offlineHydrate.test.js (1 test) 37ms
+ ✓ tests/store/useSupplierStore.cache.test.js (2 tests) 14ms
+stdout | src/features/products/__tests__/useProductStore.cache.test.js > useProductStore searchProducts cache > stores full results in cache and paginates in memory
+[telemetry] products.search.cache.miss { term: 'shoe' }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.searchCache.trim {}
+[telemetry] products.search.success { ms: 33.16559600000005, total: 2 }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.search.cache.miss { term: 'shoe' }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+[telemetry] products.searchCache.trim {}
+[telemetry] products.search.success { ms: 10.772451000000046, total: 2 }
+[telemetry] circuit.close { component: 'products', reason: 'success' }
+
+ ✓ src/features/products/__tests__/useProductStore.cache.test.js (1 test) 57ms
+ ✓ src/pages/__tests__/Suppliers.errorHint.test.jsx (1 test) 126ms
+ ✓ tests/i18n/suppliers.i18n.smoke.test.js (1 test) 5ms
+ ✓ src/features/products/__tests__/useProductFilters.abort.test.jsx (1 test) 37ms
+ ✓ src/pages/__tests__/Products.telemetry.test.jsx (1 test) 126ms
+stdout | src/features/products/__tests__/useProductStore.abort.test.js > useProductStore searchProducts abort > retorna aborted:true y no actualiza estado en cancelación
+[telemetry] products.search.cache.miss { term: 'abcdef' }
+[telemetry] products.search.abort {}
+
+ ✓ src/features/products/__tests__/useProductStore.abort.test.js (1 test) 10ms
+ ✓ src/components/MetricsPanel.test.jsx (1 test) 48ms
+ ✓ src/features/products/__tests__/ProductGrid.a11y.test.jsx (1 test) 256ms
+ ✓ tests/store/useSupplierStore.offline.test.js (1 test) 7ms
+ ✓ src/pages/__tests__/Clients.toasts.test.jsx (1 test) 84ms
+ ✓ src/features/products/__tests__/useProductFilters.test.jsx (1 test) 49ms
+stdout | src/features/products/__tests__/optimisticUpdate.test.jsx > optimisticUpdateProduct > updates immediately then persists
+[telemetry] products.inlineUpdate.success { id: '1', correlationId: 'inline_1_1755892957984' }
+
+ ✓ src/features/products/__tests__/optimisticUpdate.test.jsx (1 test) 5ms
+ ✓ tests/components/SupplierModal.test.jsx (2 tests) 263ms
+ ✓ src/features/products/__tests__/productMappers.test.js (2 tests) 4ms
+ ✓ src/components/ui/ErrorState.test.jsx (1 test) 54ms
+ ✓ src/features/products/__tests__/normalization.test.jsx (1 test) 2ms
+ ✓ src/components/ui/EmptyState.test.jsx (1 test) 40ms
+ ✓ src/features/products/__tests__/accessibility.live-region.test.jsx (1 test) 69ms
+stderr | src/features/products/__tests__/inlineEdit.rollback.test.jsx > inlineEdit.rollback (placeholder) > placeholder
+`ReactDOMTestUtils.act` is deprecated in favor of `React.act`. Import `act` from `react` instead of `react-dom/test-utils`. See https://react.dev/warnings/react-dom-test-utils for more info.
+
+ ✓ src/features/products/__tests__/inlineEdit.rollback.test.jsx (1 test) 3ms
+ ✓ src/components/ui/GenericSkeletonList.test.jsx (2 tests) 60ms
+ ✓ tests/store/useSupplierStore.test.js (7 tests) 4780ms
+   ✓ useSupplierStore > maneja error y setea error en estado 609ms
+   ✓ useSupplierStore circuit breaker > abre circuito tras N fallos y salta fetch 1902ms
+   ✓ useSupplierStore circuit breaker > cierra circuito manualmente tras expirar y éxito siguiente 1805ms
+
+ Test Files  39 passed (39)
+      Tests  79 passed (79)
+   Start at  17:02:32
+   Duration  6.57s (transform 2.98s, setup 6.26s, collect 18.74s, tests 8.69s, environment 32.49s, prepare 7.11s)
+

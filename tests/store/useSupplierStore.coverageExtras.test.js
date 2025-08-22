@@ -68,11 +68,19 @@ describe('useSupplierStore extra coverage paths', () => {
       throw new Error('fail prefetch');
     });
     await useSupplierStore.getState().fetchSuppliers(1,10,'');
-    // allow background prefetch chain (uses domainRetry) more time
-    await new Promise(r => setTimeout(r, 25));
-    const events = rec().mock.calls.map(c=>c[0]);
-    // Accept either error or skip depending on race
-    expect(events).toEqual(expect.arrayContaining(['feature.suppliers.prefetch.error']));
+    // poll hasta que aparezca algún evento de prefetch (success/skip/error) o timeout
+    const deadline = Date.now() + 300;
+    let events;
+    while (Date.now() < deadline) {
+      events = rec().mock.calls.map(c=>c[0]);
+      if (events.some(e => e.startsWith('feature.suppliers.prefetch.'))) break;
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise(r => setTimeout(r, 15));
+    }
+    const prefetchEvents = events.filter(e => e.startsWith('feature.suppliers.prefetch.'));
+    expect(prefetchEvents.length).toBeGreaterThan(0);
+    // debe haber error o skip(failed)
+    expect(prefetchEvents).toEqual(expect.arrayContaining(['feature.suppliers.prefetch.error']));
   });
 
   it('offline/online window events emiten telemetry y cambian estado', () => {
