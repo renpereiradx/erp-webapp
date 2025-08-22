@@ -25,6 +25,7 @@ import useReservationCache from '../hooks/useReservationCache';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import CacheMetricsPanel from '../components/debug/CacheMetricsPanel';
 import ReservationMetricsPanel from '../components/reservations/ReservationMetricsPanel';
+import APITestPanel from '../components/reservations/APITestPanel';
 
 // Componentes específicos de reservas
 import ReservationCard from '../components/reservations/ReservationCard';
@@ -506,6 +507,11 @@ const Reservations = () => {
       {/* Métricas de reservas (desarrollo) - Wave 7 */}
       {import.meta.env.DEV && (
         <ReservationMetricsPanel />
+      )}
+
+      {/* Panel de pruebas API V2 (desarrollo) - Wave 8 */}
+      {import.meta.env.DEV && (
+        <APITestPanel />
       )}
 
       {/* Wave 5: Offline Banner - Mostrar cuando esté offline */}

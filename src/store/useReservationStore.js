@@ -1,5 +1,6 @@
 /**
  * Store de Zustand para gestión de estado de reservas - Versión Hardened
+ * Wave 8: API Integration & Backend Alignment
  * Implementa patrón establecido con helpers de resiliencia, cache, circuit breaker y offline
  * Siguiendo estructura exitosa de Suppliers/Products
  */
@@ -7,11 +8,14 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import reservationService from '@/services/reservationService';
+import reservationServiceV2 from '@/services/reservationServiceV2';
 import { telemetry } from '@/utils/telemetry';
 import { classifyError, withRetry as baseWithRetry } from './helpers/reliability';
 import { createCircuitHelpers } from './helpers/circuit';
 import { lruTrim, invalidatePages as sharedInvalidatePages } from './helpers/cache';
 import { createOfflineSnapshotHelpers } from './helpers/offline';
+import { validateReserveRequest, validateReservationId } from '@/utils/reservationValidators';
+import { RESERVATION_ACTIONS } from '@/types/reservationTypes';
 
 /**
  * @typedef {Object} Reservation
@@ -1382,6 +1386,257 @@ const useReservationStore = create(
       dismissOfflineBanner: () => {
         set({ offlineBannerShown: false });
         telemetry.record('feature.reservations.offline.banner.dismissed');
+      },
+
+      // =================================
+      // WAVE 8: NEW API V2 METHODS
+      // =================================
+
+      /**
+       * Gestionar reserva usando la nueva API unificada
+       * @param {string} action - create, update, cancel
+       * @param {Object} data - Datos de la reserva
+       */
+      manageReservationV2: async (action, data) => {
+        const start = performance.now();
+        
+        // Validar entrada
+        const validation = validateReserveRequest({ action, ...data });
+        if (!validation.isValid) {
+          const error = new Error(`Validation failed: ${validation.errors.join(', ')}`);
+          telemetry.record('feature.reservations.error', {
+            op: `manageReservation.${action}`,
+            code: 'VALIDATION_ERROR',
+            errors: validation.errors
+          });
+          throw error;
+        }
+
+        set({ loading: true, error: null });
+        
+        try {
+          const response = await get()._withRetry(async () => {
+            return await reservationServiceV2.manageReservation(action, data);
+          }, `manageReservation.${action}`);
+          
+          // Invalidar cache según la acción
+          const state = get();
+          const invalidateScope = action === RESERVATION_ACTIONS.CREATE ? 3 : 2;
+          state._invalidatePages(state.lastQuery.search, state.lastQuery.page, invalidateScope, action);
+          
+          set({ loading: false });
+          get()._recordSuccess();
+          
+          telemetry.record(`feature.reservations.${action}.success`, {
+            latencyMs: Math.round(performance.now() - start)
+          });
+          
+          // Background refetch para create
+          if (action === RESERVATION_ACTIONS.CREATE) {
+            setTimeout(() => {
+              get().loadPage(1, state.lastQuery.pageSize, state.lastQuery.search);
+            }, 100);
+          }
+          
+          return response;
+          
+        } catch (error) {
+          const code = classifyError(error.message);
+          
+          set({ 
+            loading: false, 
+            error: error.message,
+            lastErrorCode: code,
+            lastErrorHintKey: `reservations.error.${action}_${code.toLowerCase()}`
+          });
+          
+          get()._recordFailure();
+          
+          telemetry.record('feature.reservations.error', {
+            op: `manageReservation.${action}`,
+            code,
+            latencyMs: Math.round(performance.now() - start)
+          });
+          
+          throw error;
+        }
+      },
+
+      /**
+       * Obtener reservas por producto usando API v2
+       * @param {string} productId - ID del producto
+       */
+      getReservationsByProductV2: async (productId) => {
+        const start = performance.now();
+        
+        if (!productId) {
+          throw new Error('Product ID is required');
+        }
+
+        try {
+          const response = await get()._withRetry(async () => {
+            return await reservationServiceV2.getReservationsByProduct(productId);
+          }, 'getReservationsByProduct');
+          
+          get()._recordSuccess();
+          
+          telemetry.record('feature.reservations.by_product.success', {
+            productId,
+            count: response?.length || 0,
+            latencyMs: Math.round(performance.now() - start)
+          });
+          
+          return response;
+          
+        } catch (error) {
+          const code = classifyError(error.message);
+          
+          telemetry.record('feature.reservations.error', {
+            op: 'getReservationsByProduct',
+            code,
+            productId,
+            latencyMs: Math.round(performance.now() - start)
+          });
+          
+          get()._recordFailure();
+          throw error;
+        }
+      },
+
+      /**
+       * Obtener reservas por cliente usando API v2
+       * @param {string} clientId - ID del cliente
+       */
+      getReservationsByClientV2: async (clientId) => {
+        const start = performance.now();
+        
+        if (!clientId) {
+          throw new Error('Client ID is required');
+        }
+
+        try {
+          const response = await get()._withRetry(async () => {
+            return await reservationServiceV2.getReservationsByClient(clientId);
+          }, 'getReservationsByClient');
+          
+          get()._recordSuccess();
+          
+          telemetry.record('feature.reservations.by_client.success', {
+            clientId,
+            count: response?.length || 0,
+            latencyMs: Math.round(performance.now() - start)
+          });
+          
+          return response;
+          
+        } catch (error) {
+          const code = classifyError(error.message);
+          
+          telemetry.record('feature.reservations.error', {
+            op: 'getReservationsByClient',
+            code,
+            clientId,
+            latencyMs: Math.round(performance.now() - start)
+          });
+          
+          get()._recordFailure();
+          throw error;
+        }
+      },
+
+      /**
+       * Verificar consistencia reservas-ventas usando API v2
+       */
+      checkConsistencyV2: async () => {
+        const start = performance.now();
+        
+        try {
+          const response = await get()._withRetry(async () => {
+            return await reservationServiceV2.checkConsistency();
+          }, 'checkConsistency');
+          
+          get()._recordSuccess();
+          
+          telemetry.record('feature.reservations.consistency.check.success', {
+            issuesFound: response?.length || 0,
+            latencyMs: Math.round(performance.now() - start)
+          });
+          
+          return response;
+          
+        } catch (error) {
+          const code = classifyError(error.message);
+          
+          telemetry.record('feature.reservations.error', {
+            op: 'checkConsistency',
+            code,
+            latencyMs: Math.round(performance.now() - start)
+          });
+          
+          get()._recordFailure();
+          throw error;
+        }
+      },
+
+      /**
+       * Obtener horarios disponibles usando API v2
+       * @param {string} productId - ID del producto
+       * @param {string} date - Fecha en formato YYYY-MM-DD
+       * @param {number} durationHours - Duración en horas
+       */
+      getAvailableSchedulesV2: async (productId, date, durationHours = 1) => {
+        const start = performance.now();
+        const cacheKey = `schedules_v2_${productId}_${date}_${durationHours}`;
+        
+        // Verificar caché primero
+        const cached = get().scheduleCache[cacheKey];
+        if (cached && (Date.now() - cached.ts) < get().pageCacheTTL) {
+          set(state => ({ cacheHits: state.cacheHits + 1 }));
+          telemetry.record('feature.reservations.schedule.cache.hit', { key: cacheKey });
+          return cached.data;
+        }
+        
+        try {
+          const response = await get()._withRetry(async () => {
+            return await reservationServiceV2.getAvailableSchedules(productId, date, durationHours);
+          }, 'getAvailableSchedules');
+          
+          // Cachear resultado
+          set(state => ({
+            scheduleCache: {
+              ...state.scheduleCache,
+              [cacheKey]: { data: response, ts: Date.now() }
+            },
+            cacheMisses: state.cacheMisses + 1
+          }));
+          
+          get()._recordSuccess();
+          
+          telemetry.record('feature.reservations.schedule.available.success', {
+            productId,
+            date,
+            durationHours,
+            count: response?.length || 0,
+            latencyMs: Math.round(performance.now() - start)
+          });
+          
+          return response;
+          
+        } catch (error) {
+          const code = classifyError(error.message);
+          
+          telemetry.record('feature.reservations.error', {
+            op: 'getAvailableSchedules',
+            code,
+            productId,
+            date,
+            durationHours,
+            latencyMs: Math.round(performance.now() - start)
+          });
+          
+          get()._recordFailure();
+          throw error;
+        }
       },
 
       forceRevalidateOffline: async () => {

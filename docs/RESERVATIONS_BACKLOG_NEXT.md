@@ -1,8 +1,8 @@
 # Reservations – Backlog Próximo (Post Wave 6 Completado)
 
 Fecha: 2025-08-22
-**Estado Actual**: ✅ **Wave 7 (Observabilidad & Métricas) COMPLETADO** - Panel de métricas integral implementado con observabilidad completa del sistema de reservas
-Contexto: Wave 7 Observabilidad & Métricas ha sido completado exitosamente. El sistema ahora cuenta con un ReservationMetricsPanel integral que proporciona observabilidad completa del sistema de reservas, incluyendo métricas de cache, circuit breaker, conectividad, estadísticas de negocio, tasas de conversión y performance en tiempo real. Se han corregido todas las importaciones incorrectas y el servidor está funcionando sin errores. Este backlog actualizado refleja el progreso logrado y las tareas restantes para alcanzar nivel "Production Hardened" completo.
+**Estado Actual**: ✅ **Wave 8 (API Integration & Backend Alignment) COMPLETADO** - Migración completa a API documentada con 7 endpoints implementados, validación exhaustiva y JWT authentication
+Contexto: Wave 8 API Integration & Backend Alignment ha sido completado exitosamente. El sistema ahora está 100% alineado con la API documentada en RESERVE_API.md, incluye validación exhaustiva, JWT authentication, sistema mock compatible, y panel de pruebas interactivo. Todos los 7 endpoints están implementados y funcionando con fallback automático API→Mock. Este backlog actualizado refleja el progreso logrado y las tareas restantes para alcanzar nivel "Production Hardened" completo.
 
 ## 1. Arquitectura & Separación Base (Wave 1) - ✅ COMPLETADO
 - [x] **Crear página independiente Reservations** (`src/pages/Reservations.jsx`) separada de `BookingSales.jsx`.
@@ -99,13 +99,19 @@ Contexto: Wave 7 Observabilidad & Métricas ha sido completado exitosamente. El 
 - [x] **Indicadores visuales** con códigos de color para estados del sistema.
 - [x] **Métricas de performance** con carga actual y controles de revalidación.
 
-## 9. API Integration & Backend Alignment
-- [ ] **Migrar endpoints** desde estructura actual a API documentada en `RESERVE_API.md`.
-- [ ] **Implementar todos los endpoints** de la API de reservas (manage, by-id, by-product, by-client, report, consistency, available-schedules).
-- [ ] **Manejo de JWT** en headers de autorización para todos los endpoints.
-- [ ] **Validación de respuestas** según modelos `Reserve`, `ReserveRiched`, `ReservationReport`, `AvailableSchedule`.
-- [ ] **Error handling** específico por código de respuesta (400, 401, 404, 500).
-- [ ] **Retry policy** inteligente para fallos de red vs errores de validación.
+## 9. API Integration & Backend Alignment (Wave 8) - ✅ COMPLETADO
+- [x] **Migrar endpoints** desde estructura actual a API documentada en `RESERVE_API.md`.
+- [x] **Implementar todos los endpoints** de la API de reservas (manage, by-id, by-product, by-client, report, consistency, available-schedules).
+- [x] **Manejo de JWT** en headers de autorización para todos los endpoints.
+- [x] **Validación de respuestas** según modelos `Reserve`, `ReserveRiched`, `ReservationReport`, `AvailableSchedule`.
+- [x] **Error handling** específico por código de respuesta (400, 401, 404, 500).
+- [x] **Retry policy** inteligente para fallos de red vs errores de validación.
+- [x] **Tipos TypeScript/JSDoc** completos para todos los modelos de datos.
+- [x] **Sistema de validación** exhaustivo para requests y responses.
+- [x] **ReservationServiceV2** con API unificada y fallback automático.
+- [x] **MockReservationsAPIV2** compatible con API real para desarrollo.
+- [x] **Panel de pruebas interactivo** para testing de todos los endpoints.
+- [x] **Store extensions** con nuevas acciones V2 y compatibilidad backward.
 
 ## 10. Migración desde BookingSales (Wave Inicial)
 - [ ] **Audit de dependencias** entre reservas y ventas en `BookingSales.jsx`.
@@ -166,9 +172,10 @@ Contexto: Wave 7 Observabilidad & Métricas ha sido completado exitosamente. El 
 | **Wave 5** (Offline) | 2 días | ✅ COMPLETADO | Waves 2-4 completas |
 | **Wave 6** (Testing) | 3-4 días | ✅ COMPLETADO | Todas las anteriores |
 | **Wave 7** (Observabilidad) | 1-2 días | ✅ COMPLETADO | Wave 6 completa |
+| **Wave 8** (API Integration) | 1-2 días | ✅ COMPLETADO | Wave 7 completa |
 
-**Total completado**: 13-18 días ✅  
-**Total restante**: 2-5 días  
+**Total completado**: 15-20 días ✅  
+**Total restante**: 0-3 días  
 **Total estimado**: 15-23 días hábiles
 
 ## 16. Estado Actual & Próximos Pasos Post Wave 5
