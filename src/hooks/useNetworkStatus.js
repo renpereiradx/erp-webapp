@@ -4,7 +4,7 @@
  */
 
 import { useEffect } from 'react';
-import { useReservationStore } from '../store/useReservationStore';
+import useReservationStore from '../store/useReservationStore';
 
 export const useNetworkStatus = () => {
   const { setOfflineStatus, isOffline, lastOfflineAt, lastOnlineAt } = useReservationStore(state => ({

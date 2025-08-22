@@ -7,9 +7,9 @@ import React, { useState } from 'react';
 import { AlertTriangle, CheckCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { useReservationStore } from '../../store/useReservationStore';
-import { useTranslation } from '../../lib/i18n';
-import { LiveRegion } from '../a11y/LiveRegion';
+import useReservationStore from '../../store/useReservationStore';
+import { useI18n } from '../../lib/i18n';
+import LiveRegion from '../a11y/LiveRegion';
 import { cn } from '../../lib/utils';
 
 const CircuitBreakerIndicator = ({ className = "", showResetButton = true }) => {

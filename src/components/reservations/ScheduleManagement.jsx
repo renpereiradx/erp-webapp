@@ -11,11 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Badge } from '../ui/badge';
-import { useReservationStore } from '../../store/useReservationStore';
+import useReservationStore from '../../store/useReservationStore';
 import { MOCK_PRODUCTS } from '../../services/mockReservationsAPI';
-import { useTranslation } from '../../lib/i18n';
+import { useI18n } from '../../lib/i18n';
 import { useFocusManagement } from '../../hooks/useFocusManagement';
-import { LiveRegion } from '../a11y/LiveRegion';
+import LiveRegion from '../a11y/LiveRegion';
 import { cn } from '../../lib/utils';
 
 const ScheduleManagement = ({ className = "" }) => {

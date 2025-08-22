@@ -12,10 +12,10 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Badge } from '../ui/badge';
-import { useReservationStore } from '../../store/useReservationStore';
-import { useTranslation } from '../../lib/i18n';
+import useReservationStore from '../../store/useReservationStore';
+import { useI18n } from '../../lib/i18n';
 import { useFocusManagement } from '../../hooks/useFocusManagement';
-import { LiveRegion } from '../a11y/LiveRegion';
+import LiveRegion from '../a11y/LiveRegion';
 import { cn } from '../../lib/utils';
 
 const ScheduleGenerator = ({ className = "" }) => {

@@ -7,10 +7,10 @@
 import React, { useState } from 'react';
 import { WifiOff, RefreshCw, Loader2, X } from 'lucide-react';
 import { Button } from '../ui/button';
-import { useReservationStore } from '../../store/useReservationStore';
+import useReservationStore from '../../store/useReservationStore';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
-import { useTranslation } from '../../lib/i18n';
-import { LiveRegion } from '../a11y/LiveRegion';
+import { useI18n } from '../../lib/i18n';
+import LiveRegion from '../a11y/LiveRegion';
 import { cn } from '../../lib/utils';
 
 const OfflineBanner = ({ className = "" }) => {

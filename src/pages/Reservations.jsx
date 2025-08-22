@@ -24,6 +24,7 @@ import useDebounce from '../hooks/useDebounce';
 import useReservationCache from '../hooks/useReservationCache';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import CacheMetricsPanel from '../components/debug/CacheMetricsPanel';
+import ReservationMetricsPanel from '../components/reservations/ReservationMetricsPanel';
 
 // Componentes específicos de reservas
 import ReservationCard from '../components/reservations/ReservationCard';
@@ -502,12 +503,9 @@ const Reservations = () => {
         ]}
       />
 
-      {/* Métricas de cache y performance (desarrollo) */}
+      {/* Métricas de reservas (desarrollo) - Wave 7 */}
       {import.meta.env.DEV && (
-        <CacheMetricsPanel 
-          cacheManager={reservationCache}
-          title="Reservations Cache"
-        />
+        <ReservationMetricsPanel />
       )}
 
       {/* Wave 5: Offline Banner - Mostrar cuando esté offline */}

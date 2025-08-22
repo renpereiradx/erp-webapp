@@ -6,7 +6,7 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { reservationService } from '@/services/reservationService';
+import reservationService from '@/services/reservationService';
 import { telemetry } from '@/utils/telemetry';
 import { classifyError, withRetry as baseWithRetry } from './helpers/reliability';
 import { createCircuitHelpers } from './helpers/circuit';

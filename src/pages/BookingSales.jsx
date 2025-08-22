@@ -30,7 +30,7 @@ import { useSalesLogic } from '@/hooks/useSalesLogic';
 import { MOCK_SERVICES, SYSTEM_MESSAGES } from '@/constants/mockData';
 
 // Servicios
-import { reservationService } from '@/services/reservationService';
+import reservationService from '@/services/reservationService';
 import { saleService } from '@/services/saleService';
 
 const BookingSales = () => {

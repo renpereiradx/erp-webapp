@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useMemo } from 'react';
-import { useReservationStore } from '../store/useReservationStore';
+import useReservationStore from '../store/useReservationStore';
 
 export const useOfflineSync = () => {
   const store = useReservationStore();
