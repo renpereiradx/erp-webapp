@@ -91,6 +91,7 @@ const SuppliersPage = () => {
 
   // Flag configurable: por defecto no autoload (activar poniendo VITE_SUPPLIERS_AUTOLOAD=true)
   const AUTOLOAD_SUPPLIERS = import.meta.env?.VITE_SUPPLIERS_AUTOLOAD === 'true';
+  const SHOW_SUPPLIERS_METRICS = (import.meta.env?.VITE_SHOW_SUPPLIERS_METRICS === 'true') || import.meta.env?.DEV;
 
   // Emitir toast cuando el store expone un error
   useEffect(() => {
@@ -335,6 +336,8 @@ const SuppliersPage = () => {
           compact
           breadcrumb={isMaterial ? 'Compras · Proveedores' : undefined}
         />
+
+        {SHOW_SUPPLIERS_METRICS && <SuppliersMetricsPanel />}
 
         <section className={card('p-6')}>
           {/* Metrics panel (dev only suggestion) */}
