@@ -59,5 +59,8 @@ Contexto: Waves 1–5 completadas (resiliencia básica + a11y + error hints + ca
 - Auditoría i18n sin literales pendientes críticos.
 - Stores alineados usando helpers compartidos (sin duplicación lógica core resiliencia) y con tipado JSDoc homogéneo.
 
+_DoD verificada: 2025-08-22_
+<!-- Nota 2025-08-22: Suite completa 79/79 verde tras refactor tests inline edit (uso data-testid en lugar de labels dinámicos). Pendiente opcional: silenciar telemetría en tests para reducir ruido. -->
+
 ---
-Última actualización: 2025-08-21
+Última actualización: 2025-08-22
