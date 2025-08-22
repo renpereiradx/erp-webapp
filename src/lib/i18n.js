@@ -122,6 +122,30 @@ const DICTIONARY = {
 
     'errors.code_label': 'Código: {code}',
     'errors.hint.label': 'Sugerencia',
+
+    // Metrics
+    'metrics.panel.title': 'Métricas',
+    'metrics.panel.desc': 'Métricas de runtime: eficiencia de caché, reintentos y estado del circuito de proveedores.',
+    'metrics.cache_hits': 'Hits',
+    'metrics.cache_misses': 'Misses',
+    'metrics.cache_ratio': 'Ratio hits',
+    'metrics.retry_rate': 'Ratio reintentos',
+    'metrics.retries': 'Reintentos',
+    'metrics.status': 'Estado',
+    'metrics.circuit.label': 'Circuito',
+    'metrics.circuit.failures': 'Fallos',
+    'metrics.circuit.open_count': 'Aperturas',
+    'metrics.circuit.avg_open': 'Media abierto',
+    'metrics.circuit.open': 'Abierto',
+    'metrics.circuit.closed': 'Cerrado',
+    'metrics.circuit.remaining': 'Restante',
+    'metrics.circuit.open_banner': 'Circuito abierto (umbral de fallos alcanzado)',
+    'metrics.circuit.opened': 'Circuito abierto',
+    'metrics.circuit.reopened': 'Circuito reabierto',
+    'metrics.circuit.closed_announce': 'Circuito cerrado',
+    'metrics.reset_cache': 'Reset Cache',
+    'metrics.reset_circuit': 'Reset Circuito',
+    'metrics.reset_retries': 'Reset Reintentos'
   },
   en: {
     'products.title': 'Product Management',
@@ -241,6 +265,30 @@ const DICTIONARY = {
 
     'errors.code_label': 'Error code: {code}',
     'errors.hint.label': 'Hint',
+
+    // Metrics
+    'metrics.panel.title': 'Metrics',
+    'metrics.panel.desc': 'Runtime metrics: cache efficiency, retries and suppliers circuit breaker state.',
+    'metrics.cache_hits': 'Hits',
+    'metrics.cache_misses': 'Misses',
+    'metrics.cache_ratio': 'Hit ratio',
+    'metrics.retry_rate': 'Retry rate',
+    'metrics.retries': 'Retries',
+    'metrics.status': 'Status',
+    'metrics.circuit.label': 'Circuit',
+    'metrics.circuit.failures': 'Failures',
+    'metrics.circuit.open_count': 'Opens',
+    'metrics.circuit.avg_open': 'Avg open',
+    'metrics.circuit.open': 'Open',
+    'metrics.circuit.closed': 'Closed',
+    'metrics.circuit.remaining': 'Remaining',
+    'metrics.circuit.open_banner': 'Circuit open (failures threshold reached)',
+    'metrics.circuit.opened': 'Circuit opened',
+    'metrics.circuit.reopened': 'Circuit reopened',
+    'metrics.circuit.closed_announce': 'Circuit closed',
+    'metrics.reset_cache': 'Reset Cache',
+    'metrics.reset_circuit': 'Reset Circuit',
+    'metrics.reset_retries': 'Reset Retries'
   }
 };
 

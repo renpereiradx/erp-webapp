@@ -16,7 +16,10 @@ vi.mock('@/utils/telemetry', () => ({ telemetry: { record: vi.fn(), startTimer: 
 let STORE_STATE = {};
 vi.mock('@/store/useSupplierStore', () => ({
   __esModule: true,
-  default: () => STORE_STATE
+  default: (sel) => {
+    const base = STORE_STATE;
+    return typeof sel === 'function' ? sel(base) : base;
+  }
 }));
 
 // i18n simple
@@ -27,6 +30,35 @@ vi.mock('@/lib/i18n', () => ({ useI18n: () => ({ t: (k, vars) => {
 
 import SuppliersPage from '@/pages/Suppliers.jsx';
 
+function baseState(overrides) {
+  return {
+    suppliers: [],
+    loading: false,
+    error: null,
+    pagination: { current_page: 1, per_page: 10, total_pages: 0 },
+    fetchSuppliers: vi.fn(),
+    deleteSupplier: vi.fn(),
+    clearSuppliers: vi.fn(),
+    cacheHits: 0,
+    cacheMisses: 0,
+    retryCount: 0,
+    circuit: { failures: 0, openUntil: 0 },
+    circuitOpen: false,
+    circuitOpenCount: 0,
+    circuitTotalOpenDurationMs: 0,
+    lastQuery: { page: 1, pageSize: 10, search: '' },
+    pageCacheTTL: 60000,
+    pageCache: {},
+    selectors: { selectCurrentCacheMeta: () => ({ ageMs: null, stale: false }), selectCircuitOpenPctLastHr: () => 0 },
+    forceRefetch: vi.fn(),
+    isOffline: false,
+    offlineBannerShown: false,
+    autoRefetchOnReconnect: true,
+    setAutoRefetchOnReconnect: vi.fn(),
+    ...overrides
+  };
+}
+
 describe('Suppliers DataState integrations', () => {
   afterEach(() => {
     STORE_STATE = {};
@@ -34,45 +66,21 @@ describe('Suppliers DataState integrations', () => {
   });
 
   test('shows loading DataState when store.loading is true', () => {
-    STORE_STATE = {
-      suppliers: [],
-      loading: true,
-      error: null,
-      pagination: { current_page: 1, per_page: 10, total_pages: 0 },
-      fetchSuppliers: vi.fn(),
-      deleteSupplier: vi.fn(),
-      clearSuppliers: vi.fn(),
-    };
+    STORE_STATE = baseState({ loading: true });
     render(<SuppliersPage />);
     const loadingState = screen.queryByTestId('suppliers-loading');
     expect(loadingState).toBeInTheDocument();
   });
 
   test('shows empty initial DataState when no suppliers and no searchTerm', () => {
-    STORE_STATE = {
-      suppliers: [],
-      loading: false,
-      error: null,
-      pagination: { current_page: 1, per_page: 10, total_pages: 0 },
-      fetchSuppliers: vi.fn(),
-      deleteSupplier: vi.fn(),
-      clearSuppliers: vi.fn(),
-    };
+    STORE_STATE = baseState();
     render(<SuppliersPage />);
     const emptyInitial = screen.queryByTestId('suppliers-empty-initial');
     expect(emptyInitial).toBeInTheDocument();
   });
 
   test('shows error DataState when store.error present', () => {
-    STORE_STATE = {
-      suppliers: [],
-      loading: false,
-      error: 'Fallo controlado en suppliers',
-      pagination: { current_page: 1, per_page: 10, total_pages: 0 },
-      fetchSuppliers: vi.fn(),
-      deleteSupplier: vi.fn(),
-      clearSuppliers: vi.fn(),
-    };
+    STORE_STATE = baseState({ error: 'Fallo controlado en suppliers' });
     render(<SuppliersPage />);
     const err = screen.queryByTestId('suppliers-error');
     if (err) {

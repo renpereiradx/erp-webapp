@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from 'next-themes';
 import {
   Plus,
@@ -12,9 +12,13 @@ import {
   CheckCircle,
   XCircle,
   Filter,
-  BarChart3
+  BarChart3,
+  AlertTriangle,
+  WifiOff,
+  RefreshCw
 } from 'lucide-react';
 import useSupplierStore from '@/store/useSupplierStore';
+import { useShallow } from 'zustand/react/shallow';
 import SupplierModal from '@/components/SupplierModal';
 import DeleteSupplierModal from '@/components/DeleteSupplierModal';
 import ToastContainer from '@/components/ui/ToastContainer';
@@ -34,16 +38,41 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/Button';
 import DataState from '@/components/ui/DataState';
 import { useI18n } from '@/lib/i18n';
+import SuppliersMetricsPanel from '@/components/SuppliersMetricsPanel';
 
 const SuppliersPage = () => {
   const { theme } = useTheme();
   const { button: themeButton, input: themeInput, card, header: themeHeader, label: themeLabel } = useThemeStyles();
   const { toasts, success, error: showError, errorFrom, removeToast } = useToast();
   const {
-    suppliers, loading, error, pagination,
-  fetchSuppliers, loadPage, deleteSupplier, clearSuppliers,
-    lastErrorHintKey
-  } = useSupplierStore();
+    suppliers,
+    loading,
+    error,
+    pagination,
+    lastErrorHintKey,
+    isOffline,
+    lastQuery,
+    pageCacheTTL,
+    pageCacheTs
+  } = useSupplierStore(useShallow(state => {
+    const { page, pageSize, search } = state.lastQuery || { page: 1, pageSize: 10, search: '' };
+    const key = `${search || '__'}|${page}`;
+    return {
+      suppliers: state.suppliers,
+      loading: state.loading,
+      error: state.error,
+      pagination: state.pagination,
+      lastErrorHintKey: state.lastErrorHintKey,
+      isOffline: state.isOffline,
+      lastQuery: state.lastQuery,
+      pageCacheTTL: state.pageCacheTTL,
+      pageCacheTs: state.pageCache[key]?.ts || 0
+    };
+  }));
+  const loadPage = useSupplierStore(s => s.loadPage);
+  const deleteSupplier = useSupplierStore(s => s.deleteSupplier);
+  const clearSuppliers = useSupplierStore(s => s.clearSuppliers);
+  const forceRefetch = useSupplierStore(s => s.forceRefetch);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [localSearchTerm, setLocalSearchTerm] = useState('');
@@ -65,7 +94,7 @@ const SuppliersPage = () => {
     if (error) {
       const hint = lastErrorHintKey ? t(lastErrorHintKey) : undefined;
       errorFrom(new Error(hint ? `${error} (${hint})` : error));
-      telemetry.record('suppliers.error.store', { message: error, hint: lastErrorHintKey });
+      telemetry.record?.('feature.suppliers.error', { op: 'store', message: error, hint: lastErrorHintKey });
     }
   }, [error, lastErrorHintKey, errorFrom, t]);
 
@@ -99,24 +128,26 @@ const SuppliersPage = () => {
   }, [showSupplierModal, showDeleteModal]);
 
   useEffect(() => {
-    // Limpiar proveedores al montar la página
-    clearSuppliers();
-    // clearSuppliers es estable en nuestro store
+    // Cargar primera página si la lista está vacía
+    try {
+      const storeRef = useSupplierStore.getState ? useSupplierStore.getState() : null;
+      if (storeRef && !storeRef.suppliers.length) {
+        storeRef.loadPage?.(1, 10, '');
+      }
+    } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearch = () => {
     if (searchTerm.trim() !== '') {
-      const t = telemetry.startTimer('suppliers.search');
+      const tStart = telemetry.startTimer('feature.suppliers.search');
       Promise.resolve(loadPage(1, 10, searchTerm))
         .then(() => {
-          const ms = telemetry.endTimer(t, { term: searchTerm });
-          telemetry.record('suppliers.search.success', { ms });
+          const ms = telemetry.endTimer(tStart, { term: searchTerm });
           telemetry.record?.('feature.suppliers.search.success', { latencyMs: ms, term: searchTerm });
         })
         .catch((err) => {
-          telemetry.endTimer(t);
-          telemetry.record('suppliers.search.error', { message: err?.message });
+          telemetry.endTimer(tStart);
           telemetry.record?.('feature.suppliers.error', { op: 'search', message: err?.message });
         });
     }
@@ -141,12 +172,10 @@ const SuppliersPage = () => {
       await deleteSupplier(selectedSupplier.id);
       setShowDeleteModal(false);
       success('Proveedor eliminado');
-      telemetry.record('suppliers.delete.success', { id: selectedSupplier.id });
       telemetry.record?.('feature.suppliers.delete-success', { id: selectedSupplier.id });
       restoreFocus();
     } catch (err) {
-      telemetry.record('suppliers.delete.error', { id: selectedSupplier.id, message: err?.message });
-      telemetry.record?.('feature.suppliers.error', { op: 'delete', message: err?.message });
+      telemetry.record?.('feature.suppliers.error', { op: 'delete', message: err?.message, id: selectedSupplier.id });
       errorFrom(err, { fallback: 'Error al eliminar proveedor' });
     }
   };
@@ -155,7 +184,6 @@ const SuppliersPage = () => {
     setShowSupplierModal(false);
     loadPage(pagination.current_page || 1, pagination.per_page || 10, searchTerm);
     success('Operación de proveedor completada.');
-    telemetry.record('suppliers.modal.success');
     telemetry.record?.('feature.suppliers.update-success');
     restoreFocus();
   };
@@ -248,11 +276,48 @@ const SuppliersPage = () => {
     );
   };
 
+  useEffect(() => {
+    const unsub = () => {};
+    if (typeof window !== 'undefined') {
+      const handler = () => {
+        try {
+          const st = useSupplierStore.getState();
+          if (!st.isOffline && st.autoRefetchOnReconnect) {
+            const { page, pageSize, search } = st.lastQuery || { page: 1, pageSize: 10, search: '' };
+            st.forceRefetch?.(page, pageSize, search);
+            telemetry.record?.('feature.suppliers.offline.auto_refetch', { page, search: !!search });
+          }
+        } catch (_) {}
+      };
+      window.addEventListener('online', handler);
+      return () => window.removeEventListener('online', handler);
+    }
+    return unsub;
+  }, []);
+
+  // Compute stale (without causing new object each render): only when ts changes
+  const cacheMeta = useMemo(() => {
+    if (!pageCacheTs) return { stale: false };
+    // We purposefully DO NOT include Date.now() in deps so it does not trigger rerenders; staleness updates on next store activity
+    return { stale: Date.now() - pageCacheTs > pageCacheTTL / 2 };
+  }, [pageCacheTs, pageCacheTTL]);
+
   return (
     <div className="min-h-screen bg-background text-foreground p-6" data-testid="suppliers-page">
+      {isOffline && (
+        <div className="max-w-7xl mx-auto mb-4" data-testid="suppliers-offline-banner">
+          <div className="flex items-center gap-3 p-3 rounded-md border border-amber-300 bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-200" role="status" aria-live="polite">
+            <WifiOff className="w-4 h-4" />
+            <span className="text-sm font-medium">{t('suppliers.offline.banner') || 'Trabajando sin conexión. Los datos pueden estar desactualizados.'}</span>
+            <button type="button" onClick={() => { if (lastQuery) forceRefetch?.(lastQuery.page, lastQuery.pageSize, lastQuery.search); }} className="ml-auto inline-flex items-center gap-1 px-2 py-1 text-[11px] font-semibold rounded bg-amber-200 hover:bg-amber-300 dark:bg-amber-800 dark:hover:bg-amber-700 transition" data-testid="suppliers-offline-retry">
+              <RefreshCw className="w-3 h-3" /> Retry
+            </button>
+          </div>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto space-y-8">
         <PageHeader
-          title={isNeoBrutalism ? 'GESTIÓN DE PROVEEDORES' : 'Gestión de Proveedores'}
+          title={<span className="inline-flex items-center gap-2">{isNeoBrutalism ? 'GESTIÓN DE PROVEEDORES' : 'Gestión de Proveedores'}{cacheMeta?.stale && <span className="px-2 py-0.5 rounded bg-amber-200 dark:bg-amber-700 text-amber-900 dark:text-amber-100 text-[10px] font-bold tracking-wide" data-testid="suppliers-stale-badge">{t('suppliers.stale.badge') || 'STALE'}</span>}</span>}
           subtitle={isNeoBrutalism ? 'BUSCA, CREA Y ADMINISTRA TUS PROVEEDORES' : 'Busca, crea y administra tus proveedores.'}
           actions={(
             <>
@@ -269,6 +334,10 @@ const SuppliersPage = () => {
         />
 
         <section className={card('p-6')}>
+          {/* Metrics panel (dev only suggestion) */}
+          <div className="mb-4">
+            <SuppliersMetricsPanel />
+          </div>
           <div className="mb-6">
             <div className={`${themeHeader('h3')} mb-3`}>{isNeoBrutalism ? 'BUSCAR PROVEEDORES' : t('suppliers.search.db')}</div>
             <div className="flex gap-3 mb-4">

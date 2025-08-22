@@ -12,18 +12,20 @@ class SupplierService {
   async getSuppliers({ page = 1, limit = 10, search = '' }) {
     try {
       const endpoint = search ? `/supplier/name/${encodeURIComponent(search)}` : `/supplier/${page}/${limit}`;
-      const data = await apiService.get(endpoint);
-      
-      return {
-        success: true,
-        data: data
-      };
+      const apiResp = await apiService.get(endpoint);
+      // Normalizar: si la API mock devuelve { success: true, data: { data: [...], pagination } }
+      // desanidar para que el store detecte hasPagination (raw.data debe ser array)
+      let unwrapped = apiResp;
+      if (apiResp && apiResp.success === true && apiResp.data && typeof apiResp.data === 'object') {
+        const inner = apiResp.data;
+        if (inner && Array.isArray(inner.data)) {
+          unwrapped = inner; // { data: [...], pagination }
+        }
+      }
+      return { success: true, data: unwrapped };
     } catch (error) {
       console.error('Error obteniendo proveedores:', error);
-      return {
-        success: false,
-        error: error.message || 'Error al obtener la lista de proveedores'
-      };
+      return { success: false, error: error.message || 'Error al obtener la lista de proveedores' };
     }
   }
 

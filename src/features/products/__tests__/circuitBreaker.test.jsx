@@ -23,7 +23,15 @@ const fail = () => Promise.reject(new Error('Network fail'));
 
 describe('Circuit breaker & prefetch', () => {
   beforeEach(() => {
-    useProductStore.getState().reset();
+    useProductStore.getState().reset?.();
+    // Ensure circuit initial state present
+    if (!useProductStore.getState().circuit) {
+      useProductStore.setState({ circuit: { openUntil: 0, failures: 0, threshold: 4, cooldownMs: 3000 }, circuitOpen: false });
+    }
+    // lower cooldown for test speed
+    useProductStore.setState(s => ({ circuit: { ...s.circuit, cooldownMs: 100 } }));
+    // fast retries for predictability
+    useProductStore.getState().setTestingFastRetries?.(true);
     vi.clearAllMocks();
   });
   afterEach(() => {

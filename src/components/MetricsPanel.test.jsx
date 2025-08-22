@@ -18,14 +18,31 @@ vi.mock('@/store/useProductStore', () => {
   };
 });
 
+vi.mock('@/lib/i18n', () => ({
+  useI18n: () => ({
+    t: (k) => {
+      const map = {
+        'metrics.panel.title': 'Métricas',
+        'metrics.cache.label': 'label',
+        'metrics.cache_hits': 'Hits',
+        'metrics.cache_misses': 'Misses',
+        'metrics.cache_ratio': 'Ratio hits',
+        'metrics.circuit.label': 'Circuito',
+        'metrics.circuit.failures': 'Fallos',
+        'metrics.circuit.open': 'Abierto',
+        'metrics.circuit.closed': 'Cerrado'
+      };
+      return map[k];
+    }
+  })
+}));
+
 describe('MetricsPanel', () => {
-  test('renders cache stats and circuit info', () => {
+  test('renderiza métricas básicas sin colisiones de selectores', () => {
     render(<MetricsPanel />);
-    expect(screen.getByText(/Hits/i)).toBeInTheDocument();
-    // match label + value allowing whitespace/newlines
-    expect(screen.getByText(/cache hits\s*:\s*5/i)).toBeInTheDocument();
-    expect(screen.getByText(/cache misses\s*:\s*3/i)).toBeInTheDocument();
-    expect(screen.getByText(/Failures/i)).toBeInTheDocument();
-    expect(screen.getByText(/failures\s*:\s*2/i)).toBeInTheDocument();
+    expect(screen.getByTestId('metrics-hits').textContent).toMatch(/5/);
+    expect(screen.getByTestId('metrics-misses').textContent).toMatch(/3/);
+    expect(screen.getByTestId('metrics-ratio').textContent).toMatch(/63/);
+    expect(screen.getByTestId('metrics-failures').textContent).toMatch(/2/);
   });
 });

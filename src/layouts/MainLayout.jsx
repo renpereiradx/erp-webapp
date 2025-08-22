@@ -476,8 +476,8 @@ const MainLayout = ({ children }) => {
                   to={item.href}
                   className={`erp-nav-item group flex items-center px-4 py-3 text-sm ${getTitleClass('body')} ${isNeoBrutalist ? '' : isFluent ? 'fluent-radius-small' : 'rounded-md'} transition-all duration-200`}
                   style={navStyles}
-                  data-component="nav-item" 
-                  data-testid={`nav-item-${item.name.toLowerCase()}`}
+                  data-component="nav-item"
+                  data-testid={item.name === 'Proveedores' ? 'nav-proveedores' : `nav-item-${item.name.toLowerCase()}`}
                   data-active={active}
                   onMouseEnter={(e) => {
                     if (!active && !isNeoBrutalist) {

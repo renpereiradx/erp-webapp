@@ -7,7 +7,7 @@ export default function MetricsPanel() {
   const { t } = useI18n();
   const [{ hits, misses, ratio }, setNothing] = React.useState({ hits: 0, misses: 0, ratio: 0 });
   const cacheStats = useProductStore((s) => s.selectors.selectCacheStats(s));
-  const circuit = useProductStore((s) => s.circuit);
+  const circuit = useProductStore((s) => s.circuit || { failures: 0, openUntil: 0, threshold: 4, cooldownMs: 30000 });
   const circuitOpen = useProductStore((s) => s.circuitOpen);
 
   React.useEffect(() => {
@@ -22,16 +22,16 @@ export default function MetricsPanel() {
           <div className="text-sm font-medium">{t('metrics.cache.label') || 'Cache'}</div>
         </div>
         <div className="text-right text-xs">
-          <div>{t('metrics.cache_hits') || 'Hits'}: {cacheStats.hits}</div>
-          <div>{t('metrics.cache_misses') || 'Misses'}: {cacheStats.misses}</div>
-          <div>{t('metrics.cache_ratio') || 'Hit ratio'}: {(cacheStats.ratio * 100).toFixed(0)}%</div>
+          <div data-testid="metrics-hits">{t('metrics.cache_hits') || 'Hits'}: {cacheStats.hits}</div>
+          <div data-testid="metrics-misses">{t('metrics.cache_misses') || 'Misses'}: {cacheStats.misses}</div>
+          <div data-testid="metrics-ratio">{t('metrics.cache_ratio') || 'Hit ratio'}: {(cacheStats.ratio * 100).toFixed(0)}%</div>
         </div>
       </div>
       <div className="h-px my-2 bg-slate-200 dark:bg-slate-700" />
       <div className="flex items-center justify-between text-xs">
         <div>{t('metrics.circuit.label') || 'Circuit'}</div>
         <div>
-          <div>{t('metrics.circuit.failures') || 'Failures'}: {circuit?.failures ?? 0}</div>
+          <div data-testid="metrics-failures">{t('metrics.circuit.failures') || 'Failures'}: {circuit?.failures ?? 0}</div>
           <div>{t('metrics.circuit.open') || 'Open'}: {circuitOpen ? t('metrics.circuit.open_until', { when: new Date(circuit?.openUntil).toLocaleTimeString() }) : (t('metrics.circuit.closed') || 'Closed')}</div>
         </div>
       </div>

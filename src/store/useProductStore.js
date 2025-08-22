@@ -3,6 +3,75 @@
  * Requiere autenticación para acceder a los datos
  */
 
+/**
+ * @typedef {Object} Product
+ * @property {string|number} id
+ * @property {string} [name]
+ * @property {string} [description]
+ * @property {boolean} [is_active]
+ * @property {number} [price]
+ * @property {Record<string,any>} [meta]
+ *
+ * @typedef {Object} PageCacheEntry
+ * @property {number} ts Timestamp en ms
+ * @property {Product[]} products
+ *
+ * @typedef {Object} SearchCacheEntry
+ * @property {number} ts
+ * @property {Product[]} data
+ *
+ * @typedef {Object} CircuitState
+ * @property {number} openUntil
+ * @property {number} failures
+ * @property {number} threshold
+ * @property {number} cooldownMs
+ *
+ * @typedef {Object} CacheStats
+ * @property {number} hits
+ * @property {number} misses
+ * @property {number} ratio
+ *
+ * @typedef {Object} ProductStoreSelectors
+ * @property {(s:ProductStoreState)=>Product[]} selectProducts
+ * @property {(s:ProductStoreState)=>Record<string,Product>} selectProductsById
+ * @property {(s:ProductStoreState)=>string[]} selectSelectedIds
+ * @property {(s:ProductStoreState)=>{totalProducts:number,currentPage:number,totalPages:number,pageSize:number}} selectBasicMeta
+ * @property {(s:ProductStoreState)=>Product[]} selectCategories
+ * @property {(s:ProductStoreState)=>{loading:boolean,error:string|null}} selectLoadingError
+ * @property {(s:ProductStoreState)=>string} selectLastSearchTerm
+ * @property {(s:ProductStoreState)=>CacheStats} selectCacheStats
+ *
+ * @typedef {Object} ProductStoreState
+ * @property {Product[]} products
+ * @property {Record<string,Product>} productsById
+ * @property {Record<number,PageCacheEntry>} pageCache
+ * @property {Record<string,SearchCacheEntry>} searchCache
+ * @property {number} pageCacheTTL
+ * @property {number} cacheTTL
+ * @property {number} cacheHits
+ * @property {number} cacheMisses
+ * @property {string[]} selectedIds
+ * @property {Product|null} selectedProduct
+ * @property {boolean} loading
+ * @property {string|null} error
+ * @property {AbortController|null} fetchAbortController
+ * @property {Record<string,number>} errorCounters
+ * @property {string|null} lastErrorCode
+ * @property {string|null} lastErrorHintKey
+ * @property {boolean} isOffline
+ * @property {CircuitState} circuit
+ * @property {boolean} circuitOpen
+ * @property {any} circuitTimeoutId
+ * @property {{overrideTTL:number|null,fastRetries:boolean,overrideRetryConfig?:{attempts?:number,baseDelay?:number}}} _testing
+ * @property {number} currentPage
+ * @property {number} pageSize
+ * @property {number} totalProducts
+ * @property {number} totalPages
+ * @property {string} lastSearchTerm
+ * @property {{search:string,category:string,status:string,sortBy:string,sortOrder:string}} filters
+ * @property {ProductStoreSelectors} selectors
+ */
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { productService } from '@/services/productService';
@@ -11,12 +80,14 @@ import { apiClient } from '@/services/api';
 import { toApiError } from '@/utils/ApiError';
 import { telemetry } from '@/utils/telemetry';
 import { isConnectionError, getConnectionErrorMessage } from '@/utils/connectionUtils';
+import { classifyError, withRetry as sharedWithRetry } from './helpers/reliability';
+import { createCircuitHelpers } from './helpers/circuit';
+import { lruTrim } from './helpers/cache';
+import { createOfflineSnapshotHelpers } from './helpers/offline';
 
-// Jitter helper
-const _jitter = (base) => {
-  const rand = Math.random();
-  return base + (rand * 0.3 * base); // +-30%
-};
+// Circuit breaker helpers
+const circuit = createCircuitHelpers('products', telemetry);
+const offline = createOfflineSnapshotHelpers('products_last_offline_snapshot','products', telemetry);
 
 const useProductStore = create(
   devtools(
@@ -39,6 +110,10 @@ const useProductStore = create(
       lastErrorCode: null,
       lastErrorHintKey: null,
       isOffline: false,
+      // Circuit breaker state
+      circuit: { openUntil: 0, failures: 0, threshold: 4, cooldownMs: 30000 },
+      circuitOpen: false,
+      circuitTimeoutId: null,
       // para pruebas podemos ajustar TTL
       _testing: { overrideTTL: null, fastRetries: false, overrideRetryConfig: null },
 
@@ -69,90 +144,44 @@ const useProductStore = create(
       setError: (error) => set({ error }),
       clearError: () => set({ error: null, lastErrorCode: null, lastErrorHintKey: null }),
       setIsOffline: (flag) => set({ isOffline: !!flag }),
-      _recordFailure: () => {
-        const state = get();
-        const failures = state.circuit.failures + 1;
-        let openUntil = state.circuit.openUntil;
-        let timeoutId = state.circuitTimeoutId;
-        if (failures >= state.circuit.threshold) {
-          openUntil = Date.now() + state.circuit.cooldownMs;
-          // reset any previous timeout
-          try { if (timeoutId) clearTimeout(timeoutId); } catch (e) {}
-          // schedule a new timeout that will reliably close the circuit
-          const id = setTimeout(() => {
-            try { get()._closeCircuit('timeout'); } catch (e) {}
-          }, state.circuit.cooldownMs);
-          timeoutId = id;
-          // mark circuit open flag
-          set({ circuit: { ...state.circuit, failures, openUntil }, circuitTimeoutId: timeoutId, circuitOpen: true });
-          try { telemetry.record('circuit.open', { component: 'products', failures, openUntil }); } catch {}
-          return;
-        }
-        set({ circuit: { ...state.circuit, failures, openUntil } });
-      },
-      _recordSuccess: () => {
-        const state = get();
-        try { if (state.circuitTimeoutId) { clearTimeout(state.circuitTimeoutId); } } catch (e) {}
-        get()._closeCircuit('success');
-      },
-      _circuitOpen: () => {
-        const state = get();
-        const openUntil = state.circuit?.openUntil || 0;
-        if (openUntil && Date.now() >= openUntil) {
-          try { if (state.circuitTimeoutId) clearTimeout(state.circuitTimeoutId); } catch (e) {}
-          get()._closeCircuit('cooldown-expired');
-          return false;
-        }
-        return !!state.circuitOpen && openUntil && Date.now() < openUntil;
-      },
-      // Helper centralizado para cerrar circuito (DRY)
-      _closeCircuit: (reason = 'manual') => {
-        set((s) => ({ circuit: { ...s.circuit, failures: 0, openUntil: 0 }, circuitTimeoutId: null, circuitOpen: false }));
-        try { telemetry.record('circuit.close', { component: 'products', reason }); } catch {}
-      },
+      _recordFailure: () => circuit.recordFailure(get, set),
+      _recordSuccess: () => circuit.recordSuccess(get, set),
+      _circuitOpen: () => circuit.isOpen(get, set),
+      // Helper para cerrar circuito (DRY)
+      _closeCircuit: (reason = 'manual') => circuit.close(get, set, reason),
 
       // Helper para ejecutar una función con reintentos (backoff + jitter)
       _withRetry: async (fn, opts = {}) => {
-        let attempts = opts.attempts ?? 3;
-        let baseDelay = opts.baseDelay ?? 300;
-        const telemetryKey = opts.telemetryKey;
-
-        // Apply testing overrides if present to make retry behavior deterministic in tests
+        const attempts = opts.attempts ?? 3;
+        const baseDelay = opts.baseDelay ?? 300;
+        const testing = get()._testing || {};
+        const overrideCfg = testing.overrideRetryConfig || {};
+        const fast = testing.fastRetries;
+        const effAttempts = overrideCfg.attempts ?? (fast ? 1 : attempts);
+        const effBaseDelay = overrideCfg.baseDelay ?? (fast ? 0 : baseDelay);
+        const retries = Math.max(0, effAttempts - 1);
         try {
-          const testing = get()._testing || {};
-          if (testing.fastRetries) {
-            attempts = 1;
-            baseDelay = 0;
-          } else if (testing.overrideRetryConfig) {
-            attempts = testing.overrideRetryConfig.attempts ?? attempts;
-            baseDelay = testing.overrideRetryConfig.baseDelay ?? baseDelay;
-          }
-        } catch (e) {}
-
-        let lastErr;
-        for (let attempt = 0; attempt < attempts; attempt++) {
-          try {
-            const res = await fn();
-            // registro de éxito y reseteo de circuito
-            get()._recordSuccess?.();
-            return res;
-          } catch (err) {
-            lastErr = err;
-            // record failure for circuit
-            try { get()._recordFailure(); } catch (e) {}
-            // No reintentar en AbortError
-            if (err?.name === 'AbortError') throw err;
-            // Si es el último intento, volver a lanzar
-            if (attempt === attempts - 1) break;
-            // Esperar con backoff exponencial y jitter
-            const delay = Math.round(baseDelay * Math.pow(2, attempt) * (1 + (Math.random() - 0.5) * 0.3));
-            // Registrar intento en telemetry si aplica
-            try { if (telemetryKey) telemetry.record(`${telemetryKey}.retry`, { attempt: attempt + 1 }); } catch (e) {}
-            await new Promise(r => setTimeout(r, delay));
-          }
+          const res = await sharedWithRetry(() => fn(), {
+            retries,
+            baseDelay: effBaseDelay,
+            op: opts.telemetryKey || 'products.op',
+            telemetryRecord: (event, data) => {
+              if (event === 'feature.retry') {
+                telemetry.record?.('products.retry', { attempt: data.attempt, max: data.max, op: data.op });
+              } else {
+                telemetry.record?.(event, data);
+              }
+            },
+            onRetry: (a, err) => {
+              try { telemetry.record?.('products.retry.attempt', { attempt: a, op: opts.telemetryKey }); } catch {}
+            }
+          });
+          try { circuit.recordSuccess(get, set); } catch {}
+          return res;
+        } catch (err) {
+          try { circuit.recordFailure(get, set); } catch {}
+          throw err;
         }
-        // después de agotar intentos, lanzar último error
-        throw lastErr;
       },
       
       setFilters: (newFilters) => 
@@ -345,7 +374,7 @@ const useProductStore = create(
             telemetry.endTimer(t, { total: totalCount, search: true });
             return { data: paginatedProducts, total: totalCount };
           } else {
-            const response = await get()._withRetry(() => productService.getProducts(currentPage, currentPageSize), { telemetryKey: 'products.fetch' });
+            const response = await get()._withRetry(() => productService.getProducts(currentPage, currentPageSize), { telemetryKey: 'products.fetch', attempts: 3 });
             products = Array.isArray(response) ? response : [response];
             totalCount = products.length;
             const byId = Object.fromEntries(products.map(p => [p.id, p]));
@@ -363,18 +392,11 @@ const useProductStore = create(
             set((s) => ({ pageCache: { ...s.pageCache, [currentPage]: { ts: Date.now(), products } } }));
             // Trim pageCache (LRU-ish by timestamp) si excede 20 páginas
             set((s) => {
-              const keys = Object.keys(s.pageCache);
-              if (keys.length <= 20) return {};
-              const sorted = keys
-                .map(k => ({ k, ts: s.pageCache[k].ts }))
-                .sort((a,b) => a.ts - b.ts);
-              const toRemove = sorted.slice(0, keys.length - 20);
-              if (!toRemove.length) return {};
-              const clone = { ...s.pageCache };
-              toRemove.forEach(r => { delete clone[r.k]; });
-              return { pageCache: clone };
+              const { cache: trimmed, removed } = lruTrim(s.pageCache, 20);
+              if (!removed.length) return {};
+              telemetry.record('products.pageCache.trim', { removed: removed.length, remaining: Object.keys(trimmed).length, limit: 20 });
+              return { pageCache: trimmed };
             });
-            telemetry.record('products.pageCache.trim');
             telemetry.endTimer(t, { total: totalCount });
             return { data: products, total: totalCount };
           }
@@ -403,7 +425,7 @@ const useProductStore = create(
           // Offline snapshot si había datos previos
           const prev = get().products;
           if (prev.length) set({ lastOfflineSnapshot: prev });
-          if (prev.length) get()._persistOfflineSnapshot(prev);
+          if (prev.length) offline.persist(prev);
           throw norm;
         } finally {
           set({ fetchAbortController: null });
@@ -679,6 +701,12 @@ const useProductStore = create(
           });
           telemetry.endTimer(t, { ok: true });
           telemetry.record('products.create.success');
+          try {
+            const st = get();
+            st._invalidatePages(st.currentPage, 1, 'create');
+            // background refetch de la página actual (no await)
+            (async () => { try { await st.fetchProducts(st.currentPage, st.pageSize, st.lastSearchTerm || ''); } catch {} })();
+          } catch {}
           return newProduct;
         } catch (error) {
           telemetry.record('products.create.error', { message: error?.message });
@@ -733,6 +761,11 @@ const useProductStore = create(
           });
           telemetry.endTimer(t, { ok: true });
           telemetry.record('products.delete.success');
+          try {
+            const st = get();
+            st._invalidatePages(st.currentPage, 1, 'delete');
+            (async () => { try { await st.fetchProducts(st.currentPage, st.pageSize, st.lastSearchTerm || ''); } catch {} })();
+          } catch {}
           return true;
         } catch (error) {
           telemetry.record('products.delete.error', { message: error?.message });
@@ -745,9 +778,7 @@ const useProductStore = create(
       setSelectedProduct: (product) => set({ selectedProduct: product }),
       
       // Filtro local (para productos ya cargados)
-      setLocalFilters: (newFilters) => set((state) => ({
-        filters: { ...state.filters, ...newFilters }
-      })), // fixed
+      setLocalFilters: (newFilters) => set((state) => ({ filters: { ...state.filters, ...newFilters } })),
 
       refresh: async () => {
         const state = get();
@@ -791,19 +822,6 @@ const useProductStore = create(
         pageCacheTTL: 120000,
         cacheTTL: 120000,
       }),
-      // Attempt to hydrate offline snapshot on startup
-      hydrateFromStorage: () => {
-        try {
-          const raw = window.localStorage.getItem('products_last_offline_snapshot');
-          if (!raw) return null;
-          const parsed = JSON.parse(raw);
-          set({ products: parsed, productsById: Object.fromEntries(parsed.map(p => [p.id, p])), totalProducts: parsed.length });
-          return parsed;
-        } catch (e) {
-          return null;
-        }
-      },
-
       // Selectores memoizados (para consumo en componentes)
       selectors: {
         selectProducts: (state) => state.products,
@@ -839,9 +857,8 @@ const useProductStore = create(
         const ids = get().selectedIds;
         if (!ids.length) return;
         const correlationId = `bulkAct_${Date.now()}_${ids.length}`;
-        const prevSnapshot = get().productsById; // snapshot for rollback event
+        const prevSnapshot = get().productsById;
         // Optimista
-        const prev = get().productsById;
         set((state) => {
           const products = state.products.map(p => ids.includes(p.id) ? { ...p, is_active: true } : p);
           const productsById = { ...state.productsById };
@@ -864,7 +881,6 @@ const useProductStore = create(
         const correlationId = `bulkDeact_${Date.now()}_${ids.length}`;
         const prevSnapshot = get().productsById;
         // Optimista
-        const prev = get().productsById;
         set((state) => {
           const products = state.products.map(p => ids.includes(p.id) ? { ...p, is_active: false } : p);
           const productsById = { ...state.productsById };
@@ -907,13 +923,13 @@ const useProductStore = create(
         }
       },
       // Persistir snapshot offline en localStorage
-      _persistOfflineSnapshot: (snapshot) => {
-        try {
-          window.localStorage.setItem('products_last_offline_snapshot', JSON.stringify(snapshot));
-        } catch (e) {
-          // ignore
-        }
+      _persistOfflineSnapshot: (snapshot) => { offline.persist(snapshot); },
+      hydrateFromStorage: () => {
+        const parsed = offline.hydrate();
+        if (parsed) set({ products: parsed, productsById: Object.fromEntries(parsed.map(p=>[p.id,p])), totalProducts: parsed.length });
+        return parsed;
       },
+
       _mapErrorCodeToHintKey: (code) => {
         switch (code) {
           case 'NETWORK': return 'errors.hint.NETWORK';

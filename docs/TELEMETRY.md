@@ -12,7 +12,7 @@ Este proyecto incluye una utilidad de telemetría ligera en `src/utils/telemetry
 - `telemetry.get(event: string)` / `telemetry.getAll()`
   - Devuelve eventos acumulados en memoria (solo para debugging/test).
 
-## Eventos actuales
+## Eventos actuales (namespaces legacy y feature coexistieron; legacy marcados como deprecated)
 
 Productos (`src/pages/Products.jsx` y `src/store/useProductStore.js`)
 - `products.search.success` { ms, total }
@@ -31,32 +31,59 @@ Clientes (`src/pages/Clients.jsx`)
 - `clients.modal.success` {}
 - `clients.error.store` { message }
 
-Proveedores (`src/pages/Suppliers.jsx`)
-- `suppliers.search.success` { ms }
-- `suppliers.search.error` { message }
-- `suppliers.delete.success` { id }
-- `suppliers.delete.error` { id, message }
-- `suppliers.modal.success` {}
-- `suppliers.error.store` { message }
+Proveedores – feature namespace (`src/store/useSupplierStore.js`, `src/pages/Suppliers.jsx`, `SuppliersMetricsPanel`)
+- `feature.suppliers.load` { page, count, search, latencyMs }
+- `feature.suppliers.search.success` { latencyMs, term }
+- `feature.suppliers.search.error` { message, term? } (emitido en paths de error búsqueda)
+- `feature.suppliers.create` { latencyMs }
+- `feature.suppliers.update-success` { latencyMs }
+- `feature.suppliers.delete-success` { latencyMs }
+- `feature.suppliers.error` { code, op?, page?, search?, latencyMs, message? }
+- `feature.suppliers.retry` { attempt, max, op }
+- `feature.suppliers.cache.hit` { page, search }
+- `feature.suppliers.cache.miss` { page, search }
+- `feature.suppliers.cache.revalidate.success` { page }
+- `feature.suppliers.cache.revalidate.error` { page, message }
+- `feature.suppliers.cache.trim` { removed, remaining, limit }
+- `feature.suppliers.cache.reset` {}
+- `feature.suppliers.prefetch.success` { page, count }
+- `feature.suppliers.prefetch.error` { page, message }
+- `feature.suppliers.prefetch.skip` { page, reason }
+- `feature.suppliers.circuit.open` { failures, openUntil }
+- `feature.suppliers.circuit.close` { reason, durationMs? }
+- `feature.suppliers.circuit.skip` { page, search, context? }
+- `feature.suppliers.circuit.reset` {}
+- `feature.suppliers.circuit.reopened` {}
+- `feature.suppliers.offline.snapshot.persist` { count }
+- `feature.suppliers.offline.snapshot.hydrate` { count }
+- `feature.suppliers.circuit.panel.opened` {}
+- `feature.suppliers.circuit.panel.reopened` {}
+- `feature.suppliers.circuit.panel.closed` {}
+
+(Proveedores legacy – DEPRECATED: `suppliers.search.success|error`, `suppliers.delete.success|error`, `suppliers.modal.success`, `suppliers.error.store`)
 
 ## Uso típico
 ```js
-// Medir una búsqueda
-const t = telemetry.startTimer('products.search');
+// Medir una búsqueda suppliers (feature namespace)
+const t = telemetry.startTimer('feature.suppliers.search');
 try {
-  const res = await searchProducts(term);
-  const ms = telemetry.endTimer(t, { total: res.total });
-  telemetry.record('products.search.success', { ms, total: res.total });
+  await loadPage(1, 10, term);
+  const ms = telemetry.endTimer(t, { term });
+  telemetry.record('feature.suppliers.search.success', { latencyMs: ms, term });
 } catch (err) {
   telemetry.endTimer(t);
-  telemetry.record('products.search.error', { message: err?.message });
+  telemetry.record('feature.suppliers.error', { op: 'search', message: err?.message });
 }
 ```
 
 ## Pruebas
 En tests se stubbean con:
-- `vi.mock('@/utils/telemetry', () => ({ telemetry: { record: vi.fn(), startTimer: vi.fn(), endTimer: vi.fn() } }))`
-- Se verifican las llamadas a `telemetry.record(...)`.
+```js
+vi.mock('@/utils/telemetry', () => ({
+  telemetry: { record: vi.fn(), startTimer: vi.fn(), endTimer: vi.fn() }
+}));
+```
+Se verifican las llamadas a `telemetry.record(...)`.
 
 ## Notas
 - La telemetría es en memoria y no persiste. Adecuada para debugging/local y tests.
