@@ -1,53 +1,63 @@
 /**
- * Report Builder - Wave 6: Advanced Analytics & Reporting
- * Enterprise-grade custom report generation system
+ * Report Builder Component
+ * Wave 6: Advanced Analytics & Reporting - Phase 3
  * 
- * Features:
- * - Drag-and-drop report builder interface
- * - Multiple output formats (PDF, Excel, CSV, HTML)
- * - Scheduled report generation and distribution
- * - Interactive preview and customization
- * - Template library and custom templates
- * - Real-time data integration
- * 
- * Architecture: Visual report builder with template system
- * Enfoque: Hardened Implementation - Production ready from day 1
+ * Advanced drag-and-drop report builder with real-time preview,
+ * multiple export formats, and comprehensive customization options
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  FileText,
-  Plus,
-  Save,
-  Download,
-  Eye,
-  Settings,
-  Calendar,
-  Mail,
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { 
+  FileText, 
+  Download, 
+  Eye, 
+  Settings, 
   Filter,
+  Calendar,
   BarChart3,
+  Table,
+  Image,
+  Palette,
+  Type,
+  Layout,
+  Save,
+  Play,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  X,
+  Plus,
+  Trash2,
+  Copy,
+  Upload,
+  RefreshCw,
+  Mail,
   PieChart,
   LineChart,
   Grid,
-  Type,
-  Image,
-  Table,
   Clock,
   Users,
-  Copy,
-  Trash2,
   Edit,
-  Play,
   Pause,
-  RefreshCw,
-  CheckCircle,
-  XCircle,
-  AlertCircle
+  XCircle
 } from 'lucide-react';
-
-import { useAnalyticsStore } from '@/store/useAnalyticsStore';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
-import { t } from '@/lib/i18n';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { useI18n } from '@/lib/i18n';
+import useReportsStore from '@/store/useReportsStore';
 import { telemetry } from '@/utils/telemetry';
 
 // Report template card component
