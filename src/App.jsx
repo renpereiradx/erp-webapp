@@ -16,6 +16,7 @@ import BookingSales from '@/pages/BookingSales';
 import Purchases from '@/pages/Purchases';
 import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
+import SessionsPage from '@/pages/SessionsPage';
 import ProductDetailTest from '@/components/ProductDetailTest';
 import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import useAuthStore from '@/store/useAuthStore';
@@ -102,6 +103,7 @@ function App() {
                     <Route path="/reservas-ventas" element={<Navigate to="/reservas" replace />} />
                     <Route path="/booking-sales" element={<Navigate to="/ventas" replace />} />
                     <Route path="/configuracion" element={<Settings />} />
+                    <Route path="/sesiones" element={<SessionsPage />} />
                     <Route path="/test-products" element={<ProductDetailTest />} />
                     <Route path="/debug-products" element={<ProductComparisonDebug />} />
                     
