@@ -23,24 +23,24 @@ class ReservationServiceV2 {
   async withFallback(apiCall, mockCall, operation = 'unknown') {
     try {
       if (!this.useApi) {
-        console.log(`[telemetry] reservations.service.mock.${operation}`);
+        console.log(`[telemetry] feature.reservations.service.mock.${operation}`);
         return await mockCall();
       }
 
       // Verificar token JWT antes de hacer llamada
       if (!this._hasValidJWT()) {
-        console.warn(`[telemetry] reservations.service.api.${operation}.no_jwt_fallback`);
+        console.warn(`[telemetry] feature.reservations.service.api.${operation}.no_jwt_fallback`);
         this.useApi = false;
         return await mockCall();
       }
 
-      console.log(`[telemetry] reservations.service.api.${operation}.attempt`);
+      console.log(`[telemetry] feature.reservations.service.api.${operation}.attempt`);
       const result = await apiCall();
-      console.log(`[telemetry] reservations.service.api.${operation}.success`);
+      console.log(`[telemetry] feature.reservations.service.api.${operation}.success`);
       return result;
     } catch (error) {
       console.warn(`API call failed for ${operation}, falling back to mock:`, error.message);
-      console.log(`[telemetry] reservations.service.api.${operation}.fallback`, {
+      console.log(`[telemetry] feature.reservations.service.api.${operation}.fallback`, {
         error: error.message,
         code: error.code,
         status: error.response?.status

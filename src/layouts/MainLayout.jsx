@@ -189,11 +189,18 @@ const MainLayout = ({ children }) => {
       badge: '5'
     },
     { 
-      name: 'Reservas y Ventas', 
-      href: '/reservas-ventas', 
+      name: 'Reservas', 
+      href: '/reservas', 
       icon: Calendar, 
       color: 'purple',
       badge: '6'
+    },
+    { 
+      name: 'Ventas', 
+      href: '/ventas', 
+      icon: ShoppingCart, 
+      color: 'green',
+      badge: '7'
     },
     { 
       name: 'Pedidos', 

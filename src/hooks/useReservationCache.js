@@ -42,7 +42,7 @@ export const useReservationCache = (options = {}) => {
     cache.set(key, data, pageCacheTTL);
     
     // Log para telemetría
-    console.log(`[telemetry] reservations.cache.page.set`, { 
+    console.log(`[telemetry] feature.reservations.cache.page.set`, { 
       key, 
       count: data?.reservations?.length || 0,
       hasNext: !!data?.pagination?.hasNext
@@ -73,7 +73,7 @@ export const useReservationCache = (options = {}) => {
 
   // Invalidación inteligente post-mutación
   const invalidateAfterMutation = useCallback((mutationType, reservationData = {}) => {
-    console.log(`[telemetry] reservations.cache.invalidate.${mutationType}`, reservationData);
+    console.log(`[telemetry] feature.reservations.cache.invalidate.${mutationType}`, reservationData);
 
     switch (mutationType) {
       case 'create':
@@ -90,7 +90,7 @@ export const useReservationCache = (options = {}) => {
           cache.invalidatePattern(`^schedules#.*productId:${reservationData.product_id}`);
         }
         
-        console.log(`[telemetry] reservations.cache.invalidate.complete`, {
+        console.log(`[telemetry] feature.reservations.cache.invalidate.complete`, {
           mutationType,
           pagesInvalidated,
           productId: reservationData.product_id
@@ -123,7 +123,7 @@ export const useReservationCache = (options = {}) => {
     
     // Skip si ya está en cache o en cola de prefetch
     if (cache.get(nextPageKey) || prefetchQueueRef.current.has(nextPageKey)) {
-      console.log(`[telemetry] reservations.prefetch.skip`, { 
+      console.log(`[telemetry] feature.reservations.prefetch.skip`, { 
         key: nextPageKey, 
         reason: cache.get(nextPageKey) ? 'already_cached' : 'in_queue'
       });
@@ -133,21 +133,21 @@ export const useReservationCache = (options = {}) => {
     prefetchQueueRef.current.add(nextPageKey);
 
     try {
-      console.log(`[telemetry] reservations.prefetch.start`, { key: nextPageKey });
+      console.log(`[telemetry] feature.reservations.prefetch.start`, { key: nextPageKey });
       
       const data = await fetchFunction({ ...currentFilters, page: nextPage });
       
       if (data && data.reservations && data.reservations.length > 0) {
         setCachedPage(data, currentFilters, nextPage);
-        console.log(`[telemetry] reservations.prefetch.success`, { 
+        console.log(`[telemetry] feature.reservations.prefetch.success`, { 
           key: nextPageKey,
           count: data.reservations.length
         });
       } else {
-        console.log(`[telemetry] reservations.prefetch.empty`, { key: nextPageKey });
+        console.log(`[telemetry] feature.reservations.prefetch.empty`, { key: nextPageKey });
       }
     } catch (error) {
-      console.log(`[telemetry] reservations.prefetch.error`, { 
+      console.log(`[telemetry] feature.reservations.prefetch.error`, { 
         key: nextPageKey,
         error: error.message
       });
@@ -169,17 +169,17 @@ export const useReservationCache = (options = {}) => {
     backgroundTasksRef.current.add(key);
 
     try {
-      console.log(`[telemetry] reservations.revalidate.background.start`, { key });
+      console.log(`[telemetry] feature.reservations.revalidate.background.start`, { key });
       
       const data = await fetchFunction({ ...filters, page });
       setCachedPage(data, filters, page);
       
-      console.log(`[telemetry] reservations.revalidate.background.success`, { 
+      console.log(`[telemetry] feature.reservations.revalidate.background.success`, { 
         key,
         count: data?.reservations?.length || 0
       });
     } catch (error) {
-      console.log(`[telemetry] reservations.revalidate.background.error`, { 
+      console.log(`[telemetry] feature.reservations.revalidate.background.error`, { 
         key,
         error: error.message
       });

@@ -41,6 +41,11 @@ import ScheduleGenerator from '../components/reservations/ScheduleGenerator';
 import OfflineBanner from '../components/reservations/OfflineBanner';
 import CircuitBreakerIndicator from '../components/reservations/CircuitBreakerIndicator';
 
+// Nuevos componentes para funcionalidades específicas (Wave 4 completado)
+import ReservationCalendarView from '../components/reservations/ReservationCalendarView';
+import RescheduleModal from '../components/reservations/RescheduleModal';
+import ConsistencyChecker from '../components/reservations/ConsistencyChecker';
+
 const Reservations = () => {
   const { theme } = useTheme();
   const { t } = useI18n();
@@ -51,7 +56,11 @@ const Reservations = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [activeFilters, setActiveFilters] = useState({});
-  const [activeTab, setActiveTab] = useState('list'); // list, create, schedules
+  const [activeTab, setActiveTab] = useState('list'); // list, create, schedules, calendar
+  
+  // Nuevos estados para funcionalidades específicas
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [reservationToReschedule, setReservationToReschedule] = useState(null);
 
   // Wave 5: Network status monitoring
   const networkStatus = useNetworkStatus();
@@ -63,6 +72,12 @@ const Reservations = () => {
       label: t('reservations.tabs.list') || 'Reservas', 
       icon: Calendar,
       description: t('reservations.tabs.list_description') || 'Ver y gestionar reservas existentes'
+    },
+    { 
+      id: 'calendar', 
+      label: t('reservations.tabs.calendar') || 'Calendario', 
+      icon: Calendar,
+      description: t('reservations.tabs.calendar_description') || 'Vista de calendario con disponibilidad'
     },
     { 
       id: 'create', 
@@ -143,7 +158,7 @@ const Reservations = () => {
     if (!forceRefresh) {
       const cachedData = reservationCache.getCachedPage(cacheKey, cacheKey.page);
       if (cachedData) {
-        console.log('[telemetry] reservations.cache.hit', cacheKey);
+        console.log('[telemetry] feature.reservations.cache.hit', cacheKey);
         
         // Verificar si necesita revalidación en background
         if (reservationCache.needsRevalidation(cacheKey, cacheKey.page)) {
@@ -154,7 +169,7 @@ const Reservations = () => {
       }
     }
 
-    console.log('[telemetry] reservations.cache.miss', { ...cacheKey, forceRefresh });
+    console.log('[telemetry] feature.reservations.cache.miss', { ...cacheKey, forceRefresh });
     
     // Cargar desde API/mock
     const data = await fetchReservations(cacheKey);
@@ -340,6 +355,32 @@ const Reservations = () => {
       throw error;
     }
   }, [confirmReservation, reservationCache, loadReservationsWithCache, searchParams]);
+
+  // Nuevos handlers para funcionalidades específicas de Wave 4
+  const handleRescheduleRequest = useCallback((reservation) => {
+    setReservationToReschedule(reservation);
+    setShowRescheduleModal(true);
+    
+    console.log('[telemetry] feature.reservations.reschedule.modal.open', {
+      reservationId: reservation.id,
+      currentTime: reservation.start_time
+    });
+  }, []);
+
+  const handleRescheduleComplete = useCallback(async () => {
+    setShowRescheduleModal(false);
+    setReservationToReschedule(null);
+    
+    // Invalidar cache y refrescar datos
+    reservationCache.invalidateAfterMutation('update', { 
+      id: reservationToReschedule?.id,
+      action: 'reschedule' 
+    });
+    
+    await loadReservationsWithCache(searchParams, true);
+    
+    console.log('[telemetry] feature.reservations.reschedule.complete');
+  }, [reservationCache, loadReservationsWithCache, searchParams, reservationToReschedule]);
 
   const handleRescheduleReservation = useCallback(async (id, newSchedule) => {
     try {
@@ -628,6 +669,7 @@ const Reservations = () => {
                 onEdit={(reservation) => setSelectedReservation(reservation)}
                 onCancel={handleCancelReservation}
                 onConfirm={handleConfirmReservation}
+                onReschedule={handleRescheduleRequest} // Nuevo handler para reprogramar
                 onView={(reservation) => setSelectedReservation(reservation)}
               />
             ))}
@@ -660,6 +702,18 @@ const Reservations = () => {
               </Button>
             </div>
           )}
+        </TabsContent>
+
+        {/* Tab: Vista Calendario */}
+        <TabsContent value="calendar" className="space-y-6">
+          <ReservationCalendarView />
+          
+          {/* Verificador de consistencia en vista minimal */}
+          <ConsistencyChecker 
+            showMinimal={true}
+            autoCheck={true}
+            checkInterval={60000} // 1 minuto para calendario
+          />
         </TabsContent>
 
         {/* Tab: Crear Reserva */}
@@ -716,6 +770,28 @@ const Reservations = () => {
           onSave={handleUpdateReservation}
           onClose={() => setSelectedReservation(null)}
         />
+      )}
+
+      {/* Modal de reprogramación */}
+      {showRescheduleModal && reservationToReschedule && (
+        <RescheduleModal
+          isOpen={showRescheduleModal}
+          onClose={() => setShowRescheduleModal(false)}
+          reservation={reservationToReschedule}
+          onComplete={handleRescheduleComplete}
+        />
+      )}
+
+      {/* Verificador de consistencia flotante (desarrollo) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-20 right-4 z-50">
+          <ConsistencyChecker 
+            showMinimal={true}
+            autoCheck={true}
+            checkInterval={30000}
+            className="shadow-lg"
+          />
+        </div>
       )}
 
       {/* Indicador de carga en background */}

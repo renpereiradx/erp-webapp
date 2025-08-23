@@ -11,6 +11,7 @@ import Products from '@/pages/Products';
 import Clients from '@/pages/Clients';
 import Suppliers from '@/pages/Suppliers';
 import Reservations from '@/pages/Reservations';
+import Sales from '@/pages/Sales';
 import BookingSales from '@/pages/BookingSales';
 import Purchases from '@/pages/Purchases';
 import Login from '@/pages/Login';
@@ -96,7 +97,10 @@ function App() {
                     <Route path="/proveedores" element={<Suppliers />} />
                     <Route path="/compras" element={<Purchases />} />
                     <Route path="/reservas" element={<Reservations />} />
-                    <Route path="/reservas-ventas" element={<BookingSales />} />
+                    <Route path="/ventas" element={<Sales />} />
+                    {/* Backward compatibility - redirect to separated pages */}
+                    <Route path="/reservas-ventas" element={<Navigate to="/reservas" replace />} />
+                    <Route path="/booking-sales" element={<Navigate to="/ventas" replace />} />
                     <Route path="/configuracion" element={<Settings />} />
                     <Route path="/test-products" element={<ProductDetailTest />} />
                     <Route path="/debug-products" element={<ProductComparisonDebug />} />

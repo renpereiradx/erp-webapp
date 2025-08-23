@@ -60,6 +60,62 @@ import { RESERVATION_ACTIONS } from '@/types/reservationTypes';
  * @property {number} openUntil
  * @property {number} openCount
  * @property {number} avgOpenDurationMs
+ *
+ * @typedef {Object} CircuitHistoryEvent
+ * @property {number} timestamp
+ * @property {string} type 'opened'|'closed'|'reset'
+ *
+ * @typedef {Object} ReservationStoreSelectors
+ * @property {(s: ReservationStoreState)=>CacheStats} selectCacheStats
+ * @property {(s: ReservationStoreState)=>CircuitStats} selectCircuitStats
+ * @property {(s: ReservationStoreState)=>{ts: number|null, halfTTL:number}} selectCurrentCacheMeta
+ * @property {(s: ReservationStoreState)=>number} selectCircuitOpenPctLastHr
+ *
+ * @typedef {Object} ReservationStoreState
+ * @property {Reservation[]} reservations
+ * @property {boolean} loading
+ * @property {string|null} error
+ * @property {string|null} lastErrorCode
+ * @property {string|null} lastErrorHintKey
+ * @property {Pagination} pagination
+ * @property {Record<string, PageCacheEntry>} pageCache
+ * @property {number} pageCacheTTL
+ * @property {number} cacheHits
+ * @property {number} cacheMisses
+ * @property {number} retryCount
+ * @property {CircuitState} circuit
+ * @property {boolean} circuitOpen
+ * @property {any} circuitTimeoutId
+ * @property {number} circuitOpenCount
+ * @property {number} circuitTotalOpenDurationMs
+ * @property {number|null} circuitLastOpenedAt
+ * @property {CircuitHistoryEvent[]} circuitOpenHistory
+ * @property {boolean} isOffline
+ * @property {Reservation[]|null} lastOfflineSnapshot
+ * @property {boolean} offlineBannerShown
+ * @property {number|null} lastOfflineAt
+ * @property {number|null} lastOnlineAt
+ * @property {{page:number,pageSize:number,search:string}} lastQuery
+ * @property {boolean} autoRefetchOnReconnect
+ * @property {ReservationStoreSelectors} selectors
+ * // Actions
+ * @property {(value:boolean)=>void} setAutoRefetchOnReconnect
+ * @property {(limit?:number)=>void} _trimPageCache
+ * @property {(search:string,page:number,radius?:number,reason?:string)=>number[]} _invalidatePages
+ * @property {()=>void} clearReservations
+ * @property {()=>void} _recordFailure
+ * @property {()=>void} _recordSuccess
+ * @property {()=>boolean} _circuitOpen
+ * @property {(reason?:string)=>void} _closeCircuit
+ * @property {(snapshot:Reservation[])=>void} _persistOfflineSnapshot
+ * @property {()=>Reservation[]|null} hydrateFromStorage
+ * @property {(flag:boolean)=>void} setIsOffline
+ * @property {(page:number,pageSize:number,search:string,filters?:object)=>Promise<void|{data:Reservation[],circuitOpen?:boolean}>} fetchReservations
+ * @property {(page:number,pageSize:number,search:string,filters?:object)=>Promise<void|{data:Reservation[],circuitOpen?:boolean}>} loadPage
+ * @property {(data:Partial<Reservation>)=>Promise<Reservation>} createReservation
+ * @property {(id:Reservation['id'],data:Partial<Reservation>)=>Promise<Reservation>} updateReservation
+ * @property {(id:Reservation['id'])=>Promise<boolean>} deleteReservation
+ * @property {(id:Reservation['id'],data:{date:string,start_time:string,duration:number})=>Promise<Reservation>} rescheduleReservation
  */
 
 // Environment configuration
