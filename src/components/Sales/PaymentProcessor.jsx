@@ -34,10 +34,14 @@ import {
 
 import { usePaymentStore } from '@/store/usePaymentStore';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useFocusManagement } from '@/hooks/useFocusManagement';
+import { useLiveRegion } from '@/hooks/useLiveRegion';
+import { useTranslation } from '@/hooks/useTranslation';
 import { PAYMENT_TYPES, PAYMENT_STATUSES } from '@/services/paymentArchitecture';
 import { salesPaymentAdapter } from '@/services/salesPaymentAdapter';
 import { purchasePaymentAdapter } from '@/services/purchasePaymentAdapter';
 import { telemetry } from '@/utils/telemetry';
+import { LiveRegion } from '@/components/Common/LiveRegion';
 
 /**
  * Payment Method Icon Component
@@ -73,6 +77,7 @@ const PaymentMethodCard = ({
   onClick 
 }) => {
   const { getTextStyles } = useThemeStyles();
+  const { t } = useTranslation();
   
   return (
     <button
@@ -85,12 +90,18 @@ const PaymentMethodCard = ({
           ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
           : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
       }`}
+      role="radio"
+      aria-checked={isSelected}
+      aria-disabled={isDisabled}
+      aria-describedby={`payment-method-${paymentType}-description`}
+      tabIndex={isDisabled ? -1 : 0}
     >
       <div className="flex flex-col items-center space-y-3">
         <PaymentMethodIcon 
           paymentType={paymentType} 
           size={32} 
           className={isSelected ? 'text-blue-600' : 'text-gray-600'}
+          aria-hidden="true"
         />
         
         <div className="text-center">
@@ -98,7 +109,10 @@ const PaymentMethodCard = ({
             {label}
           </h3>
           {description && (
-            <p className={`${getTextStyles('secondary')} text-sm mt-1`}>
+            <p 
+              id={`payment-method-${paymentType}-description`}
+              className={`${getTextStyles('secondary')} text-sm mt-1`}
+            >
               {description}
             </p>
           )}
@@ -118,6 +132,7 @@ const CashPaymentInput = ({
   currency = 'MXN' 
 }) => {
   const { getTextStyles, getInputStyles } = useThemeStyles();
+  const { t } = useTranslation();
   
   const change = useMemo(() => {
     if (amountReceived > totalAmount) {
@@ -129,35 +144,80 @@ const CashPaymentInput = ({
   const isInsufficient = amountReceived < totalAmount;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" role="group" aria-labelledby="cash-payment-title">
+      <h3 id="cash-payment-title" className="sr-only">
+        {t('payment.cash.title', 'Pago en efectivo')}
+      </h3>
+      
       <div>
-        <label className={`${getTextStyles('primary')} font-medium mb-2 block`}>
-          Monto Recibido
+        <label 
+          htmlFor="amount-received"
+          className={`${getTextStyles('primary')} font-medium mb-2 block`}
+        >
+          {t('payment.cash.amountReceived', 'Monto Recibido')}
         </label>
         <div className="relative">
-          <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <DollarSign 
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 
+            size={20} 
+            aria-hidden="true"
+          />
           <input
+            id="amount-received"
             type="number"
             step="0.01"
             min="0"
             value={amountReceived || ''}
             onChange={(e) => onAmountChange(parseFloat(e.target.value) || 0)}
-            className={`${getInputStyles()} pl-10 text-lg`}
+            className={`${getInputStyles()} pl-10 text-lg ${
+              isInsufficient ? 'border-red-300 focus:border-red-500' : ''
+            }`}
             placeholder="0.00"
             autoFocus
+            aria-describedby="amount-hints"
+            aria-invalid={isInsufficient}
+            aria-required="true"
           />
+        </div>
+        <div id="amount-hints" className="mt-1 space-y-1">
+          <p className={`${getTextStyles('secondary')} text-sm`}>
+            {t('payment.cash.totalDue', 'Total a pagar: {{amount}} {{currency}}', { 
+              amount: totalAmount.toFixed(2), 
+              currency 
+            })}
+          </p>
+          {isInsufficient && (
+            <p className="text-red-600 text-sm" role="alert">
+              {t('payment.cash.insufficient', 'Monto insuficiente. Faltan {{amount}} {{currency}}', {
+                amount: (totalAmount - amountReceived).toFixed(2),
+                currency
+              })}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Amount status indicators */}
       {isInsufficient && amountReceived > 0 && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div 
+          className="p-3 bg-red-50 border border-red-200 rounded-lg"
+          role="alert"
+          aria-live="polite"
+        >
           <div className="flex items-center space-x-2">
-            <AlertCircle size={18} className="text-red-600 flex-shrink-0" />
+            <AlertCircle 
+              size={18} 
+              className="text-red-600 flex-shrink-0" 
+              aria-hidden="true"
+            />
             <div>
-              <p className="text-red-800 font-medium">Monto Insuficiente</p>
+              <p className="text-red-800 font-medium">
+                {t('payment.cash.insufficientTitle', 'Monto Insuficiente')}
+              </p>
               <p className="text-red-700 text-sm">
-                Faltan ${(totalAmount - amountReceived).toFixed(2)}
+                {t('payment.cash.missingAmount', 'Faltan {{amount}}', {
+                  amount: `$${(totalAmount - amountReceived).toFixed(2)}`
+                })}
               </p>
             </div>
           </div>
@@ -165,12 +225,27 @@ const CashPaymentInput = ({
       )}
 
       {change > 0 && (
-        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div 
+          className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+          role="status"
+          aria-live="polite"
+        >
           <div className="flex items-center space-x-2">
-            <Info size={18} className="text-yellow-600 flex-shrink-0" />
+            <Info 
+              size={18} 
+              className="text-yellow-600 flex-shrink-0" 
+              aria-hidden="true"
+            />
             <div>
-              <p className="text-yellow-800 font-medium">Cambio a Devolver</p>
-              <p className="text-yellow-700 text-lg font-bold">
+              <p className="text-yellow-800 font-medium">
+                {t('payment.cash.changeTitle', 'Cambio a Devolver')}
+              </p>
+              <p 
+                className="text-yellow-700 text-lg font-bold"
+                aria-label={t('payment.cash.changeAmount', 'Cambio: {{amount}} pesos', {
+                  amount: change.toFixed(2)
+                })}
+              >
                 ${change.toFixed(2)}
               </p>
             </div>
@@ -179,10 +254,20 @@ const CashPaymentInput = ({
       )}
 
       {amountReceived >= totalAmount && change === 0 && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+        <div 
+          className="p-3 bg-green-50 border border-green-200 rounded-lg"
+          role="status"
+          aria-live="polite"
+        >
           <div className="flex items-center space-x-2">
-            <Check size={18} className="text-green-600 flex-shrink-0" />
-            <p className="text-green-800 font-medium">Monto Exacto</p>
+            <Check 
+              size={18} 
+              className="text-green-600 flex-shrink-0" 
+              aria-hidden="true"
+            />
+            <p className="text-green-800 font-medium">
+              {t('payment.cash.exactAmount', 'Monto Exacto')}
+            </p>
           </div>
         </div>
       )}
@@ -488,41 +573,49 @@ export const PaymentProcessor = ({
 }) => {
   const { getCardStyles, getTextStyles, getButtonStyles } = useThemeStyles();
   const { processPayment, paymentState } = usePaymentStore();
+  const { t } = useTranslation();
+  const { announce } = useLiveRegion();
+  const { focusElement, setFocusContainer } = useFocusManagement();
   
   const [selectedPaymentType, setSelectedPaymentType] = useState(null);
   const [paymentMethodData, setPaymentMethodData] = useState({});
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState([]);
 
-  // Payment method configurations
+  // Set focus management container
+  useEffect(() => {
+    setFocusContainer('payment-processor');
+  }, [setFocusContainer]);
+
+  // Payment method configurations with i18n
   const paymentMethods = {
     [PAYMENT_TYPES.CASH]: {
-      label: 'Efectivo',
-      description: 'Pago en efectivo con cambio',
+      label: t('payment.methods.cash.label', 'Efectivo'),
+      description: t('payment.methods.cash.description', 'Pago en efectivo con cambio'),
       component: CashPaymentInput,
       validator: (data) => data.amountReceived >= paymentData.amount
     },
     [PAYMENT_TYPES.CARD]: {
-      label: 'Tarjeta',
-      description: 'Débito o crédito',
+      label: t('payment.methods.card.label', 'Tarjeta'),
+      description: t('payment.methods.card.description', 'Débito o crédito'),
       component: CardPaymentInput,
       validator: (data) => data.cardNumber && data.expiryDate && data.cvv
     },
     [PAYMENT_TYPES.TRANSFER]: {
-      label: 'Transferencia',
-      description: 'Transferencia bancaria',
+      label: t('payment.methods.transfer.label', 'Transferencia'),
+      description: t('payment.methods.transfer.description', 'Transferencia bancaria'),
       component: TransferPaymentInput,
       validator: (data) => data.referenceNumber
     },
     [PAYMENT_TYPES.DIGITAL_WALLET]: {
-      label: 'Billetera Digital',
-      description: 'PayPal, Apple Pay, etc.',
+      label: t('payment.methods.wallet.label', 'Billetera Digital'),
+      description: t('payment.methods.wallet.description', 'PayPal, Apple Pay, etc.'),
       component: null, // TODO: Implement
       validator: () => true
     },
     [PAYMENT_TYPES.CRYPTOCURRENCY]: {
-      label: 'Criptomoneda',
-      description: 'Bitcoin, Ethereum, etc.',
+      label: t('payment.methods.crypto.label', 'Criptomoneda'),
+      description: t('payment.methods.crypto.description', 'Bitcoin, Ethereum, etc.'),
       component: null, // TODO: Implement
       validator: () => true
     }
@@ -556,6 +649,13 @@ export const PaymentProcessor = ({
     setPaymentMethodData({});
     setErrors([]);
     
+    // Announce payment method selection
+    const methodName = paymentMethods[paymentType]?.label || paymentType;
+    announce(
+      t('payment.methodSelected', 'Método de pago seleccionado: {{method}}', { method: methodName }),
+      'polite'
+    );
+    
     telemetry.record('payment_processor.method_selected', {
       paymentType,
       context,
@@ -565,48 +665,69 @@ export const PaymentProcessor = ({
 
   const handlePaymentMethodDataChange = (data) => {
     setPaymentMethodData(data);
-    setErrors([]);
+    
+    // Clear errors when data changes
+    if (errors.length > 0) {
+      setErrors([]);
+    }
   };
 
   const handleProcessPayment = async () => {
     if (!isPaymentValid) {
-      setErrors(['Por favor complete toda la información requerida']);
+      const errorMessage = t('payment.error.incomplete', 'Por favor complete toda la información requerida');
+      setErrors([errorMessage]);
+      announce(errorMessage, 'assertive');
       return;
     }
 
     setProcessing(true);
     setErrors([]);
+    
+    // Announce payment processing start
+    announce(
+      t('payment.processing.started', 'Procesando pago...'),
+      'polite'
+    );
 
     try {
       const adapter = getPaymentAdapter();
       const processedPaymentData = {
         ...paymentData,
         paymentType: selectedPaymentType,
-        ...paymentMethodData
+        paymentMethodData
       };
 
       const result = await adapter.processPayment(processedPaymentData);
+      
+      // Announce successful payment
+      announce(
+        t('payment.processing.success', 'Pago procesado exitosamente'),
+        'polite'
+      );
 
       telemetry.record('payment_processor.payment_success', {
         paymentType: selectedPaymentType,
         context,
-        amount: paymentData.amount,
-        transactionId: result.transactionId
+        amount: paymentData.amount
       });
 
       onPaymentSuccess?.(result);
-
-    } catch (error) {
-      console.error('Payment processing error:', error);
       
-      const errorMessage = error.message || 'Error al procesar el pago';
+    } catch (error) {
+      const errorMessage = error.message || t('payment.error.processing', 'Error al procesar el pago');
       setErrors([errorMessage]);
       
+      // Announce payment error
+      announce(
+        t('payment.processing.error', 'Error en el procesamiento del pago: {{error}}', { error: errorMessage }),
+        'assertive'
+      );
+
       telemetry.record('payment_processor.payment_error', {
+        error: error.message,
         paymentType: selectedPaymentType,
         context,
-        amount: paymentData.amount,
-        error: errorMessage
+        amount: paymentData.amount
       });
 
       onPaymentError?.(error);
@@ -615,39 +736,100 @@ export const PaymentProcessor = ({
     }
   };
 
+  const handleCancel = () => {
+    announce(
+      t('payment.cancelled', 'Proceso de pago cancelado'),
+      'polite'
+    );
+    
+    telemetry.record('payment_processor.cancelled', {
+      paymentType: selectedPaymentType,
+      context,
+      amount: paymentData.amount
+    });
+    
+    onCancel?.();
+  };
+
   const SelectedPaymentComponent = selectedPaymentType ? 
     paymentMethods[selectedPaymentType]?.component : null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div 
+      className="max-w-4xl mx-auto space-y-6"
+      id="payment-processor"
+      role="main"
+      aria-labelledby="payment-title"
+    >
+      {/* Live region for announcements */}
+      <LiveRegion />
+
       {/* Header */}
-      <div className="text-center">
-        <h2 className={`${getTextStyles('primary')} text-2xl font-bold mb-2`}>
-          Procesar Pago
-        </h2>
+      <header className="text-center">
+        <h1 
+          id="payment-title"
+          className={`${getTextStyles('primary')} text-2xl font-bold mb-2`}
+        >
+          {t('payment.title', 'Procesar Pago')}
+        </h1>
         <p className={`${getTextStyles('secondary')}`}>
-          Selecciona el método de pago y completa la transacción
+          {t('payment.subtitle', 'Selecciona el método de pago y completa la transacción')}
         </p>
-      </div>
+      </header>
+
+      {/* Error notifications */}
+      {errors.length > 0 && (
+        <div 
+          className="bg-red-50 border border-red-200 rounded-lg p-4"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="flex items-start space-x-2">
+            <AlertCircle className="text-red-600 mt-1" size={18} aria-hidden="true" />
+            <div>
+              <h3 className="text-red-800 font-medium">
+                {t('payment.error.title', 'Error en el pago')}
+              </h3>
+              <ul className="text-red-700 text-sm mt-1 space-y-1">
+                {errors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Payment summary */}
-        <div className="lg:col-span-1">
+        <section className="lg:col-span-1" aria-labelledby="payment-summary-title">
+          <h2 id="payment-summary-title" className="sr-only">
+            {t('payment.summary.title', 'Resumen del pago')}
+          </h2>
           <PaymentSummary 
             paymentData={paymentData} 
             context={context} 
           />
-        </div>
+        </section>
 
         {/* Payment methods and processing */}
-        <div className="lg:col-span-2 space-y-6">
+        <section className="lg:col-span-2 space-y-6" aria-labelledby="payment-methods-title">
+          <h2 id="payment-methods-title" className="sr-only">
+            {t('payment.methods.title', 'Métodos de pago')}
+          </h2>
+          
           {/* Payment method selection */}
           <div className={`${getCardStyles()} p-6`}>
             <h3 className={`${getTextStyles('primary')} font-semibold mb-4`}>
-              Método de Pago
+              {t('payment.methods.selectMethod', 'Método de Pago')}
             </h3>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div 
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              role="radiogroup"
+              aria-labelledby="payment-methods-title"
+              aria-describedby="payment-methods-hint"
+            >
               {filteredPaymentMethods.map((paymentType) => (
                 <PaymentMethodCard
                   key={paymentType}
@@ -660,13 +842,23 @@ export const PaymentProcessor = ({
                 />
               ))}
             </div>
+            <div id="payment-methods-hint" className="sr-only">
+              {t('payment.methods.hint', 'Selecciona un método de pago para continuar con la transacción')}
+            </div>
           </div>
 
           {/* Payment method details */}
           {SelectedPaymentComponent && (
-            <div className={`${getCardStyles()} p-6`}>
-              <h3 className={`${getTextStyles('primary')} font-semibold mb-4`}>
-                Detalles del Pago
+            <div 
+              className={`${getCardStyles()} p-6`}
+              role="region"
+              aria-labelledby="payment-details-title"
+            >
+              <h3 
+                id="payment-details-title"
+                className={`${getTextStyles('primary')} font-semibold mb-4`}
+              >
+                {t('payment.details.title', 'Detalles del Pago')}
               </h3>
               
               <SelectedPaymentComponent
@@ -679,52 +871,56 @@ export const PaymentProcessor = ({
             </div>
           )}
 
-          {/* Errors */}
-          {errors.length > 0 && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-start space-x-2">
-                <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-red-800 font-medium">Error en el Pago</h4>
-                  <ul className="text-red-700 text-sm mt-1 space-y-1">
-                    {errors.map((error, index) => (
-                      <li key={index}>• {error}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Action buttons */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div 
+            className="flex flex-col sm:flex-row gap-4"
+            role="group"
+            aria-label={t('payment.actions.label', 'Acciones de pago')}
+          >
             <button
-              onClick={onCancel}
+              onClick={handleCancel}
               disabled={processing}
               className={`${getButtonStyles('secondary')} flex-1 py-3`}
+              aria-describedby="cancel-hint"
             >
-              Cancelar
+              {t('payment.actions.cancel', 'Cancelar')}
             </button>
+            <div id="cancel-hint" className="sr-only">
+              {t('payment.actions.cancelHint', 'Cancela el proceso de pago y regresa a la pantalla anterior')}
+            </div>
             
             <button
               onClick={handleProcessPayment}
               disabled={!isPaymentValid || processing}
               className={`${getButtonStyles('primary')} flex-1 py-3 flex items-center justify-center space-x-2`}
+              aria-describedby="process-hint"
+              aria-live="polite"
+              aria-disabled={!isPaymentValid || processing}
             >
               {processing ? (
                 <>
-                  <Loader2 size={20} className="animate-spin" />
-                  <span>Procesando...</span>
+                  <Loader2 size={20} className="animate-spin" aria-hidden="true" />
+                  <span>{t('payment.processing.label', 'Procesando...')}</span>
                 </>
               ) : (
                 <>
-                  <CreditCard size={20} />
-                  <span>Procesar Pago - ${paymentData.amount.toFixed(2)}</span>
+                  <CreditCard size={20} aria-hidden="true" />
+                  <span>
+                    {t('payment.actions.process', 'Procesar Pago - {{amount}}', {
+                      amount: `$${paymentData.amount.toFixed(2)}`
+                    })}
+                  </span>
                 </>
               )}
             </button>
+            <div id="process-hint" className="sr-only">
+              {!isPaymentValid 
+                ? t('payment.actions.processHintDisabled', 'Complete todos los campos requeridos para procesar el pago')
+                : t('payment.actions.processHint', 'Procesa el pago con el método seleccionado')
+              }
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

@@ -51,7 +51,7 @@ import {
  * @property {string} status
  * @property {string} processedAt
  * @property {Object} [details] - Detalles específicos del contexto
- */ Processing Service - Enterprise Grade
+ /* Processing Service - Enterprise Grade
  * Advanced payment processing with automatic change calculation
  * 
  * Features:

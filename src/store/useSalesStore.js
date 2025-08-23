@@ -23,6 +23,12 @@ import { immer } from 'zustand/middleware/immer';
 import { salesService } from '@/services/salesService';
 import { cancellationService } from '@/services/cancellationService';
 import { telemetry } from '@/utils/telemetry';
+import { createCircuitHelpers } from '@/store/helpers/circuit';
+import { createOfflineSnapshotHelpers } from '@/store/helpers/offline';
+
+// Wave 5: Offline & Circuit Breaker helpers
+const circuit = createCircuitHelpers('sales', telemetry);
+const offline = createOfflineSnapshotHelpers('sales-offline-snapshot', 'sales', telemetry);
 
 /**
  * @typedef {Object} SalesState
@@ -132,7 +138,18 @@ const initialState = {
       pageSize: 20,
       total: 0
     }
-  }
+  },
+
+  // Wave 5: Circuit Breaker state
+  ...circuit.init(),
+
+  // Wave 5: Offline state
+  isOffline: false,
+  lastOfflineSnapshot: null,
+  offlineBannerShown: false,
+  lastOfflineAt: null,
+  lastOnlineAt: null,
+  autoRefetchOnReconnect: true
 };
 
 export const useSalesStore = create(
@@ -443,20 +460,56 @@ export const useSalesStore = create(
             state.errors.loadData = null;
           });
           
+          // Wave 5: Check circuit breaker
+          if (get()._circuitOpen()) {
+            set((state) => {
+              state.loading.loadHistory = false;
+              state.errors.loadData = {
+                message: 'Service temporarily unavailable. Please try again later.',
+                timestamp: new Date().toISOString(),
+                code: 'CIRCUIT_OPEN'
+              };
+            });
+            throw new Error('Circuit breaker is open');
+          }
+          
           try {
-            const history = await salesService.getSalesHistory(params);
+            // Use correct API method
+            const defaultParams = {
+              startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              endDate: new Date().toISOString().split('T')[0],
+              page: 1,
+              pageSize: 20,
+              ...params
+            };
+            
+            const history = await salesService.getSalesByDateRange(defaultParams);
+            
+            // Wave 5: Record success
+            get()._recordSuccess();
             
             set((state) => {
-              state.salesHistory = history.sales || [];
+              state.salesHistory = history.data?.sales || [];
               state.ui.pagination = {
                 ...state.ui.pagination,
-                total: history.total || 0
+                total: history.data?.total_count || 0
               };
               state.loading.loadHistory = false;
+              
+              // Wave 5: Create offline snapshot
+              const snapshot = {
+                salesHistory: state.salesHistory,
+                statistics: state.statistics,
+                lastUpdated: Date.now()
+              };
+              get()._persistOfflineSnapshot(snapshot);
             });
             
             return history;
           } catch (error) {
+            // Wave 5: Record failure
+            get()._recordFailure();
+            
             set((state) => {
               state.loading.loadHistory = false;
               state.errors.loadData = {
@@ -617,6 +670,62 @@ export const useSalesStore = create(
             currentSale.items.length > 0 &&
             currentSale.total > 0
           );
+        },
+
+        // ================= WAVE 5: CIRCUIT BREAKER HELPERS =================
+        _recordFailure: () => circuit.recordFailure(get, set),
+        _recordSuccess: () => circuit.recordSuccess(get, set),
+        _circuitOpen: () => circuit.isOpen(get, set),
+        _closeCircuit: (reason = 'manual') => circuit.close(get, set, reason),
+
+        // ================= WAVE 5: OFFLINE SNAPSHOT HELPERS =================
+        _persistOfflineSnapshot: (snapshot) => { offline.persist(snapshot); },
+        hydrateFromStorage: () => {
+          const parsed = offline.hydrate();
+          if (parsed) { 
+            set({ 
+              salesHistory: parsed.salesHistory || [],
+              statistics: parsed.statistics || get().statistics,
+              lastOfflineSnapshot: parsed 
+            }); 
+          }
+          return parsed;
+        },
+        setIsOffline: (flag) => {
+          const becoming = !!flag;
+          set((s) => {
+            const was = s.isOffline;
+            if (!was && becoming) {
+              try { telemetry.record?.('feature.sales.offline.banner.show'); } catch (_) {}
+              return { isOffline: true, offlineBannerShown: true, lastOfflineAt: Date.now() };
+            }
+            if (was && !becoming) {
+              try { telemetry.record?.('feature.sales.offline.banner.hide'); } catch (_) {}
+              return { isOffline: false, lastOnlineAt: Date.now() };
+            }
+            return { isOffline: becoming };
+          });
+        },
+
+        // Force refetch ignoring cache
+        forceRefetch: async () => {
+          try {
+            telemetry.record?.('feature.sales.force_refetch.start');
+            const history = await salesService.getSalesByDateRange({
+              startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              endDate: new Date().toISOString().split('T')[0]
+            });
+            
+            set((state) => {
+              state.salesHistory = history.data?.sales || [];
+              state.lastOnlineAt = Date.now();
+            });
+            
+            telemetry.record?.('feature.sales.force_refetch.success', { count: history.data?.sales?.length || 0 });
+          } catch (error) {
+            telemetry.record?.('feature.sales.force_refetch.error', { error: error.message });
+            throw error;
+          }
         }
       })),
       {
@@ -626,7 +735,9 @@ export const useSalesStore = create(
           salesHistory: state.salesHistory,
           statistics: state.statistics,
           currentSale: state.currentSale,
-          ui: state.ui
+          ui: state.ui,
+          autoRefetchOnReconnect: state.autoRefetchOnReconnect,
+          lastOfflineSnapshot: state.lastOfflineSnapshot
         })
       }
     )

@@ -20,6 +20,7 @@ import DataState from '@/components/ui/DataState';
 import ClientSelector from '@/components/ClientSelector';
 import CalendarReservation from '@/components/CalendarReservation';
 import SaleItemsManager from '@/components/SaleItemsManager';
+import SalesOfflineBanner from '@/components/Sales/SalesOfflineBanner';
 
 // Custom hooks para lógica de negocio
 import { useThemeStyles } from '@/hooks/useThemeStyles';
@@ -252,6 +253,9 @@ const BookingSales = () => {
         subtitle={t('booking.subtitle') || 'Gestiona reservas de servicios y ventas de productos de forma integrada'}
         breadcrumb={[{ label: 'Operaciones', href: '/dashboard' }, { label: t('booking.title') || 'Reservas y Ventas' }]}
       />
+
+      {/* Wave 5: Sales Offline Banner - Show only on sales tab */}
+      {activeTab === 'ventas' && <SalesOfflineBanner />}
 
       <NotificationBanner />
  

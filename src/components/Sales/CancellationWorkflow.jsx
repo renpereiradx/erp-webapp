@@ -36,8 +36,12 @@ import {
 import { useCancellationStore } from '@/store/useCancellationStore';
 import { usePaymentStore } from '@/store/usePaymentStore';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useFocusManagement } from '@/hooks/useFocusManagement';
+import { useLiveRegion } from '@/hooks/useLiveRegion';
+import { useTranslation } from '@/hooks/useTranslation';
 import { CANCELLATION_REASONS, CANCELLATION_STATUSES } from '@/services/cancellationService';
 import { PaymentProcessor } from './PaymentProcessor';
+import { LiveRegion } from '@/components/Common/LiveRegion';
 import { telemetry } from '@/utils/telemetry';
 
 /**
@@ -45,27 +49,31 @@ import { telemetry } from '@/utils/telemetry';
  */
 const RiskLevelIndicator = ({ riskLevel, size = 'sm' }) => {
   const { getTextStyles } = useThemeStyles();
+  const { t } = useTranslation();
   
   const riskConfig = {
     low: {
       color: 'text-green-600',
       bgColor: 'bg-green-100',
       borderColor: 'border-green-300',
-      label: 'Bajo Riesgo',
+      label: t('cancellation.risk.low', 'Bajo Riesgo'),
+      description: t('cancellation.risk.lowDesc', 'Cancelación de bajo impacto'),
       icon: Check
     },
     medium: {
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-100',
       borderColor: 'border-yellow-300',
-      label: 'Riesgo Medio',
+      label: t('cancellation.risk.medium', 'Riesgo Medio'),
+      description: t('cancellation.risk.mediumDesc', 'Cancelación con impacto moderado'),
       icon: Clock
     },
     high: {
       color: 'text-red-600',
       bgColor: 'bg-red-100',
       borderColor: 'border-red-300',
-      label: 'Alto Riesgo',
+      label: t('cancellation.risk.high', 'Alto Riesgo'),
+      description: t('cancellation.risk.highDesc', 'Cancelación de alto impacto que requiere supervisión'),
       icon: AlertTriangle
     }
   };
@@ -75,13 +83,21 @@ const RiskLevelIndicator = ({ riskLevel, size = 'sm' }) => {
   const iconSize = size === 'lg' ? 24 : size === 'md' ? 20 : 16;
 
   return (
-    <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full border ${
-      config.bgColor
-    } ${config.borderColor}`}>
-      <Icon size={iconSize} className={config.color} />
+    <div 
+      className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full border ${
+        config.bgColor
+      } ${config.borderColor}`}
+      role="status"
+      aria-label={`${config.label}: ${config.description}`}
+      aria-describedby={`risk-level-${riskLevel}-description`}
+    >
+      <Icon size={iconSize} className={config.color} aria-hidden="true" />
       <span className={`${config.color} font-medium text-sm`}>
         {config.label}
       </span>
+      <div id={`risk-level-${riskLevel}-description`} className="sr-only">
+        {config.description}
+      </div>
     </div>
   );
 };
@@ -744,6 +760,9 @@ export const CancellationWorkflow = ({
     processCancellation, 
     impactAnalysis 
   } = useCancellationStore();
+  const { t } = useTranslation();
+  const { announce } = useLiveRegion();
+  const { focusElement, setFocusContainer } = useFocusManagement();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedReason, setSelectedReason] = useState('');
@@ -751,12 +770,42 @@ export const CancellationWorkflow = ({
   const [processing, setProcessing] = useState(false);
   const [cancellationResult, setCancellationResult] = useState(null);
 
+  // Set focus management container
+  useEffect(() => {
+    setFocusContainer('cancellation-workflow');
+  }, [setFocusContainer]);
+
   const steps = [
-    { id: 'reason', title: 'Motivo', component: ReasonSelectionStep },
-    { id: 'impact', title: 'Impacto', component: ImpactAssessmentStep },
-    { id: 'approval', title: 'Aprobación', component: ApprovalWorkflowStep },
-    { id: 'refund', title: 'Reembolso', component: RefundProcessingStep },
-    { id: 'completion', title: 'Completado', component: CompletionStep }
+    { 
+      id: 'reason', 
+      title: t('cancellation.steps.reason', 'Motivo'), 
+      component: ReasonSelectionStep,
+      description: t('cancellation.steps.reasonDesc', 'Selecciona el motivo de cancelación')
+    },
+    { 
+      id: 'impact', 
+      title: t('cancellation.steps.impact', 'Impacto'), 
+      component: ImpactAssessmentStep,
+      description: t('cancellation.steps.impactDesc', 'Revisión del impacto de la cancelación')
+    },
+    { 
+      id: 'approval', 
+      title: t('cancellation.steps.approval', 'Aprobación'), 
+      component: ApprovalWorkflowStep,
+      description: t('cancellation.steps.approvalDesc', 'Proceso de aprobación si es necesario')
+    },
+    { 
+      id: 'refund', 
+      title: t('cancellation.steps.refund', 'Reembolso'), 
+      component: RefundProcessingStep,
+      description: t('cancellation.steps.refundDesc', 'Procesamiento del reembolso')
+    },
+    { 
+      id: 'completion', 
+      title: t('cancellation.steps.completion', 'Completado'), 
+      component: CompletionStep,
+      description: t('cancellation.steps.completionDesc', 'Cancelación finalizada')
+    }
   ];
 
   const currentStepData = steps[currentStep];
@@ -792,18 +841,56 @@ export const CancellationWorkflow = ({
 
   const handleNextStep = () => {
     if (currentStep < steps.length - 1 && canProceedToNext()) {
-      setCurrentStep(currentStep + 1);
+      const newStep = currentStep + 1;
+      setCurrentStep(newStep);
+      
+      // Announce step navigation
+      const stepData = steps[newStep];
+      announce(
+        t('cancellation.navigation.nextStep', 'Avanzando al paso {{step}}: {{title}}', {
+          step: newStep + 1,
+          title: stepData.title
+        }),
+        'polite'
+      );
+      
+      // Focus management
+      setTimeout(() => {
+        focusElement(`step-${newStep}-content`);
+      }, 100);
     }
   };
 
   const handlePrevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      const newStep = currentStep - 1;
+      setCurrentStep(newStep);
+      
+      // Announce step navigation
+      const stepData = steps[newStep];
+      announce(
+        t('cancellation.navigation.prevStep', 'Regresando al paso {{step}}: {{title}}', {
+          step: newStep + 1,
+          title: stepData.title
+        }),
+        'polite'
+      );
+      
+      // Focus management
+      setTimeout(() => {
+        focusElement(`step-${newStep}-content`);
+      }, 100);
     }
   };
 
   const handleProcessCancellation = async () => {
     setProcessing(true);
+    
+    // Announce processing start
+    announce(
+      t('cancellation.processing.started', 'Iniciando proceso de cancelación...'),
+      'polite'
+    );
     
     try {
       const result = await processCancellation({
@@ -817,6 +904,12 @@ export const CancellationWorkflow = ({
       setCancellationResult(result);
       setCurrentStep(steps.length - 1); // Go to completion step
       
+      // Announce successful completion
+      announce(
+        t('cancellation.processing.success', 'Cancelación procesada exitosamente'),
+        'polite'
+      );
+      
       telemetry.record('cancellation_workflow.processed', {
         cancellationId: result.cancellationId,
         context,
@@ -826,7 +919,16 @@ export const CancellationWorkflow = ({
       
     } catch (error) {
       console.error('Cancellation processing error:', error);
-      // TODO: Handle error state
+      
+      // Announce error
+      announce(
+        t('cancellation.processing.error', 'Error al procesar la cancelación: {{error}}', {
+          error: error.message || t('cancellation.processing.genericError', 'Error desconocido')
+        }),
+        'assertive'
+      );
+      
+      // TODO: Handle error state properly
     } finally {
       setProcessing(false);
     }
@@ -839,6 +941,14 @@ export const CancellationWorkflow = ({
       refund: refundResult.processed ? refundResult : null
     }));
     
+    // Announce refund completion
+    if (refundResult.processed) {
+      announce(
+        t('cancellation.refund.completed', 'Reembolso procesado correctamente'),
+        'polite'
+      );
+    }
+    
     if (!cancellationResult) {
       handleProcessCancellation();
     } else {
@@ -846,53 +956,125 @@ export const CancellationWorkflow = ({
     }
   };
 
+  const handleCancel = () => {
+    announce(
+      t('cancellation.workflow.cancelled', 'Proceso de cancelación cancelado'),
+      'polite'
+    );
+    
+    telemetry.record('cancellation_workflow.cancelled', {
+      step: currentStep,
+      context,
+      reason: selectedReason
+    });
+    
+    onCancel?.();
+  };
+
   return (
-    <div className={`${getCardStyles()} p-8 max-w-4xl mx-auto`}>
+    <div 
+      className={`${getCardStyles()} p-8 max-w-4xl mx-auto`}
+      id="cancellation-workflow"
+      role="main"
+      aria-labelledby="cancellation-title"
+    >
+      {/* Live region for announcements */}
+      <LiveRegion />
+
+      {/* Header */}
+      <header className="text-center mb-6">
+        <h1 
+          id="cancellation-title"
+          className={`${getTextStyles('primary')} text-2xl font-bold mb-2`}
+        >
+          {t('cancellation.title', 'Proceso de Cancelación')}
+        </h1>
+        <p className={`${getTextStyles('secondary')}`}>
+          {t('cancellation.subtitle', 'Sigue estos pasos para completar la cancelación')}
+        </p>
+      </header>
+
       {/* Progress indicator */}
-      <div className="flex items-center justify-center mb-8">
-        {steps.map((step, index) => (
-          <React.Fragment key={step.id}>
-            <div className={`flex items-center ${
-              index <= currentStep ? 'text-blue-600' : 'text-gray-400'
-            }`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm font-medium ${
-                index < currentStep 
-                  ? 'bg-blue-600 border-blue-600 text-white' 
-                  : index === currentStep
-                  ? 'border-blue-600 bg-white text-blue-600'
-                  : 'border-gray-300 bg-white text-gray-400'
+      <nav 
+        className="flex items-center justify-center mb-8"
+        aria-labelledby="progress-title"
+        role="navigation"
+      >
+        <h2 id="progress-title" className="sr-only">
+          {t('cancellation.progress.title', 'Progreso del proceso de cancelación')}
+        </h2>
+        <ol className="flex items-center">
+          {steps.map((step, index) => (
+            <li key={step.id} className="flex items-center">
+              <div className={`flex items-center ${
+                index <= currentStep ? 'text-blue-600' : 'text-gray-400'
               }`}>
-                {index < currentStep ? (
-                  <Check size={16} />
-                ) : (
-                  index + 1
-                )}
+                <div 
+                  className={`w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm font-medium ${
+                    index < currentStep 
+                      ? 'bg-blue-600 border-blue-600 text-white' 
+                      : index === currentStep
+                      ? 'border-blue-600 bg-white text-blue-600'
+                      : 'border-gray-300 bg-white text-gray-400'
+                  }`}
+                  aria-current={index === currentStep ? 'step' : undefined}
+                  aria-label={
+                    index < currentStep 
+                      ? t('cancellation.progress.completed', 'Paso {{step}} completado: {{title}}', { step: index + 1, title: step.title })
+                      : index === currentStep
+                      ? t('cancellation.progress.current', 'Paso {{step}} actual: {{title}}', { step: index + 1, title: step.title })
+                      : t('cancellation.progress.pending', 'Paso {{step}} pendiente: {{title}}', { step: index + 1, title: step.title })
+                  }
+                >
+                  {index < currentStep ? (
+                    <Check size={16} aria-hidden="true" />
+                  ) : (
+                    <span>{index + 1}</span>
+                  )}
+                </div>
+                
+                <span className="ml-2 font-medium text-sm">
+                  {step.title}
+                </span>
               </div>
               
-              <span className="ml-2 font-medium text-sm">
-                {step.title}
-              </span>
-            </div>
-            
-            {index < steps.length - 1 && (
-              <div className={`w-8 h-1 mx-4 ${
-                index < currentStep ? 'bg-blue-600' : 'bg-gray-300'
-              }`} />
-            )}
-          </React.Fragment>
-        ))}
-      </div>
+              {index < steps.length - 1 && (
+                <div 
+                  className={`w-8 h-1 mx-4 ${
+                    index < currentStep ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
+                  aria-hidden="true"
+                />
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
 
       {/* Context info */}
-      <div className="mb-8">
+      <section className="mb-8" aria-labelledby="context-title">
+        <h2 id="context-title" className="sr-only">
+          {t('cancellation.context.title', 'Información del elemento a cancelar')}
+        </h2>
         <CancellationContextInfo 
           cancellationData={cancellationData} 
           context={context} 
         />
-      </div>
+      </section>
 
       {/* Current step content */}
-      <div className="mb-8">
+      <section 
+        className="mb-8"
+        id={`step-${currentStep}-content`}
+        aria-labelledby={`step-${currentStep}-title`}
+        role="region"
+      >
+        <h2 id={`step-${currentStep}-title`} className="sr-only">
+          {t('cancellation.currentStep', 'Paso actual: {{title}} - {{description}}', {
+            title: currentStepData.title,
+            description: currentStepData.description
+          })}
+        </h2>
         <CurrentStepComponent
           cancellationData={cancellationData}
           context={context}
@@ -904,19 +1086,35 @@ export const CancellationWorkflow = ({
           onRefundComplete={handleRefundComplete}
           cancellationResult={cancellationResult}
         />
-      </div>
+      </section>
 
       {/* Navigation */}
       {currentStep < steps.length - 1 && (
-        <div className="flex justify-between pt-6 border-t">
+        <nav 
+          className="flex justify-between pt-6 border-t"
+          aria-label={t('cancellation.navigation.label', 'Navegación del proceso')}
+          role="navigation"
+        >
           <button
-            onClick={currentStep === 0 ? onCancel : handlePrevStep}
+            onClick={currentStep === 0 ? handleCancel : handlePrevStep}
             disabled={processing}
             className={`${getButtonStyles('secondary')} px-6 py-3 flex items-center space-x-2`}
+            aria-describedby={currentStep === 0 ? 'cancel-hint' : 'prev-hint'}
           >
-            <ArrowLeft size={18} />
-            <span>{currentStep === 0 ? 'Cancelar' : 'Anterior'}</span>
+            <ArrowLeft size={18} aria-hidden="true" />
+            <span>
+              {currentStep === 0 
+                ? t('cancellation.navigation.cancel', 'Cancelar') 
+                : t('cancellation.navigation.previous', 'Anterior')
+              }
+            </span>
           </button>
+          <div id="cancel-hint" className="sr-only">
+            {t('cancellation.navigation.cancelHint', 'Cancela el proceso y regresa sin hacer cambios')}
+          </div>
+          <div id="prev-hint" className="sr-only">
+            {t('cancellation.navigation.prevHint', 'Regresa al paso anterior para hacer cambios')}
+          </div>
           
           {currentStep === 3 ? (
             // Refund step is handled by the component itself
@@ -926,29 +1124,40 @@ export const CancellationWorkflow = ({
             <button
               disabled
               className={`${getButtonStyles('primary')} px-6 py-3 opacity-50`}
+              aria-describedby="approval-wait-hint"
             >
-              Esperando Aprobación...
+              {t('cancellation.approval.waiting', 'Esperando Aprobación...')}
             </button>
           ) : (
             <button
               onClick={handleNextStep}
               disabled={!canProceedToNext() || processing}
               className={`${getButtonStyles('primary')} px-6 py-3 flex items-center space-x-2 disabled:opacity-50`}
+              aria-describedby={!canProceedToNext() ? 'next-disabled-hint' : 'next-hint'}
             >
               {processing ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" />
-                  <span>Procesando...</span>
+                  <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+                  <span>{t('cancellation.processing.label', 'Procesando...')}</span>
                 </>
               ) : (
                 <>
-                  <span>Siguiente</span>
-                  <ChevronRight size={18} />
+                  <span>{t('cancellation.navigation.next', 'Siguiente')}</span>
+                  <ChevronRight size={18} aria-hidden="true" />
                 </>
               )}
             </button>
           )}
-        </div>
+          <div id="approval-wait-hint" className="sr-only">
+            {t('cancellation.approval.waitHint', 'Este proceso requiere aprobación debido al alto riesgo o monto')}
+          </div>
+          <div id="next-hint" className="sr-only">
+            {t('cancellation.navigation.nextHint', 'Continúa al siguiente paso del proceso')}
+          </div>
+          <div id="next-disabled-hint" className="sr-only">
+            {t('cancellation.navigation.nextDisabledHint', 'Complete los campos requeridos para continuar')}
+          </div>
+        </nav>
       )}
     </div>
   );

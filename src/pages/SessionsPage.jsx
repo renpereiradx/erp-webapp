@@ -5,22 +5,11 @@
 
 import React from 'react';
 import SessionManager from '@/components/Sessions/SessionManager';
-import { Helmet } from 'react-helmet-async';
 
 const SessionsPage = () => {
   return (
-    <>
-      <Helmet>
-        <title>Gestión de Sesiones - ERP WebApp</title>
-        <meta 
-          name="description" 
-          content="Administra tus sesiones activas, revisa el historial y monitorea la actividad de tu cuenta de forma segura." 
-        />
-      </Helmet>
-      
-      <div className="sessions-page">
-        <SessionManager />
-      </div>
+    <div className="sessions-page">
+      <SessionManager />
       
       <style jsx>{`
         .sessions-page {
@@ -29,7 +18,7 @@ const SessionsPage = () => {
           padding: 0;
         }
       `}</style>
-    </>
+    </div>
   );
 };
 

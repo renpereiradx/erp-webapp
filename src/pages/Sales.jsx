@@ -16,6 +16,7 @@ import { useI18n } from '@/lib/i18n';
 import DataState from '@/components/ui/DataState';
 import ClientSelector from '@/components/ClientSelector';
 import SaleItemsManager from '@/components/SaleItemsManager';
+import SalesOfflineBanner from '@/components/Sales/SalesOfflineBanner';
 
 // Custom hooks para lógica de ventas únicamente
 import { useThemeStyles } from '@/hooks/useThemeStyles';
@@ -29,6 +30,9 @@ import { saleService } from '@/services/saleService';
 
 // Hook para integración opcional con reservas
 import { useReservationIntegration } from '@/hooks/useReservationIntegration';
+
+// Wave 5: Import Sales Store
+import useSalesStore from '@/store/useSalesStore';
 
 const Sales = () => {
   const { theme } = useTheme();
@@ -156,6 +160,9 @@ const Sales = () => {
         subtitle={t('sales.page.subtitle') || 'Registro y seguimiento de ventas'}
         showBreadcrumb={true}
       />
+
+      {/* Wave 5: Sales Offline Banner */}
+      <SalesOfflineBanner />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Notificación */}

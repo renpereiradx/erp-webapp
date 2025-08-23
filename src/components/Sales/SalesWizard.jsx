@@ -37,9 +37,12 @@ import {
 import { useSalesStore } from '@/store/useSalesStore';
 import { usePaymentStore } from '@/store/usePaymentStore';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useFocusManagement } from '@/hooks/useFocusManagement';
+import { useLiveRegion } from '@/components/a11y/LiveRegion';
 import { salesPaymentAdapter } from '@/services/salesPaymentAdapter';
 import { PAYMENT_TYPES } from '@/services/paymentArchitecture';
 import { telemetry } from '@/utils/telemetry';
+import { t } from '@/lib/i18n';
 
 // Wizard context for sharing state between steps
 const SalesWizardContext = createContext();
@@ -57,51 +60,76 @@ const StepIndicator = ({ steps, currentStep, onStepClick }) => {
   const { getTextStyles, theme } = useThemeStyles();
   
   return (
-    <div className="flex items-center justify-center mb-8">
-      {steps.map((step, index) => (
-        <React.Fragment key={step.id}>
-          <div 
-            className={`flex items-center cursor-pointer ${
-              index <= currentStep ? 'text-blue-600' : 'text-gray-400'
-            }`}
-            onClick={() => onStepClick(index)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onStepClick(index);
-              }
-            }}
-          >
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-              index < currentStep 
-                ? 'bg-blue-600 border-blue-600 text-white' 
-                : index === currentStep
-                ? 'border-blue-600 bg-white text-blue-600'
-                : 'border-gray-300 bg-white text-gray-400'
-            }`}>
-              {index < currentStep ? (
-                <CheckCircle size={20} />
-              ) : (
-                <step.icon size={20} />
-              )}
-            </div>
+    <div 
+      className="flex items-center justify-center mb-8"
+      role="navigation"
+      aria-label={t('sales.wizard.stepNavigation', 'Navegación por pasos del asistente')}
+    >
+      <ol className="flex items-center">
+        {steps.map((step, index) => (
+          <li key={step.id} className="flex items-center">
+            <button 
+              className={`flex items-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg p-2 transition-colors ${
+                index <= currentStep ? 'text-blue-600' : 'text-gray-400'
+              }`}
+              onClick={() => onStepClick(index)}
+              disabled={index > currentStep}
+              aria-current={index === currentStep ? 'step' : undefined}
+              aria-label={t('sales.wizard.stepButton', 'Paso {{number}}: {{title}}{{status}}', {
+                number: index + 1,
+                title: step.title,
+                status: index < currentStep 
+                  ? ` (${t('common.completed', 'completado')})`
+                  : index === currentStep 
+                  ? ` (${t('common.current', 'actual')})`
+                  : ` (${t('common.pending', 'pendiente')})`
+              })}
+            >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
+                index < currentStep 
+                  ? 'bg-blue-600 border-blue-600 text-white' 
+                  : index === currentStep
+                  ? 'border-blue-600 bg-white text-blue-600'
+                  : 'border-gray-300 bg-white text-gray-400'
+              }`}>
+                {index < currentStep ? (
+                  <CheckCircle size={20} aria-hidden="true" />
+                ) : (
+                  <step.icon size={20} aria-hidden="true" />
+                )}
+              </div>
+              
+              <span className={`ml-2 font-medium ${
+                index <= currentStep ? getTextStyles('primary') : getTextStyles('secondary')
+              }`}>
+                {step.title}
+              </span>
+            </button>
             
-            <span className={`ml-2 font-medium ${
-              index <= currentStep ? getTextStyles('primary') : getTextStyles('secondary')
-            }`}>
-              {step.title}
-            </span>
-          </div>
-          
-          {index < steps.length - 1 && (
-            <div className={`w-12 h-1 mx-4 ${
-              index < currentStep ? 'bg-blue-600' : 'bg-gray-300'
-            }`} />
-          )}
-        </React.Fragment>
-      ))}
+            {index < steps.length - 1 && (
+              <div 
+                className={`w-12 h-1 mx-4 transition-colors ${
+                  index < currentStep ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
+                aria-hidden="true"
+              />
+            )}
+          </li>
+        ))}
+      </ol>
+      
+      {/* Progress indicator for screen readers */}
+      <div 
+        className="sr-only" 
+        role="status" 
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {t('sales.wizard.progress', 'Paso {{current}} de {{total}}', {
+          current: currentStep + 1,
+          total: steps.length
+        })}
+      </div>
     </div>
   );
 };
@@ -835,35 +863,97 @@ const ConfirmationStep = () => {
 export const SalesWizard = ({ onComplete, onCancel }) => {
   const { getCardStyles, getTextStyles, getButtonStyles } = useThemeStyles();
   
+  // Accessibility hooks
+  const { announce, LiveRegions } = useLiveRegion();
+  const { useModalFocus } = useFocusManagement();
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [stepValid, setStepValid] = useState(false);
   const [stepData, setStepData] = useState({});
 
+  // Modal focus management
+  const modalRef = useModalFocus(true);
+
   const steps = [
-    { id: 'customer', title: 'Cliente', icon: User, component: CustomerStep },
-    { id: 'products', title: 'Productos', icon: ShoppingCart, component: ProductStep },
-    { id: 'payment', title: 'Pago', icon: CreditCard, component: PaymentStep },
-    { id: 'confirmation', title: 'Confirmación', icon: CheckCircle, component: ConfirmationStep }
+    { id: 'customer', title: t('sales.wizard.customer', 'Cliente'), icon: User, component: CustomerStep },
+    { id: 'products', title: t('sales.wizard.products', 'Productos'), icon: ShoppingCart, component: ProductStep },
+    { id: 'payment', title: t('sales.wizard.payment', 'Pago'), icon: CreditCard, component: PaymentStep },
+    { id: 'confirmation', title: t('sales.wizard.confirmation', 'Confirmación'), icon: CheckCircle, component: ConfirmationStep }
   ];
 
   const CurrentStepComponent = steps[currentStep].component;
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      const newStep = currentStep + 1;
+      setCurrentStep(newStep);
       setStepValid(false);
+      
+      // Announce step change to screen readers
+      const stepTitle = steps[newStep].title;
+      announce(
+        t('sales.wizard.stepAnnouncement', `Paso {{step}} de {{total}}: {{title}}`, {
+          step: newStep + 1,
+          total: steps.length,
+          title: stepTitle
+        }),
+        'polite'
+      );
+      
+      // Record telemetry
+      telemetry.record('sales_wizard.step_advance', {
+        fromStep: currentStep,
+        toStep: newStep,
+        stepId: steps[newStep].id
+      });
     }
   };
 
   const prevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      const newStep = currentStep - 1;
+      setCurrentStep(newStep);
+      
+      // Announce step change to screen readers
+      const stepTitle = steps[newStep].title;
+      announce(
+        t('sales.wizard.stepBackAnnouncement', `Regresando al paso {{step}}: {{title}}`, {
+          step: newStep + 1,
+          title: stepTitle
+        }),
+        'polite'
+      );
+      
+      // Record telemetry
+      telemetry.record('sales_wizard.step_back', {
+        fromStep: currentStep,
+        toStep: newStep,
+        stepId: steps[newStep].id
+      });
     }
   };
 
   const goToStep = (stepIndex) => {
     if (stepIndex <= currentStep) {
+      const oldStep = currentStep;
       setCurrentStep(stepIndex);
+      
+      // Announce step change to screen readers
+      const stepTitle = steps[stepIndex].title;
+      announce(
+        t('sales.wizard.stepJumpAnnouncement', `Navegando al paso {{step}}: {{title}}`, {
+          step: stepIndex + 1,
+          title: stepTitle
+        }),
+        'polite'
+      );
+      
+      // Record telemetry
+      telemetry.record('sales_wizard.step_jump', {
+        fromStep: oldStep,
+        toStep: stepIndex,
+        stepId: steps[stepIndex].id
+      });
     }
   };
 
@@ -880,7 +970,23 @@ export const SalesWizard = ({ onComplete, onCancel }) => {
 
   return (
     <SalesWizardContext.Provider value={contextValue}>
-      <div className={`${getCardStyles()} p-8 max-w-4xl mx-auto`}>
+      <div 
+        ref={modalRef}
+        className={`${getCardStyles()} p-8 max-w-4xl mx-auto`}
+        role="dialog"
+        aria-labelledby="sales-wizard-title"
+        aria-describedby="sales-wizard-description"
+      >
+        {/* Accessible title and description */}
+        <div className="sr-only">
+          <h1 id="sales-wizard-title">
+            {t('sales.wizard.title', 'Asistente de Nueva Venta')}
+          </h1>
+          <p id="sales-wizard-description">
+            {t('sales.wizard.description', 'Proceso guiado para crear una nueva venta en 4 pasos: selección de cliente, productos, pago y confirmación.')}
+          </p>
+        </div>
+
         <StepIndicator
           steps={steps}
           currentStep={currentStep}
@@ -890,13 +996,17 @@ export const SalesWizard = ({ onComplete, onCancel }) => {
         <CurrentStepComponent />
         
         {/* Navigation */}
-        <div className="flex justify-between mt-8 pt-6 border-t">
+        <nav aria-label={t('sales.wizard.navigation', 'Navegación del asistente')} className="flex justify-between mt-8 pt-6 border-t">
           <button
             onClick={currentStep === 0 ? onCancel : prevStep}
             className={`${getButtonStyles('secondary')} px-6 py-3 flex items-center space-x-2`}
+            aria-label={currentStep === 0 
+              ? t('sales.wizard.cancel', 'Cancelar asistente')
+              : t('sales.wizard.previousStep', 'Ir al paso anterior')
+            }
           >
-            <ArrowLeft size={18} />
-            <span>{currentStep === 0 ? 'Cancelar' : 'Anterior'}</span>
+            <ArrowLeft size={18} aria-hidden="true" />
+            <span>{currentStep === 0 ? t('common.cancel', 'Cancelar') : t('common.previous', 'Anterior')}</span>
           </button>
           
           {currentStep < steps.length - 1 ? (
@@ -904,19 +1014,33 @@ export const SalesWizard = ({ onComplete, onCancel }) => {
               onClick={nextStep}
               disabled={!stepValid}
               className={`${getButtonStyles('primary')} px-6 py-3 flex items-center space-x-2 disabled:opacity-50`}
+              aria-label={t('sales.wizard.nextStep', 'Continuar al siguiente paso')}
+              aria-describedby={!stepValid ? 'step-validation-hint' : undefined}
             >
-              <span>Siguiente</span>
-              <ArrowRight size={18} />
+              <span>{t('common.next', 'Siguiente')}</span>
+              <ArrowRight size={18} aria-hidden="true" />
             </button>
           ) : (
             <button
               onClick={() => onComplete(stepData)}
+              disabled={!stepValid}
               className={`${getButtonStyles('primary')} px-6 py-3`}
+              aria-label={t('sales.wizard.complete', 'Finalizar venta')}
             >
-              Finalizar
+              {t('sales.wizard.finalize', 'Finalizar')}
             </button>
           )}
-        </div>
+          
+          {/* Validation hint for screen readers */}
+          {!stepValid && (
+            <div id="step-validation-hint" className="sr-only">
+              {t('sales.wizard.validationHint', 'Complete los campos requeridos para continuar')}
+            </div>
+          )}
+        </nav>
+        
+        {/* Live region for announcements */}
+        <LiveRegions />
       </div>
     </SalesWizardContext.Provider>
   );

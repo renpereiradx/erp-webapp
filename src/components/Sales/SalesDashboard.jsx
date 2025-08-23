@@ -36,7 +36,9 @@ import { useSalesStore } from '@/store/useSalesStore';
 import { usePaymentStore } from '@/store/usePaymentStore';
 import { useCancellationStore } from '@/store/useCancellationStore';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useLiveRegion } from '@/components/a11y/LiveRegion';
 import { telemetry } from '@/utils/telemetry';
+import { t } from '@/lib/i18n';
 
 // Dashboard metric cards
 const MetricCard = ({ 
@@ -47,7 +49,8 @@ const MetricCard = ({
   icon: Icon, 
   loading = false,
   error = null,
-  onClick = null
+  onClick = null,
+  description = ""
 }) => {
   const { theme, getCardStyles, getTextStyles } = useThemeStyles();
   
@@ -61,7 +64,7 @@ const MetricCard = ({
         onClick ? 'hover:scale-105' : ''
       }`}
       onClick={onClick}
-      role={onClick ? "button" : "presentation"}
+      role={onClick ? "button" : "article"}
       tabIndex={onClick ? 0 : -1}
       onKeyDown={(e) => {
         if (onClick && (e.key === 'Enter' || e.key === ' ')) {
@@ -69,34 +72,62 @@ const MetricCard = ({
           onClick();
         }
       }}
+      aria-label={onClick 
+        ? t('sales.dashboard.metricButton', 'Metric {{title}}: {{value}}. {{description}}. {{change}}', {
+            title, 
+            value, 
+            description: description || '',
+            change: change ? `${changeType === 'positive' ? t('common.increase', 'Aumento') : t('common.decrease', 'Disminución')} del ${change}` : ''
+          })
+        : undefined
+      }
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className={`${getTextStyles('secondary')} text-sm font-medium mb-1`}>
-            {title}
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <p className={`${getTextStyles('secondary')} text-sm font-medium`} id={`metric-title-${title.replace(/\s+/g, '-').toLowerCase()}`}>
+              {title}
+            </p>
+            <Icon className={`${getTextStyles('secondary')} w-5 h-5`} aria-hidden="true" />
+          </div>
           
           {loading ? (
-            <div className="animate-pulse">
+            <div className="animate-pulse" role="status" aria-label={t('common.loading', 'Cargando')}>
               <div className="h-8 bg-gray-300 rounded w-24 mb-2"></div>
               <div className="h-4 bg-gray-200 rounded w-16"></div>
+              <span className="sr-only">{t('sales.dashboard.loading', 'Cargando información de ventas')}</span>
             </div>
           ) : error ? (
-            <div className="flex items-center text-red-600">
-              <AlertCircle size={16} className="mr-1" />
-              <span className="text-sm">Error</span>
+            <div className="flex items-center text-red-600" role="alert">
+              <AlertCircle size={16} className="mr-1" aria-hidden="true" />
+              <span className="text-sm">{t('common.error', 'Error')}</span>
             </div>
           ) : (
             <>
-              <p className={`${getTextStyles('primary')} text-3xl font-bold mb-2`}>
+              <p 
+                className={`${getTextStyles('primary')} text-3xl font-bold mb-2`}
+                aria-describedby={`metric-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
+              >
                 {value}
               </p>
               
               {change && (
-                <div className={`flex items-center ${changeColor} text-sm`}>
-                  <ChangeIcon size={16} className="mr-1" />
+                <div 
+                  className={`flex items-center ${changeColor} text-sm`}
+                  aria-label={t('sales.dashboard.changeIndicator', '{{changeType}} del {{change}}', {
+                    changeType: changeType === 'positive' ? t('common.increase', 'Aumento') : t('common.decrease', 'Disminución'),
+                    change
+                  })}
+                >
+                  <ChangeIcon size={16} className="mr-1" aria-hidden="true" />
                   <span>{change}</span>
                 </div>
+              )}
+              
+              {description && (
+                <p className={`${getTextStyles('secondary')} text-xs mt-1`}>
+                  {description}
+                </p>
               )}
             </>
           )}
@@ -230,6 +261,9 @@ const RecentSalesList = ({ sales, loading, onViewSale, onCancelSale }) => {
 export const SalesDashboard = () => {
   const { getTextStyles, getButtonStyles } = useThemeStyles();
   
+  // Accessibility hooks
+  const { announce, LiveRegions } = useLiveRegion();
+  
   // Store hooks
   const {
     statistics,
@@ -262,6 +296,9 @@ export const SalesDashboard = () => {
     try {
       setRefreshing(true);
       
+      // Announce loading to screen readers
+      announce(t('sales.dashboard.loading', 'Cargando información de ventas'), 'polite');
+      
       await Promise.all([
         loadSalesStatistics(period),
         loadPaymentStatistics({ context: 'sale', period }),
@@ -269,12 +306,18 @@ export const SalesDashboard = () => {
         loadSalesHistory({ page: 1, pageSize: 10 })
       ]);
       
+      // Announce completion
+      announce(t('sales.dashboard.dataLoaded', 'Información de ventas actualizada'), 'polite');
+      
       telemetry.record('sales_dashboard.data_loaded', {
         period,
         salesCount: salesHistory.length,
         hasErrors: Object.values(errors).some(e => e !== null)
       });
     } catch (error) {
+      // Announce error
+      announce(t('sales.dashboard.error', 'Error al cargar datos de ventas'), 'assertive');
+      
       telemetry.record('sales_dashboard.load_error', {
         error: error.message,
         period
@@ -282,6 +325,22 @@ export const SalesDashboard = () => {
     } finally {
       setRefreshing(false);
     }
+  };
+
+  // Handle period change
+  const handlePeriodChange = (newPeriod) => {
+    setSelectedPeriod(newPeriod);
+    
+    // Announce period change
+    announce(
+      t('sales.dashboard.periodChanged', 'Período cambiado a {{period}}', { period: newPeriod }),
+      'polite'
+    );
+    
+    telemetry.record('sales_dashboard.period_changed', {
+      fromPeriod: selectedPeriod,
+      toPeriod: newPeriod
+    });
   };
 
   // Load data on mount and period change
@@ -359,153 +418,355 @@ export const SalesDashboard = () => {
 
   // Handle sale view
   const handleViewSale = (sale) => {
+    announce(
+      t('sales.dashboard.viewingSale', 'Viendo detalles de la venta {{id}}', { id: sale.id || sale.saleId }),
+      'polite'
+    );
     telemetry.record('sales_dashboard.view_sale', { saleId: sale.id || sale.saleId });
     // TODO: Navigate to sale details
   };
 
   // Handle sale cancellation
   const handleCancelSale = (sale) => {
+    announce(
+      t('sales.dashboard.cancelingSale', 'Iniciando cancelación de la venta {{id}}', { id: sale.id || sale.saleId }),
+      'polite'
+    );
     telemetry.record('sales_dashboard.cancel_sale_initiated', { saleId: sale.id || sale.saleId });
     // TODO: Navigate to cancellation process
   };
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      {/* Accessible title and description */}
+      <div className="sr-only">
+        <h1 id="dashboard-title">{t('sales.dashboard.title', 'Dashboard de Ventas')}</h1>
+        <p id="dashboard-description">{t('sales.dashboard.description', 'Panel principal para gestión y seguimiento de ventas')}</p>
+      </div>
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h1 className={`${getTextStyles('primary')} text-3xl font-bold`}>
-            Dashboard de Ventas
+          <h1 className={`${getTextStyles('primary')} text-3xl font-bold`} aria-labelledby="dashboard-title">
+            {t('sales.dashboard.title', 'Dashboard de Ventas')}
           </h1>
-          <p className={`${getTextStyles('secondary')} mt-1`}>
-            Resumen de tu actividad de ventas
+          <p className={`${getTextStyles('secondary')} mt-1`} aria-describedby="dashboard-description">
+            {t('sales.dashboard.subtitle', 'Resumen de tu actividad de ventas')}
           </p>
         </div>
         
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3" role="toolbar" aria-label={t('sales.dashboard.headerActions', 'Acciones del dashboard')}>
           {/* Period selector */}
+          <label htmlFor="period-selector" className="sr-only">
+            {t('sales.dashboard.selectPeriod', 'Seleccionar período de tiempo')}
+          </label>
           <select
+            id="period-selector"
             value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
+            onChange={(e) => handlePeriodChange(e.target.value)}
             className={`${getButtonStyles('secondary')} px-4 py-2`}
-            aria-label="Seleccionar período"
+            aria-describedby="period-hint"
           >
-            <option value="today">Hoy</option>
-            <option value="week">Esta Semana</option>
-            <option value="month">Este Mes</option>
+            <option value="today">{t('sales.dashboard.today', 'Hoy')}</option>
+            <option value="week">{t('sales.dashboard.thisWeek', 'Esta Semana')}</option>
+            <option value="month">{t('sales.dashboard.thisMonth', 'Este Mes')}</option>
+            <option value="year">{t('sales.dashboard.thisYear', 'Este año')}</option>
           </select>
+          <div id="period-hint" className="sr-only">
+            {t('sales.dashboard.periodHint', 'Cambia el período de tiempo para filtrar las métricas mostradas')}
+          </div>
           
           {/* Refresh button */}
           <button
-            onClick={() => loadDashboardData()}
+            onClick={() => {
+              announce(t('sales.dashboard.refreshingData', 'Actualizando datos del dashboard'), 'polite');
+              loadDashboardData();
+            }}
             disabled={refreshing}
             className={`${getButtonStyles('secondary')} p-2`}
-            aria-label="Actualizar datos"
+            aria-label={t('sales.dashboard.refreshData', 'Actualizar datos')}
+            aria-describedby="refresh-hint"
           >
             <RefreshCw 
               size={18} 
               className={refreshing ? 'animate-spin' : ''} 
+              aria-hidden="true"
             />
           </button>
+          <div id="refresh-hint" className="sr-only">
+            {t('sales.dashboard.refreshHint', 'Actualiza todas las métricas y datos del dashboard')}
+          </div>
           
           {/* Filters button */}
           <button
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={() => {
+              const newShowFilters = !showFilters;
+              setShowFilters(newShowFilters);
+              announce(
+                newShowFilters 
+                  ? t('sales.dashboard.filtersShown', 'Filtros mostrados') 
+                  : t('sales.dashboard.filtersHidden', 'Filtros ocultados'), 
+                'polite'
+              );
+            }}
             className={`${getButtonStyles('secondary')} p-2`}
-            aria-label="Mostrar filtros"
+            aria-label={t('sales.dashboard.toggleFilters', 'Mostrar/ocultar filtros')}
+            aria-expanded={showFilters}
+            aria-describedby="filters-hint"
           >
-            <Filter size={18} />
+            <Filter size={18} aria-hidden="true" />
           </button>
+          <div id="filters-hint" className="sr-only">
+            {t('sales.dashboard.filtersHint', 'Alterna la visibilidad del panel de filtros')}
+          </div>
+
+          {/* Create sale button */}
+          <Button
+            onClick={() => {
+              announce(t('sales.dashboard.creatingNewSale', 'Iniciando nueva venta'), 'polite');
+              onCreateSale();
+            }}
+            size="sm"
+            aria-describedby="create-sale-hint"
+          >
+            {t('sales.dashboard.createSale', 'Nueva Venta')}
+          </Button>
+          <div id="create-sale-hint" className="sr-only">
+            {t('sales.dashboard.createSaleHint', 'Inicia el proceso de creación de una nueva venta')}
+          </div>
         </div>
-      </div>
+      </header>
+
+      {/* Live region for announcements */}
+      <LiveRegion />
+
+      {/* Filters section */}
+      {showFilters && (
+        <section 
+          className={`${getCardStyles()} p-6`}
+          aria-labelledby="filters-section-title"
+          role="region"
+        >
+          <h2 id="filters-section-title" className={`${getTextStyles('primary')} text-lg font-semibold mb-4`}>
+            {t('sales.dashboard.filters', 'Filtros')}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="status-filter" className={`${getTextStyles('secondary')} block text-sm font-medium mb-2`}>
+                {t('sales.dashboard.statusFilter', 'Estado')}
+              </label>
+              <select 
+                id="status-filter"
+                className={`${getInputStyles()} w-full`}
+                value={filters.status}
+                onChange={(e) => {
+                  setFilters({ ...filters, status: e.target.value });
+                  announce(
+                    t('sales.dashboard.statusFilterChanged', 'Filtro de estado cambiado a {{status}}', { status: e.target.value }),
+                    'polite'
+                  );
+                }}
+                aria-describedby="status-filter-hint"
+              >
+                <option value="">{t('sales.dashboard.allStatuses', 'Todos los estados')}</option>
+                <option value="completed">{t('sales.dashboard.completed', 'Completado')}</option>
+                <option value="pending">{t('sales.dashboard.pending', 'Pendiente')}</option>
+                <option value="cancelled">{t('sales.dashboard.cancelled', 'Cancelado')}</option>
+              </select>
+              <div id="status-filter-hint" className="sr-only">
+                {t('sales.dashboard.statusFilterHint', 'Filtra las ventas por su estado actual')}
+              </div>
+            </div>
+            
+            <div>
+              <label htmlFor="customer-filter" className={`${getTextStyles('secondary')} block text-sm font-medium mb-2`}>
+                {t('sales.dashboard.customerFilter', 'Cliente')}
+              </label>
+              <input
+                id="customer-filter"
+                type="text"
+                placeholder={t('sales.dashboard.searchCustomer', 'Buscar cliente...')}
+                className={`${getInputStyles()} w-full`}
+                value={filters.customer}
+                onChange={(e) => setFilters({ ...filters, customer: e.target.value })}
+                aria-describedby="customer-filter-hint"
+              />
+              <div id="customer-filter-hint" className="sr-only">
+                {t('sales.dashboard.customerFilterHint', 'Busca ventas por nombre o información del cliente')}
+              </div>
+            </div>
+            
+            <div>
+              <label htmlFor="amount-filter" className={`${getTextStyles('secondary')} block text-sm font-medium mb-2`}>
+                {t('sales.dashboard.minAmountFilter', 'Monto mínimo')}
+              </label>
+              <input
+                id="amount-filter"
+                type="number"
+                placeholder="0.00"
+                className={`${getInputStyles()} w-full`}
+                value={filters.minAmount}
+                onChange={(e) => setFilters({ ...filters, minAmount: e.target.value })}
+                aria-describedby="amount-filter-hint"
+              />
+              <div id="amount-filter-hint" className="sr-only">
+                {t('sales.dashboard.amountFilterHint', 'Filtra ventas por monto mínimo en pesos')}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Error notifications */}
       {Object.entries(errors).map(([key, error]) => (
         error && (
-          <div key={key} className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <Alert 
+            key={key}
+            variant="error" 
+            className="mb-4"
+            role="alert"
+            aria-live="assertive"
+          >
             <div className="flex justify-between items-start">
               <div className="flex">
-                <AlertCircle className="text-red-600 mr-2 mt-0.5" size={18} />
+                <AlertCircle className="text-red-600 mr-2 mt-0.5" size={18} aria-hidden="true" />
                 <div>
-                  <p className="text-red-800 font-medium">Error en {key}</p>
+                  <p className="text-red-800 font-medium">
+                    {t('sales.dashboard.errorIn', 'Error en {{section}}', { section: key })}
+                  </p>
                   <p className="text-red-600 text-sm mt-1">{error.message}</p>
                 </div>
               </div>
               <button
-                onClick={() => clearError(key)}
+                onClick={() => {
+                  clearError(key);
+                  announce(t('sales.dashboard.errorCleared', 'Error eliminado'), 'polite');
+                }}
                 className="text-red-600 hover:text-red-800"
-                aria-label="Cerrar error"
+                aria-label={t('sales.dashboard.closeError', 'Cerrar error')}
               >
                 ×
               </button>
             </div>
-          </div>
+          </Alert>
         )
       ))}
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section 
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        aria-labelledby="metrics-section-title"
+        role="region"
+      >
+        <h2 id="metrics-section-title" className="sr-only">
+          {t('sales.dashboard.metricsSection', 'Métricas principales de ventas')}
+        </h2>
+        
         <MetricCard
-          title="Total de Ventas"
+          title={t('sales.dashboard.totalSales', 'Total de Ventas')}
           value={dashboardMetrics.totalSales.value}
           change={dashboardMetrics.totalSales.change}
           changeType={dashboardMetrics.totalSales.changeType}
           icon={ShoppingCart}
           loading={loading.loadStatistics}
           error={errors.loadData}
+          aria-describedby="total-sales-description"
         />
+        <div id="total-sales-description" className="sr-only">
+          {t('sales.dashboard.totalSalesDesc', 'Número total de ventas en el período seleccionado')}
+        </div>
         
         <MetricCard
-          title="Ingresos Totales"
+          title={t('sales.dashboard.totalRevenue', 'Ingresos Totales')}
           value={dashboardMetrics.totalRevenue.value}
           change={dashboardMetrics.totalRevenue.change}
           changeType={dashboardMetrics.totalRevenue.changeType}
           icon={DollarSign}
           loading={loading.loadStatistics}
           error={errors.loadData}
+          aria-describedby="total-revenue-description"
         />
+        <div id="total-revenue-description" className="sr-only">
+          {t('sales.dashboard.totalRevenueDesc', 'Suma total de ingresos por ventas en el período')}
+        </div>
         
         <MetricCard
-          title="Ticket Promedio"
+          title={t('sales.dashboard.averageTicket', 'Ticket Promedio')}
           value={dashboardMetrics.averageTicket.value}
           change={dashboardMetrics.averageTicket.change}
           changeType={dashboardMetrics.averageTicket.changeType}
           icon={TrendingUp}
           loading={loading.loadStatistics}
           error={errors.loadData}
+          aria-describedby="average-ticket-description"
         />
+        <div id="average-ticket-description" className="sr-only">
+          {t('sales.dashboard.averageTicketDesc', 'Valor promedio por venta en el período')}
+        </div>
         
         <MetricCard
-          title="Tasa de Cancelación"
+          title={t('sales.dashboard.cancellationRate', 'Tasa de Cancelación')}
           value={dashboardMetrics.cancellationRate.value}
           change={dashboardMetrics.cancellationRate.change}
           changeType={dashboardMetrics.cancellationRate.changeType}
           icon={AlertCircle}
           loading={loading.loadStatistics}
           error={errors.loadData}
+          aria-describedby="cancellation-rate-description"
         />
-      </div>
+        <div id="cancellation-rate-description" className="sr-only">
+          {t('sales.dashboard.cancellationRateDesc', 'Porcentaje de ventas canceladas en el período')}
+        </div>
+      </section>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <section 
+        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+        aria-labelledby="quick-actions-title"
+        role="region"
+      >
+        <h2 id="quick-actions-title" className="sr-only">
+          {t('sales.dashboard.quickActions', 'Acciones rápidas')}
+        </h2>
         {quickActions.map((action, index) => (
           <QuickActionButton
             key={index}
             icon={action.icon}
             label={action.label}
-            onClick={action.onClick}
+            onClick={() => {
+              announce(
+                t('sales.dashboard.actionExecuted', 'Ejecutando {{action}}', { action: action.label }),
+                'polite'
+              );
+              action.onClick();
+            }}
             variant={action.variant}
+            aria-describedby={`action-${index}-description`}
           />
         ))}
-      </div>
+        {quickActions.map((action, index) => (
+          <div key={`desc-${index}`} id={`action-${index}-description`} className="sr-only">
+            {action.description || t('sales.dashboard.defaultActionDesc', 'Acción rápida del dashboard')}
+          </div>
+        ))}
+      </section>
 
       {/* Recent Sales */}
-      <RecentSalesList
-        sales={salesHistory}
-        loading={loading.loadHistory}
-        onViewSale={handleViewSale}
-        onCancelSale={handleCancelSale}
-      />
+      <section aria-labelledby="recent-sales-title" role="region">
+        <h2 id="recent-sales-title" className="sr-only">
+          {t('sales.dashboard.recentSales', 'Ventas recientes')}
+        </h2>
+        <RecentSalesList
+          sales={salesHistory}
+          loading={loading.loadHistory}
+          onViewSale={handleViewSale}
+          onCancelSale={handleCancelSale}
+          aria-describedby="recent-sales-description"
+        />
+        <div id="recent-sales-description" className="sr-only">
+          {t('sales.dashboard.recentSalesDesc', 'Lista de las ventas más recientes con opciones para ver detalles o cancelar')}
+        </div>
+      </section>
     </div>
   );
 };
