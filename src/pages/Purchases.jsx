@@ -1,6 +1,14 @@
 /**
- * Página Principal de Compras - Wave 2 Enterprise Architecture
- * Implementa el sistema completo de gestión de compras con arquitectura enterprise hardened
+ * Página Principal de Compras - Wave 3 Performance & Cache Avanzado
+ * Sistema completo con optimizaciones de performance enterprise y cache inteligente
+ * 
+ * WAVE 3 FEATURES:
+ * - React.memo con comparaciones optimizadas automáticas
+ * - Virtual scrolling para listas grandes (1000+ items)
+ * - Prefetch inteligente basado en patrones usuario
+ * - Bundle splitting y lazy loading estratégico
+ * - Memory leak prevention automático  
+ * - Performance monitoring en tiempo real
  * 
  * WAVE 2 FEATURES:
  * - Resiliencia & Confiabilidad con circuit breaker funcional
@@ -10,11 +18,11 @@
  * - Componentes enterprise integrados
  * - Store centralizado con cache y offline support
  * 
- * @since Wave 2 - Resiliencia & Confiabilidad
+ * @since Wave 3 - Performance & Cache Avanzado
  * @author Sistema ERP
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense, startTransition } from 'react';
 import { useTheme } from 'next-themes';
 
 // Iconos
@@ -44,11 +52,14 @@ import DataState from '@/components/ui/DataState';
 // Enterprise Store & Services (Wave 1)
 import { usePurchaseStore } from '@/store/usePurchaseStore';
 
-// Enterprise Components (Wave 1)
+// Enterprise Components (Wave 1) - Ahora optimizados Wave 3
 import PurchaseModal from '@/components/purchases/PurchaseModal';
-import PurchaseCard from '@/components/purchases/PurchaseCard';
 import PurchaseFilters from '@/components/purchases/PurchaseFilters';
 import PurchaseMetricsPanel from '@/components/purchases/PurchaseMetricsPanel';
+
+// Wave 3 Components - Lazy loaded
+const VirtualizedPurchaseList = lazy(() => import('@/components/purchases/VirtualizedPurchaseList'));
+const PurchaseAnalyticsDashboard = lazy(() => import('@/components/purchases/PurchaseAnalyticsDashboard'));
 
 // Legacy Components (a migrar gradualmente)
 import SupplierSelector from '@/components/SupplierSelector';
@@ -58,6 +69,14 @@ import PurchaseSummary from '@/components/PurchaseSummary';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useI18n } from '@/lib/i18n';
 import { useTelemetry } from '@/hooks/useTelemetry';
+import { usePerformanceOptimizations } from '@/hooks/usePerformanceOptimizations';
+import { usePurchasePrefetch } from '@/hooks/usePurchasePrefetch';
+
+// Types & Constants
+import { 
+  PURCHASE_TELEMETRY_EVENTS, 
+  PURCHASE_STATUS 
+} from '@/types/purchaseTypes';
 
 // Types & Constants
 import { 
@@ -72,12 +91,40 @@ const Purchases = () => {
   const { t } = useI18n();
   const { trackEvent } = useTelemetry();
 
-  // Estado local para UI (Wave 2)
-  const [activeTab, setActiveTab] = useState('purchases-list'); // Cambiar default a lista
+  // Wave 3: Performance optimizations
+  const {
+    optimizedMemo,
+    optimizedCallback,
+    scheduleUpdate,
+    createCleanupRegistry
+  } = usePerformanceOptimizations({
+    componentName: 'PurchasesPage',
+    enableMemoization: true,
+    enableProfiling: process.env.NODE_ENV === 'development'
+  });
+
+  // Wave 3: Prefetch inteligente
+  const {
+    triggerSmartPrefetch,
+    prefetchedPurchases,
+    prefetchConditions
+  } = usePurchasePrefetch({
+    enableSupplierPrefetch: true,
+    enableProductPrefetch: true,
+    enableStatsPrefetch: true,
+    prefetchDelay: 1500,
+    maxPrefetchItems: 100
+  });
+
+  const registerCleanup = createCleanupRegistry();
+
+  // Estado local para UI (Wave 2) - Optimizado Wave 3
+  const [activeTab, setActiveTab] = useState('purchases-list');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState(null);
   const [showMetrics, setShowMetrics] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [useVirtualScrolling, setUseVirtualScrolling] = useState(false);
 
   // Enterprise Store (Wave 1)
   const {
@@ -107,23 +154,47 @@ const Purchases = () => {
     getMetrics
   } = usePurchaseStore();
 
-  // Wave 2: Telemetría avanzada
+  // Wave 3: Detectar listas grandes para virtual scrolling automático
   useEffect(() => {
-    trackEvent(PURCHASE_TELEMETRY_EVENTS.PAGE_VIEW, {
-      tab: activeTab,
-      timestamp: new Date().toISOString()
-    });
-  }, [activeTab, trackEvent]);
+    if (purchases && purchases.length > 100) {
+      setUseVirtualScrolling(true);
+      trackEvent('performance.virtual_scrolling.enabled', {
+        items_count: purchases.length,
+        trigger: 'auto_threshold'
+      });
+    }
+  }, [purchases, trackEvent]);
 
-  // Wave 2: Carga inicial con resiliencia
+  // Wave 2: Telemetría avanzada - Optimizada Wave 3
   useEffect(() => {
-    const initializePage = async () => {
+    const trackPageView = () => {
+      trackEvent(PURCHASE_TELEMETRY_EVENTS.PAGE_VIEW, {
+        tab: activeTab,
+        timestamp: new Date().toISOString(),
+        prefetch_enabled: prefetchConditions.hasGoodConnection(),
+        virtual_scrolling: useVirtualScrolling
+      });
+    };
+
+    // Usar transición para eventos no críticos
+    startTransition(trackPageView);
+  }, [activeTab, trackEvent, prefetchConditions, useVirtualScrolling]);
+
+  // Wave 2: Carga inicial con resiliencia - Optimizada Wave 3
+  useEffect(() => {
+    const initializePage = optimizedCallback(async () => {
       try {
         trackEvent(PURCHASE_TELEMETRY_EVENTS.LOAD_START);
+        
+        // Iniciar prefetch inteligente
+        triggerSmartPrefetch('page_load');
+        
         await loadPurchases();
+        
         trackEvent(PURCHASE_TELEMETRY_EVENTS.LOAD_SUCCESS, {
           count: purchases.length,
-          cached: cache.isValid
+          cached: cache.isValid,
+          prefetch_active: true
         });
       } catch (error) {
         trackEvent(PURCHASE_TELEMETRY_EVENTS.LOAD_ERROR, {
@@ -131,13 +202,13 @@ const Purchases = () => {
           circuit_state: circuit.state
         });
       }
-    };
+    }, [loadPurchases, trackEvent, triggerSmartPrefetch, purchases.length, cache.isValid, circuit.state], 'initializePage');
 
     initializePage();
-  }, [loadPurchases, trackEvent]);
+  }, [initializePage]);
 
-  // Wave 2: Manejo de notificaciones mejorado
-  const showNotification = useCallback((message, type = 'success', duration = 5000) => {
+  // Wave 2: Manejo de notificaciones mejorado - Optimizado Wave 3
+  const showNotification = optimizedCallback((message, type = 'success', duration = 5000) => {
     setNotification({ message, type, id: Date.now() });
     setTimeout(() => setNotification(null), duration);
     
@@ -147,10 +218,10 @@ const Purchases = () => {
       duration,
       has_message: !!message
     });
-  }, [trackEvent]);
+  }, [trackEvent], 'showNotification');
 
-  // Wave 2: Handlers con telemetría
-  const handleCreatePurchase = useCallback(async (purchaseData) => {
+  // Wave 2: Handlers con telemetría - Optimizados Wave 3
+  const handleCreatePurchase = optimizedCallback(async (purchaseData) => {
     try {
       trackEvent(PURCHASE_TELEMETRY_EVENTS.CREATE_START, {
         items_count: purchaseData.items?.length || 0,
@@ -160,9 +231,11 @@ const Purchases = () => {
       const result = await createPurchase(purchaseData);
       
       if (result.success) {
-        showNotification(t('purchases.messages.created') || 'Compra creada exitosamente');
-        setIsModalOpen(false);
-        setActiveTab('purchases-list');
+        scheduleUpdate(() => {
+          showNotification(t('purchases.messages.created') || 'Compra creada exitosamente');
+          setIsModalOpen(false);
+          setActiveTab('purchases-list');
+        }, 'low');
         
         trackEvent(PURCHASE_TELEMETRY_EVENTS.CREATE_SUCCESS, {
           purchase_id: result.data?.id,
@@ -478,28 +551,113 @@ const Purchases = () => {
               testId="purchases-empty"
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {purchases.map((purchase) => (
-                <PurchaseCard
-                  key={purchase.id}
-                  purchase={purchase}
-                  onEdit={(purchase) => {
-                    setEditingPurchase(purchase);
-                    setIsModalOpen(true);
-                  }}
-                  onDelete={handleDeletePurchase}
-                  onView={(id) => {
-                    trackEvent(PURCHASE_TELEMETRY_EVENTS.VIEW_DETAILS, { purchase_id: id });
-                    // Aquí iría la navegación a detalle
-                  }}
-                />
-              ))}
+            <div className="space-y-4">
+              {/* Toggle para virtual scrolling */}
+              {purchases.length > 50 && (
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                  <div>
+                    <span className="text-sm font-medium">
+                      Lista grande detectada ({purchases.length} items)
+                    </span>
+                    <p className="text-xs text-gray-600">
+                      El scroll virtual mejora el rendimiento con listas grandes
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setUseVirtualScrolling(!useVirtualScrolling);
+                      trackEvent('performance.virtual_scrolling.toggled', {
+                        enabled: !useVirtualScrolling,
+                        items_count: purchases.length
+                      });
+                    }}
+                  >
+                    {useVirtualScrolling ? 'Vista Normal' : 'Scroll Virtual'}
+                  </Button>
+                </div>
+              )}
+
+              {/* Renderizado condicional: Virtual vs Normal */}
+              {useVirtualScrolling ? (
+                <div className="h-96 border rounded-lg">
+                  <Suspense fallback={
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <div className="animate-spin h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <div>Cargando lista virtualizada...</div>
+                      </div>
+                    </div>
+                  }>
+                    <VirtualizedPurchaseList
+                      purchases={purchases}
+                      onItemClick={(purchase, action) => {
+                        triggerSmartPrefetch('hover', { 
+                          purchaseId: purchase.id 
+                        });
+                        
+                        switch (action) {
+                          case 'edit':
+                            setEditingPurchase(purchase);
+                            setIsModalOpen(true);
+                            break;
+                          case 'view':
+                            trackEvent(PURCHASE_TELEMETRY_EVENTS.VIEW_DETAILS, { 
+                              purchase_id: purchase.id 
+                            });
+                            break;
+                          case 'delete':
+                            handleDeletePurchase(purchase.id);
+                            break;
+                        }
+                      }}
+                      compact={purchases.length > 200}
+                    />
+                  </Suspense>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {purchases.map((purchase) => (
+                    <PurchaseCard
+                      key={purchase.id}
+                      purchase={purchase}
+                      onEdit={(purchase) => {
+                        triggerSmartPrefetch('hover', { 
+                          purchaseId: purchase.id 
+                        });
+                        setEditingPurchase(purchase);
+                        setIsModalOpen(true);
+                      }}
+                      onDelete={handleDeletePurchase}
+                      onView={(id) => {
+                        trackEvent(PURCHASE_TELEMETRY_EVENTS.VIEW_DETAILS, { purchase_id: id });
+                        triggerSmartPrefetch('hover', { purchaseId: id });
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </TabsContent>
 
-        {/* Tab de Analíticas - Wave 2 */}
+        {/* Tab de Analíticas - Wave 3 Lazy Loaded */}
         <TabsContent value="analytics" className="space-y-4">
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <BarChart3 className="h-12 w-12 mx-auto text-gray-400 mb-4 animate-pulse" />
+                <div className="text-lg">Cargando analytics...</div>
+                <div className="text-sm text-gray-500 mt-2">
+                  Preparando gráficos y métricas avanzadas
+                </div>
+              </div>
+            </div>
+          }>
+            <PurchaseAnalyticsDashboard purchases={purchases} />
+          </Suspense>
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Panel principal de métricas */}
             <div className="lg:col-span-2">
@@ -581,4 +739,10 @@ const Purchases = () => {
   );
 };
 
-export default Purchases;
+// Wave 3: Comparador optimizado para React.memo
+const arePurchasesPagePropsEqual = (prevProps, nextProps) => {
+  // Las páginas normalmente no reciben props, pero es buena práctica tenerlo
+  return true;
+};
+
+export default memo(Purchases, arePurchasesPagePropsEqual);

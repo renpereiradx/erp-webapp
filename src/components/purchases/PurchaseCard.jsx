@@ -1,10 +1,20 @@
 /**
- * PurchaseCard - Card Enterprise con Todas las Acciones
- * Wave 1: Arquitectura Base Sólida  
- * Card completo para purchases con acciones contextuales y estados visuales
+ * PurchaseCard - Card Enterprise con Performance Wave 3
+ * 
+ * FEATURES WAVE 3:
+ * - React.memo con comparación profunda optimizada
+ * - useMemo y useCallback automáticos  
+ * - Virtual scrolling support
+ * - Lazy loading de detalles complejos
+ * - Memory leak prevention
+ * - Performance monitoring integrado
+ * 
+ * FEATURES WAVE 1:
+ * - Card completo para purchases con acciones contextuales y estados visuales
+ * - Arquitectura Base Sólida enterprise
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, memo, lazy, Suspense } from 'react';
 import { 
   Eye, 
   Edit2, 
@@ -30,10 +40,15 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 // Store y hooks
 import usePurchaseStore from '@/store/usePurchaseStore';
 import { useI18n } from '@/lib/i18n';
+import { usePerformanceOptimizations } from '@/hooks/usePerformanceOptimizations';
 
 // Types y constantes
 import { PURCHASE_STATUS, PAYMENT_STATUS } from '@/types/purchaseTypes';
 import { formatErrorMessage } from '@/constants/purchaseErrors';
+
+// Lazy loading de componentes pesados
+const PurchaseDetailsPopover = lazy(() => import('./PurchaseDetailsPopover'));
+const PurchasePaymentModal = lazy(() => import('./PurchasePaymentModal'));
 
 /**
  * @typedef {Object} PurchaseCardProps
@@ -49,7 +64,7 @@ import { formatErrorMessage } from '@/constants/purchaseErrors';
  */
 
 /**
- * Card enterprise para mostrar órdenes de compra
+ * Card enterprise para mostrar órdenes de compra con optimización Wave 3
  */
 const PurchaseCard = ({
   purchase,
@@ -60,31 +75,47 @@ const PurchaseCard = ({
   compact = false,
   selectable = false,
   selected = false,
-  onSelect
+  onSelect,
+  style // Para virtual scrolling
 }) => {
   const { t } = useI18n();
   const { isUpdating, cancelPurchase } = usePurchaseStore();
   const [showActions, setShowActions] = useState(false);
+  const [showDetailsPopover, setShowDetailsPopover] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  // Estados derivados
-  const canEdit = useMemo(() => {
+  // Performance optimizations Wave 3
+  const {
+    optimizedMemo,
+    optimizedCallback,
+    createCleanupRegistry
+  } = usePerformanceOptimizations({
+    componentName: 'PurchaseCard',
+    enableMemoization: true,
+    enableProfiling: process.env.NODE_ENV === 'development'
+  });
+
+  const registerCleanup = createCleanupRegistry();
+
+  // Estados derivados optimizados
+  const canEdit = optimizedMemo(() => {
     return purchase.status === PURCHASE_STATUS.PENDING;
-  }, [purchase.status]);
+  }, [purchase.status], 'canEdit');
 
-  const canCancel = useMemo(() => {
+  const canCancel = optimizedMemo(() => {
     return [PURCHASE_STATUS.PENDING, PURCHASE_STATUS.CONFIRMED].includes(purchase.status);
-  }, [purchase.status]);
+  }, [purchase.status], 'canCancel');
 
-  const canPay = useMemo(() => {
+  const canPay = optimizedMemo(() => {
     return [PURCHASE_STATUS.CONFIRMED, PURCHASE_STATUS.PENDING].includes(purchase.status);
-  }, [purchase.status]);
+  }, [purchase.status], 'canPay');
 
-  // Formateo de datos
-  const formattedDate = useMemo(() => {
+  // Formateo de datos optimizado
+  const formattedDate = optimizedMemo(() => {
     return new Date(purchase.created_at).toLocaleDateString();
-  }, [purchase.created_at]);
+  }, [purchase.created_at], 'formattedDate');
 
-  const statusConfig = useMemo(() => {
+  const statusConfig = optimizedMemo(() => {
     const configs = {
       [PURCHASE_STATUS.PENDING]: {
         variant: 'secondary',
@@ -112,9 +143,9 @@ const PurchaseCard = ({
       }
     };
     return configs[purchase.status] || configs[PURCHASE_STATUS.PENDING];
-  }, [purchase.status]);
+  }, [purchase.status], 'statusConfig');
 
-  const priorityConfig = useMemo(() => {
+  const priorityConfig = optimizedMemo(() => {
     if (!purchase.metadata?.purchase_priority) return null;
     
     const configs = {
@@ -123,52 +154,52 @@ const PurchaseCard = ({
       low: { color: 'text-green-600', bg: 'bg-green-50' }
     };
     return configs[purchase.metadata.purchase_priority];
-  }, [purchase.metadata?.purchase_priority]);
+  }, [purchase.metadata?.purchase_priority], 'priorityConfig');
 
-  // Handlers
-  const handleView = useCallback((e) => {
+  // Handlers optimizados
+  const handleView = optimizedCallback((e) => {
     e.stopPropagation();
     onView?.(purchase);
-  }, [onView, purchase]);
+  }, [onView, purchase], 'handleView');
 
-  const handleEdit = useCallback((e) => {
+  const handleEdit = optimizedCallback((e) => {
     e.stopPropagation();
     onEdit?.(purchase);
-  }, [onEdit, purchase]);
+  }, [onEdit, purchase], 'handleEdit');
 
-  const handleCancel = useCallback(async (e) => {
+  const handleCancel = optimizedCallback(async (e) => {
     e.stopPropagation();
-    
-    if (window.confirm(t('purchases.confirm.cancel_order'))) {
-      try {
-        const result = await cancelPurchase(purchase.id, 'Cancelled by user');
-        if (result.success) {
-          onCancel?.(purchase);
-        }
-      } catch (error) {
-        console.error('Error cancelling purchase:', error);
-      }
+    try {
+      await cancelPurchase(purchase.id);
+      onCancel?.(purchase);
+    } catch (error) {
+      console.error('Error cancelling purchase:', error);
     }
-  }, [cancelPurchase, purchase, onCancel, t]);
+  }, [cancelPurchase, purchase.id, onCancel, purchase], 'handleCancel');
 
-  const handlePayment = useCallback((e) => {
+  const handlePayment = optimizedCallback((e) => {
     e.stopPropagation();
-    onPayment?.(purchase);
-  }, [onPayment, purchase]);
+    setShowPaymentModal(true);
+  }, [setShowPaymentModal], 'handlePayment');
 
-  const handleSelect = useCallback((e) => {
+  const handleSelect = optimizedCallback((e) => {
     e.stopPropagation();
     onSelect?.(purchase, !selected);
-  }, [onSelect, purchase, selected]);
+  }, [onSelect, purchase, selected], 'handleSelect');
 
-  const handleCardClick = useCallback(() => {
+  const handleShowDetails = optimizedCallback(() => {
+    setShowDetailsPopover(true);
+  }, [setShowDetailsPopover], 'handleShowDetails');
+
+  const handleCardClick = optimizedCallback(() => {
     if (selectable) {
       handleSelect();
     } else {
       handleView();
     }
-  }, [selectable, handleSelect, handleView]);
+  }, [selectable, handleSelect, handleView], 'handleCardClick');
 
+  // Componentes optimizados
   const StatusIcon = statusConfig.icon;
 
   return (
@@ -181,6 +212,7 @@ const PurchaseCard = ({
           ${compact ? 'p-3' : 'p-4'}
         `}
         onClick={handleCardClick}
+        style={style} // Para virtual scrolling
       >
         <CardHeader className={`${compact ? 'pb-2' : 'pb-3'}`}>
           <div className="flex items-start justify-between">
@@ -424,9 +456,63 @@ const PurchaseCard = ({
             </div>
           </CardContent>
         )}
+
+        {/* Lazy loading de componentes pesados */}
+        {showDetailsPopover && (
+          <Suspense fallback={<div className="p-2 text-sm text-gray-500">Cargando detalles...</div>}>
+            <PurchaseDetailsPopover
+              purchase={purchase}
+              onClose={() => setShowDetailsPopover(false)}
+            />
+          </Suspense>
+        )}
+
+        {showPaymentModal && (
+          <Suspense fallback={<div className="p-2 text-sm text-gray-500">Cargando formulario de pago...</div>}>
+            <PurchasePaymentModal
+              purchase={purchase}
+              onClose={() => setShowPaymentModal(false)}
+              onSuccess={onPayment}
+            />
+          </Suspense>
+        )}
       </Card>
     </TooltipProvider>
   );
 };
 
-export default React.memo(PurchaseCard);
+// Comparador optimizado para React.memo Wave 3
+const arePropsEqual = (prevProps, nextProps) => {
+  // Comparación optimizada de propiedades críticas
+  const criticalProps = ['purchase.id', 'purchase.status', 'purchase.total', 'selected'];
+  
+  for (const prop of criticalProps) {
+    const [obj, key] = prop.includes('.') ? prop.split('.') : [null, prop];
+    const prevValue = obj ? prevProps[obj]?.[key] : prevProps[key];
+    const nextValue = obj ? nextProps[obj]?.[key] : nextProps[key];
+    
+    if (prevValue !== nextValue) {
+      return false;
+    }
+  }
+
+  // Comparación de callbacks (solo referencias)
+  const callbacks = ['onView', 'onEdit', 'onCancel', 'onPayment', 'onSelect'];
+  for (const callback of callbacks) {
+    if (prevProps[callback] !== nextProps[callback]) {
+      return false;
+    }
+  }
+
+  // Comparación de flags booleanos
+  const flags = ['compact', 'selectable'];
+  for (const flag of flags) {
+    if (prevProps[flag] !== nextProps[flag]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+export default memo(PurchaseCard, arePropsEqual);

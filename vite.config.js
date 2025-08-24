@@ -3,19 +3,28 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 import { fileURLToPath, URL } from 'node:url'
+// Wave 3: Import bundle splitting configuration
+import { bundleSplittingConfig } from './src/config/bundleSplitting.js'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(),tailwindcss()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  
+  // Wave 3: Enhanced build configuration with bundle splitting
   build: {
+    ...bundleSplittingConfig.build,
     rollupOptions: {
+      ...bundleSplittingConfig.build.rollupOptions,
       output: {
+        ...bundleSplittingConfig.build.rollupOptions.output,
+        // Merge existing chunks with Wave 3 optimizations
         manualChunks: {
+          // Original chunks
           react: ['react', 'react-dom'],
           router: ['react-router-dom'],
           radix: [
@@ -27,11 +36,19 @@ export default defineConfig({
             '@radix-ui/react-tooltip'
           ],
           virtuoso: ['react-virtuoso'],
-          lucide: ['lucide-react']
+          lucide: ['lucide-react'],
+          
+          // Wave 3: Enhanced chunks
+          ...bundleSplittingConfig.build.rollupOptions.output.manualChunks
         }
       }
     }
   },
+  
+  // Wave 3: Performance optimizations
+  ...bundleSplittingConfig.optimizeDeps && { optimizeDeps: bundleSplittingConfig.optimizeDeps },
+  ...bundleSplittingConfig.server && { server: bundleSplittingConfig.server },
+  
   test: {
     environment: 'jsdom',
     globals: true,
