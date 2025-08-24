@@ -50,7 +50,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import DataState from '@/components/ui/DataState';
 
 // Enterprise Store & Services (Wave 1)
-import { usePurchaseStore } from '@/store/usePurchaseStore';
+import usePurchaseStore from '@/store/usePurchaseStore';
 
 // Enterprise Components (Wave 1) - Ahora optimizados Wave 3
 import PurchaseModal from '@/components/purchases/PurchaseModal';
@@ -60,6 +60,7 @@ import PurchaseMetricsPanel from '@/components/purchases/PurchaseMetricsPanel';
 // Wave 3 Components - Lazy loaded
 const VirtualizedPurchaseList = lazy(() => import('@/components/purchases/VirtualizedPurchaseList'));
 const PurchaseAnalyticsDashboard = lazy(() => import('@/components/purchases/PurchaseAnalyticsDashboard'));
+const Wave3StatusPanel = lazy(() => import('@/components/Wave3StatusPanel'));
 
 // Legacy Components (a migrar gradualmente)
 import SupplierSelector from '@/components/SupplierSelector';
@@ -71,12 +72,8 @@ import { useI18n } from '@/lib/i18n';
 import { useTelemetry } from '@/hooks/useTelemetry';
 import { usePerformanceOptimizations } from '@/hooks/usePerformanceOptimizations';
 import { usePurchasePrefetch } from '@/hooks/usePurchasePrefetch';
-
-// Types & Constants
-import { 
-  PURCHASE_TELEMETRY_EVENTS, 
-  PURCHASE_STATUS 
-} from '@/types/purchaseTypes';
+import { useServiceWorker } from '@/hooks/useServiceWorker';
+import { useAnalyticsWorker } from '@/hooks/useAnalyticsWorker';
 
 // Types & Constants
 import { 
@@ -114,6 +111,31 @@ const Purchases = () => {
     enableStatsPrefetch: true,
     prefetchDelay: 1500,
     maxPrefetchItems: 100
+  });
+
+  // Wave 3: Service Worker integration
+  const {
+    isRegistered: swRegistered,
+    isActivated: swActivated,
+    networkStatus,
+    clearCache: clearSWCache,
+    cachePurchaseData
+  } = useServiceWorker({
+    enableBackground: true,
+    enableCaching: true,
+    enableSync: true
+  });
+
+  // Wave 3: Analytics Worker integration
+  const {
+    isReady: workerReady,
+    isProcessing: workerProcessing,
+    calculateAnalytics,
+    exportPurchases,
+    progress: workerProgress
+  } = useAnalyticsWorker({
+    enableBackground: true,
+    maxConcurrentTasks: 1
   });
 
   const registerCleanup = createCleanupRegistry();
@@ -659,10 +681,32 @@ const Purchases = () => {
           </Suspense>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Wave 3 Status Panel */}
+            <div>
+              <Suspense fallback={<div className="h-32 bg-gray-100 rounded animate-pulse" />}>
+                <Wave3StatusPanel
+                  serviceWorker={swState}
+                  analyticsWorker={workerState}
+                  virtualScrolling={useVirtualScrolling}
+                  prefetchStatus={prefetchStatus}
+                  onClearCache={() => {
+                    clearCache();
+                    swState.clearCache?.();
+                    trackEvent('performance.cache.cleared', {
+                      source: 'status_panel'
+                    });
+                  }}
+                />
+              </Suspense>
+            </div>
+            
             {/* Panel principal de métricas */}
-            <div className="lg:col-span-2">
+            <div>
               <PurchaseMetricsPanel />
             </div>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
             
             {/* Métricas adicionales específicas */}
             <Card className={styles.card()}>

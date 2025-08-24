@@ -21,11 +21,10 @@ export const bundleSplittingConfig = {
     rollupOptions: {
       output: {
         manualChunks: {
-          // Vendor chunks optimizados
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-select'],
-          'state-vendor': ['zustand', '@tanstack/react-query'],
-          'virtual-vendor': ['react-window', 'react-virtualized-auto-sizer'],
+          // Vendor chunks optimizados - Solo sin conflictos
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-state': ['zustand', '@tanstack/react-query'],
+          'vendor-virtual': ['react-window', 'react-virtualized-auto-sizer'],
           
           // Feature chunks
           'purchases-core': [
@@ -48,7 +47,7 @@ export const bundleSplittingConfig = {
           'performance-hooks': [
             './src/hooks/usePerformanceOptimizations.js',
             './src/hooks/useTelemetry.js',
-            './src/services/recovery.js'
+            './src/helpers/recovery.js'
           ],
           
           // Theme & UI chunks

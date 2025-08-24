@@ -24,8 +24,7 @@ export default defineConfig({
         ...bundleSplittingConfig.build.rollupOptions.output,
         // Merge existing chunks with Wave 3 optimizations
         manualChunks: {
-          // Original chunks
-          react: ['react', 'react-dom'],
+          // Original chunks (sin react duplicado)
           router: ['react-router-dom'],
           radix: [
             '@radix-ui/react-accordion',

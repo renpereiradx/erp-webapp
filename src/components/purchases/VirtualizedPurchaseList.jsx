@@ -16,7 +16,7 @@
 
 import React, { memo, useMemo, useCallback, useRef, useEffect } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { AutoSizer } from 'react-virtualized-auto-sizer';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import { usePerformanceOptimizations } from '@/hooks/usePerformanceOptimizations';
 import PurchaseCard from './PurchaseCard';
 
