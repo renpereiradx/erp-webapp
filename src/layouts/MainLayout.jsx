@@ -704,11 +704,12 @@ const MainLayout = ({ children }) => {
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(true)}
-            className={`erp-mobile-menu-btn px-4 ${!isClient ? 'lg:hidden' : ''}`}
+            className={`erp-mobile-menu-btn px-4 lg:hidden`}
             style={{ 
               borderRight: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
               color: 'var(--foreground)',
-              display: isClient ? (!isLargeScreen ? 'flex' : 'none') : undefined,
+              // Siempre oculto en desktop (>= lg) vía clase; sólo controlamos display tras hidratación para evitar parpadeo
+              display: isClient ? (isLargeScreen ? 'none' : 'flex') : undefined,
               width: '48px',
               height: '48px',
               minWidth: '48px',
