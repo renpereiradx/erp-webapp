@@ -38,11 +38,11 @@ import { useSalesStore } from '@/store/useSalesStore';
 import { usePaymentStore } from '@/store/usePaymentStore';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useFocusManagement } from '@/hooks/useFocusManagement';
-import { useLiveRegion } from '@/components/a11y/LiveRegion';
+import { useLiveRegion } from '@/hooks/useLiveRegion';
+import { useTranslation } from '@/hooks/useTranslation';
 import { salesPaymentAdapter } from '@/services/salesPaymentAdapter';
 import { PAYMENT_TYPES } from '@/services/paymentArchitecture';
 import { telemetry } from '@/utils/telemetry';
-import { t } from '@/lib/i18n';
 
 // Wizard context for sharing state between steps
 const SalesWizardContext = createContext();
@@ -862,6 +862,7 @@ const ConfirmationStep = () => {
 // Main wizard component
 export const SalesWizard = ({ onComplete, onCancel }) => {
   const { getCardStyles, getTextStyles, getButtonStyles } = useThemeStyles();
+  const { t } = useTranslation();
   
   // Accessibility hooks
   const { announce, LiveRegions } = useLiveRegion();

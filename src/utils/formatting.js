@@ -22,15 +22,20 @@ export const formatCurrency = (value, options = {}) => {
   } = options;
 
   if (value === null || value === undefined || isNaN(value) || !isFinite(value)) {
-    return '$0.00';
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits,
+      maximumFractionDigits
+    }).format(0);
   }
 
   // Handle compact formatting for large numbers
   if (compact && Math.abs(value) >= 1000) {
     const suffixes = ['', 'K', 'M', 'B', 'T'];
-    const suffixIndex = Math.floor(Math.log10(Math.abs(value)) / 3);
+    const suffixIndex = Math.min(Math.floor(Math.log10(Math.abs(value)) / 3), suffixes.length - 1);
     const shortValue = value / Math.pow(1000, suffixIndex);
-    
+
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency,
@@ -59,453 +64,34 @@ export const formatNumber = (value, options = {}) => {
     minimumFractionDigits = 0,
     maximumFractionDigits = 2,
     compact = false,
-    decimals
-  } = options;
-
-  if (value === null || value === undefined || isNaN(value) || !isFinite(value)) {
-    return '0';
-  }
-
-  // Handle decimals option override
-  const minDecimals = decimals !== undefined ? decimals : minimumFractionDigits;
-  const maxDecimals = decimals !== undefined ? decimals : maximumFractionDigits;
-
-  // Handle compact formatting for large numbers
-  if (compact && Math.abs(value) >= 1000) {
-    const suffixes = ['', 'K', 'M', 'B', 'T'];
-    const suffixIndex = Math.floor(Math.log10(Math.abs(value)) / 3);
-    const shortValue = value / Math.pow(1000, suffixIndex);
-    
-    return new Intl.NumberFormat(locale, {
-      minimumFractionDigits: shortValue >= 10 ? 0 : 1,
-      maximumFractionDigits: shortValue >= 10 ? 0 : 1
-    }).format(shortValue) + suffixes[suffixIndex];
-  }
-
-  return new Intl.NumberFormat(locale, {
-    minimumFractionDigits: minDecimals,
-    maximumFractionDigits: maxDecimals
-  }).format(value);
-};
-
-/**
- * Format percentage values with localization support
- * @param {number} value - The numeric value to format (0.15 = 15%)
- * @param {Object} options - Formatting options
- * @returns {string} Formatted percentage string
- */
-export const formatPercentage = (value, options = {}) => {
-  const {
-    locale = 'es-MX',
-    minimumFractionDigits = 2,
-    maximumFractionDigits = 2,
-    showSign = false,
-    isAlreadyPercentage = false,
-    decimals
-  } = options;
-
-  if (value === null || value === undefined || isNaN(value) || !isFinite(value)) {
-    return '0.00%';
-  }
-
-  // Handle decimals option override
-  const minDecimals = decimals !== undefined ? decimals : minimumFractionDigits;
-  const maxDecimals = decimals !== undefined ? decimals : maximumFractionDigits;
-
-  const actualValue = isAlreadyPercentage ? value / 100 : value;
-  const sign = showSign && actualValue > 0 ? '+' : '';
-  
-  return sign + new Intl.NumberFormat(locale, {
-    style: 'percent',
-    minimumFractionDigits: minDecimals,
-    maximumFractionDigits: maxDecimals
-  }).format(actualValue);
-};
-
-/**
- * Format date values with various formats
- * @param {Date|string|number} date - The date to format
- * @param {Object} options - Formatting options
- * @returns {string} Formatted date string
- */
-export const formatDate = (date, options = {}) => {
-  const {
-    locale = 'es-MX',
-    format = 'short',
-    includeTime = false,
-    relative = false,
-    timeZone = 'America/Mexico_City'
-  } = options;
-
-  if (!date) return 'Fecha inválida';
-
-  const dateObj = date instanceof Date ? date : new Date(date);
-  
-  if (isNaN(dateObj.getTime())) {
-    return 'Fecha inválida';
-  }
-
-  // Handle relative dates
-  if (relative) {
-    const now = new Date();
-    const diffDays = Math.floor((dateObj - now) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'hoy';
-    if (diffDays === -1) return 'ayer';
-    if (diffDays === 1) return 'mañana';
-  }
-
-  // Handle custom format patterns
-  if (typeof format === 'string' && format.includes('-')) {
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    
-    switch (format) {
-      case 'yyyy-MM-dd':
-        return `${year}-${month}-${day}`;
-      case 'dd/MM/yyyy':
-        return `${day}/${month}/${year}`;
-      case 'MMM dd, yyyy':
-        return dateObj.toLocaleDateString(locale, { 
-          month: 'short', 
-          day: 'numeric', 
-          year: 'numeric' 
-        });
-      default:
-        break;
-    }
-  }
-
-  // Predefined formats
-  const formatOptions = {
-    short: { 
-      year: 'numeric', 
-      month: 'numeric', 
-      day: 'numeric' 
-    },
-    medium: { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    },
-    long: { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    },
-    full: { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric'
-    }
-  };
-
-  let dateFormat = formatOptions[format] || formatOptions.short;
-  
-  if (includeTime) {
-    dateFormat = {
-      ...dateFormat,
-      hour: '2-digit',
-      minute: '2-digit'
-    };
-  }
-
-  return dateObj.toLocaleDateString(locale, { 
-    ...dateFormat, 
-    timeZone 
-  });
-};
-
-/**
- * Format currency values with localization support
- * @param {number} value - The numeric value to format
- * @param {Object} options - Formatting options
- * @returns {string} Formatted currency string
- */
-export const formatCurrency = (value, options = {}) => {
-  const {
-    currency = 'USD',
-    locale = 'es-MX',
-    minimumFractionDigits = 2,
-    maximumFractionDigits = 2,
-    compact = false
-  } = options;
-
-  if (value === null || value === undefined || isNaN(value) || !isFinite(value)) {
-    return '$0.00';
-  }
-
-  // Handle compact formatting for large numbers
-  if (compact && Math.abs(value) >= 1000) {
-    const suffixes = ['', 'K', 'M', 'B', 'T'];
-    const suffixIndex = Math.floor(Math.log10(Math.abs(value)) / 3);
-    const shortValue = value / Math.pow(1000, suffixIndex);
-    
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: shortValue >= 10 ? 0 : 1,
-      maximumFractionDigits: shortValue >= 10 ? 0 : 1
-    }).format(shortValue) + suffixes[suffixIndex];
-  }
-
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency,
-    minimumFractionDigits,
-    maximumFractionDigits
-  }).format(value);
-};
-
-/**
- * Format numeric values with localization support
- * @param {number} value - The numeric value to format
- * @param {Object} options - Formatting options
- * @returns {string} Formatted number string
- */
-export const formatNumber = (value, options = {}) => {
-  const {
-    locale = 'es-MX',
-    minimumFractionDigits = 0,
-    maximumFractionDigits = 2,
-    compact = false,
-    decimals
-  } = options;
-
-  if (value === null || value === undefined || isNaN(value) || !isFinite(value)) {
-    return '0';
-  }
-
-  // Handle decimals option override
-  const minDecimals = decimals !== undefined ? decimals : minimumFractionDigits;
-  const maxDecimals = decimals !== undefined ? decimals : maximumFractionDigits;
-
-  // Handle compact formatting for large numbers
-  if (compact && Math.abs(value) >= 1000) {
-    const suffixes = ['', 'K', 'M', 'B', 'T'];
-    const suffixIndex = Math.floor(Math.log10(Math.abs(value)) / 3);
-    const shortValue = value / Math.pow(1000, suffixIndex);
-    
-    return new Intl.NumberFormat(locale, {
-      minimumFractionDigits: shortValue >= 10 ? 0 : 1,
-      maximumFractionDigits: shortValue >= 10 ? 0 : 1
-    }).format(shortValue) + suffixes[suffixIndex];
-  }
-
-  return new Intl.NumberFormat(locale, {
-    minimumFractionDigits: minDecimals,
-    maximumFractionDigits: maxDecimals
-  }).format(value);
-};
-
-/**
- * Format percentage values with localization support
- * @param {number} value - The numeric value to format (0.15 = 15%)
- * @param {Object} options - Formatting options
- * @returns {string} Formatted percentage string
- */
-export const formatPercentage = (value, options = {}) => {
-  const {
-    locale = 'es-MX',
-    minimumFractionDigits = 2,
-    maximumFractionDigits = 2,
-    showSign = false,
-    isAlreadyPercentage = false,
-    decimals
-  } = options;
-
-  if (value === null || value === undefined || isNaN(value) || !isFinite(value)) {
-    return '0.00%';
-  }
-
-  // Handle decimals option override
-  const minDecimals = decimals !== undefined ? decimals : minimumFractionDigits;
-  const maxDecimals = decimals !== undefined ? decimals : maximumFractionDigits;
-
-  const actualValue = isAlreadyPercentage ? value / 100 : value;
-  const sign = showSign && actualValue > 0 ? '+' : '';
-  
-  return sign + new Intl.NumberFormat(locale, {
-    style: 'percent',
-    minimumFractionDigits: minDecimals,
-    maximumFractionDigits: maxDecimals
-  }).format(actualValue);
-};
-
-/**
- * Format date values with various formats
- * @param {Date|string|number} date - The date to format
- * @param {Object} options - Formatting options
- * @returns {string} Formatted date string
- */
-export const formatDate = (date, options = {}) => {
-  const {
-    locale = 'es-MX',
-    format = 'short',
-    includeTime = false,
-    relative = false,
-    timeZone = 'America/Mexico_City'
-  } = options;
-
-  if (!date) return 'Fecha inválida';
-
-  const dateObj = date instanceof Date ? date : new Date(date);
-  
-  if (isNaN(dateObj.getTime())) {
-    return 'Fecha inválida';
-  }
-
-  // Handle relative dates
-  if (relative) {
-    const now = new Date();
-    const diffDays = Math.floor((dateObj - now) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'hoy';
-    if (diffDays === -1) return 'ayer';
-    if (diffDays === 1) return 'mañana';
-  }
-
-  // Handle custom format patterns
-  if (typeof format === 'string' && format.includes('-')) {
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    
-    switch (format) {
-      case 'yyyy-MM-dd':
-        return `${year}-${month}-${day}`;
-      case 'dd/MM/yyyy':
-        return `${day}/${month}/${year}`;
-      case 'MMM dd, yyyy':
-        return dateObj.toLocaleDateString(locale, { 
-          month: 'short', 
-          day: 'numeric', 
-          year: 'numeric' 
-        });
-      default:
-        break;
-    }
-  }
-
-  // Predefined formats
-  const formatOptions = {
-    short: { 
-      year: 'numeric', 
-      month: 'numeric', 
-      day: 'numeric' 
-    },
-    medium: { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    },
-    long: { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    },
-    full: { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric'
-    }
-  };
-
-  let dateFormat = formatOptions[format] || formatOptions.short;
-  
-  if (includeTime) {
-    dateFormat = {
-      ...dateFormat,
-      hour: '2-digit',
-      minute: '2-digit'
-    };
-  }
-
-  return dateObj.toLocaleDateString(locale, { 
-    ...dateFormat, 
-    timeZone 
-  });
-};
-
-/**
- * Format currency values with localization support
- * @param {number} value - The numeric value to format
- * @param {Object} options - Formatting options
- * @returns {string} Formatted currency string
- */
-export const formatCurrency = (value, options = {}) => {
-  const {
-    currency = 'USD',
-    locale = 'es-MX',
-    minimumFractionDigits = 2,
-    maximumFractionDigits = 2,
-    compact = false
-  } = options;
-
-  if (value === null || value === undefined || isNaN(value)) {
-    return '$0.00';
-  }
-
-  // Handle compact formatting for large numbers
-  if (compact && Math.abs(value) >= 1000) {
-    const suffixes = ['', 'K', 'M', 'B', 'T'];
-    const suffixIndex = Math.floor(Math.log10(Math.abs(value)) / 3);
-    const shortValue = value / Math.pow(1000, suffixIndex);
-    
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: shortValue >= 10 ? 0 : 1,
-      maximumFractionDigits: shortValue >= 10 ? 0 : 1
-    }).format(shortValue) + suffixes[suffixIndex];
-  }
-
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency,
-    minimumFractionDigits,
-    maximumFractionDigits
-  }).format(value);
-};
-
-/**
- * Format numeric values with localization support
- * @param {number} value - The numeric value to format
- * @param {Object} options - Formatting options
- * @returns {string} Formatted number string
- */
-export const formatNumber = (value, options = {}) => {
-  const {
-    locale = 'es-MX',
-    minimumFractionDigits = 0,
-    maximumFractionDigits = 2,
-    compact = false,
+    decimals,
     useGrouping = true
   } = options;
 
-  if (value === null || value === undefined || isNaN(value)) {
+  if (value === null || value === undefined || isNaN(value) || !isFinite(value)) {
     return '0';
   }
+
+  // Handle decimals option override
+  const minDecimals = decimals !== undefined ? decimals : minimumFractionDigits;
+  const maxDecimals = decimals !== undefined ? decimals : maximumFractionDigits;
 
   // Handle compact formatting for large numbers
   if (compact && Math.abs(value) >= 1000) {
     const suffixes = ['', 'K', 'M', 'B', 'T'];
-    const suffixIndex = Math.floor(Math.log10(Math.abs(value)) / 3);
+    const suffixIndex = Math.min(Math.floor(Math.log10(Math.abs(value)) / 3), suffixes.length - 1);
     const shortValue = value / Math.pow(1000, suffixIndex);
-    
+
     return new Intl.NumberFormat(locale, {
-      minimumFractionDigits: shortValue >= 10 ? 0 : 1,
-      maximumFractionDigits: shortValue >= 10 ? 0 : 1,
+      minimumFractionDigits: shortValue >= 10 ? 0 : minDecimals,
+      maximumFractionDigits: shortValue >= 10 ? 0 : maxDecimals,
       useGrouping
     }).format(shortValue) + suffixes[suffixIndex];
   }
 
   return new Intl.NumberFormat(locale, {
-    minimumFractionDigits,
-    maximumFractionDigits,
+    minimumFractionDigits: minDecimals,
+    maximumFractionDigits: maxDecimals,
     useGrouping
   }).format(value);
 };
@@ -521,8 +107,31 @@ export const formatPercentage = (value, options = {}) => {
     locale = 'es-MX',
     minimumFractionDigits = 2,
     maximumFractionDigits = 2,
-    showSign = false
+    showSign = false,
+    isAlreadyPercentage = false,
+    decimals
   } = options;
+
+  if (value === null || value === undefined || isNaN(value) || !isFinite(value)) {
+    return new Intl.NumberFormat(locale, {
+      style: 'percent',
+      minimumFractionDigits: minimumFractionDigits,
+      maximumFractionDigits: maximumFractionDigits
+    }).format(0);
+  }
+
+  const minDecimals = decimals !== undefined ? decimals : minimumFractionDigits;
+  const maxDecimals = decimals !== undefined ? decimals : maximumFractionDigits;
+
+  const actualValue = isAlreadyPercentage ? value / 100 : value;
+  const sign = showSign && actualValue > 0 ? '+' : '';
+
+  return sign + new Intl.NumberFormat(locale, {
+    style: 'percent',
+    minimumFractionDigits: minDecimals,
+    maximumFractionDigits: maxDecimals
+  }).format(actualValue);
+};
 
 /**
  * Format date values with various formats
@@ -533,55 +142,96 @@ export const formatPercentage = (value, options = {}) => {
 export const formatDate = (date, options = {}) => {
   const {
     locale = 'es-MX',
-    format = 'short', // short, medium, long, full, custom
-    customFormat = null,
-    timeZone = 'America/Mexico_City'
+    format = 'short',
+    includeTime = false,
+    relative = false,
+    timeZone = 'America/Mexico_City',
+    customFormat = null
   } = options;
 
-  if (!date) return '';
+  if (!date) return 'Fecha inválida';
 
   const dateObj = date instanceof Date ? date : new Date(date);
-  
+
   if (isNaN(dateObj.getTime())) {
     return 'Fecha inválida';
   }
 
-  // Custom format using toLocaleDateString options
-  if (customFormat) {
+  // Relative handling
+  if (relative) {
+    const now = new Date();
+    const diffDays = Math.floor((dateObj - now) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'hoy';
+    if (diffDays === -1) return 'ayer';
+    if (diffDays === 1) return 'mañana';
+  }
+
+  // Custom format object for toLocaleDateString
+  if (customFormat && typeof customFormat === 'object') {
     return dateObj.toLocaleDateString(locale, { ...customFormat, timeZone });
   }
 
-  // Predefined formats
+  // String pattern formats
+  if (typeof format === 'string' && format.includes('-')) {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+
+    switch (format) {
+      case 'yyyy-MM-dd':
+        return `${year}-${month}-${day}`;
+      case 'dd/MM/yyyy':
+        return `${day}/${month}/${year}`;
+      case 'MMM dd, yyyy':
+        return dateObj.toLocaleDateString(locale, {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          timeZone
+        });
+      default:
+        break;
+    }
+  }
+
   const formatOptions = {
-    short: { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    short: {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
     },
-    medium: { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    medium: {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     },
-    long: { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    long: {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     },
-    full: { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    full: {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     }
   };
 
-  return dateObj.toLocaleDateString(locale, { 
-    ...formatOptions[format], 
-    timeZone 
+  let dateFormat = formatOptions[format] || formatOptions.short;
+
+  if (includeTime) {
+    dateFormat = {
+      ...dateFormat,
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+  }
+
+  return dateObj.toLocaleDateString(locale, {
+    ...dateFormat,
+    timeZone
   });
 };
 
@@ -594,39 +244,29 @@ export const formatDate = (date, options = {}) => {
 export const formatDuration = (seconds, options = {}) => {
   const {
     format = 'short', // short, long
-    showSeconds = true,
-    locale = 'es'
+    showSeconds = true
   } = options;
 
-  if (!seconds || isNaN(seconds)) return '0s';
+  if (seconds === null || seconds === undefined || isNaN(seconds) || seconds === 0) return '0s';
 
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
 
   if (format === 'long') {
     const parts = [];
-    if (hours > 0) {
-      parts.push(`${hours} ${hours === 1 ? 'hora' : 'horas'}`);
-    }
-    if (minutes > 0) {
-      parts.push(`${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`);
-    }
-    if (showSeconds && remainingSeconds > 0) {
-      parts.push(`${remainingSeconds} ${remainingSeconds === 1 ? 'segundo' : 'segundos'}`);
-    }
-    return parts.join(', ');
+    if (hrs > 0) parts.push(`${hrs} ${hrs === 1 ? 'hora' : 'horas'}`);
+    if (mins > 0) parts.push(`${mins} ${mins === 1 ? 'minuto' : 'minutos'}`);
+    if (showSeconds && secs > 0) parts.push(`${secs} ${secs === 1 ? 'segundo' : 'segundos'}`);
+    return parts.join(', ') || '0s';
   }
 
-  // Short format
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  } else if (minutes > 0) {
-    return showSeconds 
-      ? `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-      : `${minutes}m`;
+  if (hrs > 0) {
+    return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  } else if (mins > 0) {
+    return showSeconds ? `${mins}:${String(secs).padStart(2, '0')}` : `${mins}m`;
   } else {
-    return `${remainingSeconds}s`;
+    return `${secs}s`;
   }
 };
 
@@ -642,17 +282,17 @@ export const formatFileSize = (bytes, options = {}) => {
     binary = false // Use 1024 instead of 1000
   } = options;
 
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === null || bytes === undefined || isNaN(bytes) || bytes === 0) return '0 Bytes';
 
   const k = binary ? 1024 : 1000;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = binary 
+  const sizes = binary
     ? ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
     : ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
 
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const i = Math.min(Math.floor(Math.log(Math.abs(bytes)) / Math.log(k)), sizes.length - 1);
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
 
 /**
@@ -670,18 +310,14 @@ export const formatRelativeTime = (date, options = {}) => {
   if (!date) return '';
 
   const dateObj = date instanceof Date ? date : new Date(date);
-  
-  if (isNaN(dateObj.getTime())) {
-    return 'Fecha inválida';
-  }
+
+  if (isNaN(dateObj.getTime())) return 'Fecha inválida';
 
   const now = new Date();
   const diffInSeconds = Math.floor((now - dateObj) / 1000);
 
-  // Use Intl.RelativeTimeFormat for modern browsers
   if (typeof Intl !== 'undefined' && Intl.RelativeTimeFormat) {
     const rtf = new Intl.RelativeTimeFormat(locale, { numeric });
-
     const units = [
       { unit: 'year', seconds: 31536000 },
       { unit: 'month', seconds: 2592000 },
@@ -702,7 +338,6 @@ export const formatRelativeTime = (date, options = {}) => {
     return rtf.format(0, 'second');
   }
 
-  // Fallback for older browsers
   const absSeconds = Math.abs(diffInSeconds);
   const future = diffInSeconds < 0;
 
@@ -710,19 +345,13 @@ export const formatRelativeTime = (date, options = {}) => {
     return future ? 'en unos segundos' : 'hace unos segundos';
   } else if (absSeconds < 3600) {
     const minutes = Math.floor(absSeconds / 60);
-    return future 
-      ? `en ${minutes} minuto${minutes !== 1 ? 's' : ''}`
-      : `hace ${minutes} minuto${minutes !== 1 ? 's' : ''}`;
+    return future ? `en ${minutes} minuto${minutes !== 1 ? 's' : ''}` : `hace ${minutes} minuto${minutes !== 1 ? 's' : ''}`;
   } else if (absSeconds < 86400) {
     const hours = Math.floor(absSeconds / 3600);
-    return future 
-      ? `en ${hours} hora${hours !== 1 ? 's' : ''}`
-      : `hace ${hours} hora${hours !== 1 ? 's' : ''}`;
+    return future ? `en ${hours} hora${hours !== 1 ? 's' : ''}` : `hace ${hours} hora${hours !== 1 ? 's' : ''}`;
   } else {
     const days = Math.floor(absSeconds / 86400);
-    return future 
-      ? `en ${days} día${days !== 1 ? 's' : ''}`
-      : `hace ${days} día${days !== 1 ? 's' : ''}`;
+    return future ? `en ${days} día${days !== 1 ? 's' : ''}` : `hace ${days} día${days !== 1 ? 's' : ''}`;
   }
 };
 
@@ -737,7 +366,7 @@ export const formatChartData = (data, numberFields = []) => {
 
   return data.map(item => {
     const formatted = { ...item };
-    
+
     numberFields.forEach(field => {
       if (formatted[field] !== undefined) {
         const num = parseFloat(formatted[field]);
@@ -757,8 +386,10 @@ export const formatChartData = (data, numberFields = []) => {
  * @returns {string} Truncated text
  */
 export const truncateText = (text, maxLength, suffix = '...') => {
-  if (!text || text.length <= maxLength) return text;
-  
+  if (text === null || text === undefined) return '';
+  if (maxLength === undefined || maxLength === null) return text;
+  if (text.length <= maxLength) return text;
+
   return text.substring(0, maxLength - suffix.length) + suffix;
 };
 
@@ -777,16 +408,16 @@ export const formatGrowthRate = (rate, options = {}) => {
 
   if (rate === null || rate === undefined || isNaN(rate)) {
     return {
-      value: '0%',
+      value: formatPercentage(0, { minimumFractionDigits: precision, maximumFractionDigits: precision }),
       className: 'text-gray-500',
       trend: 'neutral'
     };
   }
 
-  const formattedRate = formatPercentage(rate, { 
+  const formattedRate = formatPercentage(rate, {
     minimumFractionDigits: precision,
     maximumFractionDigits: precision,
-    showSign 
+    showSign
   });
 
   let className = 'text-gray-500';
@@ -816,18 +447,18 @@ export const formatGrowthRate = (rate, options = {}) => {
  */
 export const debounce = (func, wait, immediate = false) => {
   let timeout;
-  
+
   return function executedFunction(...args) {
     const later = () => {
       timeout = null;
       if (!immediate) func(...args);
     };
-    
+
     const callNow = immediate && !timeout;
-    
+
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
-    
+
     if (callNow) func(...args);
   };
 };

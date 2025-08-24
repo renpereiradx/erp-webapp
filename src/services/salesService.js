@@ -501,6 +501,453 @@ export const salesService = {
       'get_sales_statistics',
       { retries: 3 }
     );
+  },
+
+  /**
+   * Crea una nueva venta
+   * @param {ProcessSaleRequest} saleData - Datos de la venta
+   * @returns {Promise<ProcessSaleResponse>}
+   */
+  async createSale(saleData) {
+    telemetry.record('sales.create.start', {
+      hasReservation: !!saleData.reserve_id,
+      productCount: saleData.product_details?.length || 0,
+    });
+
+    try {
+      // Validar datos antes de enviar
+      if (!saleData.client_id) {
+        return {
+          success: false,
+          error: 'client_id es requerido',
+          error_code: 'INVALID_CLIENT_ID'
+        };
+      }
+
+      if (!saleData.product_details || !Array.isArray(saleData.product_details) || saleData.product_details.length === 0) {
+        return {
+          success: false,
+          error: 'product_details debe ser un array no vacío',
+          error_code: 'INVALID_PRODUCT_DETAILS'
+        };
+      }
+
+      const response = await apiCallWithResilience(
+        () => apiClient.post('/sales', saleData),
+        'create_sale',
+        { retries: 3 }
+      );
+
+      telemetry.record('sales.create.success', {
+        sale_id: response.sale_id,
+        total_amount: response.total_amount
+      });
+
+      return {
+        success: true,
+        ...response
+      };
+    } catch (error) {
+      const categorizedError = categorizeError(error, 'create_sale');
+      telemetry.error('sales.create.error', categorizedError);
+      
+      return {
+        success: false,
+        error: categorizedError.message,
+        error_code: categorizedError.code,
+        category: categorizedError.category
+      };
+    }
+  },
+
+  /**
+   * Obtiene lista de ventas con filtros
+   * @param {Object} filters - Filtros de búsqueda
+   * @param {number} [filters.page] - Página
+   * @param {number} [filters.limit] - Límite por página
+   * @param {string} [filters.status] - Estado de la venta
+   * @param {string} [filters.client_id] - ID del cliente
+   * @param {string} [filters.startDate] - Fecha inicio
+   * @param {string} [filters.endDate] - Fecha fin
+   * @returns {Promise<Object>}
+   */
+  async getSales(filters = {}) {
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      client_id,
+      startDate,
+      endDate,
+      ...otherFilters
+    } = filters;
+
+    telemetry.record('sales.get_list.start', { filters });
+
+    try {
+      const params = {
+        page,
+        limit,
+        ...otherFilters
+      };
+
+      if (status) params.status = status;
+      if (client_id) params.client_id = client_id;
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+
+      const response = await apiCallWithResilience(
+        () => apiClient.get('/sales', { params }),
+        'get_sales_list',
+        { retries: 3 }
+      );
+
+      telemetry.record('sales.get_list.success', {
+        count: response.data?.length || 0,
+        total: response.total || 0
+      });
+
+      return {
+        success: true,
+        data: response.data || response,
+        pagination: {
+          page,
+          limit,
+          total: response.total || response.data?.length || 0,
+          totalPages: Math.ceil((response.total || 0) / limit)
+        }
+      };
+    } catch (error) {
+      const categorizedError = categorizeError(error, 'get_sales_list');
+      telemetry.error('sales.get_list.error', categorizedError);
+      
+      return {
+        success: false,
+        error: categorizedError.message,
+        error_code: categorizedError.code,
+        data: []
+      };
+    }
+  },
+
+  /**
+   * Obtiene una venta por ID
+   * @param {string} saleId - ID de la venta
+   * @returns {Promise<Object>}
+   */
+  async getSaleById(saleId) {
+    if (!saleId || typeof saleId !== 'string') {
+      return {
+        success: false,
+        error: 'ID de venta requerido',
+        error_code: 'INVALID_SALE_ID'
+      };
+    }
+
+    telemetry.record('sales.get_by_id.start', { sale_id: saleId });
+
+    try {
+      const response = await apiCallWithResilience(
+        () => apiClient.get(`/sales/${saleId}`),
+        'get_sale_by_id',
+        { retries: 3 }
+      );
+
+      telemetry.record('sales.get_by_id.success', { sale_id: saleId });
+
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      const categorizedError = categorizeError(error, 'get_sale_by_id');
+      telemetry.error('sales.get_by_id.error', categorizedError);
+      
+      return {
+        success: false,
+        error: categorizedError.message,
+        error_code: categorizedError.code || 'SALE_NOT_FOUND'
+      };
+    }
+  },
+
+  /**
+   * Actualiza una venta existente
+   * @param {string} saleId - ID de la venta
+   * @param {Object} updateData - Datos a actualizar
+   * @returns {Promise<Object>}
+   */
+  async updateSale(saleId, updateData) {
+    if (!saleId || typeof saleId !== 'string') {
+      return {
+        success: false,
+        error: 'ID de venta requerido',
+        error_code: 'INVALID_SALE_ID'
+      };
+    }
+
+    if (!updateData || typeof updateData !== 'object') {
+      return {
+        success: false,
+        error: 'Datos de actualización requeridos',
+        error_code: 'INVALID_UPDATE_DATA'
+      };
+    }
+
+    telemetry.record('sales.update.start', { 
+      sale_id: saleId,
+      fields: Object.keys(updateData) 
+    });
+
+    try {
+      const response = await apiCallWithResilience(
+        () => apiClient.put(`/sales/${saleId}`, updateData),
+        'update_sale',
+        { retries: 3 }
+      );
+
+      telemetry.record('sales.update.success', { sale_id: saleId });
+
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      const categorizedError = categorizeError(error, 'update_sale');
+      telemetry.error('sales.update.error', categorizedError);
+      
+      return {
+        success: false,
+        error: categorizedError.message,
+        error_code: categorizedError.code
+      };
+    }
+  },
+
+  /**
+   * Elimina una venta
+   * @param {string} saleId - ID de la venta
+   * @returns {Promise<Object>}
+   */
+  async deleteSale(saleId) {
+    if (!saleId || typeof saleId !== 'string') {
+      return {
+        success: false,
+        error: 'ID de venta requerido',
+        error_code: 'INVALID_SALE_ID'
+      };
+    }
+
+    telemetry.record('sales.delete.start', { sale_id: saleId });
+
+    try {
+      const response = await apiCallWithResilience(
+        () => apiClient.delete(`/sales/${saleId}`),
+        'delete_sale',
+        { retries: 3 }
+      );
+
+      telemetry.record('sales.delete.success', { sale_id: saleId });
+
+      return {
+        success: true,
+        data: response
+      };
+    } catch (error) {
+      const categorizedError = categorizeError(error, 'delete_sale');
+      telemetry.error('sales.delete.error', categorizedError);
+      
+      return {
+        success: false,
+        error: categorizedError.message,
+        error_code: categorizedError.code
+      };
+    }
+  },
+
+  /**
+   * Procesa un pago para una venta
+   * @param {Object} paymentData - Datos del pago
+   * @param {string} paymentData.sale_id - ID de la venta
+   * @param {number} paymentData.amount - Monto del pago
+   * @param {number} paymentData.payment_method_id - Método de pago
+   * @param {number} [paymentData.received_amount] - Monto recibido para calcular cambio
+   * @returns {Promise<Object>}
+   */
+  async processPayment(paymentData) {
+    if (!paymentData.sale_id) {
+      return {
+        success: false,
+        error: 'ID de venta requerido',
+        error_code: 'INVALID_SALE_ID'
+      };
+    }
+
+    if (!paymentData.amount || paymentData.amount <= 0) {
+      return {
+        success: false,
+        error: 'Monto de pago inválido',
+        error_code: 'INVALID_PAYMENT_AMOUNT'
+      };
+    }
+
+    telemetry.record('sales.payment.start', {
+      sale_id: paymentData.sale_id,
+      amount: paymentData.amount,
+      payment_method: paymentData.payment_method_id
+    });
+
+    try {
+      // Calcular cambio si se proporciona monto recibido
+      let change = 0;
+      if (paymentData.received_amount && paymentData.received_amount > paymentData.amount) {
+        change = paymentData.received_amount - paymentData.amount;
+      }
+
+      const response = await apiCallWithResilience(
+        () => apiClient.post('/sales/payments', {
+          ...paymentData,
+          change_amount: change
+        }),
+        'process_payment',
+        { retries: 3 }
+      );
+
+      telemetry.record('sales.payment.success', {
+        sale_id: paymentData.sale_id,
+        payment_id: response.payment_id,
+        change_amount: change
+      });
+
+      return {
+        success: true,
+        payment_id: response.payment_id,
+        change_amount: change,
+        receipt_data: response.receipt_data,
+        ...response
+      };
+    } catch (error) {
+      const categorizedError = categorizeError(error, 'process_payment');
+      telemetry.error('sales.payment.error', categorizedError);
+      
+      return {
+        success: false,
+        error: categorizedError.message,
+        error_code: categorizedError.code
+      };
+    }
+  },
+
+  /**
+   * Cancela una venta
+   * @param {string} saleId - ID de la venta
+   * @param {Object} cancellationData - Datos de cancelación
+   * @param {string} cancellationData.reason - Razón de la cancelación
+   * @param {boolean} [cancellationData.restock] - Si restituir inventario
+   * @returns {Promise<Object>}
+   */
+  async cancelSale(saleId, cancellationData) {
+    if (!saleId || typeof saleId !== 'string') {
+      return {
+        success: false,
+        error: 'ID de venta requerido',
+        error_code: 'INVALID_SALE_ID'
+      };
+    }
+
+    if (!cancellationData?.reason) {
+      return {
+        success: false,
+        error: 'Razón de cancelación requerida',
+        error_code: 'CANCELLATION_REASON_REQUIRED'
+      };
+    }
+
+    telemetry.record('sales.cancel.start', { 
+      sale_id: saleId,
+      reason: cancellationData.reason
+    });
+
+    try {
+      const response = await apiCallWithResilience(
+        () => apiClient.put(`/sales/${saleId}/cancel`, cancellationData),
+        'cancel_sale',
+        { retries: 3 }
+      );
+
+      telemetry.record('sales.cancel.success', { 
+        sale_id: saleId,
+        refund_amount: response.refund_amount
+      });
+
+      return {
+        success: true,
+        cancellation_id: response.cancellation_id,
+        refund_amount: response.refund_amount,
+        ...response
+      };
+    } catch (error) {
+      const categorizedError = categorizeError(error, 'cancel_sale');
+      telemetry.error('sales.cancel.error', categorizedError);
+      
+      return {
+        success: false,
+        error: categorizedError.message,
+        error_code: categorizedError.code
+      };
+    }
+  },
+
+  /**
+   * Aplica modificación de precio a una venta
+   * @param {Object} modificationData - Datos de modificación
+   * @param {string} modificationData.sale_id - ID de la venta
+   * @param {string} modificationData.product_id - ID del producto
+   * @param {number} modificationData.new_price - Nuevo precio
+   * @param {string} modificationData.reason - Razón del cambio
+   * @returns {Promise<Object>}
+   */
+  async applyPriceModification(modificationData) {
+    if (!modificationData.sale_id || !modificationData.product_id) {
+      return {
+        success: false,
+        error: 'Sale ID y Product ID requeridos',
+        error_code: 'INVALID_MODIFICATION_DATA'
+      };
+    }
+
+    telemetry.record('sales.price_modification.start', {
+      sale_id: modificationData.sale_id,
+      product_id: modificationData.product_id,
+      new_price: modificationData.new_price
+    });
+
+    try {
+      const response = await apiCallWithResilience(
+        () => apiClient.post('/sales/price-modification', modificationData),
+        'apply_price_modification',
+        { retries: 3 }
+      );
+
+      telemetry.record('sales.price_modification.success', {
+        sale_id: modificationData.sale_id,
+        modification_id: response.modification_id
+      });
+
+      return {
+        success: true,
+        ...response
+      };
+    } catch (error) {
+      const categorizedError = categorizeError(error, 'apply_price_modification');
+      telemetry.error('sales.price_modification.error', categorizedError);
+      
+      return {
+        success: false,
+        error: categorizedError.message,
+        error_code: categorizedError.code
+      };
+    }
   }
 };
 

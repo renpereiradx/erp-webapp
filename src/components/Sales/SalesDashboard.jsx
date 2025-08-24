@@ -36,9 +36,9 @@ import { useSalesStore } from '@/store/useSalesStore';
 import { usePaymentStore } from '@/store/usePaymentStore';
 import { useCancellationStore } from '@/store/useCancellationStore';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
-import { useLiveRegion } from '@/components/a11y/LiveRegion';
+import { useLiveRegion } from '@/hooks/useLiveRegion';
+import { useTranslation } from '@/hooks/useTranslation';
 import { telemetry } from '@/utils/telemetry';
-import { t } from '@/lib/i18n';
 
 // Dashboard metric cards
 const MetricCard = ({ 
@@ -260,6 +260,7 @@ const RecentSalesList = ({ sales, loading, onViewSale, onCancelSale }) => {
 // Main dashboard component
 export const SalesDashboard = () => {
   const { getTextStyles, getButtonStyles } = useThemeStyles();
+  const { t } = useTranslation();
   
   // Accessibility hooks
   const { announce, LiveRegions } = useLiveRegion();
