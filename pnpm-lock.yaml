@@ -113,6 +113,12 @@ importers:
       framer-motion:
         specifier: ^12.15.0
         version: 12.15.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      i18next:
+        specifier: ^25.4.1
+        version: 25.4.1(typescript@5.9.2)
+      i18next-browser-languagedetector:
+        specifier: ^8.2.0
+        version: 8.2.0
       immer:
         specifier: ^10.1.1
         version: 10.1.1
@@ -137,6 +143,9 @@ importers:
       react-hook-form:
         specifier: ^7.56.3
         version: 7.56.3(react@19.1.0)
+      react-i18next:
+        specifier: ^15.7.2
+        version: 15.7.2(i18next@25.4.1(typescript@5.9.2))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.2)
       react-resizable-panels:
         specifier: ^3.0.2
         version: 3.0.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -339,6 +348,10 @@ packages:
 
   '@babel/runtime@7.27.1':
     resolution: {integrity: sha512-1x3D2xEk2fRo3PAhwQwu5UubzgiVWSXTBfWpVd2Mx2AzRqJuDJCsgaDVZ7HB5iGzDW1Hl1sWN2mFyKjmR9uAog==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/runtime@7.28.3':
+    resolution: {integrity: sha512-9uIQ10o0WGdpP6GDhXcdOJPJuDgFtIDtN/9+ArJQ2NAfAmiuhTQdzkaTGR33v43GYS2UrSA0eX2pPPHoFVvpxA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.27.2':
@@ -2486,6 +2499,9 @@ packages:
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
 
+  html-parse-stringify@3.0.1:
+    resolution: {integrity: sha512-KknJ50kTInJ7qIScF3jeaFRpMpE8/lfiTdzf/twXyPBLAGrLRTmkz3AdTnKeh40X8k9L2fdYwEp/42WGXIRGcg==}
+
   http-errors@2.0.0:
     resolution: {integrity: sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==}
     engines: {node: '>= 0.8'}
@@ -2497,6 +2513,17 @@ packages:
   https-proxy-agent@7.0.6:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
     engines: {node: '>= 14'}
+
+  i18next-browser-languagedetector@8.2.0:
+    resolution: {integrity: sha512-P+3zEKLnOF0qmiesW383vsLdtQVyKtCNA9cjSoKCppTKPQVfKd2W8hbVo5ZhNJKDqeM7BOcvNoKJOjpHh4Js9g==}
+
+  i18next@25.4.1:
+    resolution: {integrity: sha512-sYJX4Ap0SSho1JZppKvc9BeacbpNCdNvKuXMYPUGjDH0XTTdVXmm7UU3l4bvF8nqh70lZNBeLboRYwItBf9jOw==}
+    peerDependencies:
+      typescript: ^5
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   iconv-lite@0.6.3:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
@@ -3013,6 +3040,22 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
+
+  react-i18next@15.7.2:
+    resolution: {integrity: sha512-xJxq7ibnhUlMvd82lNC4te1GxGUMoM1A05KKyqoqsBXVZtEvZg/fz/fnVzdlY/hhQ3SpP/79qCocZOtICGhd3g==}
+    peerDependencies:
+      i18next: '>= 25.4.1'
+      react: '>= 16.8.0'
+      react-dom: '*'
+      react-native: '*'
+      typescript: ^5
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
+      typescript:
+        optional: true
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -3560,6 +3603,10 @@ packages:
       jsdom:
         optional: true
 
+  void-elements@3.1.0:
+    resolution: {integrity: sha512-Dhxzh5HZuiHQhbvTW9AMetFfBHDMYpo23Uo9btPXgdYP+3T5S+p+jgNy7spra+veYhBP2dCSgxR/i2Y02h5/6w==}
+    engines: {node: '>=0.10.0'}
+
   w3c-xmlserializer@5.0.0:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
     engines: {node: '>=18'}
@@ -3791,6 +3838,8 @@ snapshots:
       '@babel/helper-plugin-utils': 7.27.1
 
   '@babel/runtime@7.27.1': {}
+
+  '@babel/runtime@7.28.3': {}
 
   '@babel/template@7.27.2':
     dependencies:
@@ -5848,6 +5897,10 @@ snapshots:
 
   html-escaper@2.0.2: {}
 
+  html-parse-stringify@3.0.1:
+    dependencies:
+      void-elements: 3.1.0
+
   http-errors@2.0.0:
     dependencies:
       depd: 2.0.0
@@ -5869,6 +5922,16 @@ snapshots:
       debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
+
+  i18next-browser-languagedetector@8.2.0:
+    dependencies:
+      '@babel/runtime': 7.27.1
+
+  i18next@25.4.1(typescript@5.9.2):
+    dependencies:
+      '@babel/runtime': 7.28.3
+    optionalDependencies:
+      typescript: 5.9.2
 
   iconv-lite@0.6.3:
     dependencies:
@@ -6336,6 +6399,16 @@ snapshots:
   react-hook-form@7.56.3(react@19.1.0):
     dependencies:
       react: 19.1.0
+
+  react-i18next@15.7.2(i18next@25.4.1(typescript@5.9.2))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.2):
+    dependencies:
+      '@babel/runtime': 7.28.3
+      html-parse-stringify: 3.0.1
+      i18next: 25.4.1(typescript@5.9.2)
+      react: 19.1.0
+    optionalDependencies:
+      react-dom: 19.1.0(react@19.1.0)
+      typescript: 5.9.2
 
   react-is@16.13.1: {}
 
@@ -6881,6 +6954,8 @@ snapshots:
       - sugarss
       - supports-color
       - terser
+
+  void-elements@3.1.0: {}
 
   w3c-xmlserializer@5.0.0:
     dependencies:
