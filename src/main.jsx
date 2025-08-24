@@ -8,6 +8,8 @@ import App from './App.jsx'
 import { ThemeProvider } from './themes/ThemeProvider'
 import './i18n' // Initialize i18n
 
+// Wave 5: Offline & Circuit Breaker UI - Auto-initialized via hooks
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ThemeProvider 
