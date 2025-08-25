@@ -1,405 +1,417 @@
+import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { telemetry } from '@/lib/telemetry';
+
 /**
- * @fileoverview Hook useClientCache - Cache management avanzado
- * Wave 3B: Advanced Caching
+ * Wave 3B: Advanced Cache Management Hook
  * 
- * Features:
- * - TTL avanzado con timers automáticos
- * - LRU eviction con límite configurable
+ * Características implementadas:
+ * - TTL con auto-cleanup y background revalidation
+ * - LRU eviction (límite 30 entradas por defecto)
  * - Background revalidation cuando edad > 50% TTL
- * - LocalStorage persistence para offline
- * - Telemetría completa cache hit/miss/evict
- * - Invalidación inteligente por tipo operación
+ * - Prefetch con cola de deduplicación
+ * - Invalidación post-mutación inteligente
+ * - Telemetría completa (hit/miss/evict/prefetch)
+ * - Persistencia localStorage opcional
+ * 
+ * @param {Object} options - Configuración del cache
+ * @param {number} options.ttl - TTL en ms (default: 5 minutos)
+ * @param {number} options.maxEntries - Máximo entradas LRU (default: 30)
+ * @param {boolean} options.enableTelemetry - Telemetría habilitada (default: true)
+ * @param {boolean} options.enablePersistence - Persistencia localStorage (default: true)
+ * @param {boolean} options.enableBackgroundRevalidation - Revalidación background (default: true)
+ * @param {number} options.revalidationThreshold - Umbral revalidación (default: 0.5 = 50%)
+ * @param {Function} options.fetcher - Función para obtener datos frescos
+ * @param {string} options.prefix - Prefijo para keys de cache (default: 'client_cache')
  */
+export const useClientCache = (options = {}) => {
+  const {
+    ttl = 5 * 60 * 1000, // 5 minutos
+    maxEntries = 30,
+    enableTelemetry = true,
+    enablePersistence = true,
+    enableBackgroundRevalidation = true,
+    revalidationThreshold = 0.5, // 50%
+    fetcher = null,
+    prefix = 'client_cache'
+  } = options;
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useClientStore } from '@/store/useClientStore';
-
-/**
- * Configuración por defecto del cache
- */
-const DEFAULT_CACHE_CONFIG = {
-  ttl: 5 * 60 * 1000, // 5 minutos en milisegundos
-  maxEntries: 30,
-  staleThreshold: 0.5, // 50% del TTL
-  persistToStorage: true,
-  enableTelemetry: true,
-  backgroundRevalidation: true
-};
-
-/**
- * Hook para gestión avanzada de cache de clientes
- * @param {Object} config - Configuración del cache
- * @returns {Object} Interface del cache con métodos y estado
- */
-export function useClientCache(config = {}) {
-  const finalConfig = { ...DEFAULT_CACHE_CONFIG, ...config };
-  const store = useClientStore();
-  
-  const [cacheState, setCacheState] = useState({
+  // Referencias para mantener estado persistente
+  const cacheRef = useRef(new Map());
+  const accessOrderRef = useRef(new Map()); // Para LRU tracking
+  const backgroundJobsRef = useRef(new Set()); // Para deduplicación
+  const telemetryRef = useRef({
     hits: 0,
     misses: 0,
     evictions: 0,
-    revalidations: 0,
-    lastCleanup: Date.now()
+    prefetches: 0,
+    backgroundRevalidations: 0,
+    totalRequests: 0
   });
 
-  const timersRef = useRef(new Map());
-  const telemetryRef = useRef([]);
+  // Timers para auto-cleanup
+  const cleanupTimerRef = useRef(null);
 
-  /**
-   * Registrar evento de telemetría
-   */
-  const recordTelemetry = useCallback((event, data) => {
-    if (!finalConfig.enableTelemetry) return;
+  // Wave 3B: Cargar cache desde localStorage al inicializar
+  useEffect(() => {
+    if (!enablePersistence) return;
 
-    const entry = {
-      timestamp: Date.now(),
-      event,
-      data
-    };
+    try {
+      const savedCache = localStorage.getItem(`${prefix}_data`);
+      const savedStats = localStorage.getItem(`${prefix}_stats`);
+      
+      if (savedCache) {
+        const parsed = JSON.parse(savedCache);
+        const now = Date.now();
+        
+        // Filtrar entradas expiradas al cargar
+        Object.entries(parsed).forEach(([key, entry]) => {
+          if (now - entry.timestamp < ttl) {
+            cacheRef.current.set(key, entry);
+            accessOrderRef.current.set(key, now);
+          }
+        });
 
-    telemetryRef.current.push(entry);
-    
-    // Mantener solo los últimos 100 eventos
-    if (telemetryRef.current.length > 100) {
-      telemetryRef.current = telemetryRef.current.slice(-100);
-    }
+        if (enableTelemetry) {
+          telemetry.record('feature.clients.cache.loaded', {
+            entriesLoaded: cacheRef.current.size,
+            entriesExpired: Object.keys(parsed).length - cacheRef.current.size
+          });
+        }
+      }
 
-    // También enviar al store si tiene telemetría
-    if (typeof store?.getTelemetrySnapshot === 'function') {
-      try {
-        // El store ya maneja su propia telemetría
-      } catch (error) {
-        console.warn('Cache telemetry error:', error);
+      if (savedStats) {
+        telemetryRef.current = { ...telemetryRef.current, ...JSON.parse(savedStats) };
+      }
+    } catch (error) {
+      console.warn('Error loading cache from localStorage:', error);
+      if (enableTelemetry) {
+        telemetry.record('feature.clients.cache.load_error', { error: error.message });
       }
     }
-  }, [finalConfig.enableTelemetry, store]);
+  }, [prefix, ttl, enablePersistence, enableTelemetry]);
 
-  /**
-   * Generar clave de cache
-   */
-  const generateCacheKey = useCallback((search = '', page = 1, pageSize = 20) => {
-    return `clients_${search || 'all'}_${page}_${pageSize}`;
-  }, []);
+  // Wave 3B: Persistir cache en localStorage
+  const persistCache = useCallback(() => {
+    if (!enablePersistence) return;
 
-  /**
-   * Verificar si una entrada está stale
-   */
-  const isStale = useCallback((entry) => {
-    if (!entry || !entry.timestamp) return true;
+    try {
+      const cacheData = {};
+      cacheRef.current.forEach((value, key) => {
+        cacheData[key] = value;
+      });
+
+      localStorage.setItem(`${prefix}_data`, JSON.stringify(cacheData));
+      localStorage.setItem(`${prefix}_stats`, JSON.stringify(telemetryRef.current));
+    } catch (error) {
+      console.warn('Error persisting cache:', error);
+      if (enableTelemetry) {
+        telemetry.record('feature.clients.cache.persist_error', { error: error.message });
+      }
+    }
+  }, [prefix, enablePersistence, enableTelemetry]);
+
+  // Wave 3B: LRU Eviction - Evitar que el cache crezca indefinidamente
+  const evictLRU = useCallback(() => {
+    if (cacheRef.current.size <= maxEntries) return;
+
+    // Encontrar la entrada menos recientemente usada
+    let oldestKey = null;
+    let oldestTime = Infinity;
+
+    accessOrderRef.current.forEach((time, key) => {
+      if (time < oldestTime) {
+        oldestTime = time;
+        oldestKey = key;
+      }
+    });
+
+    if (oldestKey) {
+      cacheRef.current.delete(oldestKey);
+      accessOrderRef.current.delete(oldestKey);
+      telemetryRef.current.evictions++;
+
+      if (enableTelemetry) {
+        telemetry.record('feature.clients.cache.eviction', {
+          evictedKey: oldestKey,
+          reason: 'lru',
+          cacheSize: cacheRef.current.size
+        });
+      }
+    }
+  }, [maxEntries, enableTelemetry]);
+
+  // Wave 3B: Background Revalidation
+  const shouldRevalidate = useCallback((entry) => {
+    if (!enableBackgroundRevalidation || !fetcher) return false;
     
     const age = Date.now() - entry.timestamp;
-    const staleTime = finalConfig.ttl * finalConfig.staleThreshold;
+    const ageThreshold = ttl * revalidationThreshold;
     
-    return age > staleTime;
-  }, [finalConfig.ttl, finalConfig.staleThreshold]);
+    return age > ageThreshold;
+  }, [enableBackgroundRevalidation, fetcher, ttl, revalidationThreshold]);
 
-  /**
-   * Verificar si una entrada está expirada
-   */
-  const isExpired = useCallback((entry) => {
-    if (!entry || !entry.timestamp) return true;
+  const backgroundRevalidate = useCallback(async (key) => {
+    if (!fetcher || backgroundJobsRef.current.has(key)) return;
+
+    backgroundJobsRef.current.add(key);
     
-    const age = Date.now() - entry.timestamp;
-    return age > finalConfig.ttl;
-  }, [finalConfig.ttl]);
+    try {
+      const freshData = await fetcher(key);
+      
+      // Actualizar cache con datos frescos
+      cacheRef.current.set(key, {
+        data: freshData,
+        timestamp: Date.now()
+      });
+      accessOrderRef.current.set(key, Date.now());
+      
+      telemetryRef.current.backgroundRevalidations++;
+      
+      if (enableTelemetry) {
+        telemetry.record('feature.clients.cache.background_revalidation', {
+          key,
+          success: true
+        });
+      }
+    } catch (error) {
+      if (enableTelemetry) {
+        telemetry.record('feature.clients.cache.background_revalidation', {
+          key,
+          success: false,
+          error: error.message
+        });
+      }
+    } finally {
+      backgroundJobsRef.current.delete(key);
+    }
+  }, [fetcher, enableTelemetry]);
 
-  /**
-   * Obtener entrada del cache
-   */
-  const getCacheEntry = useCallback((cacheKey) => {
-    const pageCache = store.pageCache || {};
-    const entry = pageCache[cacheKey];
+  // Obtener valor del cache
+  const get = useCallback((key) => {
+    telemetryRef.current.totalRequests++;
+    
+    const entry = cacheRef.current.get(key);
+    const now = Date.now();
 
     if (!entry) {
-      setCacheState(prev => ({ ...prev, misses: prev.misses + 1 }));
-      recordTelemetry('cache.miss', { cacheKey });
+      telemetryRef.current.misses++;
+      if (enableTelemetry) {
+        telemetry.record('feature.clients.cache.miss', { key });
+      }
       return null;
     }
 
-    if (isExpired(entry)) {
-      setCacheState(prev => ({ ...prev, misses: prev.misses + 1 }));
-      recordTelemetry('cache.expired', { cacheKey, age: Date.now() - entry.timestamp });
-      return null;
-    }
-
-    setCacheState(prev => ({ ...prev, hits: prev.hits + 1 }));
-    recordTelemetry('cache.hit', { 
-      cacheKey, 
-      age: Date.now() - entry.timestamp,
-      stale: isStale(entry)
-    });
-
-    return entry;
-  }, [store.pageCache, isExpired, isStale, recordTelemetry]);
-
-  /**
-   * Configurar timer de expiración para una entrada
-   */
-  const setExpirationTimer = useCallback((cacheKey, entry) => {
-    // Limpiar timer existente si existe
-    if (timersRef.current.has(cacheKey)) {
-      clearTimeout(timersRef.current.get(cacheKey));
-    }
-
-    // Calcular tiempo hasta expiración
-    const age = Date.now() - entry.timestamp;
-    const timeToExpire = finalConfig.ttl - age;
-
-    if (timeToExpire > 0) {
-      const timerId = setTimeout(() => {
-        recordTelemetry('cache.auto_expired', { cacheKey });
-        // La limpieza se hará en el próximo acceso o cleanup
-        timersRef.current.delete(cacheKey);
-      }, timeToExpire);
-
-      timersRef.current.set(cacheKey, timerId);
-    }
-  }, [finalConfig.ttl, recordTelemetry]);
-
-  /**
-   * Programar revalidación en background
-   */
-  const scheduleBackgroundRevalidation = useCallback((cacheKey, search, page, pageSize) => {
-    if (!finalConfig.backgroundRevalidation) return;
-
-    // Revalidar después de un breve delay para no bloquear UI
-    setTimeout(async () => {
-      try {
-        recordTelemetry('cache.background_revalidation_start', { cacheKey });
-        
-        await store.fetchClients(page, pageSize, search, true);
-        
-        setCacheState(prev => ({ ...prev, revalidations: prev.revalidations + 1 }));
-        recordTelemetry('cache.background_revalidation_success', { cacheKey });
-      } catch (error) {
-        recordTelemetry('cache.background_revalidation_error', { 
-          cacheKey, 
-          error: error.message 
-        });
-      }
-    }, 100);
-  }, [finalConfig.backgroundRevalidation, store, recordTelemetry]);
-
-  /**
-   * Obtener datos con cache inteligente
-   */
-  const getWithCache = useCallback(async (search = '', page = 1, pageSize = 20) => {
-    const cacheKey = generateCacheKey(search, page, pageSize);
-    const cachedEntry = getCacheEntry(cacheKey);
-
-    if (cachedEntry) {
-      // Configurar timer de expiración si no existe
-      setExpirationTimer(cacheKey, cachedEntry);
-
-      // Programar revalidación en background si está stale
-      if (isStale(cachedEntry)) {
-        scheduleBackgroundRevalidation(cacheKey, search, page, pageSize);
-      }
-
-      return {
-        data: cachedEntry.clients || [],
-        pagination: cachedEntry.pagination,
-        fromCache: true,
-        stale: isStale(cachedEntry)
-      };
-    }
-
-    // Cache miss - fetch from store
-    try {
-      const result = await store.fetchClients(page, pageSize, search);
+    // Verificar si está expirado
+    if (now - entry.timestamp > ttl) {
+      cacheRef.current.delete(key);
+      accessOrderRef.current.delete(key);
+      telemetryRef.current.misses++;
       
-      recordTelemetry('cache.fetch_success', { 
-        cacheKey, 
-        count: Array.isArray(result) ? result.length : result?.data?.length || 0 
-      });
-
-      return {
-        data: Array.isArray(result) ? result : result.data || [],
-        pagination: result.pagination,
-        fromCache: false,
-        stale: false
-      };
-    } catch (error) {
-      recordTelemetry('cache.fetch_error', { cacheKey, error: error.message });
-      throw error;
+      if (enableTelemetry) {
+        telemetry.record('feature.clients.cache.miss', { key, reason: 'expired' });
+      }
+      return null;
     }
-  }, [
-    generateCacheKey, 
-    getCacheEntry, 
-    setExpirationTimer, 
-    isStale, 
-    scheduleBackgroundRevalidation, 
-    store, 
-    recordTelemetry
-  ]);
 
-  /**
-   * Invalidar cache por patrón
-   */
-  const invalidateCache = useCallback((pattern = null) => {
-    const pageCache = store.pageCache || {};
-    let invalidatedKeys = [];
+    // Cache hit - actualizar orden de acceso
+    accessOrderRef.current.set(key, now);
+    telemetryRef.current.hits++;
 
-    if (pattern) {
-      // Invalidar por patrón específico
-      Object.keys(pageCache).forEach(key => {
-        if (key.includes(pattern)) {
-          invalidatedKeys.push(key);
+    if (enableTelemetry) {
+      telemetry.record('feature.clients.cache.hit', { key });
+    }
+
+    // Wave 3B: Verificar si necesita revalidación background
+    if (shouldRevalidate(entry)) {
+      backgroundRevalidate(key);
+    }
+
+    return entry.data;
+  }, [ttl, enableTelemetry, shouldRevalidate, backgroundRevalidate]);
+
+  // Establecer valor en cache
+  const set = useCallback((key, data) => {
+    const now = Date.now();
+    
+    cacheRef.current.set(key, {
+      data,
+      timestamp: now
+    });
+    
+    accessOrderRef.current.set(key, now);
+    
+    // Evictar si excede límite
+    evictLRU();
+    
+    // Persistir cambios
+    persistCache();
+
+    if (enableTelemetry) {
+      telemetry.record('feature.clients.cache.set', {
+        key,
+        cacheSize: cacheRef.current.size
+      });
+    }
+  }, [evictLRU, persistCache, enableTelemetry]);
+
+  // Wave 3B: Prefetch con deduplicación
+  const prefetch = useCallback(async (key) => {
+    if (!fetcher || backgroundJobsRef.current.has(`prefetch_${key}`)) return;
+    
+    // Si ya está en cache y no necesita revalidación, no prefetch
+    const existing = cacheRef.current.get(key);
+    if (existing && !shouldRevalidate(existing)) return;
+
+    backgroundJobsRef.current.add(`prefetch_${key}`);
+    
+    try {
+      const data = await fetcher(key);
+      set(key, data);
+      
+      telemetryRef.current.prefetches++;
+      
+      if (enableTelemetry) {
+        telemetry.record('feature.clients.cache.prefetch', {
+          key,
+          success: true
+        });
+      }
+    } catch (error) {
+      if (enableTelemetry) {
+        telemetry.record('feature.clients.cache.prefetch', {
+          key,
+          success: false,
+          error: error.message
+        });
+      }
+    } finally {
+      backgroundJobsRef.current.delete(`prefetch_${key}`);
+    }
+  }, [fetcher, set, shouldRevalidate, enableTelemetry]);
+
+  // Wave 3B: Invalidación inteligente post-mutación
+  const invalidate = useCallback((keyOrPattern) => {
+    if (typeof keyOrPattern === 'string') {
+      // Invalidar key específica
+      if (cacheRef.current.has(keyOrPattern)) {
+        cacheRef.current.delete(keyOrPattern);
+        accessOrderRef.current.delete(keyOrPattern);
+        
+        if (enableTelemetry) {
+          telemetry.record('feature.clients.cache.invalidate', {
+            key: keyOrPattern,
+            type: 'single'
+          });
+        }
+      }
+    } else if (keyOrPattern instanceof RegExp) {
+      // Invalidar por patrón
+      let invalidatedCount = 0;
+      
+      cacheRef.current.forEach((_, key) => {
+        if (keyOrPattern.test(key)) {
+          cacheRef.current.delete(key);
+          accessOrderRef.current.delete(key);
+          invalidatedCount++;
         }
       });
-    } else {
-      // Invalidar todo el cache
-      invalidatedKeys = Object.keys(pageCache);
+      
+      if (enableTelemetry) {
+        telemetry.record('feature.clients.cache.invalidate', {
+          pattern: keyOrPattern.toString(),
+          type: 'pattern',
+          count: invalidatedCount
+        });
+      }
     }
+    
+    persistCache();
+  }, [persistCache, enableTelemetry]);
 
-    if (invalidatedKeys.length > 0) {
-      store.clearCache?.();
-      setCacheState(prev => ({ ...prev, evictions: prev.evictions + invalidatedKeys.length }));
-      recordTelemetry('cache.invalidated', { 
-        pattern, 
-        keysCount: invalidatedKeys.length,
-        keys: invalidatedKeys 
-      });
-    }
+  // Limpiar cache expirado
+  const cleanup = useCallback(() => {
+    const now = Date.now();
+    let cleanedCount = 0;
 
-    // Limpiar timers de las claves invalidadas
-    invalidatedKeys.forEach(key => {
-      if (timersRef.current.has(key)) {
-        clearTimeout(timersRef.current.get(key));
-        timersRef.current.delete(key);
+    cacheRef.current.forEach((entry, key) => {
+      if (now - entry.timestamp > ttl) {
+        cacheRef.current.delete(key);
+        accessOrderRef.current.delete(key);
+        cleanedCount++;
       }
     });
-  }, [store, recordTelemetry]);
 
-  /**
-   * Persistir cache a localStorage
-   */
-  const persistCache = useCallback(() => {
-    if (!finalConfig.persistToStorage) return;
-
-    try {
-      const pageCache = store.pageCache || {};
-      const cacheData = {
-        timestamp: Date.now(),
-        cache: pageCache,
-        config: finalConfig
-      };
-
-      localStorage.setItem('clientCache', JSON.stringify(cacheData));
-      recordTelemetry('cache.persisted', { entriesCount: Object.keys(pageCache).length });
-    } catch (error) {
-      recordTelemetry('cache.persist_error', { error: error.message });
-    }
-  }, [finalConfig, store.pageCache, recordTelemetry]);
-
-  /**
-   * Hidratar cache desde localStorage
-   */
-  const hydrateCache = useCallback(() => {
-    if (!finalConfig.persistToStorage) return false;
-
-    try {
-      const stored = localStorage.getItem('clientCache');
-      if (!stored) return false;
-
-      const cacheData = JSON.parse(stored);
-      const age = Date.now() - cacheData.timestamp;
-
-      // Verificar si el cache persistido no está demasiado viejo
-      if (age > finalConfig.ttl * 2) {
-        localStorage.removeItem('clientCache');
-        recordTelemetry('cache.hydrate_expired', { age });
-        return false;
-      }
-
-      // Hidratar cache válido
-      const validEntries = {};
-      Object.entries(cacheData.cache).forEach(([key, entry]) => {
-        if (!isExpired(entry)) {
-          validEntries[key] = entry;
-          setExpirationTimer(key, entry);
-        }
-      });
-
-      if (Object.keys(validEntries).length > 0) {
-        recordTelemetry('cache.hydrated', { 
-          entriesCount: Object.keys(validEntries).length,
-          totalStored: Object.keys(cacheData.cache).length
+    if (cleanedCount > 0) {
+      persistCache();
+      
+      if (enableTelemetry) {
+        telemetry.record('feature.clients.cache.cleanup', {
+          cleanedCount,
+          remainingCount: cacheRef.current.size
         });
-        return true;
       }
-
-      return false;
-    } catch (error) {
-      recordTelemetry('cache.hydrate_error', { error: error.message });
-      return false;
     }
-  }, [finalConfig, isExpired, setExpirationTimer, recordTelemetry]);
+  }, [ttl, persistCache, enableTelemetry]);
 
-  /**
-   * Obtener estadísticas del cache
-   */
-  const getCacheStats = useCallback(() => {
-    const pageCache = store.pageCache || {};
-    const totalOperations = cacheState.hits + cacheState.misses;
-    const hitRatio = totalOperations > 0 ? (cacheState.hits / totalOperations) * 100 : 0;
-
-    return {
-      ...cacheState,
-      totalOperations,
-      hitRatio: Number(hitRatio.toFixed(1)),
-      entriesCount: Object.keys(pageCache).length,
-      maxEntries: finalConfig.maxEntries,
-      ttl: finalConfig.ttl,
-      config: finalConfig,
-      telemetryEvents: telemetryRef.current.length
-    };
-  }, [store.pageCache, cacheState, finalConfig]);
-
-  /**
-   * Cleanup automático en unmount
-   */
+  // Auto-cleanup timer
   useEffect(() => {
+    cleanupTimerRef.current = setInterval(cleanup, ttl / 2); // Cleanup cada mitad del TTL
+    
     return () => {
-      // Limpiar todos los timers
-      timersRef.current.forEach(timerId => {
-        clearTimeout(timerId);
-      });
-      timersRef.current.clear();
-
-      // Persistir cache si está configurado
-      if (finalConfig.persistToStorage) {
-        persistCache();
+      if (cleanupTimerRef.current) {
+        clearInterval(cleanupTimerRef.current);
       }
     };
-  }, [finalConfig.persistToStorage, persistCache]);
+  }, [cleanup, ttl]);
 
-  /**
-   * Hidratación inicial
-   */
-  useEffect(() => {
-    hydrateCache();
-  }, [hydrateCache]);
+  // Limpiar cache completamente
+  const clear = useCallback(() => {
+    const size = cacheRef.current.size;
+    cacheRef.current.clear();
+    accessOrderRef.current.clear();
+    backgroundJobsRef.current.clear();
+    
+    persistCache();
+
+    if (enableTelemetry) {
+      telemetry.record('feature.clients.cache.clear', { clearedCount: size });
+    }
+  }, [persistCache, enableTelemetry]);
+
+  // Estadísticas en tiempo real
+  const stats = useMemo(() => {
+    const { hits, misses, evictions, prefetches, backgroundRevalidations, totalRequests } = telemetryRef.current;
+    
+    return {
+      hits,
+      misses,
+      evictions,
+      prefetches,
+      backgroundRevalidations,
+      totalRequests,
+      hitRatio: totalRequests > 0 ? hits / totalRequests : 0,
+      cacheSize: cacheRef.current.size,
+      maxEntries
+    };
+  }, [maxEntries]);
 
   return {
-    // Métodos principales
-    get: getWithCache,
-    invalidate: invalidateCache,
-    persist: persistCache,
-    hydrate: hydrateCache,
+    // Operaciones principales
+    get,
+    set,
+    prefetch,
+    invalidate,
+    cleanup,
+    clear,
     
-    // Estado y estadísticas
-    stats: getCacheStats(),
+    // Estadísticas
+    stats,
     
-    // Utilidades
-    generateKey: generateCacheKey,
-    isStale,
-    isExpired,
+    // Estado
+    isBackgroundJobRunning: (key) => backgroundJobsRef.current.has(key),
     
     // Configuración
-    config: finalConfig
+    ttl,
+    maxEntries
   };
-}
-
-export default useClientCache;
+};
