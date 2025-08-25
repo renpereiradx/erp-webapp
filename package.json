@@ -20,7 +20,21 @@
     "test:watch": "vitest --watch",
     "test:a11y": "vitest run tests/a11y",
     "test:all": "npm run test:unit && npm run test:components && npm run test:integration && npm run test:e2e",
-    "test:ci": "npm run test:coverage && npm run test:e2e"
+    "test:ci": "npm run test:coverage && npm run test:e2e",
+    
+    "test:clients": "vitest run --config vitest.config.clients.js",
+    "test:clients:coverage": "vitest run --config vitest.config.clients.js --coverage",
+    "test:clients:watch": "vitest --config vitest.config.clients.js",
+    "test:clients:unit": "vitest run src/test/clients/ --config vitest.config.clients.js",
+    "test:clients:e2e": "playwright test src/test/e2e/clients.e2e.test.js",
+    "test:clients:accessibility": "vitest run src/test/clients/ --config vitest.config.clients.js --grep=\"Accessibility\"",
+    "test:clients:performance": "vitest run src/test/clients/ --config vitest.config.clients.js --grep=\"Performance\"",
+    "test:wave5": "node scripts/test-runner.js all",
+    "test:wave5:unit": "node scripts/test-runner.js unit",
+    "test:wave5:integration": "node scripts/test-runner.js integration",
+    "test:wave5:e2e": "node scripts/test-runner.js e2e",
+    "test:wave5:accessibility": "node scripts/test-runner.js accessibility",
+    "test:wave5:performance": "node scripts/test-runner.js performance"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
