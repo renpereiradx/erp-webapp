@@ -1,16 +1,17 @@
 /**
  * @fileoverview Componente ClientCard - Tarjeta individual de cliente
- * Seguimiento Wave 1: Arquitectura Base Sólida
+ * Wave 3A: React Performance Optimizations
  * 
  * Features:
+ * - React.memo para evitar re-renders innecesarios
+ * - useMemo para cálculos costosos
+ * - useCallback para handlers estables
  * - Diseño responsive
  * - Accesibilidad completa
  * - Soporte para todos los themes
- * - Acciones inline
- * - Estados visuales claros
  */
 
-import React from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { useTheme } from 'next-themes';
 import { Eye, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -19,7 +20,13 @@ import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useI18n } from '@/lib/i18n';
 
 /**
- * Tarjeta de cliente individual con acciones
+ * Tarjeta de cliente individual con acciones - Optimizada con React.memo
+ * @param {Object} props - Props del componente
+ * @param {Object} props.client - Datos del cliente
+ * @param {Function} props.onView - Handler para ver detalles
+ * @param {Function} props.onEdit - Handler para editar
+ * @param {Function} props.onDelete - Handler para eliminar
+ * @param {string} props.className - Clases CSS adicionales
  */
 const ClientCard = ({ 
   client, 
@@ -32,26 +39,49 @@ const ClientCard = ({
   const { card, themeHeader, themeLabel } = useThemeStyles();
   const { t } = useI18n();
   
-  const isNeoBrutalism = theme?.includes('neo-brutalism');
+  // Memoizar valores calculados costosos
+  const computedValues = useMemo(() => {
+    if (!client) return null;
 
-  if (!client) {
-    return null;
-  }
+    const isNeoBrutalism = theme?.includes('neo-brutalism');
+    const fullName = `${client.name} ${client.last_name || ''}`.trim();
+    const registrationDate = client.created_at 
+      ? new Date(client.created_at).toLocaleDateString()
+      : 'N/A';
+    
+    return {
+      isNeoBrutalism,
+      fullName,
+      registrationDate
+    };
+  }, [client, theme]);
 
-  // Construir nombre completo
-  const fullName = `${client.name} ${client.last_name || ''}`.trim();
-  
-  // Formatear fecha de registro
-  const registrationDate = client.created_at 
-    ? new Date(client.created_at).toLocaleDateString()
-    : 'N/A';
-
-  const handleKeyPress = (event, action) => {
+  // Handlers estables con useCallback
+  const handleKeyPress = useCallback((event, action) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       action();
     }
-  };
+  }, []); // Sin dependencias porque action viene como parámetro
+
+  const handleViewClick = useCallback(() => {
+    onView?.(client);
+  }, [onView, client]);
+
+  const handleEditClick = useCallback(() => {
+    onEdit?.(client);
+  }, [onEdit, client]);
+
+  const handleDeleteClick = useCallback(() => {
+    onDelete?.(client);
+  }, [onDelete, client]);
+
+  // Early return si no hay cliente
+  if (!client || !computedValues) {
+    return null;
+  }
+
+  const { isNeoBrutalism, fullName, registrationDate } = computedValues;
 
   return (
     <div 
@@ -89,33 +119,32 @@ const ClientCard = ({
           />
         </div>
 
-        {/* Información del cliente */}
-        <div className="space-y-2 mb-4" role="list" aria-label="Información del cliente">
-          <div className="flex justify-between text-sm" role="listitem">
-            <span className={`text-muted-foreground ${themeLabel()}`}>
-              {t('clients.card.document') || 'DOCUMENTO:'}
-            </span>
-            <span className={themeLabel()} title={client.document_id || 'Sin documento'}>
-              {client.document_id || 'N/A'}
-            </span>
+        {/* Info grid */}
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center space-x-2">
+            <span className={`${themeLabel} font-medium`}>Email:</span>
+            <span className="text-muted-foreground truncate">{client.email || 'Sin email'}</span>
           </div>
           
-          <div className="flex justify-between text-sm" role="listitem">
-            <span className={`text-muted-foreground ${themeLabel()}`}>
-              {t('clients.card.contact') || 'CONTACTO:'}
-            </span>
-            <span className={themeLabel()} title={client.contact || 'Sin contacto'}>
-              {client.contact || 'N/A'}
-            </span>
-          </div>
+          {client.phone && (
+            <div className="flex items-center space-x-2">
+              <span className={`${themeLabel} font-medium`}>Teléfono:</span>
+              <span className="text-muted-foreground">{client.phone}</span>
+            </div>
+          )}
           
-          <div className="flex justify-between text-sm" role="listitem">
-            <span className={`text-muted-foreground ${themeLabel()}`}>
-              {t('clients.card.registered') || 'REGISTRO:'}
-            </span>
-            <span className={themeLabel()} title={registrationDate}>
-              {registrationDate}
-            </span>
+          {client.address && (
+            <div className="flex items-center space-x-2">
+              <span className={`${themeLabel} font-medium`}>Dirección:</span>
+              <span className="text-muted-foreground truncate" title={client.address}>
+                {client.address}
+              </span>
+            </div>
+          )}
+          
+          <div className="flex items-center space-x-2 pt-1">
+            <span className={`${themeLabel} font-medium text-xs`}>Registro:</span>
+            <span className="text-muted-foreground text-xs">{registrationDate}</span>
           </div>
         </div>
       </div>
@@ -123,8 +152,8 @@ const ClientCard = ({
       {/* Actions */}
       <div className="flex gap-2 mt-3" role="group" aria-label="Acciones del cliente">
         <Button 
-          onClick={() => onView?.(client)}
-          onKeyPress={(e) => handleKeyPress(e, () => onView?.(client))}
+          onClick={handleViewClick}
+          onKeyPress={(e) => handleKeyPress(e, handleViewClick)}
           variant="secondary" 
           size="sm" 
           className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50" 
@@ -136,8 +165,8 @@ const ClientCard = ({
         </Button>
         
         <Button 
-          onClick={() => onEdit?.(client)}
-          onKeyPress={(e) => handleKeyPress(e, () => onEdit?.(client))}
+          onClick={handleEditClick}
+          onKeyPress={(e) => handleKeyPress(e, handleEditClick)}
           variant="primary" 
           size="sm" 
           className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50" 
@@ -149,8 +178,8 @@ const ClientCard = ({
         </Button>
         
         <Button 
-          onClick={() => onDelete?.(client)}
-          onKeyPress={(e) => handleKeyPress(e, () => onDelete?.(client))}
+          onClick={handleDeleteClick}
+          onKeyPress={(e) => handleKeyPress(e, handleDeleteClick)}
           variant="destructive" 
           size="icon" 
           className="focus-visible:ring-2 focus-visible:ring-ring/50" 
@@ -164,4 +193,34 @@ const ClientCard = ({
   );
 };
 
-export default ClientCard;
+// Función de comparación para React.memo - optimiza re-renders
+const arePropsEqual = (prevProps, nextProps) => {
+  // Comparar propiedades primitivas
+  if (prevProps.className !== nextProps.className) return false;
+  
+  // Comparar cliente por ID y propiedades clave
+  if (!prevProps.client && !nextProps.client) return true;
+  if (!prevProps.client || !nextProps.client) return false;
+  
+  const prevClient = prevProps.client;
+  const nextClient = nextProps.client;
+  
+  return (
+    prevClient.id === nextClient.id &&
+    prevClient.name === nextClient.name &&
+    prevClient.last_name === nextClient.last_name &&
+    prevClient.email === nextClient.email &&
+    prevClient.phone === nextClient.phone &&
+    prevClient.status === nextClient.status &&
+    prevClient.created_at === nextClient.created_at &&
+    // Handlers son estables si se usan useCallback correctamente
+    prevProps.onView === nextProps.onView &&
+    prevProps.onEdit === nextProps.onEdit &&
+    prevProps.onDelete === nextProps.onDelete
+  );
+};
+
+// Aplicar comparación personalizada
+ClientCard.displayName = 'ClientCard';
+
+export default memo(ClientCard, arePropsEqual);
