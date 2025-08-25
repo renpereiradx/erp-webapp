@@ -130,7 +130,11 @@ const esTranslations = {
       openModal: 'Abrir modal de {{type}}',
       closeModal: 'Cerrar modal',
       modalTitle: 'Modal de {{type}}',
-      confirmDelete: 'Confirmar eliminación'
+      confirmDelete: 'Confirmar eliminación',
+      modalOpened: 'Modal abierto: {{title}}',
+      modalClosed: 'Modal cerrado',
+      trapFocus: 'Foco capturado en modal',
+      restoreFocus: 'Foco restaurado al elemento anterior'
     },
     
     forms: {
@@ -138,7 +142,14 @@ const esTranslations = {
       invalid: 'Campo inválido',
       validationError: 'Error de validación',
       fieldHelp: 'Ayuda para el campo {{field}}',
-      characterCount: '{{current}} de {{max}} caracteres'
+      characterCount: '{{current}} de {{max}} caracteres',
+      formSaved: 'Formulario guardado exitosamente',
+      formHasErrors: 'El formulario tiene {{count}} error{{plural}}',
+      requiredField: 'Campo {{field}} es requerido',
+      invalidFormat: 'El formato de {{field}} es inválido',
+      fieldTooShort: '{{field}} debe tener al menos {{min}} caracteres',
+      fieldTooLong: '{{field}} no puede tener más de {{max}} caracteres',
+      fieldUpdated: 'Campo {{field}} actualizado'
     },
     
     navigation: {
@@ -149,7 +160,11 @@ const esTranslations = {
       nextPage: 'Página siguiente',
       previousPage: 'Página anterior',
       firstPage: 'Primera página',
-      lastPage: 'Última página'
+      lastPage: 'Última página',
+      navigatedTo: 'Navegando a {{location}}',
+      pageChanged: 'Página cambiada a {{page}} de {{total}}',
+      itemsPerPage: '{{count}} elementos por página',
+      totalItems: '{{count}} elementos en total'
     },
     
     tables: {
@@ -159,7 +174,184 @@ const esTranslations = {
       sortDescending: 'Ordenar descendente',
       selectRow: 'Seleccionar fila {{index}}',
       selectAll: 'Seleccionar todas las filas',
-      actions: 'Acciones para {{item}}'
+      actions: 'Acciones para {{item}}',
+      tableUpdated: 'Tabla actualizada con {{count}} elementos',
+      noData: 'No hay datos disponibles en la tabla',
+      rowSelected: 'Fila {{index}} seleccionada',
+      rowDeselected: 'Fila {{index}} deseleccionada',
+      allRowsSelected: 'Todas las filas seleccionadas',
+      allRowsDeselected: 'Todas las filas deseleccionadas',
+      sortChanged: 'Tabla ordenada por {{column}} en orden {{direction}}'
+    },
+    
+    status: {
+      loading: 'Cargando',
+      loaded: 'Contenido cargado',
+      saving: 'Guardando',
+      saved: 'Guardado exitosamente',
+      error: 'Error ocurrido',
+      warning: 'Advertencia',
+      info: 'Información',
+      success: 'Operación exitosa',
+      processing: 'Procesando',
+      completed: 'Completado',
+      cancelled: 'Cancelado',
+      pending: 'Pendiente'
+    },
+    
+    actions: {
+      edit: 'Editar {{item}}',
+      delete: 'Eliminar {{item}}',
+      view: 'Ver detalles de {{item}}',
+      create: 'Crear nuevo {{item}}',
+      save: 'Guardar {{item}}',
+      cancel: 'Cancelar acción',
+      confirm: 'Confirmar acción',
+      download: 'Descargar {{item}}',
+      upload: 'Subir {{item}}',
+      search: 'Buscar {{item}}',
+      filter: 'Filtrar {{item}}',
+      export: 'Exportar {{item}}',
+      import: 'Importar {{item}}',
+      refresh: 'Actualizar {{item}}'
+    },
+    
+    keyboard: {
+      enterToActivate: 'Presiona Enter para activar',
+      spaceToSelect: 'Presiona Espacio para seleccionar',
+      escapeToClose: 'Presiona Escape para cerrar',
+      tabToNavigate: 'Usa Tab para navegar',
+      arrowsToMove: 'Usa las flechas para moverte',
+      homeEnd: 'Usa Inicio/Fin para ir al principio/final',
+      pageUpDown: 'Usa Re Pág/Av Pág para navegar por páginas'
+    },
+    
+    regions: {
+      main: 'Contenido principal',
+      navigation: 'Navegación',
+      banner: 'Encabezado',
+      contentinfo: 'Información de contenido',
+      complementary: 'Contenido complementario',
+      search: 'Búsqueda',
+      form: 'Formulario',
+      application: 'Aplicación'
+    }
+  },
+  
+  clients: {
+    title: 'Gestión de Clientes',
+    subtitle: 'Administra los clientes de tu empresa',
+    create: 'Nuevo Cliente',
+    edit: 'Editar Cliente',
+    delete: 'Eliminar Cliente',
+    view: 'Ver Detalles',
+    list: 'Lista de Clientes',
+    search: 'Buscar clientes...',
+    
+    fields: {
+      name: 'Nombre',
+      email: 'Correo Electrónico',
+      phone: 'Teléfono',
+      company: 'Empresa',
+      address: 'Dirección',
+      city: 'Ciudad',
+      country: 'País',
+      status: 'Estado',
+      notes: 'Notas',
+      createdAt: 'Fecha de Creación',
+      updatedAt: 'Última Actualización',
+      contactPerson: 'Persona de Contacto',
+      taxId: 'NIF/CIF',
+      website: 'Sitio Web'
+    },
+    
+    status: {
+      active: 'Activo',
+      inactive: 'Inactivo',
+      pending: 'Pendiente',
+      suspended: 'Suspendido',
+      archived: 'Archivado'
+    },
+    
+    messages: {
+      created: 'Cliente creado exitosamente',
+      updated: 'Cliente actualizado exitosamente',
+      deleted: 'Cliente eliminado exitosamente',
+      error: 'Error al procesar el cliente',
+      notFound: 'Cliente no encontrado',
+      loading: 'Cargando clientes...',
+      empty: 'No hay clientes registrados',
+      deleteConfirm: '¿Estás seguro de que deseas eliminar este cliente?',
+      searchResults: 'Se encontraron {{count}} cliente{{plural}}',
+      noResults: 'No se encontraron clientes que coincidan con tu búsqueda',
+      filtered: 'Mostrando {{count}} de {{total}} clientes',
+      loadingMore: 'Cargando más clientes...'
+    },
+    
+    filters: {
+      title: 'Filtros',
+      status: 'Estado',
+      company: 'Empresa',
+      city: 'Ciudad',
+      country: 'País',
+      dateRange: 'Rango de Fechas',
+      clear: 'Limpiar Filtros',
+      apply: 'Aplicar Filtros',
+      activeFilters: '{{count}} filtro{{plural}} activo{{plural}}'
+    },
+    
+    actions: {
+      addClient: 'Agregar Cliente',
+      editClient: 'Editar Cliente',
+      deleteClient: 'Eliminar Cliente',
+      viewClient: 'Ver Cliente',
+      exportClients: 'Exportar Clientes',
+      importClients: 'Importar Clientes',
+      searchClients: 'Buscar Clientes',
+      filterClients: 'Filtrar Clientes',
+      refreshClients: 'Actualizar Lista'
+    },
+    
+    accessibility: {
+      clientCard: 'Tarjeta de cliente {{name}}',
+      clientList: 'Lista de clientes',
+      searchInput: 'Campo de búsqueda de clientes',
+      filterButton: 'Botón de filtros de clientes',
+      addButton: 'Botón para agregar nuevo cliente',
+      editButton: 'Editar cliente {{name}}',
+      deleteButton: 'Eliminar cliente {{name}}',
+      viewButton: 'Ver detalles del cliente {{name}}',
+      statusBadge: 'Estado del cliente: {{status}}',
+      clientSelected: 'Cliente {{name}} seleccionado',
+      clientDeselected: 'Cliente {{name}} deseleccionado',
+      loadingClients: 'Cargando lista de clientes',
+      clientsLoaded: '{{count}} cliente{{plural}} cargado{{plural}}',
+      searchStarted: 'Búsqueda iniciada para: {{term}}',
+      searchCompleted: 'Búsqueda completada. {{count}} resultado{{plural}}',
+      filterApplied: 'Filtros aplicados. {{count}} cliente{{plural}} mostrado{{plural}}',
+      clientCreated: 'Nuevo cliente {{name}} creado exitosamente',
+      clientUpdated: 'Cliente {{name}} actualizado exitosamente',
+      clientDeleted: 'Cliente {{name}} eliminado exitosamente',
+      nameRequired: 'El nombre es requerido',
+      nameMinLength: 'El nombre debe tener al menos 2 caracteres',
+      emailRequired: 'El email es requerido',
+      emailInvalid: 'El email tiene un formato inválido',
+      headerActions: 'Acciones del encabezado',
+      searchInProgress: 'Búsqueda en progreso',
+      searching: 'Buscando...',
+      searchAndFilters: 'Búsqueda y filtros',
+      searchHelp: 'Escribe para buscar clientes por nombre, email o empresa',
+      statusFilter: 'Filtrar por estado',
+      resultsCounter: 'Contador de resultados',
+      showingResults: 'Mostrando {{count}} de {{total}} resultado{{plural}}',
+      statisticsSection: 'Sección de estadísticas',
+      clientGrid: 'Cuadrícula de clientes'
+    },
+    
+    stats: {
+      total: 'Total',
+      filtered: 'Filtrados',
+      title: 'Estadísticas'
     }
   },
   
