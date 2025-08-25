@@ -33,7 +33,22 @@
     "test:wave5:integration": "node scripts/test-runner.js integration",
     "test:wave5:e2e": "node scripts/test-runner.js e2e",
     "test:wave5:accessibility": "node scripts/test-runner.js accessibility",
-    "test:wave5:performance": "node scripts/test-runner.js performance"
+    "test:wave5:performance": "node scripts/test-runner.js performance",
+    "deploy:wave8": "./deploy-wave8.sh deploy",
+    "deploy:rollback": "./deploy-wave8.sh rollback",
+    "deploy:health-check": "./deploy-wave8.sh health-check",
+    "deploy:security-scan": "./deploy-wave8.sh security-scan",
+    "deploy:monitoring": "./deploy-wave8.sh monitoring",
+    "docker:build": "docker build -t erp-webapp .",
+    "docker:run": "docker run -p 8080:8080 erp-webapp",
+    "docker:compose:up": "docker-compose up -d",
+    "docker:compose:down": "docker-compose down",
+    "k8s:deploy": "kubectl apply -f k8s/ -n erp-webapp",
+    "k8s:delete": "kubectl delete -f k8s/ -n erp-webapp",
+    "lighthouse": "lighthouse http://localhost:4173 --only-categories=performance,pwa,best-practices --chrome-flags=\"--headless\"",
+    "lighthouse:ci": "lhci autorun",
+    "analyze": "npm run build && npx vite-bundle-analyzer dist",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
