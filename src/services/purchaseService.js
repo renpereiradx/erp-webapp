@@ -1,16 +1,49 @@
 /**
- * Servicio de Compras - Integración con API
- * Maneja todas las operaciones relacionadas con compras
- * Integra con los endpoints definidos en swagger.yaml
+ * Servicio de Compras Legacy - Bridge to V2
+ * Wave 1: Compatibilidad con implementación existente
+ * Migración gradual hacia purchaseServiceV2.js
  */
 
 import { apiClient } from './api';
+import purchaseServiceV2 from './purchaseServiceV2';
+import { telemetry } from '@/utils/telemetry';
 
 class PurchaseService {
+  constructor() {
+    // Flag para migración gradual a V2
+    this.useV2ForEnhanced = true;
+  }
+
+  // ==================== COMPATIBILIDAD CON SISTEMA EXISTENTE ====================
+  
   // Crear nueva compra usando el procedimiento register_purchase_order
   async createPurchase(purchaseData) {
     try {
-      // Validar datos antes del envío
+      telemetry.increment('purchase.legacy.create_start');
+      
+      // Si es una compra mejorada, usar V2
+      if (this.useV2ForEnhanced && this._isEnhancedPurchase(purchaseData)) {
+        const enhancedData = this._transformToV2Format(purchaseData);
+        const result = await purchaseServiceV2.createEnhancedPurchase(enhancedData);
+        
+        if (result.success) {
+          telemetry.increment('purchase.legacy.create_v2_success');
+          return {
+            success: true,
+            data: {
+              id: result.purchase_order_id,
+              total_amount: result.total_amount
+            },
+            message: result.message,
+            purchaseOrderId: result.purchase_order_id
+          };
+        } else {
+          telemetry.increment('purchase.legacy.create_v2_error');
+          return result;
+        }
+      }
+      
+      // Validar datos antes del envío (legacy)
       const validation = this.validatePurchaseData(purchaseData);
       if (!validation.isValid) {
         return {
@@ -19,7 +52,7 @@ class PurchaseService {
         };
       }
 
-      // Preparar datos según la especificación del procedimiento
+      // Preparar datos según la especificación del procedimiento (legacy)
       const requestData = {
         supplier_id: purchaseData.supplierId,
         status: purchaseData.status || 'PENDING',
@@ -41,6 +74,7 @@ class PurchaseService {
       });
 
       if (response.data) {
+        telemetry.increment('purchase.legacy.create_legacy_success');
         return {
           success: true,
           data: response.data,
@@ -350,6 +384,65 @@ class PurchaseService {
       total: Number(total.toFixed(2)),
       itemCount: items.reduce((sum, item) => sum + item.quantity, 0)
     };
+  }
+  
+  // ==================== MÉTODOS DE MIGRACIÓN A V2 ====================
+  
+  /**
+   * Determinar si una compra es "mejorada" y debe usar V2
+   */
+  _isEnhancedPurchase(purchaseData) {
+    return !!(
+      purchaseData.metadata ||
+      purchaseData.currency_id ||
+      purchaseData.payment_method_id ||
+      (purchaseData.items && purchaseData.items.some(item => 
+        item.profit_pct !== undefined || item.tax_rate_id
+      ))
+    );
+  }
+  
+  /**
+   * Transformar formato legacy a formato V2
+   */
+  _transformToV2Format(purchaseData) {
+    return {
+      supplier_id: Number(purchaseData.supplierId || purchaseData.supplier_id),
+      status: purchaseData.status || 'pending',
+      product_details: (purchaseData.items || purchaseData.product_details || []).map(item => ({
+        product_id: item.productId || item.product_id,
+        quantity: Number(item.quantity),
+        unit_price: Number(item.unitPrice || item.unit_price),
+        tax_rate_id: item.taxRateId || item.tax_rate_id || null,
+        profit_pct: item.profitPct || item.profit_pct || null
+      })),
+      payment_method_id: purchaseData.payment_method_id || 1,
+      currency_id: purchaseData.currency_id || 1,
+      metadata: purchaseData.metadata || {}
+    };
+  }
+  
+  /**
+   * Migrar gradualmente a V2 para nuevas funcionalidades
+   */
+  async createEnhancedPurchase(purchaseData) {
+    return await purchaseServiceV2.createEnhancedPurchase(purchaseData);
+  }
+  
+  async processPayment(paymentData) {
+    return await purchaseServiceV2.processPayment(paymentData);
+  }
+  
+  async previewCancellation(purchaseId) {
+    return await purchaseServiceV2.previewCancellation(purchaseId);
+  }
+  
+  async cancelEnhanced(purchaseId, reason) {
+    return await purchaseServiceV2.cancelEnhanced(purchaseId, reason);
+  }
+  
+  async getPaymentStatistics(params) {
+    return await purchaseServiceV2.getPaymentStatistics(params);
   }
 }
 

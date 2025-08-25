@@ -1,0 +1,62 @@
+# Wave 8: Enterprise Kubernetes Namespace
+# ERP WebApp Production Namespace
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: erp-webapp
+  labels:
+    name: erp-webapp
+    environment: production
+    team: erp
+    project: webapp
+  annotations:
+    description: "ERP WebApp Production Environment"
+---
+# Resource Quota for the namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: erp-webapp-quota
+  namespace: erp-webapp
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: 4Gi
+    limits.cpu: "4"
+    limits.memory: 8Gi
+    persistentvolumeclaims: "4"
+    services: "10"
+    secrets: "10"
+    configmaps: "10"
+---
+# Network Policy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: erp-webapp-netpol
+  namespace: erp-webapp
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system

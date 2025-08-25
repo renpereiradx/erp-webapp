@@ -1,92 +1,112 @@
-# Checklist simplificado para nueva página / feature
+# Checklist de Nueva Feature - Índice de Enfoques
 
-Fecha: 2025-08-19
+Fecha: 2025-08-23
 Responsable: Equipo Frontend
-Estado: Plantilla activa (versión reducida por capacidad limitada)
+**Estado**: Guías separadas por enfoque disponibles
 
-Resumen
-Documento único con el mínimo necesario para entregar un MVP usable rápido y una ruta incremental clara. Todo lo no esencial pasa a fases posteriores para evitar bloqueo mientras seguimos creando páginas.
+## 🎯 Dos Enfoques Disponibles
 
-Fases de implementación
-| Fase | Objetivo | Tiempo aprox | Salida clave |
-|------|----------|--------------|--------------|
-| MVP | Página funcional básica | 1-3 días | Listado + ver detalle / acción primaria |
-| Hardening | Robustez + accesibilidad + test mínimo | 1-2 días | Errores claros, i18n, a11y base |
-| Optimización | Perf, virtualización, métricas extra | Opcional | Sólo si detectado en métricas |
+### 🚀 Enfoque MVP - Desarrollo Rápido
+**Objetivo**: Funcionalidad navegable en **1-3 días**
+**Cuándo usar**: Features experimentales, recursos limitados, validación rápida
 
-Checklist MVP (obligatorio)
-- [ ] Carpeta `src/features/<feature>/` con: `components/`, `hooks/`, `services/` y `__tests__/` (aunque sea 1 test)
-- [ ] Fetch básico con wrapper `_fetchWithRetry` (máx 2 reintentos + backoff simple)
-- [ ] Estado local (useState/useReducer) o store mínimo (sin normalizar si < 200 items)
-- [ ] Render listado + acción primaria (crear / actualizar / habilitar) según necesidad
-- [ ] Cadenas visibles en i18n (`src/lib/i18n.js`) sin hardcodes en JSX (incluye labels internos de cards/resúmenes como DOCUMENTO:, RUC:, REGISTRO:, TOTAL:)
-- [ ] Accesibilidad mínima: roles/labels en inputs y botón principal focusable
-- [ ] Manejo de error simple: mensaje genérico + botón reintentar
-- [ ] Telemetría mínima: evento `feature.<feature>.load` (duración) y `feature.<feature>.error`
-- [ ] 1 test unit (servicio o hook) + 1 test render básico (smoke)
-- [ ] Linter y build pasan
- - [ ] (Recomendado) Usar `<DataState variant="loading" />` para placeholder inicial
+📋 **Ver**: [`NEW_FEATURE_MVP_GUIDE.md`](./NEW_FEATURE_MVP_GUIDE.md)
 
-Checklist Hardening (hacer después si MVP estable)
-- [ ] Normalizar datos (byId + ids) si se añaden mutaciones múltiples
-- [ ] Inline edit optimista solo para campos críticos (diferir bulk)
-- [ ] Estados UI unificados (Loading / Empty / Error) reutilizando componentes comunes
- - [ ] Sustituir cualquier implementación ad-hoc por `<DataState>` con `skeletonVariant` adecuado
-- [ ] i18n: placeholders / tooltips y labels internos restantes extraídos
-- [ ] Focus management tras acciones (crear / cerrar modal)
-- [ ] Telemetría: agregar `errorCode` y `latencyMs`
-- [ ] Test de error y de actualización (mock 200 + mock 500)
+**Características:**
+- ⚡ Velocidad first: MVP navegable antes que perfección
+- 🔄 Iterativo: Fases MVP → Hardening → Optimización  
+- 🎯 Pragmático: Evitar premature optimization
+- 📊 Data-driven: Optimizar solo con métricas que justifiquen
 
-Checklist Optimización (opt-in según señales)
-- [ ] Virtualización si lista > 300 elementos o FPS < 50
-- [ ] Cache con TTL si se observa fetch repetido (>30% duplicado en 2 min)
-- [ ] Prefetch siguiente página si scroll > 80%
-- [ ] Métricas extra: hit ratio, p50/p95 (solo si hay panel activo)
+### 🏆 Enfoque Production Hardened - Enterprise
+**Objetivo**: Sistema empresarial completo **production-ready desde día 1**
+**Cuándo usar**: Features críticas, recursos adecuados, sistemas de producción
 
-Qué se ha pospuesto globalmente
-- Bulk operations complejas (se implementan puntualmente donde justifique)
-- Panel métricas extendido (solo productos por ahora)
-- Circuit breaker específico por feature (uso global cuando esté estable)
-- Cola offline (se integrará primero en features críticas)
+📋 **Ver**: [`NEW_FEATURE_HARDENED_GUIDE.md`](./NEW_FEATURE_HARDENED_GUIDE.md)
 
-Plantilla carpeta mínima
-```
-src/features/<feature>/
-   components/
-      <Feature>MainView.jsx
-   hooks/
-      use<Feature>Data.js
-   services/
-      <feature>Api.js
-   __tests__/
-      <feature>.smoke.test.jsx
-      <feature>.service.test.js
-```
+**Características:**
+- 🏗️ Calidad first: Production-ready desde inicio
+- 📈 Comprehensive: Todas las características enterprise
+- 🔒 Robusto: Observabilidad, resiliencia, escalabilidad
+- 🎯 Long-term: Arquitectura preparada para evolución
 
-Convenciones rápidas
-- Eventos telemetry: `feature.<feature>.*`
-- Claves i18n: `<feature>.title`, `<feature>.error.generic`, `<feature>.action.primary`
-- Evitar premature optimization (no virtualización ni normalización si no hay necesidad)
- - Estados: `<DataState variant="loading|empty|error" skeletonVariant="list|productGrid" />`
+## 🤔 Guía de Decisión
 
-Recursos (orden recomendado)
-1. `docs/FEATURE_PAGE_IMPROVEMENT_TEMPLATE.md` (si se requiere profundizar)
-2. `docs/CACHE_IMPLEMENTATION.md` (solo al entrar en Optimización)
-3. `docs/OBSERVABILITY.md` (telemetría extra opcional)
-4. `docs/FEATURE_FLAGS.md` (si se gatea la página)
-5. `src/features/products/` (referencia completa – usar selectivamente)
+| Criterio | MVP Guide | Hardened Guide |
+|----------|-----------|----------------|
+| **Tiempo disponible** | 1-3 días | 3-5 semanas |
+| **Recursos equipo** | 1-2 devs | Equipo senior completo |
+| **Criticidad negocio** | Experimental/Validación | Crítica/Core business |
+| **Usuarios esperados** | <100 | Cientos/Miles |
+| **Uptime requirements** | Best effort | 99.9%+ |
+| **Compliance needs** | Básico | Enterprise/Auditable |
+| **Escalabilidad** | Future consideration | Desde día 1 |
+| **Observabilidad** | Telemetría básica | Dashboard completo |
 
-Preguntas rápidas de decisión
-| Pregunta | Si Sí | Si No |
-|----------|-------|-------|
-| ¿>300 items potenciales? | Evaluar virtualización | Mantener listado simple |
-| ¿Fetch repetido mismo payload? | Introducir cache TTL | Seguir sin cache |
-| ¿Errores frecuentes? | Añadir códigos/hints | Mantener mensaje genérico |
-| ¿Necesidad edición rápida? | Implementar inline básico | Modal o formulario dedicado |
+## 📊 Comparación de Resultados
 
-Notas
-- Preferir entregar MVP navegable antes que completar Hardening.
-- Documentar en el PR qué parte se dejó para Hardening / Optimización.
+### 🚀 MVP Approach (1-3 días)
+**Entrega:**
+- ✅ Funcionalidad básica navegable
+- ✅ CRUD simple
+- ✅ Error handling básico
+- ✅ Tests smoke
+- ✅ i18n básico
+
+**No incluye:**
+- ❌ Performance optimizations
+- ❌ Advanced caching
+- ❌ Circuit breaker
+- ❌ Comprehensive testing
+- ❌ Offline support
+
+### 🏆 Hardened Approach (16-25 días)
+**Entrega:**
+- ✅ Sistema empresarial completo
+- ✅ Performance optimizado (85% reducción API calls)
+- ✅ Cache avanzado TTL+LRU
+- ✅ Circuit breaker + retry automático
+- ✅ WCAG 2.1 AA compliance
+- ✅ Suite testing completa (≥85% coverage)
+- ✅ Offline support + auto-recovery
+- ✅ Panel métricas tiempo real
+- ✅ Observabilidad enterprise
+
+## 🎯 Recomendaciones de Uso
+
+### Usar **MVP Guide** cuando:
+- 🧪 **Validación de concepto** antes de inversión mayor
+- ⚡ **Pressure de tiempo** para demo/presentación
+- 🔬 **Feature experimental** con incertidumbre de adopción
+- 👥 **Equipo pequeño** (1-2 desarrolladores)
+- 📊 **Necesitas métricas** de uso real antes de investment
+
+### Usar **Hardened Guide** cuando:
+- 💼 **Feature crítica** del core business (reservas, ventas, facturación)
+- 👥 **Equipo senior** disponible con tiempo adecuado
+- 🏢 **Entorno enterprise** con requerimientos de availability
+- 🔒 **Compliance** o auditorías requeridas
+- 🏗️ **Base patterns** para otras features futuras
+- 📈 **Escalabilidad** requerida desde día 1
+
+## 🔄 Path de Migración
+
+Si empiezas con **MVP** y necesitas **Hardened**:
+
+1. **Evaluar MVP** con usuarios reales (2-4 semanas uso)
+2. **Analizar métricas** de telemetría básica
+3. **Decidir investment** basado en data
+4. **Migrar gradualmente** usando Hardened Guide como roadmap
+5. **Mantener backward compatibility** durante migración
+
+## 📚 Recursos Adicionales
+
+- **Implementación de Referencia**: Sistema Reservas (Hardened completo)
+- **Patterns Reutilizables**: `src/store/helpers/`, `src/components/ui/`
+- **Testing Infrastructure**: Vitest setup, utilities
+- **Performance Patterns**: React optimization examples
 
 ---
-Mantener este documento corto. Cualquier crecimiento moverlo a docs más específicas.
+
+> **Decisión**: Elige el enfoque basado en **contexto del negocio**, no preferencias técnicas.
+> Ambos enfoques son válidos para diferentes situaciones.

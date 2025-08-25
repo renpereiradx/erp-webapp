@@ -22,7 +22,8 @@ import {
   User,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -189,11 +190,18 @@ const MainLayout = ({ children }) => {
       badge: '5'
     },
     { 
-      name: 'Reservas y Ventas', 
-      href: '/reservas-ventas', 
+      name: 'Reservas', 
+      href: '/reservas', 
       icon: Calendar, 
       color: 'purple',
       badge: '6'
+    },
+    { 
+      name: 'Ventas', 
+      href: '/ventas', 
+      icon: ShoppingCart, 
+      color: 'green',
+      badge: '7'
     },
     { 
       name: 'Pedidos', 
@@ -208,6 +216,13 @@ const MainLayout = ({ children }) => {
       icon: BarChart3, 
       color: 'green',
       badge: '7'
+    },
+    { 
+      name: 'Sesiones', 
+      href: '/sesiones', 
+      icon: Shield, 
+      color: 'red',
+      badge: '🔒'
     },
     { 
       name: 'Configuración', 
@@ -689,11 +704,12 @@ const MainLayout = ({ children }) => {
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(true)}
-            className={`erp-mobile-menu-btn px-4 ${!isClient ? 'lg:hidden' : ''}`}
+            className={`erp-mobile-menu-btn px-4 lg:hidden`}
             style={{ 
               borderRight: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
               color: 'var(--foreground)',
-              display: isClient ? (!isLargeScreen ? 'flex' : 'none') : undefined,
+              // Siempre oculto en desktop (>= lg) vía clase; sólo controlamos display tras hidratación para evitar parpadeo
+              display: isClient ? (isLargeScreen ? 'none' : 'flex') : undefined,
               width: '48px',
               height: '48px',
               minWidth: '48px',
@@ -806,6 +822,24 @@ const MainLayout = ({ children }) => {
 
                     {/* Menu Items */}
                     <div className="p-2">
+                      <Link
+                        to="/sesiones"
+                        className={`flex items-center w-full px-4 py-3 text-sm ${isNeoBrutalist ? 'font-bold' : 'font-medium'} text-left transition-colors ${isNeoBrutalist ? '' : 'rounded-md'}`}
+                        style={{ color: 'var(--foreground)' }}
+                        onClick={() => setShowUserMenu(false)}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = isNeoBrutalist ? 'var(--muted)' : 'var(--accent)';
+                          e.target.style.color = isNeoBrutalist ? 'var(--foreground)' : 'var(--accent-foreground)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = 'transparent';
+                          e.target.style.color = 'var(--foreground)';
+                        }}
+                      >
+                        <Shield className="w-4 h-4 mr-3" />
+                        {isNeoBrutalist ? 'SESIONES' : 'Gestión de Sesiones'}
+                      </Link>
+                      
                       <Link
                         to="/configuracion"
                         className={`flex items-center w-full px-4 py-3 text-sm ${isNeoBrutalist ? 'font-bold' : 'font-medium'} text-left transition-colors ${isNeoBrutalist ? '' : 'rounded-md'}`}

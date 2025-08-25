@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema ERP - Sin Conexión</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .offline-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .offline-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 16px;
+            color: #2c3e50;
+        }
+
+        .offline-message {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .retry-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .retry-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .retry-button:active {
+            transform: translateY(0);
+        }
+
+        .offline-features {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .offline-features h3 {
+            color: #2c3e50;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        .feature-list {
+            list-style: none;
+            text-align: left;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #555;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: #27ae60;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-offline {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .status-online {
+            background: #27ae60;
+            color: white;
+        }
+
+        .app-info {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+            color: #95a5a6;
+            font-size: 14px;
+        }
+
+        @media (max-width: 480px) {
+            .offline-container {
+                padding: 30px 20px;
+            }
+            
+            .offline-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 36px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status status-offline" id="connectionStatus">
+        🔴 Sin conexión
+    </div>
+
+    <div class="offline-container">
+        <div class="offline-icon">
+            📡
+        </div>
+        
+        <h1>Sin conexión a internet</h1>
+        
+        <div class="offline-message">
+            No se puede conectar al servidor en este momento. 
+            Algunas funciones están disponibles sin conexión.
+        </div>
+        
+        <button class="retry-button" onclick="retryConnection()">
+            🔄 Reintentar conexión
+        </button>
+        
+        <div class="offline-features">
+            <h3>📋 Funciones disponibles sin conexión:</h3>
+            <ul class="feature-list">
+                <li>Ver clientes guardados localmente</li>
+                <li>Consultar productos en caché</li>
+                <li>Crear reservas (se sincronizarán automáticamente)</li>
+                <li>Acceso a reportes descargados</li>
+                <li>Búsqueda en datos locales</li>
+            </ul>
+        </div>
+        
+        <div class="app-info">
+            <strong>🏢 Sistema ERP</strong><br>
+            Wave 6 - PWA Enterprise<br>
+            Los datos se sincronizarán automáticamente cuando se restablezca la conexión.
+        </div>
+    </div>
+
+    <script>
+        // Monitorear estado de conexión
+        function updateConnectionStatus() {
+            const statusElement = document.getElementById('connectionStatus');
+            
+            if (navigator.onLine) {
+                statusElement.textContent = '🟢 Conectado';
+                statusElement.className = 'connection-status status-online';
+                
+                // Auto-redirect cuando vuelva la conexión
+                setTimeout(() => {
+                    if (navigator.onLine) {
+                        window.location.href = '/';
+                    }
+                }, 2000);
+            } else {
+                statusElement.textContent = '🔴 Sin conexión';
+                statusElement.className = 'connection-status status-offline';
+            }
+        }
+
+        // Event listeners para conexión
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+
+        // Función retry
+        function retryConnection() {
+            const button = document.querySelector('.retry-button');
+            button.textContent = '🔄 Verificando...';
+            button.disabled = true;
+            
+            // Intentar cargar la página principal
+            fetch('/', { 
+                method: 'HEAD',
+                cache: 'no-cache'
+            })
+            .then(response => {
+                if (response.ok) {
+                    button.textContent = '✅ ¡Conectado!';
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    throw new Error('No connection');
+                }
+            })
+            .catch(() => {
+                button.textContent = '❌ Sin conexión';
+                setTimeout(() => {
+                    button.textContent = '🔄 Reintentar conexión';
+                    button.disabled = false;
+                }, 2000);
+            });
+        }
+
+        // Service Worker communication
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'BACK_ONLINE') {
+                    window.location.href = '/';
+                }
+            });
+        }
+
+        // Check inicial
+        updateConnectionStatus();
+
+        // Verificar conexión cada 10 segundos
+        setInterval(() => {
+            if (navigator.onLine) {
+                fetch('/', { method: 'HEAD', cache: 'no-cache' })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/';
+                    }
+                })
+                .catch(() => {});
+            }
+        }, 10000);
+
+        console.log('📱 PWA Offline Page - Wave 6 Enterprise');
+    </script>
+</body>
+</html>

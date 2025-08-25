@@ -101,76 +101,57 @@ const getErrorDetails = (error) => {
 
 export const authService = {
   /**
-   * Iniciar sesión con username/email y contraseña
-   * Usa el cliente oficial del Business Management API
+   * Iniciar sesión
+   * @param {string} email - Correo electrónico
+   * @param {string} password - Contraseña
+   * @returns {Promise<{user: Object, token: string}>}
    */
-  login: async (credentials) => {
+  async login(email, password) {
+    telemetry.record('feature.auth.login.start');
+    const startTime = Date.now();
+
     try {
-      const { username, password } = credentials;
-      
-      // Usar el método login del cliente oficial
-      const response = await apiClient.login(username, password);
-      
-      // Extraer token y role_id de la respuesta
-      const { token, role_id } = response;
-      
-      if (!token) {
-        throw new Error('Token no recibido del servidor');
-      }
-      
-      // Crear objeto de usuario basado en la respuesta
-      const user = {
-        id: role_id || 1,
-        username,
-        email: username, // Guardar el valor ingresado como email también
-        role: role_id || 'user',
-        role_id,
-        name: username || 'Usuario',
-        company: 'ERP Systems Inc.',
-        lastLogin: new Date().toISOString(),
-      };
-      
-      return {
-        user,
-        token,
-        role_id,
-        message: 'Login exitoso'
-      };
-      
-    } catch (error) {
-      // Manejo de errores de la API con mensajes amigables para el usuario
-      console.error('Error en login:', error);
-      
-      const { category, suggestions } = getErrorDetails(error);
-      
-      // Si la respuesta del servidor contiene un mensaje específico, usarlo
-      const serverMessage = error.response?.data?.message || error.response?.data || error.message;
-      
-      if (category.title === 'Error de Autenticación') {
-        // Usar el mensaje del servidor si está disponible y es específico
-        if (typeof serverMessage === 'string' && serverMessage.length > 0) {
-          throw new Error(serverMessage);
-        }
-        throw new Error('Usuario o contraseña incorrectos. Por favor, verifica tus credenciales e intenta nuevamente.');
-      } else if (category.title === 'Error de Validación') {
-        throw new Error('Los datos ingresados no son válidos. Asegúrate de completar todos los campos correctamente.');
-      } else if (category.title === 'Error de Permisos') {
-        throw new Error('Tu cuenta ha sido bloqueada o no tienes permisos para acceder. Contacta al administrador del sistema.');
-      } else if (category.title === 'Error del Servidor') {
-        // Para errores 500+, pero si el servidor responde con un mensaje específico, usarlo
-        if (typeof serverMessage === 'string' && serverMessage.length > 0) {
-          throw new Error(serverMessage);
-        }
-        throw new Error('El servicio de autenticación no está disponible. Contacta al soporte técnico.');
-      } else if (category.title === 'Límite de Solicitudes') {
-        throw new Error('Demasiados intentos de inicio de sesión. Espera unos minutos antes de intentar nuevamente.');
+      const response = await apiClient.post('/auth/login', {
+        email,
+        password
+      });
+
+      if (response?.token && response?.user) {
+        localStorage.setItem('authToken', response.token);
+        telemetry.record('feature.auth.login.success', {
+          duration: Date.now() - startTime,
+          userId: response.user.id
+        });
+        return response;
       } else {
-        // Mensaje genérico más amigable - priorizar mensaje del servidor
-        if (typeof serverMessage === 'string' && serverMessage.length > 0) {
-          throw new Error(serverMessage);
-        }
-        throw new Error(error.message || 'Error inesperado al iniciar sesión. Intenta nuevamente o contacta al soporte técnico.');
+        throw new Error('Respuesta de login inválida');
       }
+    } catch (error) {
+      telemetry.record('feature.auth.login.error', {
+        duration: Date.now() - startTime,
+        error: error.message
+      });
+      throw categorizeError(error, 'Error al iniciar sesión');
+    }
+  },
+
+  /**
+   * Cerrar sesión simple (solo limpia token local)
+   * @deprecated Usar logout() que incluye revocación en el servidor
+   * @returns {Promise<{success: boolean, message: string}>}
+   */
+  async logoutLocal() {
+    telemetry.record('feature.auth.logout_local.start');
+    
+    try {
+      localStorage.removeItem('authToken');
+      telemetry.record('feature.auth.logout_local.success');
+      return { success: true, message: 'Sesión cerrada localmente' };
+    } catch (error) {
+      telemetry.record('feature.auth.logout_local.error', {
+        error: error.message
+      });
+      throw new Error('Error al cerrar sesión localmente');
     }
   },
 

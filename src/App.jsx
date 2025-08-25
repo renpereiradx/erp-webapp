@@ -10,12 +10,16 @@ import Dashboard from '@/pages/Dashboard';
 import Products from '@/pages/Products';
 import Clients from '@/pages/Clients';
 import Suppliers from '@/pages/Suppliers';
+import Reservations from '@/pages/Reservations';
+import Sales from '@/pages/Sales';
 import BookingSales from '@/pages/BookingSales';
 import Purchases from '@/pages/Purchases';
 import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
+import SessionsPage from '@/pages/SessionsPage';
 import ProductDetailTest from '@/components/ProductDetailTest';
 import ProductComparisonDebug from '@/components/ProductComparisonDebug';
+import Wave5Demo from '@/pages/Wave5Demo'; // Wave 5: Offline & Circuit Breaker UI
 import useAuthStore from '@/store/useAuthStore';
 import { apiClient } from '@/services/api';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -94,10 +98,18 @@ function App() {
                     <Route path="/clientes" element={<Clients />} />
                     <Route path="/proveedores" element={<Suppliers />} />
                     <Route path="/compras" element={<Purchases />} />
-                    <Route path="/reservas-ventas" element={<BookingSales />} />
+                    <Route path="/reservas" element={<Reservations />} />
+                    <Route path="/ventas" element={<Sales />} />
+                    {/* Backward compatibility - redirect to separated pages */}
+                    <Route path="/reservas-ventas" element={<Navigate to="/reservas" replace />} />
+                    <Route path="/booking-sales" element={<Navigate to="/ventas" replace />} />
                     <Route path="/configuracion" element={<Settings />} />
+                    <Route path="/sesiones" element={<SessionsPage />} />
                     <Route path="/test-products" element={<ProductDetailTest />} />
                     <Route path="/debug-products" element={<ProductComparisonDebug />} />
+                    
+                    {/* Wave 5: Offline & Circuit Breaker UI Demo */}
+                    <Route path="/wave5-demo" element={<Wave5Demo />} />
                     
                     {/* Ruta 404 */}
                     <Route path="*" element={
