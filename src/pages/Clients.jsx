@@ -15,9 +15,10 @@ import {
   BarChart3
 } from 'lucide-react';
 import useClientStore from '@/store/useClientStore';
-import ClientModal from '@/components/ClientModal';
-import DeleteClientModal from '@/components/DeleteClientModal';
-import ClientDetailModal from '@/components/ClientDetailModal';
+import ClientModal from '@/components/clients/ClientModal';
+import DeleteClientModal from '@/components/clients/DeleteClientModal';
+import ClientDetailModal from '@/components/clients/ClientDetailModal';
+import ClientCard from '@/components/clients/ClientCard';
 import ToastContainer from '@/components/ui/ToastContainer';
 import { useToast } from '@/hooks/useToast';
 import { telemetry } from '@/utils/telemetry';
@@ -191,31 +192,13 @@ const ClientsPage = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredClients.map(client => (
-          <div key={client.id} className={`${card('p-4 sm:p-5')} group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 flex flex-col`} data-testid={`client-card-${client.id}`}>
-            {/* Accent bar */}
-            {!isNeoBrutalism ? (
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60 opacity-80 rounded-t-md" aria-hidden="true" />
-            ) : (
-              <div className="absolute inset-x-0 top-0 h-[3px] bg-border" aria-hidden="true" />
-            )}
-
-            <div className="flex-1">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className={`${themeHeader('h3')} mb-2 truncate`}>{client.name} {client.last_name || ''}</h3>
-                <StatusBadge active={!!client.status} />
-              </div>
-              <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>{t('clients.card.document') || 'DOCUMENTO:'}</span><span className={themeLabel()}>{client.document_id || 'N/A'}</span></div>
-                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>{t('clients.card.contact') || 'CONTACTO:'}</span><span className={themeLabel()}>{client.contact || 'N/A'}</span></div>
-                  <div className="flex justify-between text-sm"><span className={`text-muted-foreground ${themeLabel()}`}>{t('clients.card.registered') || 'REGISTRO:'}</span><span className={themeLabel()}>{new Date(client.created_at).toLocaleDateString()}</span></div>
-                </div>
-            </div>
-            <div className="flex gap-2 mt-3">
-              <Button onClick={() => handleViewClient(client)} variant="secondary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50" data-testid={`client-view-${client.id}`}><Eye className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'VER' : 'Ver'}</Button>
-              <Button onClick={() => handleEditClient(client)} variant="primary" size="sm" className="flex-1 text-xs focus-visible:ring-2 focus-visible:ring-ring/50" data-testid={`client-edit-${client.id}`}><Edit className="w-4 h-4 mr-1" />{isNeoBrutalism ? 'EDITAR' : 'Editar'}</Button>
-              <Button onClick={() => handleDeleteClient(client)} variant="destructive" size="icon" className="focus-visible:ring-2 focus-visible:ring-ring/50" aria-label="Eliminar cliente" data-testid={`client-delete-${client.id}`}><Trash2 className="w-4 h-4" /></Button>
-            </div>
-          </div>
+          <ClientCard
+            key={client.id}
+            client={client}
+            onView={handleViewClient}
+            onEdit={handleEditClient}
+            onDelete={handleDeleteClient}
+          />
         ))}
       </div>
     );
