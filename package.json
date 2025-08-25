@@ -21,7 +21,6 @@
     "test:a11y": "vitest run tests/a11y",
     "test:all": "npm run test:unit && npm run test:components && npm run test:integration && npm run test:e2e",
     "test:ci": "npm run test:coverage && npm run test:e2e",
-    
     "test:clients": "vitest run --config vitest.config.clients.js",
     "test:clients:coverage": "vitest run --config vitest.config.clients.js --coverage",
     "test:clients:watch": "vitest --config vitest.config.clients.js",
@@ -94,6 +93,8 @@
     "tailwindcss": "^4.1.7",
     "uuid": "^11.1.0",
     "vaul": "^1.1.2",
+    "vite-plugin-pwa": "^1.0.3",
+    "web-vitals": "^5.1.0",
     "zod": "^3.24.4",
     "zustand": "^5.0.5"
   },
