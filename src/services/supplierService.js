@@ -34,14 +34,51 @@ const supplierService = {
     }
   },
   create: async (data) => {
-    // ... similar implementation for create, update, delete
-    return await apiService.post(API_PREFIX, data);
+    const startTime = Date.now();
+    try {
+      const result = await _fetchWithRetry(() => apiService.post(API_PREFIX, data));
+      telemetry.record('supplier.service.create', { duration: Date.now() - startTime });
+      return result;
+    } catch (error) {
+      telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'create' });
+      throw error;
+    }
   },
+  
   update: async (id, data) => {
-    return await apiService.put(`${API_PREFIX}/${id}`, data);
+    const startTime = Date.now();
+    try {
+      const result = await _fetchWithRetry(() => apiService.put(`${API_PREFIX}/${id}`, data));
+      telemetry.record('supplier.service.update', { duration: Date.now() - startTime });
+      return result;
+    } catch (error) {
+      telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'update' });
+      throw error;
+    }
   },
+  
   delete: async (id) => {
-    return await apiService.delete(`${API_PREFIX}/${id}`);
+    const startTime = Date.now();
+    try {
+      const result = await _fetchWithRetry(() => apiService.delete(`${API_PREFIX}/${id}`));
+      telemetry.record('supplier.service.delete', { duration: Date.now() - startTime });
+      return result;
+    } catch (error) {
+      telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'delete' });
+      throw error;
+    }
+  },
+  
+  getStatistics: async () => {
+    const startTime = Date.now();
+    try {
+      const result = await _fetchWithRetry(() => apiService.get(`${API_PREFIX}/statistics`));
+      telemetry.record('supplier.service.stats', { duration: Date.now() - startTime });
+      return result;
+    } catch (error) {
+      telemetry.record('supplier.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getStatistics' });
+      throw error;
+    }
   }
 };
 

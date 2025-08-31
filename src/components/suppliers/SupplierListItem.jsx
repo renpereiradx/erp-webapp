@@ -1,23 +1,126 @@
 import React from 'react';
 import { Button } from '../ui/Button';
-import { Edit, Trash2, Mail, Phone, FileText } from 'lucide-react';
+import { Edit, Trash2, Mail, Phone, FileText, MapPin, Building2, Tag } from 'lucide-react';
 import { useThemeStyles } from '../../hooks/useThemeStyles';
 
 const SupplierListItem = ({ supplier, onEdit, onDelete }) => {
-  const { styles } = useThemeStyles();
+  const { styles, isNeoBrutalism } = useThemeStyles();
+  
+  // Obtener prioridad con color
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  // Obtener categoría con icono
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case 'manufacturing': return <Building2 className="w-3 h-3" />;
+      case 'technology': return <FileText className="w-3 h-3" />;
+      case 'industrial': return <Building2 className="w-3 h-3" />;
+      case 'logistics': return <MapPin className="w-3 h-3" />;
+      case 'materials': return <Tag className="w-3 h-3" />;
+      default: return <Building2 className="w-3 h-3" />;
+    }
+  };
+
   return (
-    <div className={styles.card('transition-all hover:border-primary')}>
-      <div className="flex justify-between items-start">
-        <div className="space-y-2">
-          <h3 className={styles.header('h3')}>{supplier.name}</h3>
-          <div className="space-y-1 text-sm text-muted-foreground font-semibold">
-            <div className="flex items-center gap-2"><Mail className="w-4 h-4" /><span>{supplier.contact?.email || 'N/A'}</span></div>
-            <div className="flex items-center gap-2"><FileText className="w-4 h-4" /><span>{supplier.tax_id || 'N/A'}</span></div>
+    <div className={`${styles.card('p-6 transition-all hover:shadow-lg cursor-pointer')} group`}>
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex-1">
+          <div className="flex items-start justify-between mb-3">
+            <h3 className={`${styles.header('h3')} mb-1 group-hover:text-primary transition-colors`}>
+              {supplier.name}
+            </h3>
+            {supplier.metadata?.priority && (
+              <span className={`px-2 py-1 text-xs font-bold rounded-md border ${getPriorityColor(supplier.metadata.priority)} ${isNeoBrutalism ? 'border-2 border-black' : ''}`}>
+                {supplier.metadata.priority.toUpperCase()}
+              </span>
+            )}
           </div>
+          
+          {/* Información de contacto */}
+          <div className="space-y-2 mb-4">
+            {supplier.contact?.email && (
+              <div className="flex items-center gap-2 text-sm">
+                <Mail className="w-4 h-4 text-muted-foreground" />
+                <span className={styles.body()}>{supplier.contact.email}</span>
+              </div>
+            )}
+            {supplier.contact?.phone && (
+              <div className="flex items-center gap-2 text-sm">
+                <Phone className="w-4 h-4 text-muted-foreground" />
+                <span className={styles.body()}>{supplier.contact.phone}</span>
+              </div>
+            )}
+            {supplier.address?.city && (
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <span className={styles.body()}>{supplier.address.city}, {supplier.address.country || 'México'}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Información adicional */}
+          <div className="flex flex-wrap gap-2 items-center">
+            {supplier.tax_id && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-muted/50 rounded text-xs">
+                <FileText className="w-3 h-3" />
+                <span className="font-mono">{supplier.tax_id}</span>
+              </div>
+            )}
+            {supplier.metadata?.category && (
+              <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded text-xs font-semibold">
+                {getCategoryIcon(supplier.metadata.category)}
+                <span>{supplier.metadata.category}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Notas si existen */}
+          {supplier.metadata?.notes && (
+            <div className="mt-3 p-2 bg-muted/30 rounded-md">
+              <p className="text-sm text-muted-foreground italic">
+                "{supplier.metadata.notes}"
+              </p>
+            </div>
+          )}
         </div>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={() => onEdit(supplier)} title="Editar Proveedor"><Edit className="w-4 h-4" /></Button>
-          <Button variant="ghost" size="icon" onClick={() => onDelete(supplier)} title="Eliminar Proveedor" className="hover:bg-destructive/10"><Trash2 className="w-4 h-4" /></Button>
+        
+        {/* Botones de acción */}
+        <div className="flex flex-col gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={(e) => { e.stopPropagation(); onEdit(supplier); }} 
+            className={`${styles.button('secondary')} w-8 h-8 text-xs`}
+            title="Editar Proveedor"
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={(e) => { e.stopPropagation(); onDelete(supplier); }} 
+            className="w-8 h-8 text-xs hover:bg-destructive/10 hover:text-destructive"
+            title="Eliminar Proveedor"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Footer con fechas */}
+      <div className="flex justify-between items-center pt-3 border-t border-muted/20 text-xs text-muted-foreground">
+        <div>
+          Creado: {new Date(supplier.created_at).toLocaleDateString('es-MX')}
+        </div>
+        <div>
+          Actualizado: {new Date(supplier.updated_at).toLocaleDateString('es-MX')}
         </div>
       </div>
     </div>

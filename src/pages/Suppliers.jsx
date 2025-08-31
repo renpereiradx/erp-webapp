@@ -17,10 +17,19 @@ const SuppliersPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', tax_id: '' });
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchSuppliers();
   }, [fetchSuppliers]);
+
+  // Filtrar proveedores localmente
+  const filteredSuppliers = suppliers.filter(supplier =>
+    (supplier.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (supplier.contact?.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (supplier.address?.city || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (supplier.metadata?.category || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleCreate = () => {
     setEditingItem(null);
@@ -71,14 +80,58 @@ const SuppliersPage = () => {
         <Button onClick={handleCreate} className={styles.button('primary')}><Plus className="w-4 h-4 mr-2" />{t('supplier.action.create', 'Nuevo Proveedor')}</Button>
       </div>
 
+      {/* Búsqueda */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder={t('supplier.search.placeholder', 'Buscar por nombre, email, ciudad o categoría...')}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={`pl-10 ${styles.input()}`}
+        />
+      </div>
+
       {suppliers.length === 0 ? (
         <DataState variant="empty" title={t('supplier.empty.title', 'No hay proveedores')} message={t('supplier.empty.message', 'Crea tu primer proveedor para empezar.')} actionLabel={t('supplier.action.create', 'Crear Proveedor')} onAction={handleCreate} />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {suppliers.map(supplier => (
-            <SupplierListItem key={supplier.id} supplier={supplier} onEdit={handleEdit} onDelete={handleDelete} />
-          ))}
-        </div>
+        <>
+          {/* Estadísticas rápidas */}
+          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 mb-6">
+            <div className={`${styles.card('p-4 text-center')}`}>
+              <div className="text-2xl font-bold text-primary">{filteredSuppliers.length}</div>
+              <div className="text-sm text-muted-foreground">
+                {searchTerm ? `Encontrados (${suppliers.length} total)` : 'Total Proveedores'}
+              </div>
+            </div>
+            <div className={`${styles.card('p-4 text-center')}`}>
+              <div className="text-2xl font-bold text-green-600">{filteredSuppliers.filter(s => s.metadata?.priority === 'high').length}</div>
+              <div className="text-sm text-muted-foreground">Alta Prioridad</div>
+            </div>
+            <div className={`${styles.card('p-4 text-center')}`}>
+              <div className="text-2xl font-bold text-blue-600">{new Set(filteredSuppliers.map(s => s.address?.city)).size}</div>
+              <div className="text-sm text-muted-foreground">Ciudades</div>
+            </div>
+            <div className={`${styles.card('p-4 text-center')}`}>
+              <div className="text-2xl font-bold text-purple-600">{new Set(filteredSuppliers.map(s => s.metadata?.category)).size}</div>
+              <div className="text-sm text-muted-foreground">Categorías</div>
+            </div>
+          </div>
+
+          {/* Resultados de búsqueda */}
+          {filteredSuppliers.length === 0 ? (
+            <DataState 
+              variant="empty" 
+              title={t('supplier.search.empty', 'No se encontraron proveedores')} 
+              message={t('supplier.search.message', 'Intenta con otros términos de búsqueda')} 
+            />
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+              {filteredSuppliers.map(supplier => (
+                <SupplierListItem key={supplier.id} supplier={supplier} onEdit={handleEdit} onDelete={handleDelete} />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {showModal && (

@@ -3,6 +3,123 @@
  * Provides realistic data for dashboard and other components
  */
 
+// Supplier demo data
+export const DEMO_SUPPLIER_DATA = [
+  {
+    id: 101,
+    name: "Distribuidora Nacional S.A.",
+    contact: {
+      email: "ventas@disnacional.com.mx",
+      phone: "+52-555-2100"
+    },
+    address: {
+      street: "Av. Insurgentes Sur 2345",
+      city: "CDMX",
+      country: "México"
+    },
+    tax_id: "DISN850101ABC",
+    metadata: {
+      priority: "high",
+      notes: "Proveedor principal de materias primas",
+      category: "manufacturing"
+    },
+    created_at: "2025-07-12T08:30:00Z",
+    updated_at: "2025-08-28T16:45:00Z"
+  },
+  {
+    id: 102,
+    name: "Tecnología Avanzada del Norte",
+    contact: {
+      email: "contacto@tecnorte.mx",
+      phone: "+52-555-3200"
+    },
+    address: {
+      street: "Blvd. Díaz Ordaz 1890",
+      city: "Monterrey",
+      country: "México"
+    },
+    tax_id: "TECN901201DEF",
+    metadata: {
+      priority: "medium",
+      notes: "Especialista en equipos tecnológicos",
+      category: "technology"
+    },
+    created_at: "2025-07-18T14:15:00Z",
+    updated_at: "2025-08-25T11:20:00Z"
+  },
+  {
+    id: 103,
+    name: "Suministros Industriales del Bajío",
+    contact: {
+      email: "admin@sibajio.com",
+      phone: "+52-555-4300"
+    },
+    address: {
+      street: "Carr. Panamericana Km 12.5",
+      city: "León",
+      country: "México"
+    },
+    tax_id: "SUIN750315GHI",
+    metadata: {
+      priority: "medium",
+      notes: "Suministros diversos para manufactura",
+      category: "industrial"
+    },
+    created_at: "2025-08-02T09:45:00Z",
+    updated_at: "2025-08-22T13:30:00Z"
+  },
+  {
+    id: 104,
+    name: "Logística Express del Pacifico",
+    contact: {
+      email: "operaciones@logexpress.mx",
+      phone: "+52-555-5400"
+    },
+    address: {
+      street: "Puerto Interior Km 15",
+      city: "Guadalajara",
+      country: "México"
+    },
+    tax_id: "LOGI820720JKL",
+    metadata: {
+      priority: "low",
+      notes: "Servicios de transporte y logística",
+      category: "logistics"
+    },
+    created_at: "2025-08-08T12:00:00Z",
+    updated_at: "2025-08-20T15:45:00Z"
+  },
+  {
+    id: 105,
+    name: "Materiales Especializados de Querétaro",
+    contact: {
+      email: "ventas@matespec.qro.mx",
+      phone: "+52-555-6500"
+    },
+    address: {
+      street: "Zona Industrial El Marqués Lote 45",
+      city: "Querétaro",
+      country: "México"
+    },
+    tax_id: "MATE930428MNO",
+    metadata: {
+      priority: "high",
+      notes: "Proveedor estratégico de materiales especiales",
+      category: "materials"
+    },
+    created_at: "2025-07-25T10:30:00Z",
+    updated_at: "2025-08-26T14:15:00Z"
+  }
+];
+
+export const DEMO_SUPPLIER_STATISTICS = {
+  total_suppliers: 127,
+  active_suppliers: 118,
+  inactive_suppliers: 9,
+  new_suppliers: 5,
+  updated_suppliers: 12
+};
+
 // Client demo data
 export const DEMO_CLIENT_DATA = [
   {
@@ -202,6 +319,14 @@ export const DEMO_CONFIG_CLIENTS = {
   useRealAPI: false, // Toggle real API calls
   simulateDelay: true, // Simulate network delay
   delayMs: 600, // Delay in milliseconds
+  pageSize: 10 // Items per page
+};
+
+export const DEMO_CONFIG_SUPPLIERS = {
+  enabled: true, // Enable/disable demo mode
+  useRealAPI: false, // Toggle real API calls
+  simulateDelay: true, // Simulate network delay
+  delayMs: 500, // Delay in milliseconds
   pageSize: 10 // Items per page
 };
 
@@ -424,6 +549,155 @@ export const deleteDemoClient = async (id) => {
     success: true,
     client_id: id,
     message: 'Cliente eliminado correctamente',
+    source: 'demo'
+  };
+};
+
+/**
+ * Get demo suppliers list with pagination and search
+ * @param {Object} params - Query parameters
+ * @returns {Promise<Object>} - Demo suppliers data
+ */
+export const getDemoSuppliers = async (params = {}) => {
+  await simulateDelay(DEMO_CONFIG_SUPPLIERS.delayMs);
+  
+  const { page = 1, pageSize = DEMO_CONFIG_SUPPLIERS.pageSize, name = '' } = params;
+  
+  // Filtrar por nombre si se proporciona
+  let filteredSuppliers = DEMO_SUPPLIER_DATA;
+  if (name) {
+    filteredSuppliers = DEMO_SUPPLIER_DATA.filter(supplier =>
+      supplier.name.toLowerCase().includes(name.toLowerCase())
+    );
+  }
+  
+  // Paginación
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedSuppliers = filteredSuppliers.slice(startIndex, endIndex);
+  
+  return {
+    success: true,
+    data: {
+      suppliers: paginatedSuppliers,
+      total: filteredSuppliers.length,
+      page: parseInt(page),
+      pageSize: parseInt(pageSize)
+    },
+    source: 'demo'
+  };
+};
+
+/**
+ * Get demo supplier statistics
+ * @returns {Promise<Object>} - Demo supplier statistics
+ */
+export const getDemoSupplierStatistics = async () => {
+  await simulateDelay(400);
+  
+  return {
+    success: true,
+    data: {
+      supplier_statistics: DEMO_SUPPLIER_STATISTICS
+    },
+    source: 'demo'
+  };
+};
+
+/**
+ * Create demo supplier
+ * @param {Object} supplierData - Supplier data to create
+ * @returns {Promise<Object>} - Demo creation result
+ */
+export const createDemoSupplier = async (supplierData) => {
+  await simulateDelay(800);
+  
+  // Simular validación
+  if (!supplierData.name || !supplierData.contact?.email) {
+    throw new Error('Validation failed: name and email are required');
+  }
+  
+  // Simular ID único
+  const newId = Math.max(...DEMO_SUPPLIER_DATA.map(s => s.id)) + 1;
+  
+  const newSupplier = {
+    id: newId,
+    name: supplierData.name,
+    contact: {
+      email: supplierData.contact.email,
+      phone: supplierData.contact.phone || ''
+    },
+    address: supplierData.address || {},
+    tax_id: supplierData.tax_id || '',
+    metadata: supplierData.metadata || {},
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  
+  // Agregar a datos demo (temporal)
+  DEMO_SUPPLIER_DATA.push(newSupplier);
+  
+  return {
+    success: true,
+    supplier_id: newId,
+    message: 'Proveedor creado correctamente',
+    source: 'demo'
+  };
+};
+
+/**
+ * Update demo supplier
+ * @param {number} id - Supplier ID
+ * @param {Object} supplierData - Updated supplier data
+ * @returns {Promise<Object>} - Demo update result
+ */
+export const updateDemoSupplier = async (id, supplierData) => {
+  await simulateDelay(700);
+  
+  const supplierIndex = DEMO_SUPPLIER_DATA.findIndex(s => s.id === id);
+  if (supplierIndex === -1) {
+    throw new Error(`Supplier with ID ${id} not found`);
+  }
+  
+  // Actualizar datos
+  DEMO_SUPPLIER_DATA[supplierIndex] = {
+    ...DEMO_SUPPLIER_DATA[supplierIndex],
+    ...supplierData,
+    updated_at: new Date().toISOString()
+  };
+  
+  return {
+    success: true,
+    supplier_id: id,
+    message: 'Proveedor actualizado correctamente',
+    source: 'demo'
+  };
+};
+
+/**
+ * Delete demo supplier (logical delete)
+ * @param {number} id - Supplier ID
+ * @returns {Promise<Object>} - Demo deletion result
+ */
+export const deleteDemoSupplier = async (id) => {
+  await simulateDelay(500);
+  
+  const supplierIndex = DEMO_SUPPLIER_DATA.findIndex(s => s.id === id);
+  if (supplierIndex === -1) {
+    throw new Error(`Supplier with ID ${id} not found`);
+  }
+  
+  // Borrado lógico (marcar como inactivo)
+  DEMO_SUPPLIER_DATA[supplierIndex].metadata = {
+    ...DEMO_SUPPLIER_DATA[supplierIndex].metadata,
+    status: 'inactive',
+    deleted_at: new Date().toISOString()
+  };
+  
+  return {
+    success: true,
+    supplier_id: id,
+    message: 'Proveedor eliminado correctamente',
     source: 'demo'
   };
 };
