@@ -1,8 +1,6 @@
-import React from 'react';
-import { useI18n } from '@/lib/i18n';
-
 export default function EditableField({ value, label, type='text', name, onSave, validate, disabled, editing: editingProp, allowEnterSubmit = false }) {
   const { t } = useI18n();
+  const { styles } = useThemeStyles();
   const resolvedLabel = label || (name === 'price' ? (t('field.price') || 'Precio') : name === 'stock' ? (t('field.stock') || 'Stock') : (t(`field.${name}`) || label || name));
   const [editingState, setEditingState] = React.useState(false);
   const isControlled = typeof editingProp === 'boolean';
@@ -20,15 +18,13 @@ export default function EditableField({ value, label, type='text', name, onSave,
 
   const commit = async () => {
     const msg = validate ? validate(local) : '';
-    // If validation message exists, normally block; but if commit was triggered via Enter key and allowEnterSubmit is true, allow handler to run
     if (msg && !(allowEnterSubmit && lastKeyWasEnterRef.current)) { setError(msg); return false; }
     if (local === value) { if (!isControlled) setEditingState(false); return true; }
     setSaving(true);
-    // reset Enter flag before calling onSave
     lastKeyWasEnterRef.current = false;
     const res = await Promise.resolve(onSave?.(local));
     setSaving(false);
-    if (res === false) { // rollback signaled
+    if (res === false) {
       setError(t('products.error.save') || 'Error al guardar');
       setLocal(value ?? '');
       return false;
@@ -68,13 +64,13 @@ export default function EditableField({ value, label, type='text', name, onSave,
               onChange={(e) => setLocal(e.target.value)}
               onKeyDown={handleKeyDown}
               type={type}
-              className="px-1 py-0.5 border rounded focus:outline-none focus:ring w-24"
+              className={`w-24 ${styles.input()}`}
               disabled={saving}
               autoFocus
               data-testid={`editable-${name}-input`}
             />
-            <button type="submit" disabled={saving} className="text-green-600 font-medium" data-testid={`editable-${name}-save`}>{saving ? '...' : (t('products.inline.save') || 'OK')}</button>
-            <button type="button" onClick={cancel} disabled={saving} className="text-red-500 font-medium" data-testid={`editable-${name}-cancel`}>{t('products.inline.cancel') || 'X'}</button>
+            <button type="submit" disabled={saving} className={styles.button('primary')} data-testid={`editable-${name}-save`} style={{ fontSize: '0.85em', padding: '0.25em 0.5em' }}>{saving ? '...' : (t('products.inline.save') || 'OK')}</button>
+            <button type="button" onClick={cancel} disabled={saving} className={styles.button('secondary')} data-testid={`editable-${name}-cancel`} style={{ fontSize: '0.85em', padding: '0.25em 0.5em' }}>{t('products.inline.cancel') || 'X'}</button>
             {error && <span role="alert" className="text-red-500 ml-1" data-testid={`editable-${name}-error`}>{error}</span>}
           </form>
           <button type="button" onClick={handleEditButtonClick} className="underline text-primary focus:outline-none focus:ring-2 focus:ring-ring/50" data-testid={`editable-${name}-focus`}>{t('action.edit') || 'Editar'}</button>
