@@ -1,145 +1,74 @@
 /**
- * Custom hook para manejo de estilos multitema
- * Centraliza toda la lógica de estilos adaptativos
- * Evita duplicación de código entre componentes
+ * Hook de estilos que usa el store de temas de Zustand
+ * Patrón MVP oficial siguiendo GUIA_MVP_DESARROLLO.md
  */
 
-import { useTheme } from 'next-themes';
 import { useMemo } from 'react';
+import useThemeStore from '../store/useThemeStore';
 
 export const useThemeStyles = () => {
-  const { theme } = useTheme();
+  // Usar selectores específicos para optimización
+  const theme = useThemeStore((state) => state.theme);
+  const isNeoBrutalism = useThemeStore((state) => state.isNeoBrutalism());
+  const isMaterial = useThemeStore((state) => state.isMaterial());
+  const isFluent = useThemeStore((state) => state.isFluent());
+  const isDark = useThemeStore((state) => state.isDark());
   
   const themeConfig = useMemo(() => ({
-    isNeoBrutalism: theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark',
-    isMaterial: theme === 'material-light' || theme === 'material-dark',
-    isFluent: theme === 'fluent-light' || theme === 'fluent-dark',
-    mode: theme?.endsWith('dark') ? 'dark' : 'light',
-  }), [theme]);
+    theme,
+    isNeoBrutalism,
+    isMaterial,
+    isFluent,
+    isDark,
+    mode: isDark ? 'dark' : 'light',
+  }), [theme, isNeoBrutalism, isMaterial, isFluent, isDark]);
 
   const styles = useMemo(() => ({
-    // Contenedores principales
+    // Estilos que dependen de la configuración del tema
     container: () => {
-      if (themeConfig.isNeoBrutalism) {
-        return "bg-card text-card-foreground border brutal-border brutal-shadow-lg p-6 rounded-none";
-      } else if (themeConfig.isMaterial) {
-        // Material 3: superficies con tokens, radios medios, elevación sutil
-        return "bg-background text-foreground rounded-md shadow-sm";
-      } else if (themeConfig.isFluent) {
-        // Fluent 2: superficies con tokens, radios pequeños, elevación sutil
-        return "bg-background text-foreground rounded-lg fluent-elevation-2";
-      }
-      return "bg-background text-foreground border shadow rounded";
+      if (themeConfig.isNeoBrutalism) return "bg-card text-card-foreground border brutal-border brutal-shadow-lg p-6 rounded-none";
+      return "bg-background text-foreground rounded-lg shadow-sm";
     },
-
-    // Tarjetas y paneles
     card: (extra = '') => {
-      if (themeConfig.isNeoBrutalism) {
-        return `bg-card text-card-foreground brutal-border brutal-shadow-md ${extra}`.trim();
-      } else if (themeConfig.isMaterial) {
-        // Superficie card + tipografía del sistema
-        return `bg-card text-card-foreground rounded-md shadow-sm border ${extra}`.trim();
-      } else if (themeConfig.isFluent) {
-        return `bg-card text-card-foreground rounded-lg fluent-elevation-2 border ${extra}`.trim();
-      }
-      return `bg-card text-card-foreground border shadow ${extra}`.trim();
+      if (themeConfig.isNeoBrutalism) return `bg-card text-card-foreground brutal-border brutal-shadow-md ${extra}`.trim();
+      return `bg-card text-card-foreground rounded-lg shadow-sm border ${extra}`.trim();
     },
-
-    // Botones con variantes
     button: (variant = 'primary') => {
-      if (themeConfig.isNeoBrutalism) {
-        if (variant === 'primary') {
-          return "brutalist-button bg-[var(--primary)] text-[var(--primary-foreground)]";
+        if (themeConfig.isNeoBrutalism) {
+            if (variant === 'primary') return "brutalist-button bg-[var(--primary)] text-[var(--primary-foreground)]";
+            if (variant === 'destructive') return "brutalist-button bg-[var(--destructive)] text-[var(--destructive-foreground)]";
+            return "brutalist-button bg-background text-foreground";
         }
-        if (variant === 'destructive') {
-          return "brutalist-button bg-[var(--destructive)] text-[var(--destructive-foreground)]";
-        }
-        if (variant === 'secondary') {
-          return "brutalist-button bg-[var(--secondary)] text-[var(--secondary-foreground)]";
-        }
-        return "brutalist-button bg-background text-foreground";
-      } else {
-        // Material 3 y Fluent 2 usan tokens del sistema
-        if (variant === 'primary') {
-          return "bg-primary text-primary-foreground rounded-md shadow-sm hover:opacity-90 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
-        }
-        if (variant === 'destructive') {
-          return "bg-destructive text-destructive-foreground rounded-md shadow-sm hover:opacity-90 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
-        }
-        // Secondary (tonal/neutral)
-        return "bg-secondary text-secondary-foreground border rounded-md hover:bg-muted/60 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
-      }
+        if (variant === 'primary') return "bg-primary text-primary-foreground rounded-md shadow-sm hover:opacity-90";
+        if (variant === 'destructive') return "bg-destructive text-destructive-foreground rounded-md shadow-sm hover:opacity-90";
+        return "bg-secondary text-secondary-foreground border rounded-md hover:bg-muted/60";
     },
-
-    // Headers y títulos
     header: (level = 'h1') => {
-      if (themeConfig.isNeoBrutalism) {
-        const sizes = {
-          h1: "text-3xl font-black uppercase tracking-wide",
-          h2: "text-2xl font-black uppercase tracking-wide",
-          h3: "text-xl font-black uppercase tracking-wide",
-          h4: "text-lg font-black uppercase tracking-wide",
-        };
+        const sizes = themeConfig.isNeoBrutalism 
+            ? { h1: "text-3xl font-black uppercase tracking-wide", h2: "text-2xl font-black uppercase" }
+            : { h1: "text-3xl font-bold", h2: "text-2xl font-bold" };
         return sizes[level] || sizes.h1;
-      } else {
-        const sizes = {
-          h1: "text-3xl font-bold",
-          h2: "text-2xl font-bold",
-          h3: "text-xl font-semibold",
-          h4: "text-lg font-semibold",
-        };
-        return sizes[level] || sizes.h1;
-      }
     },
-
-    // Labels y texto
-    label: () => {
-      if (themeConfig.isNeoBrutalism) return "text-sm font-black uppercase tracking-wide";
-      return "text-sm font-medium";
+    label: () => themeConfig.isNeoBrutalism ? "text-sm font-black uppercase" : "text-sm font-medium",
+    input: () => themeConfig.isNeoBrutalism ? "brutalist-input" : "border rounded-md bg-background text-foreground focus:ring-2 focus:ring-ring/50",
+    tab: () => themeConfig.isNeoBrutalism ? "border brutal-border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" : "rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+    metricCard: () => {
+        if (themeConfig.isNeoBrutalism) return { border: '4px solid var(--border)', borderRadius: '0px', boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)' };
+        if (themeConfig.isMaterial) return { borderRadius: '12px', boxShadow: '0px 3px 6px rgba(0, 0, 0, 0.15)' };
+        if (themeConfig.isFluent) return { border: '1px solid var(--border)', borderRadius: '4px', boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.14)' };
+        return {};
     },
-
-    // Texto del cuerpo
-    body: () => {
-      if (themeConfig.isNeoBrutalism) return "font-bold";
-      return "text-muted-foreground";
-    },
-
-    // Pestañas de navegación
-    tab: () => {
-      if (themeConfig.isNeoBrutalism) {
-        return "border brutal-border bg-background data-[state=active]:bg-[var(--primary)] data-[state=active]:text-[var(--primary-foreground)] font-black uppercase transition-all duration-150";
-      } else {
-        return "rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200";
-      }
-    },
-
-    // Input fields
-    input: () => {
-      if (themeConfig.isNeoBrutalism) {
-        return "brutalist-input focus:shadow-[var(--input-shadow-focus)]";
-      } else if (themeConfig.isMaterial) {
-        return "border rounded-md bg-background text-foreground focus:border-ring focus:ring-2 focus:ring-ring/50 transition-all duration-200";
-      } else if (themeConfig.isFluent) {
-        return "border rounded-lg bg-background text-foreground focus:border-ring focus:ring-2 focus:ring-ring/50 transition-all duration-200";
-      }
-      return "border rounded bg-background text-foreground focus:border-ring focus:ring-2 focus:ring-ring/50 transition-all duration-200";
-    },
-
-    // Card headers
-    cardHeader: () => {
-      if (themeConfig.isNeoBrutalism) {
-        return "border-b brutal-border";
-      }
-      return "border-b";
+    chartColors: () => {
+        if (themeConfig.isNeoBrutalism) return ['#A3E635', '#3B82F6', '#EC4899', '#F97316', '#8B5CF6'];
+        if (themeConfig.isMaterial) return ['#6200EE', '#03DAC6', '#B00020', '#FF9800', '#9C27B0'];
+        if (themeConfig.isFluent) return ['#0078D4', '#107C10', '#FFB900', '#D13438', '#8764B8'];
+        return ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00C49F'];
     }
   }), [themeConfig]);
 
   return {
     ...themeConfig,
-    // Exposición en nivel superior para retrocompatibilidad
-    ...styles,
-    // Objeto agrupado
-    styles
+    styles,
   };
 };
 

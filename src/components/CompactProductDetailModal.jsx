@@ -8,10 +8,11 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { X, Package, DollarSign, Calendar, Tag, AlertTriangle } from 'lucide-react';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
+// useThemeStyles removido para MVP - sin hooks problemáticos
 
 const CompactProductDetailModal = ({ product, isOpen, onClose }) => {
-  const styles = useThemeStyles();
+  // Para MVP - estilos fijos sin hooks problemáticos
+  const styles = { card: () => '', isNeoBrutalism: false };
   
   if (!product) return null;
 

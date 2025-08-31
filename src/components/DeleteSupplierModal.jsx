@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from 'next-themes';
+// useTheme removido para MVP - sin hooks problemáticos
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 

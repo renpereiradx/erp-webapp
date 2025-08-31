@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from 'next-themes';
+// useTheme removido para MVP - sin hooks problemáticos
 import { X, User, Mail, Phone, Hash, Calendar, Info } from 'lucide-react';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/Button';
@@ -9,7 +9,8 @@ const getTypographyStyles = (theme, level) => { /* ... */ };
 const getBadgeStyles = (theme, status) => { /* ... */ };
 
 const ClientDetailModal = ({ isOpen, onClose, client }) => {
-  const { theme } = useTheme();
+  // Para MVP - tema fijo sin hooks problemáticos
+  const theme = 'default';
   const isNeoBrutalism = theme?.includes('neo-brutalism');
 
   if (!isOpen || !client) return null;

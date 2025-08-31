@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react';
-import { useTheme } from 'next-themes';
+// useTheme removido para MVP - sin hooks problemáticos
 import { Calendar, ShoppingCart, Save, Check, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/Button';
@@ -19,7 +19,7 @@ import { useI18n } from '@/lib/i18n';
 import DataState from '@/components/ui/DataState';
 
 // Custom hooks para lógica de negocio
-import { useThemeStyles } from '@/hooks/useThemeStyles';
+// useThemeStyles removido para MVP - sin hooks problemáticos
 import { useReservationLogic } from '@/hooks/useReservationLogic';
 import { useSalesLogic } from '@/hooks/useSalesLogic';
 
@@ -32,13 +32,14 @@ import SaleItemsManager from '@/components/SaleItemsManager';
 import { MOCK_SERVICES, SYSTEM_MESSAGES } from '@/constants/mockData';
 
 // Servicios
-import { reservationService } from '@/services/reservationService';
+import reservationService from '@/services/reservationService';
 import { saleService } from '@/services/saleService';
 
 const BookingSales = () => {
-  const { theme } = useTheme();
-  const themeStyles = useThemeStyles(theme);
-  const styles = themeStyles.styles || themeStyles;
+  // Para MVP - tema fijo sin hooks problemáticos
+  const theme = 'default';
+  const themeStyles = { styles: {} };
+  const styles = {};
   const { t } = useI18n();
   
   // Estado local para UI

@@ -5,10 +5,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
+// useTheme removido para MVP - sin hooks problemáticos
 import { ChevronLeft, ChevronRight, Clock, User, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { BrutalistBadge } from '@/components/ui/Card';
+import { BrutalistBadge } from '@/components/ui/Card.jsx';
 import { Badge } from '@/components/ui/badge';
 import useReservationStore from '@/store/useReservationStore';
 import { materialColors, materialTypography, materialSpacing, materialCorners, materialElevation } from '@/utils/materialDesignUtils';
@@ -23,7 +23,8 @@ const CalendarReservation = ({
   selectedProduct = null, // Producto/servicio seleccionado
   className = ""
 }) => {
-  const { theme } = useTheme();
+  // Para MVP - tema fijo sin hooks problemáticos
+  const theme = 'default';
   const isNeoBrutalism = theme === 'neo-brutalism-light' || theme === 'neo-brutalism-dark';
   const isMaterial = theme === 'material-light' || theme === 'material-dark';
   const isFluent = theme === 'fluent-light' || theme === 'fluent-dark';

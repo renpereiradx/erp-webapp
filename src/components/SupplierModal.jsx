@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { useTheme } from 'next-themes';
+// useTheme removido para MVP - sin hooks problemáticos
 import { X, Save, User, Phone, MapPin, ToggleLeft, ToggleRight, Loader, Building, FileText, MessageSquare } from 'lucide-react';
 import useSupplierStore from '@/store/useSupplierStore';
 import { useToast } from '@/hooks/useToast';
@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import StatusBadge from '@/components/ui/StatusBadge';
 
 const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
-  const { theme } = useTheme();
+  // Para MVP - tema fijo sin hooks problemáticos
+  const theme = 'default';
   const { createSupplier, updateSupplier, loading } = useSupplierStore();
   const { success, error: showError } = useToast();
 

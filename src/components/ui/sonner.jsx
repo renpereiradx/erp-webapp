@@ -1,23 +1,24 @@
-import { useTheme } from "next-themes"
+/**
+ * Sonner simplificado para MVP - Sin hooks problemáticos
+ * Versión básica que funciona sin dependencias de contexto
+ */
+
 import { Toaster as Sonner } from "sonner";
 
 const Toaster = ({
   ...props
 }) => {
-  const { theme = "system" } = useTheme()
-
   return (
     <Sonner
-      theme={theme}
+      theme="light"
       className="toaster group"
-      style={
-        {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)"
-        }
-      }
-      {...props} />
+      style={{
+        "--normal-bg": "hsl(var(--popover))",
+        "--normal-text": "hsl(var(--popover-foreground))",
+        "--normal-border": "hsl(var(--border))"
+      }}
+      {...props} 
+    />
   );
 }
 

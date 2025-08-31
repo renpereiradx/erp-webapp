@@ -9,7 +9,7 @@
  */
 
 import React, { useState } from 'react';
-import { useTheme } from 'next-themes';
+// useTheme removido para MVP - sin hooks problemáticos
 // Importar iconos necesarios
 import { 
   ShoppingCart, 
@@ -31,7 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import PageHeader from '@/components/ui/PageHeader';
 
 // Custom Hooks
-import { useThemeStyles } from '@/hooks/useThemeStyles';
+// useThemeStyles removido para MVP - sin hooks problemáticos
 import { usePurchaseLogic } from '@/hooks/usePurchaseLogic';
 import DataState from '@/components/ui/DataState';
 import { useI18n } from '@/lib/i18n';
@@ -51,9 +51,10 @@ import {
 } from '@/constants/purchaseData';
 
 const Purchases = () => {
-  const { theme } = useTheme();
-  const themeStyles = useThemeStyles();
-  const styles = themeStyles.styles || themeStyles;
+  // Para MVP - tema fijo sin hooks problemáticos
+  const theme = 'default';
+  const themeStyles = { styles: {} };
+  const styles = {};
 
   // Estado local para UI
   const [activeTab, setActiveTab] = useState('new-purchase'); // Volver a nueva compra como default

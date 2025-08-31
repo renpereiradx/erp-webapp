@@ -25,7 +25,7 @@ import { Badge } from '@/components/ui/badge';
 // Hooks
 import productService from '@/services/productService';
 import purchaseService from '@/services/purchaseService';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
+// useThemeStyles removido para MVP - sin hooks problemáticos
 
 // Constants
 import { TAX_RATES, PRODUCT_TAX_CATEGORIES } from '@/constants/purchaseData';
@@ -36,7 +36,8 @@ const EnhancedPurchaseProductSelector = ({
   theme,
   className = ''
 }) => {
-  const styles = useThemeStyles();
+  // Para MVP - estilos fijos sin hooks problemáticos
+  const styles = {};
   // Estado local
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState([]);

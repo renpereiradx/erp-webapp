@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useId } from 'react';
 import { Search, Building, User, Phone, Mail } from 'lucide-react';
 import { useSupplierLogic } from '../hooks/useSupplierLogic';
-import { useThemeStyles } from '../hooks/useThemeStyles';
+// useThemeStyles removido para MVP - sin hooks problemáticos
 import StatusBadge from '@/components/ui/StatusBadge';
 
 const SupplierSelector = ({ 
@@ -23,7 +23,8 @@ const SupplierSelector = ({
   className = '',
   error = null
 }) => {
-  const themeStyles = useThemeStyles(theme);
+  // Para MVP - estilos fijos sin hooks problemáticos
+  const themeStyles = { styles: { input: () => 'input-class', card: (classes = '') => `card-class ${classes}`, label: () => 'label-class' } };
   const styles = themeStyles.styles || themeStyles;
   const supplierLogic = useSupplierLogic();
   

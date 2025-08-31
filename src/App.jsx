@@ -1,6 +1,6 @@
 /**
  * Componente principal de la aplicación ERP
- * Sistema de autenticación completo
+ * Sistema de autenticación completo con sistema de temas robusto
  */
 
 import React, { useEffect } from 'react';
@@ -16,17 +16,15 @@ import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
 import ProductDetailTest from '@/components/ProductDetailTest';
 import ProductComparisonDebug from '@/components/ProductComparisonDebug';
-import useAuthStore from '@/store/useAuthStore';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { apiClient } from '@/services/api';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import './App.css';
 
-// TEMPORAL: Componentes de autenticación eliminados completamente
-// para evitar errores con useAuthStore comentado
-
 // Componente de protección de rutas
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuthStore();
+  const { isAuthenticated, loading } = useAuth();
   
   if (loading) {
     return (
@@ -43,12 +41,15 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-function App() {
-  const { isAuthenticated, loading, initializeAuth } = useAuthStore();
+// Componente interno que usa los hooks
+function AppContent() {
+  const { isAuthenticated, loading, initializeAuth } = useAuth();
+  const { initializeTheme } = useTheme();
 
-  // Inicializar autenticación al cargar la aplicación
+  // Inicializar autenticación y tema al cargar la aplicación
   useEffect(() => {
     initializeAuth();
+    initializeTheme();
     
     const ensureAutoLogin = async () => {
       const token = localStorage.getItem('authToken');
@@ -62,7 +63,7 @@ function App() {
     };
     
     ensureAutoLogin();
-  }, [initializeAuth]);
+  }, [initializeAuth, initializeTheme]);
 
   if (loading) {
     return (
@@ -93,11 +94,12 @@ function App() {
                     <Route path="/productos" element={<Products />} />
                     <Route path="/clientes" element={<Clients />} />
                     <Route path="/proveedores" element={<Suppliers />} />
-                    <Route path="/compras" element={<Purchases />} />
-                    <Route path="/reservas-ventas" element={<BookingSales />} />
+
+                    {/* --- RUTAS EN DESARROLLO (AISLADAS TEMPORALMENTE) --- */}
+                    {/* <Route path="/compras" element={<Purchases />} /> */}
                     <Route path="/configuracion" element={<Settings />} />
-                    <Route path="/test-products" element={<ProductDetailTest />} />
-                    <Route path="/debug-products" element={<ProductComparisonDebug />} />
+                    {/* <Route path="/test-products" element={<ProductDetailTest />} /> */}
+                    {/* <Route path="/debug-products" element={<ProductComparisonDebug />} /> */}
                     
                     {/* Ruta 404 */}
                     <Route path="*" element={
@@ -133,5 +135,15 @@ function App() {
   );
 }
 
-export default App;
+// Componente principal que provee los contextos
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
 
+export default App;

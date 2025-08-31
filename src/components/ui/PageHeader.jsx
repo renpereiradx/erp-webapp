@@ -1,22 +1,18 @@
-import React from 'react';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
-
 /**
- * PageHeader
- * Encabezado compacto y consistente para todas las páginas (excepto Dashboard)
- * - Respeta el sistema de diseño (Material 3 / Fluent 2 / Neo-Brutalism)
- * - Usa tokens (bg-background, text-foreground, primary, muted-foreground)
+ * PageHeader simplificado para MVP - Sin hooks problemáticos
+ * Encabezado consistente para todas las páginas
  */
-const PageHeader = ({ title, subtitle, actions = null, compact = true, breadcrumb = null }) => {
-  const { header: themeHeader, label: themeLabel } = useThemeStyles();
 
+import React from 'react';
+
+const PageHeader = ({ title, subtitle, actions = null, compact = true, breadcrumb = null }) => {
   const renderBreadcrumb = () => {
-    if (!breadcrumb) return <div className={`text-muted-foreground mb-1 ${themeLabel()}`}>Sección</div>;
-    if (typeof breadcrumb === 'string') return <div className={`text-muted-foreground mb-1 ${themeLabel()}`}>{breadcrumb}</div>;
+    if (!breadcrumb) return <div className="text-muted-foreground mb-1 text-sm font-medium">Sección</div>;
+    if (typeof breadcrumb === 'string') return <div className="text-muted-foreground mb-1 text-sm font-medium">{breadcrumb}</div>;
 
     if (Array.isArray(breadcrumb)) {
       return (
-        <nav className={`text-muted-foreground mb-1 ${themeLabel()}`} aria-label="Breadcrumb">
+        <nav className="text-muted-foreground mb-1 text-sm font-medium" aria-label="Breadcrumb">
           <ol className="inline-flex items-center gap-1">
             {breadcrumb.map((item, idx) => (
               <li key={idx} className="inline-flex items-center">
@@ -37,19 +33,32 @@ const PageHeader = ({ title, subtitle, actions = null, compact = true, breadcrum
 
     return null;
   };
-  
+
   return (
-    <header className={`text-center ${compact ? 'py-4' : 'py-8'}`} data-testid={props?.['data-testid'] ?? 'page-header'}>
-      {renderBreadcrumb()}
-      <h1 className={`${themeHeader('h1')} text-primary mb-1`} data-testid="page-header-title">{title}</h1>
-      {subtitle && (
-        <p className={`text-muted-foreground max-w-2xl mx-auto ${compact ? 'mb-4' : 'mb-6'} ${themeLabel()}`} data-testid="page-header-subtitle">{subtitle}</p>
-      )}
-      {actions && (
-        <div className="flex flex-wrap justify-center gap-3" data-testid="page-header-actions">
-          {actions}
+    <header className="bg-background border-b pb-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1">
+          {renderBreadcrumb()}
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-muted-foreground text-base">
+                {subtitle}
+              </p>
+            )}
+          </div>
         </div>
-      )}
+
+        {actions && (
+          <div className="flex-shrink-0">
+            <div className="flex items-center gap-3">
+              {actions}
+            </div>
+          </div>
+        )}
+      </div>
     </header>
   );
 };

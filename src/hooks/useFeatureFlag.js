@@ -1,4 +1,7 @@
-import { useCallback, useState, useEffect } from 'react';
+/**
+ * useFeatureFlag simplificado para MVP - Sin hooks problemáticos
+ * Versión que no usa useState para evitar problemas de contexto React
+ */
 
 const KEY = 'feature.flags.v1';
 let cache = null;
@@ -10,27 +13,33 @@ function load() {
   } catch { cache = {}; }
   return cache;
 }
-function save(obj) { cache = obj; localStorage.setItem(KEY, JSON.stringify(obj)); }
 
+function save(obj) { 
+  cache = obj; 
+  localStorage.setItem(KEY, JSON.stringify(obj)); 
+}
+
+// Versión simplificada sin hooks para MVP
 export function useFeatureFlag(flag, defaultValue = false) {
-  const [value, setValue] = useState(() => load()[flag] ?? defaultValue);
-  const setFlag = useCallback((v) => {
+  // Para MVP, siempre retornar valor por defecto
+  // y función no-op para setear
+  const value = load()[flag] ?? defaultValue;
+  const setFlag = (v) => {
     const all = load();
     all[flag] = v;
     save(all);
-    setValue(v);
-  }, [flag]);
+    // No hay setState porque no usamos hooks
+  };
   return [value, setFlag];
 }
 
+// Versión simplificada sin hooks
 export function useFeatureFlags() {
-  const [flags, setFlags] = useState(load());
-  useEffect(() => { setFlags(load()); }, []);
+  const flags = load();
   const setFlag = (flag, val) => {
     const all = load();
     all[flag] = val;
     save(all);
-    setFlags({ ...all });
   };
   return { flags, setFlag };
 }

@@ -1,10 +1,11 @@
 import React from 'react';
-import { useTheme } from 'next-themes';
+// useTheme removido para MVP - sin hooks problemáticos
 import { X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 const DeleteClientModal = ({ isOpen, onClose, client, onConfirm, loading }) => {
-  const { theme } = useTheme();
+  // Para MVP - tema fijo sin hooks problemáticos
+  const theme = 'default';
   const isNeoBrutalism = theme?.includes?.('neo-brutalism');
 
   if (!isOpen) return null;

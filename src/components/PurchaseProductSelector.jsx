@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Package, Plus, DollarSign, Hash } from 'lucide-react';
-import { useThemeStyles } from '../hooks/useThemeStyles';
+// useThemeStyles removido para MVP - sin hooks problemáticos
 import { MOCK_PURCHASE_PRODUCTS } from '../constants/purchaseData';
 
 const PurchaseProductSelector = ({ 
@@ -15,7 +15,8 @@ const PurchaseProductSelector = ({
   supplierId = null,
   className = ''
 }) => {
-  const themeStyles = useThemeStyles(theme);
+  // Para MVP - estilos fijos sin hooks problemáticos
+  const themeStyles = { styles: { input: () => 'input-class', card: (classes = '') => `card-class ${classes}`, button: () => 'button-class' } };
   const styles = themeStyles.styles || themeStyles;
   
   const [searchTerm, setSearchTerm] = useState('');

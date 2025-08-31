@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from 'next-themes';
+// useTheme removido para MVP - sin hooks problemáticos
 import { createMaterialStyles } from '../utils/materialDesignUtils';
 
 /**
@@ -7,7 +7,8 @@ import { createMaterialStyles } from '../utils/materialDesignUtils';
  * Demonstrates the Material Design theme system with various components
  */
 const MaterialDesignShowcase = () => {
-  const { theme } = useTheme();
+  // Para MVP - tema fijo sin hooks problemáticos
+  const theme = 'default';
   const isMaterial = theme?.includes('material');
 
   if (!isMaterial) {

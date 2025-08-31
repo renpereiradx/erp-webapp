@@ -29,7 +29,7 @@ import { Input } from '@/components/ui/Input';
 
 // Custom hooks
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
+// useThemeStyles removido para MVP - sin hooks problemáticos
 
 // Constants
 import { 
@@ -39,7 +39,8 @@ import {
 } from '@/constants/purchaseData';
 
 const PurchaseOrdersList = ({ theme }) => {
-  const styles = useThemeStyles();
+  // Para MVP - estilos fijos sin hooks problemáticos
+  const styles = {};
   const {
     orders,
     loading,

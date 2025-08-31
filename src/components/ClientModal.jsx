@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { useTheme } from 'next-themes';
+// useTheme removido para MVP - sin hooks problemáticos
 import { X, Save, User, Phone, MapPin, Loader, FileText } from 'lucide-react';
 import useClientStore from '@/store/useClientStore';
 import { useToast } from '@/hooks/useToast';
@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/label';
 
 const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
-  const { theme } = useTheme();
+  // Para MVP - tema fijo sin hooks problemáticos
+  const theme = 'default';
   const { createClient, updateClient, loading } = useClientStore();
   const { success, error: showError } = useToast();
 

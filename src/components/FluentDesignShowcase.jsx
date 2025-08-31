@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTheme } from 'next-themes';
+// useTheme removido para MVP - sin hooks problemáticos
 import { createFluentStyles, applyFluentMotion } from '../utils/fluentDesignUtils';
 
 /**
@@ -7,7 +7,8 @@ import { createFluentStyles, applyFluentMotion } from '../utils/fluentDesignUtil
  * Demonstrates the Fluent Design 2.0 system with various components
  */
 const FluentDesignShowcase = () => {
-  const { theme } = useTheme();
+  // Para MVP - tema fijo sin hooks problemáticos
+  const theme = 'default';
   const isFluent = theme?.includes('fluent');
 
   if (!isFluent) {

@@ -17,7 +17,7 @@ import {
   Mail,
   Phone
 } from 'lucide-react';
-import { useThemeStyles } from '../hooks/useThemeStyles';
+// useThemeStyles removido para MVP - sin hooks problemáticos
 import { DELIVERY_METHODS, PAYMENT_TERMS } from '../constants/purchaseData';
 
 const PurchaseSummary = ({ 
@@ -25,7 +25,8 @@ const PurchaseSummary = ({
   theme = 'neo-brutalism',
   className = ''
 }) => {
-  const themeStyles = useThemeStyles(theme);
+  // Para MVP - estilos fijos sin hooks problemáticos
+  const themeStyles = { styles: { card: (classes = '') => `card-class ${classes}`, button: () => 'button-class', input: () => 'input-class' } };
   const styles = themeStyles.styles || themeStyles;
 
   if (!summary) {

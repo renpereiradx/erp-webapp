@@ -45,6 +45,11 @@ const DICTIONARY = {
     'badge.low_stock': 'Bajo stock',
     'badge.low_stock.upper': 'BAJO STOCK',
 
+    // Clients - MVP strings
+    'clients.title': 'Clientes',
+    'clients.action.primary': 'Nuevo Cliente',
+    'clients.error.generic': 'Error al procesar la solicitud. Por favor, intente nuevamente.',
+
     // Error hints
     'errors.hint.INTERNAL': 'Problema interno, intenta más tarde.',
     'errors.hint.NETWORK': 'Verifica tu conexión a internet.',
@@ -439,6 +444,46 @@ Object.assign(DICTIONARY.es, {
   'booking.summary.subtotal': 'Subtotal:',
   'booking.summary.tax': 'IVA (16%):',
   'booking.summary.items_count': '{count} artículos',
+
+  // Login Page (Refactored)
+  'login.title': 'Acceso al Sistema',
+  'login.subtitle': 'Ingresa tus credenciales para continuar',
+  'login.email_label': 'Email o Usuario',
+  'login.email_placeholder': 'ej: admin',
+  'login.password_label': 'Contraseña',
+  'login.password_placeholder': 'ej: admin123',
+  'login.submit': 'Iniciar Sesión',
+  'login.loading': 'Iniciando Sesión...',
+  'login.forgot_password': '¿Olvidaste tu contraseña?',
+  'login.error.generic': 'Error: Credenciales incorrectas o problema del servidor.',
+
+  // Dashboard Page
+  'dashboard.title': 'Dashboard',
+  'dashboard.error.title': 'Error al cargar el Dashboard',
+  'dashboard.metrics.sales': 'Ventas Totales',
+  'dashboard.metrics.clients': 'Clientes Activos',
+  'dashboard.metrics.products': 'Productos Totales',
+  'dashboard.metrics.orders': 'Pedidos Hoy',
+  'dashboard.charts.sales': 'Ventas Mensuales',
+  'dashboard.charts.categories': 'Categorías Populares',
+
+  // Suppliers Page
+  'supplier.title': 'Proveedores',
+  'supplier.action.create': 'Nuevo Proveedor',
+  'supplier.error.title': 'Error al cargar proveedores',
+  'supplier.empty.title': 'No hay proveedores',
+  'supplier.empty.message': 'Crea tu primer proveedor para empezar.',
+  'supplier.modal.edit': 'Editar Proveedor',
+  'supplier.modal.create': 'Crear Proveedor',
+
+  // Settings Page
+  'settings.title': 'Configuración',
+  'settings.theme.title': 'Tema de Apariencia',
+  'settings.theme.description': 'Selecciona el tema que mejor se adapte a tus preferencias.',
+  'settings.language.title': 'Idioma',
+  'settings.language.description': 'Próximamente: Opciones de idioma.',
+  'settings.notifications.title': 'Notificaciones',
+  'settings.notifications.description': 'Próximamente: Ajustes de notificaciones.',
 });
 Object.assign(DICTIONARY.en, {
   'booking.title': 'Bookings & Sales',
@@ -468,7 +513,25 @@ Object.assign(DICTIONARY.es, {
   'suppliers.stats.shown': 'PROVEEDORES MOSTRADOS',
   'clients.card.document': 'DOCUMENTO:',
   'clients.card.contact': 'CONTACTO:',
-  'clients.card.registered': 'REGISTRO:',
+      'clients.card.registered': 'REGISTRO:',
+
+    // Clients - MVP strings from new page
+    'client.title': 'Clientes',
+    'client.action.create': 'Nuevo Cliente',
+    'client.search.placeholder': 'Buscar cliente...',
+    'client.error.title': 'Error al cargar clientes',
+    'client.empty.title': 'Sin clientes',
+    'client.empty.message': 'No hay clientes registrados todavía.',
+    'client.modal.edit': 'EDITAR CLIENTE',
+    'client.modal.create': 'CREAR CLIENTE',
+    'field.email': 'EMAIL',
+    'field.phone': 'TELÉFONO',
+    'field.tax_id': 'RFC',
+    'action.saving': 'Guardando...',
+    'action.update': 'Actualizar',
+    'action.cancel': 'Cancelar',
+    'action.delete': 'Eliminar',
+
   'suppliers.card.ruc': 'RUC:',
   'suppliers.card.phone': 'TELÉFONO:',
   'suppliers.card.fax': 'FAX:',
@@ -526,38 +589,26 @@ Object.assign(DICTIONARY.en, {
   'clients.pagination.page_of': 'Page {page} of {totalPages}',
 });
 
-// Suppliers
+// Suppliers - MVP strings
 Object.assign(DICTIONARY.es, {
-  'suppliers.search.db': 'Buscar Proveedores',
-  'suppliers.search.placeholder': 'Buscar por nombre o contacto...',
-  'suppliers.search': 'Buscar',
-  'suppliers.clear': 'Limpiar',
-  'suppliers.filter.current_results_title': 'Filtrar Resultados Actuales',
-  'suppliers.filter.name_placeholder': 'Filtrar por nombre...',
-  'suppliers.filter.all_status': 'Todos los estados',
-  'suppliers.filter.status.active': 'Activos',
-  'suppliers.filter.status.inactive': 'Inactivos',
-  'suppliers.pagination.first': 'Primera',
-  'suppliers.pagination.prev': 'Anterior',
-  'suppliers.pagination.next': 'Siguiente',
-  'suppliers.pagination.last': 'Última',
-  'suppliers.pagination.page_of': 'Página {page} de {totalPages}',
+  'suppliers.title': 'Proveedores',
+  'suppliers.action.create': 'Crear Proveedor',
+  'suppliers.empty.title': 'Sin proveedores',
+  'suppliers.empty.message': 'No hay proveedores registrados',
+  'suppliers.error.title': 'Error al cargar proveedores',
+  'suppliers.modal.create': 'CREAR PROVEEDOR',
+  'suppliers.modal.edit': 'EDITAR PROVEEDOR',
+  'suppliers.search.placeholder': 'Buscar proveedor...',
 });
 Object.assign(DICTIONARY.en, {
-  'suppliers.search.db': 'Search Suppliers',
-  'suppliers.search.placeholder': 'Search by name or contact...',
-  'suppliers.search': 'Search',
-  'suppliers.clear': 'Clear',
-  'suppliers.filter.current_results_title': 'Filter Current Results',
-  'suppliers.filter.name_placeholder': 'Filter by name...',
-  'suppliers.filter.all_status': 'All statuses',
-  'suppliers.filter.status.active': 'Active',
-  'suppliers.filter.status.inactive': 'Inactive',
-  'suppliers.pagination.first': 'First',
-  'suppliers.pagination.prev': 'Previous',
-  'suppliers.pagination.next': 'Next',
-  'suppliers.pagination.last': 'Last',
-  'suppliers.pagination.page_of': 'Page {page} of {totalPages}',
+  'suppliers.title': 'Suppliers',
+  'suppliers.action.create': 'Create Supplier',
+  'suppliers.empty.title': 'No suppliers',
+  'suppliers.empty.message': 'No suppliers registered',
+  'suppliers.error.title': 'Error loading suppliers',
+  'suppliers.modal.create': 'CREATE SUPPLIER',
+  'suppliers.modal.edit': 'EDIT SUPPLIER',
+  'suppliers.search.placeholder': 'Search supplier...',
 });
 
 let currentLang = 'es';

@@ -1,158 +1,144 @@
-/**
- * Servicio para la gestión de clientes en el sistema ERP
- * Migrado para usar el cliente oficial del Business Management API
- */
+// src/services/clientService.js
+import apiService from './api';
+import { telemetry } from '../utils/telemetry';
 
-import { apiClient } from './api';
+const API_PREFIX = '/clients'; // Ajustado según docs/api/CLIENT_API.md
 
-export const clientService = {
-  // Obtener todos los clientes con paginación y filtros
-  getClients: async (params = {}) => {
+// Helper con retry simple (máx 2 reintentos)
+const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
+  let lastError;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await apiClient.getClients(params);
+      return await requestFn();
     } catch (error) {
-      console.error('Error obteniendo clientes:', error);
-      throw new Error(error.message || 'Error al obtener la lista de clientes');
-    }
-  },
-
-  // Obtener un cliente por ID
-  getClientById: async (id) => {
-    try {
-      return await apiClient.getClient(id);
-    } catch (error) {
-      console.error('Error obteniendo cliente:', error);
-      throw new Error(error.message || 'Error al obtener el cliente');
-    }
-  },
-
-  // Obtener un cliente por nombre
-  getClientByName: async (name) => {
-    try {
-      // Asumiendo que apiClient tiene un método para manejar rutas personalizadas o que se puede construir la URL
-      // Si apiClient.makeRequest es el método genérico para hacer peticiones
-      const response = await apiClient.makeRequest(`/client/name/${encodeURIComponent(name)}`, { method: 'GET' });
-      return response;
-    } catch (error) {
-      console.error('Error obteniendo cliente por nombre:', error);
-      throw new Error(error.message || 'Error al obtener el cliente por nombre');
-    }
-  },
-
-  // Crear un nuevo cliente
-  createClient: async (clientData) => {
-    try {
-      return await apiClient.createClient(clientData);
-    } catch (error) {
-      console.error('Error creando cliente:', error);
-      throw new Error(error.message || 'Error al crear el cliente');
-    }
-  },
-
-  // Actualizar un cliente existente
-  updateClient: async (id, clientData) => {
-    try {
-      return await apiClient.updateClient(id, clientData);
-    } catch (error) {
-      console.error('Error actualizando cliente:', error);
-      throw new Error(error.message || 'Error al actualizar el cliente');
-    }
-  },
-
-  // Eliminar un cliente
-  deleteClient: async (id) => {
-    try {
-      return await apiClient.deleteClient(id);
-    } catch (error) {
-      console.error('Error eliminando cliente:', error);
-      throw new Error(error.message || 'Error al eliminar el cliente');
-    }
-  },
-
-  // Obtener historial de pedidos de un cliente
-  getClientOrders: async (clientId, params = {}) => {
-    try {
-      // Por ahora simulamos esto con datos básicos hasta que el backend lo implemente
-      console.warn('getClientOrders no está implementado en el cliente API oficial aún');
-      return {
-        data: [],
-        pagination: {
-          current_page: 1,
-          per_page: 10,
-          total: 0,
-          total_pages: 0
-        }
-      };
-    } catch (error) {
-      console.error('Error obteniendo pedidos del cliente:', error);
-      throw new Error(error.message || 'Error al obtener el historial de pedidos');
-    }
-  },
-
-  // Obtener estadísticas de un cliente
-  getClientStats: async (clientId) => {
-    try {
-      // Por ahora simulamos esto con datos básicos hasta que el backend lo implemente
-      console.warn('getClientStats no está implementado en el cliente API oficial aún');
-      return {
-        total_orders: 0,
-        total_spent: 0,
-        last_order_date: null,
-        average_order_value: 0
-      };
-    } catch (error) {
-      console.error('Error obteniendo estadísticas del cliente:', error);
-      throw new Error(error.message || 'Error al obtener las estadísticas del cliente');
-    }
-  },
-
-  // Buscar clientes por email o teléfono
-  searchClients: async (query) => {
-    try {
-      const clients = await apiClient.getClients();
+      lastError = error;
       
-      if (!query || query.trim() === '') {
-        return clients;
+      if (attempt < maxRetries) {
+        // Backoff simple: 500ms * intento
+        const backoffMs = 500 * (attempt + 1);
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
+        continue;
       }
-      
-      const searchTerm = query.toLowerCase().trim();
-      
-      return clients.filter(client => 
-        client.name?.toLowerCase().includes(searchTerm) ||
-        client.email?.toLowerCase().includes(searchTerm) ||
-        client.phone?.toLowerCase().includes(searchTerm) ||
-        client.company?.toLowerCase().includes(searchTerm)
-      );
-    } catch (error) {
-      console.error('Error buscando clientes:', error);
-      throw new Error(error.message || 'Error al buscar clientes');
     }
-  },
-
-  // Obtener clientes más activos
-  getTopClients: async (limit = 10) => {
-    try {
-      // Por ahora devolvemos los primeros clientes hasta que el backend implemente ranking
-      const clients = await apiClient.getClients();
-      return clients.slice(0, limit);
-    } catch (error) {
-      console.error('Error obteniendo top clientes:', error);
-      throw new Error(error.message || 'Error al obtener los clientes más activos');
-    }
-  },
-
-  // Activar/desactivar cliente
-  toggleClientStatus: async (id, status) => {
-    try {
-      // Por ahora simulamos esto hasta que el backend lo implemente
-      console.warn('toggleClientStatus no está implementado en el cliente API oficial aún');
-      return { success: true, message: 'Estado actualizado' };
-    } catch (error) {
-      console.error('Error cambiando estado del cliente:', error);
-      throw new Error(error.message || 'Error al cambiar el estado del cliente');
-    }
-  },
+  }
+  
+  throw lastError;
 };
 
-export default clientService;
+export const clientService = {
+  async getAll(params = {}) {
+    const startTime = Date.now();
+    
+    try {
+      const query = new URLSearchParams(params).toString();
+      const endpoint = query ? `${API_PREFIX}?${query}` : API_PREFIX;
 
+      const result = await _fetchWithRetry(async () => {
+        return await apiService.get(endpoint);
+      });
+      
+      telemetry.record('client.service.load', {
+        duration: Date.now() - startTime
+      });
+      
+      return result;
+    } catch (error) {
+      telemetry.record('client.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getAll'
+      });
+      throw error;
+    }
+  },
+
+  async create(data) {
+    const startTime = Date.now();
+    
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiService.post(API_PREFIX, data);
+      });
+      
+      telemetry.record('client.service.create', {
+        duration: Date.now() - startTime
+      });
+      
+      return result;
+    } catch (error) {
+      telemetry.record('client.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'create'
+      });
+      throw error;
+    }
+  },
+
+  async update(id, data) {
+    const startTime = Date.now();
+    
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiService.put(`${API_PREFIX}/${id}`, data);
+      });
+      
+      telemetry.record('client.service.update', {
+        duration: Date.now() - startTime
+      });
+      
+      return result;
+    } catch (error) {
+      telemetry.record('client.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'update'
+      });
+      throw error;
+    }
+  },
+
+  async delete(id) {
+    const startTime = Date.now();
+    
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiService.delete(`${API_PREFIX}/${id}`);
+      });
+      
+      telemetry.record('client.service.delete', {
+        duration: Date.now() - startTime
+      });
+      
+      return result;
+    } catch (error) {
+      telemetry.record('client.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'delete'
+      });
+      throw error;
+    }
+  },
+
+  async getStatistics() {
+    const startTime = Date.now();
+    try {
+      const result = await _fetchWithRetry(async () => {
+        return await apiService.get(`${API_PREFIX}/statistics`);
+      });
+      telemetry.record('client.service.stats', {
+        duration: Date.now() - startTime
+      });
+      return result;
+    } catch (error) {
+      telemetry.record('client.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getStatistics'
+      });
+      throw error;
+    }
+  }
+};

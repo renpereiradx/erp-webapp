@@ -18,7 +18,7 @@ const _jitter = (base) => {
   return base + (rand * 0.3 * base); // +-30%
 };
 
-const useProductStore = create(
+const useProductStore = create()(
   devtools(
     (set, get) => ({
       // =================== ESTADO ===================

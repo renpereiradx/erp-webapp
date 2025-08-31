@@ -7,7 +7,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import saleService from '@/services/saleService';
 
-const useSaleStore = create(
+const useSaleStore = create()(
   devtools(
     (set, get) => ({
       // Estado inicial

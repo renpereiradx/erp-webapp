@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { Trash2, Edit3, Package, DollarSign, Hash, AlertTriangle } from 'lucide-react';
-import { useThemeStyles } from '../hooks/useThemeStyles';
+// useThemeStyles removido para MVP - sin hooks problemáticos
 
 const PurchaseItemsList = ({ 
   items = [], 
@@ -17,7 +17,8 @@ const PurchaseItemsList = ({
   errors = {},
   className = ''
 }) => {
-  const themeStyles = useThemeStyles(theme);
+  // Para MVP - estilos fijos sin hooks problemáticos
+  const themeStyles = { styles: { input: () => 'input-class', card: (classes = '') => `card-class ${classes}`, button: () => 'button-class' } };
   const styles = themeStyles.styles || themeStyles;
 
   if (items.length === 0) {

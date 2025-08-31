@@ -1,141 +1,146 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { clientService } from '@/services/clientService';
+import { clientService } from '../services/clientService';
+import { telemetry } from '../utils/telemetry';
 
-const useClientStore = create(
+const useClientStore = create()(
   devtools(
     (set, get) => ({
-      // Estado inicial mejorado
+      // Estado de la lista y paginación
       clients: [],
-      loading: false,
-      error: null,
-      lastSearchTerm: '',
-      currentPage: 1,
+      page: 1,
+      pageSize: 10,
       totalPages: 1,
       totalClients: 0,
-      pageSize: 10,
+      searchTerm: '',
 
-      // Limpiar errores
+      // Estado de las estadísticas
+      stats: null,
+      
+      // Estados de carga y error
+      loading: false,
+      statsLoading: false,
+      error: null,
+
+      // Acciones básicas
       clearError: () => set({ error: null }),
+      clearClients: () => set({ clients: [], error: null }),
 
-      // Limpiar la lista de clientes
-      clearClients: () => set({ clients: [], totalClients: 0, currentPage: 1, totalPages: 1, lastSearchTerm: '' }),
-
-      // Cambiar tamaño de página
-      changePageSize: async (newPageSize) => {
-        const { lastSearchTerm } = get();
-        set({ pageSize: newPageSize, currentPage: 1 });
-        await get().searchClients(lastSearchTerm, 1, newPageSize);
-      },
-
-      // Cargar una página específica
-      loadPage: async (page) => {
-        const { lastSearchTerm, pageSize } = get();
-        await get().searchClients(lastSearchTerm, page, pageSize);
-      },
-
-            // Acción principal de búsqueda y paginación
-      searchClients: async (searchTerm = '', page = 1, limit = 10) => {
-        set({ loading: true, error: null, lastSearchTerm: searchTerm });
+      // Cargar datos
+      fetchClients: async () => {
+        const { page, pageSize, searchTerm } = get();
+        set({ loading: true, error: null });
+        const startTime = Date.now();
+        
         try {
-          let clientsData = [];
-          let paginationInfo = null;
+          const params = { page, pageSize };
+          if (searchTerm) params.name = searchTerm;
 
-          if (searchTerm.trim() !== '') {
-            // Si se proporciona un término de búsqueda, usar el endpoint getClientByName
-            const clientByNameResponse = await clientService.getClientByName(searchTerm);
+          const result = await clientService.getAll(params);
+          
+          let data = [];
+          let total = 0;
+          let totalPages = 1;
 
-            let parsedResponse = clientByNameResponse;
-            if (typeof clientByNameResponse === 'string') {
-                try {
-                    parsedResponse = JSON.parse(clientByNameResponse);
-                } catch (e) {
-                    parsedResponse = []; // Fallback to empty array if parsing fails
-                }
-            }
-
-            // La API podría devolver un solo objeto o un array. Normalizar a un array.
-            clientsData = Array.isArray(parsedResponse) ? parsedResponse : (parsedResponse ? [parsedResponse] : []);
-            // Para una búsqueda de nombre específico, la información de paginación no es típicamente relevante,
-            // así que podemos establecer totalPages y totalClients basándonos en los clientes encontrados.
-            paginationInfo = {
-                current_page: 1,
-                per_page: clientsData.length,
-                total: clientsData.length,
-                total_pages: 1
-            };
-          } else {
-            // Si no hay término de búsqueda, obtener todos los clientes con paginación
-            const response = await clientService.getClients({ page, limit, search: searchTerm });
-            
-            if (response && typeof response === 'object') {
-              if (response.data && response.pagination) {
-                clientsData = Array.isArray(response.data) ? response.data : [];
-                paginationInfo = response.pagination;
-              } else if (Array.isArray(response)) {
-                clientsData = response;
-              } else if (response.clients && Array.isArray(response.clients)) {
-                clientsData = response.clients;
-              } else {
-                const possibleArrays = Object.values(response).filter(val => Array.isArray(val));
-                if (possibleArrays.length > 0) {
-                  clientsData = possibleArrays[0];
-                }
-              }
-            } else if (Array.isArray(response)) {
-              clientsData = response;
-            }
+          if (result.success !== false) {
+            const raw = result.data || result;
+            data = raw.clients || [];
+            total = raw.total || 0;
+            totalPages = Math.ceil(total / pageSize);
           }
           
-          // Filtrar elementos inválidos
-          const validClients = clientsData.filter(c => c && typeof c === 'object');
-          
-          set({
-            clients: validClients,
-            currentPage: paginationInfo ? paginationInfo.current_page : 1,
-            totalPages: paginationInfo ? paginationInfo.total_pages : 1,
-            totalClients: paginationInfo ? paginationInfo.total : validClients.length,
-            loading: false,
+          set({ 
+            clients: data, 
+            totalClients: total,
+            totalPages: totalPages,
+            loading: false 
           });
+          
+          telemetry.record('feature.client.load', { 
+            duration: Date.now() - startTime,
+            count: data.length,
+            page: page
+          });
+          
         } catch (error) {
-          set({ error: error.message, loading: false });
+          set({ error: error.message || 'Error al cargar', loading: false });
+          telemetry.record('feature.client.error', { 
+            error: error.message 
+          });
         }
       },
 
-      // Acciones CRUD (sin cambios, pero se benefician del estado mejorado)
-      createClient: async (clientData) => {
-        set({ loading: true });
+      // Cargar estadísticas
+      fetchStatistics: async () => {
+        set({ statsLoading: true });
         try {
-          await clientService.createClient(clientData);
-          // Refrescar la última búsqueda para ver el nuevo cliente
-          await get().loadPage(get().currentPage);
+          const result = await clientService.getStatistics();
+          let stats = null;
+          if (result.success !== false) {
+            const raw = result.data || result;
+            stats = raw.client_statistics || raw;
+          }
+          set({ stats, statsLoading: false });
         } catch (error) {
-          set({ loading: false, error: error.message });
-          throw error;
+          set({ stats: null, statsLoading: false });
+          telemetry.record('feature.client.stats.error', { 
+            error: error.message 
+          });
         }
       },
 
-      updateClient: async (id, clientData) => {
-        set({ loading: true });
+      // Acciones de paginación y búsqueda
+      setPage: (newPage) => {
+        set({ page: newPage });
+        get().fetchClients();
+      },
+      setSearchTerm: (term) => {
+        set({ searchTerm: term });
+      },
+      search: () => {
+        set({ page: 1 }); // Reset page to 1 on new search
+        get().fetchClients();
+      },
+
+      // CRUD
+      createClient: async (data) => {
         try {
-          await clientService.updateClient(id, clientData);
-          await get().loadPage(get().currentPage);
+          const result = await clientService.create(data);
+          if (result.success !== false) {
+            get().fetchClients(); // Recargar lista
+          }
+          return { success: true };
         } catch (error) {
-          set({ loading: false, error: error.message });
-          throw error;
+          set({ error: error.message || 'Error al crear' });
+          return { success: false, error: error.message };
+        }
+      },
+
+      updateClient: async (id, data) => {
+        try {
+          const result = await clientService.update(id, data);
+          if (result.success !== false) {
+            get().fetchClients(); // Recargar lista
+          }
+          return { success: true };
+        } catch (error) {
+          set({ error: error.message || 'Error al actualizar' });
+          return { success: false, error: error.message };
         }
       },
 
       deleteClient: async (id) => {
-        set({ loading: true });
         try {
-          await clientService.deleteClient(id);
-          await get().loadPage(get().currentPage);
+          const result = await clientService.delete(id);
+          if (result.success !== false) {
+            get().fetchClients(); // Recargar lista
+          }
+          return { success: true };
         } catch (error) {
-          set({ loading: false, error: error.message });
-          throw error;
+          set({ error: error.message || 'Error al eliminar' });
+          return { success: false, error: error.message };
         }
-      },
+      }
     }),
     {
       name: 'client-store',
