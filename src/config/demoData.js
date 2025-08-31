@@ -124,80 +124,84 @@ export const DEMO_SUPPLIER_STATISTICS = {
 export const DEMO_CLIENT_DATA = [
   {
     id: 201,
-    name: "Empresa ABC Corp",
+    name: "Grupo Empresarial ABC Corp",
     contact: {
-      email: "contacto@abccorp.com",
+      email: "contacto@abccorp.com.mx",
       phone: "+52-555-1234"
     },
     address: {
-      street: "Av. Insurgentes 1234",
+      street: "Av. Insurgentes Sur 1234, Col. del Valle",
       city: "CDMX",
       country: "México"
     },
-    tax_id: "RFC123456789",
+    tax_id: "ABC850315GH7",
     metadata: {
       priority: "high",
-      notes: "Cliente premium con descuentos especiales"
+      type: "corporate",
+      notes: "Cliente premium con descuentos especiales del 15%. Contrato corporativo vigente hasta 2026."
     },
     created_at: "2025-08-15T09:30:00Z",
     updated_at: "2025-08-28T14:20:00Z"
   },
   {
     id: 202,
-    name: "Tech Solutions SA",
+    name: "Tech Solutions México SA",
     contact: {
       email: "ventas@techsolutions.mx",
       phone: "+52-555-5678"
     },
     address: {
-      street: "Blvd. Manuel Ávila Camacho 456",
+      street: "Blvd. Manuel Ávila Camacho 456, Zona Centro",
       city: "Monterrey",
       country: "México"
     },
-    tax_id: "RFC987654321",
+    tax_id: "TSM901201BC8",
     metadata: {
       priority: "medium",
-      notes: "Cliente frecuente en productos tecnológicos"
+      type: "corporate",
+      notes: "Cliente frecuente en productos tecnológicos. Compras mensuales promedio de $50K."
     },
     created_at: "2025-08-10T11:15:00Z",
     updated_at: "2025-08-25T16:45:00Z"
   },
   {
     id: 203,
-    name: "Distribuidora Regional Ltda",
+    name: "Distribuidora Regional del Oeste",
     contact: {
       email: "compras@distregional.com",
       phone: "+52-555-9012"
     },
     address: {
-      street: "Carretera Nacional Km 25",
+      street: "Av. López Mateos Sur 2500, Zona Industrial",
       city: "Guadalajara",
       country: "México"
     },
-    tax_id: "RFC456789123",
+    tax_id: "DRO750420JH9",
     metadata: {
       priority: "medium",
-      notes: "Distribuidor mayorista con pagos a 30 días"
+      type: "wholesale",
+      notes: "Distribuidor mayorista con pagos a 30 días. Volúmenes altos, márgenes ajustados."
     },
     created_at: "2025-08-05T08:00:00Z",
     updated_at: "2025-08-20T10:30:00Z"
   },
   {
     id: 204,
-    name: "Comercial del Norte",
+    name: "Comercializadora del Norte",
     contact: {
       email: "admin@comercialnorte.mx",
       phone: "+52-555-3456"
     },
     address: {
-      street: "Calle Morelos 789",
+      street: "Calle Morelos 789, Centro Histórico",
       city: "Tijuana",
       country: "México"
     },
-    tax_id: "RFC789123456",
+    tax_id: "CDN820810MN2",
     metadata: {
       priority: "low",
-      notes: "Cliente ocasional"
+      type: "retail",
+      notes: "Cliente ocasional con compras estacionales. Activo principalmente en temporadas altas."
     },
     created_at: "2025-07-28T13:45:00Z",
     updated_at: "2025-08-18T09:15:00Z"
@@ -210,26 +214,90 @@ export const DEMO_CLIENT_DATA = [
       phone: "+52-555-7890"
     },
     address: {
-      street: "Av. Chapultepec 321",
+      street: "Av. Chapultepec 321, Zona Rosa",
       city: "CDMX",
       country: "México"
     },
-    tax_id: "RFC321654987",
+    tax_id: "SEU930505PQ4",
     metadata: {
       priority: "high",
-      notes: "Cliente VIP con contrato anual"
+      type: "corporate",
+      notes: "Cliente VIP con contrato anual. Servicios integrales y soporte prioritario 24/7."
     },
     created_at: "2025-07-20T15:20:00Z",
     updated_at: "2025-08-22T11:00:00Z"
+  },
+  {
+    id: 206,
+    name: "Retail Express Querétaro",
+    contact: {
+      email: "gerencia@retailexpress.com.mx",
+      phone: "+52-442-1122"
+    },
+    address: {
+      street: "Av. 5 de Febrero 150, Centro Sur",
+      city: "Querétaro",
+      country: "México"
+    },
+    tax_id: "REQ840225RT5",
+    metadata: {
+      priority: "medium",
+      type: "retail",
+      notes: "Cadena de tiendas con 8 sucursales. Pedidos semanales constantes."
+    },
+    created_at: "2025-08-01T10:30:00Z",
+    updated_at: "2025-08-29T16:45:00Z"
+  },
+  {
+    id: 207,
+    name: "Constructora del Bajío SA",
+    contact: {
+      email: "compras@constbajio.mx",
+      phone: "+52-477-3344"
+    },
+    address: {
+      street: "Blvd. Adolfo López Mateos 2890, Industrial",
+      city: "León",
+      country: "México"
+    },
+    tax_id: "CDB770315CS2",
+    metadata: {
+      priority: "medium",
+      type: "corporate",
+      notes: "Especialistas en construcción industrial. Proyectos a gran escala."
+    },
+    created_at: "2025-07-15T08:15:00Z",
+    updated_at: "2025-08-20T12:30:00Z"
+  },
+  {
+    id: 208,
+    name: "MiPyme Digital",
+    contact: {
+      email: "contacto@mipymedigital.com",
+      phone: "+52-555-9988"
+    },
+    address: {
+      street: "Calle Revolución 45, Centro",
+      city: "Puebla",
+      country: "México"
+    },
+    tax_id: "MPD210810DG8",
+    metadata: {
+      priority: "low",
+      type: "retail",
+      notes: "Startup emergente. Compras pequeñas pero frecuentes."
+    },
+    created_at: "2025-08-12T14:20:00Z",
+    updated_at: "2025-08-28T10:15:00Z"
   }
 ];
 
 export const DEMO_CLIENT_STATISTICS = {
-  total_clients: 247,
-  active_clients: 235,
+  total_clients: 250,
+  active_clients: 238,
   inactive_clients: 12,
-  new_clients: 8,
-  updated_clients: 15
+  new_clients: 11,
+  updated_clients: 18
 };
 
 // Dashboard demo data

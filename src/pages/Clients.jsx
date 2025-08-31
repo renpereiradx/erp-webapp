@@ -3,33 +3,39 @@ import { Plus, Search } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import DataState from '../components/ui/DataState';
-import Pagination from '../components/ui/Pagination';
 import ClientListItem from '../components/clients/ClientListItem';
 import ClientDetailModal from '../components/clients/ClientDetailModal';
 import ClientForm from '../components/clients/ClientForm';
 import { useI18n } from '../lib/i18n';
 import useClientStore from '../store/useClientStore';
-import ClientStats from '../components/ClientStats';
+import { useThemeStyles } from '../hooks/useThemeStyles';
 
 const ClientsPage = () => {
   const { t } = useI18n();
+  const { styles } = useThemeStyles();
   const {
-    clients, loading, error, fetchClients, createClient, updateClient, deleteClient, clearError,
-    page, totalPages, setPage, searchTerm, setSearchTerm, search
+    clients, loading, error, fetchClients, createClient, updateClient, deleteClient, clearError
   } = useClientStore();
   
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [viewingClient, setViewingClient] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', tax_id: '' });
-
+  const [searchTerm, setSearchTerm] = useState('');
   useEffect(() => {
     fetchClients();
-  }, []); // Carga inicial
+  }, [fetchClients]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    search();
+  // Filtrar clientes localmente para funcionalidad rica
+  const filteredClients = clients.filter(client =>
+    (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.contact?.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.address?.city || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.metadata?.type || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSearch = (value) => {
+    setSearchTerm(value);
   };
 
   const handleCreate = () => {
@@ -52,78 +58,107 @@ const ClientsPage = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     const clientData = { name: formData.name, contact: { email: formData.email, phone: formData.phone }, tax_id: formData.tax_id };
-    const result = editingItem ? await updateClient(editingItem.id, clientData) : await createClient(clientData);
-    if (result.success) {
-      setShowEditModal(false);
+    if (editingItem) {
+      await updateClient(editingItem.id, clientData);
+    } else {
+      await createClient(clientData);
     }
+    setShowEditModal(false);
   };
   
   const handleDelete = async (item) => {
-    if (window.confirm(`¿Eliminar ${item.name}?`)) {
-      await deleteClient(item.id);
+    if (window.confirm(`¿Eliminar cliente ${item.name}?`)) {
+      deleteClient(item.id);
     }
   };
 
+  if (loading && clients.length === 0) {
+    return <DataState variant="loading" skeletonVariant="list" />;
+  }
+
   if (error) {
-    return <DataState variant="error" title={t('client.error.title', 'Error')} message={error} onRetry={() => { clearError(); fetchClients(); }} />;
+    return <DataState variant="error" title={t('client.error.title', 'Error al cargar clientes')} message={error} onRetry={() => { clearError(); fetchClients(); }} />;
   }
 
   return (
     <div className="space-y-6">
-      <ClientStats />
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-black uppercase tracking-wide">{t('client.title', 'Clientes')}</h1>
-        <Button onClick={handleCreate} className="bg-lime-400 text-black font-bold"><Plus className="w-4 h-4 mr-2" />{t('client.action.create', 'Nuevo Cliente')}</Button>
+        <h1 className={styles.header('h1')}>{t('client.title', 'Clientes')}</h1>
+        <Button onClick={handleCreate} className={styles.button('primary')}><Plus className="w-4 h-4 mr-2" />{t('client.action.create', 'Nuevo Cliente')}</Button>
       </div>
-      
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <Input
-          placeholder={t('client.search.placeholder', 'Buscar por nombre...')}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 max-w-md"
-        />
-        <Button type="submit" variant="outline" className="border-2 border-black font-bold">{t('action.search', 'Buscar')}</Button>
-      </form>
 
-      {loading && clients.length === 0 ? (
-        <DataState variant="loading" skeletonVariant="list" />
-      ) : clients.length === 0 ? (
-        <DataState variant="empty" title={t('client.empty.title', 'No se encontraron clientes')} message={t('client.empty.message', 'Intenta con otra búsqueda o crea un nuevo cliente.')} actionLabel={t('client.action.create', 'Crear Cliente')} onAction={handleCreate} />
+      {/* Búsqueda */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder={t('client.search.placeholder', 'Buscar por nombre, email, ciudad o tipo...')}
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          className={`pl-10 ${styles.input()}`}
+        />
+      </div>
+
+      {clients.length === 0 ? (
+        <DataState variant="empty" title={t('client.empty.title', 'No hay clientes')} message={t('client.empty.message', 'Crea tu primer cliente para empezar.')} actionLabel={t('client.action.create', 'Crear Cliente')} onAction={handleCreate} />
       ) : (
         <>
-          <div className="grid gap-4">
-            {clients.map(client => (
-              <ClientListItem 
-                key={client.id} 
-                client={client} 
-                onEdit={handleEdit} 
-                onDelete={handleDelete}
-                onView={setViewingClient} 
-              />
-            ))}
+          {/* Estadísticas rápidas */}
+          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4 mb-6">
+            <div className={`${styles.card('p-4 text-center')}`}>
+              <div className="text-2xl font-bold text-primary">{filteredClients.length}</div>
+              <div className="text-sm text-muted-foreground">
+                {searchTerm ? `Encontrados (${clients.length} total)` : 'Total Clientes'}
+              </div>
+            </div>
+            <div className={`${styles.card('p-4 text-center')}`}>
+              <div className="text-2xl font-bold text-red-600">{filteredClients.filter(c => c.metadata?.priority === 'high').length}</div>
+              <div className="text-sm text-muted-foreground">Alta Prioridad</div>
+            </div>
+            <div className={`${styles.card('p-4 text-center')}`}>
+              <div className="text-2xl font-bold text-blue-600">{new Set(filteredClients.map(c => c.address?.city)).size}</div>
+              <div className="text-sm text-muted-foreground">Ciudades</div>
+            </div>
+            <div className={`${styles.card('p-4 text-center')}`}>
+              <div className="text-2xl font-bold text-purple-600">{new Set(filteredClients.map(c => c.metadata?.type)).size}</div>
+              <div className="text-sm text-muted-foreground">Tipos</div>
+            </div>
           </div>
-          <Pagination page={page} totalPages={totalPages} setPage={setPage} />
+
+          {/* Resultados de búsqueda */}
+          {filteredClients.length === 0 ? (
+            <DataState 
+              variant="empty" 
+              title={t('client.search.empty', 'No se encontraron clientes')} 
+              message={t('client.search.message', 'Intenta con otros términos de búsqueda')} 
+            />
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+              {filteredClients.map(client => (
+                <ClientListItem key={client.id} client={client} onEdit={handleEdit} onDelete={handleDelete} onView={setViewingClient} />
+              ))}
+            </div>
+          )}
         </>
       )}
-      
+
       {viewingClient && (
         <ClientDetailModal client={viewingClient} onClose={() => setViewingClient(null)} />
       )}
 
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-black mb-4">{editingItem ? t('client.modal.edit', 'EDITAR CLIENTE') : t('client.modal.create', 'CREAR CLIENTE')}</h2>
-            <ClientForm 
-              formData={formData} 
-              setFormData={setFormData} 
-              handleSubmit={handleSave} 
-              handleCancel={() => setShowEditModal(false)} 
-              loading={loading} 
-              isEditing={!!editingItem} 
-            />
-            {error && <p className="text-red-600 text-sm mt-2 font-bold">{error}</p>}
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className={`p-6 max-w-md w-full ${styles.card()}`}>
+            <h2 className={styles.header('h2')}>{editingItem ? t('client.modal.edit', 'Editar Cliente') : t('client.modal.create', 'Crear Cliente')}</h2>
+            <div className="mt-4">
+              <ClientForm 
+                formData={formData}
+                setFormData={setFormData}
+                handleSubmit={handleSave}
+                handleCancel={() => setShowEditModal(false)}
+                loading={loading}
+                isEditing={!!editingItem}
+              />
+            </div>
           </div>
         </div>
       )}
