@@ -8,9 +8,7 @@
  * - Manejo de errores robusto
  */
 
-import React, { useState } from 'react';
-// useTheme removido para MVP - sin hooks problemáticos
-// Importar iconos necesarios
+import React, { useState, useEffect } from 'react';
 import { 
   ShoppingCart, 
   Package, 
@@ -30,11 +28,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import PageHeader from '@/components/ui/PageHeader';
 
-// Custom Hooks
-// useThemeStyles removido para MVP - sin hooks problemáticos
-import { usePurchaseLogic } from '@/hooks/usePurchaseLogic';
+// Custom Hooks and Services
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 import DataState from '@/components/ui/DataState';
 import { useI18n } from '@/lib/i18n';
+import usePurchaseStore from '@/store/usePurchaseStore';
 
 // Componentes Especializados
 import SupplierSelector from '@/components/SupplierSelector';
@@ -51,60 +49,61 @@ import {
 } from '@/constants/purchaseData';
 
 const Purchases = () => {
-  // Para MVP - tema fijo sin hooks problemáticos
-  const theme = 'default';
-  const themeStyles = { styles: {} };
-  const styles = {};
+  const { styles } = useThemeStyles();
 
   // Estado local para UI
   const [activeTab, setActiveTab] = useState('new-purchase'); // Volver a nueva compra como default
   const [notification, setNotification] = useState(null);
 
-  // Lógica de compras mediante custom hook
-  const purchaseLogic = usePurchaseLogic();
+  // Store de compras (MVP patterns)
   const {
-    // Estado
-    selectedSupplier,
-    purchaseItems,
-    purchaseNotes,
-    expectedDelivery,
-    paymentTerms,
-    deliveryMethod,
-    
-    // Estado UI
+    currentOrderData,
+    purchaseOrders,
     loading,
-    saving,
-    errors,
-    
-    // Cálculos
-    subtotal,
-    tax,
-    deliveryCost,
-    total,
-    itemCount,
-    uniqueProducts,
-    
-    // Validaciones
-    validations,
-    
-    // Setters
-    setSelectedSupplier,
-    setPurchaseNotes,
-    setExpectedDelivery,
-    setPaymentTerms,
-    setDeliveryMethod,
-    
-    // Acciones
-    addPurchaseItem,
+    error,
+    setCurrentOrderSupplier,
+    addItemToCurrentOrder,
     updateItemQuantity,
     updateItemPrice,
-    removeItem,
-    clearPurchase,
-    createPurchase,
-    getPurchaseSummary
-  } = purchaseLogic;
-
+    removeItemFromCurrentOrder,
+    setOrderNotes,
+    setExpectedDelivery,
+    clearCurrentOrder,
+    createPurchaseOrder,
+    canCreateOrder,
+    getCurrentOrderItemsCount,
+    getCurrentOrderTotal,
+    fetchPurchaseOrders
+  } = usePurchaseStore();
+  
   const { t } = useI18n();
+  
+  // Estados derivados para compatibilidad
+  const selectedSupplier = currentOrderData.supplierId ? 
+    { id: currentOrderData.supplierId, name: currentOrderData.supplierName } : null;
+  const purchaseItems = currentOrderData.items;
+  const purchaseNotes = currentOrderData.notes;
+  const expectedDelivery = currentOrderData.expectedDelivery;
+  const subtotal = currentOrderData.subtotalAmount;
+  const tax = currentOrderData.taxAmount;
+  const total = currentOrderData.totalAmount;
+  const itemCount = getCurrentOrderItemsCount();
+  const uniqueProducts = currentOrderData.items.length;
+  
+  // Validaciones simples (MVP)
+  const validations = {
+    hasSupplier: !!currentOrderData.supplierId,
+    hasItems: currentOrderData.items.length > 0,
+    hasValidItems: currentOrderData.items.every(item => item.quantity > 0 && item.unitPrice > 0),
+    canProceed: canCreateOrder()
+  };
+
+  // Cargar órdenes al montar el componente
+  useEffect(() => {
+    if (activeTab === 'purchases-list') {
+      fetchPurchaseOrders();
+    }
+  }, [activeTab, fetchPurchaseOrders]);
 
   // Mostrar notificación
   const showNotification = (message, type = 'success') => {
@@ -115,21 +114,53 @@ const Purchases = () => {
   // Manejar envío de compra
   const handleSubmitPurchase = async () => {
     if (!validations.canProceed) {
-      showNotification(PURCHASE_MESSAGES.ERROR.CREATE_FAILED, 'error');
+      showNotification('Por favor completa todos los campos requeridos', 'error');
       return;
     }
 
     try {
-      const result = await createPurchase();
+      const result = await createPurchaseOrder();
       if (result.success) {
-        showNotification(PURCHASE_MESSAGES.SUCCESS.CREATED);
+        showNotification('Orden de compra creada exitosamente');
         setActiveTab('purchases-list'); // Cambiar a lista después de crear
       }
     } catch (error) {
-      console.error('Error creating purchase:', error);
-      showNotification(error.message || PURCHASE_MESSAGES.ERROR.CREATE_FAILED, 'error');
+      console.error('Error creating purchase order:', error);
+      showNotification(error.message || 'Error al crear la orden de compra', 'error');
     }
   };
+  
+  // Handlers para el store
+  const setSelectedSupplier = (supplier) => {
+    if (supplier) {
+      setCurrentOrderSupplier(supplier.id, supplier.name);
+    }
+  };
+  
+  const addPurchaseItem = (product, quantity = 1, unitPrice = 0) => {
+    addItemToCurrentOrder(product, quantity, unitPrice);
+  };
+  
+  const removeItem = (productId) => {
+    removeItemFromCurrentOrder(productId);
+  };
+  
+  const setPurchaseNotes = (notes) => {
+    setOrderNotes(notes);
+  };
+  
+  const clearPurchase = () => {
+    clearCurrentOrder();
+  };
+  
+  // Mock para getPurchaseSummary (compatibilidad)
+  const getPurchaseSummary = () => ({
+    subtotal,
+    tax,
+    total,
+    itemCount,
+    uniqueProducts
+  });
 
   // Componente de notificación
   const NotificationBanner = () => {
@@ -152,9 +183,9 @@ const Purchases = () => {
   const PurchaseConfiguration = () => (
     <Card className={styles.card()}>
       <CardHeader>
-        <CardTitle className={styles.cardHeader()}>
+        <CardTitle className={styles.header('h3')}>
           <FileText className="w-5 h-5 mr-2" />
-          {t('purchases.config.title') || 'Configuración de Compra'}
+          {t('purchases.config.title', 'Configuración de Compra')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -162,56 +193,24 @@ const Purchases = () => {
         <div>
           <label className={styles.label()}>
             <Truck className="inline w-4 h-4 mr-2" />
-            {t('purchases.config.expected_delivery') || 'Fecha de Entrega Esperada'}
+            {t('purchases.config.expected_delivery', 'Fecha de Entrega Esperada')}
           </label>
           <input
             type="date"
-            value={expectedDelivery}
+            value={expectedDelivery || ''}
             onChange={(e) => setExpectedDelivery(e.target.value)}
             min={new Date().toISOString().split('T')[0]}
             className={styles.input()}
           />
         </div>
 
-        {/* Términos de pago */}
-        <div>
-          <label className={styles.label()}>{t('purchases.config.payment_terms') || 'Términos de Pago'}</label>
-          <select
-            value={paymentTerms}
-            onChange={(e) => setPaymentTerms(e.target.value)}
-            className={styles.input()}
-          >
-            {PAYMENT_TERMS.map(term => (
-              <option key={term.id} value={term.id}>
-                {term.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Método de entrega */}
-        <div>
-          <label className={styles.label()}>{t('purchases.config.delivery_method') || 'Método de Entrega'}</label>
-          <select
-            value={deliveryMethod}
-            onChange={(e) => setDeliveryMethod(e.target.value)}
-            className={styles.input()}
-          >
-            {DELIVERY_METHODS.map(method => (
-              <option key={method.id} value={method.id}>
-                {method.name} {method.cost > 0 && `(+$${method.cost})`}
-              </option>
-            ))}
-          </select>
-        </div>
-
         {/* Notas */}
         <div>
-          <label className={styles.label()}>{t('purchases.config.notes') || 'Notas'}</label>
+          <label className={styles.label()}>{t('purchases.config.notes', 'Notas')}</label>
           <textarea
             value={purchaseNotes}
             onChange={(e) => setPurchaseNotes(e.target.value)}
-            placeholder={t('purchases.config.notes.placeholder') || 'Notas adicionales sobre la compra...'}
+            placeholder={t('purchases.config.notes.placeholder', 'Notas adicionales sobre la compra...')}
             rows={3}
             className={styles.input()}
           />
@@ -223,66 +222,50 @@ const Purchases = () => {
   // Estadísticas compactas (minimalista)
   const CompactStats = () => (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-      <div className={styles.card('p-3')}>
-        <div className="flex items-center">
-          <Package className={`w-5 h-5 mr-2 ${
-            styles.isNeoBrutalism ? 'text-black' : 
-            styles.isMaterial ? 'text-blue-600' : 
-            styles.isFluent ? 'text-sky-600' : 'text-blue-600'
-          }`} />
+      <div className={styles.card()}>
+        <div className="flex items-center p-3">
+          <Package className="w-5 h-5 mr-2 text-blue-600" />
           <div>
-            <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
+            <div className="text-lg font-bold">
               {uniqueProducts}
             </div>
-            <div className="text-xs text-muted-foreground">{t('purchases.stats.products') || 'Productos'}</div>
+            <div className="text-xs text-muted-foreground">{t('purchases.stats.products', 'Productos')}</div>
           </div>
         </div>
       </div>
       
-      <div className={styles.card('p-3')}>
-        <div className="flex items-center">
-          <Calculator className={`w-5 h-5 mr-2 ${
-            styles.isNeoBrutalism ? 'text-black' : 
-            styles.isMaterial ? 'text-green-600' : 
-            styles.isFluent ? 'text-emerald-600' : 'text-green-600'
-          }`} />
+      <div className={styles.card()}>
+        <div className="flex items-center p-3">
+          <Calculator className="w-5 h-5 mr-2 text-green-600" />
           <div>
-            <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
+            <div className="text-lg font-bold">
               {itemCount}
             </div>
-            <div className="text-xs text-muted-foreground">{t('purchases.stats.quantity') || 'Cantidad'}</div>
+            <div className="text-xs text-muted-foreground">{t('purchases.stats.quantity', 'Cantidad')}</div>
           </div>
         </div>
       </div>
       
-      <div className={styles.card('p-3')}>
-        <div className="flex items-center">
-          <FileText className={`w-5 h-5 mr-2 ${
-            styles.isNeoBrutalism ? 'text-black' : 
-            styles.isMaterial ? 'text-purple-600' : 
-            styles.isFluent ? 'text-violet-600' : 'text-purple-600'
-          }`} />
+      <div className={styles.card()}>
+        <div className="flex items-center p-3">
+          <FileText className="w-5 h-5 mr-2 text-purple-600" />
           <div>
-            <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
-              ${subtotal}
+            <div className="text-lg font-bold">
+              ${subtotal.toFixed(2)}
             </div>
-            <div className="text-xs text-muted-foreground">{t('purchases.stats.subtotal') || 'Subtotal'}</div>
+            <div className="text-xs text-muted-foreground">{t('purchases.stats.subtotal', 'Subtotal')}</div>
           </div>
         </div>
       </div>
       
-      <div className={styles.card('p-3')}>
-        <div className="flex items-center">
-          <ShoppingCart className={`w-5 h-5 mr-2 ${
-            styles.isNeoBrutalism ? 'text-black' : 
-            styles.isMaterial ? 'text-orange-600' : 
-            styles.isFluent ? 'text-amber-600' : 'text-orange-600'
-          }`} />
+      <div className={styles.card()}>
+        <div className="flex items-center p-3">
+          <ShoppingCart className="w-5 h-5 mr-2 text-orange-600" />
           <div>
-            <div className={`text-lg font-bold ${styles.isNeoBrutalism ? 'font-black' : 'font-semibold'}`}>
-              ${total}
+            <div className="text-lg font-bold">
+              ${total.toFixed(2)}
             </div>
-            <div className="text-xs text-muted-foreground">{t('purchases.stats.total') || 'Total'}</div>
+            <div className="text-xs text-muted-foreground">{t('purchases.stats.total', 'Total')}</div>
           </div>
         </div>
       </div>
@@ -300,14 +283,14 @@ const Purchases = () => {
       <NotificationBanner />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className={styles.tab()}>
-          <TabsTrigger value="new-purchase" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="new-purchase" className={`${styles.tab()} flex items-center gap-2`}>
             <Plus className="w-4 h-4" />
-            {t('purchases.tab.new') || 'Nueva Compra'}
+            {t('purchases.tab.new', 'Nueva Compra')}
           </TabsTrigger>
-          <TabsTrigger value="purchases-list" className="flex items-center gap-2">
+          <TabsTrigger value="purchases-list" className={`${styles.tab()} flex items-center gap-2`}>
             <ShoppingCart className="w-4 h-4" />
-            {t('purchases.tab.list') || 'Lista de Compras'}
+            {t('purchases.tab.list', 'Lista de Compras')}
           </TabsTrigger>
         </TabsList>
 
@@ -320,9 +303,9 @@ const Purchases = () => {
           ) : (!selectedSupplier && purchaseItems.length === 0) ? (
             <DataState
               variant="empty"
-              title={t('purchases.empty.title') || 'Comienza una compra'}
-              description={t('purchases.empty.description') || 'Selecciona un proveedor para empezar o crea uno nuevo.'}
-              actionLabel={t('purchases.empty.action') || 'Seleccionar Proveedor'}
+              title={t('purchases.empty.title', 'Comienza una compra')}
+              description={t('purchases.empty.description', 'Selecciona un proveedor para empezar o crea uno nuevo.')}
+              actionLabel={t('purchases.empty.action', 'Seleccionar Proveedor')}
               onAction={() => {
                 // foco/abrir selector — fallback: abrir modal de proveedor si existe
                 try { document.querySelector('[data-testid="supplier-selector"]')?.focus(); } catch (e) {}
@@ -336,8 +319,8 @@ const Purchases = () => {
                 {/* Selección de proveedor */}
                 <Card className={styles.card()} data-testid="supplier-card-wrapper">
                   <CardHeader>
-                    <CardTitle className={styles.cardHeader()}>
-                      {t('purchases.supplier.info') || 'Información del Proveedor'}
+                    <CardTitle className={styles.header('h3')}>
+                      {t('purchases.supplier.info', 'Información del Proveedor')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -345,9 +328,7 @@ const Purchases = () => {
                       <SupplierSelector
                         selectedSupplier={selectedSupplier}
                         onSupplierChange={setSelectedSupplier}
-                        theme={theme}
                         required={true}
-                        error={errors.supplier}
                       />
                     </div>
                   </CardContent>
@@ -357,15 +338,14 @@ const Purchases = () => {
                 {selectedSupplier && (
                   <Card className={styles.card()} data-testid="product-selector-card">
                     <CardHeader>
-                      <CardTitle className={styles.cardHeader()}>
+                      <CardTitle className={styles.header('h3')}>
                         <Package className="w-5 h-5 mr-2" />
-                        {t('purchases.products.title') || 'Productos'}
+                        {t('purchases.products.title', 'Productos')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <EnhancedPurchaseProductSelector
                         onProductAdd={addPurchaseItem}
-                        theme={theme}
                         supplierId={selectedSupplier.id}
                       />
                     </CardContent>
@@ -376,8 +356,8 @@ const Purchases = () => {
                 {purchaseItems.length > 0 && (
                   <Card className={styles.card()} data-testid="purchase-items-card">
                     <CardHeader>
-                      <CardTitle className={styles.cardHeader()}>
-                        {(t('purchases.items.title') || 'Items del Pedido ({count})').replace('{count}', purchaseItems.length)}
+                      <CardTitle className={styles.header('h3')}>
+                        {t('purchases.items.title', 'Items del Pedido ({count})').replace('{count}', purchaseItems.length)}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -387,8 +367,6 @@ const Purchases = () => {
                           onQuantityChange={updateItemQuantity}
                           onPriceChange={updateItemPrice}
                           onRemoveItem={removeItem}
-                          theme={theme}
-                          errors={errors}
                         />
                       </div>
                     </CardContent>
@@ -405,7 +383,6 @@ const Purchases = () => {
               <div className="space-y-4">
                 <PurchaseSummary
                   summary={getPurchaseSummary()}
-                  theme={theme}
                 />
 
                 {/* Botones de acción */}
@@ -413,38 +390,38 @@ const Purchases = () => {
                   <div className="space-y-3">
                     <Button
                       onClick={handleSubmitPurchase}
-                      disabled={saving}
-                      className={`w-full ${styles.button()}`}
+                      disabled={loading}
+                      className={`w-full ${styles.button('primary')}`}
                       size="lg"
                       data-testid="purchase-save-button"
                     >
                       <Save className="w-4 h-4 mr-2" />
-                      {saving ? (t('purchases.saving') || 'Creando Compra...') : (t('purchases.create') || 'Crear Compra')}
+                      {loading ? t('purchases.saving', 'Creando Compra...') : t('purchases.create', 'Crear Compra')}
                     </Button>
                     
                     <Button
                       onClick={clearPurchase}
                       variant="outline"
                       className="w-full"
-                      disabled={saving}
+                      disabled={loading}
                       data-testid="purchase-clear-button"
                     >
-                      {t('purchases.clear') || 'Limpiar Todo'}
+                      {t('purchases.clear', 'Limpiar Todo')}
                     </Button>
                   </div>
                 )}
 
                 {/* Validaciones minimalistas */}
                 {!validations.canProceed && (
-                  <div className={`p-3 ${styles.card('border-orange-200 bg-orange-50')}`}>
+                  <div className="p-3 border border-orange-200 bg-orange-50 rounded-lg">
                     <div className="flex items-center text-orange-800">
                       <AlertCircle className="w-4 h-4 mr-2" />
-                      <span className="text-sm font-medium">{t('purchases.todo.title') || 'Por completar:'}</span>
+                      <span className="text-sm font-medium">{t('purchases.todo.title', 'Por completar:')}</span>
                     </div>
                     <ul className="mt-1 text-xs text-orange-700 space-y-0.5">
-                      {!validations.hasSupplier && <li>• {t('purchases.todo.supplier') || 'Seleccionar proveedor'}</li>}
-                      {!validations.hasItems && <li>• {t('purchases.todo.items') || 'Agregar productos'}</li>}
-                      {!validations.hasValidItems && <li>• {t('purchases.todo.valid_items') || 'Verificar cantidades'}</li>}
+                      {!validations.hasSupplier && <li>• {t('purchases.todo.supplier', 'Seleccionar proveedor')}</li>}
+                      {!validations.hasItems && <li>• {t('purchases.todo.items', 'Agregar productos')}</li>}
+                      {!validations.hasValidItems && <li>• {t('purchases.todo.valid_items', 'Verificar cantidades')}</li>}
                     </ul>
                   </div>
                 )}
@@ -455,7 +432,7 @@ const Purchases = () => {
 
         {/* Tab de Lista de Compras */}
         <TabsContent value="purchases-list" className="space-y-4">
-          <PurchaseOrdersList theme={theme} />
+          <PurchaseOrdersList />
         </TabsContent>
       </Tabs>
     </div>

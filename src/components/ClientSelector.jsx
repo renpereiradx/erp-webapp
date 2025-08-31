@@ -14,7 +14,9 @@ const ClientSelector = ({
   theme = 'neo-brutalism',
   placeholder = 'Seleccionar cliente...',
   showSearch = true,
-  className = ''
+  className = '',
+  'data-testid': dataTestId = 'client-selector',
+  ...props
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -83,7 +85,7 @@ const ClientSelector = ({
   const selectId = `client-select-${generatedId}`;
 
   return (
-    <div className={`${styles.container} ${className}`} data-testid={props?.['data-testid'] ?? 'client-selector'}>
+    <div className={`${styles.container} ${className}`} data-testid={dataTestId}>
       <label className={styles.label} htmlFor={selectId} data-testid="client-label">
         <Users className="inline w-4 h-4 mr-2" />
         Cliente

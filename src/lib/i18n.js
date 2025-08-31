@@ -589,6 +589,185 @@ Object.assign(DICTIONARY.en, {
   'clients.pagination.page_of': 'Page {page} of {totalPages}',
 });
 
+// Sales - MVP strings
+Object.assign(DICTIONARY.es, {
+  'sales.title': 'Ventas',
+  'sales.subtitle': 'Gestiona las ventas de productos',
+  'sales.new_sale': 'Nueva Venta',
+  'sales.processing': 'Procesando...',
+  'sales.complete': 'Completar Venta',
+  'sales.summary.title': 'Resumen de Venta',
+  'sales.summary.subtotal': 'Subtotal:',
+  'sales.summary.tax': 'IVA (16%):',
+  'sales.summary.total': 'Total:',
+  'sales.summary.items': 'artículos',
+  // Payment strings
+  'sales.payment.title': 'Procesamiento de Pago',
+  'sales.payment.method': 'Método de Pago',
+  'sales.payment.amount_paid': 'Monto Pagado',
+  'sales.payment.change': 'Cambio:',
+  'sales.payment.total': 'Total a Pagar:',
+  'sales.session.start': 'Iniciar Sesión de Ventas',
+  'sales.session.end': 'Finalizar Sesión',
+  'sales.session.active': 'Sesión Activa',
+});
+
+Object.assign(DICTIONARY.en, {
+  'sales.title': 'Sales',
+  'sales.subtitle': 'Manage product sales',
+  'sales.new_sale': 'New Sale',
+  'sales.processing': 'Processing...',
+  'sales.complete': 'Complete Sale',
+  'sales.summary.title': 'Sale Summary',
+  'sales.summary.subtotal': 'Subtotal:',
+  'sales.summary.tax': 'Tax (16%):',
+  'sales.summary.total': 'Total:',
+  'sales.summary.items': 'items',
+  // Payment strings
+  'sales.payment.title': 'Payment Processing',
+  'sales.payment.method': 'Payment Method',
+  'sales.payment.amount_paid': 'Amount Paid',
+  'sales.payment.change': 'Change:',
+  'sales.payment.total': 'Total to Pay:',
+  'sales.session.start': 'Start Sales Session',
+  'sales.session.end': 'End Session',
+  'sales.session.active': 'Active Session',
+});
+
+// Reservations - MVP strings
+Object.assign(DICTIONARY.es, {
+  'reservations.title': 'Reservas',
+  'reservations.subtitle': 'Gestiona reservas y horarios de servicios',
+  'reservations.new_reservation': 'Nueva Reserva',
+  'reservations.service': 'Servicio',
+  'reservations.client': 'Cliente',
+  'reservations.duration': 'Duración (horas)',
+  'reservations.select_service': 'Seleccionar servicio...',
+  'reservations.select_client': 'Seleccionar cliente...',
+  'reservations.available_times': 'Horarios Disponibles',
+  'reservations.create': 'Crear Reserva',
+  'reservations.calendar': 'Calendario de Reservas',
+  'reservations.cancel': 'Cancelar',
+  'reservations.confirm_cancel': '¿Cancelar esta reserva?',
+  'reservations.tab.calendar': 'Calendario',
+  'reservations.tab.list': 'Lista de Reservas',
+  'reservations.empty.title': 'Sin reservas',
+  'reservations.empty.message': 'No hay reservas registradas',
+  'reservations.error.title': 'Error',
+  'reservations.search.placeholder': 'Buscar reservas...',
+  'reservations.modal.edit': 'Editar Reserva',
+  'reservations.modal.create': 'Crear Reserva',
+  'reservations.status.confirmed': 'Confirmada',
+  'reservations.status.cancelled': 'Cancelada',
+  'reservations.status.pending': 'Pendiente',
+});
+
+Object.assign(DICTIONARY.en, {
+  'reservations.title': 'Reservations',
+  'reservations.subtitle': 'Manage service reservations and schedules',
+  'reservations.new_reservation': 'New Reservation',
+  'reservations.service': 'Service',
+  'reservations.client': 'Client',
+  'reservations.duration': 'Duration (hours)',
+  'reservations.select_service': 'Select service...',
+  'reservations.select_client': 'Select client...',
+  'reservations.available_times': 'Available Times',
+  'reservations.create': 'Create Reservation',
+  'reservations.calendar': 'Reservations Calendar',
+  'reservations.cancel': 'Cancel',
+  'reservations.confirm_cancel': 'Cancel this reservation?',
+  'reservations.tab.calendar': 'Calendar',
+  'reservations.tab.list': 'Reservations List',
+  'reservations.empty.title': 'No reservations',
+  'reservations.empty.message': 'No reservations registered',
+  'reservations.error.title': 'Error',
+  'reservations.search.placeholder': 'Search reservations...',
+  'reservations.modal.edit': 'Edit Reservation',
+  'reservations.modal.create': 'Create Reservation',
+  'reservations.status.confirmed': 'Confirmed',
+  'reservations.status.cancelled': 'Cancelled',
+  'reservations.status.pending': 'Pending',
+});
+
+// Schedules - MVP strings
+Object.assign(DICTIONARY.es, {
+  'schedules.title': 'Gestión de Horarios',
+  'schedules.subtitle': 'Administra la disponibilidad de horarios para servicios',
+  'schedules.search.placeholder': 'Buscar horarios...',
+  'schedules.filter.all_products': 'Todos los servicios',
+  'schedules.filter.date': 'Filtrar por fecha',
+  'schedules.generate': 'Generar Horarios',
+  'schedules.empty.title': 'Sin horarios',
+  'schedules.empty.message': 'No hay horarios registrados para los filtros actuales',
+  'schedules.error.title': 'Error',
+  'schedules.status.available': 'Disponible',
+  'schedules.status.unavailable': 'No Disponible',
+  'schedules.disable': 'Deshabilitar',
+  'schedules.enable': 'Habilitar',
+  'schedules.modal.generate': 'Generar Horarios',
+  'schedules.generate_type': 'Tipo de Generación',
+  'schedules.generate.daily': 'Horarios diarios automáticos',
+  'schedules.generate.date': 'Para fecha específica',
+  'schedules.generate.next_days': 'Próximos N días',
+  'schedules.target_date': 'Fecha Objetivo',
+  'schedules.days_count': 'Número de Días',
+});
+
+Object.assign(DICTIONARY.en, {
+  'schedules.title': 'Schedule Management',
+  'schedules.subtitle': 'Manage schedule availability for services',
+  'schedules.search.placeholder': 'Search schedules...',
+  'schedules.filter.all_products': 'All services',
+  'schedules.filter.date': 'Filter by date',
+  'schedules.generate': 'Generate Schedules',
+  'schedules.empty.title': 'No schedules',
+  'schedules.empty.message': 'No schedules registered for current filters',
+  'schedules.error.title': 'Error',
+  'schedules.status.available': 'Available',
+  'schedules.status.unavailable': 'Unavailable',
+  'schedules.disable': 'Disable',
+  'schedules.enable': 'Enable',
+  'schedules.modal.generate': 'Generate Schedules',
+  'schedules.generate_type': 'Generation Type',
+  'schedules.generate.daily': 'Automatic daily schedules',
+  'schedules.generate.date': 'For specific date',
+  'schedules.generate.next_days': 'Next N days',
+  'schedules.target_date': 'Target Date',
+  'schedules.days_count': 'Number of Days',
+});
+
+// Navigation strings
+Object.assign(DICTIONARY.es, {
+  'navigation.operations': 'Operaciones',
+});
+
+Object.assign(DICTIONARY.en, {
+  'navigation.operations': 'Operations',
+});
+
+// Action strings
+Object.assign(DICTIONARY.es, {
+  'action.generating': 'Generando...',
+  'action.generate': 'Generar',
+  'action.saving': 'Guardando...',
+  'action.create': 'Crear',
+  'action.update': 'Actualizar',
+  'action.cancel': 'Cancelar',
+  'action.edit': 'Editar',
+  'action.delete': 'Eliminar',
+});
+
+Object.assign(DICTIONARY.en, {
+  'action.generating': 'Generating...',
+  'action.generate': 'Generate',
+  'action.saving': 'Saving...',
+  'action.create': 'Create',
+  'action.update': 'Update',
+  'action.cancel': 'Cancel',
+  'action.edit': 'Edit',
+  'action.delete': 'Delete',
+});
+
 // Suppliers - MVP strings
 Object.assign(DICTIONARY.es, {
   'suppliers.title': 'Proveedores',

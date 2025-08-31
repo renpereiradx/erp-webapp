@@ -1,21 +1,33 @@
 /**
  * Store de Zustand para gestión de estado de ventas
- * Maneja el estado global de las ventas, incluyendo CRUD operations y estado de la UI
+ * Maneja el estado global de las ventas, incluyendo CRUD operations, sesiones y pagos
+ * Implementa patrones MVP según GUIA_MVP_DESARROLLO.md y SALE_API.md
  */
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import saleService from '@/services/saleService';
+import { telemetryService } from '@/services/telemetryService';
+import { DEMO_CONFIG_SALES } from '@/config/demoData';
 
 const useSaleStore = create()(
   devtools(
     (set, get) => ({
-      // Estado inicial
+      // ============ Estado MVP (Arrays simples) ============
       sales: [],
       currentSale: null,
       saleItems: [],
       loading: false,
       error: null,
+      
+      // ============ Gestión de sesiones ============
+      currentSession: null,
+      sessionActive: false,
+      
+      // ============ Procesamiento de pagos ============
+      paymentInProgress: false,
+      paymentResult: null,
+      changeCalculation: null,
       filters: {
         page: 1,
         limit: 10,
@@ -44,30 +56,154 @@ const useSaleStore = create()(
         topSellingProducts: [],
       },
 
-      // Estado temporal para venta en curso
+      // ============ Estado temporal para venta en curso (MVP) ============
       currentSaleData: {
-        clientId: '',
+        clientId: null,
+        sessionId: null,
         items: [],
-        total: 0,
-        subtotal: 0,
-        tax: 0,
-        discount: 0,
+        totalAmount: 0,
+        subtotalAmount: 0,
+        taxAmount: 0,
+        discountAmount: 0,
         notes: '',
+        paymentMethod: 'cash',
+        amountPaid: 0,
+        changeAmount: 0,
+        posTerminalId: 'POS_001'
       },
 
-      // Acciones para ventas
+      // ============ GESTIÓN DE SESIONES ============
+      
+      startSaleSession: async (userId, posTerminalId = 'POS_001') => {
+        set({ loading: true, error: null });
+        try {
+          const response = await saleService.startSaleSession({ userId, posTerminalId });
+          
+          if (response.success) {
+            set({
+              currentSession: response.data,
+              sessionActive: true,
+              currentSaleData: {
+                ...get().currentSaleData,
+                sessionId: response.data.session_id,
+                posTerminalId: posTerminalId
+              },
+              loading: false
+            });
+            
+            telemetryService.recordEvent('sale_session_started', {
+              session_id: response.data.session_id,
+              user_id: userId
+            });
+          }
+          
+          return response;
+        } catch (error) {
+          set({ error: error.message, loading: false });
+          throw error;
+        }
+      },
+      
+      endSaleSession: async (summary = {}) => {
+        const session = get().currentSession;
+        if (!session) return;
+        
+        set({ loading: true, error: null });
+        try {
+          const response = await saleService.endSaleSession(session.session_id, summary);
+          
+          if (response.success) {
+            set({
+              currentSession: null,
+              sessionActive: false,
+              loading: false
+            });
+            
+            telemetryService.recordEvent('sale_session_ended', {
+              session_id: session.session_id,
+              duration: Date.now() - new Date(session.started_at).getTime()
+            });
+          }
+          
+          return response;
+        } catch (error) {
+          set({ error: error.message, loading: false });
+          throw error;
+        }
+      },
+      
+      // ============ PROCESAMIENTO DE PAGOS ============
+      
+      processPayment: async (saleId, paymentData) => {
+        set({ paymentInProgress: true, error: null });
+        try {
+          const response = await saleService.processPayment(saleId, paymentData);
+          
+          if (response.success) {
+            set({
+              paymentResult: response.data,
+              paymentInProgress: false
+            });
+            
+            telemetryService.recordEvent('payment_processed', {
+              sale_id: saleId,
+              payment_method: paymentData.paymentMethod,
+              amount: paymentData.amountPaid
+            });
+          }
+          
+          return response;
+        } catch (error) {
+          set({ error: error.message, paymentInProgress: false });
+          throw error;
+        }
+      },
+      
+      calculateChange: async (totalAmount, amountPaid) => {
+        try {
+          const response = await saleService.calculateChange(totalAmount, amountPaid);
+          
+          if (response.success) {
+            set({ changeCalculation: response.data });
+            
+            // Actualizar datos de venta actual
+            const currentSaleData = get().currentSaleData;
+            set({
+              currentSaleData: {
+                ...currentSaleData,
+                amountPaid: amountPaid,
+                changeAmount: response.data.change_amount
+              }
+            });
+          }
+          
+          return response;
+        } catch (error) {
+          console.error('Error calculating change:', error);
+          throw error;
+        }
+      },
+      
+      // ============ CRUD OPERATIONS (MVP Style) ============
       fetchSales: async (params = {}) => {
         set({ loading: true, error: null });
         try {
           const filters = { ...get().filters, ...params };
           const response = await saleService.getSales(filters);
           
-          set({
-            sales: response.data || [],
-            pagination: response.pagination || get().pagination,
-            filters,
-            loading: false,
-          });
+          if (response.success) {
+            set({
+              sales: response.data || [],
+              pagination: response.pagination || get().pagination,
+              filters,
+              loading: false,
+            });
+            
+            telemetryService.recordEvent('sales_fetched', {
+              count: response.data?.length || 0,
+              filters: JSON.stringify(filters)
+            });
+          }
           
           return response;
         } catch (error) {
@@ -80,10 +216,14 @@ const useSaleStore = create()(
         set({ loading: true, error: null });
         try {
           const response = await saleService.getSaleById(id);
-          set({
-            currentSale: response.data,
-            loading: false,
-          });
+          
+          if (response.success) {
+            set({
+              currentSale: response.data,
+              loading: false,
+            });
+          }
+          
           return response;
         } catch (error) {
           set({ error: error.message, loading: false });
@@ -91,23 +231,46 @@ const useSaleStore = create()(
         }
       },
 
-      createSale: async (saleData) => {
+      createSale: async (saleData = null) => {
         set({ loading: true, error: null });
         try {
-          const response = await saleService.createSale(saleData);
+          // Si no se proporciona saleData, usar currentSaleData
+          const dataToSend = saleData || get().currentSaleData;
           
-          // Actualizar la lista de ventas
-          const sales = get().sales;
-          set({
-            sales: [response.data, ...sales],
-            loading: false,
+          const response = await saleService.createSale({
+            clientId: dataToSend.clientId,
+            sessionId: dataToSend.sessionId,
+            paymentMethod: dataToSend.paymentMethod,
+            amountPaid: dataToSend.amountPaid,
+            items: dataToSend.items,
+            totalAmount: dataToSend.totalAmount,
+            subtotalAmount: dataToSend.subtotalAmount,
+            taxAmount: dataToSend.taxAmount,
+            discountAmount: dataToSend.discountAmount,
+            notes: dataToSend.notes,
+            posTerminalId: dataToSend.posTerminalId
           });
           
-          // Limpiar venta actual
-          get().clearCurrentSale();
-          
-          // Actualizar estadísticas
-          get().updateStats();
+          if (response.success) {
+            // Actualizar la lista de ventas (MVP: array simple)
+            const sales = get().sales;
+            set({
+              sales: [response.data, ...sales],
+              loading: false,
+            });
+            
+            // Limpiar venta actual
+            get().clearCurrentSale();
+            
+            // Actualizar estadísticas
+            get().updateStats();
+            
+            telemetryService.recordEvent('sale_created', {
+              sale_id: response.data?.id || response.sale_id,
+              total_amount: dataToSend.totalAmount,
+              payment_method: dataToSend.paymentMethod
+            });
+          }
           
           return response;
         } catch (error) {
@@ -199,29 +362,12 @@ const useSaleStore = create()(
         }
       },
 
-      createSaleWithReservation: async (saleData, reservationData) => {
-        set({ loading: true, error: null });
-        try {
-          const response = await saleService.createSaleWithReservation(saleData, reservationData);
-          
-          // Actualizar la lista de ventas
-          const sales = get().sales;
-          set({
-            sales: [response.data, ...sales],
-            loading: false,
-          });
-          
-          // Limpiar venta actual
-          get().clearCurrentSale();
-          
-          // Actualizar estadísticas
-          get().updateStats();
-          
-          return response;
-        } catch (error) {
-          set({ error: error.message, loading: false });
-          throw error;
-        }
+      // DEPRECATED: Removed coupling between sales and reservations
+      // Use createSale() and reservationService.createReservation() separately
+      createSaleWithReservation: async () => {
+        console.warn('⚠️  createSaleWithReservation is deprecated. Handle sales and reservations separately.');
+        set({ error: 'This method has been deprecated. Please create sales and reservations separately.', loading: false });
+        throw new Error('This method has been deprecated. Please create sales and reservations separately for better separation of concerns.');
       },
 
       fetchTodaySales: async () => {
@@ -273,7 +419,8 @@ const useSaleStore = create()(
         }
       },
 
-      // Gestión de venta actual (carrito)
+      // ============ GESTIÓN DE CARRITO (MVP Style) ============
+      
       setCurrentSaleClient: (clientId) => {
         const currentSaleData = get().currentSaleData;
         set({
@@ -282,6 +429,20 @@ const useSaleStore = create()(
             clientId
           }
         });
+        
+        telemetryService.recordEvent('sale_client_selected', { client_id: clientId });
+      },
+      
+      setPaymentMethod: (paymentMethod) => {
+        const currentSaleData = get().currentSaleData;
+        set({
+          currentSaleData: {
+            ...currentSaleData,
+            paymentMethod
+          }
+        });
+        
+        telemetryService.recordEvent('payment_method_selected', { method: paymentMethod });
       },
 
       addItemToCurrentSale: (product, quantity = 1) => {
@@ -297,27 +458,36 @@ const useSaleStore = create()(
               : item
           );
         } else {
-          // Agregar nuevo ítem
+          // Agregar nuevo ítem (MVP: estructura simple)
           newItems = [...currentSaleData.items, {
-            ...product,
-            quantity,
-            unitPrice: product.price,
-            totalPrice: product.price * quantity
+            id: product.id,
+            product_id: product.id,
+            name: product.name,
+            quantity: quantity,
+            unit_price: product.price,
+            total_price: product.price * quantity
           }];
         }
         
-        const subtotal = newItems.reduce((sum, item) => sum + item.totalPrice, 0);
-        const tax = subtotal * 0.16; // IVA del 16%
-        const total = subtotal + tax - currentSaleData.discount;
+        // Recalcular totales (MVP: cálculos simples)
+        const subtotalAmount = newItems.reduce((sum, item) => sum + item.total_price, 0);
+        const taxAmount = subtotalAmount * 0.16; // IVA del 16%
+        const totalAmount = subtotalAmount + taxAmount - currentSaleData.discountAmount;
         
         set({
           currentSaleData: {
             ...currentSaleData,
             items: newItems,
-            subtotal,
-            tax,
-            total
+            subtotalAmount,
+            taxAmount,
+            totalAmount
           }
+        });
+        
+        telemetryService.recordEvent('item_added_to_sale', {
+          product_id: product.id,
+          quantity: quantity,
+          unit_price: product.price
         });
       },
 
@@ -331,22 +501,28 @@ const useSaleStore = create()(
         
         const newItems = currentSaleData.items.map(item =>
           item.id === itemId
-            ? { ...item, quantity, totalPrice: item.unitPrice * quantity }
+            ? { ...item, quantity, total_price: item.unit_price * quantity }
             : item
         );
         
-        const subtotal = newItems.reduce((sum, item) => sum + item.totalPrice, 0);
-        const tax = subtotal * 0.16;
-        const total = subtotal + tax - currentSaleData.discount;
+        // Recalcular totales
+        const subtotalAmount = newItems.reduce((sum, item) => sum + item.total_price, 0);
+        const taxAmount = subtotalAmount * 0.16;
+        const totalAmount = subtotalAmount + taxAmount - currentSaleData.discountAmount;
         
         set({
           currentSaleData: {
             ...currentSaleData,
             items: newItems,
-            subtotal,
-            tax,
-            total
+            subtotalAmount,
+            taxAmount,
+            totalAmount
           }
+        });
+        
+        telemetryService.recordEvent('item_quantity_updated', {
+          item_id: itemId,
+          new_quantity: quantity
         });
       },
 
@@ -354,32 +530,37 @@ const useSaleStore = create()(
         const currentSaleData = get().currentSaleData;
         const newItems = currentSaleData.items.filter(item => item.id !== itemId);
         
-        const subtotal = newItems.reduce((sum, item) => sum + item.totalPrice, 0);
-        const tax = subtotal * 0.16;
-        const total = subtotal + tax - currentSaleData.discount;
+        // Recalcular totales
+        const subtotalAmount = newItems.reduce((sum, item) => sum + item.total_price, 0);
+        const taxAmount = subtotalAmount * 0.16;
+        const totalAmount = subtotalAmount + taxAmount - currentSaleData.discountAmount;
         
         set({
           currentSaleData: {
             ...currentSaleData,
             items: newItems,
-            subtotal,
-            tax,
-            total
+            subtotalAmount,
+            taxAmount,
+            totalAmount
           }
         });
+        
+        telemetryService.recordEvent('item_removed_from_sale', { item_id: itemId });
       },
 
       applyDiscount: (discountAmount) => {
         const currentSaleData = get().currentSaleData;
-        const total = currentSaleData.subtotal + currentSaleData.tax - discountAmount;
+        const totalAmount = currentSaleData.subtotalAmount + currentSaleData.taxAmount - discountAmount;
         
         set({
           currentSaleData: {
             ...currentSaleData,
-            discount: discountAmount,
-            total: Math.max(0, total)
+            discountAmount: discountAmount,
+            totalAmount: Math.max(0, totalAmount)
           }
         });
+        
+        telemetryService.recordEvent('discount_applied', { discount_amount: discountAmount });
       },
 
       setNotes: (notes) => {
@@ -392,36 +573,44 @@ const useSaleStore = create()(
         });
       },
 
-  clearCurrentSale: () => {
+      clearCurrentSale: () => {
         set({
           currentSaleData: {
-            clientId: '',
+            clientId: null,
+            sessionId: get().currentSession?.session_id || null,
             items: [],
-            total: 0,
-            subtotal: 0,
-            tax: 0,
-            discount: 0,
+            totalAmount: 0,
+            subtotalAmount: 0,
+            taxAmount: 0,
+            discountAmount: 0,
             notes: '',
+            paymentMethod: 'cash',
+            amountPaid: 0,
+            changeAmount: 0,
+            posTerminalId: 'POS_001'
           }
         });
+        
+        telemetryService.recordEvent('sale_cart_cleared');
       },
 
-      // Utilidades y helpers
+      // ============ UTILIDADES Y HELPERS (MVP) ============
+      
       updateStats: () => {
         const sales = get().sales;
         const today = new Date().toISOString().split('T')[0];
         
         const todaySales = sales.filter(sale => 
-          sale.createdAt?.startsWith(today) && sale.status !== 'cancelled'
+          sale.sale_date?.startsWith(today) && sale.status !== 'cancelled'
         );
         
         const totalRevenue = sales
           .filter(sale => sale.status === 'completed')
-          .reduce((sum, sale) => sum + (sale.total || 0), 0);
+          .reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
         
         const todayRevenue = todaySales
           .filter(sale => sale.status === 'completed')
-          .reduce((sum, sale) => sum + (sale.total || 0), 0);
+          .reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
         
         const averageOrderValue = sales.length > 0 ? totalRevenue / sales.length : 0;
         
@@ -457,30 +646,51 @@ const useSaleStore = create()(
         });
       },
 
-  clearError: () => set({ error: null }),
+      clearError: () => set({ error: null }),
 
-  // Limpiar entidad de venta actual (distinto a carrito en curso)
-  clearCurrentSaleEntity: () => set({ currentSale: null }),
+      // Limpiar entidad de venta actual (distinto a carrito en curso)
+      clearCurrentSaleEntity: () => set({ currentSale: null }),
+      
+      // Limpiar resultado de pago
+      clearPaymentResult: () => set({ paymentResult: null, changeCalculation: null }),
 
-      // Selectores
+      // ============ SELECTORES (MVP Simple) ============
+      
       getSalesByStatus: (status) => {
         return get().sales.filter(sale => sale.status === status);
       },
 
       getSalesByClient: (clientId) => {
-        return get().sales.filter(sale => sale.clientId === clientId);
+        return get().sales.filter(sale => sale.client_id === clientId);
       },
 
       getTodaySalesCount: () => {
         const sales = get().sales;
         const today = new Date().toISOString().split('T')[0];
         return sales.filter(sale => 
-          sale.createdAt?.startsWith(today) && sale.status !== 'cancelled'
+          sale.sale_date?.startsWith(today) && sale.status !== 'cancelled'
         ).length;
       },
 
       getCurrentSaleItemsCount: () => {
         return get().currentSaleData.items.reduce((sum, item) => sum + item.quantity, 0);
+      },
+      
+      getCurrentSaleTotal: () => {
+        return get().currentSaleData.totalAmount;
+      },
+      
+      getChangeAmount: () => {
+        const { totalAmount, amountPaid } = get().currentSaleData;
+        return Math.max(0, amountPaid - totalAmount);
+      },
+      
+      canProcessSale: () => {
+        const { clientId, items, totalAmount, paymentMethod, amountPaid } = get().currentSaleData;
+        return items.length > 0 && 
+               totalAmount > 0 && 
+               paymentMethod && 
+               (paymentMethod === 'cash' ? amountPaid >= totalAmount : true);
       },
     }),
     { name: 'sale-store' }

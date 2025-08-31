@@ -15,6 +15,7 @@ import {
   ShoppingCart,
   ShoppingBag,
   Calendar,
+  Clock,
   BarChart3, 
   Settings,
   Search,
@@ -461,25 +462,39 @@ const MainLayout = ({ children }) => {
       badge: '4'
     },
     { 
-      name: 'Compras', 
-      href: '/compras', 
-      icon: ShoppingBag, 
-      color: 'indigo',
+      name: 'Ventas', 
+      href: '/ventas', 
+      icon: ShoppingCart, 
+      color: 'green',
       badge: '5'
     },
     { 
-      name: 'Reservas y Ventas', 
-      href: '/reservas-ventas', 
+      name: 'Reservas', 
+      href: '/reservas', 
       icon: Calendar, 
       color: 'purple',
       badge: '6'
     },
     { 
+      name: 'Horarios', 
+      href: '/horarios', 
+      icon: Clock, 
+      color: 'orange',
+      badge: '7'
+    },
+    { 
+      name: 'Compras', 
+      href: '/compras', 
+      icon: ShoppingBag, 
+      color: 'indigo',
+      badge: '8'
+    },
+    { 
       name: 'Pedidos', 
       href: '/pedidos', 
-      icon: ShoppingCart, 
-      color: 'green',
-      badge: '7'
+      icon: Package, 
+      color: 'teal',
+      badge: '9'
     },
     { 
       name: 'Reportes', 
