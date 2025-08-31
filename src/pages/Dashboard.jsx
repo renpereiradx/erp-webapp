@@ -3,6 +3,7 @@ import { useI18n } from '../lib/i18n';
 import useDashboardStore from '../store/useDashboardStore';
 import { useThemeStyles } from '../hooks/useThemeStyles';
 import DataState from '../components/ui/DataState';
+import { DEMO_CHART_DATA } from '../config/demoData';
 import { DollarSign, Users, Package, ShoppingCart } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -27,22 +28,17 @@ const MetricCard = ({ title, value, icon: Icon, loading }) => {
 
 const DashboardPage = () => {
   const { t } = useI18n();
-  const { styles, chartColors } = useThemeStyles();
+  const { styles } = useThemeStyles();
+  const chartColors = styles.chartColors();
   const { clientStats, productStats, salesStats, loading, error, fetchDashboardData } = useDashboardStore();
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  // Datos para los gráficos (a futuro se podrían mover al store)
-  const salesChartData = [
-    { name: 'Ene', value: 12000 }, { name: 'Feb', value: 15000 }, { name: 'Mar', value: 18000 },
-    { name: 'Abr', value: 22000 }, { name: 'May', value: 19000 }, { name: 'Jun', value: 25000 },
-  ];
-  const categoryChartData = [
-    { name: 'Electrónicos', value: 35 }, { name: 'Ropa', value: 25 }, { name: 'Hogar', value: 20 },
-    { name: 'Deportes', value: 15 }, { name: 'Otros', value: 5 },
-  ];
+  // Usar datos demo para gráficos
+  const salesChartData = DEMO_CHART_DATA.salesChart;
+  const categoryChartData = DEMO_CHART_DATA.categoryChart;
 
   if (loading && !clientStats) {
     return <DataState variant="loading" skeletonVariant="list" skeletonProps={{ count: 8 }} />;

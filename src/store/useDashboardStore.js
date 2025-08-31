@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { clientService } from '../services/clientService';
+import { 
+  DEMO_CONFIG_DASHBOARD, 
+  getDemoDashboardData,
+  getDemoClientStats,
+  getDemoProductStats,
+  getDemoSalesStats
+} from '../config/demoData';
 // import { productService } from '../services/productService'; // A futuro
 // import { saleService } from '../services/saleService'; // A futuro
 
@@ -19,7 +26,33 @@ const useDashboardStore = create()(
       // Acción para cargar todos los datos del dashboard
       fetchDashboardData: async () => {
         set({ loading: true, error: null });
+        
         try {
+          // Si demo está habilitado, usar datos demo
+          if (DEMO_CONFIG_DASHBOARD.enabled && !DEMO_CONFIG_DASHBOARD.useRealAPI) {
+            console.log('📊 Dashboard: Loading demo data...');
+            
+            // Cargar datos demo de forma paralela
+            const [clientResult, productResult, salesResult] = await Promise.all([
+              getDemoClientStats(),
+              getDemoProductStats(), 
+              getDemoSalesStats()
+            ]);
+            
+            set({
+              clientStats: clientResult.data.client_statistics,
+              productStats: productResult.data.product_statistics,
+              salesStats: salesResult.data.sales_statistics,
+              loading: false
+            });
+            
+            console.log('✅ Dashboard: Demo data loaded successfully');
+            return;
+          }
+          
+          // Si demo está deshabilitado, usar API real
+          console.log('🌐 Dashboard: Loading data from API...');
+          
           // Cargar estadísticas de clientes
           const clientResult = await clientService.getStatistics();
           if (clientResult.success !== false) {
@@ -30,15 +63,33 @@ const useDashboardStore = create()(
           // const productResult = await productService.getStatistics();
           // const salesResult = await saleService.getStatistics();
 
-          // Datos de ejemplo por ahora
+          // Datos de ejemplo para API real (temporal)
           set({
             productStats: { total: 1253, lowStock: 4 },
             salesStats: { today: 147, total: 125430, trend: 12.5 },
           });
 
           set({ loading: false });
+          console.log('✅ Dashboard: API data loaded successfully');
+          
         } catch (error) {
-          set({ error: error.message, loading: false });
+          console.error('❌ Dashboard: Error loading data:', error.message);
+          
+          // Si falla la API y demo está habilitado como fallback
+          if (DEMO_CONFIG_DASHBOARD.enabled) {
+            console.log('🔄 Dashboard: Falling back to demo data...');
+            const demoData = await getDemoDashboardData();
+            set({
+              clientStats: demoData.data.clientStats,
+              productStats: demoData.data.productStats,
+              salesStats: demoData.data.salesStats,
+              loading: false,
+              error: null // Clear error since we have fallback data
+            });
+            console.log('✅ Dashboard: Demo fallback data loaded');
+          } else {
+            set({ error: error.message, loading: false });
+          }
         }
       },
     }),

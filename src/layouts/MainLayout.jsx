@@ -352,9 +352,9 @@ const MainLayout = ({ children }) => {
       //   theme, 
       //   htmlTheme: html.getAttribute('data-theme'), 
       //   bodyTheme: body.getAttribute('data-theme'),
-      //   isNeoBrutalist,
-      //   isMaterial,
-      //   isFluent
+      //   isNeoBrutalismValue,
+      //   isMaterialValue,
+      //   isFluentValue
       // });
       
       // Verificar que las variables CSS están disponibles
@@ -399,7 +399,7 @@ const MainLayout = ({ children }) => {
         default: return 'font-black uppercase tracking-wide';
       }
     }
-    if (isFluent) {
+    if (isFluentValue) {
       switch(size) {
         case 'title': return 'fluent-title';
         case 'body': return 'fluent-body';
@@ -407,7 +407,7 @@ const MainLayout = ({ children }) => {
         default: return 'fluent-body';
       }
     }
-    if (isMaterial) {
+    if (isMaterialValue) {
       switch(size) {
         case 'title': return 'material-headline-medium';
         case 'body': return 'material-body-medium';
@@ -419,15 +419,15 @@ const MainLayout = ({ children }) => {
   };
 
   const getCardClass = () => {
-    if (isNeoBrutalist) return 'border-4 border-foreground shadow-neo-brutal';
-    if (isFluent) return 'fluent-elevation-2 fluent-radius-medium';
-    if (isMaterial) return 'material-card-elevated';
+    if (isNeoBrutalismValue) return 'border-4 border-foreground shadow-neo-brutal';
+    if (isFluentValue) return 'fluent-elevation-2 fluent-radius-medium';
+    if (isMaterialValue) return 'material-card-elevated';
     return 'border border-border rounded-lg shadow-lg';
   };
 
   const getButtonClass = () => {
-    if (isFluent) return 'fluent-elevation-2 fluent-radius-small';
-    if (isMaterial) return 'material-button-elevated';
+    if (isFluentValue) return 'fluent-elevation-2 fluent-radius-small';
+    if (isMaterialValue) return 'material-button-elevated';
     return '';
   };
   // Configuración de navegación
@@ -520,14 +520,14 @@ const MainLayout = ({ children }) => {
         boxShadow: '4px 0px 0px 0px rgba(0,0,0,1)'
       };
     }
-    if (isFluent) {
+    if (isFluentValue) {
       return {
         backgroundColor: 'var(--fluent-surface-primary)', 
         borderRight: '1px solid var(--fluent-neutral-grey-30)',
         boxShadow: 'var(--fluent-elevation-4)'
       };
     }
-    if (isMaterial) {
+    if (isMaterialValue) {
       return {
         backgroundColor: 'var(--material-surface)', 
         borderRight: '1px solid var(--material-outline)',
@@ -598,25 +598,25 @@ const MainLayout = ({ children }) => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`erp-nav-item group flex items-center px-4 py-3 text-sm ${getTitleClass('body')} ${isNeoBrutalist ? '' : isFluent ? 'fluent-radius-small' : 'rounded-md'} transition-all duration-200`}
+                  className={`erp-nav-item group flex items-center px-4 py-3 text-sm ${getTitleClass('body')} ${isNeoBrutalismValue ? '' : isFluentValue ? 'fluent-radius-small' : 'rounded-md'} transition-all duration-200`}
                   style={navStyles}
                   data-component="nav-item" 
                   data-testid={`nav-item-${item.name.toLowerCase()}`}
                   data-active={active}
                   onMouseEnter={(e) => {
-                    if (!active && !isNeoBrutalist) {
+                    if (!active && !isNeoBrutalismValue) {
                       e.target.style.backgroundColor = 'var(--accent)';
                       e.target.style.color = 'var(--accent-foreground)';
-                    } else if (isNeoBrutalist) {
+                    } else if (isNeoBrutalismValue) {
                       e.target.style.boxShadow = '1px 1px 0px 0px rgba(0,0,0,1)';
                       e.target.style.transform = 'translate(1px, 1px)';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!active && !isNeoBrutalist) {
+                    if (!active && !isNeoBrutalismValue) {
                       e.target.style.backgroundColor = 'transparent';
                       e.target.style.color = 'var(--foreground)';
-                    } else if (isNeoBrutalist) {
+                    } else if (isNeoBrutalismValue) {
                       e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
                       e.target.style.transform = 'translate(0px, 0px)';
                     }
@@ -624,7 +624,7 @@ const MainLayout = ({ children }) => {
                 >
                   <Icon className="erp-nav-icon mr-3 h-5 w-5 flex-shrink-0" />
                   <span className="erp-nav-text flex-1">{item.name}</span>
-                  {isNeoBrutalist ? (
+                  {isNeoBrutalismValue ? (
                     <span className={`erp-nav-badge ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
                           style={{ 
                             backgroundColor: `var(--brutalist-${item.color})`,
@@ -663,7 +663,7 @@ const MainLayout = ({ children }) => {
               <Button variant={computedStyles.values.buttonVariant} size="sm" className="w-full">
                 <span className="mr-2">→</span>
                 Upgrade Now
-                {isNeoBrutalist && (
+                {isNeoBrutalismValue && (
                   <span className="ml-2 px-2 py-1 text-xs font-black border-2 border-black bg-yellow-400">
                     22
                   </span>
@@ -698,15 +698,15 @@ const MainLayout = ({ children }) => {
               {/* Logo */}
               <div className="flex items-center flex-shrink-0 px-6 py-6"
                    style={{ 
-                     borderBottom: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)'
+                     borderBottom: isNeoBrutalismValue ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)'
                    }}>
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 flex items-center justify-center rounded-md"
                        style={{ 
                          backgroundColor: 'var(--primary)', 
                          color: 'var(--primary-foreground)',
-                         border: isNeoBrutalist ? '2px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
-                         boxShadow: isNeoBrutalist ? '2px 2px 0px 0px rgba(0,0,0,1)' : 'none'
+                         border: isNeoBrutalismValue ? '2px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
+                         boxShadow: isNeoBrutalismValue ? '2px 2px 0px 0px rgba(0,0,0,1)' : 'none'
                        }}>
                     <LayoutDashboard className="h-6 w-6" />
                   </div>
@@ -720,7 +720,7 @@ const MainLayout = ({ children }) => {
               </div>
 
               {/* Navigation */}
-              <nav className={`mt-6 flex-1 px-4 ${isNeoBrutalist ? 'space-y-3' : 'space-y-2'}`}>
+              <nav className={`mt-6 flex-1 px-4 ${isNeoBrutalismValue ? 'space-y-3' : 'space-y-2'}`}>
                 {navigation.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
@@ -731,22 +731,22 @@ const MainLayout = ({ children }) => {
                       key={item.name}
                       to={item.href}
                       onClick={() => setSidebarOpen(false)}
-                      className={`group flex items-center px-4 py-3 text-sm ${computedStyles.css.mediumClass} ${isNeoBrutalist ? '' : 'rounded-md'} transition-all duration-200`}
+                      className={`group flex items-center px-4 py-3 text-sm ${computedStyles.css.mediumClass} ${isNeoBrutalismValue ? '' : 'rounded-md'} transition-all duration-200`}
                       style={navStyles}
                       onMouseEnter={(e) => {
-                        if (!active && !isNeoBrutalist) {
+                        if (!active && !isNeoBrutalismValue) {
                           e.target.style.backgroundColor = 'var(--accent)';
                           e.target.style.color = 'var(--accent-foreground)';
-                        } else if (isNeoBrutalist) {
+                        } else if (isNeoBrutalismValue) {
                           e.target.style.boxShadow = '1px 1px 0px 0px rgba(0,0,0,1)';
                           e.target.style.transform = 'translate(1px, 1px)';
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!active && !isNeoBrutalist) {
+                        if (!active && !isNeoBrutalismValue) {
                           e.target.style.backgroundColor = 'transparent';
                           e.target.style.color = 'var(--foreground)';
-                        } else if (isNeoBrutalist) {
+                        } else if (isNeoBrutalismValue) {
                           e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
                           e.target.style.transform = 'translate(0px, 0px)';
                         }
@@ -754,7 +754,7 @@ const MainLayout = ({ children }) => {
                     >
                       <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
                       <span className="flex-1">{item.name}</span>
-                      {isNeoBrutalist ? (
+                      {isNeoBrutalismValue ? (
                         <span className={`ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
                               style={{ 
                                 backgroundColor: `var(--brutalist-${item.color})`,
@@ -879,20 +879,20 @@ const MainLayout = ({ children }) => {
                   <div className={`absolute right-0 mt-2 w-72 z-50 ${computedStyles.css.cardRadius}`}
                        style={{ 
                          backgroundColor: 'var(--popover)', 
-                         border: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
-                         boxShadow: isNeoBrutalist ? '8px 8px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-lg)'
+                         border: isNeoBrutalismValue ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
+                         boxShadow: isNeoBrutalismValue ? '8px 8px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-lg)'
                        }}>
                     {/* User Info */}
                     <div className="p-4"
                          style={{ 
-                           borderBottom: isNeoBrutalist ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)'
+                           borderBottom: isNeoBrutalismValue ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)'
                          }}>
                       <div className="flex items-center space-x-3">
-                        <div className={`w-12 h-12 flex items-center justify-center ${isNeoBrutalist ? '' : 'rounded-full'}`}
+                        <div className={`w-12 h-12 flex items-center justify-center ${isNeoBrutalismValue ? '' : 'rounded-full'}`}
                              style={{ 
                                backgroundColor: 'var(--primary)', 
                                color: 'var(--primary-foreground)',
-                               border: isNeoBrutalist ? '4px solid var(--border)' : 'none'
+                               border: isNeoBrutalismValue ? '4px solid var(--border)' : 'none'
                              }}>
                           <User className="w-6 h-6" />
                         </div>
@@ -901,7 +901,7 @@ const MainLayout = ({ children }) => {
                              style={{ color: 'var(--foreground)' }}>
                             {user?.name || 'Usuario Demo'}
                           </p>
-                          <p className={`text-xs ${isNeoBrutalist ? 'font-bold' : ''}`}
+                          <p className={`text-xs ${isNeoBrutalismValue ? 'font-bold' : ''}`}
                              style={{ color: 'var(--muted-foreground)' }}>
                             {user?.email || user?.username || 'demo@erp.com'}
                           </p>
@@ -913,12 +913,12 @@ const MainLayout = ({ children }) => {
                     <div className="p-2">
                       <Link
                         to="/configuracion"
-                        className={`flex items-center w-full px-4 py-3 text-sm ${computedStyles.css.mediumClass} text-left transition-colors ${isNeoBrutalist ? '' : 'rounded-md'}`}
+                        className={`flex items-center w-full px-4 py-3 text-sm ${computedStyles.css.mediumClass} text-left transition-colors ${isNeoBrutalismValue ? '' : 'rounded-md'}`}
                         style={{ color: 'var(--foreground)' }}
                         onClick={() => setShowUserMenu(false)}
                         onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = isNeoBrutalist ? 'var(--muted)' : 'var(--accent)';
-                          e.target.style.color = isNeoBrutalist ? 'var(--foreground)' : 'var(--accent-foreground)';
+                          e.target.style.backgroundColor = isNeoBrutalismValue ? 'var(--muted)' : 'var(--accent)';
+                          e.target.style.color = isNeoBrutalismValue ? 'var(--foreground)' : 'var(--accent-foreground)';
                         }}
                         onMouseLeave={(e) => {
                           e.target.style.backgroundColor = 'transparent';
@@ -931,7 +931,7 @@ const MainLayout = ({ children }) => {
                       
                       <button
                         onClick={handleLogout}
-                        className={`flex items-center w-full px-4 py-3 text-sm ${computedStyles.css.mediumClass} text-left transition-colors ${isNeoBrutalist ? '' : 'rounded-md'}`}
+                        className={`flex items-center w-full px-4 py-3 text-sm ${computedStyles.css.mediumClass} text-left transition-colors ${isNeoBrutalismValue ? '' : 'rounded-md'}`}
                         style={{ color: 'var(--destructive)' }}
                         onMouseEnter={(e) => {
                           e.target.style.backgroundColor = 'var(--destructive)';

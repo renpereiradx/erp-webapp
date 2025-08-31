@@ -33,38 +33,55 @@ Responsable: Equipo Frontend
 - **Testing**: Vitest + Testing Library
 - **Telemetría**: `@/utils/telemetry` (sistema simple existente)
 - **i18n**: `@/lib/i18n` (sistema custom existente)
-- **Temas**: Zustand (`useThemeStore.js`)
+- **Temas**: React Context enterprise-grade (`ThemeContext.jsx` + `useThemeStyles.js`)
+- **Demo Data**: Sistema offline-first para desarrollo (`/config/demoData.js`)
 
-### 🎨 Sistema de Temas (Patrón Oficial)
-Para unificar toda la gestión de estado global, mejorar el rendimiento y evitar errores de hooks, el sistema de temas se maneja a través de un store dedicado de Zustand.
+### 🎨 Sistema de Temas (Patrón Oficial - Actualizado)
+El sistema de temas se maneja a través de React Context para simplicidad y compatibilidad con React 19.
 
 **Componentes Clave:**
-- **`useThemeStore.js`**: Un store de Zustand que es la única fuente de verdad para el tema. Maneja el estado, la persistencia en `localStorage` y la aplicación de la clase CSS al DOM.
+- **`ThemeContext.jsx`**: Context de React que es la única fuente de verdad para el tema. Maneja el estado, la persistencia en `localStorage` y la aplicación automática de clases CSS al DOM.
+- **`/config/themes.js`**: Configuración centralizada de todos los temas disponibles con validación robusta.
+- **`useThemeStyles.js`**: Hook optimizado para acceder a estilos específicos del tema actual.
 
 **Uso en Componentes:**
-1.  **Para leer o cambiar el tema**: Importar y usar el hook `useThemeStore`.
+1.  **Para leer o cambiar el tema**: Importar y usar el hook `useTheme`.
     ```jsx
-    import useThemeStore from '@/store/useThemeStore';
+    import { useTheme } from '@/contexts/ThemeContext';
     
     const ThemeSwitcher = () => {
-      // El selector asegura que el componente solo se re-renderice si el valor de `theme` cambia.
-      const theme = useThemeStore((state) => state.theme);
-      const setTheme = useThemeStore((state) => state.setTheme);
+      const { theme, setTheme, availableThemes } = useTheme();
 
       return (
         <select value={theme} onChange={(e) => setTheme(e.target.value)}>
-          {/* ...opciones de tema... */}
+          {availableThemes.map(t => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
         </select>
       );
     }
     ```
-2.  **Para estilos condicionales**: El hook `useThemeStyles` consume `useThemeStore` internamente, por lo que su uso desde los componentes no cambia.
+2.  **Para estilos específicos**: El hook `useThemeStyles` proporciona funciones optimizadas.
     ```jsx
-    const { styles, isNeoBrutalism } = useThemeStyles();
-    // <div className={styles.card()}>...</div>
+    import { useThemeStyles } from '@/hooks/useThemeStyles';
+    
+    const MyComponent = () => {
+      const { styles, isNeoBrutalism, isDark } = useThemeStyles();
+      
+      return (
+        <div className={styles.card()}>
+          <h2 className={styles.header('h2')}>Título</h2>
+          <button className={styles.button('primary')}>Acción</button>
+        </div>
+      );
+    }
     ```
 
-**Importante**: Al unificar el estado del tema en Zustand, se logra una arquitectura más consistente y predecible en toda la aplicación.
+**Importante**: 
+- **Inicialización automática**: El tema se aplica automáticamente al cargar la aplicación
+- **Validación robusta**: Los temas inválidos se detectan y se aplica un fallback seguro  
+- **Performance optimizada**: Los estilos se memorizan para evitar recálculos innecesarios
+- **TypeScript ready**: Soporte completo de tipos para mejor DX
 
 **⚠️ IMPORTANTE: Products usa patrón HARDENED, NO es MVP**
 
@@ -87,9 +104,11 @@ src/__tests__/
    <feature>.page.test.jsx     # Test página básica
 ```
 
-### 🔌 Integración API
+### 🔌 Integración API + Demo Data
+- [ ] **Demo Mode**: Configuración offline-first con `DEMO_CONFIG_<FEATURE>` en `/config/demoData.js`
 - [ ] **Fetch básico** con wrapper `_fetchWithRetry` (máx 2 reintentos + backoff simple)
 - [ ] **Manejo respuesta**: Admitir `{data}`, `{results}` o array directo
+- [ ] **Fallback automático**: Si API falla y demo habilitado, usar datos demo sin error
 - [ ] **Error simple**: Mensaje genérico + botón "Reintentar"
 - [ ] **Loading state**: Spinner o skeleton básico
 
@@ -266,11 +285,18 @@ const use<Feature>Store = create(
 export default use<Feature>Store;
 ```
 
-### 🌐 Servicio API MVP (BusinessManagementAPI)
+### 🌐 Servicio API MVP con Demo Data (BusinessManagementAPI)
 ```javascript
 // src/services/<feature>Service.js
 import { apiClient } from '@/services/api';
 import { telemetry } from '@/utils/telemetry';
+import { 
+  DEMO_CONFIG_<FEATURE>,
+  getDemo<Feature>s,
+  createDemo<Feature>,
+  updateDemo<Feature>,
+  deleteDemo<Feature>
+} from '@/config/demoData';
 
 const API_PREFIX = '/<feature>s'; // Ajustar según API
 
@@ -301,6 +327,16 @@ export const <feature>Service = {
     const startTime = Date.now();
     
     try {
+      // Si demo está habilitado, usar datos demo
+      if (DEMO_CONFIG_<FEATURE>.enabled && !DEMO_CONFIG_<FEATURE>.useRealAPI) {
+        console.log('🔄 <Feature>: Loading demo data...');
+        const result = await getDemo<Feature>s(params);
+        console.log('✅ <Feature>: Demo data loaded');
+        return result;
+      }
+      
+      // Si demo deshabilitado, usar API real
+      console.log('🌐 <Feature>: Loading from API...');
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(API_PREFIX, { params });
       });
@@ -311,6 +347,14 @@ export const <feature>Service = {
       
       return result;
     } catch (error) {
+      // Si falla API y demo está habilitado como fallback
+      if (DEMO_CONFIG_<FEATURE>.enabled) {
+        console.log('🔄 <Feature>: Falling back to demo data...');
+        const result = await getDemo<Feature>s(params);
+        console.log('✅ <Feature>: Demo fallback loaded');
+        return result;
+      }
+      
       telemetry.record('<feature>.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -391,7 +435,7 @@ export const <feature>Service = {
 };
 ```
 
-### 📄 Componente de Página MVP (Patrón Oficial)
+### 📄 Componente de Página MVP (Patrón Oficial - Con Temas)
 ```jsx
 // src/pages/<Feature>.jsx
 import React, { useState, useEffect } from 'react';
@@ -400,10 +444,12 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import DataState from '@/components/ui/DataState';
 import { useI18n } from '@/lib/i18n';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 import use<Feature>Store from '@/store/use<Feature>Store';
 
 const <Feature>Page = () => {
   const { t } = useI18n();
+  const { styles } = useThemeStyles();
   const {
     <feature>s,
     loading,
@@ -506,10 +552,10 @@ const <Feature>Page = () => {
     <div className="space-y-6">
       {/* Header con acción primaria */}
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-black uppercase tracking-wide">
+        <h1 className={styles.header('h1')}>
           {t('<feature>.title', '<Feature>s')}
         </h1>
-        <Button onClick={handleCreate} className="bg-lime-400 text-black font-bold">
+        <Button onClick={handleCreate} className={styles.button('primary')}>
           <Plus className="w-4 h-4 mr-2" />
           {t('<feature>.action.create', 'Nuevo')}
         </Button>
@@ -522,7 +568,7 @@ const <Feature>Page = () => {
           placeholder={t('<feature>.search.placeholder', 'Buscar...')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+          className={`pl-10 ${styles.input()}`}
         />
       </div>
       
@@ -531,7 +577,7 @@ const <Feature>Page = () => {
         {filteredItems.map(item => (
           <div 
             key={item.id} 
-            className="bg-card border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4"
+            className={styles.card('p-4')}
           >
             <div className="flex justify-between items-start">
               <div className="space-y-2">
@@ -570,8 +616,8 @@ const <Feature>Page = () => {
       {/* Modal Simple (inline para MVP) */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-black mb-4">
+          <div className={styles.container('max-w-md w-full mx-4')}>
+            <h2 className={styles.header('h2')}>
               {editingItem ? 
                 t('<feature>.modal.edit', 'EDITAR') : 
                 t('<feature>.modal.create', 'CREAR')
@@ -580,12 +626,13 @@ const <Feature>Page = () => {
             
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-sm font-bold mb-1">
+                <label className={styles.label()}>
                   {t('field.name', 'NOMBRE')}
                 </label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className={styles.input()}
                   required
                 />
               </div>
@@ -596,7 +643,7 @@ const <Feature>Page = () => {
                 <Button 
                   type="submit" 
                   disabled={loading}
-                  className="flex-1 bg-lime-400 text-black font-bold"
+                  className={`flex-1 ${styles.button('primary')}`}
                 >
                   {loading ? 
                     t('action.saving', 'Guardando...') : 
@@ -607,7 +654,7 @@ const <Feature>Page = () => {
                   type="button" 
                   variant="outline" 
                   onClick={() => setShowModal(false)}
-                  className="flex-1 border-2 border-black font-bold"
+                  className={`flex-1 ${styles.button('secondary')}`}
                 >
                   {t('action.cancel', 'Cancelar')}
                 </Button>
@@ -760,12 +807,15 @@ describe('<Feature>Page', () => {
 
 ## 📚 Recursos Rápidos
 
-1. **Stores MVP Existentes**: `src/store/useClientStore.js`, `src/store/useSupplierStore.js`
+1. **Stores MVP Existentes**: `src/store/useClientStore.js`, `src/store/useSupplierStore.js`, `src/store/useDashboardStore.js`
 2. **API Client**: `src/services/api.js` (BusinessManagementAPI)
 3. **UI Components**: `src/components/ui/` (shadcn/ui + customs)
 4. **DataState**: `src/components/ui/DataState.jsx`
 5. **i18n System**: `src/lib/i18n.js`
 6. **Telemetría**: `src/utils/telemetry.js`
+7. **Theme System**: `src/contexts/ThemeContext.jsx` + `src/hooks/useThemeStyles.js`
+8. **Demo Data**: `src/config/demoData.js` (offline-first development)
+9. **Theme Config**: `src/config/themes.js` (centralized theme definitions)
 
 ## 🎯 Criterios de Éxito MVP
 

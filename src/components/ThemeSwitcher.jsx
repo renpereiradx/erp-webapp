@@ -1,16 +1,13 @@
 /**
- * Selector de temas siguiendo patrón MVP oficial
- * Usando useThemeStore directamente según GUIA_MVP_DESARROLLO.md
+ * Selector de temas usando ThemeContext
+ * Actualizado para usar React Context en lugar de Zustand
  */
 
 import React from 'react';
-import useThemeStore from '@/store/useThemeStore';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export const ThemeSwitcher = () => {
-  // Usar el selector tal como indica la guía MVP
-  const theme = useThemeStore((state) => state.theme);
-  const setTheme = useThemeStore((state) => state.setTheme);
-  const isNeoBrutalism = useThemeStore((state) => state.isNeoBrutalism());
+  const { theme, setTheme, isNeoBrutalism } = useTheme();
 
   return (
     <div className="erp-theme-switcher p-4 bg-background text-foreground">

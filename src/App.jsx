@@ -10,12 +10,13 @@ import Dashboard from '@/pages/Dashboard';
 import Products from '@/pages/Products';
 import Clients from '@/pages/Clients';
 import Suppliers from '@/pages/Suppliers';
-import BookingSales from '@/pages/BookingSales';
-import Purchases from '@/pages/Purchases';
+// ISOLATED IMPORTS - Pages temporarily disabled for refactoring
+// import BookingSales from '@/pages/BookingSales';
+// import Purchases from '@/pages/Purchases';
 import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
-import ProductDetailTest from '@/components/ProductDetailTest';
-import ProductComparisonDebug from '@/components/ProductComparisonDebug';
+// import ProductDetailTest from '@/components/ProductDetailTest';
+// import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { apiClient } from '@/services/api';
@@ -44,12 +45,11 @@ const ProtectedRoute = ({ children }) => {
 // Componente interno que usa los hooks
 function AppContent() {
   const { isAuthenticated, loading, initializeAuth } = useAuth();
-  const { initializeTheme } = useTheme();
+  const { isInitialized } = useTheme(); // El tema se inicializa automáticamente
 
-  // Inicializar autenticación y tema al cargar la aplicación
+  // Inicializar autenticación al cargar la aplicación
   useEffect(() => {
     initializeAuth();
-    initializeTheme();
     
     const ensureAutoLogin = async () => {
       const token = localStorage.getItem('authToken');
@@ -63,7 +63,7 @@ function AppContent() {
     };
     
     ensureAutoLogin();
-  }, [initializeAuth, initializeTheme]);
+  }, [initializeAuth]);
 
   if (loading) {
     return (
@@ -95,7 +95,7 @@ function AppContent() {
                     <Route path="/clientes" element={<Clients />} />
                     <Route path="/proveedores" element={<Suppliers />} />
 
-                    {/* --- RUTAS EN DESARROLLO (AISLADAS TEMPORALMENTE) --- */}
+                    {/* --- RUTAS AISLADAS TEMPORALMENTE PARA REFACTORING --- */}
                     {/* <Route path="/compras" element={<Purchases />} /> */}
                     <Route path="/configuracion" element={<Settings />} />
                     {/* <Route path="/test-products" element={<ProductDetailTest />} /> */}
