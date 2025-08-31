@@ -21,12 +21,13 @@ const ProductsPage = () => {
   const { styles } = useThemeStyles();
   
   // State from Zustand store
-  const {
-    products, isLoading, error, lastErrorCode, lastErrorHint, totalProducts, currentPage, totalPages, pageSize,
-    lastSearchTerm, selectedIds, isOffline, 
-    searchProducts, loadPage, changePageSize, clearProducts, deleteProduct, toggleSelect, clearSelection, 
-    selectAllCurrent, bulkActivate, bulkDeactivate, optimisticUpdateProduct, hydrateFromStorage
-  } = useProductStore(state => ({ ...state })); // Subscribe to all changes
+  const products = useProductStore(state => state.products);
+  const isLoading = useProductStore(state => state.isLoading);
+  const error = useProductStore(state => state.error);
+  const lastSearchTerm = useProductStore(state => state.lastSearchTerm);
+  const isOffline = useProductStore(state => state.isOffline);
+  const searchProducts = useProductStore(state => state.searchProducts);
+  const hydrateFromStorage = useProductStore(state => state.hydrateFromStorage);
 
   // Local UI state
   const [showProductModal, setShowProductModal] = useState(false);
@@ -40,8 +41,12 @@ const ProductsPage = () => {
   const [inlineEditingId, setInlineEditingId] = useState(null);
 
   useEffect(() => {
-    hydrateFromStorage?.();
-  }, [hydrateFromStorage]);
+    if (typeof hydrateFromStorage === 'function') {
+      hydrateFromStorage();
+    }
+    // Solo al montar
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleApiSearch = (e) => {
     e.preventDefault();
