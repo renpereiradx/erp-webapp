@@ -126,6 +126,33 @@ const DICTIONARY = {
 
     'errors.code_label': 'Código: {code}',
     'errors.hint.label': 'Sugerencia',
+
+    // Modal translations
+    'modal.close': 'Cerrar modal',
+    'modal.loading': 'Cargando...',
+    'modal.cancel': 'Cancelar',
+    'modal.confirm': 'Confirmar',
+    'modal.processing': 'Procesando...',
+
+    // Client modals
+    'client.modal.edit_subtitle': 'Modifica la información del cliente',
+    'client.modal.create_subtitle': 'Ingresa los datos del nuevo cliente',
+
+    // Supplier modals  
+    'supplier.modal.edit_subtitle': 'Modifica los datos del proveedor',
+    'supplier.modal.create_subtitle': 'Registra un nuevo proveedor en el sistema',
+
+    // Reservation modals
+    'reservations.modal.edit_subtitle': 'Modifica los detalles de la reserva',
+    'reservations.modal.create_subtitle': 'Programa una nueva reserva de servicio',
+
+    // Delete confirmations
+    'client.delete.title': 'Eliminar Cliente',
+    'client.delete.message': 'Esta acción eliminará permanentemente al cliente "{name}" y no se puede deshacer.',
+    'client.delete.confirm': 'Eliminar Cliente',
+    'supplier.delete.title': 'Eliminar Proveedor',
+    'supplier.delete.message': 'Esta acción eliminará permanentemente al proveedor "{name}" y no se puede deshacer.',
+    'supplier.delete.confirm': 'Eliminar Proveedor',
   },
   en: {
     'products.title': 'Product Management',

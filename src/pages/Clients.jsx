@@ -3,6 +3,7 @@ import { Plus, Search } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import DataState from '../components/ui/DataState';
+import EnhancedModal, { ConfirmationModal } from '../components/ui/EnhancedModal';
 import ClientListItem from '../components/clients/ClientListItem';
 import ClientDetailModal from '../components/clients/ClientDetailModal';
 import ClientForm from '../components/clients/ClientForm';
@@ -18,7 +19,9 @@ const ClientsPage = () => {
   } = useClientStore();
   
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [deletingItem, setDeletingItem] = useState(null);
   const [viewingClient, setViewingClient] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', tax_id: '' });
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,9 +69,16 @@ const ClientsPage = () => {
     setShowEditModal(false);
   };
   
-  const handleDelete = async (item) => {
-    if (window.confirm(`¿Eliminar cliente ${item.name}?`)) {
-      deleteClient(item.id);
+  const handleDelete = (item) => {
+    setDeletingItem(item);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deletingItem) {
+      await deleteClient(deletingItem.id);
+      setShowDeleteModal(false);
+      setDeletingItem(null);
     }
   };
 
@@ -145,23 +155,43 @@ const ClientsPage = () => {
         <ClientDetailModal client={viewingClient} onClose={() => setViewingClient(null)} />
       )}
 
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className={`p-6 max-w-md w-full ${styles.card()}`}>
-            <h2 className={styles.header('h2')}>{editingItem ? t('client.modal.edit', 'Editar Cliente') : t('client.modal.create', 'Crear Cliente')}</h2>
-            <div className="mt-4">
-              <ClientForm 
-                formData={formData}
-                setFormData={setFormData}
-                handleSubmit={handleSave}
-                handleCancel={() => setShowEditModal(false)}
-                loading={loading}
-                isEditing={!!editingItem}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <EnhancedModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title={editingItem ? t('client.modal.edit', 'Editar Cliente') : t('client.modal.create', 'Crear Cliente')}
+        subtitle={editingItem ? 
+          t('client.modal.edit_subtitle', 'Modifica la información del cliente') : 
+          t('client.modal.create_subtitle', 'Ingresa los datos del nuevo cliente')
+        }
+        variant="default"
+        size="md"
+        loading={loading}
+        testId="client-modal"
+      >
+        <ClientForm 
+          formData={formData}
+          setFormData={setFormData}
+          handleSubmit={handleSave}
+          handleCancel={() => setShowEditModal(false)}
+          loading={loading}
+          isEditing={!!editingItem}
+        />
+      </EnhancedModal>
+
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        title={t('client.delete.title', 'Eliminar Cliente')}
+        message={deletingItem ? 
+          t('client.delete.message', 'Esta acción eliminará permanentemente al cliente "{name}" y no se puede deshacer.').replace('{name}', deletingItem.name) :
+          ''
+        }
+        confirmText={t('client.delete.confirm', 'Eliminar Cliente')}
+        cancelText={t('modal.cancel', 'Cancelar')}
+        variant="error"
+        loading={loading}
+      />
     </div>
   );
 };

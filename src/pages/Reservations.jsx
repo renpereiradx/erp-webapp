@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageHeader from '@/components/ui/PageHeader';
 import DataState from '@/components/ui/DataState';
+import EnhancedModal from '@/components/ui/EnhancedModal';
 import { useI18n } from '@/lib/i18n';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 
@@ -417,109 +418,127 @@ const Reservations = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Modal Simple (inline para MVP) */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className={styles.container('max-w-md w-full mx-4')}>
-            <Card className={styles.card()}>
-              <CardHeader>
-                <CardTitle className={styles.header('h3')}>
-                  {editingReservation ? 
-                    t('reservations.modal.edit', 'Editar Reserva') : 
-                    t('reservations.modal.create', 'Crear Reserva')
-                  }
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSaveReservation} className="space-y-4">
-                  <div>
-                    <label className={styles.label()}>
-                      {t('reservations.service', 'Servicio')}
-                    </label>
-                    <select
-                      value={formData.product_id}
-                      onChange={(e) => setFormData(prev => ({ ...prev, product_id: e.target.value }))}
-                      className={styles.input()}
-                      required
-                    >
-                      <option value="">Seleccionar...</option>
-                      {products
-                        .filter(product => product.type === 'service' || product.reservable)
-                        .map((product) => (
-                          <option key={product.id} value={product.id}>
-                            {product.name}
-                          </option>
-                        ))
-                      }
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className={styles.label()}>
-                      {t('reservations.client', 'Cliente')}
-                    </label>
-                    <select
-                      value={formData.client_id}
-                      onChange={(e) => setFormData(prev => ({ ...prev, client_id: e.target.value }))}
-                      className={styles.input()}
-                      required
-                    >
-                      <option value="">Seleccionar...</option>
-                      {clients.map((client) => (
-                        <option key={client.id} value={client.id}>
-                          {client.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className={styles.label()}>
-                      {t('reservations.duration', 'Duración (horas)')}
-                    </label>
-                    <Input
-                      type="number"
-                      min="1"
-                      max="8"
-                      value={formData.duration}
-                      onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
-                      className={styles.input()}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="flex gap-4 pt-4">
-                    <Button 
-                      type="submit" 
-                      disabled={loading}
-                      className={`flex-1 ${styles.button('primary')}`}
-                    >
-                      {loading ? 
-                        t('action.saving', 'Guardando...') : 
-                        (editingReservation ? t('action.update', 'Actualizar') : t('action.create', 'Crear'))
-                      }
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setShowModal(false)}
-                      className={`flex-1 ${styles.button('secondary')}`}
-                    >
-                      {t('action.cancel', 'Cancelar')}
-                    </Button>
-                  </div>
-                </form>
-                
-                {error && (
-                  <p className="text-red-600 text-sm mt-2 font-bold">
-                    {error}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+      {/* Modal Enriquecido para Reservas */}
+      <EnhancedModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingReservation ? 
+          t('reservations.modal.edit', 'Editar Reserva') : 
+          t('reservations.modal.create', 'Crear Reserva')
+        }
+        subtitle={editingReservation ? 
+          t('reservations.modal.edit_subtitle', 'Modifica los detalles de la reserva') : 
+          t('reservations.modal.create_subtitle', 'Programa una nueva reserva de servicio')
+        }
+        variant="default"
+        size="md"
+        loading={loading}
+        testId="reservation-modal"
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setShowModal(false)}
+              className={styles.button('secondary')}
+              disabled={loading}
+            >
+              {t('action.cancel', 'Cancelar')}
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={loading}
+              className={styles.button('primary')}
+              form="reservation-form"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                  {t('action.saving', 'Guardando...')}
+                </>
+              ) : (
+                editingReservation ? t('action.update', 'Actualizar') : t('action.create', 'Crear')
+              )}
+            </Button>
           </div>
-        </div>
-      )}
+        }
+      >
+        <form id="reservation-form" onSubmit={handleSaveReservation} className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label className={styles.label()}>
+                <Calendar className="w-4 h-4 inline mr-2" />
+                {t('reservations.service', 'Servicio')}
+              </label>
+              <select
+                value={formData.product_id}
+                onChange={(e) => setFormData(prev => ({ ...prev, product_id: e.target.value }))}
+                className={styles.input()}
+                required
+              >
+                <option value="">Seleccionar servicio...</option>
+                {products
+                  .filter(product => product.type === 'service' || product.reservable)
+                  .map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.name} {product.price && `- $${product.price}`}
+                    </option>
+                  ))
+                }
+              </select>
+            </div>
+
+            <div>
+              <label className={styles.label()}>
+                <User className="w-4 h-4 inline mr-2" />
+                {t('reservations.client', 'Cliente')}
+              </label>
+              <select
+                value={formData.client_id}
+                onChange={(e) => setFormData(prev => ({ ...prev, client_id: e.target.value }))}
+                className={styles.input()}
+                required
+              >
+                <option value="">Seleccionar cliente...</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={styles.label()}>
+                <Clock className="w-4 h-4 inline mr-2" />
+                {t('reservations.duration', 'Duración (horas)')}
+              </label>
+              <Input
+                type="number"
+                min="1"
+                max="8"
+                value={formData.duration}
+                onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
+                className={styles.input()}
+                placeholder="Ej: 2 horas"
+                required
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Entre 1 y 8 horas de duración
+              </p>
+            </div>
+          </div>
+          
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm font-medium flex items-center">
+                <XCircle className="w-4 h-4 mr-2" />
+                {error}
+              </p>
+            </div>
+          )}
+        </form>
+      </EnhancedModal>
     </div>
   );
 };

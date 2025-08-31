@@ -6,6 +6,7 @@ import { useThemeStyles } from '../hooks/useThemeStyles';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import DataState from '../components/ui/DataState';
+import EnhancedModal from '../components/ui/EnhancedModal';
 import SupplierListItem from '../components/suppliers/SupplierListItem';
 import SupplierForm from '../components/suppliers/SupplierForm';
 
@@ -134,23 +135,28 @@ const SuppliersPage = () => {
         </>
       )}
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className={`p-6 max-w-md w-full ${styles.card()}`}>
-            <h2 className={styles.header('h2')}>{editingItem ? t('supplier.modal.edit', 'Editar Proveedor') : t('supplier.modal.create', 'Crear Proveedor')}</h2>
-            <div className="mt-4">
-              <SupplierForm 
-                formData={formData}
-                setFormData={setFormData}
-                handleSubmit={handleSave}
-                handleCancel={() => setShowModal(false)}
-                loading={loading}
-                isEditing={!!editingItem}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <EnhancedModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingItem ? t('supplier.modal.edit', 'Editar Proveedor') : t('supplier.modal.create', 'Crear Proveedor')}
+        subtitle={editingItem ? 
+          t('supplier.modal.edit_subtitle', 'Modifica los datos del proveedor') : 
+          t('supplier.modal.create_subtitle', 'Registra un nuevo proveedor en el sistema')
+        }
+        variant="default"
+        size="md"
+        loading={loading}
+        testId="supplier-modal"
+      >
+        <SupplierForm 
+          formData={formData}
+          setFormData={setFormData}
+          handleSubmit={handleSave}
+          handleCancel={() => setShowModal(false)}
+          loading={loading}
+          isEditing={!!editingItem}
+        />
+      </EnhancedModal>
     </div>
   );
 };
