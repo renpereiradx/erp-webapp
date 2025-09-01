@@ -75,4 +75,27 @@ const Button = React.forwardRef(({ className, variant = 'primary', size = 'defau
 
 Button.displayName = 'Button';
 
+// Export de buttonVariants para compatibilidad con componentes que lo requieren
+export const buttonVariants = (variant = 'primary', size = 'default') => {
+  const base = 'inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium select-none disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-all';
+  
+  const variantClasses = {
+    primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
+    secondary: 'border border-border bg-transparent text-foreground hover:bg-accent/5',
+    destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+    outline: 'border border-border bg-transparent text-foreground hover:bg-accent/5',
+    ghost: 'bg-transparent text-foreground hover:bg-accent/5',
+    link: 'bg-transparent underline-offset-4 text-primary hover:underline'
+  };
+  
+  const sizeClasses = {
+    sm: 'h-8 px-3 text-xs rounded-md',
+    default: 'h-10 px-4 py-2 text-sm rounded-md',
+    lg: 'h-12 px-8 text-base rounded-md',
+    icon: 'h-10 w-10 p-0 rounded-md'
+  };
+  
+  return `${base} ${variantClasses[variant] || variantClasses.primary} ${sizeClasses[size] || sizeClasses.default}`;
+};
+
 export { Button };
