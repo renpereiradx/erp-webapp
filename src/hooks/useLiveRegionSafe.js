@@ -63,11 +63,16 @@ export const useLiveRegionSafe = (options = {}) => {
 
     // Telemetría opcional
     if (enableTelemetry) {
-      telemetry.track('accessibility.live_region.announce', {
-        message_length: message.length,
-        priority,
-        timestamp: announcement.timestamp
-      });
+      try {
+        telemetry.track('accessibility.live_region.announce', {
+          message_length: message.length,
+          priority,
+          timestamp: announcement.timestamp
+        });
+      } catch (error) {
+        // Silently handle telemetry errors in StrictMode
+        console.warn('Telemetry tracking failed:', error);
+      }
     }
 
     // Debug logging
@@ -176,19 +181,27 @@ export const useLiveRegionSafe = (options = {}) => {
   // Telemetría de uso
   useEffect(() => {
     if (enableTelemetry) {
-      telemetry.track('accessibility.live_region.mount', {
-        politeness,
-        atomic,
-        relevant,
-        debugMode
-      });
+      try {
+        telemetry.track('accessibility.live_region.mount', {
+          politeness,
+          atomic,
+          relevant,
+          debugMode
+        });
+      } catch (error) {
+        console.warn('Telemetry mount tracking failed:', error);
+      }
     }
 
     return () => {
       if (enableTelemetry) {
-        telemetry.track('accessibility.live_region.unmount', {
-          announcements_made: messageQueue.length
-        });
+        try {
+          telemetry.track('accessibility.live_region.unmount', {
+            announcements_made: messageQueue.length
+          });
+        } catch (error) {
+          console.warn('Telemetry unmount tracking failed:', error);
+        }
       }
     };
   }, []);

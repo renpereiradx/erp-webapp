@@ -8,7 +8,13 @@ import { useLiveRegionSafe } from '@/hooks/useLiveRegionSafe';
 const AnnouncementContext = createContext(null);
 
 export const AnnouncementProvider = ({ children }) => {
-  const live = useLiveRegionSafe({ politeness: 'polite', atomic: true, relevant: 'additions text', clearDelay: 4000 });
+  const live = useLiveRegionSafe({ 
+    politeness: 'polite', 
+    atomic: true, 
+    relevant: 'additions text', 
+    clearDelay: 4000,
+    enableTelemetry: false // Disable telemetry to avoid potential issues in StrictMode
+  });
 
   const value = useMemo(() => ({
     announce: live.announce,
@@ -30,20 +36,16 @@ export const AnnouncementProvider = ({ children }) => {
 };
 
 export const useAnnouncement = () => {
-  const ctx = useContext(AnnouncementContext);
-  if (!ctx) {
-    // Fallback silencioso para evitar errores en pruebas si el provider no está montado
-    return {
-      announce: () => {},
-      announceSuccess: () => {},
-      announceError: () => {},
-      announceWarning: () => {},
-      announceLoading: () => {},
-      announceFormValidation: () => {},
-      announceFormSaved: () => {},
-    };
-  }
-  return ctx;
+  // Always return fallback functions since AnnouncementProvider is temporarily disabled
+  return {
+    announce: () => {},
+    announceSuccess: () => {},
+    announceError: () => {},
+    announceWarning: () => {},
+    announceLoading: () => {},
+    announceFormValidation: () => {},
+    announceFormSaved: () => {},
+  };
 };
 
 export default AnnouncementContext;

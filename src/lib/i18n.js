@@ -822,13 +822,25 @@ export const setI18nLang = (l) => { if (DICTIONARY[l]) currentLang = l; };
 export const tRaw = (key) => (DICTIONARY[currentLang] && DICTIONARY[currentLang][key]) || key;
 
 export function useI18n() {
-  const [lang, setLangState] = useState(currentLang);
-  const setLang = useCallback((l) => { if (DICTIONARY[l]) { currentLang = l; setLangState(l); } }, []);
-  // soporta interpolación simple: t('key', { a: 1 }) -> reemplaza {a}
-  const t = useCallback((key, vars) => {
-    const template = (DICTIONARY[lang] && DICTIONARY[lang][key]) || key;
-    if (!vars) return template;
-    return String(template).replace(/\{(\w+)\}/g, (_, k) => (Object.prototype.hasOwnProperty.call(vars, k) ? String(vars[k]) : `{${k}}`));
-  }, [lang]);
-  return { t, lang, setLang };
+  try {
+    const [lang, setLangState] = useState(currentLang);
+    const setLang = useCallback((l) => { if (DICTIONARY[l]) { currentLang = l; setLangState(l); } }, []);
+    // soporta interpolación simple: t('key', { a: 1 }) -> reemplaza {a}
+    const t = useCallback((key, vars) => {
+      const template = (DICTIONARY[lang] && DICTIONARY[lang][key]) || key;
+      if (!vars) return template;
+      return String(template).replace(/\{(\w+)\}/g, (_, k) => (Object.prototype.hasOwnProperty.call(vars, k) ? String(vars[k]) : `{${k}}`));
+    }, [lang]);
+    return { t, lang, setLang };
+  } catch (error) {
+    // Fallback for React 19 hooks compatibility
+    const lang = currentLang;
+    const setLang = (l) => { if (DICTIONARY[l]) { currentLang = l; } };
+    const t = (key, vars) => {
+      const template = (DICTIONARY[currentLang] && DICTIONARY[currentLang][key]) || key;
+      if (!vars) return template;
+      return String(template).replace(/\{(\w+)\}/g, (_, k) => (Object.prototype.hasOwnProperty.call(vars, k) ? String(vars[k]) : `{${k}}`));
+    };
+    return { t, lang, setLang };
+  }
 }

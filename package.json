@@ -5,12 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:clean": "rm -rf node_modules/.vite && rm -rf node_modules/.cache && vite",
+    "dev:nuclear": "rm -rf node_modules/.vite && rm -rf node_modules/.cache && rm -rf dist && pnpm install --force && vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest --run",
     "test:ui": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "clean": "rm -rf node_modules/.vite && rm -rf node_modules/.cache && rm -rf dist",
+    "reset": "rm -rf node_modules && rm -rf pnpm-lock.yaml && pnpm install"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -89,7 +93,8 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "@tailwindcss/oxide",
-      "esbuild"
+      "esbuild",
+      "msw"
     ]
   }
 }

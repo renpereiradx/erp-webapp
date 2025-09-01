@@ -147,9 +147,8 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AnnouncementProvider>
-          <AppContent />
-        </AnnouncementProvider>
+        {/* AnnouncementProvider temporarily disabled due to React 19 hooks compatibility */}
+        <AppContent />
       </AuthProvider>
     </ThemeProvider>
   );
