@@ -1,10 +1,11 @@
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { screen, fireEvent, within } from '@testing-library/react';
+import { renderWithTheme } from '@/utils/themeTestUtils';
 import DataState from './DataState';
 
 describe('DataState component', () => {
   test('renders loading skeleton', () => {
-    render(<DataState variant="loading" testId="products-loading" />);
+  renderWithTheme(<DataState variant="loading" testId="products-loading" skeletonVariant="list" skeletonProps={{ count: 3 }} />);
     const container = screen.getByTestId('products-loading');
     expect(container).toBeInTheDocument();
     // ProductSkeletonGrid renders a list role
@@ -13,7 +14,7 @@ describe('DataState component', () => {
   });
 
   test('renders list variant skeleton', () => {
-    render(<DataState variant="loading" skeletonVariant="list" testId="list-loading" skeletonProps={{ count: 3 }} />);
+  renderWithTheme(<DataState variant="loading" skeletonVariant="list" testId="list-loading" skeletonProps={{ count: 3 }} />);
     const container = screen.getByTestId('list-loading');
     expect(container).toBeInTheDocument();
     const list = within(container).getByRole('list');
@@ -23,7 +24,7 @@ describe('DataState component', () => {
 
   test('renders empty state and calls action', () => {
     const onAction = vi.fn();
-    render(
+  renderWithTheme(
       <DataState
         variant="empty"
         title="No items"
@@ -43,7 +44,7 @@ describe('DataState component', () => {
 
   test('renders error state and retry calls onRetry', () => {
     const onRetry = vi.fn();
-    render(
+  renderWithTheme(
       <DataState
         variant="error"
         title="Error"

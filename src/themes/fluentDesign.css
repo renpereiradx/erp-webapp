@@ -141,11 +141,46 @@
   --fluent-curve-easy-ease: cubic-bezier(0.33, 0, 0.67, 1);
   --fluent-curve-linear: cubic-bezier(0, 0, 1, 1);
   
+  /* Component Context Tokens */
+  --fluent-button-primary-background: var(--fluent-brand-primary);
+  --fluent-button-primary-foreground: var(--fluent-text-on-accent);
+  --fluent-button-primary-hover: var(--fluent-brand-primary-hover);
+  --fluent-button-primary-pressed: var(--fluent-brand-primary-pressed);
+  --fluent-button-secondary-background: var(--fluent-surface-secondary);
+  --fluent-button-secondary-foreground: var(--fluent-text-primary);
+  --fluent-button-secondary-hover: var(--fluent-surface-tertiary);
+  --fluent-button-ghost-foreground: var(--fluent-text-secondary);
+  --fluent-button-ghost-hover: var(--fluent-surface-secondary);
+  
+  --fluent-card-background: var(--fluent-surface-card);
+  --fluent-card-foreground: var(--fluent-text-primary);
+  --fluent-card-hover: var(--fluent-surface-card-hover);
+  --fluent-card-pressed: var(--fluent-surface-card-pressed);
+  --fluent-card-border: var(--fluent-border-neutral);
+  --fluent-card-shadow: var(--fluent-shadow-2);
+  --fluent-card-shadow-hover: var(--fluent-shadow-4);
+  
+  --fluent-input-background: var(--fluent-surface-primary);
+  --fluent-input-foreground: var(--fluent-text-primary);
+  --fluent-input-border: var(--fluent-border-neutral);
+  --fluent-input-border-focus: var(--fluent-border-accent);
+  --fluent-input-placeholder: var(--fluent-text-tertiary);
+  
+  --fluent-menu-background: var(--fluent-surface-layer);
+  --fluent-menu-foreground: var(--fluent-text-primary);
+  --fluent-menu-item-hover: var(--fluent-surface-secondary);
+  --fluent-menu-separator: var(--fluent-border-neutral-variant);
+  
+  --fluent-dialog-background: var(--fluent-surface-layer);
+  --fluent-dialog-foreground: var(--fluent-text-primary);
+  --fluent-dialog-overlay: var(--fluent-background-overlay);
+  --fluent-dialog-shadow: var(--fluent-shadow-64);
+
   /* Legacy CSS Variables for compatibility */
   --background: var(--fluent-background-canvas);
   --foreground: var(--fluent-text-primary);
-  --card: var(--fluent-surface-card);
-  --card-foreground: var(--fluent-text-primary);
+  --card: var(--fluent-card-background);
+  --card-foreground: var(--fluent-card-foreground);
   --popover: var(--fluent-surface-layer);
   --popover-foreground: var(--fluent-text-primary);
   --primary: var(--fluent-brand-primary);
@@ -163,7 +198,7 @@
   --warning: var(--fluent-semantic-warning);
   --warning-foreground: var(--fluent-text-on-accent);
   --border: var(--fluent-border-neutral);
-  --input: var(--fluent-surface-primary);
+  --input: var(--fluent-input-background);
   --ring: var(--fluent-border-focus);
   --radius: var(--fluent-corner-radius-medium);
   
@@ -231,20 +266,20 @@
   --fluent-surface-tertiary: #323130;
   --fluent-surface-quaternary: #3B3A39;
   --fluent-surface-alt: #1B1A19;
-  --fluent-surface-card: #292827;
-  --fluent-surface-card-hover: #343332;
-  --fluent-surface-card-pressed: #3B3A39;
+  --fluent-surface-card: #343332;
+  --fluent-surface-card-hover: #3F3E3D;
+  --fluent-surface-card-pressed: #4A4948;
   
   /* Background Colors */
-  --fluent-background-canvas: #201F1E;
-  --fluent-background-application: #1B1A19;
+  --fluent-background-canvas: #1B1A19;
+  --fluent-background-application: #161514;
   --fluent-background-layer: #292827;
   --fluent-background-layer-alt: #323130;
   --fluent-background-overlay: rgba(32, 31, 30, 0.95);
   
   /* Border Colors */
-  --fluent-border-neutral: #3B3A39;
-  --fluent-border-neutral-variant: #484644;
+  --fluent-border-neutral: #484644;
+  --fluent-border-neutral-variant: #565554;
   --fluent-border-on-accent: rgba(0, 0, 0, 0.1);
   --fluent-border-accent: #2899F5;
   --fluent-border-focus: #C8C6C4;
@@ -315,11 +350,46 @@
   --fluent-curve-easy-ease: cubic-bezier(0.33, 0, 0.67, 1);
   --fluent-curve-linear: cubic-bezier(0, 0, 1, 1);
   
+  /* Component Context Tokens */
+  --fluent-button-primary-background: var(--fluent-brand-primary);
+  --fluent-button-primary-foreground: var(--fluent-text-on-accent);
+  --fluent-button-primary-hover: var(--fluent-brand-primary-hover);
+  --fluent-button-primary-pressed: var(--fluent-brand-primary-pressed);
+  --fluent-button-secondary-background: var(--fluent-surface-secondary);
+  --fluent-button-secondary-foreground: var(--fluent-text-primary);
+  --fluent-button-secondary-hover: var(--fluent-surface-tertiary);
+  --fluent-button-ghost-foreground: var(--fluent-text-secondary);
+  --fluent-button-ghost-hover: var(--fluent-surface-secondary);
+  
+  --fluent-card-background: var(--fluent-surface-card);
+  --fluent-card-foreground: var(--fluent-text-primary);
+  --fluent-card-hover: var(--fluent-surface-card-hover);
+  --fluent-card-pressed: var(--fluent-surface-card-pressed);
+  --fluent-card-border: var(--fluent-border-neutral);
+  --fluent-card-shadow: var(--fluent-shadow-2);
+  --fluent-card-shadow-hover: var(--fluent-shadow-4);
+  
+  --fluent-input-background: var(--fluent-surface-card);
+  --fluent-input-foreground: var(--fluent-text-primary);
+  --fluent-input-border: var(--fluent-border-neutral);
+  --fluent-input-border-focus: var(--fluent-border-accent);
+  --fluent-input-placeholder: var(--fluent-text-tertiary);
+  
+  --fluent-menu-background: var(--fluent-surface-layer);
+  --fluent-menu-foreground: var(--fluent-text-primary);
+  --fluent-menu-item-hover: var(--fluent-surface-secondary);
+  --fluent-menu-separator: var(--fluent-border-neutral-variant);
+  
+  --fluent-dialog-background: var(--fluent-surface-layer);
+  --fluent-dialog-foreground: var(--fluent-text-primary);
+  --fluent-dialog-overlay: var(--fluent-background-overlay);
+  --fluent-dialog-shadow: var(--fluent-shadow-64);
+
   /* Legacy CSS Variables for compatibility */
   --background: var(--fluent-background-canvas);
   --foreground: var(--fluent-text-primary);
-  --card: var(--fluent-surface-card);
-  --card-foreground: var(--fluent-text-primary);
+  --card: var(--fluent-card-background);
+  --card-foreground: var(--fluent-card-foreground);
   --popover: var(--fluent-surface-layer);
   --popover-foreground: var(--fluent-text-primary);
   --primary: var(--fluent-brand-primary);
@@ -337,7 +407,7 @@
   --warning: var(--fluent-semantic-warning);
   --warning-foreground: var(--fluent-text-on-accent);
   --border: var(--fluent-border-neutral);
-  --input: var(--fluent-surface-card);
+  --input: var(--fluent-input-background);
   --ring: var(--fluent-border-focus);
   --radius: var(--fluent-corner-radius-medium);
   
@@ -429,6 +499,39 @@
   letter-spacing: 0em;
 }
 
+.fluent-caption2 {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 400;
+  font-size: 0.625rem; /* 10px */
+  line-height: 0.875rem; /* 14px */
+  letter-spacing: 0em;
+}
+
+.fluent-caption2-strong {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 600;
+  font-size: 0.625rem; /* 10px */
+  line-height: 0.875rem; /* 14px */
+  letter-spacing: 0em;
+}
+
+/* Platform-specific Typography */
+.fluent-typography-windows {
+  font-family: 'Segoe UI Variable', 'Segoe UI', sans-serif;
+}
+
+.fluent-typography-macos {
+  font-family: 'SF Pro Display', 'San Francisco Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.fluent-typography-ios {
+  font-family: 'SF Pro Display', 'San Francisco Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.fluent-typography-android {
+  font-family: 'Roboto', sans-serif;
+}
+
 /* Fluent 2 Component Base Styles */
 .fluent-component {
   font-family: 'Segoe UI', sans-serif;
@@ -478,10 +581,276 @@
 .fluent-spacing-320 { gap: var(--fluent-size-320); }
 .fluent-spacing-480 { gap: var(--fluent-size-480); }
 
+/* Fluent 2 High Contrast Theme */
+[data-theme='fluent-high-contrast'] {
+  /* High Contrast Colors */
+  --fluent-brand-primary: #FFFF00;
+  --fluent-brand-primary-hover: #FFFF66;
+  --fluent-brand-primary-pressed: #CCCC00;
+  
+  /* Neutral Colors - High Contrast */
+  --fluent-neutral-white: #FFFFFF;
+  --fluent-neutral-black: #000000;
+  --fluent-text-primary: #FFFFFF;
+  --fluent-text-secondary: #FFFFFF;
+  --fluent-text-tertiary: #FFFF00;
+  --fluent-text-disabled: #808080;
+  --fluent-text-accent: #FFFF00;
+  --fluent-text-on-accent: #000000;
+  
+  /* Surface Colors - High Contrast */
+  --fluent-surface-primary: #000000;
+  --fluent-surface-secondary: #000000;
+  --fluent-surface-tertiary: #1A1A1A;
+  --fluent-surface-card: #000000;
+  --fluent-surface-card-hover: #1A1A1A;
+  --fluent-surface-card-pressed: #333333;
+  
+  /* Background Colors - High Contrast */
+  --fluent-background-canvas: #000000;
+  --fluent-background-application: #000000;
+  --fluent-background-layer: #000000;
+  --fluent-background-overlay: rgba(0, 0, 0, 0.98);
+  
+  /* Border Colors - High Contrast */
+  --fluent-border-neutral: #FFFFFF;
+  --fluent-border-neutral-variant: #FFFF00;
+  --fluent-border-accent: #FFFF00;
+  --fluent-border-focus: #FFFF00;
+  
+  /* Semantic Colors - High Contrast */
+  --fluent-semantic-success: #00FF00;
+  --fluent-semantic-warning: #FFFF00;
+  --fluent-semantic-danger: #FF0000;
+  --fluent-semantic-info: #00FFFF;
+  
+  /* Component Context Tokens */
+  --fluent-button-primary-background: #FFFF00;
+  --fluent-button-primary-foreground: #000000;
+  --fluent-button-primary-hover: #FFFF66;
+  --fluent-button-secondary-background: #000000;
+  --fluent-button-secondary-foreground: #FFFFFF;
+  --fluent-button-secondary-hover: #1A1A1A;
+  --fluent-button-ghost-foreground: #FFFFFF;
+  --fluent-button-ghost-hover: #1A1A1A;
+  
+  --fluent-card-background: #000000;
+  --fluent-card-foreground: #FFFFFF;
+  --fluent-card-border: #FFFFFF;
+  --fluent-card-shadow: none; /* No shadows in high contrast */
+  
+  --fluent-input-background: #000000;
+  --fluent-input-foreground: #FFFFFF;
+  --fluent-input-border: #FFFFFF;
+  --fluent-input-border-focus: #FFFF00;
+  --fluent-input-placeholder: #808080;
+  
+  /* Legacy Variables */
+  --background: var(--fluent-background-canvas);
+  --foreground: var(--fluent-text-primary);
+  --card: var(--fluent-card-background);
+  --card-foreground: var(--fluent-card-foreground);
+  --primary: var(--fluent-brand-primary);
+  --primary-foreground: var(--fluent-text-on-accent);
+  --secondary: var(--fluent-surface-secondary);
+  --secondary-foreground: var(--fluent-text-primary);
+  --destructive: var(--fluent-semantic-danger);
+  --destructive-foreground: var(--fluent-text-primary);
+  --border: var(--fluent-border-neutral);
+  --input: var(--fluent-input-background);
+  --ring: var(--fluent-border-focus);
+}
+
 /* Apply Fluent font to body when theme is active */
 [data-theme='fluent-light'] body,
-[data-theme='fluent-dark'] body {
+[data-theme='fluent-dark'] body,
+[data-theme='fluent-high-contrast'] body {
   font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* Fluent 2 Component Classes */
+.fluent-button {
+  font-family: 'Segoe UI', sans-serif;
+  font-weight: 600;
+  border-radius: var(--fluent-corner-radius-medium);
+  padding: var(--fluent-size-80) var(--fluent-size-160);
+  min-height: var(--fluent-control-height-medium);
+  transition: all var(--fluent-duration-fast) var(--fluent-curve-easy-ease);
+  cursor: pointer;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fluent-size-80);
+}
+
+.fluent-button-primary {
+  background-color: var(--fluent-button-primary-background);
+  color: var(--fluent-button-primary-foreground);
+  box-shadow: var(--fluent-shadow-2);
+}
+
+.fluent-button-primary:hover {
+  background-color: var(--fluent-button-primary-hover);
+  box-shadow: var(--fluent-shadow-4);
+}
+
+.fluent-button-primary:active {
+  background-color: var(--fluent-button-primary-pressed);
+  box-shadow: var(--fluent-shadow-2);
+  transform: scale(0.98);
+}
+
+/* Destructive (usa clases compuestas pero definimos helper opcional) */
+.fluent-button-destructive {
+  background-color: var(--fluent-semantic-danger);
+  color: var(--fluent-text-on-accent);
+  box-shadow: var(--fluent-shadow-2);
+}
+.fluent-button-destructive:hover {
+  background-color: color-mix(in srgb, var(--fluent-semantic-danger) 90%, black 10%);
+  box-shadow: var(--fluent-shadow-4);
+}
+.fluent-button-destructive:active {
+  background-color: color-mix(in srgb, var(--fluent-semantic-danger) 80%, black 20%);
+  box-shadow: var(--fluent-shadow-2);
+  transform: scale(0.98);
+}
+
+.fluent-button-secondary {
+  background-color: var(--fluent-button-secondary-background);
+  color: var(--fluent-button-secondary-foreground);
+  border-color: var(--fluent-border-neutral);
+}
+
+.fluent-button-secondary:hover {
+  background-color: var(--fluent-button-secondary-hover);
+}
+
+.fluent-button-ghost {
+  background-color: transparent;
+  color: var(--fluent-button-ghost-foreground);
+}
+
+.fluent-button-ghost:hover {
+  background-color: var(--fluent-button-ghost-hover);
+}
+
+/* Outline variant */
+.fluent-button-outline {
+  background-color: transparent;
+  color: var(--fluent-text-primary);
+  border-color: var(--fluent-border-accent);
+}
+.fluent-button-outline:hover {
+  background-color: var(--fluent-surface-secondary);
+}
+.fluent-button-outline:active {
+  background-color: var(--fluent-surface-tertiary);
+  transform: scale(0.98);
+}
+
+/* Accessible focus ring unified */
+.fluent-button:focus-visible {
+  outline: 2px solid var(--fluent-border-focus);
+  outline-offset: 2px;
+}
+
+.fluent-card {
+  background-color: var(--fluent-card-background);
+  color: var(--fluent-card-foreground);
+  border: 1px solid var(--fluent-card-border);
+  border-radius: var(--fluent-corner-radius-large);
+  box-shadow: var(--fluent-card-shadow);
+  transition: all var(--fluent-duration-fast) var(--fluent-curve-easy-ease);
+  padding: var(--fluent-size-160);
+}
+
+.fluent-card:hover {
+  background-color: var(--fluent-card-hover);
+  box-shadow: var(--fluent-card-shadow-hover);
+}
+
+.fluent-card:active {
+  background-color: var(--fluent-card-pressed);
+  transform: scale(0.99);
+}
+
+.fluent-input {
+  background-color: var(--fluent-input-background);
+  color: var(--fluent-input-foreground);
+  border: 1px solid var(--fluent-input-border);
+  border-radius: var(--fluent-corner-radius-medium);
+  padding: var(--fluent-size-80) var(--fluent-size-120);
+  min-height: var(--fluent-control-height-medium);
+  transition: all var(--fluent-duration-fast) var(--fluent-curve-easy-ease);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.fluent-input:focus {
+  border-color: var(--fluent-input-border-focus);
+  outline: 2px solid var(--fluent-input-border-focus);
+  outline-offset: -1px;
+}
+
+.fluent-input::placeholder {
+  color: var(--fluent-input-placeholder);
+}
+
+/* Fluent Input Variants */
+.fluent-input-subtle { background: var(--fluent-surface-secondary); border-color: var(--fluent-border-neutral-variant); }
+.fluent-input-subtle:focus { border-color: var(--fluent-input-border-focus); outline: 2px solid var(--fluent-input-border-focus); }
+
+.fluent-input-strong { background: var(--fluent-surface-card); border-color: var(--fluent-border-neutral); box-shadow: var(--fluent-shadow-2) inset; }
+.fluent-input-strong:focus { box-shadow: var(--fluent-shadow-4) inset; }
+
+.fluent-input-filled { background: var(--fluent-surface-tertiary); border-color: var(--fluent-border-neutral-variant); }
+.fluent-input-filled:hover { background: color-mix(in srgb, var(--fluent-surface-tertiary) 90%, var(--fluent-brand-primary) 10%); }
+
+/* Semantic states */
+.fluent-input-error { border-color: var(--fluent-semantic-danger); }
+.fluent-input-error:focus { outline-color: var(--fluent-semantic-danger); }
+.fluent-input-success { border-color: var(--fluent-semantic-success); }
+.fluent-input-success:focus { outline-color: var(--fluent-semantic-success); }
+.fluent-input-warning { border-color: var(--fluent-semantic-warning); }
+.fluent-input-warning:focus { outline-color: var(--fluent-semantic-warning); }
+.fluent-input-info { border-color: var(--fluent-brand-primary); }
+.fluent-input-info:focus { outline-color: var(--fluent-brand-primary); }
+
+/* Densities */
+.fluent-input-density-compact { min-height: var(--fluent-control-height-small); padding: var(--fluent-size-40) var(--fluent-size-80); }
+.fluent-input-density-comfy { /* default */ }
+.fluent-input-density-spacious { min-height: var(--fluent-control-height-large); padding: var(--fluent-size-120) var(--fluent-size-160); }
+
+/* Icon adornments */
+.fluent-input-with-icon-left { padding-left: calc(var(--fluent-size-160) + 28px); }
+.fluent-input-with-icon-right { padding-right: calc(var(--fluent-size-160) + 28px); }
+
+.fluent-menu {
+  background-color: var(--fluent-menu-background);
+  color: var(--fluent-menu-foreground);
+  border: 1px solid var(--fluent-border-neutral);
+  border-radius: var(--fluent-corner-radius-large);
+  box-shadow: var(--fluent-shadow-16);
+  padding: var(--fluent-size-80);
+  min-width: 200px;
+}
+
+.fluent-menu-item {
+  padding: var(--fluent-size-80) var(--fluent-size-120);
+  border-radius: var(--fluent-corner-radius-medium);
+  cursor: pointer;
+  transition: all var(--fluent-duration-fast) var(--fluent-curve-easy-ease);
+}
+
+.fluent-menu-item:hover {
+  background-color: var(--fluent-menu-item-hover);
+}
+
+.fluent-menu-separator {
+  height: 1px;
+  background-color: var(--fluent-menu-separator);
+  margin: var(--fluent-size-40) 0;
 }
 
 /* Interactive States */
@@ -491,16 +860,22 @@
 }
 
 .fluent-interactive:hover {
-  filter: brightness(1.05);
+  filter: brightness(1.02);
 }
 
 .fluent-interactive:active {
-  filter: brightness(0.95);
-  transform: scale(0.98);
+  filter: brightness(0.98);
+  transform: scale(0.99);
 }
 
 .fluent-interactive:focus-visible {
   outline: 2px solid var(--fluent-stroke-focus-outer);
+  outline-offset: 2px;
+}
+
+/* Focus Management for High Contrast */
+[data-theme='fluent-high-contrast'] .fluent-interactive:focus-visible {
+  outline: 3px solid var(--fluent-border-focus);
   outline-offset: 2px;
 }
 
@@ -543,3 +918,59 @@
     transform: scale(1);
   }
 }
+
+/* ======================= */
+/* Fluent Card Variants    */
+/* ======================= */
+
+/* Elevated: stronger shadow */
+.fluent-card-elevated {
+  background: var(--fluent-surface-card);
+  box-shadow: var(--fluent-shadow-4);
+  transition: box-shadow var(--fluent-duration-fast) var(--fluent-curve-easy-ease), background-color var(--fluent-duration-fast) var(--fluent-curve-easy-ease);
+}
+.fluent-card-elevated:hover { box-shadow: var(--fluent-shadow-8); }
+
+/* Subdued: lighter surface */
+.fluent-card-subdued {
+  background: var(--fluent-surface-secondary);
+  border: 1px solid var(--fluent-border-neutral-variant);
+}
+
+/* Outline soft / strong */
+.fluent-card-outline-soft {
+  background: var(--fluent-surface-card);
+  border: 1px solid color-mix(in srgb, var(--fluent-border-neutral) 60%, transparent);
+  box-shadow: none;
+}
+.fluent-card-outline-strong {
+  background: var(--fluent-surface-card);
+  border: 1px solid var(--fluent-border-neutral);
+  box-shadow: var(--fluent-shadow-2);
+}
+
+/* Accent left bar */
+.fluent-card-accent-left { position: relative; }
+.fluent-card-accent-left::before {
+  content: '';
+  position: absolute; inset: 0 auto 0 0; width: 4px;
+  background: linear-gradient(var(--fluent-brand-primary), color-mix(in srgb, var(--fluent-brand-primary) 60%, var(--fluent-surface-secondary)));
+  border-top-left-radius: inherit; border-bottom-left-radius: inherit;
+}
+
+/* Semantic variants */
+.fluent-card-success { background: color-mix(in srgb, var(--fluent-semantic-success) 12%, var(--fluent-surface-card)); border: 1px solid color-mix(in srgb, var(--fluent-semantic-success) 45%, transparent); }
+.fluent-card-warning { background: color-mix(in srgb, var(--fluent-semantic-warning) 15%, var(--fluent-surface-card)); border: 1px solid color-mix(in srgb, var(--fluent-semantic-warning) 40%, transparent); }
+.fluent-card-error { background: color-mix(in srgb, var(--fluent-semantic-danger) 18%, var(--fluent-surface-card)); border: 1px solid color-mix(in srgb, var(--fluent-semantic-danger) 45%, transparent); }
+.fluent-card-info { background: color-mix(in srgb, var(--fluent-brand-primary) 12%, var(--fluent-surface-card)); border: 1px solid color-mix(in srgb, var(--fluent-brand-primary) 40%, transparent); }
+
+/* Interactive layer (focus ring reused) */
+.fluent-card-interactive { position: relative; cursor: pointer; transition: background-color var(--fluent-duration-fast) var(--fluent-curve-easy-ease), box-shadow var(--fluent-duration-fast) var(--fluent-curve-easy-ease); }
+.fluent-card-interactive:hover { background: var(--fluent-card-hover); }
+.fluent-card-interactive:active { background: var(--fluent-card-pressed); }
+.fluent-card-interactive:focus-visible { outline: 2px solid var(--fluent-border-focus); outline-offset: 2px; }
+
+/* Densities */
+.fluent-card-density-compact { padding: var(--fluent-size-80); }
+.fluent-card-density-comfy { padding: var(--fluent-size-120); }
+.fluent-card-density-spacious { padding: var(--fluent-size-160); }

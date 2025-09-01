@@ -1,8 +1,9 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, waitFor, cleanup } from '@testing-library/react';
+import { waitFor, cleanup } from '@testing-library/react';
+import { renderWithTheme } from '../../utils/themeTestUtils.jsx';
 
-vi.mock('@/hooks/useToast', () => {
+vi.mock('../../hooks/useToast', () => {
   const errorFrom = vi.fn();
   const success = vi.fn();
   return {
@@ -17,7 +18,7 @@ vi.mock('@/hooks/useToast', () => {
 });
 
 const recordSpy = vi.fn();
-vi.mock('@/utils/telemetry', () => ({
+vi.mock('../../utils/telemetry', () => ({
   telemetry: {
     record: (...args) => recordSpy(...args),
     startTimer: vi.fn(() => ({ id: 't' })),
@@ -25,31 +26,35 @@ vi.mock('@/utils/telemetry', () => ({
   },
 }));
 
-vi.mock('@/store/useClientStore', () => ({
+const mockStoreImpl = vi.fn();
+vi.mock('../../store/useClientStore', () => ({
   __esModule: true,
-  default: () => ({
-    searchClients: vi.fn(),
-    clearClients: vi.fn(),
-    clients: [],
-    loading: false,
-    error: 'Fallo controlado',
-    clearError: vi.fn(),
-    totalPages: 0,
-    currentPage: 1,
-    loadPage: vi.fn(),
-    totalClients: 0,
-    lastSearchTerm: '',
-    pageSize: 10,
-    changePageSize: vi.fn(),
-    deleteClient: vi.fn(),
-  }),
+  default: () => mockStoreImpl(),
 }));
 
-import ClientsPage from '@/pages/Clients.jsx';
+import ClientsPage from '../Clients.jsx';
 
 describe('ClientsPage toasts y telemetría', () => {
   it('emite toast de error y telemetría cuando el store expone error', async () => {
-    const { unmount } = render(<ClientsPage />);
+    mockStoreImpl.mockReturnValue({
+      searchClients: vi.fn(),
+      clearClients: vi.fn(),
+      clients: [],
+      loading: false,
+      error: 'Fallo controlado',
+      clearError: vi.fn(),
+      totalPages: 0,
+      currentPage: 1,
+      loadPage: vi.fn(),
+      totalClients: 0,
+      lastSearchTerm: '',
+      pageSize: 10,
+      changePageSize: vi.fn(),
+      deleteClient: vi.fn(),
+      fetchClients: vi.fn(),
+    });
+
+    const { unmount } = renderWithTheme(<ClientsPage />);
 
     await waitFor(() => {
       // telemetry.record debe ser llamado con el evento de error del store

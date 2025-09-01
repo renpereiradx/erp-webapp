@@ -265,17 +265,18 @@ const Reservations = () => {
                       </label>
                       <div className="grid grid-cols-2 gap-2 mt-2">
                         {timeSlots.map(time => (
-                          <button
+                          <Button
                             key={time}
                             onClick={() => setSelectedTime(time)}
                             className={`p-2 text-xs font-bold border-2 transition-all ${
                               selectedTime === time
-                                ? `${styles.button('primary')} shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]`
-                                : `${styles.button('secondary')} hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]`
+                                ? 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                                : 'hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]'
                             }`}
+                            variant={selectedTime === time ? 'primary' : 'secondary'}
                           >
                             {time}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -285,7 +286,8 @@ const Reservations = () => {
                   {selectedProduct && selectedClient && selectedTime && (
                     <Button
                       onClick={handleCreateReservation}
-                      className={`w-full ${styles.button('primary')}`}
+                      className="w-full"
+                      variant="primary"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       {t('reservations.create', 'Crear Reserva')}
@@ -330,7 +332,7 @@ const Reservations = () => {
                 className={`pl-10 ${styles.input()}`}
               />
             </div>
-            <Button onClick={() => setActiveTab('calendar')} className={styles.button('primary')}>
+            <Button onClick={() => setActiveTab('calendar')} variant="primary">
               <Plus className="w-4 h-4 mr-2" />
               {t('reservations.new_reservation', 'Nueva Reserva')}
             </Button>
@@ -438,9 +440,8 @@ const Reservations = () => {
           <div className="flex gap-3 justify-end">
             <Button 
               type="button" 
-              variant="outline" 
+              variant="secondary"
               onClick={() => setShowModal(false)}
-              className={styles.button('secondary')}
               disabled={loading}
             >
               {t('action.cancel', 'Cancelar')}
@@ -448,7 +449,7 @@ const Reservations = () => {
             <Button 
               type="submit" 
               disabled={loading}
-              className={styles.button('primary')}
+              variant="primary"
               form="reservation-form"
             >
               {loading ? (

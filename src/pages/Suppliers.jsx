@@ -78,7 +78,7 @@ const SuppliersPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className={styles.header('h1')}>{t('supplier.title', 'Proveedores')}</h1>
-        <Button onClick={handleCreate} className={styles.button('primary')}><Plus className="w-4 h-4 mr-2" />{t('supplier.action.create', 'Nuevo Proveedor')}</Button>
+        <Button onClick={handleCreate} variant="primary"><Plus className="w-4 h-4 mr-2" />{t('supplier.action.create', 'Nuevo Proveedor')}</Button>
       </div>
 
       {/* Búsqueda */}

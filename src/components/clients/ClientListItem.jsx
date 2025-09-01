@@ -6,13 +6,14 @@ import { useThemeStyles } from '../../hooks/useThemeStyles';
 const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
   const { styles, isNeoBrutalism } = useThemeStyles();
   
-  // Obtener prioridad con color
+  // Obtener prioridad con color usando sistema de temas
   const getPriorityColor = (priority) => {
+    const baseClasses = isNeoBrutalism ? 'border-2 border-black' : 'border';
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'high': return `bg-destructive/10 text-destructive ${baseClasses}`;
+      case 'medium': return `bg-yellow-500/10 text-yellow-700 ${baseClasses}`;
+      case 'low': return `bg-green-500/10 text-green-700 ${baseClasses}`;
+      default: return `bg-muted text-muted-foreground ${baseClasses}`;
     }
   };
 
@@ -39,7 +40,7 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
               {client.name}
             </h3>
             {client.metadata?.priority && (
-              <span className={`px-2 py-1 text-xs font-bold rounded-md border ${getPriorityColor(client.metadata.priority)} ${isNeoBrutalism ? 'border-2 border-black' : ''}`}>
+              <span className={`px-2 py-1 text-xs font-bold rounded-md ${getPriorityColor(client.metadata.priority)}`}>
                 {client.metadata.priority.toUpperCase()}
               </span>
             )}
@@ -70,13 +71,13 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
           {/* Información adicional */}
           <div className="flex flex-wrap gap-2 items-center">
             {client.tax_id && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-muted/50 rounded text-xs">
+              <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${styles.badge('secondary')}`}>
                 <FileText className="w-3 h-3" />
                 <span className="font-mono">{client.tax_id}</span>
               </div>
             )}
             {client.metadata?.type && (
-              <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded text-xs font-semibold">
+              <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold ${styles.badge('primary')}`}>
                 {getClientTypeIcon(client.metadata.type)}
                 <span>{client.metadata.type}</span>
               </div>
@@ -85,8 +86,8 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
 
           {/* Notas si existen */}
           {client.metadata?.notes && (
-            <div className="mt-3 p-2 bg-muted/30 rounded-md">
-              <p className="text-sm text-muted-foreground italic">
+            <div className={`mt-3 p-2 rounded-md ${styles.cardNote()}`}>
+              <p className={`text-sm italic ${styles.body('muted')}`}>
                 "{client.metadata.notes}"
               </p>
             </div>
@@ -96,28 +97,25 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
         {/* Botones de acción */}
         <div className="flex flex-col gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button 
-            variant="ghost" 
-            size="icon" 
+            variant="secondary" 
+            size="sm" 
             onClick={(e) => { e.stopPropagation(); onView(client); }} 
-            className="w-8 h-8 text-xs hover:bg-primary/10 hover:text-primary"
             title="Ver detalles del cliente"
           >
             <Eye className="w-4 h-4" />
           </Button>
           <Button 
-            variant="ghost" 
-            size="icon" 
+            variant="secondary" 
+            size="sm" 
             onClick={(e) => { e.stopPropagation(); onEdit(client); }} 
-            className={`${styles.button('secondary')} w-8 h-8 text-xs`}
             title="Editar Cliente"
           >
             <Edit className="w-4 h-4" />
           </Button>
           <Button 
-            variant="ghost" 
-            size="icon" 
+            variant="destructive" 
+            size="sm" 
             onClick={(e) => { e.stopPropagation(); onDelete(client); }} 
-            className="w-8 h-8 text-xs hover:bg-destructive/10 hover:text-destructive"
             title="Eliminar Cliente"
           >
             <Trash2 className="w-4 h-4" />
@@ -126,7 +124,7 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
       </div>
 
       {/* Footer con fechas */}
-      <div className="flex justify-between items-center pt-3 border-t border-muted/20 text-xs text-muted-foreground">
+      <div className={`flex justify-between items-center pt-3 text-xs ${styles.cardFooter()} ${styles.body('muted')}`}>
         <div>
           Creado: {new Date(client.created_at).toLocaleDateString('es-MX')}
         </div>

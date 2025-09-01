@@ -10,6 +10,7 @@ import ClientForm from '../components/clients/ClientForm';
 import { useI18n } from '../lib/i18n';
 import useClientStore from '../store/useClientStore';
 import { useThemeStyles } from '../hooks/useThemeStyles';
+import { telemetry } from '../utils/telemetry';
 
 const ClientsPage = () => {
   const { t } = useI18n();
@@ -28,6 +29,13 @@ const ClientsPage = () => {
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
+
+  // Telemetría de errores del store
+  useEffect(() => {
+    if (error) {
+      telemetry.record('clients.error.store', { message: error });
+    }
+  }, [error]);
 
   // Filtrar clientes localmente para funcionalidad rica
   const filteredClients = clients.filter(client =>
@@ -94,7 +102,7 @@ const ClientsPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className={styles.header('h1')}>{t('client.title', 'Clientes')}</h1>
-        <Button onClick={handleCreate} className={styles.button('primary')}><Plus className="w-4 h-4 mr-2" />{t('client.action.create', 'Nuevo Cliente')}</Button>
+        <Button onClick={handleCreate} variant="primary"><Plus className="w-4 h-4 mr-2" />{t('client.action.create', 'Nuevo Cliente')}</Button>
       </div>
 
       {/* Búsqueda */}

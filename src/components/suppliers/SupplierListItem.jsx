@@ -6,13 +6,14 @@ import { useThemeStyles } from '../../hooks/useThemeStyles';
 const SupplierListItem = ({ supplier, onEdit, onDelete }) => {
   const { styles, isNeoBrutalism } = useThemeStyles();
   
-  // Obtener prioridad con color
+  // Obtener prioridad con color usando sistema de temas
   const getPriorityColor = (priority) => {
+    const baseClasses = isNeoBrutalism ? 'border-2 border-black' : 'border';
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'high': return `bg-destructive/10 text-destructive ${baseClasses}`;
+      case 'medium': return `bg-yellow-500/10 text-yellow-700 ${baseClasses}`;
+      case 'low': return `bg-green-500/10 text-green-700 ${baseClasses}`;
+      default: return `bg-muted text-muted-foreground ${baseClasses}`;
     }
   };
 
@@ -94,19 +95,17 @@ const SupplierListItem = ({ supplier, onEdit, onDelete }) => {
         {/* Botones de acción */}
         <div className="flex flex-col gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button 
-            variant="ghost" 
-            size="icon" 
+            variant="secondary" 
+            size="sm" 
             onClick={(e) => { e.stopPropagation(); onEdit(supplier); }} 
-            className={`${styles.button('secondary')} w-8 h-8 text-xs`}
             title="Editar Proveedor"
           >
             <Edit className="w-4 h-4" />
           </Button>
           <Button 
-            variant="ghost" 
-            size="icon" 
+            variant="destructive" 
+            size="sm" 
             onClick={(e) => { e.stopPropagation(); onDelete(supplier); }} 
-            className="w-8 h-8 text-xs hover:bg-destructive/10 hover:text-destructive"
             title="Eliminar Proveedor"
           >
             <Trash2 className="w-4 h-4" />

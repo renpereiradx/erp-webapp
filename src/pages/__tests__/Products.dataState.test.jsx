@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
 import { vi } from 'vitest';
 
 // Mock toast
@@ -57,7 +58,7 @@ describe('Products DataState integrations', () => {
       clearError: vi.fn(),
     };
 
-    render(<Products />);
+  renderWithTheme(<Products />);
     const loadingById = screen.queryByTestId('products-loading');
     if (loadingById) {
       expect(loadingById).toBeInTheDocument();
@@ -87,7 +88,7 @@ describe('Products DataState integrations', () => {
       clearError: vi.fn(),
     };
 
-    render(<Products />);
+  renderWithTheme(<Products />);
     const emptyInitial = screen.queryByTestId('products-empty-initial') || screen.queryByTestId('empty-initial');
     expect(emptyInitial).toBeInTheDocument();
   });
@@ -112,7 +113,7 @@ describe('Products DataState integrations', () => {
       clearError: vi.fn(),
     };
 
-    render(<Products />);
+  renderWithTheme(<Products />);
     const emptySearch = screen.queryByTestId('products-empty-search') || screen.queryByTestId('empty-search');
     expect(emptySearch).toBeInTheDocument();
   });
@@ -139,7 +140,7 @@ describe('Products DataState integrations', () => {
       clearError: vi.fn(),
     };
 
-    render(<Products />);
+  renderWithTheme(<Products />);
     const err = screen.queryByTestId('error-main');
     if (err) {
       expect(err).toBeInTheDocument();

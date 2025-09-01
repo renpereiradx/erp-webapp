@@ -12,6 +12,7 @@ describe('GenericSkeletonList', () => {
 
   test('renders custom count items', () => {
     render(<GenericSkeletonList count={3} />);
-    expect(screen.getAllByTestId(/generic-skeleton-/).length).toBe(3);
+    const items = screen.getAllByTestId(/generic-skeleton-/);
+    expect(items.length).toBe(3);
   });
 });

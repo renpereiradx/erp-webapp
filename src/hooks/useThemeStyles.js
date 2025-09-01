@@ -12,7 +12,8 @@ import { getStyleForThemeType } from '../config/themes';
  * @returns {Object} - Configuración de estilos y helpers
  */
 export const useThemeStyles = () => {
-  const { theme, themeConfig, isNeoBrutalism, isMaterial, isFluent, isDark, isLight } = useTheme();
+  // Extraemos también las acciones de tema para exponerlas (tests las requieren)
+  const { theme, themeConfig, isNeoBrutalism, isMaterial, isFluent, isDark, isLight, setTheme, resetTheme } = useTheme();
   
   // Obtener configuración de estilos para el tipo de tema actual
   const styleConfig = useMemo(() => {
@@ -48,13 +49,48 @@ export const useThemeStyles = () => {
         return `${base} ${border} ${shadow} ${radius} p-6 ${extra}`.trim();
       },
 
+      // Contenedor de página plano (sin borde ni sombra) para evitar apariencia de card global
+      page: (extra = '') => {
+        const bg = 'bg-background';
+        const fg = 'text-foreground';
+        return `${bg} ${fg} w-full ${extra}`.trim();
+      },
+
       // Tarjetas
-      card: (extra = '') => {
+      card: (variantOrExtra = '', maybeExtra = '') => {
+        // API flexible: card(extra) o card(variant, extra/opciones)
+        let variant = null;
+        let extra = '';
+        let options = {};
+        if (typeof maybeExtra === 'string' || !maybeExtra) {
+          // Llamada: card(variantOrExtra, extra)
+          if (styleConfig.card?.variants?.[variantOrExtra]) {
+            variant = variantOrExtra;
+            extra = maybeExtra || '';
+          } else {
+            extra = variantOrExtra || '';
+          }
+        } else {
+          // Llamada: card(variant, options)
+            if (styleConfig.card?.variants?.[variantOrExtra]) {
+              variant = variantOrExtra;
+              options = maybeExtra || {};
+              extra = options.extra || '';
+            } else {
+              // card(extra, options)
+              extra = variantOrExtra || '';
+              options = maybeExtra || {};
+            }
+        }
+
         const base = styleConfig.card?.base || 'bg-card text-card-foreground';
         const border = styleConfig.card?.border || 'border';
         const shadow = styleConfig.card?.shadow || 'shadow-sm';
         const radius = styleConfig.card?.radius || 'rounded-lg';
-        return `${base} ${border} ${shadow} ${radius} ${extra}`.trim();
+        const variantClasses = variant ? styleConfig.card?.variants?.[variant] : '';
+        const density = options.density ? styleConfig.card?.densities?.[options.density] : '';
+        const interactive = options.interactive ? 'md-card-interactive' : '';
+        return `${variantClasses || base} ${border} ${shadow} ${radius} ${density} ${interactive} ${extra}`.replace(/\s+/g,' ').trim();
       },
 
       // Botones
@@ -77,10 +113,18 @@ export const useThemeStyles = () => {
       },
 
       // Inputs
-      input: (extra = '') => {
+      input: (variantOrExtra = '', maybeOptions = '') => {
+        let variant = null; let extra = ''; let options = {};
+        if (typeof maybeOptions === 'string' || !maybeOptions) {
+          if (styleConfig.input?.variants?.[variantOrExtra]) { variant = variantOrExtra; extra = maybeOptions || ''; } else { extra = variantOrExtra || ''; }
+        } else {
+          if (styleConfig.input?.variants?.[variantOrExtra]) { variant = variantOrExtra; options = maybeOptions; extra = options.extra || ''; } else { extra = variantOrExtra || ''; options = maybeOptions; }
+        }
         const base = styleConfig.input?.base || 'border bg-background text-foreground p-2.5';
         const radius = styleConfig.input?.radius || 'rounded-md';
-        return `${base} ${radius} ${extra}`.trim();
+        const variantClasses = variant ? styleConfig.input?.variants?.[variant] : '';
+        const density = options.density ? styleConfig.input?.densities?.[options.density] : '';
+        return `${variantClasses || base} ${radius} ${density || ''} ${extra}`.replace(/\s+/g,' ').trim();
       },
 
       // Tabs
@@ -110,14 +154,56 @@ export const useThemeStyles = () => {
       // Color de acento
       accentColor: () => {
         return styleConfig.colors?.accent || '#000000';
+      },
+
+      // Badges
+      badge: (variant = 'primary') => {
+        const base = 'px-2 py-1 text-xs font-medium rounded-md';
+        const border = themeInfo.isNeoBrutalism ? 'border-2 border-black' : 'border';
+        switch (variant) {
+          case 'primary': return `${base} bg-primary/10 text-primary ${border}`;
+          case 'secondary': return `${base} bg-muted text-muted-foreground ${border}`;
+          case 'success': return `${base} bg-green-500/10 text-green-700 ${border}`;
+          case 'warning': return `${base} bg-yellow-500/10 text-yellow-700 ${border}`;
+          case 'error': return `${base} bg-destructive/10 text-destructive ${border}`;
+          default: return `${base} bg-primary/10 text-primary ${border}`;
+        }
+      },
+
+      // Card sections
+      cardHeader: () => {
+        const border = themeInfo.isNeoBrutalism ? 'border-b-2 border-black' : 'border-b border-border';
+        return border;
+      },
+
+      cardFooter: () => {
+        const border = themeInfo.isNeoBrutalism ? 'border-t-2 border-black' : 'border-t border-border';
+        return border;
+      },
+
+      cardSeparator: () => {
+        const border = themeInfo.isNeoBrutalism ? 'border-b-2 border-black' : 'border-b border-border/50';
+        return border;
+      },
+
+      cardNote: () => {
+        const bg = themeInfo.isNeoBrutalism ? 'bg-muted border-2 border-black' : 'bg-muted/30';
+        return bg;
       }
     };
   }, [styleConfig, themeConfig.type]);
 
+  // Helper explícito (fuera del objeto para evitar 'this')
+  const cardVariant = (variant, options = {}) => styles.card(variant, options);
+
   return {
     ...themeInfo,
     styles,
+  cardVariant,
     styleConfig, // Exponer configuración raw para casos avanzados
+    // Acciones (expuestas para compatibilidad con pruebas y usos avanzados)
+    setTheme,
+    resetTheme,
   };
 };
 
@@ -149,7 +235,19 @@ const createFallbackStyles = () => ({
   tab: (extra = '') => `border rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground ${extra}`.trim(),
   metricCard: () => ({ border: '1px solid var(--border)', borderRadius: '4px', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)' }),
   chartColors: () => ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00C49F'],
-  accentColor: () => '#000000'
+  accentColor: () => '#000000',
+  badge: (variant = 'primary') => {
+    const base = 'px-2 py-1 text-xs font-medium rounded-md border';
+    switch (variant) {
+      case 'primary': return `${base} bg-primary/10 text-primary`;
+      case 'secondary': return `${base} bg-muted text-muted-foreground`;
+      default: return `${base} bg-primary/10 text-primary`;
+    }
+  },
+  cardHeader: () => 'border-b border-border',
+  cardFooter: () => 'border-t border-border',
+  cardSeparator: () => 'border-b border-border/50',
+  cardNote: () => 'bg-muted/30'
 });
 
 /**

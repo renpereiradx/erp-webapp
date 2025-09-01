@@ -68,9 +68,14 @@ const getInitialTheme = () => {
   if (typeof window === 'undefined') return DEFAULT_THEME;
   
   try {
-    const savedTheme = localStorage.getItem(STORAGE_KEY);
+  const savedTheme = localStorage.getItem(STORAGE_KEY);
     
     if (savedTheme && isValidTheme(savedTheme)) {
+      // Migración: si el tema guardado es uno neo-brutalism por defecto antiguo, mover a material-light
+      if (savedTheme.startsWith('neo-brutalism-')) {
+        localStorage.setItem(STORAGE_KEY, DEFAULT_THEME);
+        return DEFAULT_THEME;
+      }
       return savedTheme;
     }
     

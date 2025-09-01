@@ -8,7 +8,8 @@
  */
 
 import React, { useState } from 'react';
-// useTheme removido para MVP - sin hooks problemáticos
+import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useAnnouncement } from '@/contexts/AnnouncementContext';
 import { Calendar, ShoppingCart, Save, Check, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/Button';
@@ -36,10 +37,9 @@ import reservationService from '@/services/reservationService';
 import { saleService } from '@/services/saleService';
 
 const BookingSales = () => {
-  // Para MVP - tema fijo sin hooks problemáticos
-  const theme = 'default';
-  const themeStyles = { styles: {} };
-  const styles = {};
+  // Theming unificado
+  const { styles, isMaterial, isFluent } = useThemeStyles();
+  const { announceSuccess, announceError } = useAnnouncement();
   const { t } = useI18n();
   
   // Estado local para UI
@@ -93,11 +93,13 @@ const BookingSales = () => {
       const reservationData = prepareReservationData();
       await reservationService.createReservation(reservationData);
       
-      showNotification(SYSTEM_MESSAGES.SUCCESS.RESERVATION_CREATED);
+  showNotification(SYSTEM_MESSAGES.SUCCESS.RESERVATION_CREATED);
+  announceSuccess('Reserva');
       resetReservation();
     } catch (error) {
       console.error('Error creating reservation:', error);
       showNotification(SYSTEM_MESSAGES.ERROR.NETWORK_ERROR, 'error');
+  announceError('Reserva', 'Error creando la reserva');
     } finally {
       setLoading(false);
     }
@@ -115,11 +117,13 @@ const BookingSales = () => {
       const saleData = prepareSaleData();
       await saleService.createSale(saleData);
       
-      showNotification(SYSTEM_MESSAGES.SUCCESS.SALE_COMPLETED);
+  showNotification(SYSTEM_MESSAGES.SUCCESS.SALE_COMPLETED);
+  announceSuccess('Venta');
       resetSale();
     } catch (error) {
       console.error('Error creating sale:', error);
       showNotification(SYSTEM_MESSAGES.ERROR.NETWORK_ERROR, 'error');
+  announceError('Venta', 'Error completando la venta');
     } finally {
       setLoading(false);
     }
@@ -131,13 +135,19 @@ const BookingSales = () => {
 
     const isError = notification.type === 'error';
     const icon = isError ? AlertCircle : Check;
-    const bgColor = isError ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200';
-    const textColor = isError ? 'text-red-800' : 'text-green-800';
-
+    // Usar variantes semánticas de card según tema
+    const cardVariant = isError
+      ? (isMaterial ? 'error' : 'error')
+      : (isMaterial ? 'success' : 'success');
+    const bannerClasses = styles.card(cardVariant, {
+      density: 'compact',
+      interactive: false,
+      extra: 'flex items-center gap-2 mb-6'
+    });
     return (
-      <div className={`p-4 rounded-lg border ${bgColor} ${textColor} mb-6 flex items-center`}>
-        {React.createElement(icon, { className: 'w-5 h-5 mr-2' })}
-        {notification.message}
+      <div className={bannerClasses} role={isError ? 'alert' : 'status'}>
+        {React.createElement(icon, { className: 'w-5 h-5 shrink-0' })}
+        <span className="text-sm font-medium leading-snug flex-1">{notification.message}</span>
       </div>
     );
   };
@@ -155,22 +165,21 @@ const BookingSales = () => {
           const service = MOCK_SERVICES.find(s => s.id === parseInt(e.target.value));
           setSelectedService(service);
         }}
-        className={styles.input()}
+        className={styles.input(isMaterial ? 'outlined' : 'subtle', { density: 'compact', extra: 'w-full' })}
       >
-  <option value="">{t('booking.reservation.select_service.placeholder') || 'Seleccionar servicio...'}</option>
+        <option value="">{t('booking.reservation.select_service.placeholder') || 'Seleccionar servicio...'}</option>
         {MOCK_SERVICES.map((service) => (
           <option key={service.id} value={service.id}>
             {service.name} - ${service.price} ({t('booking.reservation.duration.minutes', { minutes: service.duration }) || `${service.duration}min`})
           </option>
         ))}
       </select>
-      
       {selectedService && (
-        <div className={styles.card('p-3')}>
+        <div className={styles.card(isMaterial ? 'tonal' : 'subdued', { density: 'compact', extra: 'p-3 space-y-1' })}>
           <div className="flex justify-between items-start">
             <div>
-              <h4 className="font-medium">{selectedService.name}</h4>
-              <p className="text-sm text-gray-600 mt-1">{selectedService.description}</p>
+              <h4 className="font-medium text-sm leading-tight">{selectedService.name}</h4>
+              <p className="text-xs opacity-80 mt-1">{selectedService.description}</p>
             </div>
             <Badge variant="secondary">${selectedService.price}</Badge>
           </div>
@@ -184,7 +193,7 @@ const BookingSales = () => {
     if (!reservationValidations.hasService && !reservationValidations.hasClient) return null;
 
     return (
-      <Card className={styles.card()}>
+      <Card className={styles.card(isMaterial ? 'outlined-soft' : 'outline-soft', { density: 'compact' })}>
         <CardHeader>
           <CardTitle className={styles.cardHeader()}>{t('booking.reservation.summary') || 'Resumen de Reserva'}</CardTitle>
         </CardHeader>
@@ -223,7 +232,7 @@ const BookingSales = () => {
     if (saleItems.length === 0) return null;
 
     return (
-      <Card className={styles.card()}>
+      <Card className={styles.card(isMaterial ? 'outlined-soft' : 'outline-soft', { density: 'compact' })}>
         <CardHeader>
           <CardTitle className={styles.cardHeader()}>{t('booking.sales.summary') || 'Resumen de Venta'}</CardTitle>
         </CardHeader>
@@ -249,7 +258,7 @@ const BookingSales = () => {
   };
 
   return (
-    <div className={styles.container()} data-testid="booking-sales-page">
+  <div className={styles.container('space-y-6')} data-testid="booking-sales-page">
       <PageHeader
         title={t('booking.title') || 'Reservas y Ventas'}
         subtitle={t('booking.subtitle') || 'Gestiona reservas de servicios y ventas de productos de forma integrada'}
@@ -259,12 +268,12 @@ const BookingSales = () => {
       <NotificationBanner />
  
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className={styles.tab()}>
-          <TabsTrigger value="reservas" className="flex items-center gap-2">
+        <TabsList className="flex gap-2">
+          <TabsTrigger value="reservas" className={styles.tab('flex items-center gap-2 px-4 py-2 text-sm font-medium')}>
             <Calendar className="w-4 h-4" />
             {t('booking.tab.reservations') || 'Reservas'}
           </TabsTrigger>
-          <TabsTrigger value="ventas" className="flex items-center gap-2">
+          <TabsTrigger value="ventas" className={styles.tab('flex items-center gap-2 px-4 py-2 text-sm font-medium')}>
             <ShoppingCart className="w-4 h-4" />
             {t('booking.tab.sales') || 'Ventas'}
           </TabsTrigger>
@@ -278,7 +287,7 @@ const BookingSales = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Panel de configuración de reserva */}
               <div className="space-y-6">
-                <Card className={styles.card()}>
+                <Card className={styles.card(isMaterial ? 'elevated' : 'elevated', { density: 'comfy' })}>
                   <CardHeader>
                     <CardTitle className={styles.cardHeader()}>{t('booking.reservation.new') || 'Nueva Reserva'}</CardTitle>
                   </CardHeader>
@@ -306,7 +315,8 @@ const BookingSales = () => {
                   <Button
                     onClick={handleReservationSubmit}
                     disabled={loading}
-                    className={`w-full ${styles.button()}`}
+                    className="w-full"
+                    variant={isMaterial ? 'filled' : 'primary'}
                   >
                     <Save className="w-4 h-4 mr-2" />
                     {loading ? (t('booking.common.processing') || 'Procesando...') : (t('booking.reservation.confirm') || 'Confirmar Reserva')}
@@ -330,7 +340,7 @@ const BookingSales = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Panel de productos */}
               <div className="space-y-6">
-                <Card className={styles.card()}>
+                <Card className={styles.card(isMaterial ? 'elevated' : 'elevated', { density: 'comfy' })}>
                   <CardHeader>
                     <CardTitle className={styles.cardHeader()}>{t('booking.sales.new') || 'Nueva Venta'}</CardTitle>
                   </CardHeader>
@@ -353,7 +363,8 @@ const BookingSales = () => {
                   <Button
                     onClick={handleSaleSubmit}
                     disabled={loading}
-                    className={`w-full ${styles.button()}`}
+                    className="w-full"
+                    variant={isMaterial ? 'filled' : 'primary'}
                   >
                     <Check className="w-4 h-4 mr-2" />
                     {loading ? (t('booking.common.processing') || 'Procesando...') : (t('booking.sales.complete') || 'Completar Venta')}

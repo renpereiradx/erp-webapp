@@ -22,6 +22,7 @@ import Settings from '@/pages/Settings';
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
+import { AnnouncementProvider } from '@/contexts/AnnouncementContext';
 import { apiClient } from '@/services/api';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import './App.css';
@@ -146,7 +147,9 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppContent />
+        <AnnouncementProvider>
+          <AppContent />
+        </AnnouncementProvider>
       </AuthProvider>
     </ThemeProvider>
   );

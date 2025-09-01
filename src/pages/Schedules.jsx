@@ -201,7 +201,7 @@ const Schedules = () => {
         <div>
           <Button 
             onClick={() => setShowGenerateModal(true)} 
-            className={styles.button('primary')}
+            variant="primary"
           >
             <CalendarPlus className="w-4 h-4 mr-2" />
             {t('schedules.generate', 'Generar Horarios')}
@@ -361,7 +361,8 @@ const Schedules = () => {
                     <Button 
                       type="submit" 
                       disabled={loading}
-                      className={`flex-1 ${styles.button('primary')}`}
+                      className="flex-1"
+                      variant="primary"
                     >
                       {loading ? 
                         t('action.generating', 'Generando...') : 
@@ -370,9 +371,9 @@ const Schedules = () => {
                     </Button>
                     <Button 
                       type="button" 
-                      variant="outline" 
+                      variant="secondary"
                       onClick={() => setShowGenerateModal(false)}
-                      className={`flex-1 ${styles.button('secondary')}`}
+                      className="flex-1"
                     >
                       {t('action.cancel', 'Cancelar')}
                     </Button>

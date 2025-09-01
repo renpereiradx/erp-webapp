@@ -30,6 +30,7 @@ import PageHeader from '@/components/ui/PageHeader';
 
 // Custom Hooks and Services
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useAnnouncement } from '@/contexts/AnnouncementContext';
 import DataState from '@/components/ui/DataState';
 import { useI18n } from '@/lib/i18n';
 import usePurchaseStore from '@/store/usePurchaseStore';
@@ -50,6 +51,7 @@ import {
 
 const Purchases = () => {
   const { styles } = useThemeStyles();
+  const { announceSuccess, announceError } = useAnnouncement();
 
   // Estado local para UI
   const [activeTab, setActiveTab] = useState('new-purchase'); // Volver a nueva compra como default
@@ -283,12 +285,12 @@ const Purchases = () => {
       <NotificationBanner />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="new-purchase" className={`${styles.tab()} flex items-center gap-2`}>
+        <TabsList className="grid w-full grid-cols-2 gap-2">
+          <TabsTrigger value="new-purchase" className={styles.tab('flex items-center gap-2 px-4 py-2 text-sm font-medium')}>
             <Plus className="w-4 h-4" />
             {t('purchases.tab.new', 'Nueva Compra')}
           </TabsTrigger>
-          <TabsTrigger value="purchases-list" className={`${styles.tab()} flex items-center gap-2`}>
+          <TabsTrigger value="purchases-list" className={styles.tab('flex items-center gap-2 px-4 py-2 text-sm font-medium')}>
             <ShoppingCart className="w-4 h-4" />
             {t('purchases.tab.list', 'Lista de Compras')}
           </TabsTrigger>
@@ -391,7 +393,8 @@ const Purchases = () => {
                     <Button
                       onClick={handleSubmitPurchase}
                       disabled={loading}
-                      className={`w-full ${styles.button('primary')}`}
+                      className="w-full"
+                      variant="primary"
                       size="lg"
                       data-testid="purchase-save-button"
                     >

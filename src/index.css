@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fluent 2 Design System Utilities */
+@import './styles/fluent-utilities.css';
+
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {
   width: 8px;

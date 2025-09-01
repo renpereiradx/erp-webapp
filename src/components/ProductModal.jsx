@@ -82,8 +82,8 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess }) => {
           </div>
 
           <div className="flex gap-4 pt-4 border-t border-border">
-            <Button type="button" onClick={onClose} disabled={loading} className={`w-full ${styles.button('secondary')}`}>{t('products.cancel')}</Button>
-            <Button type="submit" disabled={loading} className={`w-full ${styles.button('primary')}`}>{loading ? t('products.saving') : t('products.save')}</Button>
+            <Button type="button" onClick={onClose} disabled={loading} variant="secondary" className="w-full">{t('products.cancel')}</Button>
+            <Button type="submit" disabled={loading} variant="primary" className="w-full">{loading ? t('products.saving') : t('products.save')}</Button>
           </div>
         </form>
       </div>

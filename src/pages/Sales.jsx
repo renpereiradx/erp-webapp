@@ -16,6 +16,7 @@ import PageHeader from '@/components/ui/PageHeader';
 import { useI18n } from '@/lib/i18n';
 import DataState from '@/components/ui/DataState';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useAnnouncement } from '@/contexts/AnnouncementContext';
 
 // Custom hooks para lógica de negocio
 import { useSalesLogic } from '@/hooks/useSalesLogic';
@@ -40,7 +41,8 @@ const PAYMENT_METHODS = [
 
 const Sales = () => {
   const { t } = useI18n();
-  const { styles } = useThemeStyles();
+  const { styles, isMaterial } = useThemeStyles();
+  const { announceSuccess, announceError } = useAnnouncement();
   
   // Estado local para UI y pagos
   const [loading, setLoading] = useState(false);
@@ -110,6 +112,7 @@ const Sales = () => {
   const handleSaleSubmit = async () => {
     if (!canProcessSale()) {
       showNotification(SYSTEM_MESSAGES.ERROR.VALIDATION_ERROR, 'error');
+      announceError('Venta', 'Validación');
       return;
     }
 
@@ -131,11 +134,13 @@ const Sales = () => {
       
       if (response.success) {
         showNotification(SYSTEM_MESSAGES.SUCCESS.SALE_COMPLETED);
+        announceSuccess('Venta');
         
         // Mostrar cambio si es pago en efectivo
         if (paymentMethod === 'cash' && amountPaid > currentSaleData.totalAmount) {
           const change = amountPaid - currentSaleData.totalAmount;
-          showNotification(`Venta completada. Cambio: $${change.toFixed(2)}`, 'success');
+          showNotification(`Venta completada. Cambio: $${change.toFixed(2)}`,'success');
+          announceSuccess('Cambio calculado');
         }
         
         // Resetear formulario
@@ -146,6 +151,7 @@ const Sales = () => {
     } catch (error) {
       console.error('Error creating sale:', error);
       showNotification(SYSTEM_MESSAGES.ERROR.NETWORK_ERROR, 'error');
+      announceError('Venta', 'Error de red');
     } finally {
       setLoading(false);
     }
@@ -154,16 +160,14 @@ const Sales = () => {
   // Componente de notificación
   const NotificationBanner = () => {
     if (!notification) return null;
-
     const isError = notification.type === 'error';
     const icon = isError ? AlertCircle : Check;
-    const bgColor = isError ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200';
-    const textColor = isError ? 'text-red-800' : 'text-green-800';
-
+    const variant = isError ? 'error' : 'success';
+    const bannerClasses = styles.card(variant, { density: 'compact', extra: 'flex items-center gap-2 mb-6' });
     return (
-      <div className={`p-4 rounded-lg border ${bgColor} ${textColor} mb-6 flex items-center`}>
-        {React.createElement(icon, { className: 'w-5 h-5 mr-2' })}
-        {notification.message}
+      <div className={bannerClasses} role={isError ? 'alert' : 'status'}>
+        {React.createElement(icon, { className: 'w-5 h-5 shrink-0' })}
+        <span className="text-sm font-medium leading-snug flex-1">{notification.message}</span>
       </div>
     );
   };
@@ -173,7 +177,7 @@ const Sales = () => {
     if (saleItems.length === 0) return null;
 
     return (
-      <Card className={styles.card()}>
+      <Card className={styles.card(isMaterial ? 'outlined-soft' : 'outline-soft', { density: 'compact' })}>
         <CardHeader>
           <CardTitle className={styles.header('h3')}>{t('sales.summary.title', 'Resumen de Venta')}</CardTitle>
         </CardHeader>
@@ -207,7 +211,7 @@ const Sales = () => {
     const totalAmount = getCurrentSaleTotal();
 
     return (
-      <Card className={styles.card()}>
+      <Card className={styles.card(isMaterial ? 'outlined-soft' : 'outline-soft', { density: 'compact' })}>
         <CardHeader>
           <CardTitle className={styles.header('h3')}>
             <CreditCard className="w-5 h-5 mr-2" />
@@ -217,7 +221,7 @@ const Sales = () => {
         <CardContent className="space-y-4">
           {/* Selector de método de pago */}
           <div>
-            <Label htmlFor="payment-method">{t('sales.payment.method', 'Método de Pago')}</Label>
+            <Label htmlFor="payment-method" className={styles.label()}>{t('sales.payment.method', 'Método de Pago')}</Label>
             <Select
               value={currentSaleData.paymentMethod}
               onValueChange={handlePaymentMethodChange}
@@ -244,7 +248,7 @@ const Sales = () => {
           {/* Campo de monto pagado (solo para efectivo) */}
           {showPaymentSection && (
             <div>
-              <Label htmlFor="amount-paid">{t('sales.payment.amount_paid', 'Monto Pagado')}</Label>
+              <Label htmlFor="amount-paid" className={styles.label()}>{t('sales.payment.amount_paid', 'Monto Pagado')}</Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
@@ -255,22 +259,18 @@ const Sales = () => {
                   value={amountPaidInput}
                   onChange={(e) => handleAmountPaidChange(e.target.value)}
                   placeholder={`Mínimo $${totalAmount}`}
-                  className="pl-10"
+                  className={styles.input(isMaterial ? 'outlined' : 'subtle', { density: 'compact', extra: 'pl-10' })}
                 />
               </div>
               
               {/* Mostrar cambio */}
               {amountPaidInput && parseFloat(amountPaidInput) >= totalAmount && (
-                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="text-green-800 font-medium">
-                      <Calculator className="w-4 h-4 inline mr-2" />
-                      {t('sales.payment.change', 'Cambio:')}
-                    </span>
-                    <span className="text-green-800 font-bold text-lg">
-                      ${(parseFloat(amountPaidInput) - totalAmount).toFixed(2)}
-                    </span>
-                  </div>
+                <div className={styles.card('success', { density: 'compact', extra: 'mt-2 p-3 flex items-center justify-between' })}>
+                  <span className="font-medium flex items-center gap-2 text-sm">
+                    <Calculator className="w-4 h-4" />
+                    {t('sales.payment.change', 'Cambio:')}
+                  </span>
+                  <span className="font-bold text-base">{(parseFloat(amountPaidInput) - totalAmount).toFixed(2)}</span>
                 </div>
               )}
             </div>
@@ -297,7 +297,7 @@ const Sales = () => {
   };
 
   return (
-    <div className={styles.container()} data-testid="sales-page">
+  <div className={styles.page('space-y-6')} data-testid="sales-page">
       <PageHeader
         title={t('sales.title', 'Ventas')}
         subtitle={t('sales.subtitle', 'Gestiona las ventas de productos')}
@@ -315,7 +315,7 @@ const Sales = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Panel de productos */}
           <div className="space-y-6">
-            <Card className={styles.card()}>
+            <Card className={styles.card(isMaterial ? 'elevated' : 'elevated', { density: 'comfy' })}>
               <CardHeader>
                 <CardTitle className={styles.header('h3')}>{t('sales.new_sale', 'Nueva Venta')}</CardTitle>
               </CardHeader>
@@ -336,7 +336,8 @@ const Sales = () => {
               <Button
                 onClick={handleSaleSubmit}
                 disabled={loading || paymentInProgress}
-                className={`w-full ${styles.button('primary')}`}
+                className="w-full"
+                variant={isMaterial ? 'filled' : 'primary'}
               >
                 <Check className="w-4 h-4 mr-2" />
                 {loading || paymentInProgress ? 

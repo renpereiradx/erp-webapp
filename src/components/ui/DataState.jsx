@@ -1,25 +1,37 @@
 /**
  * DataState simplificado para MVP - Sin hooks problemáticos
  * Componente unificado para estados loading/error/empty
+ * Actualizado para soportar sistema de temas
  */
 
 import React from 'react';
 import { CircleAlert, RefreshCw } from 'lucide-react';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
+import GenericSkeletonList from './GenericSkeletonList';
 
 // Skeleton simple
-const SimpleSkeleton = ({ count = 3 }) => (
-  <div className="space-y-4">
-    {Array.from({ length: count }).map((_, i) => (
-      <div key={i} className="animate-pulse">
-        <div className="bg-gray-200 rounded-lg p-4 space-y-3">
-          <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-          <div className="h-3 bg-gray-300 rounded w-1/2"></div>
-          <div className="h-3 bg-gray-300 rounded w-5/6"></div>
+const SimpleSkeleton = ({ count = 3, list = false, testId }) => {
+  const { styles } = useThemeStyles();
+  const items = Array.from({ length: count });
+  const Wrapper = ({ children }) => list ? (
+    <div role="list" aria-label="loading" className="space-y-4" data-testid={testId ? `${testId}-list` : undefined}>{children}</div>
+  ) : (
+    <div className="space-y-4" data-testid={testId ? `${testId}-stack` : undefined}>{children}</div>
+  );
+  return (
+    <Wrapper>
+      {items.map((_, i) => (
+        <div key={i} className="animate-pulse" role={list ? 'listitem' : undefined}>
+          <div className={`${styles.card('p-4')} space-y-3`} data-testid={`simple-skeleton-${i}`}>
+            <div className="h-4 bg-muted rounded w-3/4" />
+            <div className="h-3 bg-muted rounded w-1/2" />
+            <div className="h-3 bg-muted rounded w-5/6" />
+          </div>
         </div>
-      </div>
-    ))}
-  </div>
-);
+      ))}
+    </Wrapper>
+  );
+};
 
 export default function DataState({
   variant = 'empty',
@@ -31,11 +43,19 @@ export default function DataState({
   onRetry,
   testId,
   skeletonProps = {},
+  skeletonVariant,
 }) {
+  const { styles } = useThemeStyles();
   if (variant === 'loading') {
+    const count = skeletonProps.count || 3;
+    const sv = skeletonVariant || skeletonProps.variant;
     return (
       <div className="data-state-wrapper" data-testid={testId || 'data-state-loading'}>
-        <SimpleSkeleton count={skeletonProps.count || 3} />
+        {sv === 'list' ? (
+          <GenericSkeletonList count={count} data-testid="data-state-loading-list" />
+        ) : (
+          <SimpleSkeleton count={count} list={sv === 'list'} testId={testId || 'data-state-loading'} />
+        )}
       </div>
     );
   }
@@ -88,6 +108,7 @@ export default function DataState({
           <button
             onClick={onAction}
             className="inline-flex items-center justify-center px-6 py-2.5 bg-primary text-primary-foreground rounded-md font-medium transition-colors hover:bg-primary/90"
+            data-testid="empty-action"
           >
             {actionLabel}
           </button>

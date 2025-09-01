@@ -1,5 +1,6 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
 import React from 'react';
 import ProductGrid from '@/features/products/components/ProductGrid';
 
@@ -37,7 +38,7 @@ describe('ProductGrid navegación por teclado', () => {
       { id: 'p3', name: 'Prod 3' },
     ];
 
-    render(
+  renderWithTheme(
       <ProductGrid
         products={products}
         isNeoBrutalism={false}
@@ -62,7 +63,7 @@ describe('ProductGrid navegación por teclado', () => {
     ];
     const onView = vi.fn();
 
-    render(
+  renderWithTheme(
       <ProductGrid
         products={products}
         isNeoBrutalism={false}

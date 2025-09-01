@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, waitFor, cleanup } from '@testing-library/react';
+import { waitFor, cleanup } from '@testing-library/react';
+import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
 
 vi.mock('@/hooks/useToast', () => {
   const errorFrom = vi.fn();
@@ -42,7 +43,7 @@ import SuppliersPage from '@/pages/Suppliers.jsx';
 
 describe('SuppliersPage toasts y telemetría', () => {
   it('emite toast de error y telemetría cuando el store expone error', async () => {
-    const { unmount } = render(<SuppliersPage />);
+  const { unmount } = renderWithTheme(<SuppliersPage />);
 
     await waitFor(() => {
       expect(recordSpy).toHaveBeenCalledWith('suppliers.error.store', { message: 'Fallo en suppliers' });

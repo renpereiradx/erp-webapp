@@ -1,0 +1,140 @@
+/**
+ * Fluent 2 Utilities for Tailwind CSS
+ * Custom utility classes that extend Tailwind with Fluent design tokens
+ */
+
+/* Border Radius Utilities */
+.rounded-fluent-corner-none { border-radius: var(--fluent-corner-radius-none); }
+.rounded-fluent-corner-small { border-radius: var(--fluent-corner-radius-small); }
+.rounded-fluent-corner-medium { border-radius: var(--fluent-corner-radius-medium); }
+.rounded-fluent-corner-large { border-radius: var(--fluent-corner-radius-large); }
+.rounded-fluent-corner-xlarge { border-radius: var(--fluent-corner-radius-xlarge); }
+.rounded-fluent-corner-circular { border-radius: var(--fluent-corner-radius-circular); }
+
+/* Shadow Utilities */
+.shadow-fluent-card { box-shadow: var(--fluent-card-shadow); }
+.shadow-fluent-card-hover { box-shadow: var(--fluent-card-shadow-hover); }
+.shadow-fluent-2 { box-shadow: var(--fluent-shadow-2); }
+.shadow-fluent-4 { box-shadow: var(--fluent-shadow-4); }
+.shadow-fluent-8 { box-shadow: var(--fluent-shadow-8); }
+.shadow-fluent-16 { box-shadow: var(--fluent-shadow-16); }
+.shadow-fluent-28 { box-shadow: var(--fluent-shadow-28); }
+.shadow-fluent-64 { box-shadow: var(--fluent-shadow-64); }
+
+/* Background Color Utilities */
+.bg-fluent-brand-primary { background-color: var(--fluent-brand-primary); }
+.bg-fluent-brand-secondary { background-color: var(--fluent-brand-secondary); }
+.bg-fluent-surface-primary { background-color: var(--fluent-surface-primary); }
+.bg-fluent-surface-secondary { background-color: var(--fluent-surface-secondary); }
+.bg-fluent-surface-card { background-color: var(--fluent-surface-card); }
+.bg-fluent-background-canvas { background-color: var(--fluent-background-canvas); }
+.bg-fluent-semantic-success { background-color: var(--fluent-semantic-success); }
+.bg-fluent-semantic-warning { background-color: var(--fluent-semantic-warning); }
+.bg-fluent-semantic-danger { background-color: var(--fluent-semantic-danger); }
+
+/* Text Color Utilities */
+.text-fluent-text-primary { color: var(--fluent-text-primary); }
+.text-fluent-text-secondary { color: var(--fluent-text-secondary); }
+.text-fluent-text-tertiary { color: var(--fluent-text-tertiary); }
+.text-fluent-text-accent { color: var(--fluent-text-accent); }
+.text-fluent-text-on-accent { color: var(--fluent-text-on-accent); }
+
+/* Border Color Utilities */
+.border-fluent-border-neutral { border-color: var(--fluent-border-neutral); }
+.border-fluent-border-accent { border-color: var(--fluent-border-accent); }
+.border-fluent-card-border { border-color: var(--fluent-card-border); }
+
+/* Spacing Utilities */
+.p-fluent-xs { padding: var(--fluent-size-40); }
+.p-fluent-sm { padding: var(--fluent-size-80); }
+.p-fluent-md { padding: var(--fluent-size-120); }
+.p-fluent-lg { padding: var(--fluent-size-160); }
+.p-fluent-xl { padding: var(--fluent-size-240); }
+
+.m-fluent-xs { margin: var(--fluent-size-40); }
+.m-fluent-sm { margin: var(--fluent-size-80); }
+.m-fluent-md { margin: var(--fluent-size-120); }
+.m-fluent-lg { margin: var(--fluent-size-160); }
+.m-fluent-xl { margin: var(--fluent-size-240); }
+
+.gap-fluent-xs { gap: var(--fluent-size-40); }
+.gap-fluent-sm { gap: var(--fluent-size-80); }
+.gap-fluent-md { gap: var(--fluent-size-120); }
+.gap-fluent-lg { gap: var(--fluent-size-160); }
+.gap-fluent-xl { gap: var(--fluent-size-240); }
+
+/* Height Utilities */
+.h-fluent-control-small { height: var(--fluent-control-height-small); }
+.h-fluent-control-medium { height: var(--fluent-control-height-medium); }
+.h-fluent-control-large { height: var(--fluent-control-height-large); }
+.h-fluent-control-xlarge { height: var(--fluent-control-height-xlarge); }
+.min-h-fluent-control-small { min-height: var(--fluent-control-height-small); }
+.min-h-fluent-control-medium { min-height: var(--fluent-control-height-medium); }
+.min-h-fluent-control-large { min-height: var(--fluent-control-height-large); }
+.min-h-fluent-control-xlarge { min-height: var(--fluent-control-height-xlarge); }
+
+/* Animation Duration Utilities */
+.duration-fluent-ultra-fast { transition-duration: var(--fluent-duration-ultra-fast); }
+.duration-fluent-fast { transition-duration: var(--fluent-duration-fast); }
+.duration-fluent-normal { transition-duration: var(--fluent-duration-normal); }
+.duration-fluent-slow { transition-duration: var(--fluent-duration-slow); }
+
+/* Animation Timing Function Utilities */
+.ease-fluent-ease { transition-timing-function: var(--fluent-curve-easy-ease); }
+.ease-fluent-decelerate { transition-timing-function: var(--fluent-curve-decelerate-mid); }
+.ease-fluent-accelerate { transition-timing-function: var(--fluent-curve-accelerate-mid); }
+
+/* Component State Utilities */
+.fluent-hover:hover {
+  background-color: var(--fluent-surface-card-hover);
+  box-shadow: var(--fluent-shadow-4);
+}
+
+.fluent-pressed:active {
+  background-color: var(--fluent-surface-card-pressed);
+  transform: scale(0.98);
+}
+
+.fluent-focus:focus-visible {
+  outline: 2px solid var(--fluent-border-accent);
+  outline-offset: 2px;
+}
+
+/* High Contrast Overrides */
+[data-theme='fluent-high-contrast'] .shadow-fluent-card,
+[data-theme='fluent-high-contrast'] .shadow-fluent-card-hover,
+[data-theme='fluent-high-contrast'] .shadow-fluent-2,
+[data-theme='fluent-high-contrast'] .shadow-fluent-4,
+[data-theme='fluent-high-contrast'] .shadow-fluent-8,
+[data-theme='fluent-high-contrast'] .shadow-fluent-16,
+[data-theme='fluent-high-contrast'] .shadow-fluent-28,
+[data-theme='fluent-high-contrast'] .shadow-fluent-64 {
+  box-shadow: none;
+}
+
+[data-theme='fluent-high-contrast'] .fluent-hover:hover {
+  background-color: #1A1A1A;
+  box-shadow: none;
+}
+
+[data-theme='fluent-high-contrast'] .fluent-focus:focus-visible {
+  outline: 3px solid var(--fluent-border-focus);
+  outline-offset: 2px;
+}
+
+/* Platform Typography Utilities */
+.font-fluent-windows {
+  font-family: 'Segoe UI Variable', 'Segoe UI', sans-serif;
+}
+
+.font-fluent-macos {
+  font-family: 'SF Pro Display', 'San Francisco Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-fluent-android {
+  font-family: 'Roboto', sans-serif;
+}
+
+.font-fluent-ios {
+  font-family: 'SF Pro Display', 'San Francisco Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+}

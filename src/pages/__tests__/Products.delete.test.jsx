@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent, waitFor } from '@testing-library/react';
+import { fireEvent, waitFor } from '@testing-library/react';
+import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
 
 // Mock toast
 const success = vi.fn();
@@ -71,7 +72,7 @@ import Products from '@/pages/Products.jsx';
 
 describe('Products delete flow', () => {
   it('emite products.delete.success y muestra toast al eliminar', async () => {
-    const { getByText } = render(<Products />);
+  const { getByText } = renderWithTheme(<Products />);
 
   // Abrir el modal de eliminación a través del grid mockeado (el modal auto-confirma)
   fireEvent.click(getByText('OPEN_DELETE'));

@@ -1,12 +1,13 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
+import { renderWithTheme } from '@/utils/themeTestUtils';
 import ErrorState from './ErrorState';
 import { vi } from 'vitest';
 
 describe('ErrorState', () => {
   test('renders message, code, hint and retry', () => {
     const onRetry = vi.fn();
-    render(
+  renderWithTheme(
       <ErrorState
         title="Load failed"
         message="Network unreachable"

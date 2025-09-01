@@ -5,7 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { render, screen } from '@testing-library/react';
+import { render as rtlRender, screen } from '@testing-library/react';
 import React from 'react';
 
 // Import theme system components
@@ -111,7 +111,7 @@ describe('Theme System', () => {
         return <div>Test</div>;
       };
 
-      expect(() => render(<TestComponent />)).toThrow(
+  expect(() => rtlRender(<TestComponent />)).toThrow(
         'useTheme must be used within a ThemeProvider'
       );
     });

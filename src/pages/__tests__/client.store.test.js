@@ -1,9 +1,9 @@
 // src/__tests__/client.store.test.js
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import useClientStore from '../store/useClientStore';
-import { clientService } from '../services/clientService';
+import useClientStore from '../../store/useClientStore';
+import { clientService } from '../../services/clientService';
 
-vi.mock('../services/clientService');
+vi.mock('../../services/clientService');
 
 describe('Client Store', () => {
   beforeEach(() => {

@@ -27,6 +27,8 @@ const ProductsPage = () => {
   const lastSearchTerm = useProductStore(state => state.lastSearchTerm);
   const isOffline = useProductStore(state => state.isOffline);
   const searchProducts = useProductStore(state => state.searchProducts);
+  const deleteProduct = useProductStore(state => state.deleteProduct);
+  const fetchProducts = useProductStore(state => state.fetchProducts);
   const hydrateFromStorage = useProductStore(state => state.hydrateFromStorage);
 
   // Local UI state
@@ -94,7 +96,7 @@ const ProductsPage = () => {
       <PageHeader
         title={t('products.title')}
         subtitle={t('products.subtitle')}
-        actions={<Button onClick={handleCreateProduct} className={styles.button('primary')}><Plus className="w-4 h-4 mr-2" />{t('products.new')}</Button>}
+        actions={<Button onClick={handleCreateProduct} variant="primary"><Plus className="w-4 h-4 mr-2" />{t('products.new')}</Button>}
       />
 
       {showMetrics && <MetricsPanel />}
@@ -107,14 +109,14 @@ const ProductsPage = () => {
             onChange={(e) => setApiSearchTerm(e.target.value)}
             className={`flex-grow ${styles.input()}`}
           />
-          <Button type="submit" className={styles.button('secondary')}>{t('products.search')}</Button>
+          <Button type="submit" variant="secondary">{t('products.search')}</Button>
         </form>
       </div>
 
       {isLoading && products.length === 0 ? (
         <DataState variant="loading" skeletonVariant="productGrid" />
       ) : error && products.length === 0 ? (
-        <DataState variant="error" title={t('products.error.loading')} message={error} onRetry={fetchInitialData} />
+        <DataState variant="error" title={t('products.error.loading')} message={error} onRetry={() => fetchProducts()} />
       ) : products.length === 0 ? (
         <DataState variant="empty" title={t('products.no_results')} description={t('products.no_products_loaded')} onAction={handleCreateProduct} actionLabel={t('products.create_first')} />
       ) : (

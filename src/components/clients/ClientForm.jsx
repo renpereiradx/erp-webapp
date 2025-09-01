@@ -37,10 +37,10 @@ const ClientForm = ({ formData, setFormData, handleSubmit, handleCancel, loading
       </div>
       
       <div className="flex gap-4 pt-4">
-        <Button type="submit" disabled={loading} className={`w-full ${styles.button('primary')}`}>
+        <Button type="submit" disabled={loading} variant="primary" className="w-full">
           {loading ? t('action.saving', 'Guardando...') : (isEditing ? t('action.update', 'Actualizar') : t('action.create', 'Crear'))}
         </Button>
-        <Button type="button" variant="outline" onClick={handleCancel} className={`w-full ${styles.button('secondary')}`}>
+        <Button type="button" variant="secondary" onClick={handleCancel} className="w-full">
           {t('action.cancel', 'Cancelar')}
         </Button>
       </div>

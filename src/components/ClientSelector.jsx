@@ -7,11 +7,12 @@
 import React, { useState, useMemo, useId } from 'react';
 import { Search, User, Users } from 'lucide-react';
 import { MOCK_CLIENTS } from '../constants/mockData';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 const ClientSelector = ({ 
   selectedClient, 
   onClientChange, 
-  theme = 'neo-brutalism',
+  theme, // deprecado: se ignora a favor de contexto
   placeholder = 'Seleccionar cliente...',
   showSearch = true,
   className = '',
@@ -37,56 +38,39 @@ const ClientSelector = ({
     return MOCK_CLIENTS.find(client => client.id === selectedClient);
   }, [selectedClient]);
 
-  // Estilos por tema
-  const getThemeStyles = () => {
-    const baseStyles = {
-      container: 'space-y-3',
-      label: 'block text-sm font-medium mb-2',
-      selectContainer: 'relative',
-      select: 'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
-      searchContainer: 'relative mb-2',
-      searchInput: 'w-full px-3 py-2 pl-10 border rounded-lg focus:outline-none focus:ring-2',
-      searchIcon: 'absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400',
-      clientInfo: 'mt-2 p-3 rounded-lg border',
-      clientName: 'font-medium',
-      clientDetails: 'text-sm text-gray-600 mt-1'
-    };
-
-    switch (theme) {
-      case 'material':
-        return {
-          ...baseStyles,
-          select: `${baseStyles.select} border-gray-300 focus:border-blue-500 focus:ring-blue-500`,
-          searchInput: `${baseStyles.searchInput} border-gray-300 focus:border-blue-500 focus:ring-blue-500`,
-          clientInfo: `${baseStyles.clientInfo} bg-blue-50 border-blue-200`
-        };
-      
-      case 'fluent':
-        return {
-          ...baseStyles,
-          select: `${baseStyles.select} border-gray-200 focus:border-blue-600 focus:ring-blue-600 shadow-sm`,
-          searchInput: `${baseStyles.searchInput} border-gray-200 focus:border-blue-600 focus:ring-blue-600 shadow-sm`,
-          clientInfo: `${baseStyles.clientInfo} bg-gray-50 border-gray-200`
-        };
-      
-      default: // neo-brutalism
-        return {
-          ...baseStyles,
-          select: `${baseStyles.select} border-2 border-black focus:border-blue-500 focus:ring-blue-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`,
-          searchInput: `${baseStyles.searchInput} border-2 border-black focus:border-blue-500 focus:ring-blue-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`,
-          clientInfo: `${baseStyles.clientInfo} bg-yellow-50 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`
-        };
-    }
+  const { styles: themeStyles, isMaterial, isFluent, isNeoBrutalism } = useThemeStyles();
+  const styles = {
+    container: 'space-y-3',
+    label: themeStyles.label(),
+    selectContainer: 'relative',
+    searchContainer: 'relative mb-2',
+    searchIcon: 'absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground',
+    // Inputs adaptativos: outlined (Material), subtle (Fluent), fallback base (brutalism mantiene legacy)
+    searchInput: isMaterial
+      ? themeStyles.input('outlined', { density: 'compact', extra: 'pl-10 w-full' })
+      : isFluent
+        ? themeStyles.input('subtle', { density: 'compact', extra: 'pl-10 w-full' })
+        : 'w-full px-3 py-2 pl-10 border-2 border-black rounded-lg focus:border-blue-500 focus:outline-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
+    select: isMaterial
+      ? themeStyles.input('outlined', { density: 'compact', extra: 'w-full' })
+      : isFluent
+        ? themeStyles.input('subtle', { density: 'compact', extra: 'w-full' })
+        : 'w-full px-3 py-2 border-2 border-black rounded-lg focus:border-blue-500 focus:outline-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
+    clientInfo: isMaterial
+      ? themeStyles.card('tonal', { density: 'compact', extra: 'mt-2 p-3 rounded-lg' })
+      : isFluent
+        ? themeStyles.card('subdued', { density: 'compact', extra: 'mt-2 p-3 rounded-lg' })
+        : 'mt-2 p-3 rounded-lg border-2 border-black bg-yellow-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]',
+    clientName: 'font-medium',
+    clientDetails: 'text-sm text-muted-foreground mt-1'
   };
-
-  const styles = getThemeStyles();
   const generatedId = useId();
   const searchId = `client-search-${generatedId}`;
   const selectId = `client-select-${generatedId}`;
 
   return (
     <div className={`${styles.container} ${className}`} data-testid={dataTestId}>
-      <label className={styles.label} htmlFor={selectId} data-testid="client-label">
+  <label className={styles.label + ' block mb-2'} htmlFor={selectId} data-testid="client-label">
         <Users className="inline w-4 h-4 mr-2" />
         Cliente
       </label>
@@ -110,7 +94,7 @@ const ClientSelector = ({
       )}
 
       <div className={styles.selectContainer}>
-        <select
+  <select
           id={selectId}
           value={selectedClient}
           onChange={(e) => onClientChange(e.target.value)}

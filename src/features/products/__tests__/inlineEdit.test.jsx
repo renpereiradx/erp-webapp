@@ -1,14 +1,11 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import ProductCard from '@/features/products/components/ProductCard';
 import useProductStore from '@/store/useProductStore';
 import { productService } from '@/services/productService';
-import EditableField from '@/components/EditableField';
+import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
 
-vi.mock('@/hooks/useThemeStyles', () => ({
-  useThemeStyles: () => ({ card: () => 'card', button: () => 'btn', header: () => () => 'hdr', label: () => 'lbl' })
-}));
+import { describe, test, expect, vi } from 'vitest';
+
 vi.mock('@/services/productService', async (orig) => {
   const mod = await orig();
   return {
@@ -25,7 +22,7 @@ const product = { id: 'P1', name: 'Original', is_active: true };
 describe('Inline edit minimal flow', () => {
   test('enter edit, modify name and save triggers callback', () => {
     const onSave = vi.fn();
-    render(
+    renderWithTheme(
       <ProductCard
         product={product}
         isNeoBrutalism={false}
@@ -45,24 +42,23 @@ describe('Inline edit minimal flow', () => {
     fireEvent.click(editButtons[0]);
     const input = screen.getByLabelText('Nombre');
     fireEvent.change(input, { target: { value: 'Nuevo Nombre' } });
-    fireEvent.keyDown(input, { key: 'Enter' }); // form submit via Enter
+    fireEvent.keyDown(input, { key: 'Enter' });
     expect(onSave).toHaveBeenCalledWith('P1', { name: 'Nuevo Nombre' });
   });
+
   test('rollback on failure', async () => {
     const store = useProductStore.getState();
-    // seed store
     useProductStore.setState({ products: [product], productsById: { [product.id]: product } });
-    // force fail
     productService.updateProduct.mockImplementationOnce(() => Promise.reject(new Error('fail')));
-    // optimistic update
     await store.optimisticUpdateProduct('P1', { name: 'Nuevo' });
     const st = useProductStore.getState();
     expect(st.productsById.P1.name).toBe('Original');
     expect(st.error).toBeTruthy();
   });
-  test('validation blocks invalid price', async () => {
+
+  test('validation blocks invalid price', () => {
     const onSave = vi.fn();
-    render(
+    renderWithTheme(
       <ProductCard
         product={product}
         isNeoBrutalism={false}
@@ -85,9 +81,9 @@ describe('Inline edit minimal flow', () => {
     expect(screen.getByRole('alert').textContent).toMatch(/Precio inválido/);
   });
 
-  test('validation blocks invalid stock', async () => {
+  test('validation blocks invalid stock', () => {
     const onSave = vi.fn();
-    render(
+    renderWithTheme(
       <ProductCard
         product={product}
         isNeoBrutalism={false}
@@ -109,9 +105,10 @@ describe('Inline edit minimal flow', () => {
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByRole('alert').textContent).toMatch(/Stock inválido/);
   });
-  test('partial failure (price negative) returns false and shows error', async () => {
+
+  test('partial failure (price negative) returns false and shows error', () => {
     const onSave = vi.fn(async (_id, patch) => patch.price < 0 ? false : true);
-    render(
+    renderWithTheme(
       <ProductCard
         product={product}
         isNeoBrutalism={false}
@@ -127,9 +124,7 @@ describe('Inline edit minimal flow', () => {
         onCancelInlineEdit={() => {}}
       />
     );
-    // activate price edit
     const editButtons = screen.getAllByRole('button', { name: /Editar/i });
-    // second editable field assumed price
     fireEvent.click(editButtons[1]);
     const priceInput = screen.getByLabelText('Precio');
     fireEvent.change(priceInput, { target: { value: '-10' } });

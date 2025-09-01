@@ -3,6 +3,7 @@ import { useI18n } from '../lib/i18n';
 import useDashboardStore from '../store/useDashboardStore';
 import { useThemeStyles } from '../hooks/useThemeStyles';
 import DataState from '../components/ui/DataState';
+import { Button } from '../components/ui/Button';
 import { DEMO_CHART_DATA } from '../config/demoData';
 import { DollarSign, Users, Package, ShoppingCart, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -17,7 +18,7 @@ const MetricCard = ({ title, value, icon: Icon, loading, delta }) => {
   const formattedValue = typeof value === 'number' ? value.toLocaleString() : value;
 
   return (
-    <div className={`${styles.card('p-6 transition-shadow hover:shadow-lg cursor-default')} group`}>
+  <div className={`${styles.card('elevated', { density: 'comfy', interactive: true, extra: 'transition-shadow group' })}`}>
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
           <div className={`p-3 rounded-md ${isNeoBrutalism ? 'border-2 border-black' : ''} bg-primary/10 text-primary`}>
@@ -40,7 +41,7 @@ const MetricCard = ({ title, value, icon: Icon, loading, delta }) => {
       <div className="mt-4 pt-4 border-t border-muted/20 text-xs text-muted-foreground flex justify-between items-center">
         <div>Actualizado: <span className="font-mono">{new Date().toLocaleDateString('es-MX')}</span></div>
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className={styles.button('ghost')}>Ver detalles</button>
+          <Button variant="outline" size="sm">Ver detalles</Button>
         </div>
       </div>
     </div>
@@ -85,7 +86,7 @@ const DashboardPage = () => {
             <option>Hoy</option>
             <option>Este mes</option>
           </select>
-          <button className={styles.button('secondary')}>{t('dashboard.action.refresh', 'Actualizar')}</button>
+          <Button variant="secondary">{t('dashboard.action.refresh', 'Actualizar')}</Button>
         </div>
       </div>
       

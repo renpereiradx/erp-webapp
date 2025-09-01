@@ -1,5 +1,6 @@
 import { describe, test, expect, vi, beforeAll } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
 import React from 'react';
 import ProductGrid from '@/features/products/components/ProductGrid';
 
@@ -38,7 +39,7 @@ describe('ProductGrid A11y', () => {
       { id: 'p3', name: 'Prod 3' },
     ];
 
-    render(
+  renderWithTheme(
       <ProductGrid
         products={products}
         isNeoBrutalism={false}

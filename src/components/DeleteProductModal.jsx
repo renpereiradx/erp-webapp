@@ -34,10 +34,10 @@ const DeleteProductModal = ({ isOpen, onClose, product, onConfirm, loading }) =>
         </div>
 
         <div className="flex gap-4 pt-6 mt-6 border-t border-border">
-          <Button onClick={onClose} disabled={loading} className={`w-full ${styles.button('secondary')}`}>
+          <Button onClick={onClose} disabled={loading} variant="secondary" className="w-full">
             {t('products.cancel')}
           </Button>
-          <Button onClick={() => onConfirm(product)} disabled={loading} className={`w-full ${styles.button('destructive')}`}>
+          <Button onClick={() => onConfirm(product)} disabled={loading} variant="destructive" className="w-full">
             {loading ? t('products.deleting') : <><Trash2 className="w-4 h-4 mr-2" />{t('products.delete_action')}</>}
           </Button>
         </div>

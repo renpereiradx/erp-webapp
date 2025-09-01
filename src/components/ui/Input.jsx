@@ -1,10 +1,12 @@
 /**
  * Componente Input simplificado para MVP - Sin hooks problemáticos
  * Versión básica que funciona sin dependencias de contexto
+ * Actualizado para soportar sistema de temas
  */
 
 import React, { useId } from 'react';
 import { cn } from '@/lib/utils';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 const Input = React.forwardRef(({ 
   className, 
@@ -18,6 +20,7 @@ const Input = React.forwardRef(({
   name,
   ...props 
 }, ref) => {
+  const { styles } = useThemeStyles();
   const generatedId = useId();
   const inputId = id || (name ? `${name}-${generatedId}` : `input-${generatedId}`);
   const helperId = `${inputId}-helper`;
@@ -26,7 +29,7 @@ const Input = React.forwardRef(({
     <div className="w-full">
       {/* Label */}
       {label && (
-        <label htmlFor={inputId} className="block text-sm font-medium mb-2">
+        <label htmlFor={inputId} className={cn("block mb-2", styles.label())}>
           {label}
           {props.required && (
             <span className="text-destructive ml-1">*</span>
@@ -53,7 +56,8 @@ const Input = React.forwardRef(({
           aria-invalid={!!error}
           aria-describedby={helperText ? helperId : undefined}
           className={cn(
-            "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-10 w-full ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+            styles.input(),
             error && "border-destructive",
             leftIcon && "pl-10",
             rightIcon && "pr-10",

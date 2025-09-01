@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, waitFor } from '@testing-library/react';
+import { waitFor } from '@testing-library/react';
+import { renderWithTheme } from '@/utils/themeTestUtils.jsx';
 
 // Mock toast
 const errorFrom = vi.fn();
@@ -51,7 +52,7 @@ import Products from '@/pages/Products.jsx';
 
 describe('Products telemetry', () => {
   it('registra products.error.store y muestra toast ante error de store', async () => {
-    render(<Products />);
+  renderWithTheme(<Products />);
     await waitFor(() => {
       expect(recordSpy).toHaveBeenCalledWith('products.error.store', { message: 'Fallo controlado en productos' });
     });
