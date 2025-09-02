@@ -1,343 +1,507 @@
-# Client API - Frontend Integration Guide
+````markdown
+# Guía de API de Clientes para Desarrolladores Frontend
 
-## 📋 Resumen General
+Esta guía proporciona documentación completa de todos los endpoints de clientes disponibles para integración con aplicaciones frontend.
 
-Esta guía documenta los endpoints del sistema de gestión de clientes, siguiendo el mismo patrón robusto y consistente que los sistemas de proveedores y pagos. Permite crear, consultar, actualizar, eliminar y obtener estadísticas de clientes, facilitando la integración frontend y el desarrollo de flujos de negocio relacionados.
-
-## 🔐 Autenticación
-
-**Todos los endpoints requieren autenticación JWT.**
+## Base URL
 ```
-Authorization: Bearer <token>
+http://localhost:5050
 ```
 
-## 🛠 Endpoints Disponibles
+## Autenticación
+Todos los endpoints requieren autenticación JWT. Incluye el token en el header:
+```
+Authorization: Bearer <jwt_token>
+```
+
+---
+
+## ¿Qué es el Sistema de Clientes?
+
+El sistema de gestión de clientes permite:
+- **Crear clientes**: Registro de nuevos clientes con información completa
+- **Consultar clientes**: Búsqueda por ID, nombre o listado paginado
+- **Actualizar clientes**: Modificación de información existente
+- **Eliminar clientes**: Eliminación lógica (soft delete)
+- **Gestión de contacto**: Información de contacto y documentos de identidad
+
+### Estructura del Cliente:
+- **Datos básicos**: ID, nombre, apellido, documento de identidad
+- **Contacto**: Información de contacto (teléfono, email, etc.)
+- **Estado**: Estado activo/inactivo del cliente
+- **Auditoría**: Usuario que creó/modificó y fechas de creación
+
+---
+
+## Endpoints de Clientes
 
 ### 1. Crear Cliente
 
-**POST** `/client`
+**POST** `/client/`
 
-Crea un nuevo cliente con información básica y metadatos opcionales.
+Crea un nuevo cliente con información básica.
 
-#### Request Body
+**Request Body:**
 ```json
 {
-  "name": "Cliente S.A.",
-  "contact": {
-    "email": "contacto@cliente.com",
-    "phone": "+52-555-9876"
-  },
-  "address": {
-    "street": "Av. Juárez 321",
-    "city": "CDMX",
-    "country": "México"
-  },
-  "tax_id": "RFC987654321",
-  "metadata": {
-    "priority": "medium",
-    "notes": "Cliente frecuente"
-  }
+  "name": "Juan",
+  "last_name": "Pérez García",
+  "document_id": "12345678",
+  "contact": "+595-21-123456"
 }
 ```
 
-#### Response (Success)
+**Campos:**
+- `name` (string, requerido): Nombre del cliente
+- `last_name` (string, requerido): Apellido del cliente
+- `document_id` (string, requerido): Número de documento de identidad (CI, RUC, etc.)
+- `contact` (string, opcional): Información de contacto (teléfono, email, etc.)
+
+**Response (201):**
 ```json
 {
-  "success": true,
-  "client_id": 201,
-  "message": "Cliente creado correctamente"
+  "message": "Client added"
 }
 ```
 
-#### Response (Error)
+**Response (400):**
 ```json
 {
-  "success": false,
-  "message": "Validation failed",
-  "error": "tax_id already exists"
+  "error": "Invalid request body"
 }
 ```
 
 ---
 
-### 2. Consultar Cliente por ID
+### 2. Obtener Cliente por ID
 
 **GET** `/client/{id}`
 
-Obtiene la información detallada de un cliente específico.
+Obtiene un cliente específico por su ID.
 
-#### Path Parameters
-- `id`: ID del cliente (int)
+**Path Parameters:**
+- `id` (string, requerido): ID del cliente
 
-#### Response (Success)
+**Response (200):**
 ```json
 {
-  "success": true,
-  "client": {
-    "id": 201,
-    "name": "Cliente S.A.",
-    "contact": {
-      "email": "contacto@cliente.com",
-      "phone": "+52-555-9876"
-    },
-    "address": {
-      "street": "Av. Juárez 321",
-      "city": "CDMX",
-      "country": "México"
-    },
-    "tax_id": "RFC987654321",
-    "metadata": {
-      "priority": "medium",
-      "notes": "Cliente frecuente"
-    },
-    "created_at": "2025-08-29T10:00:00Z",
-    "updated_at": "2025-08-29T10:00:00Z"
-  }
+  "id": "abc123",
+  "name": "Juan",
+  "last_name": "Pérez García",
+  "document_id": "12345678",
+  "status": true,
+  "user_id": "user123",
+  "created_at": "2024-01-15T10:30:00Z",
+  "contact": "+595-21-123456"
 }
 ```
 
-#### Response (Error)
+**Response (404):**
 ```json
 {
-  "success": false,
-  "message": "Client not found",
-  "error": "client with ID 999 not found"
+  "error": "Client not found"
 }
 ```
 
 ---
 
-### 3. Actualizar Cliente
+### 3. Buscar Cliente por Nombre
+
+**GET** `/client/name/{name}`
+
+Busca clientes por nombre (búsqueda parcial).
+
+**Path Parameters:**
+- `name` (string, requerido): Nombre o parte del nombre a buscar
+
+**Response (200):**
+```json
+[
+  {
+    "id": "abc123",
+    "name": "Juan",
+    "last_name": "Pérez García",
+    "document_id": "12345678",
+    "status": true,
+    "user_id": "user123",
+    "created_at": "2024-01-15T10:30:00Z",
+    "contact": "+595-21-123456"
+  }
+]
+```
+
+**Response (404):**
+```json
+{
+  "error": "Client not found"
+}
+```
+
+---
+
+### 4. Obtener Clientes Paginados
+
+**GET** `/client/{page}/{pageSize}`
+
+Obtiene clientes con paginación.
+
+**Path Parameters:**
+- `page` (int, requerido): Número de página (empezando desde 1)
+- `pageSize` (int, requerido): Cantidad de elementos por página
+
+**Response (200):**
+```json
+[
+  {
+    "id": "abc123",
+    "name": "Juan",
+    "last_name": "Pérez García",
+    "document_id": "12345678",
+    "status": true,
+    "user_id": "user123",
+    "created_at": "2024-01-15T10:30:00Z",
+    "contact": "+595-21-123456"
+  },
+  {
+    "id": "def456",
+    "name": "María",
+    "last_name": "González López",
+    "document_id": "87654321",
+    "status": true,
+    "user_id": "user123",
+    "created_at": "2024-01-16T09:00:00Z",
+    "contact": "maria@email.com"
+  }
+]
+```
+
+---
+
+### 5. Actualizar Cliente
 
 **PUT** `/client/{id}`
 
 Actualiza la información de un cliente existente.
 
-#### Request Body
+**Path Parameters:**
+- `id` (string, requerido): ID del cliente a actualizar
+
+**Request Body:**
 ```json
 {
-  "name": "Cliente S.A. Renovado",
-  "contact": {
-    "email": "nuevo@cliente.com",
-    "phone": "+52-555-6543"
-  },
-  "address": {
-    "street": "Av. Patriotismo 789",
-    "city": "CDMX",
-    "country": "México"
-  },
-  "metadata": {
-    "priority": "high"
-  }
+  "name": "Juan Carlos",
+  "last_name": "Pérez García",
+  "document_id": "12345678",
+  "contact": "+595-21-987654"
 }
 ```
 
-#### Response (Success)
+**Response (200):**
 ```json
 {
-  "success": true,
-  "client_id": 201,
-  "message": "Cliente actualizado correctamente"
+  "message": "Client updated"
 }
 ```
 
----
-
-### 4. Eliminar Cliente (Borrado Lógico)
-
-**DELETE** `/client/{id}`
-
-Marca un cliente como inactivo (no se elimina físicamente).
-
-#### Response (Success)
+**Response (400):**
 ```json
 {
-  "success": true,
-  "client_id": 201,
-  "message": "Cliente eliminado correctamente"
+  "error": "Invalid request body"
 }
 ```
 
 ---
 
-### 5. Listar Clientes (Paginado y Búsqueda)
+### 6. Eliminar Cliente
 
-**GET** `/client?name=cliente&page=1&pageSize=10`
+**PUT** `/client/delete/{id}`
 
-Obtiene una lista paginada de clientes, con opción de búsqueda por nombre.
+Elimina un cliente (eliminación lógica - cambia el estado a inactivo).
 
-#### Response (Success)
+**Path Parameters:**
+- `id` (string, requerido): ID del cliente a eliminar
+
+**Response (200):**
 ```json
 {
-  "success": true,
-  "clients": [
-    {
-      "id": 201,
-      "name": "Cliente S.A.",
-      "contact": { "email": "contacto@cliente.com", "phone": "+52-555-9876" },
-      "address": { "city": "CDMX" },
-      "tax_id": "RFC987654321"
-    },
-    {
-      "id": 202,
-      "name": "Cliente B S.A.",
-      "contact": { "email": "ventas@clienteb.com", "phone": "+52-555-8765" },
-      "address": { "city": "Monterrey" },
-      "tax_id": "RFC123456789"
-    }
-  ],
-  "page": 1,
-  "pageSize": 10,
-  "total": 2
+  "message": "Client deleted"
+}
+```
+
+**Response (404):**
+```json
+{
+  "error": "Client not found"
 }
 ```
 
 ---
 
-### 6. Estadísticas de Clientes
+## Integración con Otros Sistemas
 
-**GET** `/client/statistics`
+### Ventas por Cliente
 
-Obtiene estadísticas consolidadas de clientes para análisis y monitoreo.
+Los clientes se integran con el sistema de ventas:
 
-#### Query Parameters (Opcionales)
-- `start_date`: Fecha de inicio (YYYY-MM-DD)
-- `end_date`: Fecha de fin (YYYY-MM-DD)
-- `active_only`: Solo clientes activos (boolean)
+**GET** `/sale/client_id/{client_id}`
 
-#### Example Request
-```
-GET /client/statistics?start_date=2025-08-01&end_date=2025-08-31&active_only=true
-```
+Obtiene todas las ventas realizadas a un cliente específico.
 
-#### Response (Success)
-```json
-{
-  "period": {
-    "start_date": "2025-08-01",
-    "end_date": "2025-08-31"
-  },
-  "client_statistics": {
-    "total_clients": 40,
-    "active_clients": 35,
-    "inactive_clients": 5,
-    "new_clients": 4,
-    "updated_clients": 10
-  },
-  "generated_at": "2025-08-29T10:30:00Z"
-}
-```
+**GET** `/sale/client_name/{name}`
+
+Obtiene ventas por nombre del cliente.
+
+### Reservas por Cliente
+
+Los clientes también se integran con el sistema de reservas:
+
+**GET** `/reserve/client/{client_id}`
+
+Obtiene todas las reservas de un cliente específico.
 
 ---
 
-## 📊 Modelos de Datos Principales
+## Códigos de Respuesta HTTP
+
+| Código | Descripción |
+|--------|-------------|
+| 200    | Operación exitosa |
+| 201    | Recurso creado exitosamente |
+| 400    | Solicitud inválida |
+| 401    | No autorizado (token JWT inválido) |
+| 404    | Recurso no encontrado |
+| 500    | Error interno del servidor |
+
+---
+
+## Modelo de Datos del Cliente
 
 ### Client
 ```typescript
 interface Client {
-  id: number;
-  name: string;
-  contact: {
-    email: string;
-    phone: string;
-  };
-  address: {
-    street?: string;
-    city?: string;
-    country?: string;
-  };
-  tax_id: string;
-  metadata?: Record<string, any>;
-  created_at?: string;
-  updated_at?: string;
+  id: string;                // ID único generado automáticamente
+  name: string;              // Nombre del cliente
+  last_name: string;         // Apellido del cliente
+  document_id: string;       // Número de documento de identidad
+  status: boolean;           // Estado activo (true) o inactivo (false)
+  user_id: string;           // ID del usuario que creó/modificó el cliente
+  created_at: string;        // Fecha de creación (ISO 8601)
+  contact: string;           // Información de contacto
 }
 ```
 
-### ClientStatistics
+---
+
+## Ejemplos de Uso con JavaScript/TypeScript
+
+### Crear un cliente
 ```typescript
-interface ClientStatistics {
-  total_clients: number;
-  active_clients: number;
-  inactive_clients: number;
-  new_clients: number;
-  updated_clients: number;
-}
+const createClient = async (clientData: {
+  name: string;
+  last_name: string;
+  document_id: string;
+  contact?: string;
+}) => {
+  try {
+    const response = await fetch('/client/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(clientData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error creating client:', error);
+    throw error;
+  }
+};
+```
+
+### Obtener cliente por ID
+```typescript
+const getClientById = async (clientId: string) => {
+  try {
+    const response = await fetch(`/client/${clientId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const client = await response.json();
+    return client;
+  } catch (error) {
+    console.error('Error fetching client:', error);
+    throw error;
+  }
+};
+```
+
+### Buscar clientes por nombre
+```typescript
+const searchClientsByName = async (searchTerm: string) => {
+  try {
+    const response = await fetch(`/client/name/${encodeURIComponent(searchTerm)}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const clients = await response.json();
+    return clients;
+  } catch (error) {
+    console.error('Error searching clients:', error);
+    throw error;
+  }
+};
+```
+
+### Obtener clientes paginados
+```typescript
+const getClientsPaginated = async (page: number, pageSize: number) => {
+  try {
+    const response = await fetch(`/client/${page}/${pageSize}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const clients = await response.json();
+    return clients.map(client => ({
+      ...client,
+      // Agregar campos útiles para la UI
+      fullName: `${client.name} ${client.last_name}`,
+      isActive: client.status,
+      hasContact: !!client.contact
+    }));
+  } catch (error) {
+    console.error('Error fetching paginated clients:', error);
+    throw error;
+  }
+};
+```
+
+### Actualizar cliente
+```typescript
+const updateClient = async (clientId: string, clientData: {
+  name: string;
+  last_name: string;
+  document_id: string;
+  contact?: string;
+}) => {
+  try {
+    const response = await fetch(`/client/${clientId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(clientData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error updating client:', error);
+    throw error;
+  }
+};
+```
+
+### Eliminar cliente
+```typescript
+const deleteClient = async (clientId: string) => {
+  try {
+    const response = await fetch(`/client/delete/${clientId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error deleting client:', error);
+    throw error;
+  }
+};
 ```
 
 ---
 
-## ⚠️ Manejo de Errores
+## Cuándo Usar Cada Endpoint
 
-### Códigos de Error Comunes
+### Gestión Básica de Clientes
+- **Crear cliente**: `POST /client/` - Para registrar nuevos clientes
+- **Buscar por ID**: `GET /client/{id}` - Para obtener información específica
+- **Buscar por nombre**: `GET /client/name/{name}` - Para búsquedas rápidas
+- **Listado paginado**: `GET /client/{page}/{pageSize}` - Para mostrar listas
 
-| Código | Descripción |
-|--------|-------------|
-| `VALIDATION_FAILED` | Datos de entrada inválidos |
-| `CLIENT_NOT_FOUND` | Cliente no existe |
-| `TAX_ID_DUPLICATE` | RFC/tax_id duplicado |
-| `INSUFFICIENT_PERMISSIONS` | Usuario sin permisos |
-| `INACTIVE_CLIENT` | Cliente inactivo |
+### Operaciones de Mantenimiento
+- **Actualizar**: `PUT /client/{id}` - Para modificar información
+- **Eliminar**: `PUT /client/delete/{id}` - Para desactivar clientes
 
-### Estructura de Error Estándar
-```json
-{
-  "success": false,
-  "message": "Human readable error message",
-  "error_code": "ERROR_CODE",
-  "details": "Additional technical details",
-  "timestamp": "2025-08-29T10:30:00Z"
-}
-```
+### Integración con Ventas
+- **Ventas por cliente**: `GET /sale/client_id/{client_id}`
+- **Reservas por cliente**: `GET /reserve/client/{client_id}`
 
 ---
 
-## 🔄 Flujo de Trabajo Recomendado
+## Notas Importantes
 
-### 1. Crear Cliente
-```
-POST /client → {client_id}
-```
+1. **Autenticación**: Todos los endpoints requieren un token JWT válido.
+2. **IDs únicos**: Los IDs se generan automáticamente usando shortid.
+3. **Eliminación lógica**: Los clientes no se eliminan físicamente, solo se marcan como inactivos.
+4. **Documento de identidad**: Campo requerido para identificación única del cliente.
+5. **Búsqueda flexible**: La búsqueda por nombre acepta coincidencias parciales.
+6. **Paginación**: Use siempre paginación para listas grandes de clientes.
+7. **Estado del cliente**: El campo `status` indica si el cliente está activo (true) o inactivo (false).
+8. **Auditoría**: Todos los cambios quedan registrados con el usuario que los realizó.
 
-### 2. Consultar y Actualizar
-```
-GET /client/{id}
-PUT /client/{id}
-```
+### Validaciones del Sistema
+- **Nombre**: Campo requerido, no puede estar vacío
+- **Apellido**: Campo requerido, no puede estar vacío
+- **Documento**: Campo requerido, debe ser único por cliente
+- **Contacto**: Campo opcional, puede contener teléfono, email, etc.
 
-### 3. Eliminar (borrado lógico)
-```
-DELETE /client/{id}
-```
+### Flujo Recomendado
+1. **Crear cliente** → `POST /client/`
+2. **Buscar clientes** → `GET /client/name/{name}` o `GET /client/{page}/{pageSize}`
+3. **Ver detalles** → `GET /client/{id}`
+4. **Actualizar datos** → `PUT /client/{id}`
+5. **Eliminar** → `PUT /client/delete/{id}` (solo si es necesario)
 
-### 4. Listar y Buscar
-```
-GET /client?name=...&page=...&pageSize=...
-```
-
-### 5. Estadísticas y Monitoreo
-```
-GET /client/statistics
-```
-
----
-
-## 📋 Notas para el Equipo Frontend
-
-1. **Validación de Campos**: Validar datos antes de enviar para mejor UX.
-2. **Borrado Lógico**: Los clientes eliminados no se muestran en listados activos, pero pueden consultarse para auditoría.
-3. **Metadatos Flexibles**: El campo `metadata` acepta cualquier JSON válido.
-4. **Fechas**: Todas las fechas están en formato ISO 8601 (UTC).
-5. **IDs**: Los IDs son numéricos y únicos.
-6. **Consistencia**: La API sigue el mismo patrón que los sistemas de proveedores y pagos para facilitar el desarrollo.
-
-## 🔗 Endpoints Relacionados
-
-- **Ventas**: `/sale/*` para órdenes y pagos
-- **Productos**: `/product/*` para validar productos
-- **Usuarios**: `/user/*` para información de usuarios
-
----
-
-**Última actualización**: 29 de Agosto de 2025
-**Versión API**: 1.0
-**Patrón**: Siguiendo Supplier/Payments System
+Esta documentación cubre todos los endpoints de clientes disponibles en el sistema. Para dudas adicionales, consulte el código fuente en `/handlers/client.go` y `/models/client.go`.
+````

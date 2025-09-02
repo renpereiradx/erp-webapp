@@ -28,7 +28,7 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
   };
 
   return (
-    <div className={`${styles.card('p-6 transition-all hover:shadow-lg cursor-pointer')} group`}>
+    <div className={`${styles.card('p-6')} erp-hover-card group cursor-pointer`}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-start justify-between mb-3">
@@ -37,7 +37,7 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
               onClick={() => onView(client)}
               title="Ver detalles del cliente"
             >
-              {client.name}
+              {client.displayName || client.name || client.document_id || 'Cliente'}
             </h3>
             {client.metadata?.priority && (
               <span className={`px-2 py-1 text-xs font-bold rounded-md ${getPriorityColor(client.metadata.priority)}`}>
@@ -70,10 +70,10 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
 
           {/* Información adicional */}
           <div className="flex flex-wrap gap-2 items-center">
-            {client.tax_id && (
+            {client.document_id && (
               <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${styles.badge('secondary')}`}>
                 <FileText className="w-3 h-3" />
-                <span className="font-mono">{client.tax_id}</span>
+                <span>CI: {client.document_id}</span>
               </div>
             )}
             {client.metadata?.type && (

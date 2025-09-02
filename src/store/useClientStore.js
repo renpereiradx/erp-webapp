@@ -2,14 +2,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { clientService } from '../services/clientService';
 import { telemetry } from '../utils/telemetry';
-import { 
-  DEMO_CONFIG_CLIENTS,
-  getDemoClients,
-  getDemoClientStatistics,
-  createDemoClient,
-  updateDemoClient,
-  deleteDemoClient
-} from '../config/demoData';
+// Demo deshabilitado: se retira soporte condicional
 
 const useClientStore = create()(
   devtools(
@@ -21,6 +14,10 @@ const useClientStore = create()(
       totalPages: 1,
       totalClients: 0,
       searchTerm: '',
+  lastSearchTerm: '',
+
+  // Resultados de búsqueda (opcional, la página puede gestionarlos localmente)
+  searchResults: [],
 
       // Estado de las estadísticas
       stats: null,
@@ -36,132 +33,130 @@ const useClientStore = create()(
 
       // Cargar datos
       fetchClients: async () => {
-        const { page, pageSize, searchTerm } = get();
+        const { page, pageSize } = get();
         set({ loading: true, error: null });
-        const startTime = Date.now();
-        
         try {
-          // Si demo está habilitado, usar datos demo
-          if (DEMO_CONFIG_CLIENTS.enabled && !DEMO_CONFIG_CLIENTS.useRealAPI) {
-            console.log('👥 Clients: Loading demo data...');
-            
-            const params = { page, pageSize };
-            if (searchTerm) params.name = searchTerm;
-            
-            const result = await getDemoClients(params);
-            const data = result.data.clients || [];
-            const total = result.data.total || 0;
-            const totalPages = Math.ceil(total / pageSize);
-            
-            set({ 
-              clients: data, 
-              totalClients: total,
-              totalPages: totalPages,
-              loading: false 
-            });
-            
-            console.log('✅ Clients: Demo data loaded successfully');
-            return;
+          const result = await clientService.getAll({ page, pageSize });
+          if (typeof window !== 'undefined') {
+            console.log('[useClientStore.fetchClients] raw result:', result);
           }
-          
-          // Si demo está deshabilitado, usar API real
-          console.log('🌐 Clients: Loading data from API...');
-          const params = { page, pageSize };
-          if (searchTerm) params.name = searchTerm;
-
-          const result = await clientService.getAll(params);
-          
-          let data = [];
-          let total = 0;
-          let totalPages = 1;
-
-          if (result.success !== false) {
-            const raw = result.data || result;
-            data = raw.clients || [];
-            total = raw.total || 0;
-            totalPages = Math.ceil(total / pageSize);
+          // Normalizamos la forma del payload porque el backend puede devolver:
+          // 1) Un array directo
+          // 2) Un objeto { data: [...], total, page, pageSize }
+          // 3) Un objeto { clients: [...], total }
+          let dataArray = [];
+          const isClientLike = (obj) => obj && typeof obj === 'object' && (
+            typeof obj.id === 'string' || typeof obj.name === 'string' || typeof obj.document_id === 'string'
+          );
+          if (Array.isArray(result)) {
+            dataArray = result;
+          } else if (Array.isArray(result?.data)) {
+            dataArray = result.data;
+          } else if (Array.isArray(result?.clients)) {
+            dataArray = result.clients;
+          } else if (result && typeof result === 'object') {
+            // Posibles variantes:
+            // { data: { ...singleClient } }
+            if (result.data && !Array.isArray(result.data) && isClientLike(result.data)) {
+              dataArray = [result.data];
+            } else if (result.clients && !Array.isArray(result.clients) && typeof result.clients === 'object') {
+              // { clients: { id1: {...}, id2: {...} } }
+              const values = Object.values(result.clients);
+              dataArray = values.filter(isClientLike);
+            } else if (isClientLike(result)) {
+              // Un solo cliente como objeto directo
+              dataArray = [result];
+            } else {
+              dataArray = [];
+            }
           }
-          
-          set({ 
-            clients: data, 
+
+          // Normalizar estructura de contacto para UI (la doc indica string, la UI espera objeto)
+          const normalizeClient = (c) => {
+            if (!c || typeof c !== 'object') return null;
+            // Aceptar variantes de mayúsculas/minúsculas
+            const lowerMap = Object.fromEntries(Object.entries(c).map(([k,v]) => [k.toLowerCase(), v]));
+            const id = c.id || c.ID || c.Id || lowerMap.id || lowerMap._id || lowerMap.identifier;
+            const name = c.name || c.Name || lowerMap.name;
+            const lastName = c.last_name || c.lastName || c.LastName || lowerMap.last_name || lowerMap.lastname;
+            const documentId = c.document_id || c.documentId || lowerMap.document_id || lowerMap.documentid || c.ruc || c.RUC;
+            const status = 'status' in c ? c.status : ('status' in lowerMap ? lowerMap.status : true);
+            const createdAt = c.created_at || c.createdAt || lowerMap.created_at || new Date().toISOString();
+            const updatedAt = c.updated_at || c.updatedAt || lowerMap.updated_at || createdAt;
+            const userId = c.user_id || c.userId || lowerMap.user_id;
+            const contactRaw = c.contact || c.Contact || lowerMap.contact;
+            
+            let contactObj;
+            if (contactRaw && typeof contactRaw === 'string') {
+              const isEmail = contactRaw.includes('@');
+              contactObj = { raw: contactRaw, email: isEmail ? contactRaw : '', phone: isEmail ? '' : contactRaw };
+            } else if (contactRaw && typeof contactRaw === 'object') {
+              contactObj = { email: contactRaw.email || '', phone: contactRaw.phone || '', ...contactRaw };
+            } else {
+              contactObj = { email: '', phone: '' };
+            }
+            
+            const displayName = [name, lastName].filter(Boolean).join(' ').trim() || name || lastName || documentId || 'Cliente';
+            const key = id || documentId || `${displayName}-${createdAt}`;
+            
+            return {
+              ...c,
+              id,
+              name: displayName, // Usar displayName como nombre principal
+              displayName,
+              last_name: lastName,
+              document_id: documentId,
+              tax_id: documentId, // Mapear document_id a tax_id para el modal
+              status,
+              user_id: userId,
+              created_at: createdAt,
+              updated_at: updatedAt,
+              contact: contactObj,
+              // Campos que espera el modal pero no vienen del API
+              address: {
+                street: '',
+                city: '',
+                country: ''
+              },
+              metadata: {},
+              _key: key
+            };
+          };
+
+          const normalized = dataArray.map(normalizeClient).filter(Boolean);
+
+          // Limpiar entradas inválidas (sin id y sin nombre) o respuestas de error/mensaje
+          const cleaned = normalized.filter(c => c && (c.id || c.name) && !c.error && !c.message);
+          if (typeof window !== 'undefined') {
+            console.log('[useClientStore.fetchClients] dataArray:', dataArray, 'normalized:', normalized, 'cleaned:', cleaned);
+          }
+
+          // Totales (si el backend los provee los usamos; si no, fallback al length de la página actual)
+          const total = Number(
+            result?.total ||
+            (Array.isArray(result?.data) ? result.data.length : undefined) ||
+            (Array.isArray(result?.clients) ? result.clients.length : undefined) ||
+            dataArray.length ||
+            cleaned.length || 0
+          );
+          const computedTotalPages = total && pageSize ? Math.max(1, Math.ceil(total / pageSize)) : 1;
+
+          set({
+            clients: cleaned,
             totalClients: total,
-            totalPages: totalPages,
-            loading: false 
+            totalPages: computedTotalPages,
+            loading: false
           });
-          
-          console.log('✅ Clients: API data loaded successfully');
-          
-          telemetry.record('feature.client.load', { 
-            duration: Date.now() - startTime,
-            count: data.length,
-            page: page
-          });
-          
-        } catch (error) {
-          console.error('❌ Clients: Error loading data:', error.message);
-          
-          // Si falla la API y demo está habilitado como fallback
-          if (DEMO_CONFIG_CLIENTS.enabled) {
-            console.log('🔄 Clients: Falling back to demo data...');
-            const params = { page, pageSize };
-            if (searchTerm) params.name = searchTerm;
-            
-            const demoResult = await getDemoClients(params);
-            const data = demoResult.data.clients || [];
-            const total = demoResult.data.total || 0;
-            const totalPages = Math.ceil(total / pageSize);
-            
-            set({ 
-              clients: data, 
-              totalClients: total,
-              totalPages: totalPages,
-              loading: false,
-              error: null // Clear error since we have fallback data
-            });
-            console.log('✅ Clients: Demo fallback data loaded');
-          } else {
-            set({ error: error.message || 'Error al cargar', loading: false });
-            telemetry.record('feature.client.error', { 
-              error: error.message 
-            });
+        } catch (e) {
+          if (typeof window !== 'undefined') {
+            console.error('[useClientStore.fetchClients] error:', e);
           }
+          set({ error: e.message || 'Error al cargar', loading: false });
         }
       },
 
       // Cargar estadísticas
-      fetchStatistics: async () => {
-        set({ statsLoading: true });
-        try {
-          // Si demo está habilitado, usar datos demo
-          if (DEMO_CONFIG_CLIENTS.enabled && !DEMO_CONFIG_CLIENTS.useRealAPI) {
-            const result = await getDemoClientStatistics();
-            const stats = result.data.client_statistics;
-            set({ stats, statsLoading: false });
-            return;
-          }
-          
-          // Si demo está deshabilitado, usar API real
-          const result = await clientService.getStatistics();
-          let stats = null;
-          if (result.success !== false) {
-            const raw = result.data || result;
-            stats = raw.client_statistics || raw;
-          }
-          set({ stats, statsLoading: false });
-        } catch (error) {
-          // Si falla la API y demo está habilitado como fallback
-          if (DEMO_CONFIG_CLIENTS.enabled) {
-            const demoResult = await getDemoClientStatistics();
-            const stats = demoResult.data.client_statistics;
-            set({ stats, statsLoading: false });
-          } else {
-            set({ stats: null, statsLoading: false });
-            telemetry.record('feature.client.stats.error', { 
-              error: error.message 
-            });
-          }
-        }
-      },
+  fetchStatistics: async () => { set({ stats: null }); },
 
       // Acciones de paginación y búsqueda
       setPage: (newPage) => {
@@ -176,96 +171,101 @@ const useClientStore = create()(
         get().fetchClients();
       },
 
+      // Búsqueda avanzada por nombre o ID
+      searchClients: async (term) => {
+        const trimmed = (term || '').trim();
+        if (!trimmed) return [];
+        // Detectar si es un ID (similar heurística a productos)
+        const looksLikeId = /^[a-zA-Z0-9_-]{8,30}$/.test(trimmed) && !/\s/.test(trimmed) && trimmed.length >= 8;
+        set({ loading: true, error: null });
+        try {
+          let result;
+            if (looksLikeId) {
+              const single = await clientService.getById(trimmed);
+              result = single ? [single] : [];
+            } else {
+              // Requerir al menos 2-3 caracteres para búsquedas por nombre
+              if (trimmed.length < 2) {
+                set({ loading: false });
+                return [];
+              }
+              const searchArr = await clientService.searchByName(trimmed);
+              result = Array.isArray(searchArr) ? searchArr : (searchArr ? [searchArr] : []);
+            }
+
+          // Normalizar contacto igual que en fetchClients
+          const normalizeClientSearch = (c) => {
+            if (!c || typeof c !== 'object') return null;
+            const lowerMap = Object.fromEntries(Object.entries(c).map(([k,v]) => [k.toLowerCase(), v]));
+            const id = c.id || c.ID || c.Id || lowerMap.id || lowerMap._id;
+            const name = c.name || c.Name || lowerMap.name;
+            const lastName = c.last_name || c.lastName || lowerMap.last_name || lowerMap.lastname;
+            const documentId = c.document_id || c.documentId || lowerMap.document_id || lowerMap.documentid;
+            const status = 'status' in c ? c.status : ('status' in lowerMap ? lowerMap.status : true);
+            const userId = c.user_id || c.userId || lowerMap.user_id;
+            const contactRaw = c.contact || lowerMap.contact;
+            
+            let contactObj;
+            if (contactRaw && typeof contactRaw === 'string') {
+              const isEmail = contactRaw.includes('@');
+              contactObj = { raw: contactRaw, email: isEmail ? contactRaw : '', phone: isEmail ? '' : contactRaw };
+            } else if (contactRaw && typeof contactRaw === 'object') {
+              contactObj = { email: contactRaw.email || '', phone: contactRaw.phone || '', ...contactRaw };
+            } else { contactObj = { email: '', phone: '' }; }
+            
+            const createdAt = c.created_at || lowerMap.created_at || new Date().toISOString();
+            const updatedAt = c.updated_at || lowerMap.updated_at || createdAt;
+            const displayName = [name, lastName].filter(Boolean).join(' ').trim() || name || lastName || documentId || 'Cliente';
+            const key = id || documentId || `${displayName}-${createdAt}`;
+            
+            return { 
+              ...c, 
+              id, 
+              name: displayName,
+              displayName,
+              last_name: lastName, 
+              document_id: documentId,
+              tax_id: documentId,
+              status, 
+              user_id: userId,
+              contact: contactObj, 
+              created_at: createdAt, 
+              updated_at: updatedAt,
+              address: { street: '', city: '', country: '' },
+              metadata: {},
+              _key: key 
+            };
+          };
+          const normalized = result.map(normalizeClientSearch).filter(Boolean);
+          const cleaned = normalized.filter(c => c && (c.id || c.name) && !c.error && !c.message);
+          if (typeof window !== 'undefined') {
+            console.log('[useClientStore.searchClients] result:', result, 'normalized:', normalized, 'cleaned:', cleaned);
+          }
+          set({ searchResults: cleaned, lastSearchTerm: trimmed, loading: false });
+          return cleaned;
+        } catch (e) {
+          if (typeof window !== 'undefined') {
+            console.error('[useClientStore.searchClients] error:', e);
+          }
+          set({ error: e.message || 'Error en búsqueda', loading: false, searchResults: [] });
+          throw e;
+        }
+      },
+
       // CRUD
       createClient: async (data) => {
-        try {
-          // Si demo está habilitado, usar datos demo
-          if (DEMO_CONFIG_CLIENTS.enabled && !DEMO_CONFIG_CLIENTS.useRealAPI) {
-            await createDemoClient(data);
-            get().fetchClients(); // Recargar lista
-            return { success: true };
-          }
-          
-          // Si demo está deshabilitado, usar API real
-          const result = await clientService.create(data);
-          if (result.success !== false) {
-            get().fetchClients(); // Recargar lista
-          }
-          return { success: true };
-        } catch (error) {
-          // Si falla la API y demo está habilitado como fallback
-          if (DEMO_CONFIG_CLIENTS.enabled) {
-            await createDemoClient(data);
-            get().fetchClients(); // Recargar lista
-            return { success: true };
-          }
-          set({ error: error.message || 'Error al crear' });
-          return { success: false, error: error.message };
-        }
+        try { await clientService.create(data); get().fetchClients(); return { success: true }; }
+        catch (e) { set({ error: e.message || 'Error al crear' }); return { success: false, error: e.message }; }
       },
 
       updateClient: async (id, data) => {
-        try {
-          // Si demo está habilitado, usar datos demo
-          if (DEMO_CONFIG_CLIENTS.enabled && !DEMO_CONFIG_CLIENTS.useRealAPI) {
-            await updateDemoClient(id, data);
-            get().fetchClients(); // Recargar lista
-            return { success: true };
-          }
-          
-          // Si demo está deshabilitado, usar API real
-          const result = await clientService.update(id, data);
-          if (result.success !== false) {
-            get().fetchClients(); // Recargar lista
-          }
-          return { success: true };
-        } catch (error) {
-          // Si falla la API y demo está habilitado como fallback
-          if (DEMO_CONFIG_CLIENTS.enabled) {
-            try {
-              await updateDemoClient(id, data);
-              get().fetchClients(); // Recargar lista
-              return { success: true };
-            } catch (demoError) {
-              set({ error: demoError.message || 'Error al actualizar' });
-              return { success: false, error: demoError.message };
-            }
-          }
-          set({ error: error.message || 'Error al actualizar' });
-          return { success: false, error: error.message };
-        }
+        try { await clientService.update(id, data); get().fetchClients(); return { success: true }; }
+        catch (e) { set({ error: e.message || 'Error al actualizar' }); return { success: false, error: e.message }; }
       },
 
       deleteClient: async (id) => {
-        try {
-          // Si demo está habilitado, usar datos demo
-          if (DEMO_CONFIG_CLIENTS.enabled && !DEMO_CONFIG_CLIENTS.useRealAPI) {
-            await deleteDemoClient(id);
-            get().fetchClients(); // Recargar lista
-            return { success: true };
-          }
-          
-          // Si demo está deshabilitado, usar API real
-          const result = await clientService.delete(id);
-          if (result.success !== false) {
-            get().fetchClients(); // Recargar lista
-          }
-          return { success: true };
-        } catch (error) {
-          // Si falla la API y demo está habilitado como fallback
-          if (DEMO_CONFIG_CLIENTS.enabled) {
-            try {
-              await deleteDemoClient(id);
-              get().fetchClients(); // Recargar lista
-              return { success: true };
-            } catch (demoError) {
-              set({ error: demoError.message || 'Error al eliminar' });
-              return { success: false, error: demoError.message };
-            }
-          }
-          set({ error: error.message || 'Error al eliminar' });
-          return { success: false, error: error.message };
-        }
+        try { await clientService.delete(id); get().fetchClients(); return { success: true }; }
+        catch (e) { set({ error: e.message || 'Error al eliminar' }); return { success: false, error: e.message }; }
       }
     }),
     {

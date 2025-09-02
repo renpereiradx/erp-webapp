@@ -667,19 +667,27 @@ const useProductStore = create()(
         try {
           productService.validateProductData(productData);
           const response = await productService.createProduct(productData);
-          const newProduct = response.data || response;
-          set((state) => {
-            const productsById = { ...state.productsById, [newProduct.id]: newProduct };
-            return {
-              products: [newProduct, ...state.products],
-              productsById,
-              totalProducts: state.totalProducts + 1,
-              loading: false
-            };
-          });
-          telemetry.endTimer(t, { ok: true });
-          telemetry.record('products.create.success');
-          return newProduct;
+          const newProduct = response?.data || response;
+          let createdProduct = newProduct;
+          if (!newProduct || !newProduct.id) {
+            // La API retorna solo mensaje; refrescar lista para obtener producto real
+            try { await get().fetchProducts(1, get().pageSize); } catch {}
+            createdProduct = null;
+            set((s) => ({ loading: false }));
+          } else {
+            set((state) => {
+              const productsById = { ...state.productsById, [newProduct.id]: newProduct };
+              return {
+                products: [newProduct, ...state.products],
+                productsById,
+                totalProducts: state.totalProducts + 1,
+                loading: false
+              };
+            });
+          }
+          telemetry.endTimer(t, { ok: true, messageOnly: !createdProduct });
+            telemetry.record('products.create.success');
+          return createdProduct;
         } catch (error) {
           telemetry.record('products.create.error', { message: error?.message });
           set({ error: error.message || 'Error al crear producto', loading: false });
@@ -693,20 +701,28 @@ const useProductStore = create()(
         try {
           productService.validateProductData(productData);
           const response = await productService.updateProduct(productId, productData);
-          const updatedProduct = response.data || response;
-          set((state) => {
-            const products = state.products.map(product => product.id === productId ? { ...product, ...updatedProduct } : product);
-            const productsById = { ...state.productsById, [productId]: { ...state.productsById[productId], ...updatedProduct } };
-            return {
-              products,
-              productsById,
-              selectedProduct: state.selectedProduct?.id === productId ? { ...state.selectedProduct, ...updatedProduct } : state.selectedProduct,
-              loading: false
-            };
-          });
-          telemetry.endTimer(t, { ok: true });
+          const updatedProduct = response?.data || response;
+          let finalProduct = updatedProduct;
+          if (!updatedProduct || !updatedProduct.id) {
+            // Mensaje sin datos => refrescar productos
+            try { await get().fetchProducts(get().currentPage, get().pageSize); } catch {}
+            finalProduct = null;
+            set((s) => ({ loading: false }));
+          } else {
+            set((state) => {
+              const products = state.products.map(product => product.id === productId ? { ...product, ...updatedProduct } : product);
+              const productsById = { ...state.productsById, [productId]: { ...state.productsById[productId], ...updatedProduct } };
+              return {
+                products,
+                productsById,
+                selectedProduct: state.selectedProduct?.id === productId ? { ...state.selectedProduct, ...updatedProduct } : state.selectedProduct,
+                loading: false
+              };
+            });
+          }
+          telemetry.endTimer(t, { ok: true, messageOnly: !finalProduct });
           telemetry.record('products.update.success');
-          return updatedProduct;
+          return finalProduct;
         } catch (error) {
           telemetry.record('products.update.error', { message: error?.message });
           set({ error: error.message || 'Error al actualizar producto', loading: false });
@@ -720,13 +736,16 @@ const useProductStore = create()(
         try {
           await productService.deleteProduct(productId);
           set((state) => {
-            const products = state.products.filter(product => product.id !== productId);
-            const { [productId]: _removed, ...rest } = state.productsById;
+            const products = state.products.map(p => p.id === productId ? { ...p, state: false } : p);
+            const productsById = {
+              ...state.productsById,
+              [productId]: state.productsById[productId] ? { ...state.productsById[productId], state: false } : state.productsById[productId]
+            };
             return {
               products,
-              productsById: rest,
-              totalProducts: Math.max(0, state.totalProducts - 1),
-              selectedProduct: state.selectedProduct?.id === productId ? null : state.selectedProduct,
+              productsById,
+              // totalProducts no cambia; seguimos contando aunque esté inactivo (para métricas)
+              selectedProduct: state.selectedProduct?.id === productId ? { ...state.selectedProduct, state: false } : state.selectedProduct,
               selectedIds: state.selectedIds.filter(id => id !== productId),
               loading: false
             };

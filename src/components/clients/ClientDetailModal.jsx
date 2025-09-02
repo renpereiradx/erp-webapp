@@ -39,30 +39,22 @@ const ClientDetailModal = ({ client, onClose }) => {
         <div className="p-6 overflow-y-auto">
           <div className="space-y-4">
             <DetailRow icon={<Hash size={18} />} label="ID Cliente" value={client.id} />
-            <DetailRow icon={<FileText size={18} />} label="Nombre Completo" value={client.name} />
-            <DetailRow icon={<FileText size={18} />} label="RFC / ID Fiscal" value={client.tax_id} />
+            <DetailRow icon={<FileText size={18} />} label="Nombre" value={client.name} />
+            {client.last_name && (
+              <DetailRow icon={<FileText size={18} />} label="Apellido" value={client.last_name} />
+            )}
+            <DetailRow icon={<FileText size={18} />} label="Documento de Identidad (CI)" value={client.document_id} />
+            <DetailRow icon={<Hash size={18} />} label="Estado" value={client.status ? 'Activo' : 'Inactivo'} />
             
             <h3 className={`${styles.header('h3')} pt-4`}>Contacto</h3>
-            <DetailRow icon={<Mail size={18} />} label="Email" value={client.contact?.email} />
-            <DetailRow icon={<Phone size={18} />} label="Teléfono" value={client.contact?.phone} />
-
-            <h3 className={`${styles.header('h3')} pt-4`}>Dirección</h3>
-            <DetailRow icon={<MapPin size={18} />} label="Calle" value={client.address?.street} />
-            <DetailRow icon={<MapPin size={18} />} label="Ciudad" value={client.address?.city} />
-            <DetailRow icon={<MapPin size={18} />} label="País" value={client.address?.country} />
-
-            <h3 className={`${styles.header('h3')} pt-4`}>Metadatos</h3>
-            {client.metadata && Object.keys(client.metadata).length > 0 ? (
-              Object.entries(client.metadata).map(([key, value]) => (
-                <DetailRow key={key} icon={<Hash size={18} />} label={key} value={String(value)} />
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground">No hay metadatos.</p>
-            )}
+            <DetailRow icon={<Mail size={18} />} label="Email" value={client.contact?.email || 'No especificado'} />
+            <DetailRow icon={<Phone size={18} />} label="Teléfono" value={client.contact?.phone || 'No especificado'} />
 
             <h3 className={`${styles.header('h3')} pt-4`}>Sistema</h3>
             <DetailRow icon={<Clock size={18} />} label="Fecha de Creación" value={formatDateTime(client.created_at)} />
-            <DetailRow icon={<Clock size={18} />} label="Última Actualización" value={formatDateTime(client.updated_at)} />
+            {client.user_id && (
+              <DetailRow icon={<Hash size={18} />} label="Creado por (User ID)" value={client.user_id} />
+            )}
           </div>
         </div>
 

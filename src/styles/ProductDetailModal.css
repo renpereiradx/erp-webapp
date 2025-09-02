@@ -1,0 +1,215 @@
+/* Estilos específicos para el ProductDetailModal */
+.product-detail-modal {
+  /* Animaciones mejoradas */
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Variante para modal en contenedor específico */
+.product-detail-modal.modal-in-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40; /* Un poco menor para no sobrepasar otros elementos globales */
+  border-radius: 0.75rem; /* Coincidir con el contenedor padre */
+  overflow: hidden; /* Evitar que se salga del contenedor */
+}
+
+/* Ajustes específicos para el contenido cuando está en contenedor */
+.modal-in-container .modal-content {
+  max-height: calc(100% - 2rem); /* Ajustar al contenedor */
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.product-detail-modal .modal-content {
+  animation: slideUp 0.3s ease-out;
+  transform-origin: center bottom;
+}
+
+/* Animaciones suaves para el backdrop */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Efectos hover para los badges */
+.product-badge {
+  transition: all 0.2s ease-in-out;
+}
+
+.product-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Separadores con gradiente sutil */
+.detail-separator {
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0.2;
+  height: 1px;
+}
+
+/* Mejoras para el scrollbar */
+.product-scroll-area {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+}
+
+.product-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.product-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.product-scroll-area::-webkit-scrollbar-thumb {
+  background-color: rgba(155, 155, 155, 0.5);
+  border-radius: 20px;
+  border: transparent;
+}
+
+.product-scroll-area::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(155, 155, 155, 0.7);
+}
+
+/* Estados de validación mejorados */
+.validation-success {
+  border-left: 3px solid #10b981;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), transparent);
+}
+
+.validation-error {
+  border-left: 3px solid #ef4444;
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), transparent);
+}
+
+.validation-warning {
+  border-left: 3px solid #f59e0b;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), transparent);
+}
+
+/* Efectos de focus mejorados */
+.product-tab:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Transiciones suaves para el cambio de tabs */
+.tab-content {
+  animation: tabFadeIn 0.2s ease-in-out;
+}
+
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mejoras para el modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .product-detail-modal {
+    backdrop-filter: blur(8px);
+  }
+  
+  .validation-success {
+    background: linear-gradient(90deg, rgba(16, 185, 129, 0.2), transparent);
+  }
+  
+  .validation-error {
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), transparent);
+  }
+  
+  .validation-warning {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.2), transparent);
+  }
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .product-detail-modal .modal-content {
+    margin: 0.75rem;
+    max-height: calc(100vh - 1.5rem);
+    max-width: calc(100vw - 1.5rem);
+  }
+  
+  /* Ajustes específicos para modal en contenedor en móvil */
+  .modal-in-container .modal-content {
+    margin: 0.5rem;
+    max-height: calc(100% - 1rem);
+    max-width: calc(100% - 1rem);
+  }
+  
+  .tab-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .tab-trigger {
+    font-size: 0.875rem;
+    padding: 0.5rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .product-detail-modal .modal-content {
+    max-width: 48rem; /* 768px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .product-detail-modal .modal-content {
+    max-width: 56rem; /* 896px - más compacto que antes */
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .product-detail-modal,
+  .modal-content,
+  .tab-content,
+  .product-badge {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .product-detail-modal {
+    position: static;
+    background: white;
+    color: black;
+  }
+  
+  .modal-backdrop {
+    display: none;
+  }
+  
+  .close-button {
+    display: none;
+  }
+}

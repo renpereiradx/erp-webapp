@@ -52,7 +52,7 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onToggleSel
 
   const cardVariant = stockStatus.status === 'in-stock' ? 'success' : undefined;
   return (
-    <div className={`${styles.card(cardVariant || 'group flex flex-col', cardVariant ? { interactive: true, density: 'compact', extra: 'group flex flex-col transition-all duration-200 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring' } : 'transition-all duration-200 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-ring')}`}>
+    <div className={`erp-hover-card ${styles.card(cardVariant || 'group flex flex-col', cardVariant ? { interactive: true, density: 'compact', extra: 'group flex flex-col' } : '')}`}>
       <div className="flex-1 p-4">
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-start gap-2 flex-1 pr-2 min-w-0">
@@ -73,7 +73,7 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onToggleSel
               ) : (
                 <>
                   <h3 className={`${styles.header('h3')} line-clamp-2`}>{product.name || t('field.no_name')}</h3>
-                  <p className={`text-xs text-muted-foreground ${styles.label()}`}>{product.code || product.id}</p>
+                  <p className={`text-xs text-muted-foreground ${styles.label()}`}>{product.code ? product.code : `ID: ${product.id}`}</p>
                 </>
               )}
             </div>

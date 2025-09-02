@@ -11,6 +11,7 @@ const DICTIONARY = {
     'products.retry': 'Reintentar',
     'products.search.db': 'Buscar en Base de Datos',
     'products.search.placeholder': 'Buscar por nombre o ID...',
+    'products.search.placeholder_id': 'Buscar por ID de producto...',
     'products.search': 'Buscar',
     'products.clear': 'Limpiar',
     'products.bulk.activate': 'Activar',

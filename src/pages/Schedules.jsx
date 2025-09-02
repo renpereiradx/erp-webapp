@@ -48,6 +48,9 @@ const Schedules = () => {
     targetDate: '',
     days: 7
   });
+  // Paginación cliente
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Cargar datos al montar
   useEffect(() => {
@@ -73,6 +76,27 @@ const Schedules = () => {
     
     return matchesSearch && matchesProduct && matchesDate;
   });
+
+  // Ajustar página si los filtros reducen el total
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredSchedules.length / pageSize));
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [filteredSchedules.length, pageSize, currentPage]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSchedules.length / pageSize));
+  const pageStart = (currentPage - 1) * pageSize;
+  const pageEnd = pageStart + pageSize;
+  const paginatedSchedules = filteredSchedules.slice(pageStart, pageEnd);
+
+  const goToPage = (p) => {
+    if (p < 1 || p > totalPages) return;
+    setCurrentPage(p);
+  };
+
+  // Reset page on key filter changes
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, selectedProduct, dateFilter, pageSize]);
 
   // Handlers
   const handleToggleAvailability = async (schedule) => {
@@ -219,8 +243,35 @@ const Schedules = () => {
           onAction={() => setShowGenerateModal(true)}
         />
       ) : (
-        <div className="grid gap-4">
-          {filteredSchedules.map(schedule => (
+        <>
+          {/* Controles de paginación */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div className="text-sm text-muted-foreground">
+              {filteredSchedules.length > 0 ? (
+                <span>
+                  {t('pagination.showing', 'Mostrando')} {pageStart + 1}-{Math.min(pageEnd, filteredSchedules.length)} {t('pagination.of', 'de')} {filteredSchedules.length}
+                </span>
+              ) : (
+                <span>{t('pagination.no_results', 'Sin resultados')}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-muted-foreground">
+                {t('pagination.page_size', 'Por página')}:
+              </label>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(parseInt(e.target.value))}
+                className={styles.input('!py-1 !h-8')}
+              >
+                {[5,10,20,30,50].map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+          {paginatedSchedules.map(schedule => (
             <Card key={schedule.id} className={styles.card()}>
               <CardContent className="p-4">
                 <div className="flex justify-between items-start">
@@ -288,7 +339,56 @@ const Schedules = () => {
               </CardContent>
             </Card>
           ))}
-        </div>
+          </div>
+          {/* Navegación páginas */}
+          {filteredSchedules.length > pageSize && (
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => goToPage(1)}
+                disabled={currentPage === 1}
+              >«</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >{t('pagination.prev', 'Anterior')}</Button>
+              {Array.from({ length: totalPages }).slice(0, 7).map((_, idx) => {
+                // Si hay muchas páginas, mostrar primeras 3, última y alrededor de la actual (simplificado)
+                const page = idx + 1;
+                if (totalPages > 7) {
+                  const show = page <= 2 || page === totalPages || Math.abs(page - currentPage) <= 1;
+                  if (!show) return null;
+                }
+                return (
+                  <Button
+                    key={page}
+                    variant={page === currentPage ? 'primary' : 'secondary'}
+                    size="sm"
+                    onClick={() => goToPage(page)}
+                  >{page}</Button>
+                );
+              })}
+              {totalPages > 7 && currentPage < totalPages - 2 && (
+                <span className="px-2">…</span>
+              )}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >{t('pagination.next', 'Siguiente')}</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => goToPage(totalPages)}
+                disabled={currentPage === totalPages}
+              >»</Button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Modal Generar Horarios */}

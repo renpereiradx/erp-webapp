@@ -252,26 +252,40 @@ class BusinessManagementAPI {
   }
 
   async getProductById(id, options = {}) {
-    const product = await this.makeRequest(`/products/${id}`, options);
-    
-    // Normalizar el producto para asegurar que tenga la estructura enriquecida correcta
-    if (product) {
-      const hasEnrichedData = product.has_unit_pricing !== undefined || 
-                             product.stock_status !== undefined ||
-                             product.price_formatted !== undefined ||
-                             product.has_valid_price !== undefined ||
-                             product.unit_prices !== undefined;
+    try {
+      const product = await this.makeRequest(`/products/${id}`, options);
       
-      if (hasEnrichedData) {
-        // Si ya tiene datos enriquecidos, normalizarlo para consistencia
-        return this.normalizeEnrichedProduct(product);
-      } else {
-        // Si no tiene datos enriquecidos, devolverlo tal como está
-        return product;
+      // Normalizar el producto para asegurar que tenga la estructura enriquecida correcta
+      if (product) {
+        const hasEnrichedData = product.has_unit_pricing !== undefined || 
+                               product.stock_status !== undefined ||
+                               product.price_formatted !== undefined ||
+                               product.has_valid_price !== undefined ||
+                               product.unit_prices !== undefined;
+        
+        if (hasEnrichedData) {
+          // Si ya tiene datos enriquecidos, normalizarlo para consistencia
+          return this.normalizeEnrichedProduct(product);
+        } else {
+          // Si no tiene datos enriquecidos, devolverlo tal como está
+          return product;
+        }
       }
+      
+      return product;
+    } catch (error) {
+      // Mejorar el manejo de errores específicos
+      if (error.status === 404) {
+        throw new Error(`Producto no encontrado: ${id}`);
+      } else if (error.status === 500) {
+        throw new Error(`Error interno del servidor al buscar producto: ${id}`);
+      } else if (error.status >= 500) {
+        throw new Error(`Error del servidor (${error.status}) al buscar producto: ${id}`);
+      }
+      
+      // Re-lanzar el error original si no es un error específico conocido
+      throw error;
     }
-    
-    return product;
   }
 
   async searchProductsByName(name) {
@@ -308,32 +322,64 @@ class BusinessManagementAPI {
     
     if (looksLikeId) {
       try {
+        console.log(`🔍 Buscando producto por ID: ${searchTerm}`);
         // Para búsquedas por ID, usar el endpoint de detalles enriquecidos
         const product = await this.getProductWithDetails(searchTerm, options);
+        console.log(`✅ Producto encontrado por ID:`, product);
         return Array.isArray(product) ? product : [product];
       } catch (error) {
-        // Solo hacer fallback a nombre si el error NO indica que es un ID válido pero inexistente
-        if (!error.message.includes('Producto no encontrado') && !error.message.includes('not found')) {
+        console.warn(`⚠️ Error al buscar por ID ${searchTerm}:`, error.message);
+        
+        // Si es un error 500 (server error) o error de red, intentar fallback por nombre
+        if (error.status === 500 || error.status >= 500 || error.message.includes('500') || 
+            error.message.includes('Internal Server Error') || 
+            error.message.includes('Network Error') || 
+            error.message.includes('Failed to fetch')) {
+          
+          console.log(`🔄 Error 500 detectado, intentando fallback por nombre para: ${searchTerm}`);
           try {
-            // Usar el nuevo endpoint enriquecido
-            return await this.searchProductsByNameEnriched(searchTerm, options);
-          } catch {
+            // Fallback: intentar buscar por nombre si el ID falló por error del servidor
+            const fallbackResults = await this.searchProductsByNameEnriched(searchTerm, options);
+            console.log(`✅ Fallback por nombre exitoso:`, fallbackResults);
+            return fallbackResults;
+          } catch (fallbackError) {
+            console.warn(`❌ Fallback por nombre también falló:`, fallbackError.message);
             return [];
           }
-        } else {
+        }
+        
+        // Si el error indica que es un ID válido pero inexistente (404), no hacer fallback
+        if (error.status === 404 || error.message.includes('Producto no encontrado') || 
+            error.message.includes('not found')) {
+          console.log(`📭 Producto con ID ${searchTerm} no encontrado (404)`);
+          return [];
+        }
+        
+        // Para otros errores, intentar fallback por nombre
+        try {
+          console.log(`🔄 Intentando fallback por nombre para: ${searchTerm}`);
+          const fallbackResults = await this.searchProductsByNameEnriched(searchTerm, options);
+          console.log(`✅ Fallback por nombre exitoso:`, fallbackResults);
+          return fallbackResults;
+        } catch (fallbackError) {
+          console.warn(`❌ Fallback por nombre también falló:`, fallbackError.message);
           return [];
         }
       }
     } else {
       try {
+        console.log(`🔍 Buscando productos por nombre: ${searchTerm}`);
         // Para búsquedas por nombre, usar el nuevo endpoint enriquecido
-        return await this.searchProductsByNameEnriched(searchTerm, options);
+        const results = await this.searchProductsByNameEnriched(searchTerm, options);
+        console.log(`✅ Productos encontrados por nombre:`, results);
+        return results;
       } catch (error) {
         // Silenciar errores de cancelación (AbortError) en desarrollo
         if (error.name === 'AbortError') {
+          console.log(`🚫 Búsqueda cancelada: ${searchTerm}`);
           return [];
         }
-        console.warn('Error en búsqueda por nombre:', error.message);
+        console.warn(`⚠️ Error en búsqueda por nombre:`, error.message);
         return [];
       }
     }
@@ -343,7 +389,9 @@ class BusinessManagementAPI {
     const payload = {
       name: productData.name,
       id_category: productData.id_category || productData.categoryId || productData.category_id,
-      state: productData.state !== undefined ? productData.state : true
+  state: productData.state !== undefined ? productData.state : true,
+  // Incluir product_type si viene (requerido por nuevo contrato API)
+  product_type: productData.product_type || 'PHYSICAL'
     };
 
     if (productData.description && productData.description.trim()) {
@@ -360,22 +408,25 @@ class BusinessManagementAPI {
     const payload = {
       name: productData.name,
       state: productData.state,
-      id_category: productData.id_category || productData.categoryId || productData.category_id
+      id_category: productData.id_category || productData.categoryId || productData.category_id,
+      product_type: productData.product_type || productData.productType || 'PHYSICAL'
     };
 
     if (productData.description !== undefined) {
-      payload.description = productData.description.trim();
+      payload.description = (productData.description || '').trim();
     }
 
-    return this.makeRequest(`/products/products/${id}`, {
+    // Nuevo contrato: PUT /products/{id}
+    return this.makeRequest(`/products/${id}`, {
       method: 'PUT',
       body: JSON.stringify(payload)
     });
   }
 
   async deleteProduct(id) {
-    return this.makeRequest(`/products/products/delete/${id}`, {
-      method: 'PUT'
+    // Nuevo contrato actualizado: DELETE /products/{id} (soft delete lógico en backend)
+    return this.makeRequest(`/products/${id}`, {
+      method: 'DELETE'
     });
   }
 

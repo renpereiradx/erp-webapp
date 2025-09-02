@@ -30,7 +30,7 @@ const SupplierListItem = ({ supplier, onEdit, onDelete }) => {
   };
 
   return (
-    <div className={`${styles.card('p-6 transition-all hover:shadow-lg cursor-pointer')} group`}>
+    <div className={`${styles.card('p-6')} erp-hover-card group cursor-pointer`}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-start justify-between mb-3">

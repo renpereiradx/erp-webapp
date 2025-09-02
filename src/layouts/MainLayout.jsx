@@ -4,7 +4,8 @@
  * Incluye sidebar responsive, navbar y área de contenido principal
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { 
@@ -33,6 +34,29 @@ import { Input } from '@/components/ui/Input';
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const profileBtnRef = useRef(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0, width: 288 });
+
+  useEffect(() => {
+    const calcPos = () => {
+      if (!profileBtnRef.current) return;
+      const rect = profileBtnRef.current.getBoundingClientRect();
+      setMenuPos({
+        top: rect.bottom + window.scrollY,
+        right: rect.right + window.scrollX,
+        width: 288
+      });
+    };
+    if (showUserMenu) {
+      calcPos();
+      window.addEventListener('resize', calcPos);
+      window.addEventListener('scroll', calcPos, true);
+    }
+    return () => {
+      window.removeEventListener('resize', calcPos);
+      window.removeEventListener('scroll', calcPos, true);
+    };
+  }, [showUserMenu]);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const location = useLocation();
@@ -807,44 +831,34 @@ const MainLayout = ({ children }) => {
         data-testid="main-content"
       >
         {/* Top navbar */}
-        <div className="erp-navbar sticky top-0 z-10 flex-shrink-0 flex h-20 w-full" 
+  <div className="erp-navbar sticky top-0 z-40 flex-shrink-0 flex h-16 w-full" 
              style={computedStyles.navbar}
              data-component="navbar" data-testid="navbar">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarOpen(true)}
-            className={`erp-mobile-menu-btn px-4 ${!isClient ? 'lg:hidden' : ''}`}
+            className={`erp-mobile-menu-btn hide-desktop px-4 lg:hidden`}
             style={{
               ...computedStyles.mobileMenuBtn,
-              display: isClient ? (!isLargeScreen ? 'flex' : 'none') : undefined
+              // Forzar display none en desktop incluso si estados aún no inicializan
+              display: isLargeScreen ? 'none' : 'flex'
             }}
             data-testid="mobile-menu-btn"
             data-component="mobile-menu-btn"
+            aria-label="Abrir menú"
           >
             <Menu className="h-6 w-6" />
           </Button>
 
-          <div className="erp-navbar-content flex-1 px-4 flex justify-between items-center" data-component="navbar-content" data-testid="navbar-content">
-            {/* Search */}
-            <div className="erp-search-section flex-1 flex justify-center lg:ml-6 lg:mr-6" data-component="search-section" data-testid="search-section">
-              <div className="erp-search-container max-w-lg w-full lg:max-w-xs" data-component="search-container" data-testid="search-container">
-                <Input
-                  placeholder="Buscar productos, clientes..."
-                  leftIcon={<Search className="h-5 w-5" />}
-                  className="erp-search-input w-full"
-                  data-testid="search-input"
-                />
-              </div>
-            </div>
-
-            {/* Right side */}
-            <div className="erp-navbar-actions ml-4 flex items-center md:ml-6 space-x-4" 
-                 style={{ overflow: 'visible' }}
+          <div className="erp-navbar-content flex-1 px-4 flex justify-end items-center" data-component="navbar-content" data-testid="navbar-content">
+            {/* Right side only (search eliminado) */}
+      <div className="erp-navbar-actions ml-2 flex items-center space-x-4" 
+        style={{ overflow: 'visible', marginTop: '4px' }}
                  data-component="navbar-actions" 
                  data-testid="navbar-actions">
               {/* Notifications */}
-              <Button 
+                <Button 
                 variant="ghost" 
                 size="icon" 
                 className="erp-notifications-btn relative" 
@@ -864,8 +878,8 @@ const MainLayout = ({ children }) => {
               </Button>
 
               {/* Profile Menu */}
-              <div className="erp-profile-menu relative" 
-                   style={{ overflow: 'visible' }}
+        <div className="erp-profile-menu relative" 
+          style={{ overflow: 'visible', zIndex: 55, position: 'relative' }}
                    data-component="profile-menu" 
                    data-testid="profile-menu">
                 <Button 
@@ -880,7 +894,10 @@ const MainLayout = ({ children }) => {
                     minWidth: '48px',
                     minHeight: '48px'
                   }}
-                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  ref={profileBtnRef}
+                  onClick={() => {
+                    setShowUserMenu(prev => !prev);
+                  }}
                   data-testid="profile-btn"
                 >
                   <User className="h-6 w-6" />
@@ -888,80 +905,60 @@ const MainLayout = ({ children }) => {
                     1
                   </span>
                 </Button>
-
-                {/* Dropdown Menu */}
-                {showUserMenu && (
-                  <div className={`absolute right-0 mt-2 w-72 z-50 ${computedStyles.css.cardRadius}`}
-                       style={{ 
-                         backgroundColor: 'var(--popover)', 
-                         border: isNeoBrutalismValue ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
-                         boxShadow: isNeoBrutalismValue ? '8px 8px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-lg)'
-                       }}>
-                    {/* User Info */}
-                    <div className="p-4"
-                         style={{ 
-                           borderBottom: isNeoBrutalismValue ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)'
-                         }}>
+                {showUserMenu && profileBtnRef.current && createPortal(
+                  <div
+                    className={`erp-user-dropdown fixed ${computedStyles.css.cardRadius}`}
+                    style={{
+                      top: `${menuPos.top}px`,
+                      left: `${menuPos.right - menuPos.width}px`,
+                      width: '18rem',
+                      minWidth: '16rem',
+                      minHeight: '10rem',
+                      maxHeight: '80vh',
+                      backgroundColor: 'var(--popover)',
+                      border: isNeoBrutalismValue ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)',
+                      boxShadow: isNeoBrutalismValue ? '8px 8px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-lg)',
+                      overflow: 'hidden',
+                      zIndex: 1000
+                    }}
+                  >
+                    <div className="p-4" style={{ borderBottom: isNeoBrutalismValue ? '4px solid var(--border)' : 'var(--border-width, 1px) solid var(--border)' }}>
                       <div className="flex items-center space-x-3">
                         <div className={`w-12 h-12 flex items-center justify-center ${isNeoBrutalismValue ? '' : 'rounded-full'}`}
-                             style={{ 
-                               backgroundColor: 'var(--primary)', 
-                               color: 'var(--primary-foreground)',
-                               border: isNeoBrutalismValue ? '4px solid var(--border)' : 'none'
-                             }}>
+                             style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)', border: isNeoBrutalismValue ? '4px solid var(--border)' : 'none' }}>
                           <User className="w-6 h-6" />
                         </div>
                         <div>
-                          <p className={`text-sm ${computedStyles.css.semiboldClass}`}
-                             style={{ color: 'var(--foreground)' }}>
-                            {user?.name || 'Usuario Demo'}
-                          </p>
-                          <p className={`text-xs ${isNeoBrutalismValue ? 'font-bold' : ''}`}
-                             style={{ color: 'var(--muted-foreground)' }}>
-                            {user?.email || user?.username || 'demo@erp.com'}
-                          </p>
+                          <p className={`text-sm ${computedStyles.css.semiboldClass}`} style={{ color: 'var(--foreground)' }}>{user?.name || 'Usuario Demo'}</p>
+                          <p className={`text-xs ${isNeoBrutalismValue ? 'font-bold' : ''}`} style={{ color: 'var(--muted-foreground)' }}>{user?.email || user?.username || 'demo@erp.com'}</p>
                         </div>
                       </div>
                     </div>
-
-                    {/* Menu Items */}
                     <div className="p-2">
                       <Link
                         to="/configuracion"
                         className={`flex items-center w-full px-4 py-3 text-sm ${computedStyles.css.mediumClass} text-left transition-colors ${isNeoBrutalismValue ? '' : 'rounded-md'}`}
                         style={{ color: 'var(--foreground)' }}
                         onClick={() => setShowUserMenu(false)}
-                        onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = isNeoBrutalismValue ? 'var(--muted)' : 'var(--accent)';
-                          e.target.style.color = isNeoBrutalismValue ? 'var(--foreground)' : 'var(--accent-foreground)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.backgroundColor = 'transparent';
-                          e.target.style.color = 'var(--foreground)';
-                        }}
+                        onMouseEnter={(e) => { e.target.style.backgroundColor = isNeoBrutalismValue ? 'var(--muted)' : 'var(--accent)'; e.target.style.color = isNeoBrutalismValue ? 'var(--foreground)' : 'var(--accent-foreground)'; }}
+                        onMouseLeave={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = 'var(--foreground)'; }}
                       >
                         <Settings className="w-4 h-4 mr-3" />
                         {computedStyles.values.configText}
                       </Link>
-                      
                       <button
                         onClick={handleLogout}
                         className={`flex items-center w-full px-4 py-3 text-sm ${computedStyles.css.mediumClass} text-left transition-colors ${isNeoBrutalismValue ? '' : 'rounded-md'}`}
                         style={{ color: 'var(--destructive)' }}
-                        onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = 'var(--destructive)';
-                          e.target.style.color = 'var(--destructive-foreground)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.backgroundColor = 'transparent';
-                          e.target.style.color = 'var(--destructive)';
-                        }}
+                        onMouseEnter={(e) => { e.target.style.backgroundColor = 'var(--destructive)'; e.target.style.color = 'var(--destructive-foreground)'; }}
+                        onMouseLeave={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = 'var(--destructive)'; }}
                       >
                         <LogOut className="w-4 h-4 mr-3" />
                         {computedStyles.values.logoutText}
                       </button>
                     </div>
-                  </div>
+                  </div>,
+                  document.body
                 )}
               </div>
             </div>
@@ -969,10 +966,7 @@ const MainLayout = ({ children }) => {
           
           {/* Overlay for user menu */}
           {showUserMenu && (
-            <div 
-              className="fixed inset-0 z-40" 
-              onClick={() => setShowUserMenu(false)}
-            />
+            <div className="fixed inset-0 z-[999]" onClick={() => setShowUserMenu(false)} />
           )}
         </div>
 

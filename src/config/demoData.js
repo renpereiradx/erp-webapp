@@ -555,8 +555,8 @@ export const DEMO_CONFIG_DASHBOARD = {
 };
 
 export const DEMO_CONFIG_CLIENTS = {
-  enabled: true, // Enable/disable demo mode
-  useRealAPI: false, // Toggle real API calls
+  enabled: false, // Disabled to integrate real API
+  useRealAPI: true, // Force real API calls
   simulateDelay: true, // Simulate network delay
   delayMs: 600, // Delay in milliseconds
   pageSize: 10 // Items per page
