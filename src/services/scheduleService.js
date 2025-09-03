@@ -1,6 +1,12 @@
-// src/services/scheduleService.js
-import { apiService } from '@/services/api';
+/**
+ * Servicio para gestión de horarios (Schedule API)
+ * Implementa la especificación completa de SCHEDULE_API.md
+ * Separado de reservations para mejor arquitectura modular
+ */
+
+import { apiClient } from '@/services/api';
 import { telemetryService } from '@/services/telemetryService';
+import { telemetry } from '@/utils/telemetry';
 import { MockDataService, MOCK_CONFIG } from '@/config/mockData';
 
 const API_PREFIX = '/schedules'; // Ajustar según API
@@ -32,7 +38,7 @@ export const scheduleService = {
       
       console.log('🌐 Schedules: Loading from API...');
       const result = await withRetry(async () => {
-        return await apiService.get(`${API_PREFIX}/date-range`, { params });
+        return await apiClient.get(`${API_PREFIX}/date-range`, { params });
       });
       
       telemetryService.recordMetric('schedules_fetched_api', result.data?.length || 0);
@@ -67,7 +73,7 @@ export const scheduleService = {
     const startTime = Date.now();
     
     try {
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/${id}`);
       });
       
@@ -90,7 +96,7 @@ export const scheduleService = {
     const startTime = Date.now();
     
     try {
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.put(`${API_PREFIX}/${id}/availability`, {
           is_available: isAvailable
         });
@@ -115,7 +121,7 @@ export const scheduleService = {
     const startTime = Date.now();
     
     try {
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.post(`${API_PREFIX}/generate/daily`);
       });
       
@@ -138,7 +144,7 @@ export const scheduleService = {
     const startTime = Date.now();
     
     try {
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.post(`${API_PREFIX}/generate/date`, {
           target_date: targetDate
         });
@@ -163,7 +169,7 @@ export const scheduleService = {
     const startTime = Date.now();
     
     try {
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.post(`${API_PREFIX}/generate/next-days`, {
           days: days
         });
@@ -188,7 +194,7 @@ export const scheduleService = {
     const startTime = Date.now();
     
     try {
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/product/${productId}/date/${date}/available`);
       });
       
@@ -218,7 +224,7 @@ export const scheduleService = {
         pageSize
       };
 
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/date-range`, { params });
       });
       
@@ -246,7 +252,7 @@ export const scheduleService = {
         pageSize
       };
 
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/product/${productId}`, { params });
       });
       
@@ -265,3 +271,5 @@ export const scheduleService = {
     }
   }
 };
+
+export default scheduleService;

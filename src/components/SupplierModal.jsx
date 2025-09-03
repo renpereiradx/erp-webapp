@@ -106,17 +106,18 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
 
   const modalStyles = {
     overlay: {
-      position: 'fixed',
+      position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      backdropFilter: 'blur(2px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 1000,
-      padding: '20px'
+      padding: '16px'
     },
     modal: {
       background: 'var(--card)',
@@ -124,19 +125,21 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
       borderRadius: isNeoBrutalism ? '0px' : (isMaterial ? '16px' : '8px'),
       boxShadow: isNeoBrutalism ? '8px 8px 0px 0px rgba(0,0,0,1)' : '0px 4px 8px rgba(0, 0, 0, 0.1)',
       width: '100%',
-      maxWidth: '500px',
-      maxHeight: '90vh',
-      overflow: 'auto'
+      maxWidth: '480px',
+      maxHeight: '75vh',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column'
     }
   };
 
   const modalContent = (
     <div style={modalStyles.overlay} onClick={onClose} data-testid="supplier-modal-overlay">
       <div style={modalStyles.modal} onClick={(e) => e.stopPropagation()} data-testid="supplier-modal">
-        <div style={{ padding: '24px', borderBottom: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '16px', borderBottom: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Building className="w-6 h-6 text-primary" />
-            <h2 style={{ fontSize: isNeoBrutalism ? '1.5rem' : '1.25rem', fontWeight: isNeoBrutalism ? '800' : '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', margin: 0 }} data-testid="supplier-modal-title">
+            <h2 style={{ fontSize: isNeoBrutalism ? '1.25rem' : '1.125rem', fontWeight: isNeoBrutalism ? '800' : '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', margin: 0 }} data-testid="supplier-modal-title">
               {supplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}
             </h2>
           </div>
@@ -145,31 +148,31 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: '24px' }} data-testid="supplier-modal-form">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <form onSubmit={handleSubmit} style={{ padding: '16px', flex: 1, overflowY: 'auto' }} data-testid="supplier-modal-form">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <Label htmlFor="name" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Nombre del Proveedor</Label>
+              <Label htmlFor="name" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '4px', display: 'block', fontSize: '0.875rem' }}>Nombre del Proveedor</Label>
               <Input leftIcon={<User />} id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Ej: Tech Supplies Inc." required data-testid="supplier-name-input" aria-required="true" />
             </div>
             <div>
-              <Label htmlFor="tax_id" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>RUC</Label>
+              <Label htmlFor="tax_id" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '4px', display: 'block', fontSize: '0.875rem' }}>RUC</Label>
               <Input leftIcon={<FileText />} id="tax_id" name="tax_id" value={formData.tax_id} onChange={handleChange} placeholder="Ej: 12345678-9" data-testid="supplier-tax-id-input" aria-required="false" />
             </div>
             <div>
-              <Label htmlFor="phone" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Teléfono</Label>
+              <Label htmlFor="phone" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '4px', display: 'block', fontSize: '0.875rem' }}>Teléfono</Label>
               <Input leftIcon={<Phone />} id="phone" name="phone" value={formData.contact_info.phone} onChange={handleContactInfoChange} placeholder="Ej: +595 983 111 222" data-testid="supplier-phone-input" aria-required="false" />
             </div>
             <div>
-              <Label htmlFor="fax" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Fax</Label>
+              <Label htmlFor="fax" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '4px', display: 'block', fontSize: '0.875rem' }}>Fax</Label>
               <Input leftIcon={<MessageSquare />} id="fax" name="fax" value={formData.contact_info.fax} onChange={handleContactInfoChange} placeholder="Ej: FAX-PAR-6356" data-testid="supplier-fax-input" aria-required="false" />
             </div>
             <div>
-              <Label htmlFor="address" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '8px', display: 'block' }}>Dirección</Label>
+              <Label htmlFor="address" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', marginBottom: '4px', display: 'block', fontSize: '0.875rem' }}>Dirección</Label>
               <Input leftIcon={<MapPin />} id="address" name="address" value={formData.contact_info.address} onChange={handleContactInfoChange} placeholder="Ej: Av. Mcal. López 1234, Asunción, Paraguay" data-testid="supplier-address-input" aria-required="false" />
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: isNeoBrutalism ? '0px' : '8px', border: isNeoBrutalism ? '2px solid var(--border)' : '1px solid var(--border)', background: 'var(--muted)' }}>
-              <Label htmlFor="status" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none' }}>Estado</Label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px', borderRadius: isNeoBrutalism ? '0px' : '8px', border: isNeoBrutalism ? '2px solid var(--border)' : '1px solid var(--border)', background: 'var(--muted)' }}>
+              <Label htmlFor="status" style={{ fontWeight: '600', textTransform: isNeoBrutalism ? 'uppercase' : 'none', fontSize: '0.875rem' }}>Estado</Label>
               <div className="flex items-center gap-2">
                 <StatusBadge active={!!formData.status} />
                 <Button type="button" variant={'ghost'} onClick={handleStatusToggle} aria-label="Alternar estado">
@@ -179,7 +182,7 @@ const SupplierModal = ({ isOpen, onClose, supplier, onSuccess }) => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '24px', borderTop: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)' }} data-testid="supplier-modal-actions">
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px', paddingTop: '16px', borderTop: isNeoBrutalism ? '3px solid var(--border)' : '1px solid var(--border)' }} data-testid="supplier-modal-actions">
             <Button type="button" variant={isNeoBrutalism ? 'secondary' : 'outline'} onClick={onClose} disabled={loading} data-testid="supplier-modal-cancel">
               Cancelar
             </Button>

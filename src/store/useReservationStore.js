@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { reservationService } from '@/services/reservationService';
+import scheduleService from '@/services/scheduleService';
 import { telemetry } from '@/utils/telemetry';
 
 const useReservationStore = create(
@@ -125,13 +126,13 @@ const useReservationStore = create(
         }
       },
 
-      // Cargar horarios disponibles
-      fetchAvailableSchedules: async (productId, date, duration) => {
+      // Cargar horarios disponibles (usando Schedule API)
+      fetchAvailableSchedules: async (productId, date) => {
         set({ loading: true, error: null });
         const startTime = Date.now();
         
         try {
-          const result = await reservationService.getAvailableSchedules(productId, date, duration);
+          const result = await scheduleService.getAvailableSchedules(productId, date);
           
           // Manejar diferentes formatos de respuesta
           let data = [];
@@ -156,6 +157,83 @@ const useReservationStore = create(
             error: error.message 
           });
           return [];
+        }
+      },
+
+      // Obtener horarios por rango de fechas
+      fetchSchedulesByDateRange: async (startDate, endDate, page = 1, pageSize = 20) => {
+        set({ loading: true, error: null });
+        const startTime = Date.now();
+        
+        try {
+          const result = await scheduleService.getByDateRange(startDate, endDate, page, pageSize);
+          
+          telemetry.record('feature.schedules.date_range', { 
+            duration: Date.now() - startTime 
+          });
+          
+          return result;
+        } catch (error) {
+          set({ error: error.message || 'Error al cargar horarios por fecha', loading: false });
+          telemetry.record('feature.schedules.error', { 
+            error: error.message 
+          });
+          throw error;
+        }
+      },
+
+      // Actualizar disponibilidad de horario
+      updateScheduleAvailability: async (scheduleId, isAvailable) => {
+        try {
+          const result = await scheduleService.updateAvailability(scheduleId, isAvailable);
+          
+          // Actualizar estado local
+          const schedules = get().schedules.map(schedule => 
+            schedule.id === scheduleId ? { ...schedule, is_available: isAvailable } : schedule
+          );
+          set({ schedules });
+          
+          telemetry.record('feature.schedules.update_availability');
+          return { success: true };
+        } catch (error) {
+          set({ error: error.message || 'Error al actualizar disponibilidad' });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Generar horarios diarios
+      generateDailySchedules: async () => {
+        try {
+          const result = await scheduleService.generateDaily();
+          telemetry.record('feature.schedules.generate_daily');
+          return { success: true };
+        } catch (error) {
+          set({ error: error.message || 'Error al generar horarios diarios' });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Generar horarios para fecha específica
+      generateSchedulesForDate: async (targetDate) => {
+        try {
+          const result = await scheduleService.generateForDate(targetDate);
+          telemetry.record('feature.schedules.generate_date');
+          return { success: true };
+        } catch (error) {
+          set({ error: error.message || 'Error al generar horarios para fecha' });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Generar horarios para próximos N días
+      generateSchedulesForNextDays: async (days) => {
+        try {
+          const result = await scheduleService.generateForNextDays(days);
+          telemetry.record('feature.schedules.generate_next_days');
+          return { success: true };
+        } catch (error) {
+          set({ error: error.message || 'Error al generar horarios para próximos días' });
+          return { success: false, error: error.message };
         }
       },
 

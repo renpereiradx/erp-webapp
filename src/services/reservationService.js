@@ -4,9 +4,10 @@
  * Separado completamente de Sales y Schedules para mejor arquitectura
  */
 
-import { apiService } from '@/services/api';
+import { apiClient } from '@/services/api';
 import { telemetryService } from '@/services/telemetryService';
 import { MockDataService, MOCK_CONFIG } from '@/config/mockData';
+import { telemetry } from '@/utils/telemetry';
 
 const API_PREFIX = '/reserve'; // Según RESERVES_API.md
 const RETRY_ATTEMPTS = 3;
@@ -36,7 +37,7 @@ export const reservationService = {
       
       console.log('🌐 Reservations: Loading from API...');
       const result = await withRetry(async () => {
-        return await apiService.get(`${API_PREFIX}/report`, { params });
+        return await apiClient.get(`${API_PREFIX}/report`, { params });
       });
       
       telemetryService.recordMetric('reservations_fetched_api', result.data?.length || 0);
@@ -71,7 +72,7 @@ export const reservationService = {
     const startTime = Date.now();
     
     try {
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/${id}`);
       });
       
@@ -102,7 +103,7 @@ export const reservationService = {
         duration: data.duration
       };
 
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.post(`${API_PREFIX}/manage`, reservationData);
       });
       
@@ -134,7 +135,7 @@ export const reservationService = {
         duration: data.duration
       };
 
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.post(`${API_PREFIX}/manage`, reservationData);
       });
       
@@ -162,7 +163,7 @@ export const reservationService = {
         reserve_id: id
       };
 
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.post(`${API_PREFIX}/manage`, reservationData);
       });
       
@@ -185,7 +186,7 @@ export const reservationService = {
     const startTime = Date.now();
     
     try {
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/product/${productId}`);
       });
       
@@ -208,7 +209,7 @@ export const reservationService = {
     const startTime = Date.now();
     
     try {
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/client/${clientId}`);
       });
       
@@ -231,7 +232,7 @@ export const reservationService = {
     const startTime = Date.now();
     
     try {
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/report`, { params });
       });
       
@@ -260,7 +261,7 @@ export const reservationService = {
         duration_hours: duration
       };
 
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/available-schedules`, { params });
       });
       
@@ -283,7 +284,7 @@ export const reservationService = {
     const startTime = Date.now();
     
     try {
-      const result = await _fetchWithRetry(async () => {
+      const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/consistency/check`);
       });
       
@@ -302,3 +303,5 @@ export const reservationService = {
     }
   }
 };
+
+export default reservationService;

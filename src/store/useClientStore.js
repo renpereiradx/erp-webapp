@@ -254,18 +254,48 @@ const useClientStore = create()(
 
       // CRUD
       createClient: async (data) => {
-        try { await clientService.create(data); get().fetchClients(); return { success: true }; }
-        catch (e) { set({ error: e.message || 'Error al crear' }); return { success: false, error: e.message }; }
+        try { 
+          const result = await clientService.create(data); 
+          return { success: true, data: result }; 
+        }
+        catch (e) { 
+          set({ error: e.message || 'Error al crear' }); 
+          return { success: false, error: e.message }; 
+        }
       },
 
       updateClient: async (id, data) => {
-        try { await clientService.update(id, data); get().fetchClients(); return { success: true }; }
-        catch (e) { set({ error: e.message || 'Error al actualizar' }); return { success: false, error: e.message }; }
+        try { 
+          const result = await clientService.update(id, data); 
+          return { success: true, data: result }; 
+        }
+        catch (e) { 
+          set({ error: e.message || 'Error al actualizar' }); 
+          return { success: false, error: e.message }; 
+        }
       },
 
       deleteClient: async (id) => {
-        try { await clientService.delete(id); get().fetchClients(); return { success: true }; }
-        catch (e) { set({ error: e.message || 'Error al eliminar' }); return { success: false, error: e.message }; }
+        try { 
+          const result = await clientService.delete(id); 
+          return { success: true, data: result }; 
+        }
+        catch (e) { 
+          set({ error: e.message || 'Error al eliminar cliente' }); 
+          return { success: false, error: e.message }; 
+        }
+      },
+
+      // Reactivar cliente (usando update con status: true ya que la API no especifica endpoint dedicado)
+      reactivateClient: async (id) => {
+        try {
+          // Para clientes usamos update directamente ya que la API no menciona endpoint específico de reactivación
+          const result = await clientService.update(id, { status: true });
+          return { success: true, data: result };
+        } catch (error) {
+          set({ error: error.message || 'Error al reactivar cliente' });
+          return { success: false, error: error.message };
+        }
       }
     }),
     {

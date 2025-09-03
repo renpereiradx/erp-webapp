@@ -123,8 +123,10 @@ export const clientService = {
     const startTime = Date.now();
     
     try {
+      // Ensure endpoint has trailing slash as documented: POST /client/
+      const endpoint = `${API_PREFIX}/`;
       const result = await _fetchWithRetry(async () => {
-        return await apiService.post(API_PREFIX, data);
+        return await apiService.post(endpoint, data);
       });
       
       telemetry.record('client.service.create', {

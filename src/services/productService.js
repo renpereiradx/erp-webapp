@@ -249,6 +249,26 @@ export const productService = {
     }
   },
 
+  // Reactivar producto (cambiar state a true)
+  /**
+   * @param {string} productId
+   * @returns {Promise<Product|any>}
+   */
+  reactivateProduct: async (productId) => {
+    try {
+      // Intentar endpoint específico de reactivación primero
+      // Si no existe, usar updateProduct con state: true
+      try {
+        return await apiClient.reactivateProduct(productId);
+      } catch (reactivateError) {
+        // Si no existe endpoint específico, usar update con state: true
+        return await apiClient.updateProduct(productId, { state: true });
+      }
+    } catch (error) {
+      throw toApiError(error, 'Error al reactivar producto');
+    }
+  },
+
   // =================== DESCRIPCIONES ===================
 
   // Crear descripción de producto

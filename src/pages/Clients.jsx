@@ -6,7 +6,8 @@ import DataState from '../components/ui/DataState';
 import EnhancedModal, { ConfirmationModal } from '../components/ui/EnhancedModal';
 import ClientListItem from '../components/clients/ClientListItem';
 import ClientDetailModal from '../components/clients/ClientDetailModal';
-import ClientForm from '../components/clients/ClientForm';
+// import ClientForm from '../components/clients/ClientForm'; // Reemplazado por nuevo modal unificado
+import ClientModal from '../components/clients/ClientModal';
 import { useI18n } from '../lib/i18n';
 import useClientStore from '../store/useClientStore';
 import { useThemeStyles } from '../hooks/useThemeStyles';
@@ -19,11 +20,12 @@ const ClientsPage = () => {
     clients, loading, error, fetchClients, createClient, updateClient, deleteClient, clearError, searchClients, searchResults, lastSearchTerm
   } = useClientStore();
   
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false); // ahora usa ClientModal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [deletingItem, setDeletingItem] = useState(null);
   const [viewingClient, setViewingClient] = useState(null);
+  // formData manejado internamente por ClientModal; conservamos solo para compatibilidad si hiciera falta
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', tax_id: '' });
   const [apiSearchTerm, setApiSearchTerm] = useState('');
   const [localFilter, setLocalFilter] = useState('');
@@ -107,31 +109,15 @@ const ClientsPage = () => {
 
   const handleCreate = () => {
     setEditingItem(null);
-    setFormData({ name: '', email: '', phone: '', tax_id: '' });
     setShowEditModal(true);
   };
   
   const handleEdit = (item) => {
     setEditingItem(item);
-    setFormData({ 
-      name: item.name, 
-      email: item.contact?.email || '',
-      phone: item.contact?.phone || '',
-      tax_id: item.tax_id || ''
-    });
     setShowEditModal(true);
   };
   
-  const handleSave = async (e) => {
-    e.preventDefault();
-    const clientData = { name: formData.name, contact: { email: formData.email, phone: formData.phone }, tax_id: formData.tax_id };
-    if (editingItem) {
-      await updateClient(editingItem.id, clientData);
-    } else {
-      await createClient(clientData);
-    }
-    setShowEditModal(false);
-  };
+  // Guardado ahora se maneja dentro de ClientModal (create/update + callbacks)
   
   const handleDelete = (item) => {
     setDeletingItem(item);
@@ -140,9 +126,15 @@ const ClientsPage = () => {
 
   const handleConfirmDelete = async () => {
     if (deletingItem) {
-      await deleteClient(deletingItem.id);
-      setShowDeleteModal(false);
-      setDeletingItem(null);
+      const result = await deleteClient(deletingItem.id);
+      if (result.success) {
+        setShowDeleteModal(false);
+        setDeletingItem(null);
+        // Solo refrescar si había una búsqueda activa
+        if (lastSearchTerm) {
+          searchClients(lastSearchTerm).catch(() => {});
+        }
+      }
     }
   };
 
@@ -155,7 +147,7 @@ const ClientsPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       <div className="flex justify-between items-center">
         <h1 className={styles.header('h1')}>{t('client.title', 'Clientes')}</h1>
         <Button onClick={handleCreate} variant="primary"><Plus className="w-4 h-4 mr-2" />{t('client.action.create', 'Nuevo Cliente')}</Button>
@@ -279,28 +271,18 @@ const ClientsPage = () => {
         <ClientDetailModal client={viewingClient} onClose={() => setViewingClient(null)} />
       )}
 
-      <EnhancedModal
+      <ClientModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        title={editingItem ? t('client.modal.edit', 'Editar Cliente') : t('client.modal.create', 'Crear Cliente')}
-        subtitle={editingItem ? 
-          t('client.modal.edit_subtitle', 'Modifica la información del cliente') : 
-          t('client.modal.create_subtitle', 'Ingresa los datos del nuevo cliente')
-        }
-        variant="default"
-        size="md"
-        loading={loading}
-        testId="client-modal"
-      >
-        <ClientForm 
-          formData={formData}
-          setFormData={setFormData}
-          handleSubmit={handleSave}
-          handleCancel={() => setShowEditModal(false)}
-          loading={loading}
-          isEditing={!!editingItem}
-        />
-      </EnhancedModal>
+        client={editingItem}
+        onSuccess={() => {
+          // No refrescar automáticamente - el usuario debe usar "Buscar" o "Listar Todos"
+          // Solo refrescar si hay una búsqueda activa específica
+          if (lastSearchTerm) {
+            searchClients(lastSearchTerm).catch(() => {});
+          }
+        }}
+      />
 
       <ConfirmationModal
         isOpen={showDeleteModal}

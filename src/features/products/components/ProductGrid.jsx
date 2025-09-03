@@ -18,6 +18,7 @@ export default function ProductGrid({
   onView,
   onEdit,
   onDelete,
+  onReactivate,
   itemMinWidth = 300,
   gap = '1.5rem',
   onToggleSelect,
@@ -190,6 +191,7 @@ export default function ProductGrid({
             onView={onView}
             onEdit={onEdit}
             onDelete={onDelete}
+            onReactivate={onReactivate}
             onToggleSelect={onToggleSelect}
             selected={selectedIds.includes(products[index].id)}
             enableInlineEdit

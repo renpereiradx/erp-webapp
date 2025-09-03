@@ -760,6 +760,35 @@ const useProductStore = create()(
         }
       },
 
+      // Reactivar producto (cambiar state de false a true)
+      reactivateProduct: async (productId) => {
+        set({ loading: true, error: null });
+        const t = telemetry.startTimer('products.reactivate');
+        try {
+          await productService.reactivateProduct(productId);
+          set((state) => {
+            const products = state.products.map(p => p.id === productId ? { ...p, state: true } : p);
+            const productsById = {
+              ...state.productsById,
+              [productId]: state.productsById[productId] ? { ...state.productsById[productId], state: true } : state.productsById[productId]
+            };
+            return {
+              products,
+              productsById,
+              selectedProduct: state.selectedProduct?.id === productId ? { ...state.selectedProduct, state: true } : state.selectedProduct,
+              loading: false
+            };
+          });
+          telemetry.endTimer(t, { ok: true });
+          telemetry.record('products.reactivate.success');
+          return true;
+        } catch (error) {
+          telemetry.record('products.reactivate.error', { message: error?.message });
+          set({ error: error.message || 'Error al reactivar producto', loading: false });
+          throw error;
+        }
+      },
+
       // Utilidades
       setSelectedProduct: (product) => set({ selectedProduct: product }),
       

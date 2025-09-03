@@ -1,12 +1,12 @@
 import React from 'react';
-import { Edit, Trash2, Eye, AlertCircle, CheckCircle, DollarSign, Tag, Package } from 'lucide-react';
+import { Edit, Trash2, Eye, AlertCircle, CheckCircle, DollarSign, Tag, Package, RotateCcw } from 'lucide-react';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { createProductSummary, getStockStatus } from '@/utils/productUtils';
 import { Button } from '@/components/ui/Button';
 import { useI18n } from '@/lib/i18n';
 import EditableField from '@/components/EditableField';
 
-const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onToggleSelect, selected, inlineEditing, onStartInlineEdit, onCancelInlineEdit, onInlineSave }) => {
+const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onReactivate, onToggleSelect, selected, inlineEditing, onStartInlineEdit, onCancelInlineEdit, onInlineSave }) => {
   const { styles } = useThemeStyles();
   const { t } = useI18n();
   const productSummary = createProductSummary(product);
@@ -50,9 +50,11 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onToggleSel
     }
   };
 
+  const isInactive = product.state === false;
   const cardVariant = stockStatus.status === 'in-stock' ? 'success' : undefined;
+  
   return (
-    <div className={`erp-hover-card ${styles.card(cardVariant || 'group flex flex-col', cardVariant ? { interactive: true, density: 'compact', extra: 'group flex flex-col' } : '')}`}>
+    <div className={`erp-hover-card ${styles.card(cardVariant || 'group flex flex-col', cardVariant ? { interactive: true, density: 'compact', extra: 'group flex flex-col' } : '')} ${isInactive ? 'opacity-70 border-dashed border-2' : ''}`}>
       <div className="flex-1 p-4">
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-start gap-2 flex-1 pr-2 min-w-0">
@@ -124,9 +126,36 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onToggleSel
       </div>
 
       <div className="flex gap-2 p-4 border-t border-border/50">
-        <Button onClick={() => onView?.(product)} variant="secondary" size="sm" className="flex-1 text-xs"><Eye className="w-4 h-4 mr-1" />{t('action.view')}</Button>
-  <Button onClick={() => (inlineEditing ? onCancelInlineEdit?.(product) : onEdit?.(product))} variant="secondary" size="sm" className="flex-1 text-xs"><Edit className="w-4 h-4 mr-1" />{t('action.edit')}</Button>
-        <Button onClick={() => onDelete?.(product)} variant="destructive" size="icon"><Trash2 className="w-4 h-4" /></Button>
+        <Button onClick={() => onView?.(product)} variant="secondary" size="sm" className="flex-1 text-xs">
+          <Eye className="w-4 h-4 mr-1" />{t('action.view')}
+        </Button>
+        
+        {isInactive ? (
+          // Producto inactivo - solo mostrar reactivar
+          <Button 
+            onClick={() => onReactivate?.(product)} 
+            variant="default" 
+            size="sm" 
+            className="flex-1 text-xs bg-green-600 hover:bg-green-700 text-white"
+          >
+            <RotateCcw className="w-4 h-4 mr-1" />Reactivar
+          </Button>
+        ) : (
+          // Producto activo - mostrar editar y eliminar
+          <>
+            <Button 
+              onClick={() => (inlineEditing ? onCancelInlineEdit?.(product) : onEdit?.(product))} 
+              variant="secondary" 
+              size="sm" 
+              className="flex-1 text-xs"
+            >
+              <Edit className="w-4 h-4 mr-1" />{t('action.edit')}
+            </Button>
+            <Button onClick={() => onDelete?.(product)} variant="destructive" size="icon">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

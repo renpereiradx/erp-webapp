@@ -28,6 +28,7 @@ const ProductsPage = () => {
   const isOffline = useProductStore(state => state.isOffline);
   const searchProducts = useProductStore(state => state.searchProducts);
   const deleteProduct = useProductStore(state => state.deleteProduct);
+  const reactivateProduct = useProductStore(state => state.reactivateProduct);
   const fetchProducts = useProductStore(state => state.fetchProducts);
   const hydrateFromStorage = useProductStore(state => state.hydrateFromStorage);
 
@@ -179,6 +180,20 @@ const ProductsPage = () => {
     await deleteProduct(selectedProduct.id);
     setShowDeleteModal(false);
     setSelectedProduct(null);
+  };
+
+  const handleReactivateProduct = async (product) => {
+    if (window.confirm(`¿Reactivar producto ${product.name}?`)) {
+      try {
+        await reactivateProduct(product.id);
+        // Refrescar búsqueda si hay término activo
+        if (lastSearchTerm) {
+          searchProducts(lastSearchTerm);
+        }
+      } catch (error) {
+        console.error('Error reactivating product:', error);
+      }
+    }
   };
 
   const handleModalSuccess = () => {
@@ -394,6 +409,7 @@ const ProductsPage = () => {
             onView={handleViewProduct}
             onEdit={handleEditProduct}
             onDelete={handleDeleteRequest}
+            onReactivate={handleReactivateProduct}
           />
         )}
 

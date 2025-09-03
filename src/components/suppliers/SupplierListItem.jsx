@@ -1,9 +1,9 @@
 import React from 'react';
 import { Button } from '../ui/Button';
-import { Edit, Trash2, Mail, Phone, FileText, MapPin, Building2, Tag } from 'lucide-react';
+import { Edit, Trash2, Mail, Phone, FileText, MapPin, Building2, Tag, Eye, RotateCcw } from 'lucide-react';
 import { useThemeStyles } from '../../hooks/useThemeStyles';
 
-const SupplierListItem = ({ supplier, onEdit, onDelete }) => {
+const SupplierListItem = ({ supplier, onEdit, onDelete, onView, onReactivate }) => {
   const { styles, isNeoBrutalism } = useThemeStyles();
   
   // Obtener prioridad con color usando sistema de temas
@@ -30,7 +30,7 @@ const SupplierListItem = ({ supplier, onEdit, onDelete }) => {
   };
 
   return (
-    <div className={`${styles.card('p-6')} erp-hover-card group cursor-pointer`}>
+    <div className={`${styles.card('p-6')} erp-hover-card group cursor-pointer ${supplier.status === false ? 'opacity-70 border-dashed border-2' : ''}`}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-start justify-between mb-3">
@@ -95,21 +95,46 @@ const SupplierListItem = ({ supplier, onEdit, onDelete }) => {
         {/* Botones de acción */}
         <div className="flex flex-col gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
           <Button 
-            variant="secondary" 
+            variant="outline" 
             size="sm" 
-            onClick={(e) => { e.stopPropagation(); onEdit(supplier); }} 
-            title="Editar Proveedor"
+            onClick={(e) => { e.stopPropagation(); onView(supplier); }} 
+            title="Ver Detalles del Proveedor"
           >
-            <Edit className="w-4 h-4" />
+            <Eye className="w-4 h-4" />
           </Button>
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={(e) => { e.stopPropagation(); onDelete(supplier); }} 
-            title="Eliminar Proveedor"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          
+          {supplier.status !== false ? (
+            // Proveedor activo - mostrar editar y eliminar
+            <>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={(e) => { e.stopPropagation(); onEdit(supplier); }} 
+                title="Editar Proveedor"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={(e) => { e.stopPropagation(); onDelete(supplier); }} 
+                title="Eliminar Proveedor"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </>
+          ) : (
+            // Proveedor inactivo - mostrar solo reactivar
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={(e) => { e.stopPropagation(); onReactivate(supplier); }} 
+              title="Reactivar Proveedor"
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
 

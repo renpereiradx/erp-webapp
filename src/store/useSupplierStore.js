@@ -2,20 +2,14 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import supplierService from '../services/supplierService';
 import { telemetry } from '../utils/telemetry';
-import { 
-  DEMO_CONFIG_SUPPLIERS,
-  getDemoSuppliers,
-  getDemoSupplierStatistics,
-  createDemoSupplier,
-  updateDemoSupplier,
-  deleteDemoSupplier
-} from '../config/demoData';
 
 const useSupplierStore = create()(
   devtools(
     (set, get) => ({
-      // Estado de la lista
+      // Estado de la lista y búsqueda
       suppliers: [],
+      searchResults: [],
+      lastSearchTerm: '',
       
       // Estados de carga y error
       loading: false,
@@ -25,155 +19,139 @@ const useSupplierStore = create()(
       clearError: () => set({ error: null }),
       clearSuppliers: () => set({ suppliers: [], error: null }),
 
-      fetchSuppliers: async () => {
+      fetchSuppliers: async (params = {}) => {
         set({ loading: true, error: null });
         const startTime = Date.now();
         
         try {
-          // Si demo está habilitado, usar datos demo
-          if (DEMO_CONFIG_SUPPLIERS.enabled && !DEMO_CONFIG_SUPPLIERS.useRealAPI) {
-            console.log('🏭 Suppliers: Loading demo data...');
-            
-            const result = await getDemoSuppliers();
-            const data = result.data.suppliers || [];
-            
-            set({ 
-              suppliers: data, 
-              loading: false 
-            });
-            
-            console.log('✅ Suppliers: Demo data loaded successfully');
-            return;
+          let endpoint;
+          // Usar paginación si se proporcionan parámetros
+          if (params.page && params.pageSize) {
+            endpoint = `/${params.page}/${params.pageSize}`;
           }
           
-          // Si demo está deshabilitado, usar API real
-          console.log('🌐 Suppliers: Loading data from API...');
-          const result = await supplierService.getAll();
+          const result = await supplierService.getAll(endpoint ? { endpoint } : {});
           let data = [];
-          if (result.success !== false) {
-            const raw = result.data || result;
-            data = raw.suppliers || (Array.isArray(raw) ? raw : []);
+          if (result && result.success !== false) {
+            data = Array.isArray(result) ? result : (result.data || result.suppliers || []);
           }
-          set({ suppliers: data, loading: false });
           
-          console.log('✅ Suppliers: API data loaded successfully');
+          // Normalizar estructura de datos
+          const normalizedData = data.map(supplier => ({
+            ...supplier,
+            id: supplier.id || supplier.ID,
+            name: supplier.name || supplier.Name || 'Sin nombre',
+            contact_info: supplier.contact_info || supplier.contactInfo || {},
+            tax_id: supplier.tax_id || supplier.taxId || supplier.ruc,
+            status: supplier.status !== undefined ? supplier.status : true
+          })).filter(s => s.id);
           
-          telemetry.record('feature.supplier.load', { 
+          set({ suppliers: normalizedData, loading: false });
+          
+          telemetry.record('supplier.service.load', { 
             duration: Date.now() - startTime,
-            count: data.length
+            count: normalizedData.length
           });
           
         } catch (error) {
-          console.error('❌ Suppliers: Error loading data:', error.message);
+          set({ error: error.message || 'Error al cargar proveedores', loading: false });
+          telemetry.record('supplier.service.error', { 
+            error: error.message,
+            operation: 'fetchSuppliers'
+          });
+        }
+      },
+
+      // Búsqueda de proveedores
+      searchSuppliers: async (term) => {
+        const trimmed = (term || '').trim();
+        if (!trimmed) return [];
+        
+        set({ loading: true, error: null });
+        
+        try {
+          // Detectar si parece un ID numérico
+          const looksLikeId = /^\d+$/.test(trimmed) && trimmed.length >= 1;
+          let result;
           
-          // Si falla la API y demo está habilitado como fallback
-          if (DEMO_CONFIG_SUPPLIERS.enabled) {
-            console.log('🔄 Suppliers: Falling back to demo data...');
-            const demoResult = await getDemoSuppliers();
-            const data = demoResult.data.suppliers || [];
-            
-            set({ 
-              suppliers: data, 
-              loading: false,
-              error: null // Clear error since we have fallback data
-            });
-            console.log('✅ Suppliers: Demo fallback data loaded');
+          if (looksLikeId) {
+            // Buscar por ID
+            result = await supplierService.getById(trimmed);
+            result = result ? [result] : [];
           } else {
-            set({ error: error.message || 'Error al cargar', loading: false });
-            telemetry.record('feature.supplier.error', { 
-              error: error.message 
-            });
+            // Buscar por nombre
+            if (trimmed.length < 2) {
+              set({ loading: false });
+              return [];
+            }
+            result = await supplierService.searchByName(trimmed);
+            result = Array.isArray(result) ? result : (result ? [result] : []);
           }
+          
+          // Normalizar resultados
+          const normalized = result.map(supplier => ({
+            ...supplier,
+            id: supplier.id || supplier.ID,
+            name: supplier.name || supplier.Name || 'Sin nombre',
+            contact_info: supplier.contact_info || supplier.contactInfo || {},
+            tax_id: supplier.tax_id || supplier.taxId || supplier.ruc,
+            status: supplier.status !== undefined ? supplier.status : true
+          })).filter(s => s.id);
+          
+          set({ searchResults: normalized, lastSearchTerm: trimmed, loading: false });
+          return normalized;
+          
+        } catch (error) {
+          set({ error: error.message || 'Error en búsqueda', loading: false, searchResults: [] });
+          throw error;
         }
       },
 
       createSupplier: async (data) => {
         try {
-          // Si demo está habilitado, usar datos demo
-          if (DEMO_CONFIG_SUPPLIERS.enabled && !DEMO_CONFIG_SUPPLIERS.useRealAPI) {
-            await createDemoSupplier(data);
-            get().fetchSuppliers(); // Recargar lista
-            return { success: true };
-          }
-          
-          // Si demo está deshabilitado, usar API real
           const result = await supplierService.create(data);
-          if (result.success !== false) {
-            get().fetchSuppliers(); // Recargar lista
-          }
-          return { success: true };
+          return { success: true, data: result };
         } catch (error) {
-          // Si falla la API y demo está habilitado como fallback
-          if (DEMO_CONFIG_SUPPLIERS.enabled) {
-            await createDemoSupplier(data);
-            get().fetchSuppliers(); // Recargar lista
-            return { success: true };
-          }
-          set({ error: error.message || 'Error al crear' });
+          set({ error: error.message || 'Error al crear proveedor' });
           return { success: false, error: error.message };
         }
       },
 
       updateSupplier: async (id, data) => {
         try {
-          // Si demo está habilitado, usar datos demo
-          if (DEMO_CONFIG_SUPPLIERS.enabled && !DEMO_CONFIG_SUPPLIERS.useRealAPI) {
-            await updateDemoSupplier(id, data);
-            get().fetchSuppliers(); // Recargar lista
-            return { success: true };
-          }
-          
-          // Si demo está deshabilitado, usar API real
           const result = await supplierService.update(id, data);
-          if (result.success !== false) {
-            get().fetchSuppliers(); // Recargar lista
-          }
-          return { success: true };
+          return { success: true, data: result };
         } catch (error) {
-          // Si falla la API y demo está habilitado como fallback
-          if (DEMO_CONFIG_SUPPLIERS.enabled) {
-            try {
-              await updateDemoSupplier(id, data);
-              get().fetchSuppliers(); // Recargar lista
-              return { success: true };
-            } catch (demoError) {
-              set({ error: demoError.message || 'Error al actualizar' });
-              return { success: false, error: demoError.message };
-            }
-          }
-          set({ error: error.message || 'Error al actualizar' });
+          set({ error: error.message || 'Error al actualizar proveedor' });
           return { success: false, error: error.message };
         }
       },
 
       deleteSupplier: async (id) => {
         try {
-          // Si demo está habilitado, usar datos demo
-          if (DEMO_CONFIG_SUPPLIERS.enabled && !DEMO_CONFIG_SUPPLIERS.useRealAPI) {
-            await deleteDemoSupplier(id);
-            get().fetchSuppliers(); // Recargar lista
-            return { success: true };
-          }
-          
-          // Si demo está deshabilitado, usar API real
           const result = await supplierService.delete(id);
-          if (result.success !== false) {
-            get().fetchSuppliers(); // Recargar lista
-          }
-          return { success: true };
+          return { success: true, data: result };
         } catch (error) {
-          // Si falla la API y demo está habilitado como fallback
-          if (DEMO_CONFIG_SUPPLIERS.enabled) {
-            try {
-              await deleteDemoSupplier(id);
-              get().fetchSuppliers(); // Recargar lista
-              return { success: true };
-            } catch (demoError) {
-              set({ error: demoError.message || 'Error al eliminar' });
-              return { success: false, error: demoError.message };
-            }
+          set({ error: error.message || 'Error al eliminar proveedor' });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Reactivar proveedor (si existe endpoint específico, si no, usar update)
+      reactivateSupplier: async (id) => {
+        try {
+          // Intentar con endpoint específico de reactivación primero
+          let result;
+          try {
+            result = await supplierService.reactivate(id);
+          } catch (reactivateError) {
+            // Si no existe endpoint específico, usar update con status: true
+            console.log('No reactivate endpoint, using update with status=true');
+            result = await supplierService.update(id, { status: true });
           }
-          set({ error: error.message || 'Error al eliminar' });
+          return { success: true, data: result };
+        } catch (error) {
+          set({ error: error.message || 'Error al reactivar proveedor' });
           return { success: false, error: error.message };
         }
       }

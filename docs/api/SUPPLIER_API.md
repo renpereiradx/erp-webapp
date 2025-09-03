@@ -2,7 +2,7 @@
 
 ## 📋 Resumen General
 
-Esta guía documenta los endpoints del sistema de gestión de proveedores, siguiendo el mismo patrón robusto y consistente que el sistema de pagos de compras. Permite crear, consultar, actualizar, eliminar y obtener estadísticas de proveedores, facilitando la integración frontend y el desarrollo de flujos de negocio relacionados.
+Esta guía documenta los endpoints del sistema de gestión de proveedores implementados en el sistema de business management. La API permite crear, consultar, actualizar, eliminar y listar proveedores con funcionalidad básica de gestión.
 
 ## 🔐 Autenticación
 
@@ -15,46 +15,27 @@ Authorization: Bearer <token>
 
 ### 1. Crear Proveedor
 
-**POST** `/supplier`
+**POST** `/supplier/`
 
-Crea un nuevo proveedor con información básica y metadatos opcionales.
+Crea un nuevo proveedor en el sistema.
 
 #### Request Body
 ```json
 {
   "name": "Proveedor S.A.",
-  "contact": {
+  "contact_info": {
     "email": "contacto@proveedor.com",
-    "phone": "+52-555-1234"
+    "phone": "+52-555-1234",
+    "address": "Av. Reforma 123, CDMX, México"
   },
-  "address": {
-    "street": "Av. Reforma 123",
-    "city": "CDMX",
-    "country": "México"
-  },
-  "tax_id": "RFC123456789",
-  "metadata": {
-    "priority": "high",
-    "notes": "Proveedor estratégico"
-  }
+  "tax_id": "RFC123456789"
 }
 ```
 
 #### Response (Success)
 ```json
 {
-  "success": true,
-  "supplier_id": 101,
-  "message": "Proveedor creado correctamente"
-}
-```
-
-#### Response (Error)
-```json
-{
-  "success": false,
-  "message": "Validation failed",
-  "error": "tax_id already exists"
+  "message": "Supplier added"
 }
 ```
 
@@ -64,7 +45,7 @@ Crea un nuevo proveedor con información básica y metadatos opcionales.
 
 **GET** `/supplier/{id}`
 
-Obtiene la información detallada de un proveedor específico.
+Obtiene la información detallada de un proveedor específico por ID.
 
 #### Path Parameters
 - `id`: ID del proveedor (int)
@@ -72,161 +53,158 @@ Obtiene la información detallada de un proveedor específico.
 #### Response (Success)
 ```json
 {
-  "success": true,
-  "supplier": {
-    "id": 101,
-    "name": "Proveedor S.A.",
-    "contact": {
-      "email": "contacto@proveedor.com",
-      "phone": "+52-555-1234"
-    },
-    "address": {
-      "street": "Av. Reforma 123",
-      "city": "CDMX",
-      "country": "México"
-    },
-    "tax_id": "RFC123456789",
-    "metadata": {
-      "priority": "high",
-      "notes": "Proveedor estratégico"
-    },
-    "created_at": "2025-08-29T10:00:00Z",
-    "updated_at": "2025-08-29T10:00:00Z"
-  }
+  "id": 101,
+  "name": "Proveedor S.A.",
+  "contact_info": {
+    "email": "contacto@proveedor.com",
+    "phone": "+52-555-1234",
+    "address": "Av. Reforma 123, CDMX, México"
+  },
+  "tax_id": "RFC123456789",
+  "status": true,
+  "created_at": "2025-08-29T10:00:00Z",
+  "user_id": "user123"
 }
 ```
 
-#### Response (Error)
+#### Response (Error - 400)
+- "ID is required" - Cuando el ID no se proporciona
+- "Invalid ID format" - Cuando el ID no es un entero válido
+
+#### Response (Error - 500)
+- Error del servidor interno
+
+---
+
+### 3. Buscar Proveedor por Nombre
+
+**GET** `/supplier/name/{name}`
+
+Busca proveedores que coincidan con el nombre especificado.
+
+#### Path Parameters
+- `name`: Nombre del proveedor a buscar (string)
+
+#### Response (Success)
 ```json
-{
-  "success": false,
-  "message": "Supplier not found",
-  "error": "supplier with ID 999 not found"
-}
+[
+  {
+    "id": 101,
+    "name": "Proveedor S.A.",
+    "contact_info": {
+      "email": "contacto@proveedor.com",
+      "phone": "+52-555-1234"
+    },
+    "tax_id": "RFC123456789",
+    "status": true,
+    "created_at": "2025-08-29T10:00:00Z",
+    "user_id": "user123"
+  }
+]
 ```
 
 ---
 
-### 3. Actualizar Proveedor
+### 4. Listar Proveedores (Paginado)
+
+**GET** `/supplier/{page}/{pageSize}`
+
+Obtiene una lista paginada de proveedores.
+
+#### Path Parameters
+- `page`: Número de página (int)
+- `pageSize`: Cantidad de elementos por página (int)
+
+#### Response (Success)
+```json
+[
+  {
+    "id": 101,
+    "name": "Proveedor S.A.",
+    "contact_info": {
+      "email": "contacto@proveedor.com",
+      "phone": "+52-555-1234"
+    },
+    "tax_id": "RFC123456789",
+    "status": true,
+    "created_at": "2025-08-29T10:00:00Z",
+    "user_id": "user123"
+  },
+  {
+    "id": 102,
+    "name": "Proveedor B S.A.",
+    "contact_info": {
+      "email": "ventas@proveedorb.com",
+      "phone": "+52-555-4321"
+    },
+    "tax_id": "RFC987654321",
+    "status": true,
+    "created_at": "2025-08-29T11:00:00Z",
+    "user_id": "user123"
+  }
+]
+```
+
+#### Response (Error - 400)
+- "Page and PageSize are required" - Cuando faltan parámetros
+- "Invalid Page format" / "Invalid PageSize format" - Cuando los parámetros no son enteros
+
+---
+
+### 5. Actualizar Proveedor
 
 **PUT** `/supplier/{id}`
 
 Actualiza la información de un proveedor existente.
 
+#### Path Parameters
+- `id`: ID del proveedor a actualizar (int)
+
 #### Request Body
 ```json
 {
   "name": "Proveedor S.A. Renovado",
-  "contact": {
+  "contact_info": {
     "email": "nuevo@proveedor.com",
-    "phone": "+52-555-5678"
+    "phone": "+52-555-5678",
+    "address": "Av. Insurgentes 456, CDMX, México"
   },
-  "address": {
-    "street": "Av. Insurgentes 456",
-    "city": "CDMX",
-    "country": "México"
-  },
-  "metadata": {
-    "priority": "medium"
-  }
+  "tax_id": "RFC123456789"
 }
 ```
 
 #### Response (Success)
 ```json
 {
-  "success": true,
-  "supplier_id": 101,
-  "message": "Proveedor actualizado correctamente"
+  "message": "Supplier updated"
 }
 ```
+
+#### Response (Error - 400)
+- "ID is required" - Cuando el ID no se proporciona
+- "Invalid ID format" - Cuando el ID no es un entero válido
 
 ---
 
-### 4. Eliminar Proveedor (Borrado Lógico)
+### 6. Eliminar Proveedor (Borrado Lógico)
 
-**DELETE** `/supplier/{id}`
+**PUT** `/supplier/delete/{id}`
 
-Marca un proveedor como inactivo (no se elimina físicamente).
+Marca un proveedor como inactivo (cambio de estado, no eliminación física).
 
-#### Response (Success)
-```json
-{
-  "success": true,
-  "supplier_id": 101,
-  "message": "Proveedor eliminado correctamente"
-}
-```
-
----
-
-### 5. Listar Proveedores (Paginado y Búsqueda)
-
-**GET** `/supplier?name=proveedor&page=1&pageSize=10`
-
-Obtiene una lista paginada de proveedores, con opción de búsqueda por nombre.
+#### Path Parameters
+- `id`: ID del proveedor a eliminar (int)
 
 #### Response (Success)
 ```json
 {
-  "success": true,
-  "suppliers": [
-    {
-      "id": 101,
-      "name": "Proveedor S.A.",
-      "contact": { "email": "contacto@proveedor.com", "phone": "+52-555-1234" },
-      "address": { "city": "CDMX" },
-      "tax_id": "RFC123456789"
-    },
-    {
-      "id": 102,
-      "name": "Proveedor B S.A.",
-      "contact": { "email": "ventas@proveedorb.com", "phone": "+52-555-4321" },
-      "address": { "city": "Guadalajara" },
-      "tax_id": "RFC987654321"
-    }
-  ],
-  "page": 1,
-  "pageSize": 10,
-  "total": 2
+  "message": "Supplier deleted"
 }
 ```
 
----
-
-### 6. Estadísticas de Proveedores
-
-**GET** `/supplier/statistics`
-
-Obtiene estadísticas consolidadas de proveedores para análisis y monitoreo.
-
-#### Query Parameters (Opcionales)
-- `start_date`: Fecha de inicio (YYYY-MM-DD)
-- `end_date`: Fecha de fin (YYYY-MM-DD)
-- `active_only`: Solo proveedores activos (boolean)
-
-#### Example Request
-```
-GET /supplier/statistics?start_date=2025-08-01&end_date=2025-08-31&active_only=true
-```
-
-#### Response (Success)
-```json
-{
-  "period": {
-    "start_date": "2025-08-01",
-    "end_date": "2025-08-31"
-  },
-  "supplier_statistics": {
-    "total_suppliers": 25,
-    "active_suppliers": 20,
-    "inactive_suppliers": 5,
-    "new_suppliers": 3,
-    "updated_suppliers": 7
-  },
-  "generated_at": "2025-08-29T10:30:00Z"
-}
-```
+#### Response (Error - 400)
+- "ID is required" - Cuando el ID no se proporciona
+- "Invalid ID format" - Cuando el ID no es un entero válido
 
 ---
 
@@ -237,30 +215,20 @@ GET /supplier/statistics?start_date=2025-08-01&end_date=2025-08-31&active_only=t
 interface Supplier {
   id: number;
   name: string;
-  contact: {
-    email: string;
-    phone: string;
-  };
-  address: {
-    street?: string;
-    city?: string;
-    country?: string;
-  };
+  contact_info: any; // JSON object containing contact information
   tax_id: string;
-  metadata?: Record<string, any>;
-  created_at?: string;
-  updated_at?: string;
+  status: boolean; // true = active, false = inactive
+  created_at: string; // ISO 8601 format
+  user_id: string; // ID del usuario que creó el proveedor
 }
 ```
 
-### SupplierStatistics
-```typescript
-interface SupplierStatistics {
-  total_suppliers: number;
-  active_suppliers: number;
-  inactive_suppliers: number;
-  new_suppliers: number;
-  updated_suppliers: number;
+### Ejemplo de contact_info
+```json
+{
+  "email": "contacto@proveedor.com",
+  "phone": "+52-555-1234",
+  "address": "Av. Reforma 123, CDMX, México"
 }
 ```
 
@@ -268,76 +236,85 @@ interface SupplierStatistics {
 
 ## ⚠️ Manejo de Errores
 
-### Códigos de Error Comunes
+### Códigos de Estado HTTP
 
 | Código | Descripción |
 |--------|-------------|
-| `VALIDATION_FAILED` | Datos de entrada inválidos |
-| `SUPPLIER_NOT_FOUND` | Proveedor no existe |
-| `TAX_ID_DUPLICATE` | RFC/tax_id duplicado |
-| `INSUFFICIENT_PERMISSIONS` | Usuario sin permisos |
-| `INACTIVE_SUPPLIER` | Proveedor inactivo |
+| `200` | Operación exitosa |
+| `400` | Error de validación en los datos de entrada |
+| `401` | Token JWT inválido o faltante |
+| `500` | Error interno del servidor |
 
-### Estructura de Error Estándar
-```json
-{
-  "success": false,
-  "message": "Human readable error message",
-  "error_code": "ERROR_CODE",
-  "details": "Additional technical details",
-  "timestamp": "2025-08-29T10:30:00Z"
-}
+### Mensajes de Error Comunes
+
+#### Errores de Validación (400)
+- "ID is required" - ID no proporcionado en la URL
+- "Invalid ID format" - ID no es un número entero
+- "Name is required" - Nombre no proporcionado en búsqueda
+- "Page and PageSize are required" - Parámetros de paginación faltantes
+- "Invalid Page format" / "Invalid PageSize format" - Parámetros no numéricos
+
+#### Errores de Autenticación (401)
+- Token JWT inválido, expirado o faltante
+
+#### Errores del Servidor (500)
+- Errores de base de datos
+- Errores internos del sistema
+
+---
+
+## 🔄 Flujos de Trabajo Recomendados
+
+### 1. Crear Nuevo Proveedor
+```
+POST /supplier/ → { "message": "Supplier added" }
+```
+
+### 2. Consultar Información de Proveedor
+```
+GET /supplier/{id} → Supplier object
+```
+
+### 3. Buscar Proveedores por Nombre
+```
+GET /supplier/name/{name} → Array of Supplier objects
+```
+
+### 4. Listar Proveedores con Paginación
+```
+GET /supplier/{page}/{pageSize} → Array of Supplier objects
+```
+
+### 5. Actualizar Proveedor Existente
+```
+PUT /supplier/{id} → { "message": "Supplier updated" }
+```
+
+### 6. Eliminar Proveedor (Borrado Lógico)
+```
+PUT /supplier/delete/{id} → { "message": "Supplier deleted" }
 ```
 
 ---
 
-## 🔄 Flujo de Trabajo Recomendado
+## 📋 Notas Importantes para Frontend
 
-### 1. Crear Proveedor
-```
-POST /supplier → {supplier_id}
-```
-
-### 2. Consultar y Actualizar
-```
-GET /supplier/{id}
-PUT /supplier/{id}
-```
-
-### 3. Eliminar (borrado lógico)
-```
-DELETE /supplier/{id}
-```
-
-### 4. Listar y Buscar
-```
-GET /supplier?name=...&page=...&pageSize=...
-```
-
-### 5. Estadísticas y Monitoreo
-```
-GET /supplier/statistics
-```
-
----
-
-## 📋 Notas para el Equipo Frontend
-
-1. **Validación de Campos**: Validar datos antes de enviar para mejor UX.
-2. **Borrado Lógico**: Los proveedores eliminados no se muestran en listados activos, pero pueden consultarse para auditoría.
-3. **Metadatos Flexibles**: El campo `metadata` acepta cualquier JSON válido.
-4. **Fechas**: Todas las fechas están en formato ISO 8601 (UTC).
-5. **IDs**: Los IDs son numéricos y únicos.
-6. **Consistencia**: La API sigue el mismo patrón que el sistema de pagos y compras para facilitar el desarrollo.
+1. **Autenticación Obligatoria**: Todos los endpoints requieren token JWT válido
+2. **Borrado Lógico**: La eliminación solo cambia el estado a `false`, no borra físicamente
+3. **Paginación**: El listado usa paginación obligatoria con `page` y `pageSize`
+4. **contact_info**: Campo flexible JSON que puede contener email, phone, address, etc.
+5. **user_id**: Se asigna automáticamente desde el token JWT del usuario autenticado
+6. **Fechas**: El campo `created_at` está en formato ISO 8601
+7. **IDs**: Todos los IDs son números enteros únicos
 
 ## 🔗 Endpoints Relacionados
 
-- **Compras**: `/purchase/*` para órdenes y pagos
-- **Productos**: `/product/*` para validar productos
-- **Usuarios**: `/user/*` para información de usuarios
+- **Compras**: `/purchase/*` - Para gestionar órdenes de compra a proveedores
+- **Productos**: `/products/*` - Para gestionar productos del inventario
+- **Clientes**: `/client/*` - Para gestionar clientes del sistema
 
 ---
 
-**Última actualización**: 29 de Agosto de 2025
-**Versión API**: 1.0
-**Patrón**: Siguiendo Purchase Payments System
+**Última actualización**: 3 de Septiembre de 2025  
+**Versión API**: 1.0  
+**Basado en**: Implementación actual del sistema business_management
