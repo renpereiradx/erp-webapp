@@ -42,6 +42,11 @@ const useProductStore = create()(
       // para pruebas podemos ajustar TTL
       _testing: { overrideTTL: null, fastRetries: false, overrideRetryConfig: null },
 
+      // Circuit breaker state
+      circuit: { openUntil: 0, failures: 0, threshold: 4, cooldownMs: 30000 },
+      circuitOpen: false,
+      circuitTimeoutId: null,
+
       // Categories (inicialmente vacías, se cargan desde API)
       categories: [],
       

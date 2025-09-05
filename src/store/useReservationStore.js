@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { reservationService } from '@/services/reservationService';
-import scheduleService from '@/services/scheduleService';
+import { scheduleService } from '@/services/scheduleService';
 import { telemetry } from '@/utils/telemetry';
 
 const useReservationStore = create(
@@ -160,21 +160,36 @@ const useReservationStore = create(
         }
       },
 
-      // Obtener horarios por rango de fechas
-      fetchSchedulesByDateRange: async (startDate, endDate, page = 1, pageSize = 20) => {
+      // Verificar horarios disponibles generales para una fecha
+      checkAvailableSchedulesForDate: async (date) => {
         set({ loading: true, error: null });
         const startTime = Date.now();
         
         try {
-          const result = await scheduleService.getByDateRange(startDate, endDate, page, pageSize);
+          const today = new Date().toISOString().split('T')[0];
+          let result;
           
-          telemetry.record('feature.schedules.date_range', { 
-            duration: Date.now() - startTime 
+          // Usar el endpoint optimizado para HOY
+          if (date === today) {
+            result = await scheduleService.getTodaySchedules();
+          } else {
+            // Para otras fechas usar el endpoint general
+            result = await scheduleService.getAvailableSchedulesAll({ 
+              date: date, 
+              limit: 20 
+            });
+          }
+          
+          set({ loading: false });
+          
+          telemetry.record('feature.schedules.check_available', { 
+            duration: Date.now() - startTime,
+            count: result.count || 0
           });
           
           return result;
         } catch (error) {
-          set({ error: error.message || 'Error al cargar horarios por fecha', loading: false });
+          set({ error: error.message || 'Error verificando horarios', loading: false });
           telemetry.record('feature.schedules.error', { 
             error: error.message 
           });
@@ -182,16 +197,46 @@ const useReservationStore = create(
         }
       },
 
+      // Obtener horarios de hoy
+      fetchTodaySchedules: async () => {
+        set({ loading: true, error: null });
+        const startTime = Date.now();
+        
+        try {
+          const result = await scheduleService.getTodaySchedules();
+          
+          set({ loading: false });
+          
+          telemetry.record('feature.schedules.load_today', { 
+            duration: Date.now() - startTime,
+            count: result.count || 0 
+          });
+          
+          return result;
+        } catch (error) {
+          set({ error: error.message || 'Error al cargar horarios de hoy', loading: false });
+          telemetry.record('feature.schedules.error', { 
+            error: error.message 
+          });
+          throw error;
+        }
+      },
+
+      // REMOVED: fetchSchedulesByDateRange() - The underlying API endpoint does not exist
+      // Use multiple calls to fetchAvailableSchedules() for different product/date combinations instead
+
       // Actualizar disponibilidad de horario
       updateScheduleAvailability: async (scheduleId, isAvailable) => {
         try {
           const result = await scheduleService.updateAvailability(scheduleId, isAvailable);
           
-          // Actualizar estado local
-          const schedules = get().schedules.map(schedule => 
-            schedule.id === scheduleId ? { ...schedule, is_available: isAvailable } : schedule
-          );
-          set({ schedules });
+          if (result.success !== false) {
+            // Actualizar estado local
+            const schedules = get().schedules.map(schedule => 
+              schedule.id === scheduleId ? { ...schedule, is_available: isAvailable } : schedule
+            );
+            set({ schedules });
+          }
           
           telemetry.record('feature.schedules.update_availability');
           return { success: true };
@@ -205,8 +250,11 @@ const useReservationStore = create(
       generateDailySchedules: async () => {
         try {
           const result = await scheduleService.generateDaily();
-          telemetry.record('feature.schedules.generate_daily');
-          return { success: true };
+          if (result.success !== false) {
+            telemetry.record('feature.schedules.generate_daily');
+            return { success: true, data: result };
+          }
+          throw new Error(result.message || 'Error generando horarios diarios');
         } catch (error) {
           set({ error: error.message || 'Error al generar horarios diarios' });
           return { success: false, error: error.message };
@@ -217,8 +265,11 @@ const useReservationStore = create(
       generateSchedulesForDate: async (targetDate) => {
         try {
           const result = await scheduleService.generateForDate(targetDate);
-          telemetry.record('feature.schedules.generate_date');
-          return { success: true };
+          if (result.success !== false) {
+            telemetry.record('feature.schedules.generate_date');
+            return { success: true, data: result };
+          }
+          throw new Error(result.message || 'Error generando horarios para fecha');
         } catch (error) {
           set({ error: error.message || 'Error al generar horarios para fecha' });
           return { success: false, error: error.message };
@@ -229,8 +280,11 @@ const useReservationStore = create(
       generateSchedulesForNextDays: async (days) => {
         try {
           const result = await scheduleService.generateForNextDays(days);
-          telemetry.record('feature.schedules.generate_next_days');
-          return { success: true };
+          if (result.success !== false) {
+            telemetry.record('feature.schedules.generate_next_days');
+            return { success: true, data: result };
+          }
+          throw new Error(result.message || 'Error generando horarios para próximos días');
         } catch (error) {
           set({ error: error.message || 'Error al generar horarios para próximos días' });
           return { success: false, error: error.message };

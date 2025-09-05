@@ -14,8 +14,8 @@ import { DEMO_PURCHASE_ORDERS_DATA, DEMO_TAX_RATES_DATA, PURCHASES_CONFIG, creat
 // Global mock configuration
 export const MOCK_CONFIG = {
   enabled: true, // Master switch for all mock data
-  useRealAPI: false, // Global toggle for real API calls
-  simulateNetworkDelay: true, // Global network simulation
+  useRealAPI: true, // Global toggle for real API calls - CHANGED to use real API
+  simulateNetworkDelay: false, // Global network simulation - DISABLED for real API
   defaultDelayMs: 500,
   globalSeed: 1000, // For consistent data generation
   

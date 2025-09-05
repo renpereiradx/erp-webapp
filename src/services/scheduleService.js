@@ -4,10 +4,10 @@
  * Separado de reservations para mejor arquitectura modular
  */
 
-import { apiClient } from '@/services/api';
+import { apiService } from '@/services/api';
 import { telemetryService } from '@/services/telemetryService';
 import { telemetry } from '@/utils/telemetry';
-import { MockDataService, MOCK_CONFIG } from '@/config/mockData';
+// Removed MockDataService import - using real API only
 
 const API_PREFIX = '/schedules'; // Ajustar según API
 
@@ -27,46 +27,13 @@ const withRetry = async (fn, attempts = RETRY_ATTEMPTS) => {
 };
 
 export const scheduleService = {
+  // Método genérico para obtener horarios - como no hay endpoint general, lanzamos error informativo
   async getSchedules(params = {}) {
-    const startTime = Date.now();
-    
-    try {
-      // Intentar API real si está habilitado
-      if (!MOCK_CONFIG.useRealAPI) {
-        throw new Error('Mock mode enabled - using mock data');
-      }
-      
-      console.log('🌐 Schedules: Loading from API...');
-      const result = await withRetry(async () => {
-        return await apiClient.get(`${API_PREFIX}/date-range`, { params });
-      });
-      
-      telemetryService.recordMetric('schedules_fetched_api', result.data?.length || 0);
-      return result;
-      
-    } catch (error) {
-      console.warn('🔄 Schedules API unavailable, using modular mock data...');
-      
-      // Fallback a mock data modular
-      const mockResult = await MockDataService.getSchedules({
-        page: params.page || 1,
-        pageSize: params.pageSize || 50,
-        product_id: params.product_id,
-        startDate: params.startDate,
-        endDate: params.endDate
-      });
-      
-      telemetryService.recordMetric('schedules_fetched_mock', mockResult.data?.length || 0);
-      
-      if (MOCK_CONFIG.development?.verbose) {
-        console.log('✅ Schedules loaded from modular mock system:', mockResult.data.length);
-      }
-      
-      return mockResult;
-    } finally {
-      const endTime = Date.now();
-      telemetryService.recordMetric('get_schedules_duration', endTime - startTime);
-    }
+    console.error('❌ Schedule generic endpoint not available');
+    throw new Error(
+      'El listado general de horarios no está implementado en la API. ' +
+      'Use getAvailableSchedules() para consultas específicas de producto y fecha.'
+    );
   },
 
   async getScheduleById(id) {
@@ -74,7 +41,7 @@ export const scheduleService = {
     
     try {
       const result = await withRetry(async () => {
-        return await apiClient.get(`${API_PREFIX}/${id}`);
+        return await apiService.get(`${API_PREFIX}/${id}`);
       });
       
       telemetry.record('schedules.service.load_by_id', {
@@ -97,7 +64,7 @@ export const scheduleService = {
     
     try {
       const result = await withRetry(async () => {
-        return await apiClient.put(`${API_PREFIX}/${id}/availability`, {
+        return await apiService.put(`${API_PREFIX}/${id}/availability`, {
           is_available: isAvailable
         });
       });
@@ -122,7 +89,7 @@ export const scheduleService = {
     
     try {
       const result = await withRetry(async () => {
-        return await apiClient.post(`${API_PREFIX}/generate/daily`);
+        return await apiService.post(`${API_PREFIX}/generate/daily`);
       });
       
       telemetry.record('schedules.service.generate_daily', {
@@ -145,7 +112,7 @@ export const scheduleService = {
     
     try {
       const result = await withRetry(async () => {
-        return await apiClient.post(`${API_PREFIX}/generate/date`, {
+        return await apiService.post(`${API_PREFIX}/generate/date`, {
           target_date: targetDate
         });
       });
@@ -170,7 +137,7 @@ export const scheduleService = {
     
     try {
       const result = await withRetry(async () => {
-        return await apiClient.post(`${API_PREFIX}/generate/next-days`, {
+        return await apiService.post(`${API_PREFIX}/generate/next-days`, {
           days: days
         });
       });
@@ -195,7 +162,7 @@ export const scheduleService = {
     
     try {
       const result = await withRetry(async () => {
-        return await apiClient.get(`${API_PREFIX}/product/${productId}/date/${date}/available`);
+        return await apiService.get(`${API_PREFIX}/product/${productId}/date/${date}/available`);
       });
       
       telemetry.record('schedules.service.load_available', {
@@ -213,23 +180,20 @@ export const scheduleService = {
     }
   },
 
-  async getByDateRange(startDate, endDate, page = 1, pageSize = 20) {
+  // 🆕 Nuevos endpoints basados en SCHEDULE_API.md v2.1
+  
+  // Obtener horarios de servicios para HOY
+  async getTodaySchedules() {
     const startTime = Date.now();
     
     try {
-      const params = {
-        startDate,
-        endDate,
-        page,
-        pageSize
-      };
-
       const result = await withRetry(async () => {
-        return await apiClient.get(`${API_PREFIX}/date-range`, { params });
+        return await apiService.get(`${API_PREFIX}/today`);
       });
       
-      telemetry.record('schedules.service.load_by_date_range', {
-        duration: Date.now() - startTime
+      telemetry.record('schedules.service.load_today', {
+        duration: Date.now() - startTime,
+        result_count: result.count || 0
       });
       
       return result;
@@ -237,27 +201,34 @@ export const scheduleService = {
       telemetry.record('schedules.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
-        operation: 'getByDateRange'
+        operation: 'getTodaySchedules'
       });
       throw error;
     }
   },
 
-  async getByProduct(productId, page = 1, pageSize = 20) {
+  // Obtener horarios disponibles de todos los servicios
+  async getAvailableSchedulesAll(params = {}) {
     const startTime = Date.now();
+    const { date, limit = 50 } = params;
     
     try {
-      const params = {
-        page,
-        pageSize
-      };
-
+      const queryParams = new URLSearchParams();
+      if (date) queryParams.append('date', date);
+      if (limit) queryParams.append('limit', limit.toString());
+      
+      const url = queryParams.toString() 
+        ? `${API_PREFIX}/available?${queryParams.toString()}`
+        : `${API_PREFIX}/available`;
+        
       const result = await withRetry(async () => {
-        return await apiClient.get(`${API_PREFIX}/product/${productId}`, { params });
+        return await apiService.get(url);
       });
       
-      telemetry.record('schedules.service.load_by_product', {
-        duration: Date.now() - startTime
+      telemetry.record('schedules.service.load_available_all', {
+        duration: Date.now() - startTime,
+        has_date_filter: !!date,
+        result_count: result.count || 0
       });
       
       return result;
@@ -265,9 +236,104 @@ export const scheduleService = {
       telemetry.record('schedules.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
-        operation: 'getByProduct'
+        operation: 'getAvailableSchedulesAll'
       });
       throw error;
+    }
+  },
+
+  // Obtener todos los horarios de un producto
+  async getAllSchedulesByProduct(productId) {
+    const startTime = Date.now();
+    
+    try {
+      const result = await withRetry(async () => {
+        return await apiService.get(`${API_PREFIX}/product/${productId}/all`);
+      });
+      
+      telemetry.record('schedules.service.load_all_by_product', {
+        duration: Date.now() - startTime,
+        result_count: result.data?.length || 0
+      });
+      
+      return result;
+    } catch (error) {
+      telemetry.record('schedules.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getAllSchedulesByProduct'
+      });
+      throw error;
+    }
+  },
+
+  // Obtener horarios de un producto con paginación
+  async getSchedulesByProduct(productId, params = {}) {
+    const startTime = Date.now();
+    const { page = 1, pageSize = 50 } = params;
+    
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', page.toString());
+      queryParams.append('pageSize', pageSize.toString());
+      
+      const result = await withRetry(async () => {
+        return await apiService.get(`${API_PREFIX}/product/${productId}?${queryParams.toString()}`);
+      });
+      
+      telemetry.record('schedules.service.load_by_product_paginated', {
+        duration: Date.now() - startTime,
+        page,
+        pageSize,
+        result_count: result.data?.length || 0
+      });
+      
+      return result;
+    } catch (error) {
+      telemetry.record('schedules.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getSchedulesByProduct'
+      });
+      throw error;
+    }
+  },
+
+  // Utilidad para verificar si existen horarios para una fecha
+  async checkSchedulesForDate(date, productId = null) {
+    const startTime = Date.now();
+    
+    try {
+      if (productId) {
+        // Verificar horarios específicos de un producto
+        const result = await this.getAvailableSchedules(productId, date);
+        return {
+          hasSchedules: Array.isArray(result.data) && result.data.length > 0,
+          count: result.data?.length || 0,
+          schedules: result.data || []
+        };
+      } else {
+        // Verificar horarios generales para la fecha
+        const result = await this.getAvailableSchedulesAll({ date, limit: 1 });
+        return {
+          hasSchedules: result.data?.count > 0,
+          count: result.data?.count || 0,
+          message: result.data?.message || 'Sin información de horarios'
+        };
+      }
+    } catch (error) {
+      telemetry.record('schedules.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'checkSchedulesForDate'
+      });
+      
+      // Si hay error, asumimos que no hay horarios
+      return {
+        hasSchedules: false,
+        count: 0,
+        message: `Error verificando horarios: ${error.message}`
+      };
     }
   }
 };

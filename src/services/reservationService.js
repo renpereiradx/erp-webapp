@@ -6,7 +6,7 @@
 
 import { apiClient } from '@/services/api';
 import { telemetryService } from '@/services/telemetryService';
-import { MockDataService, MOCK_CONFIG } from '@/config/mockData';
+// Removed MockDataService import - using real API only
 import { telemetry } from '@/utils/telemetry';
 
 const API_PREFIX = '/reserve'; // Según RESERVES_API.md
@@ -30,11 +30,6 @@ export const reservationService = {
     const startTime = Date.now();
     
     try {
-      // Intentar API real si está habilitado
-      if (!MOCK_CONFIG.useRealAPI) {
-        throw new Error('Mock mode enabled - using mock data');
-      }
-      
       console.log('🌐 Reservations: Loading from API...');
       const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/report`, { params });
@@ -44,24 +39,12 @@ export const reservationService = {
       return result;
       
     } catch (error) {
-      console.warn('🔄 Reservations API unavailable, using modular mock data...');
+      console.error('❌ Reservations API unavailable:', error.message);
       
-      // Fallback a mock data modular
-      const mockResult = await MockDataService.getReservations({
-        page: params.page || 1,
-        pageSize: params.pageSize || 20,
-        client_id: params.client_id,
-        product_id: params.product_id,
-        status: params.status
-      });
-      
-      telemetryService.recordMetric('reservations_fetched_mock', mockResult.data?.length || 0);
-      
-      if (MOCK_CONFIG.development?.verbose) {
-        console.log('✅ Reservations loaded from modular mock system:', mockResult.data.length);
-      }
-      
-      return mockResult;
+      // En lugar de usar mock data, retornar error apropiado
+      throw new Error(
+        `No se pudieron cargar las reservas. Verifique la conexión a la API: ${error.message}`
+      );
     } finally {
       const endTime = Date.now();
       telemetryService.recordMetric('get_reservations_duration', endTime - startTime);

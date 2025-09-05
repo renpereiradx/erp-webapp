@@ -7,7 +7,7 @@
 import { apiClient } from './api';
 import BusinessManagementAPI from './BusinessManagementAPI';
 import { ApiError, toApiError } from '@/utils/ApiError';
-import { MockDataService, MOCK_CONFIG } from '@/config/mockData';
+// Removed MockDataService import - using real API only
 import { telemetryService } from './telemetryService';
 
 /**
@@ -67,10 +67,7 @@ export const productService = {
     const startTime = performance.now();
     
     try {
-      // Intentar API real si está habilitado
-      if (!MOCK_CONFIG.useRealAPI) {
-        throw new Error('Mock mode enabled - using mock data');
-      }
+      // Using real API only
       
       const result = await retryWithBackoff(async () => {
         return await apiClient.getProducts(page, pageSize);
@@ -80,22 +77,15 @@ export const productService = {
       return result;
       
     } catch (error) {
-      console.warn('🔄 Products API unavailable, using modular mock data...');
+      console.error('❌ Products API unavailable:', error.message);
       
-      // Fallback a mock data modular
-      const mockResult = await MockDataService.getProducts({
-        page,
-        pageSize,
-        ...filters
-      });
-      
-      telemetryService?.recordMetric('products_fetched_mock', mockResult.data?.length || 0);
-      
-      if (MOCK_CONFIG.development?.verbose) {
-        console.log('✅ Products loaded from modular mock system:', mockResult.data.length);
-      }
-      
-      return mockResult;
+      // En lugar de usar mock data, retornar error apropiado
+      throw new ApiError(
+        'No se pudieron cargar los productos. Verifique la conexión a la API.',
+        'API_UNAVAILABLE',
+        503,
+        { originalError: error.message }
+      );
     } finally {
       const endTime = performance.now();
       telemetryService?.recordMetric('get_products_duration', endTime - startTime);
@@ -111,10 +101,7 @@ export const productService = {
     const startTime = performance.now();
     
     try {
-      // Intentar API real si está habilitado
-      if (!MOCK_CONFIG.useRealAPI) {
-        throw new Error('Mock mode enabled - using mock data');
-      }
+      // Using real API only
       
       const result = await retryWithBackoff(async () => {
         return await apiClient.getProductById(productId);
@@ -124,23 +111,15 @@ export const productService = {
       return result;
       
     } catch (error) {
-      console.warn(`🔄 Product API unavailable for ID ${productId}, using modular mock data...`);
+      console.error(`❌ Product API unavailable for ID ${productId}:`, error.message);
       
-      // Fallback a mock data modular
-      const mockProducts = await MockDataService.getProducts({ search: productId });
-      const product = mockProducts.data.find(p => p.id === productId);
-      
-      if (!product) {
-        throw new ApiError(`Product with ID ${productId} not found`, 'PRODUCT_NOT_FOUND', 404);
-      }
-      
-      telemetryService?.recordMetric('product_fetched_by_id_mock', 1);
-      
-      return {
-        success: true,
-        data: product,
-        source: 'mock'
-      };
+      // En lugar de usar mock data, retornar error apropiado
+      throw new ApiError(
+        `No se pudo cargar el producto con ID ${productId}. Verifique la conexión a la API.`,
+        'API_UNAVAILABLE',
+        503,
+        { originalError: error.message, productId }
+      );
     } finally {
       const endTime = performance.now();
       telemetryService?.recordMetric('get_product_by_id_duration', endTime - startTime);

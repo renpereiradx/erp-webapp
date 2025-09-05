@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Plus, Search, Edit, Trash2, CheckCircle, XCircle, Settings, RefreshCw, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Calendar, Clock, User, Plus, Search, Edit, Trash2, CheckCircle, XCircle, Settings, RefreshCw, ToggleLeft, ToggleRight, AlertCircle, Eye, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageHeader from '@/components/ui/PageHeader';
 import DataState from '@/components/ui/DataState';
 import EnhancedModal from '@/components/ui/EnhancedModal';
+import ApiStatusIndicator from '@/components/ui/ApiStatusIndicator';
 import { useI18n } from '@/lib/i18n';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 
@@ -43,7 +44,6 @@ const Reservations = () => {
     generateDailySchedules,
     generateSchedulesForDate,
     generateSchedulesForNextDays,
-    fetchSchedulesByDateRange,
     clearError
   } = useReservationStore();
 
@@ -59,6 +59,8 @@ const Reservations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingReservation, setEditingReservation] = useState(null);
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
   const [formData, setFormData] = useState({
     product_id: '',
     client_id: '',
@@ -73,20 +75,54 @@ const Reservations = () => {
     daysToGenerate: 7
   });
 
-  // Cargar datos al montar
-  useEffect(() => {
-    fetchReservations();
-    fetchProducts();
-    fetchClients();
-  }, [fetchReservations, fetchProducts, fetchClients]);
+  // Función para cargar datos de forma explícita
+  const handleLoadData = async () => {
+    setLoadingData(true);
+    try {
+      await Promise.allSettled([
+        fetchReservations(),
+        fetchProducts(),
+        fetchClients()
+      ]);
+      setDataLoaded(true);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
-  // Cargar horarios disponibles cuando cambie la fecha o producto
-  useEffect(() => {
+  // Función para refrescar datos
+  const handleRefreshData = async () => {
+    setLoadingData(true);
+    try {
+      clearError();
+      await Promise.allSettled([
+        fetchReservations(),
+        fetchProducts(),
+        fetchClients()
+      ]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  // Función para cargar horarios cuando el usuario seleccione fecha y producto
+  const handleLoadSchedules = async () => {
     if (selectedDate && selectedProduct) {
       const dateStr = selectedDate.toISOString().split('T')[0];
-      fetchAvailableSchedules(selectedProduct.id, dateStr);
+      await fetchAvailableSchedules(selectedProduct.id, dateStr);
     }
-  }, [selectedDate, selectedProduct, fetchAvailableSchedules]);
+  };
+
+  // Llamar a cargar horarios cuando cambie la fecha o producto (solo si ya hay datos cargados)
+  useEffect(() => {
+    if (dataLoaded && selectedDate && selectedProduct) {
+      handleLoadSchedules();
+    }
+  }, [selectedDate, selectedProduct, dataLoaded]);
 
   // Filtrar reservas
   const filteredReservations = reservations.filter(reservation =>
@@ -204,22 +240,113 @@ const Reservations = () => {
     })
   })).filter(slot => slot.is_available);
 
+  // Estado inicial: sin datos cargados
+  if (!dataLoaded && !loading && !error) {
+    return (
+      <div className={styles.container()} data-testid="reservations-page">
+        <PageHeader
+          title={t('reservations.title', 'Reservas')}
+          subtitle={t('reservations.subtitle', 'Gestiona reservas y horarios de servicios')}
+          breadcrumb={[
+            { label: t('navigation.operations', 'Operaciones'), href: '/dashboard' }, 
+            { label: t('reservations.title', 'Reservas') }
+          ]}
+        />
+        
+        <div className="space-y-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                  {t('reservations.welcome.title', 'Sistema de Reservas')}
+                </h3>
+                <p className="text-blue-700 dark:text-blue-300 text-sm mb-4">
+                  {t('reservations.welcome.description', 'Este sistema te permite gestionar reservas y horarios de servicios. Para comenzar, necesitas cargar los datos desde la API.')}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={handleLoadData}
+                    disabled={loadingData}
+                    variant="primary"
+                    className="flex items-center gap-2"
+                  >
+                    {loadingData ? (
+                      <>
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                        {t('reservations.welcome.loading', 'Cargando...')}
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4" />
+                        {t('reservations.welcome.load_data', 'Cargar Datos del Sistema')}
+                      </>
+                    )}
+                  </Button>
+                  <div className="sm:ml-2">
+                    <ApiStatusIndicator showDetails={false} className="text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Estados de UI
-  if (loading && reservations.length === 0) {
-    return <DataState variant="loading" skeletonVariant="list" />;
+  if ((loading || loadingData) && reservations.length === 0) {
+    return (
+      <div className={styles.container()} data-testid="reservations-page">
+        <PageHeader
+          title={t('reservations.title', 'Reservas')}
+          subtitle={t('reservations.subtitle', 'Gestiona reservas y horarios de servicios')}
+          breadcrumb={[
+            { label: t('navigation.operations', 'Operaciones'), href: '/dashboard' }, 
+            { label: t('reservations.title', 'Reservas') }
+          ]}
+        />
+        <DataState variant="loading" skeletonVariant="list" />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <DataState 
-        variant="error" 
-        title={t('reservations.error.title', 'Error')}
-        message={error}
-        onRetry={() => {
-          clearError();
-          fetchReservations();
-        }}
-      />
+      <div className={styles.container()} data-testid="reservations-page">
+        <PageHeader
+          title={t('reservations.title', 'Reservas')}
+          subtitle={t('reservations.subtitle', 'Gestiona reservas y horarios de servicios')}
+          breadcrumb={[
+            { label: t('navigation.operations', 'Operaciones'), href: '/dashboard' }, 
+            { label: t('reservations.title', 'Reservas') }
+          ]}
+        />
+        
+        <div className="space-y-6">
+          <ApiStatusIndicator showDetails={true} className="max-w-2xl" />
+          
+          <DataState 
+            variant="error" 
+            title={t('reservations.error.title', 'Error de Conexión')}
+            message={
+              error.includes('API_UNAVAILABLE') || error.includes('503') ? 
+              t('reservations.error.api_unavailable', 'No se pudo conectar con el servidor. Verifique su conexión a internet y que el servidor esté funcionando.') :
+              error.includes('ENDPOINT_NOT_IMPLEMENTED') ?
+              t('reservations.error.endpoint_not_implemented', 'Los servicios de productos aún no están configurados en el servidor. Contacte al administrador del sistema para completar la configuración de la API.') :
+              error.includes('ENDPOINT_NOT_FOUND') ?
+              t('reservations.error.endpoint_not_found', 'Algunas funcionalidades aún no están disponibles. El sistema está en proceso de configuración.') :
+              error
+            }
+            onRetry={handleRefreshData}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -232,6 +359,27 @@ const Reservations = () => {
           { label: t('navigation.operations', 'Operaciones'), href: '/dashboard' }, 
           { label: t('reservations.title', 'Reservas') }
         ]}
+        extra={
+          <div className="flex items-center gap-3">
+            {dataLoaded && (
+              <Button
+                onClick={handleRefreshData}
+                disabled={loadingData}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">
+                  {loadingData ? t('action.refreshing', 'Actualizando...') : t('action.refresh', 'Actualizar')}
+                </span>
+              </Button>
+            )}
+            <div className="hidden sm:block">
+              <ApiStatusIndicator showDetails={false} />
+            </div>
+          </div>
+        }
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -270,7 +418,19 @@ const Reservations = () => {
                     <select
                       value={selectedProduct?.id || ''}
                       onChange={(e) => {
-                        const product = products.find(p => p.id === e.target.value);
+                        const productId = e.target.value;
+                        let product = products.find(p => p.id === productId);
+                        
+                        // Si no se encuentra en products, crear objeto temporal para IDs conocidos
+                        if (!product && productId.startsWith('BT_Cancha_')) {
+                          product = {
+                            id: productId,
+                            name: productId === 'BT_Cancha_1_xyz123abc' ? 'Cancha de Beach Tennis 1' : 'Cancha de Beach Tennis 2',
+                            type: 'service',
+                            reservable: true
+                          };
+                        }
+                        
                         setSelectedProduct(product);
                       }}
                       className={styles.input()}
@@ -278,14 +438,29 @@ const Reservations = () => {
                       <option value="">
                         {t('reservations.select_service', 'Seleccionar servicio...')}
                       </option>
-                      {products
-                        .filter(product => product.type === 'service' || product.reservable)
-                        .map((product) => (
-                          <option key={product.id} value={product.id}>
-                            {product.name} - ${product.price}
-                          </option>
-                        ))
-                      }
+                      {/* Opción temporal: IDs conocidos del sistema */}
+                      <optgroup label="Servicios Conocidos (Temporal)">
+                        <option value="BT_Cancha_1_xyz123abc">Cancha de Beach Tennis 1</option>
+                        <option value="BT_Cancha_2_def456ghi">Cancha de Beach Tennis 2</option>
+                      </optgroup>
+                      {/* Servicios cargados dinámicamente */}
+                      {products && products.length > 0 && (
+                        <optgroup label="Servicios Cargados">
+                          {products
+                            .filter(product => product.type === 'service' || product.reservable)
+                            .map((product) => (
+                              <option key={product.id} value={product.id}>
+                                {product.name}{product.price ? ` - $${product.price}` : ''}
+                              </option>
+                            ))
+                          }
+                        </optgroup>
+                      )}
+                      {(!products || products.length === 0) && (
+                        <option value="" disabled>
+                          {t('reservations.no_services_available', 'No hay servicios disponibles')}
+                        </option>
+                      )}
                     </select>
                   </div>
 
@@ -305,11 +480,17 @@ const Reservations = () => {
                       <option value="">
                         {t('reservations.select_client', 'Seleccionar cliente...')}
                       </option>
-                      {clients.map((client) => (
-                        <option key={client.id} value={client.id}>
-                          {client.name}
+                      {clients && clients.length > 0 ? (
+                        clients.map((client) => (
+                          <option key={client.id} value={client.id}>
+                            {client.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="" disabled>
+                          {t('reservations.no_clients_available', 'No hay clientes disponibles')}
                         </option>
-                      ))}
+                      )}
                     </select>
                   </div>
 
@@ -322,10 +503,16 @@ const Reservations = () => {
                         {loading && <span className="text-sm text-muted-foreground ml-2">(Cargando...)</span>}
                       </label>
                       {availableTimeSlots.length === 0 && !loading ? (
-                        <div className="p-4 text-center text-muted-foreground bg-gray-50 rounded-md mt-2">
-                          <Clock className="w-6 h-6 mx-auto mb-2" />
-                          <p className="text-sm">No hay horarios disponibles para esta fecha</p>
-                          <p className="text-xs">Selecciona otra fecha o producto</p>
+                        <div className="p-4 text-center text-muted-foreground bg-gray-50 dark:bg-gray-800 rounded-md mt-2 border">
+                          <Clock className="w-8 h-8 mx-auto mb-3 text-muted-foreground/60" />
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">
+                              {t('reservations.no_schedules_available', 'Sin horarios disponibles')}
+                            </p>
+                            <p className="text-xs text-muted-foreground/80">
+                              {t('reservations.no_schedules_help', 'Prueba seleccionando otra fecha, producto o contacta al administrador para generar horarios.')}
+                            </p>
+                          </div>
                         </div>
                       ) : (
                         <div className="grid grid-cols-2 gap-2 mt-2">
@@ -494,6 +681,172 @@ const Reservations = () => {
 
         {/* Tab Gestión de Horarios */}
         <TabsContent value="schedules" className="space-y-6" data-testid="schedules-management-tab">
+          {/* Nueva sección de verificación de horarios disponibles */}
+          <Card className={styles.card()}>
+            <CardHeader>
+              <CardTitle className={styles.header('h3')}>
+                <Search className="w-5 h-5 mr-2 inline" />
+                Verificar Horarios Disponibles
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium mb-1">Fecha a consultar</label>
+                    <Input
+                      type="date"
+                      value={generalQuery.date}
+                      onChange={(e) => setGeneralQuery(prev => ({ ...prev, date: e.target.value, hasChecked: false, results: null }))}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      onClick={handleCheckAvailableSchedules}
+                      disabled={generalQuery.isQuerying || !generalQuery.date}
+                      variant="primary"
+                      className="flex items-center gap-2"
+                    >
+                      {generalQuery.isQuerying ? (
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                      ) : (
+                        <Search className="w-4 h-4" />
+                      )}
+                      Consultar
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Mostrar estado de los horarios */}
+                {generalQuery.hasChecked && (
+                  <div className="p-4 rounded-lg border">
+                    {generalQuery.results?.count > 0 ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                            <CheckCircle className="w-5 h-5" />
+                            <span className="font-medium">
+                              {generalQuery.results.count} horarios {
+                                generalQuery.date === new Date().toISOString().split('T')[0] 
+                                  ? 'programados para hoy' 
+                                  : `disponibles para ${generalQuery.date}`
+                              }
+                            </span>
+                          </div>
+                          <Button
+                            onClick={handleOpenSchedulesModal}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Ver más
+                          </Button>
+                        </div>
+                        
+                        {/* Servicios disponibles - agrupados por servicio */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {(() => {
+                            // Agrupar horarios por servicio
+                            const serviceGroups = {};
+                            generalQuery.results.schedules?.slice(0, 4).forEach(schedule => {
+                              const serviceName = schedule.product_name;
+                              if (!serviceGroups[serviceName]) {
+                                serviceGroups[serviceName] = {
+                                  name: serviceName,
+                                  total: 0,
+                                  available: 0,
+                                  schedules: []
+                                };
+                              }
+                              serviceGroups[serviceName].total += 1;
+                              if (schedule.is_available) serviceGroups[serviceName].available += 1;
+                              serviceGroups[serviceName].schedules.push(schedule);
+                            });
+                            
+                            return Object.values(serviceGroups).map((service, index) => (
+                              <Card key={index} className={styles.card()}>
+                                <CardContent className="p-3">
+                                  <div className="space-y-2">
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <h4 className="font-medium text-sm mb-1">{service.name}</h4>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                          <span className="flex items-center gap-1">
+                                            <Clock className="w-3 h-3" />
+                                            {service.total} horarios
+                                          </span>
+                                          <span className="flex items-center gap-1">
+                                            <CheckCircle className="w-3 h-3 text-green-500" />
+                                            {service.available} disponibles
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div className={`w-3 h-3 rounded-full ${
+                                        service.available > 0 ? 'bg-green-500' : 'bg-gray-400'
+                                      }`}></div>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between">
+                                      <Badge 
+                                        variant={service.available > 0 ? 'default' : 'secondary'}
+                                        className="text-xs"
+                                      >
+                                        {service.available > 0 ? 'Disponible' : 'Sin disponibilidad'}
+                                      </Badge>
+                                      
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-xs"
+                                        onClick={() => handleOpenSchedulesModal(service.schedules, `Horarios de ${service.name}`)}
+                                      >
+                                        <Eye className="w-3 h-3 mr-1" />
+                                        Ver
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ));
+                          })()
+                          }
+                        </div>
+                        
+                        {/* Resumen total */}
+                        {generalQuery.results.schedules?.length > 4 && (
+                          <div className="text-center text-sm text-muted-foreground">
+                            {(() => {
+                              const serviceGroups = {};
+                              generalQuery.results.schedules?.forEach(schedule => {
+                                const serviceName = schedule.product_name;
+                                if (!serviceGroups[serviceName]) serviceGroups[serviceName] = true;
+                              });
+                              const totalServices = Object.keys(serviceGroups).length;
+                              return `${totalServices} servicios con ${generalQuery.results.schedules?.length} horarios totales`;
+                            })()
+                            }
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                        <AlertCircle className="w-5 h-5" />
+                        <div>
+                          <div className="font-medium">No hay horarios generados para {generalQuery.date}</div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            Utiliza las herramientas de generación para crear horarios para esta fecha.
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Panel de Generación de Horarios */}
             <Card className={styles.card()}>
@@ -611,21 +964,53 @@ const Reservations = () => {
                     <select
                       value={selectedProduct?.id || ''}
                       onChange={(e) => {
-                        const product = products.find(p => p.id === e.target.value);
+                        const productId = e.target.value;
+                        let product = products.find(p => p.id === productId);
+                        
+                        // Si no se encuentra en products, crear objeto temporal para IDs conocidos
+                        if (!product && productId.startsWith('BT_Cancha_')) {
+                          product = {
+                            id: productId,
+                            name: productId === 'BT_Cancha_1_xyz123abc' ? 'Cancha de Beach Tennis 1' : 'Cancha de Beach Tennis 2',
+                            type: 'service',
+                            reservable: true
+                          };
+                        }
+                        
                         setSelectedProduct(product);
                       }}
                       className="w-full p-2 border rounded"
                     >
                       <option value="">Seleccionar servicio...</option>
-                      {products
-                        .filter(product => product.type === 'service' || product.reservable)
-                        .map((product) => (
-                          <option key={product.id} value={product.id}>
-                            {product.name}
-                          </option>
-                        ))
-                      }
+                      {/* Opción temporal: IDs conocidos del sistema */}
+                      <optgroup label="Servicios Conocidos (Temporal)">
+                        <option value="BT_Cancha_1_xyz123abc">Cancha de Beach Tennis 1</option>
+                        <option value="BT_Cancha_2_def456ghi">Cancha de Beach Tennis 2</option>
+                      </optgroup>
+                      {/* Servicios cargados dinámicamente */}
+                      {products && products.length > 0 && (
+                        <optgroup label="Servicios Cargados">
+                          {products
+                            .filter(product => product.type === 'service' || product.reservable)
+                            .map((product) => (
+                              <option key={product.id} value={product.id}>
+                                {product.name}
+                              </option>
+                            ))
+                          }
+                        </optgroup>
+                      )}
+                      {(!products || products.length === 0) && (
+                        <option value="" disabled>
+                          {t('reservations.no_services_available', 'No hay servicios disponibles')}
+                        </option>
+                      )}
                     </select>
+                    {selectedProduct?.id?.startsWith('BT_Cancha_') && (
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        📝 Usando ID directo del sistema (temporal)
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Fecha</label>
@@ -647,10 +1032,14 @@ const Reservations = () => {
                         <p className="text-sm text-muted-foreground">Cargando horarios...</p>
                       </div>
                     ) : schedules.length === 0 ? (
-                      <div className="text-center py-6 text-muted-foreground">
-                        <Clock className="w-8 h-8 mx-auto mb-2" />
-                        <p>No hay horarios para esta fecha</p>
-                        <p className="text-xs">Genera horarios usando el panel de la izquierda</p>
+                      <div className="text-center py-8 text-muted-foreground border border-dashed border-muted rounded-lg bg-muted/5">
+                        <Clock className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                        <div className="space-y-2">
+                          <p className="font-medium">{t('schedules.no_schedules', 'Sin horarios para esta fecha')}</p>
+                          <p className="text-xs text-muted-foreground/70">
+                            {t('schedules.generate_help', 'Utiliza el panel de la izquierda para generar horarios o contacta al administrador del sistema')}
+                          </p>
+                        </div>
                       </div>
                     ) : (
                       <div className="max-h-60 overflow-y-auto space-y-2">
@@ -699,10 +1088,14 @@ const Reservations = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-6 text-muted-foreground">
-                    <Settings className="w-8 h-8 mx-auto mb-2" />
-                    <p>Selecciona un servicio y fecha</p>
-                    <p className="text-xs">Para ver y gestionar horarios</p>
+                  <div className="text-center py-8 text-muted-foreground border border-dashed border-muted rounded-lg bg-muted/5">
+                    <Settings className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+                    <div className="space-y-2">
+                      <p className="font-medium">{t('schedules.select_service_date', 'Selecciona servicio y fecha')}</p>
+                      <p className="text-xs text-muted-foreground/70">
+                        {t('schedules.select_help', 'Elige un servicio y una fecha para ver y gestionar los horarios disponibles')}
+                      </p>
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -769,14 +1162,29 @@ const Reservations = () => {
                 required
               >
                 <option value="">Seleccionar servicio...</option>
-                {products
-                  .filter(product => product.type === 'service' || product.reservable)
-                  .map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.name} {product.price && `- $${product.price}`}
-                    </option>
-                  ))
-                }
+                {/* Opción temporal: IDs conocidos del sistema */}
+                <optgroup label="Servicios Conocidos (Temporal)">
+                  <option value="BT_Cancha_1_xyz123abc">Cancha de Beach Tennis 1</option>
+                  <option value="BT_Cancha_2_def456ghi">Cancha de Beach Tennis 2</option>
+                </optgroup>
+                {/* Servicios cargados dinámicamente */}
+                {products && products.length > 0 && (
+                  <optgroup label="Servicios Cargados">
+                    {products
+                      .filter(product => product.type === 'service' || product.reservable)
+                      .map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} {product.price ? `- $${product.price}` : ''}
+                        </option>
+                      ))
+                    }
+                  </optgroup>
+                )}
+                {(!products || products.length === 0) && (
+                  <option value="" disabled>
+                    {t('reservations.no_services_available', 'No hay servicios disponibles')}
+                  </option>
+                )}
               </select>
             </div>
 
@@ -792,11 +1200,17 @@ const Reservations = () => {
                 required
               >
                 <option value="">Seleccionar cliente...</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
+                {clients && clients.length > 0 ? (
+                  clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>
+                    {t('reservations.no_clients_available', 'No hay clientes disponibles')}
                   </option>
-                ))}
+                )}
               </select>
             </div>
 
@@ -854,6 +1268,127 @@ const Reservations = () => {
           )}
         </form>
       </EnhancedModal>
+      
+      {/* Modal de Detalles de Horarios */}
+      {schedulesModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={handleCloseSchedulesModal}
+          />
+          
+          {/* Modal Content */}
+          <Card className={`relative w-full max-w-4xl max-h-[90vh] ${styles.card()} shadow-2xl`}>
+            {/* Header */}
+            <CardHeader className="border-b">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">{schedulesModal.title}</CardTitle>
+                <Button
+                  onClick={handleCloseSchedulesModal}
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Se encontraron {schedulesModal.schedules.length} horarios para {schedulesModal.date}
+              </p>
+            </CardHeader>
+            
+            {/* Content */}
+            <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+              {/* Grid de horarios completo */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                {schedulesModal.schedules.map((schedule, index) => (
+                  <Card key={index} className={styles.card()}>
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <h3 className="font-medium text-sm flex-1 pr-2">{schedule.product_name}</h3>
+                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                            schedule.is_available ? 'bg-green-500' : 'bg-gray-400'
+                          }`}></div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            <span>
+                              {new Date(schedule.start_time).toLocaleTimeString('es-ES', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })} - {new Date(schedule.end_time).toLocaleTimeString('es-ES', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Calendar className="w-3 h-3" />
+                            <span>
+                              {new Date(schedule.start_time).toLocaleDateString('es-ES', {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'short'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-2 border-t">
+                          <span className="text-xs text-muted-foreground">
+                            {Math.round((new Date(schedule.end_time) - new Date(schedule.start_time)) / (1000 * 60))} min
+                          </span>
+                          <Badge 
+                            variant={schedule.is_available ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {schedule.is_available ? 'Disponible' : 'Ocupado'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              {/* Resumen */}
+              <Card className={styles.card()}>
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                      <div className="text-lg font-semibold">{schedulesModal.schedules.length}</div>
+                      <div className="text-xs text-muted-foreground">Total</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-semibold text-green-600">
+                        {schedulesModal.schedules.filter(s => s.is_available).length}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Disponibles</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-semibold text-gray-600">
+                        {schedulesModal.schedules.filter(s => !s.is_available).length}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Ocupados</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-semibold text-blue-600">
+                        {[...new Set(schedulesModal.schedules.map(s => s.product_name))].length}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Servicios</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

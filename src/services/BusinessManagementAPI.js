@@ -101,10 +101,13 @@ class BusinessManagementAPI {
     }
     
     if (!response.ok) {
-  if (response.status === 401) {
+      if (response.status === 401) {
+        console.warn('⚠️ 401 Unauthorized - Intentando auto-login...');
+        
         // Intentar auto-login una vez más
         const newToken = await this.autoLogin();
         if (newToken) {
+          console.log('✓ Auto-login exitoso, reintentando request...');
           // Reintentar con el nuevo token
           const retryConfig = {
             ...config,
@@ -128,25 +131,49 @@ class BusinessManagementAPI {
             
             return textResponse;
           }
+        } else {
+          console.error('❌ Auto-login falló - verifique credenciales o servidor');
         }
+        
         this.handleUnauthorized();
-        throw new ApiError('UNAUTHORIZED', 'Token expirado o inválido');
+        throw new ApiError('UNAUTHORIZED', 
+          'Error de autenticación. El sistema no pudo autenticarse automáticamente. ' +
+          'Verifique que el servidor esté funcionando y las credenciales sean correctas.');
       }
       
       // Para errores 404 en endpoints específicos, dar información más clara
-    if (response.status === 404) {
+      if (response.status === 404) {
+        if (endpoint.includes('/products/products/')) {
+          throw new ApiError('ENDPOINT_NOT_IMPLEMENTED', 
+            'El endpoint de productos no está implementado en el servidor. ' +
+            'Contacte al administrador del sistema para configurar la API de productos.');
+        }
         if (endpoint.includes('/descriptions')) {
-      throw new ApiError('NOT_FOUND', 'No hay descripciones disponibles para este producto');
+          throw new ApiError('NOT_FOUND', 'No hay descripciones disponibles para este producto');
         }
         if (endpoint.includes('/details')) {
-      throw new ApiError('NOT_FOUND', 'Detalles del producto no disponibles');
+          throw new ApiError('NOT_FOUND', 'Detalles del producto no disponibles');
         }
         if (endpoint.includes('/products/') && !endpoint.includes('/products/products/')) {
-      throw new ApiError('NOT_FOUND', 'Producto no encontrado');
+          throw new ApiError('NOT_FOUND', 'Producto no encontrado');
         }
         if (endpoint.includes('/categories')) {
-      throw new ApiError('NOT_FOUND', 'No hay categorías disponibles');
+          throw new ApiError('NOT_FOUND', 'No hay categorías disponibles');
         }
+        if (endpoint.includes('/reserve/')) {
+          throw new ApiError('ENDPOINT_NOT_IMPLEMENTED', 
+            'El sistema de reservas aún no está implementado en el servidor. ' +
+            'Contacte al administrador para configurar la API de reservas.');
+        }
+        if (endpoint.includes('/schedules/')) {
+          throw new ApiError('ENDPOINT_NOT_IMPLEMENTED', 
+            'El sistema de horarios aún no está implementado en el servidor. ' +
+            'Contacte al administrador para configurar la API de horarios.');
+        }
+        // Endpoint genérico no encontrado
+        throw new ApiError('ENDPOINT_NOT_FOUND', 
+          `El endpoint ${endpoint} no está disponible en el servidor. ` +
+          'Verifique que la API esté correctamente configurada.');
       }
 
       // Para errores 500, dar información más específica
