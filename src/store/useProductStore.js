@@ -7,7 +7,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { productService } from '@/services/productService';
 import { categoryCacheService } from '@/services/categoryCacheService';
-import { apiClient } from '@/services/api';
+import { apiService as apiClient } from '@/services/api';
 import { toApiError } from '@/utils/ApiError';
 import { telemetry } from '@/utils/telemetry';
 import { isConnectionError, getConnectionErrorMessage } from '@/utils/connectionUtils';

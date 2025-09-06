@@ -688,6 +688,19 @@ Object.assign(DICTIONARY.es, {
   'reservations.status.confirmed': 'Confirmada',
   'reservations.status.cancelled': 'Cancelada',
   'reservations.status.pending': 'Pendiente',
+  'reservations.status.reserved': 'Reservada',
+  'reservations.welcome.title': 'Sistema de Reservas',
+  'reservations.welcome.description': 'Este sistema te permite gestionar reservas y horarios de servicios. Para comenzar, necesitas cargar los datos desde la API.',
+  'reservations.welcome.loading': 'Cargando...',
+  'reservations.welcome.load_data': 'Cargar Datos del Sistema',
+  'reservations.start_datetime': 'Fecha y Hora de Inicio',
+  'reservations.no_services_available': 'No hay servicios disponibles',
+  'reservations.no_clients_available': 'No hay clientes disponibles',
+  'reservations.no_schedules_available': 'Sin horarios disponibles',
+  'reservations.no_schedules_help': 'Prueba seleccionando otra fecha, producto o contacta al administrador para generar horarios.',
+  'reservations.error.api_unavailable': 'No se pudo conectar con el servidor. Verifique su conexión a internet y que el servidor esté funcionando.',
+  'reservations.error.endpoint_not_implemented': 'Los servicios de productos aún no están configurados en el servidor. Contacte al administrador del sistema para completar la configuración de la API.',
+  'reservations.error.endpoint_not_found': 'Algunas funcionalidades aún no están disponibles. El sistema está en proceso de configuración.',
 });
 
 Object.assign(DICTIONARY.en, {
@@ -715,6 +728,19 @@ Object.assign(DICTIONARY.en, {
   'reservations.status.confirmed': 'Confirmed',
   'reservations.status.cancelled': 'Cancelled',
   'reservations.status.pending': 'Pending',
+  'reservations.status.reserved': 'Reserved',
+  'reservations.welcome.title': 'Reservations System',
+  'reservations.welcome.description': 'This system allows you to manage service reservations and schedules. To get started, you need to load data from the API.',
+  'reservations.welcome.loading': 'Loading...',
+  'reservations.welcome.load_data': 'Load System Data',
+  'reservations.start_datetime': 'Start Date and Time',
+  'reservations.no_services_available': 'No services available',
+  'reservations.no_clients_available': 'No clients available',
+  'reservations.no_schedules_available': 'No schedules available',
+  'reservations.no_schedules_help': 'Try selecting another date, product or contact the administrator to generate schedules.',
+  'reservations.error.api_unavailable': 'Could not connect to the server. Check your internet connection and that the server is running.',
+  'reservations.error.endpoint_not_implemented': 'Product services are not yet configured on the server. Contact the system administrator to complete API configuration.',
+  'reservations.error.endpoint_not_found': 'Some features are not yet available. The system is in the process of configuration.',
 });
 
 // Schedules - MVP strings
@@ -739,6 +765,13 @@ Object.assign(DICTIONARY.es, {
   'schedules.generate.next_days': 'Próximos N días',
   'schedules.target_date': 'Fecha Objetivo',
   'schedules.days_count': 'Número de Días',
+  'schedules.tab.management': 'Gestión de Horarios',
+  'schedules.generate.title': 'Generar Horarios',
+  'schedules.available.title': 'Horarios del Día',
+  'schedules.no_schedules': 'Sin horarios para esta fecha',
+  'schedules.generate_help': 'Utiliza el panel de la izquierda para generar horarios o contacta al administrador del sistema',
+  'schedules.select_service_date': 'Selecciona servicio y fecha',
+  'schedules.select_help': 'Elige un servicio y una fecha para ver y gestionar los horarios disponibles',
 });
 
 Object.assign(DICTIONARY.en, {
@@ -762,6 +795,13 @@ Object.assign(DICTIONARY.en, {
   'schedules.generate.next_days': 'Next N days',
   'schedules.target_date': 'Target Date',
   'schedules.days_count': 'Number of Days',
+  'schedules.tab.management': 'Schedule Management',
+  'schedules.generate.title': 'Generate Schedules',
+  'schedules.available.title': 'Day Schedules',
+  'schedules.no_schedules': 'No schedules for this date',
+  'schedules.generate_help': 'Use the left panel to generate schedules or contact the system administrator',
+  'schedules.select_service_date': 'Select service and date',
+  'schedules.select_help': 'Choose a service and a date to view and manage available schedules',
 });
 
 // Navigation strings
@@ -783,6 +823,8 @@ Object.assign(DICTIONARY.es, {
   'action.cancel': 'Cancelar',
   'action.edit': 'Editar',
   'action.delete': 'Eliminar',
+  'action.refresh': 'Actualizar',
+  'action.refreshing': 'Actualizando...',
 });
 
 Object.assign(DICTIONARY.en, {
@@ -794,6 +836,8 @@ Object.assign(DICTIONARY.en, {
   'action.cancel': 'Cancel',
   'action.edit': 'Edit',
   'action.delete': 'Delete',
+  'action.refresh': 'Refresh',
+  'action.refreshing': 'Refreshing...',
 });
 
 // Suppliers - MVP strings

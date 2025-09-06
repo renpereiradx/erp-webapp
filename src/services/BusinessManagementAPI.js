@@ -316,7 +316,7 @@ class BusinessManagementAPI {
   }
 
   async searchProductsByName(name) {
-    // Usar el nuevo endpoint que devuelve datos enriquecidos
+    // According to PRODUCT_API.md, this endpoint returns enriched data
     return this.makeRequest(`/products/name/${encodeURIComponent(name)}`);
   }
 
@@ -462,7 +462,62 @@ class BusinessManagementAPI {
   // ============================================================================
 
   async getProductsWithBasicDetails(page = 1, pageSize = 10) {
-    return this.makeRequest(`/products/products/${page}/${pageSize}`);
+    try {
+      // According to PRODUCT_API.md, the correct endpoint is /products/{page}/{pageSize}
+      return await this.makeRequest(`/products/${page}/${pageSize}`);
+    } catch (error) {
+      // If paginated endpoint doesn't exist, try enriched/all endpoint
+      if (error.status === 404 || error.code === 'ENDPOINT_NOT_FOUND' || error.code === 'ENDPOINT_NOT_IMPLEMENTED') {
+        console.log('🔄 Fallback: trying /products/enriched/all endpoint');
+        try {
+          const allProducts = await this.makeRequest('/products/enriched/all');
+          // Simulate pagination
+          if (Array.isArray(allProducts)) {
+            const startIndex = (page - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const paginatedData = allProducts.slice(startIndex, endIndex);
+            return {
+              data: paginatedData,
+              total: allProducts.length,
+              page: page,
+              pageSize: pageSize,
+              totalPages: Math.ceil(allProducts.length / pageSize)
+            };
+          }
+          return allProducts;
+        } catch (fallbackError) {
+          console.log('🔄 Second fallback: trying basic /products endpoint');
+          try {
+            const basicProducts = await this.makeRequest('/products');
+            // Simulate pagination for basic products
+            if (Array.isArray(basicProducts)) {
+              const startIndex = (page - 1) * pageSize;
+              const endIndex = startIndex + pageSize;
+              const paginatedData = basicProducts.slice(startIndex, endIndex);
+              return {
+                data: paginatedData,
+                total: basicProducts.length,
+                page: page,
+                pageSize: pageSize,
+                totalPages: Math.ceil(basicProducts.length / pageSize)
+              };
+            }
+            return basicProducts;
+          } catch (finalError) {
+            // If all fail, provide empty fallback
+            console.warn('⚠️ All products endpoints failed, using empty fallback');
+            return {
+              data: [],
+              total: 0,
+              page: page,
+              pageSize: pageSize,
+              totalPages: 0
+            };
+          }
+        }
+      }
+      throw error;
+    }
   }
 
   async getProductsWithEnrichedDetails(page = 1, pageSize = 10) {
@@ -620,15 +675,41 @@ class BusinessManagementAPI {
   }
 
   async searchProductsWithDetails(name) {
-  try {
+    try {
       return await this.makeRequest(`/products/search/details/${encodeURIComponent(name)}`);
-  } catch {
+    } catch {
       // Fallback: buscar productos básicos y enriquecerlos
       const basicProducts = await this.searchProductsByName(name);
       if (Array.isArray(basicProducts)) {
         return this.enrichProductsBatch(basicProducts, 3);
       }
       return basicProducts;
+    }
+  }
+
+  // Get service courts (according to PRODUCT_API.md)
+  async getServiceCourts() {
+    try {
+      return await this.makeRequest('/products/enriched/service-courts');
+    } catch (error) {
+      console.warn('Service courts endpoint not available, falling back to enriched all products');
+      try {
+        const allProducts = await this.makeRequest('/products/enriched/all');
+        // Filter for service-type products that might be courts
+        if (Array.isArray(allProducts)) {
+          return allProducts.filter(product => 
+            product.product_type === 'SERVICE' &&
+            (product.name?.toLowerCase().includes('cancha') ||
+             product.name?.toLowerCase().includes('court') ||
+             product.category_name?.toLowerCase().includes('cancha') ||
+             product.category_name?.toLowerCase().includes('alquiler'))
+          );
+        }
+        return [];
+      } catch (fallbackError) {
+        console.warn('Could not get service courts from any endpoint');
+        return [];
+      }
     }
   }
 

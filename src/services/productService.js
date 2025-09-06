@@ -4,7 +4,7 @@
  * Incluye fallback robusto para funcionalidad completa offline
  */
 
-import { apiClient } from './api';
+import { apiService as apiClient } from './api';
 import BusinessManagementAPI from './BusinessManagementAPI';
 import { ApiError, toApiError } from '@/utils/ApiError';
 // Removed MockDataService import - using real API only

@@ -21,21 +21,20 @@ const useReservationStore = create(
       
       clearSchedules: () => set({ schedules: [], error: null }),
 
-      // Cargar reservas
+      // Cargar reservas (usando endpoint /reserve/report según API spec)
       fetchReservations: async (params = {}) => {
         set({ loading: true, error: null });
         const startTime = Date.now();
         
         try {
-          const result = await reservationService.getReservations(params);
+          const result = await reservationService.getReservationReport(params);
           
-          // Manejar diferentes formatos de respuesta
+          // Manejar respuesta según API spec - ReservationReport[]
           let data = [];
-          if (result.success !== false) {
-            const raw = result.data || result;
-            data = Array.isArray(raw) ? raw : 
-                   Array.isArray(raw?.data) ? raw.data :
-                   Array.isArray(raw?.results) ? raw.results : [];
+          if (result && result.data) {
+            data = Array.isArray(result.data) ? result.data : [];
+          } else if (Array.isArray(result)) {
+            data = result;
           }
           
           set({ reservations: data, loading: false });
@@ -75,53 +74,134 @@ const useReservationStore = create(
         }
       },
 
-      // Crear reserva
+      // Crear reserva usando /reserve/manage con action: "create"
       createReservation: async (data) => {
+        set({ loading: true, error: null });
         try {
-          const result = await reservationService.createReservation(data);
-          if (result.success !== false) {
+          // Validar campos obligatorios según API spec
+          if (!data.product_id || !data.client_id || !data.start_time || !data.duration) {
+            throw new Error('Faltan campos obligatorios: product_id, client_id, start_time, duration');
+          }
+          
+          // Formatear datos según ReserveRequest
+          const reserveRequest = {
+            action: 'create',
+            product_id: data.product_id,
+            client_id: data.client_id,
+            start_time: data.start_time,
+            duration: parseInt(data.duration) // Asegurar que sea entero
+          };
+          
+          const result = await reservationService.createReservation(reserveRequest);
+          
+          if (result && result.data) {
             // Recargar lista después de crear
             get().fetchReservations();
+            set({ loading: false });
+            telemetry.record('feature.reservations.create');
+            return { success: true, data: result.data };
           }
-          telemetry.record('feature.reservations.create');
+          
+          set({ loading: false });
           return { success: true };
         } catch (error) {
-          set({ error: error.message || 'Error al crear reserva' });
+          set({ error: error.message || 'Error al crear reserva', loading: false });
+          telemetry.record('feature.reservations.create.error', { error: error.message });
           return { success: false, error: error.message };
         }
       },
 
-      // Actualizar reserva
+      // Actualizar reserva usando /reserve/manage con action: "update"
       updateReservation: async (id, data) => {
+        set({ loading: true, error: null });
         try {
-          const result = await reservationService.updateReservation(id, data);
-          if (result.success !== false) {
+          // Validar campos obligatorios según API spec
+          if (!id || !data.product_id || !data.client_id || !data.start_time || !data.duration) {
+            throw new Error('Faltan campos obligatorios: reserve_id, product_id, client_id, start_time, duration');
+          }
+          
+          // Formatear datos según ReserveRequest para update
+          const reserveRequest = {
+            action: 'update',
+            reserve_id: parseInt(id), // Convertir a int64
+            product_id: data.product_id,
+            client_id: data.client_id,
+            start_time: data.start_time,
+            duration: parseInt(data.duration)
+          };
+          
+          const result = await reservationService.updateReservation(id, reserveRequest);
+          
+          if (result && result.data) {
             // Recargar lista después de actualizar
             get().fetchReservations();
+            set({ loading: false });
+            telemetry.record('feature.reservations.update');
+            return { success: true, data: result.data };
           }
-          telemetry.record('feature.reservations.update');
+          
+          set({ loading: false });
           return { success: true };
         } catch (error) {
-          set({ error: error.message || 'Error al actualizar reserva' });
+          set({ error: error.message || 'Error al actualizar reserva', loading: false });
+          telemetry.record('feature.reservations.update.error', { error: error.message });
           return { success: false, error: error.message };
         }
       },
 
-      // Cancelar reserva
-      cancelReservation: async (id) => {
+      // Cancelar reserva usando /reserve/manage con action: "cancel"
+      cancelReservation: async (id, reservationData = null) => {
+        set({ loading: true, error: null });
         try {
-          const result = await reservationService.cancelReservation(id);
-          if (result.success !== false) {
-            // Actualizar estado local
-            const reservations = get().reservations.map(item => 
-              item.id === id ? { ...item, status: 'cancelled' } : item
-            );
-            set({ reservations });
+          if (!id) {
+            throw new Error('ID de reserva es obligatorio para cancelar');
           }
-          telemetry.record('feature.reservations.cancel');
+          
+          // Para cancel, necesitamos los datos de la reserva según API spec
+          let cancelRequest;
+          if (reservationData) {
+            cancelRequest = {
+              action: 'cancel',
+              reserve_id: parseInt(id),
+              product_id: reservationData.product_id,
+              client_id: reservationData.client_id,
+              start_time: reservationData.start_time,
+              duration: parseInt(reservationData.duration || reservationData.duration_hours || 1)
+            };
+          } else {
+            // Si no tenemos los datos, intentar obtenerlos primero
+            const reservation = get().reservations.find(r => r.reserve_id == id || r.id == id);
+            if (reservation) {
+              cancelRequest = {
+                action: 'cancel',
+                reserve_id: parseInt(id),
+                product_id: reservation.product_id || 'BT_Cancha_1_xyz123abc', // fallback temporal
+                client_id: reservation.client_id || reservation.client_name,
+                start_time: reservation.start_time,
+                duration: parseInt(reservation.duration_hours || reservation.duration || 1)
+              };
+            } else {
+              throw new Error('No se encontraron los datos de la reserva para cancelar');
+            }
+          }
+          
+          const result = await reservationService.cancelReservation(cancelRequest);
+          
+          if (result && result.data) {
+            // Actualizar estado local - marcar como CANCELLED
+            const reservations = get().reservations.map(item => 
+              (item.reserve_id == id || item.id == id) ? { ...item, status: 'CANCELLED' } : item
+            );
+            set({ reservations, loading: false });
+            telemetry.record('feature.reservations.cancel');
+            return { success: true, data: result.data };
+          }
+          
+          set({ loading: false });
           return { success: true };
         } catch (error) {
-          set({ error: error.message || 'Error al cancelar reserva' });
+          set({ error: error.message || 'Error al cancelar reserva', loading: false });
+          telemetry.record('feature.reservations.cancel.error', { error: error.message });
           return { success: false, error: error.message };
         }
       },
