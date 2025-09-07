@@ -277,6 +277,138 @@ const useInventoryStore = create(
           });
           return { success: false, error: error.message };
         }
+      },
+
+      // === Métodos Adicionales según Documentación ===
+
+      // Obtener historial de ajustes manuales por producto
+      getManualAdjustmentHistory: async (productId, limit = 50, offset = 0) => {
+        set({ loading: true, error: null });
+        const startTime = Date.now();
+        
+        try {
+          const result = await inventoryService.getManualAdjustmentHistory(productId, limit, offset);
+          
+          telemetryService.recordEvent('inventory_manual_adjustment_history_success', {
+            duration: Date.now() - startTime,
+            productId,
+            count: result?.length || 0
+          });
+          
+          set({ loading: false });
+          return { success: true, data: result };
+        } catch (error) {
+          set({ error: error.message || 'Error al cargar historial de ajustes', loading: false });
+          telemetryService.recordEvent('inventory_manual_adjustment_history_error', {
+            error: error.message,
+            operation: 'getManualAdjustmentHistory'
+          });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Obtener transacciones por rango de fechas
+      getStockTransactionsByDate: async (startDate, endDate, type = null, limit = 50, offset = 0) => {
+        set({ loading: true, error: null });
+        const startTime = Date.now();
+        
+        try {
+          const result = await inventoryService.getStockTransactionsByDate(startDate, endDate, type, limit, offset);
+          
+          telemetryService.recordEvent('inventory_transactions_by_date_success', {
+            duration: Date.now() - startTime,
+            startDate,
+            endDate,
+            type,
+            count: result?.length || 0
+          });
+          
+          set({ loading: false });
+          return { success: true, data: result };
+        } catch (error) {
+          set({ error: error.message || 'Error al cargar transacciones por fecha', loading: false });
+          telemetryService.recordEvent('inventory_transactions_by_date_error', {
+            error: error.message,
+            operation: 'getStockTransactionsByDate'
+          });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Obtener transacción por ID
+      getStockTransactionById: async (transactionId) => {
+        set({ loading: true, error: null });
+        const startTime = Date.now();
+        
+        try {
+          const result = await inventoryService.getStockTransactionById(transactionId);
+          
+          telemetryService.recordEvent('inventory_transaction_by_id_success', {
+            duration: Date.now() - startTime,
+            transactionId
+          });
+          
+          set({ loading: false });
+          return { success: true, data: result };
+        } catch (error) {
+          set({ error: error.message || 'Error al cargar transacción', loading: false });
+          telemetryService.recordEvent('inventory_transaction_by_id_error', {
+            error: error.message,
+            operation: 'getStockTransactionById'
+          });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Obtener reporte de discrepancias de inventario
+      getInventoryDiscrepancies: async (dateFrom = null, dateTo = null) => {
+        set({ loading: true, error: null });
+        const startTime = Date.now();
+        
+        try {
+          const result = await inventoryService.getInventoryDiscrepancies(dateFrom, dateTo);
+          
+          telemetryService.recordEvent('inventory_discrepancies_success', {
+            duration: Date.now() - startTime,
+            dateFrom,
+            dateTo,
+            count: result?.length || 0
+          });
+          
+          set({ loading: false });
+          return { success: true, data: result };
+        } catch (error) {
+          set({ error: error.message || 'Error al cargar discrepancias', loading: false });
+          telemetryService.recordEvent('inventory_discrepancies_error', {
+            error: error.message,
+            operation: 'getInventoryDiscrepancies'
+          });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // Verificar integridad del sistema
+      checkSystemIntegrity: async () => {
+        set({ loading: true, error: null });
+        const startTime = Date.now();
+        
+        try {
+          const result = await inventoryService.checkSystemIntegrity();
+          
+          telemetryService.recordEvent('inventory_system_integrity_success', {
+            duration: Date.now() - startTime
+          });
+          
+          set({ loading: false });
+          return { success: true, data: result };
+        } catch (error) {
+          set({ error: error.message || 'Error al verificar integridad', loading: false });
+          telemetryService.recordEvent('inventory_system_integrity_error', {
+            error: error.message,
+            operation: 'checkSystemIntegrity'
+          });
+          return { success: false, error: error.message };
+        }
       }
     }),
     {

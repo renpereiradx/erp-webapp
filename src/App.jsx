@@ -17,6 +17,9 @@ import Inventory from '@/pages/Inventory';
 // ISOLATED IMPORTS - Pages temporarily disabled for refactoring
 // import BookingSales from '@/pages/BookingSales';
 import Purchases from '@/pages/Purchases';
+import CashRegister from '@/pages/CashRegister';
+import PurchasePayment from '@/pages/PurchasePayment';
+import SalePayment from '@/pages/SalePayment';
 import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
 // import ProductDetailTest from '@/components/ProductDetailTest';
@@ -106,6 +109,12 @@ function AppContent() {
 
                     {/* --- RUTAS AISLADAS TEMPORALMENTE PARA REFACTORING --- */}
                     <Route path="/compras" element={<Purchases />} />
+                    
+                    {/* Nuevas rutas de sistemas de pagos */}
+                    <Route path="/caja-registradora" element={<CashRegister />} />
+                    <Route path="/pagos-compras" element={<PurchasePayment />} />
+                    <Route path="/pagos-ventas" element={<SalePayment />} />
+                    
                     <Route path="/configuracion" element={<Settings />} />
                     {/* <Route path="/test-products" element={<ProductDetailTest />} /> */}
                     {/* <Route path="/debug-products" element={<ProductComparisonDebug />} /> */}

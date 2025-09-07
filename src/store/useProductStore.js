@@ -995,10 +995,20 @@ const useProductStore = create()(
 // Global offline listeners
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
-    try { useProductStore.getState().setIsOffline(false); telemetry.record('app.online'); } catch {}
+    try { 
+      useProductStore.getState().setIsOffline(false); 
+      telemetry.record('app.online'); 
+    } catch (e) {
+      console.warn('Error handling online event:', e);
+    }
   });
   window.addEventListener('offline', () => {
-    try { useProductStore.getState().setIsOffline(true); telemetry.record('app.offline'); } catch {}
+    try { 
+      useProductStore.getState().setIsOffline(true); 
+      telemetry.record('app.offline'); 
+    } catch (e) {
+      console.warn('Error handling offline event:', e);
+    }
   });
 
   // Expose store for debugging and test helpers

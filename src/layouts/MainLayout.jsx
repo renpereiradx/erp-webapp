@@ -24,7 +24,10 @@ import {
   User,
   Menu,
   X,
-  LogOut
+  LogOut,
+  CreditCard,
+  Receipt,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -514,18 +517,39 @@ const MainLayout = ({ children }) => {
       badge: '8'
     },
     { 
+      name: 'Caja Registradora', 
+      href: '/caja-registradora', 
+      icon: DollarSign, 
+      color: 'green',
+      badge: '9'
+    },
+    { 
+      name: 'Pagos Compras', 
+      href: '/pagos-compras', 
+      icon: CreditCard, 
+      color: 'blue',
+      badge: '10'
+    },
+    { 
+      name: 'Pagos Ventas', 
+      href: '/pagos-ventas', 
+      icon: Receipt, 
+      color: 'emerald',
+      badge: '11'
+    },
+    { 
       name: 'Reportes', 
       href: '/reportes', 
       icon: BarChart3, 
       color: 'green',
-      badge: '9'
+      badge: '12'
     },
     { 
       name: 'Configuración', 
       href: '/configuracion', 
       icon: Settings, 
       color: 'pink',
-      badge: '10'
+      badge: '13'
     },
   ];
 

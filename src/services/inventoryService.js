@@ -10,15 +10,22 @@ const API_ENDPOINTS = {
   // Inventarios masivos
   inventory: '/inventory',
   inventoryInvalidate: '/inventory/invalidate',
+  inventoryDiscrepancies: '/inventory/discrepancies',
   
   // Transacciones de stock
-  stockTransactions: '/stock-transactions',
-  stockTransactionTypes: '/stock-transactions/types',
-  stockTransactionsByProduct: '/stock-transactions/product',
-  validateConsistency: '/stock-transactions/validate-consistency',
+  stockTransactions: '/stock-transaction',
+  stockTransactionTypes: '/stock-transaction/types',
+  stockTransactionsByProduct: '/stock-transaction/history',
+  validateConsistency: '/stock-transaction/validate-consistency',
+  stockTransactionsByDate: '/stock-transaction/by-date',
+  stockTransactionById: '/stock-transaction',
   
   // Ajustes manuales
-  manualAdjustment: '/inventory/manual-adjustment'
+  manualAdjustment: '/manual-adjustment',
+  manualAdjustmentHistory: '/manual-adjustment/history',
+  
+  // Sistema
+  systemIntegrityCheck: '/system/integrity-check'
 };
 
 // Helper con retry simple (máx 2 reintentos)
@@ -287,6 +294,81 @@ export const inventoryService = {
   },
 
   /**
+   * Obtiene transacciones por rango de fechas
+   * @param {string} startDate - Fecha inicio "YYYY-MM-DD"
+   * @param {string} endDate - Fecha fin "YYYY-MM-DD" 
+   * @param {string} type - Tipo de transacción (opcional)
+   * @param {number} limit - Límite de resultados (default: 50)
+   * @param {number} offset - Offset para paginación (default: 0)
+   * @returns {Promise<Array>}
+   */
+  async getStockTransactionsByDate(startDate, endDate, type = null, limit = 50, offset = 0) {
+    const startTime = Date.now();
+    
+    try {
+      console.log(`🌐 Inventory: Loading transactions from ${startDate} to ${endDate}...`);
+      let url = `${API_ENDPOINTS.stockTransactionsByDate}?start_date=${startDate}&end_date=${endDate}&limit=${limit}&offset=${offset}`;
+      if (type) {
+        url += `&type=${type}`;
+      }
+      
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.get(url);
+      });
+      
+      telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
+        operation: 'getStockTransactionsByDate',
+        startDate,
+        endDate,
+        type,
+        limit,
+        offset
+      });
+      
+      console.log('✅ Inventory: Transactions by date loaded successfully');
+      return result;
+    } catch (error) {
+      telemetryService.recordEvent('inventory_service_error', {
+        operation: 'getStockTransactionsByDate',
+        error: error.message,
+        duration: Date.now() - startTime
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene una transacción específica por ID
+   * @param {number} transactionId - ID de la transacción
+   * @returns {Promise<Object>}
+   */
+  async getStockTransactionById(transactionId) {
+    const startTime = Date.now();
+    
+    try {
+      console.log(`🌐 Inventory: Loading transaction ${transactionId}...`);
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.get(`${API_ENDPOINTS.stockTransactionById}/${transactionId}`);
+      });
+      
+      telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
+        operation: 'getStockTransactionById',
+        transactionId
+      });
+      
+      console.log('✅ Inventory: Transaction loaded successfully');
+      return result;
+    } catch (error) {
+      telemetryService.recordEvent('inventory_service_error', {
+        operation: 'getStockTransactionById',
+        error: error.message,
+        duration: Date.now() - startTime
+      });
+      throw error;
+    }
+  },
+
+  /**
    * Valida consistencia de stock
    * @param {string|null} productId - ID del producto específico (null para todos)
    * @returns {Promise<Array>}
@@ -324,6 +406,41 @@ export const inventoryService = {
   // =================== AJUSTES MANUALES ===================
 
   /**
+   * Obtiene historial de ajustes manuales por producto
+   * @param {string} productId - ID del producto
+   * @param {number} limit - Límite de resultados (default: 50)
+   * @param {number} offset - Offset para paginación (default: 0)
+   * @returns {Promise<Array>}
+   */
+  async getManualAdjustmentHistory(productId, limit = 50, offset = 0) {
+    const startTime = Date.now();
+    
+    try {
+      console.log(`🌐 Inventory: Loading manual adjustments for product ${productId}...`);
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.get(`${API_ENDPOINTS.manualAdjustmentHistory}/${productId}?limit=${limit}&offset=${offset}`);
+      });
+      
+      telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
+        operation: 'getManualAdjustmentHistory',
+        productId,
+        limit,
+        offset
+      });
+      
+      console.log('✅ Inventory: Manual adjustments loaded successfully');
+      return result;
+    } catch (error) {
+      telemetryService.recordEvent('inventory_service_error', {
+        operation: 'getManualAdjustmentHistory',
+        error: error.message,
+        duration: Date.now() - startTime
+      });
+      throw error;
+    }
+  },
+
+  /**
    * Crea un ajuste manual de stock
    * @param {Object} adjustmentData - Datos del ajuste
    * @param {string} adjustmentData.product_id - ID del producto
@@ -352,6 +469,80 @@ export const inventoryService = {
     } catch (error) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'createManualAdjustment',
+        error: error.message,
+        duration: Date.now() - startTime
+      });
+      throw error;
+    }
+  },
+
+  // =================== REPORTES Y SISTEMA ===================
+
+  /**
+   * Obtiene reporte de discrepancias de inventario
+   * @param {string} dateFrom - Fecha inicio "YYYY-MM-DD" (opcional)
+   * @param {string} dateTo - Fecha fin "YYYY-MM-DD" (opcional)
+   * @returns {Promise<Array>}
+   */
+  async getInventoryDiscrepancies(dateFrom = null, dateTo = null) {
+    const startTime = Date.now();
+    
+    try {
+      console.log('🌐 Inventory: Loading inventory discrepancies...');
+      let url = API_ENDPOINTS.inventoryDiscrepancies;
+      const params = [];
+      
+      if (dateFrom) params.push(`date_from=${dateFrom}`);
+      if (dateTo) params.push(`date_to=${dateTo}`);
+      
+      if (params.length > 0) {
+        url += `?${params.join('&')}`;
+      }
+      
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.get(url);
+      });
+      
+      telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
+        operation: 'getInventoryDiscrepancies',
+        dateFrom,
+        dateTo
+      });
+      
+      console.log('✅ Inventory: Discrepancies loaded successfully');
+      return result;
+    } catch (error) {
+      telemetryService.recordEvent('inventory_service_error', {
+        operation: 'getInventoryDiscrepancies',
+        error: error.message,
+        duration: Date.now() - startTime
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Verifica la integridad completa del sistema
+   * @returns {Promise<Object>}
+   */
+  async checkSystemIntegrity() {
+    const startTime = Date.now();
+    
+    try {
+      console.log('🌐 Inventory: Checking system integrity...');
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.get(API_ENDPOINTS.systemIntegrityCheck);
+      });
+      
+      telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
+        operation: 'checkSystemIntegrity'
+      });
+      
+      console.log('✅ Inventory: System integrity checked successfully');
+      return result;
+    } catch (error) {
+      telemetryService.recordEvent('inventory_service_error', {
+        operation: 'checkSystemIntegrity',
         error: error.message,
         duration: Date.now() - startTime
       });
