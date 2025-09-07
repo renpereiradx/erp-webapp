@@ -25,7 +25,7 @@ const PurchaseProductSelector = ({
   const [customPrice, setCustomPrice] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
 
-  // Filtrar productos por búsqueda
+  // Filtrar productos por búsqueda incluyendo código de barras
   const filteredProducts = MOCK_PURCHASE_PRODUCTS.filter(product => {
     if (!searchTerm.trim()) return true;
     
@@ -33,7 +33,8 @@ const PurchaseProductSelector = ({
     return (
       product.name.toLowerCase().includes(term) ||
       product.category.toLowerCase().includes(term) ||
-      product.supplier_code.toLowerCase().includes(term)
+      product.supplier_code.toLowerCase().includes(term) ||
+      (product.barcode && product.barcode.toLowerCase().includes(term))
     );
   });
 
@@ -79,7 +80,7 @@ const PurchaseProductSelector = ({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
-            placeholder="Buscar productos por nombre, categoría o código..."
+            placeholder="Buscar productos por nombre, categoría, código o código de barras..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full pl-10 ${styles.input()}`}

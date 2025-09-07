@@ -500,10 +500,10 @@ const MainLayout = ({ children }) => {
       badge: '6'
     },
     { 
-      name: 'Horarios', 
-      href: '/horarios', 
-      icon: Clock, 
-      color: 'orange',
+      name: 'Inventario', 
+      href: '/inventario', 
+      icon: Package, 
+      color: 'purple',
       badge: '7'
     },
     { 
@@ -514,25 +514,18 @@ const MainLayout = ({ children }) => {
       badge: '8'
     },
     { 
-      name: 'Pedidos', 
-      href: '/pedidos', 
-      icon: Package, 
-      color: 'teal',
-      badge: '9'
-    },
-    { 
       name: 'Reportes', 
       href: '/reportes', 
       icon: BarChart3, 
       color: 'green',
-      badge: '7'
+      badge: '9'
     },
     { 
       name: 'Configuración', 
       href: '/configuracion', 
       icon: Settings, 
       color: 'pink',
-      badge: '7'
+      badge: '10'
     },
   ];
 

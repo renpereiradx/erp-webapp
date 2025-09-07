@@ -320,6 +320,42 @@ class BusinessManagementAPI {
     return this.makeRequest(`/products/name/${encodeURIComponent(name)}`);
   }
 
+  async getProductByBarcode(barcode) {
+    // According to PRODUCT_API.md, this endpoint returns enriched data
+    try {
+      const product = await this.makeRequest(`/products/barcode/${encodeURIComponent(barcode)}`);
+      
+      // Normalizar el producto para asegurar que tenga la estructura enriquecida correcta
+      if (product) {
+        return this.normalizeEnrichedProduct(product);
+      }
+      
+      return product;
+    } catch (error) {
+      // Mejorar el manejo de errores específicos
+      if (error.status === 404) {
+        throw new Error(`Producto no encontrado con código de barras: ${barcode}`);
+      }
+      throw error;
+    }
+  }
+
+  async getBeachTennisCourts() {
+    // According to PRODUCT_API.md, this endpoint returns enriched data for beach tennis courts
+    try {
+      const courts = await this.makeRequest('/products/enriched/beach-tennis-courts');
+      
+      // Los productos ya vienen con estructura enriquecida del backend
+      if (Array.isArray(courts)) {
+        return courts.map(court => this.normalizeEnrichedProduct(court));
+      }
+      
+      return courts;
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener servicios de canchas de beach tennis');
+    }
+  }
+
   async searchProductsByNameEnriched(name, options = {}) {
     // Método específico para obtener datos enriquecidos por nombre
     try {
@@ -965,6 +1001,40 @@ class BusinessManagementAPI {
 
   async getInventories(page = 1, pageSize = 10) {
     return this.makeRequest(`/inventory/${page}/${pageSize}`);
+  }
+
+  // ============================================================================
+  // GENERIC HTTP METHODS (for compatibility with inventoryService)
+  // ============================================================================
+
+  async get(endpoint, options = {}) {
+    return this.makeRequest(endpoint, {
+      method: 'GET',
+      ...options
+    });
+  }
+
+  async post(endpoint, data, options = {}) {
+    return this.makeRequest(endpoint, {
+      method: 'POST',
+      body: typeof data === 'string' ? data : JSON.stringify(data),
+      ...options
+    });
+  }
+
+  async put(endpoint, data, options = {}) {
+    return this.makeRequest(endpoint, {
+      method: 'PUT', 
+      body: typeof data === 'string' ? data : JSON.stringify(data),
+      ...options
+    });
+  }
+
+  async delete(endpoint, options = {}) {
+    return this.makeRequest(endpoint, {
+      method: 'DELETE',
+      ...options
+    });
   }
 }
 

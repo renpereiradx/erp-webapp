@@ -170,7 +170,36 @@ export const productService = {
     }
   },
 
-  // Búsqueda inteligente: por ID o nombre
+  // Buscar producto por código de barras
+  /**
+   * @param {string} barcode
+   * @returns {Promise<Product|any>}
+   */
+  getProductByBarcode: async (barcode) => {
+    try {
+      return await retryWithBackoff(async () => {
+        return await apiClient.getProductByBarcode(barcode);
+      });
+    } catch (error) {
+      throw toApiError(error, 'Error al buscar producto por código de barras');
+    }
+  },
+
+  // Obtener servicios de canchas de beach tennis
+  /**
+   * @returns {Promise<Product[]|any>}
+   */
+  getBeachTennisCourts: async () => {
+    try {
+      return await retryWithBackoff(async () => {
+        return await apiClient.getBeachTennisCourts();
+      });
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener servicios de canchas de beach tennis');
+    }
+  },
+
+  // Búsqueda inteligente: por ID, nombre o código de barras
   /**
    * @param {string} searchTerm
    * @param {{ signal?: AbortSignal }} [options]

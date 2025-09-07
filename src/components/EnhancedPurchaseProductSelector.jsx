@@ -77,7 +77,7 @@ const EnhancedPurchaseProductSelector = ({
     loadTaxRates();
   }, []);
 
-  // Buscar productos con debounce
+  // Buscar productos con debounce - ahora incluye búsqueda por código de barras
   const searchProducts = useCallback(async (term) => {
     if (!term.trim()) {
       setProducts([]);
@@ -86,13 +86,32 @@ const EnhancedPurchaseProductSelector = ({
 
     setLoading(true);
     try {
-      const result = await productService.searchProducts(term, {
-        includeSupplierPrices: true,
-        supplierId: supplierId
-      });
+      // Detectar si es un código de barras (número de 8-15 dígitos)
+      const isBarcode = /^\d{8,15}$/.test(term.trim());
+      
+      let result;
+      if (isBarcode) {
+        // Buscar por código de barras específicamente
+        try {
+          const product = await productService.getProductByBarcode(term.trim());
+          result = { success: true, data: product ? [product] : [] };
+        } catch (error) {
+          // Si no se encuentra por código de barras, intentar búsqueda general
+          result = await productService.searchProducts(term, {
+            includeSupplierPrices: true,
+            supplierId: supplierId
+          });
+        }
+      } else {
+        // Búsqueda general por nombre o ID
+        result = await productService.searchProducts(term, {
+          includeSupplierPrices: true,
+          supplierId: supplierId
+        });
+      }
       
       if (result.success) {
-        setProducts(result.data);
+        setProducts(result.data || []);
       }
     } catch (error) {
       console.error('Error searching products:', error);
@@ -333,7 +352,7 @@ const EnhancedPurchaseProductSelector = ({
       <div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
         <Input
-          placeholder="Buscar productos..."
+          placeholder="Buscar productos por nombre, ID o código de barras..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 h-8 text-sm"

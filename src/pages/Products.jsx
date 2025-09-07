@@ -66,6 +66,10 @@ const ProductsPage = () => {
     if (!term) return 'none';
     const trimmed = term.trim();
     
+    // Detectar si parece un código de barras: 8-15 dígitos
+    const looksLikeBarcode = /^\d{8,15}$/.test(trimmed);
+    if (looksLikeBarcode) return 'barcode';
+    
     // Detectar si parece un ID: entre 8-30 caracteres alfanuméricos/guiones
     const looksLikeId = /^[a-zA-Z0-9_-]{8,30}$/.test(trimmed) && 
                        !/\s/.test(trimmed) && 
@@ -88,6 +92,7 @@ const ProductsPage = () => {
       filtered = filtered.filter(product => 
         product.name?.toLowerCase().includes(filterTerm) ||
         product.id?.toLowerCase().includes(filterTerm) ||
+        product.barcode?.toLowerCase().includes(filterTerm) ||
         product.category?.name?.toLowerCase().includes(filterTerm) ||
         product.description?.toLowerCase().includes(filterTerm)
       );
@@ -236,9 +241,11 @@ const ProductsPage = () => {
             <div className="flex-1 relative">
               <Input 
                 placeholder={
-                  searchType === 'id' 
-                    ? t('products.search.placeholder_id') || 'Buscar por ID de producto...'
-                    : t('products.search.placeholder') || 'Buscar por nombre...'
+                  searchType === 'barcode' 
+                    ? t('products.search.placeholder_barcode') || 'Buscar por código de barras...'
+                    : searchType === 'id' 
+                      ? t('products.search.placeholder_id') || 'Buscar por ID de producto...'
+                      : t('products.search.placeholder') || 'Buscar por nombre, ID o código de barras...'
                 }
                 value={apiSearchTerm}
                 onChange={(e) => {
@@ -343,7 +350,7 @@ const ProductsPage = () => {
                   Buscar en resultados
                 </label>
                 <Input
-                  placeholder="Ej: Dunk, Air, Pro..."
+                  placeholder="Ej: Dunk, Air, Pro, código de barras..."
                   value={localFilter}
                   onChange={(e) => setLocalFilter(e.target.value)}
                   className={`text-sm ${styles.input()}`}

@@ -15,7 +15,12 @@ const apiConfig = {
 };
 
 // Instancia única del cliente API
-export const apiClient = new BusinessManagementAPI(apiConfig);
+const businessAPI = new BusinessManagementAPI(apiConfig);
+
+// Verificar que los métodos están disponibles
+console.log('API methods available:', Object.getOwnPropertyNames(Object.getPrototypeOf(businessAPI)).filter(name => name !== 'constructor'));
+
+export const apiClient = businessAPI;
 
 // Configurar event listeners para manejo de autenticación
 // TEMPORAL: Desactivado para evitar redirecciones automáticas
@@ -62,7 +67,10 @@ export const apiService = {
   // Métodos específicos de productos (delegando al apiClient)
   getProducts: (page, pageSize) => apiClient.getProducts(page, pageSize),
   getProductById: (id) => apiClient.getProductById(id),
+  getProductByBarcode: (barcode) => apiClient.getProductByBarcode(barcode),
+  getBeachTennisCourts: () => apiClient.getBeachTennisCourts(),
   searchProducts: (term) => apiClient.searchProducts(term),
+  searchProductsByName: (name) => apiClient.searchProductsByName(name),
   createProduct: (data) => apiClient.createProduct(data),
   updateProduct: (id, data) => apiClient.updateProduct(id, data),
   deleteProduct: (id) => apiClient.deleteProduct(id),
