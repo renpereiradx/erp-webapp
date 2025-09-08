@@ -17,8 +17,7 @@ const apiConfig = {
 // Instancia única del cliente API
 const businessAPI = new BusinessManagementAPI(apiConfig);
 
-// Verificar que los métodos están disponibles
-console.log('API methods available:', Object.getOwnPropertyNames(Object.getPrototypeOf(businessAPI)).filter(name => name !== 'constructor'));
+// Business Management API client initialized
 
 export const apiClient = businessAPI;
 

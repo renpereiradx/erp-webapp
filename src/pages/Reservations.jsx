@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Plus, Search, Edit, Trash2, CheckCircle, XCircle, Settings, RefreshCw, ToggleLeft, ToggleRight, AlertCircle, Eye, X, AlertTriangle, Play } from 'lucide-react';
+import { Calendar, Clock, User, Plus, Search, Edit, Trash2, CheckCircle, XCircle, Settings, RefreshCw, ToggleLeft, ToggleRight, AlertCircle, Eye, X, AlertTriangle, Play, MapPin, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,6 +25,56 @@ import useClientStore from '@/store/useClientStore';
 
 // Componentes
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+
+// Componente de pasos del flujo de reserva
+const ReservationSteps = ({ currentStep, steps }) => {
+  const { styles } = useThemeStyles();
+  
+  return (
+    <div className="flex items-center justify-center mb-6 p-4 rounded-lg border" style={{
+      background: 'var(--md-primary-container, rgb(233, 221, 255))',
+      borderColor: 'var(--md-outline-variant, rgb(202, 196, 208))',
+      color: 'var(--md-on-primary-container, rgb(33, 0, 93))'
+    }}>
+      <div className="flex items-center space-x-2">
+        {steps.map((step, index) => (
+          <React.Fragment key={step.id}>
+            <div className={`flex items-center space-x-2 px-3 py-2 rounded-full transition-all ${
+              index + 1 === currentStep 
+                ? 'shadow-lg' 
+                : index + 1 < currentStep 
+                ? ''
+                : 'opacity-60'
+            }`}>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold`}
+                   style={{
+                     backgroundColor: index + 1 === currentStep 
+                       ? 'var(--md-primary, rgb(103, 80, 164))'
+                       : index + 1 < currentStep 
+                       ? 'var(--md-tertiary, rgb(125, 82, 96))'
+                       : 'var(--md-surface-variant, rgb(231, 224, 236))',
+                     color: index + 1 === currentStep 
+                       ? 'var(--md-on-primary, rgb(255, 255, 255))'
+                       : index + 1 < currentStep 
+                       ? 'var(--md-on-tertiary, rgb(255, 255, 255))'
+                       : 'var(--md-on-surface-variant, rgb(73, 69, 79))'
+                   }}>
+                {index + 1 < currentStep ? '✓' : index + 1}
+              </div>
+              <span className="text-sm font-medium hidden sm:inline">{step.label}</span>
+              <span className="text-xs sm:hidden">{step.shortLabel}</span>
+            </div>
+            {index < steps.length - 1 && (
+              <ArrowRight className={`w-4 h-4 ${
+                index + 1 < currentStep ? '' : 'opacity-50'
+              }`} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const Reservations = () => {
   const { t } = useI18n();
@@ -53,7 +103,10 @@ const Reservations = () => {
   const { clients, fetchClients } = useClientStore();
 
   // Estados locales para UI
-  const [activeTab, setActiveTab] = useState('calendar');
+  const [activeTab, setActiveTab] = useState('create');
+  
+  // Estados para el flujo de creación de reservas (wizard)
+  const [currentStep, setCurrentStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -84,6 +137,14 @@ const Reservations = () => {
     hasChecked: false,
     results: null
   });
+
+  // Definir pasos del flujo
+  const reservationSteps = [
+    { id: 'service', label: 'Servicio', shortLabel: 'Servicio' },
+    { id: 'schedule', label: 'Fecha y Hora', shortLabel: 'Horario' },
+    { id: 'client', label: 'Cliente', shortLabel: 'Cliente' },
+    { id: 'confirm', label: 'Confirmar', shortLabel: 'Confirmar' }
+  ];
 
   // Estados para modal de horarios
   const [schedulesModal, setSchedulesModal] = useState({
@@ -127,7 +188,7 @@ const Reservations = () => {
     }
   };
 
-  // Función para cargar horarios cuando el usuario seleccione fecha y producto
+  // Función para cargar horarios EXPLÍCITAMENTE cuando el usuario lo solicite
   const handleLoadSchedules = async () => {
     if (selectedDate && selectedProduct) {
       const dateStr = selectedDate.toISOString().split('T')[0];
@@ -135,12 +196,7 @@ const Reservations = () => {
     }
   };
 
-  // Llamar a cargar horarios cuando cambie la fecha o producto (solo si ya hay datos cargados)
-  useEffect(() => {
-    if (dataLoaded && selectedDate && selectedProduct) {
-      handleLoadSchedules();
-    }
-  }, [selectedDate, selectedProduct, dataLoaded]);
+  // NO llamar automáticamente a la API - solo cuando el usuario lo solicite explícitamente
 
   // Filtrar reservas
   const filteredReservations = reservations.filter(reservation =>
@@ -149,7 +205,74 @@ const Reservations = () => {
   );
 
   // Handlers
-  const handleCreateReservation = () => {
+  // Handlers del flujo de reserva
+  const handleSelectProduct = (product) => {
+    setSelectedProduct(product);
+    setCurrentStep(2);
+    // NO cargar horarios automáticamente - el usuario debe hacer click en "Buscar Horarios"
+  };
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    setSelectedTime('');
+    // NO cargar horarios automáticamente - el usuario debe hacer click en "Buscar Horarios"
+  };
+
+  const handleSelectTime = (displayTime, isoTime) => {
+    setSelectedTime(displayTime);
+    setFormData(prev => ({ ...prev, start_time: isoTime }));
+    setCurrentStep(3);
+  };
+
+  const handleSelectClient = (client) => {
+    setSelectedClient(client);
+    setCurrentStep(4);
+  };
+
+  const handleCreateReservation = async () => {
+    if (!selectedProduct || !formData.start_time || !selectedClient) {
+      return;
+    }
+
+    // Si no hay conexión, mostrar mensaje informativo
+    if (error) {
+      alert('No se puede crear la reserva sin conexión al servidor. Intenta reconectarte primero.');
+      return;
+    }
+
+    const reservationData = {
+      action: 'create',
+      product_id: selectedProduct.id,
+      client_id: selectedClient.id,
+      start_time: formData.start_time,
+      duration: formData.duration || 1
+    };
+
+    try {
+      await createReservation(reservationData);
+      
+      // Reset del formulario
+      setSelectedProduct(null);
+      setSelectedDate(new Date());
+      setSelectedTime('');
+      setSelectedClient(null);
+      setCurrentStep(1);
+      setFormData({
+        product_id: '',
+        client_id: '',
+        start_time: '',
+        duration: 1
+      });
+      
+      // Cambiar a la tab de lista para ver la reserva creada
+      setActiveTab('list');
+    } catch (error) {
+      console.error('Error creating reservation:', error);
+      alert('Error al crear la reserva. Por favor intenta de nuevo.');
+    }
+  };
+
+  const handleCreateReservationModal = () => {
     setEditingReservation(null);
     setFormData({
       product_id: selectedProduct?.id || '',
@@ -309,60 +432,17 @@ const Reservations = () => {
     })
   })).filter(slot => slot.is_available);
 
-  // Auto-cargar datos al montar el componente - solo una vez
-  useEffect(() => {
-    if (!dataLoaded && !loadingData && !error) {
-      // Pequeño delay para mostrar el skeleton brevemente
-      const timer = setTimeout(() => {
-        handleLoadData();
-      }, 800);
-      
-      return () => clearTimeout(timer);
-    }
-  }, []);
+  // NO cargar datos automáticamente - solo cuando el usuario lo solicite explícitamente
 
-  // Fallback: Si hay error y no se han podido cargar datos después de 5 segundos, habilitar modo básico
+  // Inicializar en modo básico sin cargar automáticamente
   useEffect(() => {
-    if (error && !dataLoaded) {
-      const fallbackTimer = setTimeout(() => {
-        console.log('🔄 Habilitando modo básico después de timeout...');
-        
-        // Crear datos de ejemplo para demostración
-        const mockReservations = [
-          {
-            reserve_id: 1,
-            product_name: 'Cancha de Beach Tennis 1',
-            client_name: 'Juan Pérez',
-            start_time: new Date().toISOString(),
-            end_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-            duration_hours: 2,
-            total_amount: 100.00,
-            status: 'CONFIRMED',
-            created_by: 'Demo User'
-          },
-          {
-            reserve_id: 2,
-            product_name: 'Cancha de Beach Tennis 2',
-            client_name: 'María García',
-            start_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            end_time: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(),
-            duration_hours: 1,
-            total_amount: 50.00,
-            status: 'RESERVED',
-            created_by: 'Demo User'
-          }
-        ];
-        
-        // Simular carga exitosa con datos de ejemplo
-        setDataLoaded(true);
-        clearError();
-        
-        console.log('✅ Modo básico activado con datos de ejemplo');
-      }, 5000);
-      
-      return () => clearTimeout(fallbackTimer);
-    }
-  }, [error, dataLoaded, clearError]);
+    // Establecer modo básico como estado inicial
+    const initTimer = setTimeout(() => {
+      setDataLoaded(true);
+    }, 100);
+    
+    return () => clearTimeout(initTimer);
+  }, []);
 
   // Estado inicial: mostrar skeleton mientras carga automáticamente
   if (!dataLoaded && (loading || loadingData)) {
@@ -553,7 +633,20 @@ const Reservations = () => {
         ]}
         extra={
           <div className="flex items-center gap-3">
-            {dataLoaded && (
+            {!dataLoaded ? (
+              <Button
+                onClick={handleLoadData}
+                disabled={loadingData}
+                variant="primary"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">
+                  {loadingData ? t('action.loading', 'Cargando...') : 'Cargar Datos'}
+                </span>
+              </Button>
+            ) : (
               <Button
                 onClick={handleRefreshData}
                 disabled={loadingData}
@@ -576,198 +669,522 @@ const Reservations = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className={styles.tab()}>
-          <TabsTrigger value="calendar" className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            {t('reservations.tab.calendar', 'Calendario')}
+          <TabsTrigger value="create" className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Nueva Reserva
           </TabsTrigger>
           <TabsTrigger value="list" className="flex items-center gap-2">
             <User className="w-4 h-4" />
-            {t('reservations.tab.list', 'Lista de Reservas')}
+            Lista de Reservas
           </TabsTrigger>
           <TabsTrigger value="schedules" className="flex items-center gap-2">
             <Settings className="w-4 h-4" />
-            {t('schedules.tab.management', 'Gestión de Horarios')}
+            Gestión de Horarios
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab Calendario */}
-        <TabsContent value="calendar" className="space-y-6" data-testid="reservations-calendar-tab">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Panel de Selección */}
-            <div className="lg:col-span-1 space-y-6">
-              <Card className={styles.card()}>
+        {/* Tab Nueva Reserva - Diseño Wizard Mejorado */}
+        <TabsContent value="create" className="space-y-6" data-testid="reservations-create-tab">
+          {/* Indicador de pasos con diseño mejorado */}
+          <ReservationSteps currentStep={currentStep} steps={reservationSteps} />
+          
+          {/* Contenedor principal del wizard */}
+          <div className="max-w-4xl mx-auto">
+            {/* Paso 1: Selección de Servicio */}
+            {currentStep === 1 && (
+              <Card className={styles.card()} style={{
+                background: 'var(--md-surface-container-low, rgb(247, 243, 249))',
+                borderColor: 'var(--md-outline-variant, rgb(202, 196, 208))'
+              }}>
                 <CardHeader>
-                  <CardTitle className={styles.header('h3')}>
-                    {t('reservations.new_reservation', 'Nueva Reserva')}
+                  <CardTitle className="flex items-center gap-3" style={{
+                    color: 'var(--md-on-surface, rgb(29, 27, 32))'
+                  }}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{
+                      background: 'var(--md-primary, rgb(103, 80, 164))',
+                      color: 'var(--md-on-primary, rgb(255, 255, 255))'
+                    }}>
+                      1
+                    </div>
+                    Selecciona el Servicio
                   </CardTitle>
+                  <p className="text-sm mt-2" style={{
+                    color: 'var(--md-on-surface-variant, rgb(73, 69, 79))'
+                  }}>
+                    Elige el servicio que deseas reservar de la lista disponible
+                  </p>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Selector de Servicio */}
-                  <div>
-                    <label className={styles.label()}>
-                      {t('reservations.service', 'Servicio')}
-                    </label>
-                    <select
-                      value={selectedProduct?.id || ''}
-                      onChange={(e) => {
-                        const productId = e.target.value;
-                        let product = products.find(p => p.id === productId);
-                        
-                        // Si no se encuentra en products, crear objeto temporal para IDs conocidos
-                        if (!product && productId.startsWith('BT_Cancha_')) {
-                          product = {
-                            id: productId,
-                            name: productId === 'BT_Cancha_1_xyz123abc' ? 'Cancha de Beach Tennis 1' : 'Cancha de Beach Tennis 2',
-                            type: 'service',
-                            reservable: true
-                          };
-                        }
-                        
-                        setSelectedProduct(product);
-                      }}
-                      className={styles.input()}
-                    >
-                      <option value="">
-                        {t('reservations.select_service', 'Seleccionar servicio...')}
-                      </option>
-                      {/* Opción temporal: IDs conocidos del sistema */}
-                      <optgroup label="Servicios Conocidos (Temporal)">
-                        <option value="BT_Cancha_1_xyz123abc">Cancha de Beach Tennis 1</option>
-                        <option value="BT_Cancha_2_def456ghi">Cancha de Beach Tennis 2</option>
-                      </optgroup>
-                      {/* Servicios cargados dinámicamente */}
-                      {products && products.length > 0 && (
-                        <optgroup label="Servicios Cargados">
-                          {products
-                            .filter(product => product.type === 'service' || product.reservable)
-                            .map((product) => (
-                              <option key={product.id} value={product.id}>
-                                {product.name}{product.price ? ` - $${product.price}` : ''}
-                              </option>
-                            ))
-                          }
-                        </optgroup>
-                      )}
-                      {(!products || products.length === 0) && (
-                        <option value="" disabled>
-                          {t('reservations.no_services_available', 'No hay servicios disponibles')}
-                        </option>
-                      )}
-                    </select>
-                  </div>
-
-                  {/* Selector de Cliente */}
-                  <div>
-                    <label className={styles.label()}>
-                      {t('reservations.client', 'Cliente')}
-                    </label>
-                    <select
-                      value={selectedClient?.id || ''}
-                      onChange={(e) => {
-                        const client = clients.find(c => c.id === e.target.value);
-                        setSelectedClient(client);
-                      }}
-                      className={styles.input()}
-                    >
-                      <option value="">
-                        {t('reservations.select_client', 'Seleccionar cliente...')}
-                      </option>
-                      {clients && clients.length > 0 ? (
-                        clients.map((client) => (
-                          <option key={client.id} value={client.id}>
-                            {client.name}
-                          </option>
-                        ))
-                      ) : (
-                        <option value="" disabled>
-                          {t('reservations.no_clients_available', 'No hay clientes disponibles')}
-                        </option>
-                      )}
-                    </select>
-                  </div>
-
-                  {/* Horarios disponibles desde API */}
-                  {selectedProduct && selectedDate && (
-                    <div>
-                      <label className={styles.label()}>
-                        <Clock className="w-4 h-4 mr-1 inline" />
-                        {t('reservations.available_times', 'Horarios Disponibles')}
-                        {loading && <span className="text-sm text-muted-foreground ml-2">(Cargando...)</span>}
-                      </label>
-                      {availableTimeSlots.length === 0 && !loading ? (
-                        <div className="p-4 text-center text-muted-foreground bg-gray-50 dark:bg-gray-800 rounded-md mt-2 border">
-                          <Clock className="w-8 h-8 mx-auto mb-3 text-muted-foreground/60" />
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium">
-                              {t('reservations.no_schedules_available', 'Sin horarios disponibles')}
-                            </p>
-                            <p className="text-xs text-muted-foreground/80">
-                              {t('reservations.no_schedules_help', 'Prueba seleccionando otra fecha, producto o contacta al administrador para generar horarios.')}
-                            </p>
+                <CardContent className="space-y-6">
+                  {/* Grid de servicios como cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Servicios conocidos del sistema */}
+                    {[
+                      { id: 'BT_Cancha_1_xyz123abc', name: 'Cancha de Beach Tennis 1', description: 'Cancha principal con vista al mar', price: '50' },
+                      { id: 'BT_Cancha_2_def456ghi', name: 'Cancha de Beach Tennis 2', description: 'Cancha secundaria techada', price: '45' }
+                    ].map((service) => (
+                      <Card 
+                        key={service.id}
+                        className={`cursor-pointer transition-all border-2 ${
+                          selectedProduct?.id === service.id 
+                            ? 'shadow-lg scale-105' 
+                            : 'hover:shadow-md hover:scale-102'
+                        }`}
+                        style={{
+                          borderColor: selectedProduct?.id === service.id 
+                            ? 'var(--md-primary, rgb(103, 80, 164))' 
+                            : 'var(--md-outline-variant, rgb(202, 196, 208))',
+                          background: selectedProduct?.id === service.id 
+                            ? 'var(--md-primary-container, rgb(233, 221, 255))' 
+                            : 'var(--md-surface, rgb(254, 247, 255))'
+                        }}
+                        onClick={() => handleSelectProduct({
+                          id: service.id,
+                          name: service.name,
+                          type: 'service',
+                          reservable: true,
+                          price: service.price
+                        })}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-lg mb-2" style={{
+                                color: selectedProduct?.id === service.id 
+                                  ? 'var(--md-on-primary-container, rgb(33, 0, 93))' 
+                                  : 'var(--md-on-surface, rgb(29, 27, 32))'
+                              }}>
+                                {service.name}
+                              </h3>
+                              <p className="text-sm mb-3" style={{
+                                color: selectedProduct?.id === service.id 
+                                  ? 'var(--md-on-primary-container, rgb(33, 0, 93))' 
+                                  : 'var(--md-on-surface-variant, rgb(73, 69, 79))'
+                              }}>
+                                {service.description}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="secondary" className="text-xs">
+                                  ${service.price}/hora
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  Disponible
+                                </Badge>
+                              </div>
+                            </div>
+                            {selectedProduct?.id === service.id && (
+                              <CheckCircle className="w-6 h-6 text-primary" />
+                            )}
                           </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+
+                    {/* Servicios cargados dinámicamente si existen */}
+                    {products && products.length > 0 && products
+                      .filter(product => product.type === 'service' || product.reservable)
+                      .map((product) => (
+                        <Card 
+                          key={product.id}
+                          className={`cursor-pointer transition-all border-2 ${
+                            selectedProduct?.id === product.id 
+                              ? 'shadow-lg scale-105' 
+                              : 'hover:shadow-md hover:scale-102'
+                          }`}
+                          style={{
+                            borderColor: selectedProduct?.id === product.id 
+                              ? 'var(--md-primary, rgb(103, 80, 164))' 
+                              : 'var(--md-outline-variant, rgb(202, 196, 208))',
+                            background: selectedProduct?.id === product.id 
+                              ? 'var(--md-primary-container, rgb(233, 221, 255))' 
+                              : 'var(--md-surface, rgb(254, 247, 255))'
+                          }}
+                          onClick={() => handleSelectProduct(product)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-lg mb-2" style={{
+                                  color: selectedProduct?.id === product.id 
+                                    ? 'var(--md-on-primary-container, rgb(33, 0, 93))' 
+                                    : 'var(--md-on-surface, rgb(29, 27, 32))'
+                                }}>
+                                  {product.name}
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                  {product.price && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      ${product.price}/hora
+                                    </Badge>
+                                  )}
+                                  <Badge variant="outline" className="text-xs">
+                                    Servicio
+                                  </Badge>
+                                </div>
+                              </div>
+                              {selectedProduct?.id === product.id && (
+                                <CheckCircle className="w-6 h-6 text-primary" />
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    }
+                  </div>
+
+                  {/* Mensaje si no hay datos */}
+                  {(!products || products.length === 0) && (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                        <AlertCircle className="w-8 h-8" />
+                      </div>
+                      <p className="font-medium">No hay servicios dinámicos cargados</p>
+                      <p className="text-sm">Usando servicios predeterminados del sistema</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Paso 2: Selección de Fecha y Hora */}
+            {currentStep === 2 && (
+              <Card className={styles.card()} style={{
+                background: 'var(--md-surface-container-low, rgb(247, 243, 249))',
+                borderColor: 'var(--md-outline-variant, rgb(202, 196, 208))'
+              }}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3" style={{
+                    color: 'var(--md-on-surface, rgb(29, 27, 32))'
+                  }}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{
+                      background: 'var(--md-primary, rgb(103, 80, 164))',
+                      color: 'var(--md-on-primary, rgb(255, 255, 255))'
+                    }}>
+                      2
+                    </div>
+                    Selecciona Fecha y Hora
+                  </CardTitle>
+                  <p className="text-sm mt-2" style={{
+                    color: 'var(--md-on-surface-variant, rgb(73, 69, 79))'
+                  }}>
+                    Servicio: <strong>{selectedProduct?.name}</strong> • Elige cuándo quieres usar el servicio
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Calendario */}
+                    <div>
+                      <h3 className="font-semibold mb-4 flex items-center gap-2">
+                        <Calendar className="w-5 h-5" />
+                        Seleccionar Fecha
+                      </h3>
+                      <CalendarComponent
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={handleDateChange}
+                        className="rounded-lg border-2"
+                        disabled={(date) => date < new Date()}
+                        style={{
+                          borderColor: 'var(--md-outline-variant, rgb(202, 196, 208))'
+                        }}
+                      />
+                    </div>
+
+                    {/* Horarios disponibles */}
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold flex items-center gap-2">
+                          <Clock className="w-5 h-5" />
+                          Horarios Disponibles
+                        </h3>
+                        <Button
+                          onClick={handleLoadSchedules}
+                          disabled={loading}
+                          size="sm"
+                          variant="outline"
+                        >
+                          {loading ? (
+                            <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                          ) : (
+                            <Search className="w-4 h-4 mr-2" />
+                          )}
+                          Buscar
+                        </Button>
+                      </div>
+
+                      {schedules.length === 0 ? (
+                        <div className="p-6 text-center rounded-lg border-2 border-dashed" style={{
+                          borderColor: 'var(--md-outline-variant, rgb(202, 196, 208))',
+                          background: 'var(--md-surface-variant, rgba(231, 224, 236, 0.3))'
+                        }}>
+                          <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                          <p className="font-medium mb-2">Haz clic en "Buscar" para cargar horarios</p>
+                          <p className="text-sm text-muted-foreground">
+                            Fecha: {selectedDate.toLocaleDateString('es-ES')}
+                          </p>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div className="grid grid-cols-2 gap-3 max-h-80 overflow-y-auto">
                           {availableTimeSlots.map(slot => (
                             <Button
                               key={slot.id}
-                              onClick={() => {
-                                setSelectedTime(slot.displayTime);
-                                setFormData(prev => ({ 
-                                  ...prev, 
-                                  start_time: slot.start_time 
-                                }));
-                              }}
-                              className={`p-2 text-xs font-bold border-2 transition-all ${
+                              onClick={() => handleSelectTime(slot.displayTime, slot.start_time)}
+                              className={`p-4 h-auto flex-col transition-all border-2 ${
                                 selectedTime === slot.displayTime
-                                  ? 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
-                                  : 'hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]'
+                                  ? 'shadow-lg scale-105'
+                                  : 'hover:shadow-md'
                               }`}
-                              variant={selectedTime === slot.displayTime ? 'primary' : 'secondary'}
-                              title={`${slot.displayTime} - ${new Date(slot.end_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
+                              variant={selectedTime === slot.displayTime ? 'primary' : 'outline'}
+                              style={{
+                                borderColor: selectedTime === slot.displayTime 
+                                  ? 'var(--md-primary, rgb(103, 80, 164))' 
+                                  : 'var(--md-outline-variant, rgb(202, 196, 208))'
+                              }}
                             >
-                              {slot.displayTime}
+                              <div className="font-bold text-lg">{slot.displayTime}</div>
+                              <div className="text-xs opacity-75">
+                                {Math.round((new Date(slot.end_time) - new Date(slot.start_time)) / (1000 * 60))} min
+                              </div>
                             </Button>
                           ))}
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Botones de navegación */}
+                  <div className="flex justify-between mt-6">
+                    <Button
+                      onClick={() => setCurrentStep(1)}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <ArrowRight className="w-4 h-4 rotate-180" />
+                      Anterior
+                    </Button>
+                    {selectedTime && (
+                      <Button
+                        onClick={() => setCurrentStep(3)}
+                        variant="primary"
+                        className="flex items-center gap-2"
+                      >
+                        Siguiente
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Paso 3: Selección de Cliente */}
+            {currentStep === 3 && (
+              <Card className={styles.card()} style={{
+                background: 'var(--md-surface-container-low, rgb(247, 243, 249))',
+                borderColor: 'var(--md-outline-variant, rgb(202, 196, 208))'
+              }}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3" style={{
+                    color: 'var(--md-on-surface, rgb(29, 27, 32))'
+                  }}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{
+                      background: 'var(--md-primary, rgb(103, 80, 164))',
+                      color: 'var(--md-on-primary, rgb(255, 255, 255))'
+                    }}>
+                      3
+                    </div>
+                    Selecciona Cliente
+                  </CardTitle>
+                  <p className="text-sm mt-2" style={{
+                    color: 'var(--md-on-surface-variant, rgb(73, 69, 79))'
+                  }}>
+                    {selectedProduct?.name} • {selectedDate.toLocaleDateString('es-ES')} • {selectedTime}
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {clients && clients.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                      {clients.map((client) => (
+                        <Card
+                          key={client.id}
+                          className={`cursor-pointer transition-all border-2 ${
+                            selectedClient?.id === client.id 
+                              ? 'shadow-lg scale-105' 
+                              : 'hover:shadow-md hover:scale-102'
+                          }`}
+                          style={{
+                            borderColor: selectedClient?.id === client.id 
+                              ? 'var(--md-primary, rgb(103, 80, 164))' 
+                              : 'var(--md-outline-variant, rgb(202, 196, 208))',
+                            background: selectedClient?.id === client.id 
+                              ? 'var(--md-primary-container, rgb(233, 221, 255))' 
+                              : 'var(--md-surface, rgb(254, 247, 255))'
+                          }}
+                          onClick={() => handleSelectClient(client)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <User className="w-5 h-5 text-primary" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold">{client.name}</h3>
+                                  <p className="text-sm text-muted-foreground">{client.email}</p>
+                                </div>
+                              </div>
+                              {selectedClient?.id === client.id && (
+                                <CheckCircle className="w-6 h-6 text-primary" />
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                        <AlertCircle className="w-8 h-8" />
+                      </div>
+                      <p className="font-medium">No hay clientes disponibles</p>
+                      <p className="text-sm">Asegúrate de haber cargado los datos primero</p>
+                    </div>
                   )}
 
-                  {/* Botón crear reserva */}
-                  {selectedProduct && selectedClient && selectedTime && (
+                  {/* Botones de navegación */}
+                  <div className="flex justify-between">
+                    <Button
+                      onClick={() => setCurrentStep(2)}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <ArrowRight className="w-4 h-4 rotate-180" />
+                      Anterior
+                    </Button>
+                    {selectedClient && (
+                      <Button
+                        onClick={() => setCurrentStep(4)}
+                        variant="primary"
+                        className="flex items-center gap-2"
+                      >
+                        Siguiente
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Paso 4: Confirmación */}
+            {currentStep === 4 && (
+              <Card className={styles.card()} style={{
+                background: 'var(--md-surface-container-low, rgb(247, 243, 249))',
+                borderColor: 'var(--md-outline-variant, rgb(202, 196, 208))'
+              }}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3" style={{
+                    color: 'var(--md-on-surface, rgb(29, 27, 32))'
+                  }}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{
+                      background: 'var(--md-primary, rgb(103, 80, 164))',
+                      color: 'var(--md-on-primary, rgb(255, 255, 255))'
+                    }}>
+                      4
+                    </div>
+                    Confirmar Reserva
+                  </CardTitle>
+                  <p className="text-sm mt-2" style={{
+                    color: 'var(--md-on-surface-variant, rgb(73, 69, 79))'
+                  }}>
+                    Revisa los detalles antes de confirmar
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Resumen de la reserva */}
+                  <div className="p-6 rounded-lg border-2" style={{
+                    background: 'var(--md-primary-container, rgba(233, 221, 255, 0.5))',
+                    borderColor: 'var(--md-primary, rgb(103, 80, 164))'
+                  }}>
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                      <CheckCircle className="w-6 h-6 text-primary" />
+                      Resumen de Reserva
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                            <MapPin className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Servicio</p>
+                            <p className="font-semibold">{selectedProduct?.name}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                            <Calendar className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Fecha</p>
+                            <p className="font-semibold">{selectedDate.toLocaleDateString('es-ES', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                            <Clock className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Hora</p>
+                            <p className="font-semibold">{selectedTime}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                            <User className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Cliente</p>
+                            <p className="font-semibold">{selectedClient?.name}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botones de navegación */}
+                  <div className="flex justify-between">
+                    <Button
+                      onClick={() => setCurrentStep(3)}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <ArrowRight className="w-4 h-4 rotate-180" />
+                      Anterior
+                    </Button>
                     <Button
                       onClick={handleCreateReservation}
-                      className="w-full"
                       variant="primary"
+                      size="lg"
+                      className="flex items-center gap-2 px-8"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
-                      {t('reservations.create', 'Crear Reserva')}
+                      <CheckCircle className="w-5 h-5" />
+                      Confirmar Reserva
                     </Button>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
-            </div>
-
-            {/* Calendario */}
-            <div className="lg:col-span-2">
-              <Card className={styles.card()}>
-                <CardHeader>
-                  <CardTitle className={styles.header('h3')}>
-                    {t('reservations.calendar', 'Calendario de Reservas')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CalendarComponent
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className="rounded-md border"
-                    disabled={(date) => date < new Date()}
-                  />
-                </CardContent>
-              </Card>
-            </div>
+            )}
           </div>
         </TabsContent>
 
@@ -784,9 +1201,9 @@ const Reservations = () => {
                 className={`pl-10 ${styles.input()}`}
               />
             </div>
-            <Button onClick={() => setActiveTab('calendar')} variant="primary">
+            <Button onClick={() => setActiveTab('create')} variant="primary">
               <Plus className="w-4 h-4 mr-2" />
-              {t('reservations.new_reservation', 'Nueva Reserva')}
+              Nueva Reserva
             </Button>
           </div>
 
@@ -797,7 +1214,7 @@ const Reservations = () => {
               title={t('reservations.empty.title', 'Sin reservas')}
               message={t('reservations.empty.message', 'No hay reservas registradas')}
               actionLabel={t('reservations.new_reservation', 'Nueva Reserva')}
-              onAction={() => setActiveTab('calendar')}
+              onAction={() => setActiveTab('create')}
             />
           ) : (
             <div className="grid gap-4">

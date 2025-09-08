@@ -95,8 +95,8 @@ const useScheduleStore = create(
         try {
           const result = await scheduleService.generateDaily();
           if (result.success !== false) {
-            // Recargar lista después de generar
-            get().fetchSchedules();
+            // Recargar lista después de generar (opcional - hacer manualmente)
+            // get().fetchSchedules();
           }
           telemetry.record('feature.schedules.generate_daily');
           return { success: true };
@@ -106,13 +106,45 @@ const useScheduleStore = create(
         }
       },
 
+      // 🆕 Generar horarios para HOY (nuevo endpoint v2.2)
+      generateTodaySchedules: async () => {
+        try {
+          const result = await scheduleService.generateToday();
+          if (result.success !== false) {
+            // Recargar lista después de generar (opcional - hacer manualmente)
+            // get().fetchSchedules();
+          }
+          telemetry.record('feature.schedules.generate_today');
+          return { success: true };
+        } catch (error) {
+          set({ error: error.message || 'Error al generar horarios para hoy' });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // 🆕 Generar horarios para MAÑANA (nuevo endpoint v2.2)
+      generateTomorrowSchedules: async () => {
+        try {
+          const result = await scheduleService.generateTomorrow();
+          if (result.success !== false) {
+            // Recargar lista después de generar (opcional - hacer manualmente)
+            // get().fetchSchedules();
+          }
+          telemetry.record('feature.schedules.generate_tomorrow');
+          return { success: true };
+        } catch (error) {
+          set({ error: error.message || 'Error al generar horarios para mañana' });
+          return { success: false, error: error.message };
+        }
+      },
+
       // Generar horarios para fecha específica
       generateSchedulesForDate: async (targetDate) => {
         try {
           const result = await scheduleService.generateForDate(targetDate);
           if (result.success !== false) {
-            // Recargar lista después de generar
-            get().fetchSchedules();
+            // Recargar lista después de generar (opcional - hacer manualmente)
+            // get().fetchSchedules();
           }
           telemetry.record('feature.schedules.generate_for_date');
           return { success: true };
@@ -127,8 +159,8 @@ const useScheduleStore = create(
         try {
           const result = await scheduleService.generateForNextDays(days);
           if (result.success !== false) {
-            // Recargar lista después de generar
-            get().fetchSchedules();
+            // Recargar lista después de generar (opcional - hacer manualmente)
+            // get().fetchSchedules();
           }
           telemetry.record('feature.schedules.generate_for_next_days');
           return { success: true };

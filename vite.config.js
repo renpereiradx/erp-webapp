@@ -54,7 +54,9 @@ export default defineConfig({
     // Enable HMR but with overlay for errors
     hmr: {
       overlay: true,
-      port: 24678
+      port: 24678,
+      // Disable WebSocket connection retries to prevent connection spam
+      clientErrorOverlay: false
     },
     // Headers agresivos para prevenir cache específico de esta app
     headers: {

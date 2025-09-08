@@ -58,19 +58,7 @@ function AppContent() {
   // Inicializar autenticación al cargar la aplicación
   useEffect(() => {
     initializeAuth();
-    
-    const ensureAutoLogin = async () => {
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        try {
-          await apiClient.ensureAuthentication();
-        } catch (error) {
-          // Auto-login failed
-        }
-      }
-    };
-    
-    ensureAutoLogin();
+    // Removed auto-login call - authentication must be explicit by user
   }, [initializeAuth]);
 
   if (loading) {

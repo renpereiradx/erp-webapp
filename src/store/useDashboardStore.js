@@ -30,8 +30,6 @@ const useDashboardStore = create()(
         try {
           // Si demo está habilitado, usar datos demo
           if (DEMO_CONFIG_DASHBOARD.enabled && !DEMO_CONFIG_DASHBOARD.useRealAPI) {
-            console.log('📊 Dashboard: Loading demo data...');
-            
             // Cargar datos demo de forma paralela
             const [clientResult, productResult, salesResult] = await Promise.all([
               getDemoClientStats(),
@@ -45,13 +43,10 @@ const useDashboardStore = create()(
               salesStats: salesResult.data.sales_statistics,
               loading: false
             });
-            
-            console.log('✅ Dashboard: Demo data loaded successfully');
             return;
           }
           
           // Si demo está deshabilitado, usar API real
-          console.log('🌐 Dashboard: Loading data from API...');
           
           // Cargar estadísticas de clientes
           const clientResult = await clientService.getStatistics();
@@ -70,7 +65,7 @@ const useDashboardStore = create()(
           });
 
           set({ loading: false });
-          console.log('✅ Dashboard: API data loaded successfully');
+          // Dashboard API data loaded successfully
           
         } catch (error) {
           console.error('❌ Dashboard: Error loading data:', error.message);
@@ -86,7 +81,7 @@ const useDashboardStore = create()(
               loading: false,
               error: null // Clear error since we have fallback data
             });
-            console.log('✅ Dashboard: Demo fallback data loaded');
+            // Dashboard fallback data loaded
           } else {
             set({ error: error.message, loading: false });
           }

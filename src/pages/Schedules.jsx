@@ -29,6 +29,8 @@ const Schedules = () => {
     error,
     updateScheduleAvailability,
     generateDailySchedules,
+    generateTodaySchedules,
+    generateTomorrowSchedules,
     generateSchedulesForDate,
     generateSchedulesForNextDays,
     clearError
@@ -107,6 +109,50 @@ const Schedules = () => {
       );
     } finally {
       setActionLoading(prev => ({ ...prev, daily: false }));
+    }
+  };
+
+  // 🆕 Acción 1a: Generar horarios para HOY
+  const handleGenerateToday = async () => {
+    setActionLoading(prev => ({ ...prev, today: true }));
+    try {
+      const result = await generateTodaySchedules();
+      addActionResult(
+        'generate_today', 
+        true, 
+        'Horarios para HOY generados exitosamente (14:00-23:00)',
+        result
+      );
+    } catch (error) {
+      addActionResult(
+        'generate_today', 
+        false, 
+        `Error generando horarios para hoy: ${error.message}`
+      );
+    } finally {
+      setActionLoading(prev => ({ ...prev, today: false }));
+    }
+  };
+
+  // 🆕 Acción 1b: Generar horarios para MAÑANA
+  const handleGenerateTomorrow = async () => {
+    setActionLoading(prev => ({ ...prev, tomorrow: true }));
+    try {
+      const result = await generateTomorrowSchedules();
+      addActionResult(
+        'generate_tomorrow', 
+        true, 
+        'Horarios para MAÑANA generados exitosamente (14:00-23:00)',
+        result
+      );
+    } catch (error) {
+      addActionResult(
+        'generate_tomorrow', 
+        false, 
+        `Error generando horarios para mañana: ${error.message}`
+      );
+    } finally {
+      setActionLoading(prev => ({ ...prev, tomorrow: false }));
     }
   };
 
@@ -294,6 +340,8 @@ const Schedules = () => {
   const getActionColor = (type) => {
     switch (type) {
       case 'generate_daily': return 'border-l-blue-500';
+      case 'generate_today': return 'border-l-emerald-500';
+      case 'generate_tomorrow': return 'border-l-cyan-500';
       case 'generate_date': return 'border-l-green-500';
       case 'bulk_generate': return 'border-l-purple-500';
       case 'query': return 'border-l-orange-500';
@@ -303,19 +351,19 @@ const Schedules = () => {
     }
   };
 
-  // Verificar horarios de hoy al cargar la página
-  useEffect(() => {
-    const checkTodaySchedules = async () => {
-      if (!generalQuery.hasChecked) {
-        // Cargar automáticamente los horarios de hoy al iniciar
-        await handleCheckAvailableSchedules();
-      }
-    };
-    
-    // Pequeño delay para no interferir con la carga inicial
-    const timer = setTimeout(checkTodaySchedules, 1000);
-    return () => clearTimeout(timer);
-  }, []); // Solo al montar el componente
+  // Verificar horarios de hoy al cargar la página (COMENTADO - hacer manual)
+  // useEffect(() => {
+  //   const checkTodaySchedules = async () => {
+  //     if (!generalQuery.hasChecked) {
+  //       // Cargar automáticamente los horarios de hoy al iniciar
+  //       await handleCheckAvailableSchedules();
+  //     }
+  //   };
+  //   
+  //   // Pequeño delay para no interferir con la carga inicial
+  //   const timer = setTimeout(checkTodaySchedules, 1000);
+  //   return () => clearTimeout(timer);
+  // }, []); // Solo al montar el componente
 
   return (
     <div className={styles.container()} data-testid="schedules-page">
@@ -543,41 +591,80 @@ const Schedules = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button
-                  onClick={handleGenerateDaily}
-                  disabled={actionLoading.daily}
-                  variant="primary"
-                  className="flex items-center gap-2 h-12"
-                >
-                  {actionLoading.daily ? (
-                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                  ) : (
-                    <Calendar className="w-4 h-4" />
-                  )}
-                  Generar Horarios Hoy
-                </Button>
-
-                {products.length === 0 ? (
+              <div className="space-y-4">
+                {/* Fila superior: Botones principales */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   <Button
-                    onClick={handleLoadProducts}
-                    disabled={actionLoading.products}
-                    variant="secondary"
-                    className="flex items-center gap-2 h-12"
+                    onClick={handleGenerateToday}
+                    disabled={actionLoading.today}
+                    variant="primary"
+                    className="flex items-center gap-2 h-10 bg-emerald-600 hover:bg-emerald-700"
                   >
-                    {actionLoading.products ? (
+                    {actionLoading.today ? (
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                    ) : (
+                      <Calendar className="w-4 h-4" />
+                    )}
+                    Generar HOY
+                  </Button>
+
+                  <Button
+                    onClick={handleGenerateTomorrow}
+                    disabled={actionLoading.tomorrow}
+                    variant="primary"
+                    className="flex items-center gap-2 h-10 bg-cyan-600 hover:bg-cyan-700"
+                  >
+                    {actionLoading.tomorrow ? (
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                    ) : (
+                      <Calendar className="w-4 h-4" />
+                    )}
+                    Generar MAÑANA
+                  </Button>
+
+                  <Button
+                    onClick={handleGenerateDaily}
+                    disabled={actionLoading.daily}
+                    variant="secondary"
+                    className="flex items-center gap-2 h-10"
+                  >
+                    {actionLoading.daily ? (
                       <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
                     ) : (
                       <RefreshCw className="w-4 h-4" />
                     )}
-                    Cargar Productos
+                    Gen. Diarios
                   </Button>
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-green-600">
-                    <CheckCircle className="w-4 h-4" />
-                    {products.length} productos disponibles
+                </div>
+
+                {/* Fila inferior: Estado de productos */}
+                <div className="flex items-center justify-between pt-2 border-t">
+                  {products.length === 0 ? (
+                    <Button
+                      onClick={handleLoadProducts}
+                      disabled={actionLoading.products}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      {actionLoading.products ? (
+                        <div className="animate-spin w-3 h-3 border-2 border-current border-t-transparent rounded-full" />
+                      ) : (
+                        <RefreshCw className="w-3 h-3" />
+                      )}
+                      Cargar Productos
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <CheckCircle className="w-4 h-4" />
+                      {products.length} productos disponibles
+                    </div>
+                  )}
+                  
+                  <div className="text-xs text-muted-foreground">
+                    Rango: 14:00-23:00 (9 horarios/día)
                   </div>
-                )}
+                </div>
               </div>
             </CardContent>
           </Card>

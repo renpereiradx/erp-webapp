@@ -38,8 +38,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const result = await authService.login(credentials);
       if (result.success) {
-        console.log('🔐 AuthContext: Login successful, updating state...', result);
-        
         // Almacenar token en apiService para persistencia
         if (result.token) {
           apiService.setToken(result.token);
@@ -48,8 +46,6 @@ export const AuthProvider = ({ children }) => {
         setUser(result.user);
         setToken(result.token);
         setError(null);
-        
-        console.log('🔐 AuthContext: State updated, isAuthenticated should be true');
       } else {
         setError(result.message || 'Login failed');
       }
@@ -67,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await authService.logout();
     } catch (error) {
-      console.warn('Logout service error:', error);
+      // Silent logout error - service might not be available
     }
     
     // Limpiar estado local

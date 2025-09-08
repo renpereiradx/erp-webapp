@@ -167,7 +167,7 @@ const MainLayout = ({ children }) => {
       
       // Clases CSS
       css: {
-        navSpacing: neo ? 'space-y-3' : 'space-y-2',
+        navSpacing: neo ? 'space-y-2' : 'space-y-1',
         titleClass: neo ? 'font-black uppercase tracking-wide' : fluent ? 'fluent-title' : material ? 'material-headline-medium' : 'font-medium',
         bodyClass: neo ? 'font-bold uppercase tracking-wide' : fluent ? 'fluent-body' : material ? 'material-body-medium' : 'font-medium',
         captionClass: neo ? 'font-bold uppercase tracking-wide text-sm' : fluent ? 'fluent-caption' : material ? 'material-body-small' : 'font-medium',
@@ -197,9 +197,9 @@ const MainLayout = ({ children }) => {
             borderWidth: '2px',
             borderStyle: 'solid',
             borderColor: 'var(--border)',
-            backgroundColor: active ? `var(--brutalist-${item?.color || 'blue'})` : 'var(--card)',
+            backgroundColor: active ? `var(--brutalist-${item?.color || 'blue'})` : 'transparent',
             color: active ? '#000000' : 'var(--foreground)',
-            boxShadow: '2px 2px 0px 0px rgba(0,0,0,1)',
+            boxShadow: active ? '2px 2px 0px 0px rgba(0,0,0,1)' : 'none',
             fontWeight: 'bold',
             textTransform: 'uppercase',
             letterSpacing: '0.025em',
@@ -208,25 +208,59 @@ const MainLayout = ({ children }) => {
         }
         if (fluent) {
           return {
-            backgroundColor: active ? 'var(--fluent-brand-primary)' : 'transparent',
-            color: active ? 'white' : 'var(--fluent-text-primary)',
-            borderRadius: 'var(--fluent-radius-small)',
-            boxShadow: active ? 'var(--fluent-elevation-2)' : 'none',
-            transition: 'all var(--fluent-duration-normal) var(--fluent-curve-easy-ease)'
+            backgroundColor: active ? 'var(--fluent-brand-primary, #0078d4)' : 'transparent',
+            color: active ? '#ffffff' : 'var(--foreground)',
+            borderRadius: 'var(--fluent-radius-small, 4px)',
+            boxShadow: active ? 'var(--fluent-elevation-2, 0 2px 4px rgba(0,0,0,0.14))' : 'none',
+            transition: 'all 200ms cubic-bezier(0.4, 0.0, 0.2, 1)'
           };
         }
         if (material) {
           return {
-            backgroundColor: active ? 'var(--material-primary)' : 'transparent',
-            color: active ? 'var(--material-on-primary)' : 'var(--material-on-surface)',
-            borderRadius: 'var(--material-radius-medium)',
-            transition: 'all 200ms ease'
+            backgroundColor: active ? 'var(--md-primary)' : 'transparent',
+            color: active ? 'var(--md-on-primary)' : 'var(--md-on-surface)',
+            borderRadius: 'var(--md-shape-corner-small)',
+            transition: 'all var(--md-motion-duration-short4) var(--md-motion-easing-standard)'
           };
         }
         return {
           backgroundColor: active ? 'var(--accent)' : 'transparent',
           color: active ? 'var(--accent-foreground)' : 'var(--foreground)',
           transition: 'colors 200ms ease'
+        };
+      },
+      
+      // Función para obtener estilos de hover usando tokens del sistema de diseño
+      getNavItemHoverStyles: (theme) => {
+        if (theme === 'neo') {
+          return {
+            backgroundColor: 'var(--muted)',
+            color: 'var(--foreground)',
+            boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)',
+            transform: 'translate(1px, 1px)',
+            transition: 'all 150ms ease'
+          };
+        }
+        if (theme === 'fluent') {
+          return {
+            backgroundColor: 'var(--fluent-neutral-grey-14, rgba(0,0,0,0.06))',
+            color: 'var(--foreground)',
+            borderRadius: 'var(--fluent-radius-small, 4px)',
+            transition: 'all 200ms cubic-bezier(0.4, 0.0, 0.2, 1)'
+          };
+        }
+        if (theme === 'material') {
+          return {
+            backgroundColor: 'var(--md-on-surface-hover)',
+            color: 'var(--md-on-surface)',
+            borderRadius: 'var(--md-shape-corner-small)',
+            transition: 'all var(--md-motion-duration-short4) var(--md-motion-easing-standard)'
+          };
+        }
+        return {
+          backgroundColor: 'var(--muted)',
+          color: 'var(--foreground)',
+          transition: 'all 200ms ease'
         };
       },
       
@@ -376,41 +410,11 @@ const MainLayout = ({ children }) => {
       html.setAttribute('data-theme', theme);
       body.setAttribute('data-theme', theme);
       
-      // console.log('🎨 Theme applied to DOM:', { 
-      //   theme, 
-      //   htmlTheme: html.getAttribute('data-theme'), 
-      //   bodyTheme: body.getAttribute('data-theme'),
-      //   isNeoBrutalismValue,
-      //   isMaterialValue,
-      //   isFluentValue
-      // });
-      
-      // Verificar que las variables CSS están disponibles
-      // const rootStyle = getComputedStyle(document.documentElement);
-      // console.log('🔍 CSS Variables verification:', {
-      //   theme,
-      //   background: rootStyle.getPropertyValue('--background'),
-      //   foreground: rootStyle.getPropertyValue('--foreground'),
-      //   primary: rootStyle.getPropertyValue('--primary'),
-      //   mdPrimary: rootStyle.getPropertyValue('--md-primary-main'),
-      //   mdError: rootStyle.getPropertyValue('--md-error-main'),
-      //   fluentPrimary: rootStyle.getPropertyValue('--fluent-brand-primary'),
-      //   fluentDanger: rootStyle.getPropertyValue('--fluent-semantic-danger')
-      // });
     }
   }, [theme]);
 
   // ...existing code...
 
-  // Debug log temporal (comentado para reducir ruido)
-  // console.log('MainLayout Debug:', {
-  //   isClient,
-  //   isLargeScreen,
-  //   windowWidth: typeof window !== 'undefined' ? window.innerWidth : 'undefined',
-  //   theme,
-  //   sidebarShouldShow: isClient && isLargeScreen,
-  //   buttonShouldShow: isClient && !isLargeScreen
-  // });
 
   // Manejar logout - TEMPORAL: Desactivado
   const handleLogout = () => {
@@ -544,13 +548,6 @@ const MainLayout = ({ children }) => {
       color: 'green',
       badge: '12'
     },
-    { 
-      name: 'Configuración', 
-      href: '/configuracion', 
-      icon: Settings, 
-      color: 'pink',
-      badge: '13'
-    },
   ];
 
   const isActive = (href) => location.pathname === href;
@@ -622,7 +619,7 @@ const MainLayout = ({ children }) => {
         data-component="sidebar-desktop" 
         data-testid="sidebar-desktop"
       >
-        <div className="erp-sidebar-content h-full flex flex-col overflow-y-auto"
+        <div className="erp-sidebar-content h-full flex flex-col"
              style={getSidebarStyles()} data-component="sidebar-content" data-testid="sidebar-content">
           {/* Logo */}
           <div className="erp-sidebar-logo flex items-center flex-shrink-0 px-6 py-6"
@@ -644,7 +641,7 @@ const MainLayout = ({ children }) => {
           </div>
 
           {/* Navigation */}
-          <nav className={`erp-sidebar-nav mt-6 flex-1 px-4 ${computedStyles.css.navSpacing}`} data-component="sidebar-nav" data-testid="sidebar-nav">
+          <nav className={`erp-sidebar-nav mt-4 flex-1 px-4 pb-4 ${computedStyles.css.navSpacing} overflow-y-auto`} data-component="sidebar-nav" data-testid="sidebar-nav">
             {navigation.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -654,31 +651,39 @@ const MainLayout = ({ children }) => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`erp-nav-item group flex items-center px-4 py-3 text-sm ${getTitleClass('body')} ${isNeoBrutalismValue ? '' : isFluentValue ? 'fluent-radius-small' : 'rounded-md'} transition-all duration-200`}
+                  className={`erp-nav-item group flex items-center px-3 py-2 text-xs ${getTitleClass('body')} ${isNeoBrutalismValue ? '' : isFluentValue ? 'fluent-radius-small' : 'rounded-md'} transition-all duration-150`}
                   style={navStyles}
                   data-component="nav-item" 
                   data-testid={`nav-item-${item.name.toLowerCase()}`}
                   data-active={active}
                   onMouseEnter={(e) => {
-                    if (!active && !isNeoBrutalismValue) {
-                      e.target.style.backgroundColor = 'var(--accent)';
-                      e.target.style.color = 'var(--accent-foreground)';
-                    } else if (isNeoBrutalismValue) {
-                      e.target.style.boxShadow = '1px 1px 0px 0px rgba(0,0,0,1)';
-                      e.target.style.transform = 'translate(1px, 1px)';
+                    if (!active) {
+                      const themeType = isNeoBrutalismValue ? 'neo' : isFluentValue ? 'fluent' : isMaterialValue ? 'material' : 'default';
+                      const hoverStyles = computedStyles.getNavItemHoverStyles(themeType);
+                      
+                      // Apply hover styles smoothly
+                      Object.entries(hoverStyles).forEach(([prop, value]) => {
+                        e.target.style.setProperty(prop, value, 'important');
+                      });
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!active && !isNeoBrutalismValue) {
-                      e.target.style.backgroundColor = 'transparent';
-                      e.target.style.color = 'var(--foreground)';
-                    } else if (isNeoBrutalismValue) {
-                      e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
-                      e.target.style.transform = 'translate(0px, 0px)';
+                    if (!active) {
+                      // Reset all hover styles to original values
+                      const originalStyles = navStyles;
+                      Object.entries(originalStyles).forEach(([prop, value]) => {
+                        e.target.style.setProperty(prop, value, 'important');
+                      });
+                      
+                      // Ensure transform is reset for neo-brutalism
+                      if (isNeoBrutalismValue && !active) {
+                        e.target.style.setProperty('transform', 'translate(0px, 0px)', 'important');
+                        e.target.style.setProperty('box-shadow', 'none', 'important');
+                      }
                     }
                   }}
                 >
-                  <Icon className="erp-nav-icon mr-3 h-5 w-5 flex-shrink-0" />
+                  <Icon className="erp-nav-icon mr-2 h-4 w-4 flex-shrink-0" />
                   <span className="erp-nav-text flex-1">{item.name}</span>
                   {isNeoBrutalismValue ? (
                     <span className={`erp-nav-badge ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
@@ -704,29 +709,6 @@ const MainLayout = ({ children }) => {
             })}
           </nav>
 
-          {/* Upgrade Section */}
-          <div className="flex-shrink-0 p-4">
-            <div className={`p-4 ${computedStyles.css.cardRadius}`}
-                 style={computedStyles.upgradeCard}>
-              <h3 className={`text-sm ${computedStyles.css.semiboldClass} mb-2`}
-                  style={{ color: 'var(--foreground)' }}>
-                Upgrade to Pro
-              </h3>
-              <p className={`text-xs mb-4 ${computedStyles.css.boldClass}`}
-                 style={{ color: 'var(--muted-foreground)' }}>
-                Are you looking for more features? Check out our Pro version.
-              </p>
-              <Button variant={computedStyles.values.buttonVariant} size="sm" className="w-full">
-                <span className="mr-2">→</span>
-                Upgrade Now
-                {isNeoBrutalismValue && (
-                  <span className="ml-2 px-2 py-1 text-xs font-black border-2 border-black bg-yellow-400">
-                    22
-                  </span>
-                )}
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -750,7 +732,7 @@ const MainLayout = ({ children }) => {
             </div>
 
             {/* Mobile sidebar content - same as desktop */}
-            <div className="flex flex-col flex-grow overflow-y-auto">
+            <div className="flex flex-col h-full">
               {/* Logo */}
               <div className="flex items-center flex-shrink-0 px-6 py-6"
                    style={{ 
@@ -776,7 +758,7 @@ const MainLayout = ({ children }) => {
               </div>
 
               {/* Navigation */}
-              <nav className={`mt-6 flex-1 px-4 ${isNeoBrutalismValue ? 'space-y-3' : 'space-y-2'}`}>
+              <nav className={`mt-4 flex-1 px-4 pb-4 ${isNeoBrutalismValue ? 'space-y-2' : 'space-y-1'} overflow-y-auto`}>
                 {navigation.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
@@ -787,28 +769,36 @@ const MainLayout = ({ children }) => {
                       key={item.name}
                       to={item.href}
                       onClick={() => setSidebarOpen(false)}
-                      className={`group flex items-center px-4 py-3 text-sm ${computedStyles.css.mediumClass} ${isNeoBrutalismValue ? '' : 'rounded-md'} transition-all duration-200`}
+                      className={`group flex items-center px-3 py-2 text-xs ${computedStyles.css.mediumClass} ${isNeoBrutalismValue ? '' : 'rounded-md'} transition-all duration-150`}
                       style={navStyles}
                       onMouseEnter={(e) => {
-                        if (!active && !isNeoBrutalismValue) {
-                          e.target.style.backgroundColor = 'var(--accent)';
-                          e.target.style.color = 'var(--accent-foreground)';
-                        } else if (isNeoBrutalismValue) {
-                          e.target.style.boxShadow = '1px 1px 0px 0px rgba(0,0,0,1)';
-                          e.target.style.transform = 'translate(1px, 1px)';
+                        if (!active) {
+                          const themeType = isNeoBrutalismValue ? 'neo' : isFluentValue ? 'fluent' : isMaterialValue ? 'material' : 'default';
+                          const hoverStyles = computedStyles.getNavItemHoverStyles(themeType);
+                          
+                          // Apply hover styles smoothly
+                          Object.entries(hoverStyles).forEach(([prop, value]) => {
+                            e.target.style.setProperty(prop, value, 'important');
+                          });
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!active && !isNeoBrutalismValue) {
-                          e.target.style.backgroundColor = 'transparent';
-                          e.target.style.color = 'var(--foreground)';
-                        } else if (isNeoBrutalismValue) {
-                          e.target.style.boxShadow = '2px 2px 0px 0px rgba(0,0,0,1)';
-                          e.target.style.transform = 'translate(0px, 0px)';
+                        if (!active) {
+                          // Reset all hover styles to original values
+                          const originalStyles = navStyles;
+                          Object.entries(originalStyles).forEach(([prop, value]) => {
+                            e.target.style.setProperty(prop, value, 'important');
+                          });
+                          
+                          // Ensure transform is reset for neo-brutalism
+                          if (isNeoBrutalismValue && !active) {
+                            e.target.style.setProperty('transform', 'translate(0px, 0px)', 'important');
+                            e.target.style.setProperty('box-shadow', 'none', 'important');
+                          }
                         }
                       }}
                     >
-                      <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                      <Icon className="mr-2 h-4 w-4 flex-shrink-0" />
                       <span className="flex-1">{item.name}</span>
                       {isNeoBrutalismValue ? (
                         <span className={`ml-2 px-2 py-1 text-xs font-black border-2 border-black`}

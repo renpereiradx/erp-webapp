@@ -146,9 +146,7 @@ export const ThemeProvider = ({ children }) => {
       // Actualizar estado
       setThemeState(newThemeId);
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🎨 Theme changed to:', newThemeId);
-      }
+      // Theme changed successfully
 
       return true;
     } catch (error) {
@@ -166,9 +164,6 @@ export const ThemeProvider = ({ children }) => {
     const success = applyThemeToDOM(theme);
     if (success) {
       setIsInitialized(true);
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🎨 Theme initialized:', theme);
-      }
     }
   }, [theme, isInitialized]);
 

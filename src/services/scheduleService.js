@@ -5,7 +5,6 @@
  */
 
 import { apiService } from '@/services/api';
-import { telemetryService } from '@/services/telemetryService';
 import { telemetry } from '@/utils/telemetry';
 // Removed MockDataService import - using real API only
 
@@ -28,8 +27,7 @@ const withRetry = async (fn, attempts = RETRY_ATTEMPTS) => {
 
 export const scheduleService = {
   // Método genérico para obtener horarios - como no hay endpoint general, lanzamos error informativo
-  async getSchedules(params = {}) {
-    console.error('❌ Schedule generic endpoint not available');
+  async getSchedules() {
     throw new Error(
       'El listado general de horarios no está implementado en la API. ' +
       'Use getAvailableSchedules() para consultas específicas de producto y fecha.'
@@ -102,6 +100,54 @@ export const scheduleService = {
         duration: Date.now() - startTime,
         error: error.message,
         operation: 'generateDaily'
+      });
+      throw error;
+    }
+  },
+
+  // 🆕 Generar horarios para HOY (nuevo endpoint v2.2)
+  async generateToday() {
+    const startTime = Date.now();
+    
+    try {
+      const result = await withRetry(async () => {
+        return await apiService.post(`${API_PREFIX}/generate/today`);
+      });
+      
+      telemetry.record('schedules.service.generate_today', {
+        duration: Date.now() - startTime
+      });
+      
+      return result;
+    } catch (error) {
+      telemetry.record('schedules.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'generateToday'
+      });
+      throw error;
+    }
+  },
+
+  // 🆕 Generar horarios para MAÑANA (nuevo endpoint v2.2)
+  async generateTomorrow() {
+    const startTime = Date.now();
+    
+    try {
+      const result = await withRetry(async () => {
+        return await apiService.post(`${API_PREFIX}/generate/tomorrow`);
+      });
+      
+      telemetry.record('schedules.service.generate_tomorrow', {
+        duration: Date.now() - startTime
+      });
+      
+      return result;
+    } catch (error) {
+      telemetry.record('schedules.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'generateTomorrow'
       });
       throw error;
     }

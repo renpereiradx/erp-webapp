@@ -28,19 +28,15 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('🔐 Attempting login with:', formData);
     
     try {
       const result = await login(formData);
-      console.log('🔐 Login result:', result);
       
-      if (result?.success) {
-        console.log('✅ Login successful, should redirect automatically');
-      } else {
-        console.error('❌ Login failed:', result?.message || 'Unknown error');
+      if (!result?.success) {
+        console.error('Login failed:', result?.message || 'Unknown error');
       }
     } catch (error) {
-      console.error('❌ Login error:', error);
+      console.error('Login error:', error);
     }
   };
 

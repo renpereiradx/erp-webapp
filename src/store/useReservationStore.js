@@ -341,6 +341,36 @@ const useReservationStore = create(
         }
       },
 
+      // 🆕 Generar horarios para HOY (nuevo endpoint v2.2)
+      generateTodaySchedules: async () => {
+        try {
+          const result = await scheduleService.generateToday();
+          if (result.success !== false) {
+            telemetry.record('feature.schedules.generate_today');
+            return { success: true, data: result };
+          }
+          throw new Error(result.message || 'Error generando horarios para hoy');
+        } catch (error) {
+          set({ error: error.message || 'Error al generar horarios para hoy' });
+          return { success: false, error: error.message };
+        }
+      },
+
+      // 🆕 Generar horarios para MAÑANA (nuevo endpoint v2.2)
+      generateTomorrowSchedules: async () => {
+        try {
+          const result = await scheduleService.generateTomorrow();
+          if (result.success !== false) {
+            telemetry.record('feature.schedules.generate_tomorrow');
+            return { success: true, data: result };
+          }
+          throw new Error(result.message || 'Error generando horarios para mañana');
+        } catch (error) {
+          set({ error: error.message || 'Error al generar horarios para mañana' });
+          return { success: false, error: error.message };
+        }
+      },
+
       // Generar horarios para fecha específica
       generateSchedulesForDate: async (targetDate) => {
         try {

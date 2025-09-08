@@ -359,12 +359,6 @@ export const MockDataService = {
 };
 
 // Development utilities
-if (MOCK_CONFIG.development.verbose) {
-  console.log('🔧 Mock Data System initialized:', {
-    products: DEMO_PRODUCT_DATA.length,
-    sales: DEMO_SALES_DATA.length,
-    reservations: DEMO_RESERVATIONS_DATA.length,
-    schedules: DEMO_SCHEDULES_DATA.length,
-    purchases: DEMO_PURCHASE_ORDERS_DATA.length
-  });
+if (MOCK_CONFIG.development.verbose && process.env.NODE_ENV === 'development') {
+  // Mock data system initialized
 }
