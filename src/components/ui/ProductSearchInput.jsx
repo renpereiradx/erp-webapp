@@ -44,13 +44,17 @@ const ProductSearchInput = ({
   }, [searchTerm]);
 
   const performSearch = async () => {
-    if (!searchTerm.trim() || searchTerm.trim().length < 2) return;
+    const trimmed = searchTerm.trim();
+    
+    // Validar longitud mínima según tipo de búsqueda
+    const minLength = searchType === 'id' ? 8 : searchType === 'barcode' ? 8 : 3;
+    if (!trimmed || trimmed.length < minLength) return;
     
     setIsSearching(true);
     setShowResults(true);
     
     try {
-      const results = await searchProducts(searchTerm.trim());
+      const results = await searchProducts(trimmed);
       const productsArray = Array.isArray(results?.data) ? results.data : 
                            Array.isArray(results) ? results : 
                            results ? [results] : [];
@@ -69,7 +73,13 @@ const ProductSearchInput = ({
     setSearchTerm(value);
     
     // Auto-search on typing (with debounce effect)
-    if (value.trim().length >= 2) {
+    // Validar longitud mínima según tipo detectado
+    const trimmed = value.trim();
+    const isId = /^[A-Za-z0-9]{8,}$/.test(trimmed);
+    const isBarcode = /^\d{8,14}$/.test(trimmed);
+    const minLength = isId || isBarcode ? 8 : 3;
+    
+    if (trimmed.length >= minLength) {
       const timeoutId = setTimeout(performSearch, 500);
       return () => clearTimeout(timeoutId);
     } else {
@@ -172,7 +182,8 @@ const ProductSearchInput = ({
         <div className="mt-1 text-xs text-muted-foreground">
           💡 Buscando por {searchType === 'id' ? 'ID de producto' : 
                           searchType === 'barcode' ? 'código de barras' : 
-                          'nombre de producto'} ({searchTerm.length} caracteres)
+                          'nombre de producto'} ({searchTerm.length}/
+          {searchType === 'id' ? '8+' : searchType === 'barcode' ? '8+' : '3+'} caracteres)
         </div>
       )}
 

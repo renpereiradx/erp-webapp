@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import DataState from '@/components/ui/DataState';
 import ProductSearchInput from '@/components/ui/ProductSearchInput';
+import ProductAdjustmentCard from '@/components/ui/ProductAdjustmentCard';
 import { useI18n } from '@/lib/i18n';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import useInventoryStore from '@/store/useInventoryStore';
@@ -136,25 +137,21 @@ const InventoryPage = () => {
     }
   };
 
-  const handleSaveAdjustment = async (e) => {
-    e.preventDefault();
-    
-    if (!selectedProduct || !adjustmentData.reason.trim()) {
-      alert('Selecciona un producto y proporciona una razón');
+  const handleSaveAdjustment = async (adjustmentRequest) => {
+    if (!adjustmentRequest || !adjustmentRequest.product_id) {
+      alert('Datos de ajuste inválidos');
       return;
     }
     
-    const result = await createManualAdjustment({
-      product_id: selectedProduct.product_id,
-      new_quantity: adjustmentData.new_quantity,
-      reason: adjustmentData.reason.trim()
-    });
+    const result = await createManualAdjustment(adjustmentRequest);
     
-    if (result.success) {
+    if (result && result.success) {
       setShowModal(false);
       setSelectedProduct(null);
       setAdjustmentData({ new_quantity: 0, reason: '' });
-      alert('Ajuste manual aplicado correctamente');
+      alert(`Ajuste manual aplicado correctamente:\n${adjustmentRequest.reason}\nCantidad: ${adjustmentRequest.new_quantity}`);
+    } else {
+      alert(`Error al aplicar ajuste: ${result?.error || 'Error desconocido'}`);
     }
   };
   
@@ -277,14 +274,14 @@ const InventoryPage = () => {
           
           {/* Modal para ajuste manual unitario */}
           {modalType === 'adjustment' && (
-            <form onSubmit={handleSaveAdjustment} className="space-y-4">
+            <div className="space-y-4">
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                 <div className="flex items-center gap-2 text-yellow-800">
                   <Settings className="w-5 h-5" />
                   <span className="font-medium">Ajuste Manual Unitario</span>
                 </div>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Ajusta el stock de un solo producto. Ideal para correcciones rápidas.
+                  Ajusta el stock de un solo producto. Ideal para correcciones rápidas con control granular.
                 </p>
               </div>
               
@@ -297,68 +294,30 @@ const InventoryPage = () => {
                   selectedProduct={selectedProduct}
                   onClear={() => setSelectedProduct(null)}
                   placeholder="Buscar por ID, nombre o código de barras..."
+                  showSelectedProduct={false}
                 />
               </div>
 
+              {/* Nueva card informativa y completa */}
               {selectedProduct && (
-                <>
-                  <div>
-                    <label className={styles.label()}>
-                      Nueva Cantidad de Stock
-                    </label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={adjustmentData.new_quantity || ''}
-                      onChange={(e) => setAdjustmentData(prev => ({ 
-                        ...prev, 
-                        new_quantity: parseInt(e.target.value) || 0 
-                      }))}
-                      className={styles.input()}
-                      placeholder="Cantidad final deseada"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      💡 Cantidad absoluta que el producto tendrá después del ajuste
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className={styles.label()}>
-                      Razón del Ajuste (Obligatorio)
-                    </label>
-                    <Input
-                      type="text"
-                      value={adjustmentData.reason || ''}
-                      onChange={(e) => setAdjustmentData(prev => ({ 
-                        ...prev, 
-                        reason: e.target.value 
-                      }))}
-                      className={styles.input()}
-                      placeholder="Ej: Productos dañados, error de conteo, etc."
-                      required
-                    />
-                  </div>
-                </>
+                <ProductAdjustmentCard
+                  product={selectedProduct}
+                  onClear={() => setSelectedProduct(null)}
+                  onAdjustmentSubmit={handleSaveAdjustment}
+                  initialQuantity={selectedProduct.current_stock || selectedProduct.stock_quantity || 0}
+                />
               )}
               
-              <div className="flex gap-2">
-                <Button
-                  type="submit"
-                  className={`flex-1 ${styles.button('primary')}`}
-                  disabled={!selectedProduct || !adjustmentData.reason}
-                >
-                  Aplicar Ajuste Manual
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className={`flex-1 ${styles.button('secondary')}`}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
+              {!selectedProduct && (
+                <div className="p-8 text-center text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                  <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-lg font-medium mb-2">Selecciona un producto</p>
+                  <p className="text-sm">
+                    Busca el producto que deseas ajustar usando el campo de búsqueda de arriba
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Modal para inventario masivo */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit, Trash2, Eye, AlertCircle, CheckCircle, DollarSign, Tag, Package, RotateCcw } from 'lucide-react';
+import { Edit, Trash2, Eye, AlertCircle, CheckCircle, DollarSign, Tag, Package, RotateCcw, Barcode, FileText, Hash } from 'lucide-react';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { createProductSummary, getStockStatus } from '@/utils/productUtils';
 import { Button } from '@/components/ui/Button';
@@ -74,8 +74,35 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onReactivat
                 </div>
               ) : (
                 <>
-                  <h3 className={`${styles.header('h3')} line-clamp-2`}>{product.name || t('field.no_name')}</h3>
-                  <p className={`text-xs text-muted-foreground ${styles.label()}`}>{product.code ? product.code : `ID: ${product.id}`}</p>
+                  <h3 className={`${styles.header('h3')} mb-2`} 
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                      title={product.name}>
+                    {product.name || t('field.no_name')}
+                  </h3>
+                  <div className="space-y-1">
+                    <p className={`text-xs text-muted-foreground ${styles.label()} flex items-center gap-1`}>
+                      <Hash className="w-3 h-3" />
+                      {product.code || product.product_id || product.id}
+                    </p>
+                    {product.barcode && (
+                      <p className={`text-xs text-muted-foreground ${styles.label()} flex items-center gap-1`}>
+                        <Barcode className="w-3 h-3" />
+                        {product.barcode}
+                      </p>
+                    )}
+                    {product.product_type && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full font-medium">
+                        <Package className="w-3 h-3" />
+                        {product.product_type.charAt(0).toUpperCase() + product.product_type.slice(1).toLowerCase()}
+                      </span>
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -88,7 +115,7 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onReactivat
         <div className="space-y-2 text-sm">
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">{t('field.category')}</span>
-            <span>{productSummary.category?.name}</span>
+            <span className="font-medium">{productSummary.category?.name || 'Sin categoría'}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">{t('field.price')}</span>
@@ -121,6 +148,40 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onReactivat
               </div>
             )}
           </div>
+          
+          {/* Información adicional */}
+          {product.description && (
+            <div className="pt-2 border-t border-border/30">
+              <div className="flex items-start gap-2">
+                <FileText className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-muted-foreground" 
+                   style={{
+                     display: '-webkit-box',
+                     WebkitLineClamp: 2,
+                     WebkitBoxOrient: 'vertical',
+                     overflow: 'hidden',
+                     textOverflow: 'ellipsis'
+                   }}
+                   title={product.description}>
+                  {product.description}
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {/* Información de fechas si está disponible */}
+          {(product.created_at || product.updated_at) && (
+            <div className="pt-1">
+              <div className="flex justify-between items-center text-xs text-muted-foreground">
+                {product.updated_at && (
+                  <span>Actualizado: {new Date(product.updated_at).toLocaleDateString('es-ES')}</span>
+                )}
+                {product.created_at && (
+                  <span>Creado: {new Date(product.created_at).toLocaleDateString('es-ES')}</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         {errorMsg && <div role="alert" className="mt-2 text-xs text-red-600 font-medium">{errorMsg}</div>}
       </div>

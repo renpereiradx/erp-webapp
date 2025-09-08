@@ -168,6 +168,190 @@ interface InventoryItemInput {
 
 ---
 
+## 🎨 Opciones por Defecto para Frontend
+
+### Valores Predeterminados para `reason`
+Para facilitar la implementación en el frontend, se recomiendan estos valores por defecto:
+
+```typescript
+const DEFAULT_REASONS = {
+  // Ajustes Manuales
+  MANUAL_ADJUSTMENT: {
+    PHYSICAL_COUNT: "Ajuste por conteo físico",
+    DAMAGED_GOODS: "Producto dañado o vencido",
+    INVENTORY_CORRECTION: "Corrección de inventario",
+    SYSTEM_ERROR: "Corrección por error del sistema",
+    THEFT_LOSS: "Pérdida por robo o extravío",
+    SUPPLIER_ERROR: "Error en entrega del proveedor",
+    EXPIRATION: "Producto vencido",
+    BREAKAGE: "Producto roto o dañado",
+    QUALITY_CONTROL: "Rechazo por control de calidad",
+    INITIAL_STOCK: "Configuración de stock inicial",
+    RECLASSIFICATION: "Reclasificación de producto",
+    OTHER: "Otro motivo (especificar en metadata)"
+  },
+  
+  // Transacciones de Stock
+  STOCK_TRANSACTION: {
+    PURCHASE: "Entrada por compra",
+    SALE: "Salida por venta",
+    TRANSFER_IN: "Transferencia entrante",
+    TRANSFER_OUT: "Transferencia saliente",
+    RETURN: "Devolución de cliente",
+    SUPPLIER_RETURN: "Devolución a proveedor",
+    PROMOTION: "Salida por promoción",
+    SAMPLE: "Muestra gratuita",
+    INTERNAL_USE: "Uso interno",
+    DESTRUCTION: "Destrucción de producto"
+  }
+};
+```
+
+### Plantillas de `metadata` por Defecto
+Estructuras recomendadas para diferentes tipos de ajustes:
+
+```typescript
+const DEFAULT_METADATA_TEMPLATES = {
+  // Conteo Físico
+  PHYSICAL_COUNT: {
+    source: "physical_count",
+    operator: "", // A completar por el usuario
+    verification: "single_check", // o "double_check"
+    location: "", // ubicación del conteo
+    counting_method: "manual", // o "scanner"
+    timestamp: new Date().toISOString()
+  },
+  
+  // Producto Dañado
+  DAMAGED_GOODS: {
+    source: "quality_control",
+    damage_type: "", // "expired", "broken", "contaminated", etc.
+    damage_severity: "total", // "partial", "total"
+    disposal_method: "", // "discard", "return_supplier", "repair"
+    photos_taken: false,
+    insurance_claim: false
+  },
+  
+  // Error del Sistema
+  SYSTEM_ERROR: {
+    source: "system_correction",
+    error_type: "", // "sync_error", "calculation_error", etc.
+    original_transaction: "", // ID de transacción original
+    detection_method: "audit", // "audit", "user_report", "automatic"
+    corrected_by: "", // ID del usuario que corrige
+    approval_required: false
+  },
+  
+  // Configuración Inicial
+  INITIAL_STOCK: {
+    source: "initial_setup",
+    migration_date: new Date().toISOString(),
+    data_source: "", // "manual", "import", "system_migration"
+    verified_by: "", // Usuario que verificó
+    cost_basis: "", // Base del costo
+    notes: ""
+  },
+  
+  // Transferencia
+  TRANSFER: {
+    source: "transfer",
+    from_location: "",
+    to_location: "",
+    transfer_type: "internal", // "internal", "external"
+    shipping_method: "",
+    tracking_number: "",
+    expected_delivery: "",
+    carrier: ""
+  },
+  
+  // Genérico/Mínimo
+  DEFAULT: {
+    source: "manual_entry",
+    timestamp: new Date().toISOString(),
+    notes: ""
+  }
+};
+```
+
+### Función Helper para Frontend
+
+```typescript
+// Función helper para generar requests con valores por defecto
+function createAdjustmentRequest(
+  productId: string, 
+  newQuantity: number, 
+  reasonType: keyof typeof DEFAULT_REASONS.MANUAL_ADJUSTMENT,
+  customReason?: string,
+  metadataTemplate?: keyof typeof DEFAULT_METADATA_TEMPLATES,
+  customMetadata?: object
+): ManualAdjustmentRequest {
+  
+  const reason = customReason || DEFAULT_REASONS.MANUAL_ADJUSTMENT[reasonType];
+  const template = metadataTemplate || 'DEFAULT';
+  const baseMetadata = { ...DEFAULT_METADATA_TEMPLATES[template] };
+  
+  return {
+    product_id: productId,
+    new_quantity: newQuantity,
+    reason: reason,
+    metadata: {
+      ...baseMetadata,
+      reason_type: reasonType,
+      ...customMetadata
+    }
+  };
+}
+
+// Ejemplos de uso:
+const physicalCountAdjustment = createAdjustmentRequest(
+  "PROD_ABC_001", 
+  150, 
+  "PHYSICAL_COUNT",
+  undefined, // usar reason por defecto
+  "PHYSICAL_COUNT",
+  { operator: "warehouse_manager", location: "A1-B2" }
+);
+
+const damagedGoodsAdjustment = createAdjustmentRequest(
+  "PROD_DEF_002", 
+  0, 
+  "DAMAGED_GOODS",
+  "Producto vencido - lote XYZ123",
+  "DAMAGED_GOODS",
+  { damage_type: "expired", disposal_method: "discard" }
+);
+```
+
+### Selectores de UI Recomendados
+
+```typescript
+// Para dropdowns en el frontend
+const REASON_OPTIONS = [
+  { value: "PHYSICAL_COUNT", label: "Conteo físico", icon: "📊" },
+  { value: "DAMAGED_GOODS", label: "Producto dañado", icon: "❌" },
+  { value: "INVENTORY_CORRECTION", label: "Corrección de inventario", icon: "🔧" },
+  { value: "SYSTEM_ERROR", label: "Error del sistema", icon: "⚠️" },
+  { value: "THEFT_LOSS", label: "Pérdida/Robo", icon: "🚫" },
+  { value: "SUPPLIER_ERROR", label: "Error del proveedor", icon: "📦" },
+  { value: "EXPIRATION", label: "Producto vencido", icon: "⏰" },
+  { value: "BREAKAGE", label: "Producto roto", icon: "💥" },
+  { value: "QUALITY_CONTROL", label: "Control de calidad", icon: "🔍" },
+  { value: "INITIAL_STOCK", label: "Stock inicial", icon: "🏁" },
+  { value: "OTHER", label: "Otro motivo", icon: "📝" }
+];
+
+const METADATA_TEMPLATES_OPTIONS = [
+  { value: "PHYSICAL_COUNT", label: "Conteo físico" },
+  { value: "DAMAGED_GOODS", label: "Producto dañado" },
+  { value: "SYSTEM_ERROR", label: "Error del sistema" },
+  { value: "INITIAL_STOCK", label: "Stock inicial" },
+  { value: "TRANSFER", label: "Transferencia" },
+  { value: "DEFAULT", label: "Básico" }
+];
+```
+
+---
+
 ## 🔗 Endpoints de la API
 
 **Todos los endpoints requieren autenticación JWT** 🔒
@@ -190,7 +374,46 @@ Content-Type: application/json
   "metadata": {
     "source": "physical_count",
     "operator": "warehouse_manager",
-    "verification": "double_checked"
+    "verification": "double_check",
+    "location": "A1-B2",
+    "counting_method": "scanner",
+    "timestamp": "2025-09-08T14:30:00Z"
+  }
+}
+```
+
+**Ejemplos Adicionales de Requests:**
+
+*Producto Dañado:*
+```json
+{
+  "product_id": "PROD_DEF_002",
+  "new_quantity": 0,
+  "reason": "Producto dañado o vencido",
+  "metadata": {
+    "source": "quality_control",
+    "damage_type": "expired",
+    "damage_severity": "total",
+    "disposal_method": "discard",
+    "batch_number": "LOT_2025_001",
+    "expiration_date": "2025-08-30"
+  }
+}
+```
+
+*Corrección por Error del Sistema:*
+```json
+{
+  "product_id": "PROD_GHI_003",
+  "new_quantity": 75.25,
+  "reason": "Corrección por error del sistema",
+  "metadata": {
+    "source": "system_correction",
+    "error_type": "sync_error",
+    "original_transaction": "TXN_456789",
+    "detection_method": "audit",
+    "corrected_by": "admin_user",
+    "approval_required": true
   }
 }
 ```
@@ -592,12 +815,49 @@ Authorization: Bearer <jwt_token>
 **ManualAdjustmentRequest:**
 - `product_id`: string (no vacío, debe existir en products)
 - `new_quantity`: number (≥ 0)
-- `reason`: string (no vacío)
+- `reason`: string (no vacío) - *Se recomienda usar valores de DEFAULT_REASONS*
+- `metadata`: object (opcional) - *Se recomienda usar plantillas de DEFAULT_METADATA_TEMPLATES*
 
 **StockTransactionRequest:**
 - `product_id`: string (no vacío, debe existir en products)
 - `transaction_type`: string (valores válidos: "PURCHASE", "SALE", "ADJUSTMENT", "INVENTORY", "INITIAL", "LOSS", "FOUND")
 - `quantity_change`: number (puede ser negativo para salidas)
+
+### Validaciones de Frontend Recomendadas
+
+**Para `reason` en Ajustes Manuales:**
+```javascript
+const validateReason = (reason) => {
+  const validReasons = Object.values(DEFAULT_REASONS.MANUAL_ADJUSTMENT);
+  return reason && reason.length >= 5 && reason.length <= 200;
+};
+
+// Validación con sugerencias
+const suggestReason = (reasonType) => {
+  return DEFAULT_REASONS.MANUAL_ADJUSTMENT[reasonType] || 
+         "Especificar motivo del ajuste";
+};
+```
+
+**Para `metadata` estructura mínima:**
+```javascript
+const validateMetadata = (metadata, reasonType) => {
+  const required = {
+    source: true,
+    timestamp: true
+  };
+  
+  // Validaciones específicas por tipo
+  const typeValidations = {
+    PHYSICAL_COUNT: ['operator', 'location'],
+    DAMAGED_GOODS: ['damage_type', 'disposal_method'],
+    SYSTEM_ERROR: ['error_type', 'detection_method']
+  };
+  
+  const requiredFields = typeValidations[reasonType] || [];
+  return requiredFields.every(field => metadata[field]);
+};
+```
 
 ### Tipos de Transacción Válidos
 - **PURCHASE**: Entrada por compra
@@ -682,9 +942,64 @@ Authorization: Bearer <jwt_token>
 
 ### Flujo Típico: Ajuste por Conteo Físico
 1. **Realizar conteo físico** del producto
-2. **POST /manual-adjustment** con la nueva cantidad
+2. **POST /manual_adjustment/** con la nueva cantidad usando valores por defecto:
+```javascript
+const adjustmentRequest = {
+  product_id: "PROD_ABC_001",
+  new_quantity: 150.50,
+  reason: "Ajuste por conteo físico", // Valor por defecto
+  metadata: {
+    source: "physical_count",
+    operator: "warehouse_manager", 
+    verification: "double_check",
+    location: "A1-B2",
+    counting_method: "scanner",
+    timestamp: new Date().toISOString()
+  }
+};
+```
 3. **Sistema crea automáticamente** la transacción de stock correspondiente
-4. **GET /manual-adjustment/history/{product_id}** para verificar el historial
+4. **GET /manual_adjustment/product/{product_id}/history** para verificar el historial
+
+### Flujo Típico: Producto Dañado
+1. **Detectar producto dañado** durante inspección
+2. **POST /manual_adjustment/** con cantidad 0:
+```javascript
+const damagedProductRequest = {
+  product_id: "PROD_DEF_002",
+  new_quantity: 0,
+  reason: "Producto dañado o vencido", // Valor por defecto
+  metadata: {
+    source: "quality_control",
+    damage_type: "expired",
+    damage_severity: "total",
+    disposal_method: "discard",
+    batch_number: "LOT_2025_001"
+  }
+};
+```
+
+### Flujo con Helper Function (Frontend)
+```javascript
+// Usando la función helper recomendada
+const adjustment1 = createAdjustmentRequest(
+  "PROD_ABC_001", 
+  150, 
+  "PHYSICAL_COUNT",
+  undefined, // usar reason por defecto
+  "PHYSICAL_COUNT",
+  { operator: "john_doe", location: "warehouse_a" }
+);
+
+const adjustment2 = createAdjustmentRequest(
+  "PROD_DEF_002", 
+  0, 
+  "DAMAGED_GOODS",
+  "Producto vencido - revisar lote completo",
+  "DAMAGED_GOODS",
+  { damage_type: "expired", batch_affected: "LOT_001" }
+);
+```
 
 ### Flujo Típico: Inventario Masivo
 1. **Realizar conteo físico** de múltiples productos
@@ -710,7 +1025,7 @@ Authorization: Bearer <jwt_token>
 
 ---
 
-**Última actualización**: 6 de Septiembre de 2025  
-**Versión**: 2.1 (Completamente Optimizada)  
-**Estado**: ✅ Sistema completamente limpio y optimizado + manage_inventory integrado  
-**Basado en**: Nueva implementación con funciones optimizadas y consistencia total
+**Última actualización**: 8 de Septiembre de 2025  
+**Versión**: 2.2 (Frontend Defaults + Completamente Optimizada)  
+**Estado**: ✅ Sistema completamente limpio y optimizado + Valores por defecto para Frontend  
+**Basado en**: Nueva implementación con funciones optimizadas, consistencia total y helpers para frontend

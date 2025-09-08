@@ -7,7 +7,7 @@ import BusinessManagementAPI from './BusinessManagementAPI';
 
 // Configuración del cliente API
 const apiConfig = {
-  baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5050',
+  baseUrl: (import.meta.env.VITE_API_URL || 'http://localhost:5050').replace(/\/+$/, ''),
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT) || 10000,
   defaultHeaders: {
     'Content-Type': 'application/json'

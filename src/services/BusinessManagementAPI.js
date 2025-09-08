@@ -357,7 +357,12 @@ class BusinessManagementAPI {
   }
 
   async searchProductsByNameEnriched(name, options = {}) {
-    // Método específico para obtener datos enriquecidos por nombre
+    // Validar longitud mínima antes de hacer la petición
+    if (!name || name.trim().length < 3) {
+      console.warn('Término de búsqueda muy corto, se requieren al menos 3 caracteres para búsqueda por nombre');
+      return [];
+    }
+    
     try {
       const products = await this.makeRequest(`/products/name/${encodeURIComponent(name)}`, options);
       
@@ -372,6 +377,13 @@ class BusinessManagementAPI {
       if (error.name === 'AbortError') {
         return [];
       }
+      
+      // Para errores 500, no mostrar mensaje de error confuso al usuario
+      if (error.status === 500 && name.trim().length < 3) {
+        console.warn('Error del servidor por término de búsqueda muy corto:', name);
+        return [];
+      }
+      
       console.warn('Error en búsqueda enriquecida por nombre:', error.message);
       return [];
     }

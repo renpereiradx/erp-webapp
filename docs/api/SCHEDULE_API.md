@@ -90,6 +90,8 @@ interface GenerateSchedulesForNextNDaysRequest {
 | `GET` | `/schedules/product/{productId}` | No | **NUEVO** - Horarios de un producto (paginado) |
 | `PUT` | `/schedules/{id}/availability` | Sí | Actualizar disponibilidad ⚠️ |
 | `POST` | `/schedules/generate/daily` | Sí | Generar horarios diarios |
+| `POST` | `/schedules/generate/today` | Sí | **NUEVO** - Generar horarios para HOY |
+| `POST` | `/schedules/generate/tomorrow` | Sí | **NUEVO** - Generar horarios para MAÑANA |
 | `POST` | `/schedules/generate/date` | Sí | Generar para fecha específica |
 | `POST` | `/schedules/generate/next-days` | Sí | Generar para próximos N días |
 
@@ -340,7 +342,49 @@ Authorization: Bearer <jwt_token>
 - `401`: "Invalid token" - Token inválido o faltante
 - `500`: Error interno del servidor
 
-### 9. Generar Horarios para Fecha Específica 🔒
+### 9. 🆕 Generar Horarios para HOY 🔒
+```http
+POST /schedules/generate/today
+Authorization: Bearer <jwt_token>
+```
+
+**Descripción:** Genera horarios para la fecha actual (HOY) en el rango de 14:00-23:00.
+
+**Body:** Sin body requerido
+
+**Response:**
+```json
+{
+  "message": "Schedules generated successfully for today"
+}
+```
+
+**Errores:**
+- `401`: "Invalid token" - Token inválido o faltante
+- `500`: Error interno del servidor
+
+### 10. 🆕 Generar Horarios para MAÑANA 🔒
+```http
+POST /schedules/generate/tomorrow
+Authorization: Bearer <jwt_token>
+```
+
+**Descripción:** Genera horarios para mañana en el rango de 14:00-23:00.
+
+**Body:** Sin body requerido
+
+**Response:**
+```json
+{
+  "message": "Schedules generated successfully for tomorrow"
+}
+```
+
+**Errores:**
+- `401`: "Invalid token" - Token inválido o faltante
+- `500`: Error interno del servidor
+
+### 11. Generar Horarios para Fecha Específica 🔒
 ```http
 POST /schedules/generate/date
 Authorization: Bearer <jwt_token>
@@ -366,7 +410,7 @@ Content-Type: application/json
 - `401`: "Invalid token" - Token inválido o faltante
 - `500`: Error interno del servidor
 
-### 10. Generar Horarios para Próximos N Días 🔒
+### 12. Generar Horarios para Próximos N Días 🔒
 ```http
 POST /schedules/generate/next-days
 Authorization: Bearer <jwt_token>
@@ -448,6 +492,28 @@ Content-Type: application/json
 
 ---
 
+## ⏰ Horarios de Operación
+
+### Rango de Servicios
+**Horario de funcionamiento**: 14:00 - 23:00 (9 horarios por día)
+
+**Slots disponibles**:
+- 14:00-15:00, 15:00-16:00, 16:00-17:00, 17:00-18:00
+- 18:00-19:00, 19:00-20:00, 20:00-21:00, 21:00-22:00  
+- **22:00-23:00** ← Último horario del día
+
+### Generación Automática
+Los horarios se generan automáticamente para:
+- **Cancha 1**: `BT_Cancha_1_xyz123abc` (Cancha de Beach Tennis 1)
+- **Cancha 2**: `BT_Cancha_2_def456ghi` (Cancha de Beach Tennis 2)
+
+Cada horario:
+- ✅ Duración: 1 hora exacta
+- ✅ Disponibilidad inicial: `true`
+- ✅ Generación inteligente: No duplica horarios existentes
+
+---
+
 ## 🎯 Casos de Uso Principales
 
 ### Frontend de Reservas
@@ -491,7 +557,23 @@ const paginatedSchedules = await fetch('/schedules/product/BT_Cancha_1_xyz123abc
 
 ### Generación de Horarios
 ```javascript
-// Generar horarios para mañana
+// Generar horarios para HOY (nueva funcionalidad)
+await fetch('/schedules/generate/today', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ' + token
+  }
+});
+
+// Generar horarios para MAÑANA (nueva funcionalidad)
+await fetch('/schedules/generate/tomorrow', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ' + token
+  }
+});
+
+// Generar horarios para fecha específica
 await fetch('/schedules/generate/date', {
   method: 'POST',
   headers: {
@@ -500,25 +582,35 @@ await fetch('/schedules/generate/date', {
   },
   body: JSON.stringify({ target_date: '2024-01-16' })
 });
+
+// Generar horarios diarios (usa función de base de datos)
+await fetch('/schedules/generate/daily', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ' + token
+  }
+});
 ```
 
 ---
 
 ## 📝 Notas Técnicas
 
-1. **Nuevos Endpoints**: Se agregaron 4 endpoints principales para consulta de horarios sin autenticación
-2. **Respuestas Enriquecidas**: Los endpoints `/schedules/available` y `/schedules/today` incluyen nombre del producto y mensajes informativos
-3. **Sin Arrays Vacíos como Errores**: Los endpoints retornan arrays vacíos `[]` en lugar de errores 404
-4. **Servicios**: Los endpoints de generación usan `services.NewScheduleService(repository.GetRepository())`
-5. **Repositorio**: Los endpoints de consulta llaman directamente a `repository.*`
-6. **Content-Type**: Siempre se establece como `application/json` en responses
-7. **Errores**: Se retornan con `http.Error()` y detalles específicos
-8. **IDs**: Se procesan como strings desde la URL y se convierten según sea necesario
-9. **Paginación**: Valores por defecto optimizados para horarios (50 en lugar de 20)
-10. **⚠️ Orden de Rutas**: Las rutas específicas (`/available`, `/today`) se declaran antes que las genéricas (`/{id}`) para evitar conflictos de routing
+1. **Nuevos Endpoints**: Se agregaron 6 endpoints principales (4 de consulta sin autenticación, 2 de generación con autenticación)
+2. **Horarios Extendidos**: Rango operativo ampliado de 14:00-23:00 (9 horarios diarios por cancha)
+3. **Generación Granular**: Nuevos endpoints `/generate/today` y `/generate/tomorrow` para control específico
+4. **Respuestas Enriquecidas**: Los endpoints `/schedules/available` y `/schedules/today` incluyen nombre del producto y mensajes informativos
+5. **Sin Arrays Vacíos como Errores**: Los endpoints retornan arrays vacíos `[]` en lugar de errores 404
+6. **Servicios**: Los endpoints de generación usan `services.NewScheduleService(repository.GetRepository())`
+7. **Repositorio**: Los endpoints de consulta llaman directamente a `repository.*`
+8. **Content-Type**: Siempre se establece como `application/json` en responses
+9. **Errores**: Se retornan con `http.Error()` y detalles específicos
+10. **IDs**: Se procesan como strings desde la URL y se convierten según sea necesario
+11. **Paginación**: Valores por defecto optimizados para horarios (50 en lugar de 20)
+12. **⚠️ Orden de Rutas**: Las rutas específicas (`/available`, `/today`) se declaran antes que las genéricas (`/{id}`) para evitar conflictos de routing
 
 ---
 
-**Última actualización**: 5 de Septiembre de 2025  
-**Versión**: 2.1  
-**Basado en**: handlers/schedule.go, routes/routes.go, database/postgres/schedule.go, database/postgres/schedule_today.go
+**Última actualización**: 8 de Septiembre de 2025  
+**Versión**: 2.2  
+**Basado en**: handlers/schedule.go, routes/routes.go, database/postgres/schedule.go
