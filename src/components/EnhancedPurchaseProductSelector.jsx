@@ -37,7 +37,9 @@ const EnhancedPurchaseProductSelector = ({
   className = ''
 }) => {
   // Para MVP - estilos fijos sin hooks problemáticos
-  const styles = {};
+  const styles = {
+    card: (classes = '') => `border rounded-lg shadow-sm bg-white ${classes}`
+  };
   // Estado local
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState([]);

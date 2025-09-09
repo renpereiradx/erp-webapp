@@ -21,7 +21,8 @@ const SupplierSelector = ({
   onlyActive = true,
   required = false,
   className = '',
-  error = null
+  error = null,
+  'data-testid': dataTestId = 'supplier-selector'
 }) => {
   // Para MVP - estilos fijos sin hooks problemáticos
   const themeStyles = { styles: { input: () => 'input-class', card: (classes = '') => `card-class ${classes}`, label: () => 'label-class' } };
@@ -101,7 +102,7 @@ const SupplierSelector = ({
   const fallbackSelectId = `supplier-select-${generatedId}`;
 
   return (
-    <div className={containerClasses} data-testid={props?.['data-testid'] ?? 'supplier-selector'}>
+    <div className={containerClasses} data-testid={dataTestId}>
       {/* Label */}
       <label className={styles.label()} htmlFor={fallbackSelectId} data-testid="supplier-label">
         <Building className="inline w-4 h-4 mr-2" />
