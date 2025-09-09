@@ -25,6 +25,7 @@ import useClientStore from '@/store/useClientStore';
 
 // Componentes
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import ClientSelector from '@/components/ClientSelector';
 
 // Componente de pasos del flujo de reserva
 const ReservationSteps = ({ currentStep, steps }) => {
@@ -715,130 +716,42 @@ const Reservations = () => {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Grid de servicios como cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Servicios conocidos del sistema */}
-                    {[
-                      { id: 'BT_Cancha_1_xyz123abc', name: 'Cancha de Beach Tennis 1', description: 'Cancha principal con vista al mar', price: '50' },
-                      { id: 'BT_Cancha_2_def456ghi', name: 'Cancha de Beach Tennis 2', description: 'Cancha secundaria techada', price: '45' }
-                    ].map((service) => (
-                      <Card 
-                        key={service.id}
-                        className={`cursor-pointer transition-all border-2 ${
-                          selectedProduct?.id === service.id 
-                            ? 'shadow-lg scale-105' 
-                            : 'hover:shadow-md hover:scale-102'
-                        }`}
-                        style={{
-                          borderColor: selectedProduct?.id === service.id 
-                            ? 'var(--md-primary, rgb(103, 80, 164))' 
-                            : 'var(--md-outline-variant, rgb(202, 196, 208))',
-                          background: selectedProduct?.id === service.id 
-                            ? 'var(--md-primary-container, rgb(233, 221, 255))' 
-                            : 'var(--md-surface, rgb(254, 247, 255))'
-                        }}
-                        onClick={() => handleSelectProduct({
-                          id: service.id,
-                          name: service.name,
-                          type: 'service',
-                          reservable: true,
-                          price: service.price
-                        })}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-lg mb-2" style={{
-                                color: selectedProduct?.id === service.id 
-                                  ? 'var(--md-on-primary-container, rgb(33, 0, 93))' 
-                                  : 'var(--md-on-surface, rgb(29, 27, 32))'
-                              }}>
-                                {service.name}
-                              </h3>
-                              <p className="text-sm mb-3" style={{
-                                color: selectedProduct?.id === service.id 
-                                  ? 'var(--md-on-primary-container, rgb(33, 0, 93))' 
-                                  : 'var(--md-on-surface-variant, rgb(73, 69, 79))'
-                              }}>
-                                {service.description}
-                              </p>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="secondary" className="text-xs">
-                                  ${service.price}/hora
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                  Disponible
-                                </Badge>
-                              </div>
-                            </div>
-                            {selectedProduct?.id === service.id && (
-                              <CheckCircle className="w-6 h-6 text-primary" />
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-
-                    {/* Servicios cargados dinámicamente si existen */}
-                    {products && products.length > 0 && products
-                      .filter(product => product.type === 'service' || product.reservable)
-                      .map((product) => (
-                        <Card 
-                          key={product.id}
-                          className={`cursor-pointer transition-all border-2 ${
-                            selectedProduct?.id === product.id 
-                              ? 'shadow-lg scale-105' 
-                              : 'hover:shadow-md hover:scale-102'
-                          }`}
-                          style={{
-                            borderColor: selectedProduct?.id === product.id 
-                              ? 'var(--md-primary, rgb(103, 80, 164))' 
-                              : 'var(--md-outline-variant, rgb(202, 196, 208))',
-                            background: selectedProduct?.id === product.id 
-                              ? 'var(--md-primary-container, rgb(233, 221, 255))' 
-                              : 'var(--md-surface, rgb(254, 247, 255))'
-                          }}
-                          onClick={() => handleSelectProduct(product)}
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-lg mb-2" style={{
-                                  color: selectedProduct?.id === product.id 
-                                    ? 'var(--md-on-primary-container, rgb(33, 0, 93))' 
-                                    : 'var(--md-on-surface, rgb(29, 27, 32))'
-                                }}>
-                                  {product.name}
-                                </h3>
-                                <div className="flex items-center gap-2">
-                                  {product.price && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      ${product.price}/hora
-                                    </Badge>
-                                  )}
-                                  <Badge variant="outline" className="text-xs">
-                                    Servicio
-                                  </Badge>
-                                </div>
-                              </div>
-                              {selectedProduct?.id === product.id && (
-                                <CheckCircle className="w-6 h-6 text-primary" />
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
-                    }
+                  {/* Botón para abrir modal de selección de servicios */}
+                  <div className="text-center">
+                    <Button
+                      onClick={() => setShowServiceModal(true)}
+                      variant="outline"
+                      size="lg"
+                      className="w-full h-16 text-lg"
+                    >
+                      <Search className="w-6 h-6 mr-3" />
+                      Buscar y Seleccionar Servicio
+                    </Button>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Haz clic para abrir el catálogo completo de servicios
+                    </p>
                   </div>
-
-                  {/* Mensaje si no hay datos */}
-                  {(!products || products.length === 0) && (
-                    <div className="text-center py-6 text-muted-foreground">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                        <AlertCircle className="w-8 h-8" />
+                  
+                  {/* Mostrar servicio seleccionado */}
+                  {selectedProduct && (
+                    <div className="p-4 rounded-lg border-2" style={{
+                      background: 'var(--md-primary-container, rgba(233, 221, 255, 0.5))',
+                      borderColor: 'var(--md-primary, rgb(103, 80, 164))'
+                    }}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                          <MapPin className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-primary text-lg">
+                            {selectedProduct.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Servicio seleccionado • ${selectedProduct.price || 'Precio a consultar'}/hora
+                          </p>
+                        </div>
+                        <CheckCircle className="w-6 h-6 text-primary" />
                       </div>
-                      <p className="font-medium">No hay servicios dinámicos cargados</p>
-                      <p className="text-sm">Usando servicios predeterminados del sistema</p>
                     </div>
                   )}
                 </CardContent>
@@ -1001,52 +914,35 @@ const Reservations = () => {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {clients && clients.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                      {clients.map((client) => (
-                        <Card
-                          key={client.id}
-                          className={`cursor-pointer transition-all border-2 ${
-                            selectedClient?.id === client.id 
-                              ? 'shadow-lg scale-105' 
-                              : 'hover:shadow-md hover:scale-102'
-                          }`}
-                          style={{
-                            borderColor: selectedClient?.id === client.id 
-                              ? 'var(--md-primary, rgb(103, 80, 164))' 
-                              : 'var(--md-outline-variant, rgb(202, 196, 208))',
-                            background: selectedClient?.id === client.id 
-                              ? 'var(--md-primary-container, rgb(233, 221, 255))' 
-                              : 'var(--md-surface, rgb(254, 247, 255))'
-                          }}
-                          onClick={() => handleSelectClient(client)}
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <User className="w-5 h-5 text-primary" />
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold">{client.name}</h3>
-                                  <p className="text-sm text-muted-foreground">{client.email}</p>
-                                </div>
-                              </div>
-                              {selectedClient?.id === client.id && (
-                                <CheckCircle className="w-6 h-6 text-primary" />
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                        <AlertCircle className="w-8 h-8" />
+                  {/* Reutilizar ClientSelector existente - escalable para miles de clientes */}
+                  <div data-testid="client-selector">
+                    <ClientSelector
+                      selectedClient={selectedClient}
+                      onClientChange={handleSelectClient}
+                      required={true}
+                    />
+                  </div>
+                  
+                  {/* Mostrar información del cliente seleccionado */}
+                  {selectedClient && (
+                    <div className="p-4 rounded-lg border-2" style={{
+                      background: 'var(--md-primary-container, rgba(233, 221, 255, 0.5))',
+                      borderColor: 'var(--md-primary, rgb(103, 80, 164))'
+                    }}>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                          <User className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-primary">
+                            {selectedClient.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            Cliente seleccionado para la reserva
+                          </p>
+                        </div>
+                        <CheckCircle className="w-6 h-6 text-primary ml-auto" />
                       </div>
-                      <p className="font-medium">No hay clientes disponibles</p>
-                      <p className="text-sm">Asegúrate de haber cargado los datos primero</p>
                     </div>
                   )}
 
@@ -1128,12 +1024,7 @@ const Reservations = () => {
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Fecha</p>
-                            <p className="font-semibold">{selectedDate.toLocaleDateString('es-ES', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}</p>
+                            <p className="font-semibold">{selectedDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                           </div>
                         </div>
                       </div>
@@ -1248,10 +1139,7 @@ const Reservations = () => {
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4" />
                             <span>
-                              <strong>Hora:</strong> {new Date(reservation.start_time).toLocaleTimeString('es-ES', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
+                              <strong>Hora:</strong> {new Date(reservation.start_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
                           <div>
@@ -1939,11 +1827,7 @@ const Reservations = () => {
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Calendar className="w-3 h-3" />
                             <span>
-                              {new Date(schedule.start_time).toLocaleDateString('es-ES', {
-                                weekday: 'long',
-                                day: 'numeric',
-                                month: 'short'
-                              })}
+                              {new Date(schedule.start_time).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' })}
                             </span>
                           </div>
                         </div>
