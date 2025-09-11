@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { EnhancedModal } from '@/components/ui/EnhancedModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useI18n } from '@/lib/i18n';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
@@ -200,73 +200,84 @@ const CashRegister = () => {
             {isActiveCashRegisterLoading ? 'Cargando...' : 'Cargar Caja Activa'}
           </Button>
           
-          <Dialog open={openCashRegisterDialog} onOpenChange={setOpenCashRegisterDialog}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusIcon className="w-4 h-4 mr-2" />
-                Abrir Caja
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Abrir Nueva Caja Registradora</DialogTitle>
-                <DialogDescription>
-                  Configure los datos iniciales para la nueva caja registradora
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleOpenCashRegister} className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Nombre de la Caja</Label>
-                  <Input
-                    id="name"
-                    value={openCashRegisterForm.name}
-                    onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Ej: Caja Principal"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="initial_balance">Balance Inicial</Label>
-                  <Input
-                    id="initial_balance"
-                    type="number"
-                    step="0.01"
-                    value={openCashRegisterForm.initial_balance}
-                    onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, initial_balance: e.target.value }))}
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="location">Ubicación</Label>
-                  <Input
-                    id="location"
-                    value={openCashRegisterForm.location}
-                    onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, location: e.target.value }))}
-                    placeholder="Ej: Mostrador Principal"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="notes">Notas</Label>
-                  <Textarea
-                    id="notes"
-                    value={openCashRegisterForm.notes}
-                    onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Notas adicionales..."
-                    rows={3}
-                  />
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setOpenCashRegisterDialog(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit" disabled={isOpeningCashRegister}>
-                    {isOpeningCashRegister ? 'Abriendo...' : 'Abrir Caja'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setOpenCashRegisterDialog(true)}>
+            <PlusIcon className="w-4 h-4 mr-2" />
+            Abrir Caja
+          </Button>
+
+          <EnhancedModal
+            isOpen={openCashRegisterDialog}
+            onClose={() => setOpenCashRegisterDialog(false)}
+            title="Abrir Nueva Caja Registradora"
+            subtitle="Configure los datos iniciales para la nueva caja registradora"
+            size="md"
+            variant="default"
+            loading={isOpeningCashRegister}
+            testId="open-cash-register-modal"
+            footer={
+              <div className="flex gap-3 justify-end">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setOpenCashRegisterDialog(false)}
+                  disabled={isOpeningCashRegister}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  onClick={handleOpenCashRegister}
+                  disabled={isOpeningCashRegister}
+                >
+                  {isOpeningCashRegister ? 'Abriendo...' : 'Abrir Caja'}
+                </Button>
+              </div>
+            }
+          >
+            <form onSubmit={handleOpenCashRegister} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Nombre de la Caja</Label>
+                <Input
+                  id="name"
+                  value={openCashRegisterForm.name}
+                  onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Ej: Caja Principal"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="initial_balance">Balance Inicial</Label>
+                <Input
+                  id="initial_balance"
+                  type="number"
+                  step="0.01"
+                  value={openCashRegisterForm.initial_balance}
+                  onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, initial_balance: e.target.value }))}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="location">Ubicación</Label>
+                <Input
+                  id="location"
+                  value={openCashRegisterForm.location}
+                  onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="Ej: Mostrador Principal"
+                />
+              </div>
+              <div>
+                <Label htmlFor="notes">Notas</Label>
+                <Textarea
+                  id="notes"
+                  value={openCashRegisterForm.notes}
+                  onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Notas adicionales..."
+                  rows={3}
+                />
+              </div>
+            </form>
+          </EnhancedModal>
         </div>
       </div>
 
@@ -306,81 +317,92 @@ const CashRegister = () => {
             </div>
             
             <div className="flex gap-2 flex-wrap">
-              <Dialog open={movementDialog} onOpenChange={setMovementDialog}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <DollarSign className="w-4 h-4 mr-2" />
-                    Registrar Movimiento
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Registrar Movimiento</DialogTitle>
-                    <DialogDescription>
-                      Registre un movimiento manual de efectivo
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleRegisterMovement} className="space-y-4">
-                    <div>
-                      <Label htmlFor="movement_type">Tipo de Movimiento</Label>
-                      <Select 
-                        value={movementForm.movement_type} 
-                        onValueChange={(value) => setMovementForm(prev => ({ ...prev, movement_type: value }))}
-                        required
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccione el tipo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="INCOME">Ingreso</SelectItem>
-                          <SelectItem value="EXPENSE">Gasto</SelectItem>
-                          <SelectItem value="ADJUSTMENT">Ajuste</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="amount">Monto</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        step="0.01"
-                        value={movementForm.amount}
-                        onChange={(e) => setMovementForm(prev => ({ ...prev, amount: e.target.value }))}
-                        placeholder="0.00"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="concept">Concepto</Label>
-                      <Input
-                        id="concept"
-                        value={movementForm.concept}
-                        onChange={(e) => setMovementForm(prev => ({ ...prev, concept: e.target.value }))}
-                        placeholder="Descripción del movimiento"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="movement_notes">Notas</Label>
-                      <Textarea
-                        id="movement_notes"
-                        value={movementForm.notes}
-                        onChange={(e) => setMovementForm(prev => ({ ...prev, notes: e.target.value }))}
-                        placeholder="Notas adicionales..."
-                        rows={2}
-                      />
-                    </div>
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setMovementDialog(false)}>
-                        Cancelar
-                      </Button>
-                      <Button type="submit" disabled={isRegisteringMovement}>
-                        {isRegisteringMovement ? 'Registrando...' : 'Registrar'}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <Button variant="outline" onClick={() => setMovementDialog(true)}>
+                <DollarSign className="w-4 h-4 mr-2" />
+                Registrar Movimiento
+              </Button>
+
+              <EnhancedModal
+                isOpen={movementDialog}
+                onClose={() => setMovementDialog(false)}
+                title="Registrar Movimiento"
+                subtitle="Registre un movimiento manual de efectivo"
+                size="md"
+                variant="default"
+                loading={isRegisteringMovement}
+                testId="register-movement-modal"
+                footer={
+                  <div className="flex gap-3 justify-end">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setMovementDialog(false)}
+                      disabled={isRegisteringMovement}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      onClick={handleRegisterMovement}
+                      disabled={isRegisteringMovement}
+                    >
+                      {isRegisteringMovement ? 'Registrando...' : 'Registrar'}
+                    </Button>
+                  </div>
+                }
+              >
+                <form onSubmit={handleRegisterMovement} className="space-y-4">
+                  <div>
+                    <Label htmlFor="movement_type">Tipo de Movimiento</Label>
+                    <Select 
+                      value={movementForm.movement_type} 
+                      onValueChange={(value) => setMovementForm(prev => ({ ...prev, movement_type: value }))}
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccione el tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="INCOME">Ingreso</SelectItem>
+                        <SelectItem value="EXPENSE">Gasto</SelectItem>
+                        <SelectItem value="ADJUSTMENT">Ajuste</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="amount">Monto</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      value={movementForm.amount}
+                      onChange={(e) => setMovementForm(prev => ({ ...prev, amount: e.target.value }))}
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="concept">Concepto</Label>
+                    <Input
+                      id="concept"
+                      value={movementForm.concept}
+                      onChange={(e) => setMovementForm(prev => ({ ...prev, concept: e.target.value }))}
+                      placeholder="Descripción del movimiento"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="movement_notes">Notas</Label>
+                    <Textarea
+                      id="movement_notes"
+                      value={movementForm.notes}
+                      onChange={(e) => setMovementForm(prev => ({ ...prev, notes: e.target.value }))}
+                      placeholder="Notas adicionales..."
+                      rows={2}
+                    />
+                  </div>
+                </form>
+              </EnhancedModal>
 
               <Button variant="outline" onClick={handleLoadMovements} disabled={isMovementsLoading}>
                 <Clock className="w-4 h-4 mr-2" />
@@ -392,57 +414,69 @@ const CashRegister = () => {
                 Ver Resumen
               </Button>
 
-              <Dialog open={closeCashRegisterDialog} onOpenChange={setCloseCashRegisterDialog}>
-                <DialogTrigger asChild>
-                  <Button variant="destructive">
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Cerrar Caja
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Cerrar Caja Registradora</DialogTitle>
-                    <DialogDescription>
-                      Confirme el balance final y cierre la caja registradora
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleCloseCashRegister} className="space-y-4">
-                    <div>
-                      <Label htmlFor="final_balance">Balance Final Físico</Label>
-                      <Input
-                        id="final_balance"
-                        type="number"
-                        step="0.01"
-                        value={closeCashRegisterForm.final_balance}
-                        onChange={(e) => setCloseCashRegisterForm(prev => ({ ...prev, final_balance: e.target.value }))}
-                        placeholder={activeCashRegister.current_balance.toString()}
-                        required
-                      />
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Balance del sistema: ${activeCashRegister.current_balance}
-                      </p>
-                    </div>
-                    <div>
-                      <Label htmlFor="close_notes">Notas de Cierre</Label>
-                      <Textarea
-                        id="close_notes"
-                        value={closeCashRegisterForm.notes}
-                        onChange={(e) => setCloseCashRegisterForm(prev => ({ ...prev, notes: e.target.value }))}
-                        placeholder="Observaciones del cierre..."
-                        rows={3}
-                      />
-                    </div>
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setCloseCashRegisterDialog(false)}>
-                        Cancelar
-                      </Button>
-                      <Button type="submit" variant="destructive" disabled={isClosingCashRegister}>
-                        {isClosingCashRegister ? 'Cerrando...' : 'Cerrar Caja'}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <Button variant="destructive" onClick={() => setCloseCashRegisterDialog(true)}>
+                <XCircle className="w-4 h-4 mr-2" />
+                Cerrar Caja
+              </Button>
+
+              <EnhancedModal
+                isOpen={closeCashRegisterDialog}
+                onClose={() => setCloseCashRegisterDialog(false)}
+                title="Cerrar Caja Registradora"
+                subtitle="Confirme el balance final y cierre la caja registradora"
+                size="md"
+                variant="warning"
+                loading={isClosingCashRegister}
+                testId="close-cash-register-modal"
+                footer={
+                  <div className="flex gap-3 justify-end">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setCloseCashRegisterDialog(false)}
+                      disabled={isClosingCashRegister}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      variant="destructive" 
+                      onClick={handleCloseCashRegister}
+                      disabled={isClosingCashRegister}
+                    >
+                      {isClosingCashRegister ? 'Cerrando...' : 'Cerrar Caja'}
+                    </Button>
+                  </div>
+                }
+              >
+                <form onSubmit={handleCloseCashRegister} className="space-y-4">
+                  <div>
+                    <Label htmlFor="final_balance">Balance Final Físico</Label>
+                    <Input
+                      id="final_balance"
+                      type="number"
+                      step="0.01"
+                      value={closeCashRegisterForm.final_balance}
+                      onChange={(e) => setCloseCashRegisterForm(prev => ({ ...prev, final_balance: e.target.value }))}
+                      placeholder={activeCashRegister?.current_balance?.toString() || "0.00"}
+                      required
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Balance del sistema: ${activeCashRegister?.current_balance || 0}
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="close_notes">Notas de Cierre</Label>
+                    <Textarea
+                      id="close_notes"
+                      value={closeCashRegisterForm.notes}
+                      onChange={(e) => setCloseCashRegisterForm(prev => ({ ...prev, notes: e.target.value }))}
+                      placeholder="Observaciones del cierre..."
+                      rows={3}
+                    />
+                  </div>
+                </form>
+              </EnhancedModal>
             </div>
           </CardContent>
         </Card>
@@ -546,82 +580,84 @@ const CashRegister = () => {
         </CardContent>
       </Card>
 
-      {/* Summary Dialog */}
-      <Dialog open={summaryDialog} onOpenChange={setSummaryDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Resumen de Caja</DialogTitle>
-            <DialogDescription>
-              Detalles completos de la caja registradora
-            </DialogDescription>
-          </DialogHeader>
-          {cashRegisterSummary && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Ingresos</p>
-                  <p className="text-lg font-semibold text-green-600">
-                    ${cashRegisterSummary.total_income}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Gastos</p>
-                  <p className="text-lg font-semibold text-red-600">
-                    ${cashRegisterSummary.total_expenses}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Ventas</p>
-                  <p className="text-lg font-semibold text-blue-600">
-                    ${cashRegisterSummary.total_sales}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Movimientos</p>
-                  <p className="text-lg font-semibold">
-                    {cashRegisterSummary.total_movements}
-                  </p>
-                </div>
-              </div>
-              
-              {cashRegisterSummary.expected_balance && (
-                <div className="border-t pt-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Balance Esperado</p>
-                      <p className="text-xl font-bold">
-                        ${cashRegisterSummary.expected_balance}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Balance Actual</p>
-                      <p className="text-xl font-bold">
-                        ${cashRegisterSummary.actual_balance}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {cashRegisterSummary.variance !== 0 && (
-                    <div className="mt-4">
-                      <p className="text-sm text-muted-foreground">Diferencia</p>
-                      <p className={`text-xl font-bold ${
-                        cashRegisterSummary.variance >= 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        ${cashRegisterSummary.variance}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-          <DialogFooter>
+      {/* Summary Modal */}
+      <EnhancedModal
+        isOpen={summaryDialog}
+        onClose={() => setSummaryDialog(false)}
+        title="Resumen de Caja"
+        subtitle="Detalles completos de la caja registradora"
+        size="lg"
+        variant="info"
+        testId="cash-register-summary-modal"
+        footer={
+          <div className="flex justify-end">
             <Button onClick={() => setSummaryDialog(false)}>
               Cerrar
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      >
+        {cashRegisterSummary && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Ingresos</p>
+                <p className="text-lg font-semibold text-green-600">
+                  ${cashRegisterSummary.total_income}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Gastos</p>
+                <p className="text-lg font-semibold text-red-600">
+                  ${cashRegisterSummary.total_expenses}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Ventas</p>
+                <p className="text-lg font-semibold text-blue-600">
+                  ${cashRegisterSummary.total_sales}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Movimientos</p>
+                <p className="text-lg font-semibold">
+                  {cashRegisterSummary.total_movements}
+                </p>
+              </div>
+            </div>
+            
+            {cashRegisterSummary.expected_balance && (
+              <div className="border-t pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Balance Esperado</p>
+                    <p className="text-xl font-bold">
+                      ${cashRegisterSummary.expected_balance}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Balance Actual</p>
+                    <p className="text-xl font-bold">
+                      ${cashRegisterSummary.actual_balance}
+                    </p>
+                  </div>
+                </div>
+                
+                {cashRegisterSummary.variance !== 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm text-muted-foreground">Diferencia</p>
+                    <p className={`text-xl font-bold ${
+                      cashRegisterSummary.variance >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      ${cashRegisterSummary.variance}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </EnhancedModal>
     </div>
   );
 };
