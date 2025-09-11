@@ -501,24 +501,24 @@ const MainLayout = ({ children }) => {
       badge: '5'
     },
     { 
+      name: 'Ajustes de Precios', 
+      href: '/ajustes-precios', 
+      icon: Edit, 
+      color: 'orange',
+      badge: '6'
+    },
+    { 
       name: 'Ventas', 
       href: '/ventas', 
       icon: ShoppingCart, 
       color: 'green',
-      badge: '6'
+      badge: '7'
     },
     { 
       name: 'Reservas', 
       href: '/reservas', 
       icon: Calendar, 
       color: 'purple',
-      badge: '7'
-    },
-    { 
-      name: 'Ajustes de Precios', 
-      href: '/ajustes-precios', 
-      icon: Edit, 
-      color: 'orange',
       badge: '8'
     },
     { 
