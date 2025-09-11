@@ -113,9 +113,6 @@ const Reservations = () => {
 
   // Estados locales para UI
   const [activeTab, setActiveTab] = useState('create');
-  const [serviceProducts, setServiceProducts] = useState([]);
-  const [loadingServices, setLoadingServices] = useState(false);
-  const [servicesError, setServicesError] = useState(null);
   
   // Estados para el flujo de creación de reservas (wizard)
   const [currentStep, setCurrentStep] = useState(1);
@@ -178,15 +175,12 @@ const Reservations = () => {
   
   // Función para cargar servicios de canchas
   const handleLoadServices = async () => {
-    setLoadingServices(true);
     try {
       const services = await fetchServiceCourts();
       setAvailableServices(Array.isArray(services) ? services : []);
     } catch (error) {
       console.error('Error loading service courts:', error);
       setAvailableServices([]);
-    } finally {
-      setLoadingServices(false);
     }
   };
 
@@ -207,19 +201,6 @@ const Reservations = () => {
     }
   };
 
-  // Función para cargar servicios enriquecidos
-  const handleLoadServices = async () => {
-    setLoadingServices(true);
-    try {
-      const services = await fetchServiceCourts();
-      setAvailableServices(Array.isArray(services) ? services : []);
-    } catch (error) {
-      console.error('Error loading services:', error);
-      setAvailableServices([]);
-    } finally {
-      setLoadingServices(false);
-    }
-  };
 
   // Función para refrescar datos
   const handleRefreshData = async () => {
@@ -873,6 +854,10 @@ const Reservations = () => {
                       </div>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Paso 2: Selección de Fecha y Hora */}
             {currentStep === 2 && (
               <Card className={styles.card()} style={{
