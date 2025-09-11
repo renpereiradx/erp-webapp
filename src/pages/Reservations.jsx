@@ -16,6 +16,14 @@ import DataState from '@/components/ui/DataState';
 import EnhancedModal from '@/components/ui/EnhancedModal';
 import ApiStatusIndicator from '@/components/ui/ApiStatusIndicator';
 import { useI18n } from '@/lib/i18n';
+import { 
+  formatTimeInParaguayTimezone,
+  formatDateInParaguayTimezone,
+  formatDateTimeInParaguayTimezone,
+  calculateDurationInMinutes,
+  convertParaguayTimeToUTC,
+  debugTimeConversion
+} from '@/utils/timeUtils';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 // Stores
@@ -100,18 +108,26 @@ const Reservations = () => {
     clearError
   } = useReservationStore();
 
-  const { products, fetchProducts } = useProductStore();
+  const { products, fetchProducts, fetchServiceCourts } = useProductStore();
   const { clients, fetchClients } = useClientStore();
 
   // Estados locales para UI
   const [activeTab, setActiveTab] = useState('create');
+  const [serviceProducts, setServiceProducts] = useState([]);
+  const [loadingServices, setLoadingServices] = useState(false);
+  const [servicesError, setServicesError] = useState(null);
   
   // Estados para el flujo de creación de reservas (wizard)
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedClient, setSelectedClient] = useState(null);
+  const [selectedClient, setSelectedClient] = useState(''); // String ID, no objeto ni null
+  
+  // Helper para obtener los datos completos del cliente seleccionado
+  const getSelectedClientData = () => {
+    return selectedClient ? clients.find(client => client.id === selectedClient) : null;
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingReservation, setEditingReservation] = useState(null);
@@ -155,6 +171,22 @@ const Reservations = () => {
     date: ''
   });
 
+  // Función para cargar servicios de canchas
+  const handleLoadServices = async () => {
+    setLoadingServices(true);
+    setServicesError(null);
+    try {
+      const services = await fetchServiceCourts();
+      setServiceProducts(services || []);
+    } catch (error) {
+      console.error('Error loading service courts:', error);
+      setServicesError('No se pudieron cargar los servicios de canchas. Verifica tu conexión e intenta nuevamente.');
+      setServiceProducts([]);
+    } finally {
+      setLoadingServices(false);
+    }
+  };
+
   // Función para cargar datos de forma explícita
   const handleLoadData = async () => {
     setLoadingData(true);
@@ -193,7 +225,21 @@ const Reservations = () => {
   const handleLoadSchedules = async () => {
     if (selectedDate && selectedProduct) {
       const dateStr = selectedDate.toISOString().split('T')[0];
+      console.log('🕐 Loading schedules for:', { product: selectedProduct.name, date: dateStr });
       await fetchAvailableSchedules(selectedProduct.id, dateStr);
+      
+      // Debug: verificar conversiones de zona horaria
+      if (schedules.length > 0) {
+        console.log('🌍 Schedule timezone conversion check:');
+        schedules.slice(0, 3).forEach(schedule => {
+          const debug = debugTimeConversion(schedule.start_time);
+          console.log(`📅 ${schedule.product_name}:`);
+          console.log(`   Original UTC: ${debug.original_utc} (${debug.original_utc_hour})`);
+          console.log(`   Expected: ${debug.expected_conversion}`);
+          console.log(`   Calculated: ${debug.formatted_time}`);
+          console.log(`   ---`);
+        });
+      }
     }
   };
 
@@ -221,6 +267,7 @@ const Reservations = () => {
 
   const handleSelectTime = (displayTime, isoTime) => {
     setSelectedTime(displayTime);
+    // isoTime ya viene en UTC desde la API, no necesita conversión adicional
     setFormData(prev => ({ ...prev, start_time: isoTime }));
     setCurrentStep(3);
   };
@@ -244,7 +291,7 @@ const Reservations = () => {
     const reservationData = {
       action: 'create',
       product_id: selectedProduct.id,
-      client_id: selectedClient.id,
+      client_id: selectedClient, // selectedClient ya es el ID
       start_time: formData.start_time,
       duration: formData.duration || 1
     };
@@ -277,7 +324,7 @@ const Reservations = () => {
     setEditingReservation(null);
     setFormData({
       product_id: selectedProduct?.id || '',
-      client_id: selectedClient?.id || '',
+      client_id: selectedClient || '', // selectedClient ya es el ID string
       start_time: formData.start_time || '',
       duration: 1
     });
@@ -422,21 +469,58 @@ const Reservations = () => {
   };
 
   // Utilizar horarios disponibles de la API en lugar de slots generados localmente
-  const availableTimeSlots = schedules.map(schedule => ({
-    id: schedule.id,
-    start_time: schedule.start_time,
-    end_time: schedule.end_time,
-    is_available: schedule.is_available,
-    displayTime: new Date(schedule.start_time).toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  })).filter(slot => slot.is_available);
+  // IMPORTANTE: Los horarios de las canchas NO se convierten de zona horaria
+  // Los horarios son fijos (ej: 14:00-15:00) independientemente de la zona horaria
+  const availableTimeSlots = schedules.map(schedule => {
+    // Extraer solo la hora de los timestamps UTC sin conversión de zona horaria
+    const startDate = new Date(schedule.start_time);
+    const endDate = new Date(schedule.end_time);
+    
+    // Mostrar la hora UTC directamente (que representa el horario fijo de la cancha)
+    const displayTime = startDate.toISOString().substr(11, 5); // "HH:MM"
+    const displayEndTime = endDate.toISOString().substr(11, 5); // "HH:MM"
+    const duration = calculateDurationInMinutes(schedule.start_time, schedule.end_time);
+    
+    // Debug: mostrar que ahora mostramos horarios fijos
+    console.log('🕒 Horario fijo de cancha:', {
+      original_utc: schedule.start_time,
+      horario_mostrado: displayTime,
+      duracion_minutos: duration,
+      explicacion: `Cancha disponible de ${displayTime} a ${displayEndTime} (horario fijo, no convertido)`
+    });
+    
+    return {
+      id: schedule.id,
+      start_time: schedule.start_time,
+      end_time: schedule.end_time,
+      is_available: schedule.is_available,
+      displayTime,
+      displayEndTime,
+      duration,
+      product_name: schedule.product_name,
+      product_id: schedule.product_id
+    };
+  }).filter(slot => slot.is_available);
 
   // NO cargar datos automáticamente - solo cuando el usuario lo solicite explícitamente
 
-  // Inicializar en modo básico sin cargar automáticamente
+  // Cargar servicios al inicializar el componente
   useEffect(() => {
+    handleLoadServices();
+    
+    // Test de conversión de zona horaria al inicializar
+    console.log('🧪 Testing timezone conversion with your API data:');
+    const testTimes = [
+      "2025-09-09T14:00:00Z", // Debe mostrar 11:00
+      "2025-09-09T15:00:00Z", // Debe mostrar 12:00
+      "2025-09-09T21:00:00Z"  // Debe mostrar 18:00
+    ];
+    
+    testTimes.forEach(utcTime => {
+      const debug = debugTimeConversion(utcTime);
+      console.log(`UTC ${utcTime} -> Paraguay ${debug.formatted_time} (Expected: ${debug.expected_conversion})`);
+    });
+    
     // Establecer modo básico como estado inicial
     const initTimer = setTimeout(() => {
       setDataLoaded(true);
@@ -716,41 +800,292 @@ const Reservations = () => {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Botón para abrir modal de selección de servicios */}
-                  <div className="text-center">
-                    <Button
-                      onClick={() => setShowServiceModal(true)}
-                      variant="outline"
-                      size="lg"
-                      className="w-full h-16 text-lg"
-                    >
-                      <Search className="w-6 h-6 mr-3" />
-                      Buscar y Seleccionar Servicio
-                    </Button>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Haz clic para abrir el catálogo completo de servicios
-                    </p>
-                  </div>
-                  
-                  {/* Mostrar servicio seleccionado */}
-                  {selectedProduct && (
-                    <div className="p-4 rounded-lg border-2" style={{
-                      background: 'var(--md-primary-container, rgba(233, 221, 255, 0.5))',
-                      borderColor: 'var(--md-primary, rgb(103, 80, 164))'
-                    }}>
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                          <MapPin className="w-6 h-6 text-primary" />
+                  {/* Grid de servicios de canchas */}
+                  <div>
+                    {loadingServices ? (
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <div className="relative mb-4">
+                          <div className={`w-12 h-12 animate-spin ${
+                            styles.theme?.includes('neo-brutalism')
+                              ? 'border-4 border-black border-t-transparent'
+                              : 'border-4 border-blue-600 border-t-transparent rounded-full'
+                          }`} />
+                          {styles.theme?.includes('neo-brutalism') && (
+                            <div className="absolute inset-0 border-4 border-dashed border-gray-400 animate-pulse" />
+                          )}
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-primary text-lg">
-                            {selectedProduct.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Servicio seleccionado • ${selectedProduct.price || 'Precio a consultar'}/hora
+                        <p style={{
+                          fontSize: styles.theme?.includes('neo-brutalism') ? '1rem' : '0.9rem',
+                          fontWeight: styles.theme?.includes('neo-brutalism') ? '700' : '500',
+                          color: 'var(--muted-foreground)',
+                          textTransform: styles.theme?.includes('neo-brutalism') ? 'uppercase' : 'none'
+                        }}>
+                          {styles.theme?.includes('neo-brutalism') ? 'CARGANDO CANCHAS...' : 'Cargando servicios de canchas...'}
+                        </p>
+                      </div>
+                    ) : servicesError ? (
+                      <div className={`text-center py-8 p-6 border-2 ${
+                        styles.theme?.includes('neo-brutalism')
+                          ? 'border-4 border-red-600 bg-red-100 shadow-[6px_6px_0px_0px_rgba(220,38,38,1)]'
+                          : styles.theme?.includes('material')
+                            ? 'rounded-2xl bg-red-50 border-red-200'
+                            : 'rounded-xl bg-red-50/80 border-red-200'
+                      }`}>
+                        <div className="mb-4">
+                          <AlertCircle className={`w-12 h-12 mx-auto text-red-600 ${
+                            styles.theme?.includes('neo-brutalism') ? 'animate-bounce' : ''
+                          }`} />
+                        </div>
+                        <h3 style={{
+                          fontSize: styles.theme?.includes('neo-brutalism') ? '1.1rem' : '1rem',
+                          fontWeight: styles.theme?.includes('neo-brutalism') ? '800' : '600',
+                          color: 'var(--destructive)',
+                          marginBottom: '8px',
+                          textTransform: styles.theme?.includes('neo-brutalism') ? 'uppercase' : 'none'
+                        }}>
+                          {styles.theme?.includes('neo-brutalism') ? 'ERROR AL CARGAR SERVICIOS' : 'Error al cargar servicios'}
+                        </h3>
+                        <p style={{
+                          fontSize: '0.875rem',
+                          color: 'var(--muted-foreground)',
+                          marginBottom: '16px',
+                          lineHeight: '1.5'
+                        }}>
+                          {servicesError}
+                        </p>
+                        <Button
+                          onClick={handleLoadServices}
+                          variant="outline"
+                          className={`${
+                            styles.theme?.includes('neo-brutalism')
+                              ? 'border-2 border-red-600 bg-white hover:bg-red-50 shadow-[4px_4px_0px_0px_rgba(220,38,38,1)]'
+                              : styles.theme?.includes('material')
+                                ? 'rounded-xl border-red-300 hover:bg-red-100'
+                                : 'rounded-lg border-red-300 hover:bg-red-50'
+                          }`}
+                          style={{
+                            fontWeight: styles.theme?.includes('neo-brutalism') ? '700' : '500',
+                            textTransform: styles.theme?.includes('neo-brutalism') ? 'uppercase' : 'none'
+                          }}
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          {styles.theme?.includes('neo-brutalism') ? 'REINTENTAR CARGA' : 'Reintentar'}
+                        </Button>
+                      </div>
+                    ) : serviceProducts.length === 0 ? (
+                      <div className="text-center py-12">
+                        <MapPin className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                        <p style={{
+                          fontSize: '1rem',
+                          color: 'var(--muted-foreground)',
+                          marginBottom: '8px'
+                        }}>
+                          No hay servicios de canchas disponibles
+                        </p>
+                        <Button
+                          onClick={handleLoadServices}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Recargar
+                        </Button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="mb-4">
+                          <p style={{
+                            fontSize: styles.theme?.includes('neo-brutalism') ? '0.9rem' : '0.875rem',
+                            color: 'var(--muted-foreground)',
+                            fontWeight: styles.theme?.includes('neo-brutalism') ? '700' : '500',
+                            textTransform: styles.theme?.includes('neo-brutalism') ? 'uppercase' : 'none',
+                            textAlign: 'center'
+                          }}>
+                            {styles.theme?.includes('neo-brutalism') 
+                              ? `${serviceProducts.length} CANCHAS DISPONIBLES - SELECCIONA UNA`
+                              : `${serviceProducts.length} servicios disponibles - Selecciona uno`
+                            }
                           </p>
                         </div>
-                        <CheckCircle className="w-6 h-6 text-primary" />
+                        
+                        {/* Grid de 2 columnas para servicios */}
+                        <div className="grid grid-cols-2 gap-4">
+                          {serviceProducts.map((service) => (
+                            <Card
+                              key={service.id}
+                              className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
+                                selectedProduct?.id === service.id
+                                  ? (styles.theme?.includes('neo-brutalism')
+                                      ? 'ring-4 ring-black ring-offset-4 bg-green-400'
+                                      : 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50')
+                                  : 'hover:shadow-lg'
+                              }`}
+                              onClick={() => handleSelectProduct(service)}
+                              style={{
+                                borderWidth: selectedProduct?.id === service.id
+                                  ? (styles.theme?.includes('neo-brutalism') ? '4px' : '2px')
+                                  : '1px',
+                                borderColor: selectedProduct?.id === service.id
+                                  ? 'var(--primary)'
+                                  : 'var(--border)',
+                                borderRadius: styles.theme?.includes('neo-brutalism') ? '0' : '12px',
+                                boxShadow: styles.theme?.includes('neo-brutalism')
+                                  ? (selectedProduct?.id === service.id 
+                                      ? '6px 6px 0px 0px rgba(0,0,0,1)' 
+                                      : '3px 3px 0px 0px rgba(0,0,0,1)')
+                                  : undefined
+                              }}
+                            >
+                              <CardContent className="p-4">
+                                <div className="text-center space-y-3">
+                                  <div className="relative mx-auto" style={{
+                                    width: '48px',
+                                    height: '48px'
+                                  }}>
+                                    <div 
+                                      className="w-full h-full flex items-center justify-center"
+                                      style={{
+                                        backgroundColor: selectedProduct?.id === service.id && styles.theme?.includes('neo-brutalism')
+                                          ? 'var(--background)'
+                                          : 'var(--primary)',
+                                        borderRadius: styles.theme?.includes('neo-brutalism') ? '0' : '50%',
+                                        border: styles.theme?.includes('neo-brutalism') ? '2px solid var(--border)' : 'none'
+                                      }}
+                                    >
+                                      <MapPin className={`w-6 h-6 ${
+                                        selectedProduct?.id === service.id && styles.theme?.includes('neo-brutalism')
+                                          ? 'text-black'
+                                          : 'text-white'
+                                      }`} />
+                                    </div>
+                                    {selectedProduct?.id === service.id && (
+                                      <CheckCircle className={`absolute -top-1 -right-1 w-5 h-5 text-green-600 ${
+                                        styles.theme?.includes('neo-brutalism') ? 'animate-bounce' : 'animate-pulse'
+                                      }`} />
+                                    )}
+                                  </div>
+                                  
+                                  <div>
+                                    <h4 style={{
+                                      fontSize: styles.theme?.includes('neo-brutalism') ? '0.9rem' : '0.875rem',
+                                      fontWeight: styles.theme?.includes('neo-brutalism') ? '800' : '600',
+                                      color: 'var(--foreground)',
+                                      textTransform: styles.theme?.includes('neo-brutalism') ? 'uppercase' : 'none',
+                                      lineHeight: '1.2',
+                                      marginBottom: '4px'
+                                    }}>
+                                      {service.name}
+                                    </h4>
+                                    <p style={{
+                                      fontSize: '0.75rem',
+                                      color: 'var(--muted-foreground)',
+                                      marginBottom: '8px'
+                                    }}>
+                                      {service.category_name}
+                                    </p>
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Clock className="w-3 h-3 text-green-600" />
+                                    <span style={{
+                                      fontSize: '0.75rem',
+                                      fontWeight: styles.theme?.includes('neo-brutalism') ? '700' : '500',
+                                      color: 'var(--primary)'
+                                    }}>
+                                      {service.price_formatted || `PYG ${service.purchase_price || 'Consultar'}`}
+                                    </span>
+                                  </div>
+                                  
+                                  {service.state && (
+                                    <Badge 
+                                      variant="outline"
+                                      className="text-xs"
+                                      style={{
+                                        backgroundColor: 'var(--primary)',
+                                        color: 'var(--primary-foreground)',
+                                        border: 'none',
+                                        fontSize: '0.65rem',
+                                        fontWeight: styles.theme?.includes('neo-brutalism') ? '700' : '500'
+                                      }}
+                                    >
+                                      {styles.theme?.includes('neo-brutalism') ? 'ACTIVO' : 'Disponible'}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Mostrar servicio seleccionado - Mejorado */}
+                  {selectedProduct && (
+                    <div 
+                      className={`p-6 border-2 transition-all duration-500 animate-in slide-in-from-top-4 ${
+                        styles.theme?.includes('neo-brutalism')
+                          ? 'border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-green-400'
+                          : styles.theme?.includes('material')
+                            ? 'rounded-2xl shadow-lg border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50'
+                            : styles.theme?.includes('fluent')
+                              ? 'rounded-xl backdrop-blur-sm bg-white/80 border-blue-200/50 shadow-lg'
+                              : 'rounded-lg border-primary bg-primary/5'
+                      }`}
+                      style={{
+                        borderColor: styles.theme?.includes('neo-brutalism') 
+                          ? 'var(--border)' 
+                          : 'var(--primary)'
+                      }}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div 
+                          className={`rounded-full flex items-center justify-center relative overflow-hidden ${
+                            styles.theme?.includes('neo-brutalism') ? 'animate-pulse' : ''
+                          }`}
+                          style={{
+                            width: styles.theme?.includes('neo-brutalism') ? '64px' : '56px',
+                            height: styles.theme?.includes('neo-brutalism') ? '64px' : '56px',
+                            backgroundColor: styles.theme?.includes('neo-brutalism')
+                              ? 'var(--background)'
+                              : 'var(--primary)',
+                            border: styles.theme?.includes('neo-brutalism') ? '3px solid var(--border)' : 'none',
+                            borderRadius: styles.theme?.includes('neo-brutalism') ? '0' : '50%'
+                          }}
+                        >
+                          <MapPin className={`${
+                            styles.theme?.includes('neo-brutalism') ? 'w-8 h-8 text-black' : 'w-7 h-7 text-white'
+                          }`} />
+                          {styles.theme?.includes('neo-brutalism') && (
+                            <CheckCircle className="absolute -top-1 -right-1 w-6 h-6 text-green-600 animate-bounce" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 style={{
+                            fontSize: styles.theme?.includes('neo-brutalism') ? '1.3rem' : '1.125rem',
+                            fontWeight: styles.theme?.includes('neo-brutalism') ? '800' : '600',
+                            color: styles.theme?.includes('neo-brutalism') ? 'var(--foreground)' : 'var(--primary)',
+                            textTransform: styles.theme?.includes('neo-brutalism') ? 'uppercase' : 'none',
+                            letterSpacing: styles.theme?.includes('neo-brutalism') ? '0.05em' : 'normal',
+                            marginBottom: '4px'
+                          }}>
+                            {selectedProduct.name}
+                          </h3>
+                          <p style={{
+                            fontSize: styles.theme?.includes('neo-brutalism') ? '0.9rem' : '0.875rem',
+                            color: 'var(--muted-foreground)',
+                            fontWeight: styles.theme?.includes('neo-brutalism') ? '700' : '500',
+                            textTransform: styles.theme?.includes('neo-brutalism') ? 'uppercase' : 'none'
+                          }}>
+                            {styles.theme?.includes('neo-brutalism') 
+                              ? `✓ SERVICIO SELECCIONADO • ${selectedProduct.price || 'PRECIO A CONSULTAR'}/HORA`
+                              : `Servicio seleccionado • ${selectedProduct.price || 'Precio a consultar'}/hora`
+                            }
+                          </p>
+                        </div>
+                        {!styles.theme?.includes('neo-brutalism') && (
+                          <CheckCircle className="w-8 h-8 text-primary animate-pulse" />
+                        )}
                       </div>
                     </div>
                   )}
@@ -784,23 +1119,213 @@ const Reservations = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Calendario */}
-                    <div>
-                      <h3 className="font-semibold mb-4 flex items-center gap-2">
-                        <Calendar className="w-5 h-5" />
-                        Seleccionar Fecha
-                      </h3>
-                      <CalendarComponent
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={handleDateChange}
-                        className="rounded-lg border-2"
-                        disabled={(date) => date < new Date()}
-                        style={{
-                          borderColor: 'var(--md-outline-variant, rgb(202, 196, 208))'
-                        }}
-                      />
-                    </div>
+                    {/* Calendario mejorado y compacto */}
+                    <div className="flex justify-center">
+                      <div className="w-full max-w-sm">
+                        <h3 className="font-semibold mb-4 flex items-center justify-center gap-2" style={{
+                          fontSize: styles.theme?.includes('neo-brutalism') ? '1rem' : '0.9rem',
+                          fontWeight: styles.theme?.includes('neo-brutalism') ? '800' : '600',
+                          color: 'var(--foreground)',
+                          textTransform: styles.theme?.includes('neo-brutalism') ? 'uppercase' : 'none',
+                          letterSpacing: styles.theme?.includes('neo-brutalism') ? '0.05em' : 'normal'
+                        }}>
+                          <Calendar className={`w-5 h-5 ${
+                            styles.theme?.includes('neo-brutalism') ? 'animate-bounce' : ''
+                          }`} />
+                          {styles.theme?.includes('neo-brutalism') ? 'SELECCIONAR FECHA' : 'Seleccionar Fecha'}
+                        </h3>
+                        
+                        <div className={`rounded-lg p-3 ${
+                          styles.theme?.includes('neo-brutalism')
+                            ? 'border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white'
+                            : styles.theme?.includes('material')
+                              ? 'border-0 shadow-md bg-white rounded-2xl'
+                              : styles.theme?.includes('fluent')
+                                ? 'border border-gray-200/50 shadow-lg bg-white/90 backdrop-blur-sm rounded-xl'
+                                : 'border shadow-sm bg-white calendar-container'
+                        }`} style={{
+                          borderColor: styles.theme?.includes('neo-brutalism') 
+                            ? 'var(--border)' 
+                            : 'var(--border)'
+                        }}>
+                          <CalendarComponent
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={handleDateChange}
+                            className={`w-full ${
+                              styles.theme?.includes('neo-brutalism')
+                                ? 'calendar-brutalist'
+                                : styles.theme?.includes('material')
+                                  ? 'calendar-material'
+                                  : styles.theme?.includes('fluent')
+                                    ? 'calendar-fluent'
+                                    : 'calendar-default'
+                            }`}
+                            disabled={(date) => {
+                              const today = new Date();
+                              const yesterday = new Date(today);
+                              yesterday.setDate(today.getDate() - 1);
+                              return date < yesterday;
+                            }}
+                            modifiers={{
+                              today: new Date(),
+                              selected: selectedDate
+                            }}
+                            modifiersStyles={{
+                              today: {
+                                backgroundColor: styles.theme?.includes('neo-brutalism') 
+                                  ? 'var(--secondary)' 
+                                  : styles.theme?.includes('material')
+                                    ? 'rgba(33, 150, 243, 0.12)'
+                                    : 'var(--accent)',
+                                color: styles.theme?.includes('neo-brutalism') 
+                                  ? 'var(--secondary-foreground)' 
+                                  : 'var(--primary)',
+                                fontWeight: styles.theme?.includes('neo-brutalism') ? '800' : '700',
+                                border: styles.theme?.includes('neo-brutalism') 
+                                  ? '2px solid var(--primary)' 
+                                  : styles.theme?.includes('material')
+                                    ? '1px solid var(--primary)'
+                                    : '1px solid var(--primary)',
+                                borderRadius: styles.theme?.includes('neo-brutalism') ? '0' : '6px',
+                                position: 'relative'
+                              },
+                              selected: {
+                                backgroundColor: 'var(--primary)',
+                                color: 'var(--primary-foreground)',
+                                fontWeight: styles.theme?.includes('neo-brutalism') ? '800' : '700',
+                                border: styles.theme?.includes('neo-brutalism') 
+                                  ? '2px solid var(--border)' 
+                                  : 'none',
+                                borderRadius: styles.theme?.includes('neo-brutalism') ? '0' : '6px',
+                                transform: styles.theme?.includes('neo-brutalism') ? 'scale(1.05)' : 'scale(1.02)',
+                                boxShadow: styles.theme?.includes('neo-brutalism') 
+                                  ? '2px 2px 0px 0px rgba(0,0,0,1)' 
+                                  : '0 2px 6px rgba(0,0,0,0.15)'
+                              }
+                            }}
+                            style={{
+                              '--rdp-cell-size': '36px',
+                              '--rdp-accent-color': 'var(--primary)',
+                              '--rdp-background-color': 'var(--background)',
+                              '--rdp-outline': '2px solid var(--primary)',
+                              fontSize: styles.theme?.includes('neo-brutalism') ? '0.85rem' : '0.8rem',
+                              fontWeight: styles.theme?.includes('neo-brutalism') ? '700' : '500'
+                            }}
+                          />
+                          
+                        </div>
+                      </div>
+                    
+                    
+                    {/* Estilos CSS directos para el calendario */}
+                    <style>{`
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} {
+                        max-width: 280px;
+                        margin: 0 auto;
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-nav_button {
+                        width: 36px !important;
+                        height: 36px !important;
+                        background: var(--primary) !important;
+                        color: var(--primary-foreground) !important;
+                        border: 2px solid var(--border) !important;
+                        border-radius: ${styles.theme?.includes('neo-brutalism') ? '0' : '6px'} !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        font-weight: 600 !important;
+                        transition: all 0.15s ease !important;
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-nav_button:hover {
+                        transform: scale(1.05) !important;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+                        background: var(--accent) !important;
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-day {
+                        width: 36px;
+                        height: 36px;
+                        border-radius: ${styles.theme?.includes('neo-brutalism') ? '0' : '6px'};
+                        border: 1px solid transparent;
+                        font-weight: ${styles.theme?.includes('neo-brutalism') ? '700' : '500'};
+                        font-size: 0.8rem;
+                        transition: all 0.15s ease;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-day:hover {
+                        background-color: ${styles.theme?.includes('neo-brutalism') ? 'var(--secondary)' : 'var(--accent)'};
+                        border-color: ${styles.theme?.includes('neo-brutalism') ? 'var(--border)' : 'var(--primary)'};
+                        transform: ${styles.theme?.includes('neo-brutalism') ? 'scale(1.03)' : 'scale(1.05)'};
+                        box-shadow: ${styles.theme?.includes('neo-brutalism') ? '1px 1px 0px 0px rgba(0,0,0,1)' : '0 1px 4px rgba(0,0,0,0.1)'};
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-day_disabled {
+                        color: var(--muted-foreground);
+                        opacity: 0.4;
+                        cursor: not-allowed;
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-head_cell {
+                        width: 36px;
+                        font-weight: ${styles.theme?.includes('neo-brutalism') ? '800' : '600'};
+                        color: var(--muted-foreground);
+                        font-size: 0.75rem;
+                        text-transform: uppercase;
+                        letter-spacing: ${styles.theme?.includes('neo-brutalism') ? '0.05em' : '0.02em'};
+                        padding: 4px 0;
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-caption {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 0.75rem 0;
+                        margin-bottom: 0.75rem;
+                        border-bottom: ${styles.theme?.includes('neo-brutalism') ? '2px solid var(--border)' : '1px solid var(--border)'};
+                        position: relative;
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-caption_label {
+                        font-size: ${styles.theme?.includes('neo-brutalism') ? '0.95rem' : '0.9rem'};
+                        font-weight: ${styles.theme?.includes('neo-brutalism') ? '800' : '600'};
+                        color: var(--foreground);
+                        text-transform: ${styles.theme?.includes('neo-brutalism') ? 'uppercase' : 'none'};
+                        letter-spacing: ${styles.theme?.includes('neo-brutalism') ? '0.05em' : 'normal'};
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-nav {
+                        position: absolute;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        display: flex;
+                        gap: 8px;
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-nav:first-child {
+                        left: 0;
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-nav:last-child {
+                        right: 0;
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-tbody {
+                        gap: 2px;
+                      }
+                      
+                      .${styles.theme?.includes('neo-brutalism') ? 'calendar-brutalist' : styles.theme?.includes('material') ? 'calendar-material' : styles.theme?.includes('fluent') ? 'calendar-fluent' : 'calendar-default'} .rdp-row {
+                        gap: 2px;
+                        margin-bottom: 2px;
+                      }
+                          `}</style>
+                        </div>
+                      </div>
 
                     {/* Horarios disponibles */}
                     <div>
@@ -855,14 +1380,13 @@ const Reservations = () => {
                             >
                               <div className="font-bold text-lg">{slot.displayTime}</div>
                               <div className="text-xs opacity-75">
-                                {Math.round((new Date(slot.end_time) - new Date(slot.start_time)) / (1000 * 60))} min
+                                {slot.duration} minutos
                               </div>
                             </Button>
                           ))}
                         </div>
                       )}
                     </div>
-                  </div>
 
                   {/* Botones de navegación */}
                   <div className="flex justify-between mt-6">
@@ -924,7 +1448,7 @@ const Reservations = () => {
                   </div>
                   
                   {/* Mostrar información del cliente seleccionado */}
-                  {selectedClient && (
+                  {getSelectedClientData() && (
                     <div className="p-4 rounded-lg border-2" style={{
                       background: 'var(--md-primary-container, rgba(233, 221, 255, 0.5))',
                       borderColor: 'var(--md-primary, rgb(103, 80, 164))'
@@ -935,7 +1459,7 @@ const Reservations = () => {
                         </div>
                         <div>
                           <h3 className="font-semibold text-primary">
-                            {selectedClient.name}
+                            {getSelectedClientData().name}
                           </h3>
                           <p className="text-sm text-muted-foreground">
                             Cliente seleccionado para la reserva
@@ -956,7 +1480,7 @@ const Reservations = () => {
                       <ArrowRight className="w-4 h-4 rotate-180" />
                       Anterior
                     </Button>
-                    {selectedClient && (
+                    {selectedClient && ( // selectedClient es un string, truthy si tiene valor
                       <Button
                         onClick={() => setCurrentStep(4)}
                         variant="primary"
@@ -1046,7 +1570,7 @@ const Reservations = () => {
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Cliente</p>
-                            <p className="font-semibold">{selectedClient?.name}</p>
+                            <p className="font-semibold">{getSelectedClientData()?.name}</p>
                           </div>
                         </div>
                       </div>
@@ -1133,13 +1657,13 @@ const Reservations = () => {
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
                             <span>
-                              <strong>Fecha:</strong> {new Date(reservation.start_time).toLocaleDateString('es-ES')}
+                              <strong>Fecha:</strong> {formatDateInParaguayTimezone(reservation.start_time)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4" />
                             <span>
-                              <strong>Hora:</strong> {new Date(reservation.start_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                              <strong>Hora:</strong> {formatTimeInParaguayTimezone(reservation.start_time)}
                             </span>
                           </div>
                           <div>
@@ -1553,13 +2077,7 @@ const Reservations = () => {
                               <Clock className="w-4 h-4" />
                               <div>
                                 <p className="text-sm font-medium">
-                                  {new Date(schedule.start_time).toLocaleTimeString('es-ES', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })} - {new Date(schedule.end_time).toLocaleTimeString('es-ES', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
+                                  {formatTimeInParaguayTimezone(schedule.start_time)} - {formatTimeInParaguayTimezone(schedule.end_time)}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
                                   {schedule.is_available ? 'Disponible' : 'No disponible'}
@@ -1720,7 +2238,10 @@ const Reservations = () => {
                 <Input
                   type="datetime-local"
                   value={formData.start_time ? formData.start_time.slice(0, 16) : ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value ? `${e.target.value}:00Z` : '' }))}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    start_time: e.target.value ? convertParaguayTimeToUTC(`${e.target.value}:00`) : '' 
+                  }))}
                   className={styles.input()}
                   required
                   min={new Date().toISOString().slice(0, 16)}
@@ -1814,27 +2335,21 @@ const Reservations = () => {
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Clock className="w-3 h-3" />
                             <span>
-                              {new Date(schedule.start_time).toLocaleTimeString('es-ES', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })} - {new Date(schedule.end_time).toLocaleTimeString('es-ES', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
+                              {formatTimeInParaguayTimezone(schedule.start_time)} - {formatTimeInParaguayTimezone(schedule.end_time)}
                             </span>
                           </div>
                           
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <Calendar className="w-3 h-3" />
                             <span>
-                              {new Date(schedule.start_time).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' })}
+                              {formatDateInParaguayTimezone(schedule.start_time, { weekday: 'long', day: 'numeric', month: 'short' })}
                             </span>
                           </div>
                         </div>
                         
                         <div className="flex items-center justify-between pt-2 border-t">
                           <span className="text-xs text-muted-foreground">
-                            {Math.round((new Date(schedule.end_time) - new Date(schedule.start_time)) / (1000 * 60))} min
+                            {calculateDurationInMinutes(schedule.start_time, schedule.end_time)} min
                           </span>
                           <Badge 
                             variant={schedule.is_available ? 'default' : 'secondary'}
@@ -1882,6 +2397,7 @@ const Reservations = () => {
           </Card>
         </div>
       )}
+
     </div>
   );
 };

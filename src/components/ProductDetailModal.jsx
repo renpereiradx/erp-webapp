@@ -101,21 +101,32 @@ const ProductDetailModal = ({ isOpen, onClose, product, container = null }) => {
 
   if (!isOpen || !product) return null;
 
-  // Procesar datos del servidor
+  // Procesar datos del servidor con estructura financial
   const processedProduct = {
     ...product,
     // Usar la estructura correcta del servidor
     categoryName: product.category?.name || product.category_name || 'Sin categoría',
     categoryDescription: product.category?.description || '',
     isActive: product.state, // El servidor usa 'state' en lugar de 'is_active'
-    hasValidPrice: product.has_valid_price,
-    hasValidStock: product.has_valid_stock,
+    // Estructura financial - precios
+    hasValidPrice: product.financial_health?.has_prices || product.has_valid_prices,
+    priceFormatted: product.unit_prices?.[0]?.price_per_unit ? 
+      `PYG ${product.unit_prices[0].price_per_unit.toLocaleString('es-PY')}` : 
+      product.price_formatted,
+    purchasePrice: product.unit_costs_summary?.[0]?.last_cost ?
+      `PYG ${product.unit_costs_summary[0].last_cost.toLocaleString('es-PY')}` :
+      product.purchase_price,
+    // Estructura financial - stock
+    hasValidStock: product.financial_health?.has_stock || product.has_valid_stock,
     stockStatus: product.stock_status,
-    priceFormatted: product.price_formatted,
     productType: product.product_type,
     // Fechas formateadas
-    priceUpdatedAt: product.price_updated_at ? new Date(product.price_updated_at).toLocaleDateString() : null,
+    priceUpdatedAt: product.unit_prices?.[0]?.effective_date ? 
+      new Date(product.unit_prices[0].effective_date).toLocaleDateString() : 
+      (product.price_updated_at ? new Date(product.price_updated_at).toLocaleDateString() : null),
     stockUpdatedAt: product.stock_updated_at ? new Date(product.stock_updated_at).toLocaleDateString() : null,
+    // Información adicional de financial structure
+    hasUnitPricing: product.unit_prices && product.unit_prices.length > 0,
   };
 
   return (
@@ -127,12 +138,12 @@ const ProductDetailModal = ({ isOpen, onClose, product, container = null }) => {
             <div className="flex items-start justify-between">
               <div>
                 <h2 className={`${styles.header('h2')} text-xl font-bold mb-2`}>
-                  {processedProduct.name}
+                  {processedProduct.product_name || processedProduct.name}
                 </h2>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Package className="h-4 w-4" />
-                    ID: {processedProduct.id}
+                    ID: {processedProduct.product_id || processedProduct.id}
                   </span>
                   <Badge variant={processedProduct.isActive ? 'default' : 'secondary'} className="product-badge">
                     {processedProduct.isActive ? 'Activo' : 'Inactivo'}
@@ -236,7 +247,8 @@ const ProductDetailModal = ({ isOpen, onClose, product, container = null }) => {
                   <Separator />
                   <DetailRow 
                     label="Precio de Compra" 
-                    value={processedProduct.purchase_price || 'No configurado'} 
+                    value={processedProduct.purchasePrice || 'No configurado'} 
+                    type="price"
                   />
                   <Separator />
                   <DetailRow 
@@ -247,7 +259,7 @@ const ProductDetailModal = ({ isOpen, onClose, product, container = null }) => {
                   <Separator />
                   <DetailRow 
                     label="Pricing por Unidades" 
-                    value={processedProduct.has_unit_pricing} 
+                    value={processedProduct.hasUnitPricing} 
                     type="boolean" 
                   />
                   

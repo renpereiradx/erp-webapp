@@ -184,7 +184,7 @@ export default function ProductGrid({
           style={{ outline: 'none' }}
         >
           <ProductCard
-            key={products[index].id}
+            key={products[index].product_id || products[index].id}
             product={products[index]}
             isNeoBrutalism={isNeoBrutalism}
             getCategoryName={getCategoryName}
@@ -193,17 +193,17 @@ export default function ProductGrid({
             onDelete={onDelete}
             onReactivate={onReactivate}
             onToggleSelect={onToggleSelect}
-            selected={selectedIds.includes(products[index].id)}
+            selected={selectedIds.includes(products[index].product_id || products[index].id)}
             enableInlineEdit
-            inlineEditing={inlineEditingId === products[index].id}
-            onStartInlineEdit={() => onStartInlineEdit?.(products[index].id)}
+            inlineEditing={inlineEditingId === (products[index].product_id || products[index].id)}
+            onStartInlineEdit={() => onStartInlineEdit?.(products[index].product_id || products[index].id)}
             onCancelInlineEdit={onCancelInlineEdit}
             onInlineSave={onInlineSave}
           />
         </div>
       )}
       components={{ List, Item }}
-      computeItemKey={(index) => products[index].id}
+      computeItemKey={(index) => products[index].product_id || products[index].id}
       endReached={() => {
         try {
           // batch size metric (approx: items rendered length)

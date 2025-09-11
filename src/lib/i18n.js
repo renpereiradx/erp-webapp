@@ -46,6 +46,33 @@ const DICTIONARY = {
     'badge.low_stock': 'Bajo stock',
     'badge.low_stock.upper': 'BAJO STOCK',
 
+    // Price Adjustments - MVP strings
+    'priceAdjustment.title': 'Ajustes de Precios',
+    'priceAdjustment.action.create': 'Crear Ajuste',
+    'priceAdjustment.action.creating': 'Creando...',
+    'priceAdjustment.action.viewHistory': 'Ver Historial',
+    
+    // Estados
+    'priceAdjustment.empty.title': 'Sin ajustes de precios',
+    'priceAdjustment.empty.message': 'No hay ajustes de precios registrados',
+    'priceAdjustment.error.title': 'Error al cargar ajustes',
+    'priceAdjustment.error.noProduct': 'Seleccione un producto',
+    
+    // Modales
+    'priceAdjustment.modal.create': 'CREAR AJUSTE DE PRECIO',
+    'priceAdjustment.modal.history': 'HISTORIAL DE AJUSTES',
+    
+    // Búsqueda
+    'priceAdjustment.search.placeholder': 'Buscar por producto, razón o usuario...',
+    
+    // Campos del formulario
+    'priceAdjustment.field.product': 'PRODUCTO',
+    'priceAdjustment.field.product.placeholder': 'Buscar producto por ID, nombre o código...',
+    'priceAdjustment.field.newPrice': 'NUEVO PRECIO',
+    'priceAdjustment.field.unit': 'UNIDAD',
+    'priceAdjustment.field.reason': 'RAZÓN DEL AJUSTE',
+    'priceAdjustment.field.reason.placeholder': 'Explique la razón del ajuste de precio...',
+
     // Clients - MVP strings
     'clients.title': 'Clientes',
     'clients.action.primary': 'Nuevo Cliente',

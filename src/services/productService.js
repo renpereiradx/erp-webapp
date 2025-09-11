@@ -199,6 +199,58 @@ export const productService = {
     }
   },
 
+  // =================== FINANCIAL ENRICHED PRODUCTS ===================
+  
+  // Obtener producto financieramente enriquecido por ID
+  /**
+   * @param {string} productId
+   * @returns {Promise<ProductFinancialEnriched|any>}
+   */
+  getProductByIdFinancial: async (productId) => {
+    try {
+      return await retryWithBackoff(async () => {
+        return await apiClient.get(`/products/financial/${productId}`);
+      });
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener producto financieramente enriquecido');
+    }
+  },
+  
+  // Obtener producto financieramente enriquecido por código de barras
+  /**
+   * @param {string} barcode
+   * @returns {Promise<ProductFinancialEnriched|any>}
+   */
+  getProductByBarcodeFinancial: async (barcode) => {
+    try {
+      return await retryWithBackoff(async () => {
+        return await apiClient.get(`/products/financial/barcode/${encodeURIComponent(barcode)}`);
+      });
+    } catch (error) {
+      throw toApiError(error, 'Error al buscar producto financiero por código de barras');
+    }
+  },
+  
+  // Buscar productos financieramente enriquecidos por nombre
+  /**
+   * @param {string} name - Término de búsqueda
+   * @param {{ limit?: number, signal?: AbortSignal }} [options] - Opciones de búsqueda
+   * @returns {Promise<ProductFinancialEnriched[]|any>}
+   */
+  searchProductsFinancial: async (name, options = {}) => {
+    const { limit = 10, signal } = options;
+    try {
+      return await retryWithBackoff(async () => {
+        const url = `/products/financial/name/${encodeURIComponent(name)}?limit=${limit}`;
+        return await apiClient.get(url, { signal });
+      });
+    } catch (error) {
+      // Permitimos que AbortError se propague tal cual
+      if (error?.name === 'AbortError') throw error;
+      throw toApiError(error, 'Error al buscar productos financieros por nombre');
+    }
+  },
+
   // Búsqueda inteligente: por ID, nombre o código de barras
   /**
    * @param {string} searchTerm
