@@ -59,6 +59,13 @@ const ProductSearchInput = ({
                            Array.isArray(results) ? results : 
                            results ? [results] : [];
       
+      // Debug: Log para ver qué datos llegan al ProductSearchInput
+      console.log('ProductSearchInput received data:', productsArray);
+      if (productsArray.length > 0) {
+        console.log('First product structure:', productsArray[0]);
+        console.log('Price check:', productsArray[0].unit_prices?.[0]?.price_per_unit);
+      }
+      
       setSearchResults(productsArray);
     } catch (error) {
       console.error('Error searching products:', error);
@@ -129,7 +136,7 @@ const ProductSearchInput = ({
             <Package className="w-5 h-5 text-green-600" />
             <div>
               <div className="font-medium text-green-900">
-                {selectedProduct.name || selectedProduct.product_name || selectedProduct.product_id}
+                {selectedProduct.product_name || selectedProduct.name || selectedProduct.product_id}
               </div>
               <div className="text-sm text-green-700">
                 ID: {selectedProduct.product_id} 
@@ -206,12 +213,17 @@ const ProductSearchInput = ({
                   <Package className="w-5 h-5 text-primary flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">
-                      {product.name || product.product_name || product.product_id}
+                      {product.product_name || product.name || product.product_id}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       ID: {product.product_id}
                       {product.barcode && ` | Código: ${product.barcode}`}
-                      {product.current_stock !== undefined && ` | Stock: ${product.current_stock}`}
+                      {product.stock_quantity !== undefined && 
+                        ` | Stock: ${product.stock_quantity}`}
+                      {product.unit_prices?.[0]?.price_per_unit && 
+                        ` | Precio: PYG ${product.unit_prices[0].price_per_unit.toLocaleString('es-PY')}`}
+                      {(!product.unit_prices?.[0]?.price_per_unit && product.price) && 
+                        ` | Precio: PYG ${product.price.toLocaleString('es-PY')}`}
                     </div>
                   </div>
                 </div>

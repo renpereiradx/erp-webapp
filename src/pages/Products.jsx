@@ -47,6 +47,12 @@ const ProductsPage = () => {
     if (typeof hydrateFromStorage === 'function') {
       hydrateFromStorage();
     }
+    
+    // Si no hay productos después de hidratar, hacer una búsqueda inicial
+    // para cargar productos con datos financieros
+    if (products.length === 0 && !isLoading) {
+      searchProducts('').catch(console.error);
+    }
     // Solo al montar
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

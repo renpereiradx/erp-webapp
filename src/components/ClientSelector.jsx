@@ -4,10 +4,10 @@
  * Separado del componente principal para mejor mantenimiento
  */
 
-import React, { useState, useMemo, useId } from 'react';
+import React, { useState, useMemo, useId, useEffect } from 'react';
 import { Search, User, Users } from 'lucide-react';
-import { MOCK_CLIENTS } from '../constants/mockData';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import useClientStore from '@/store/useClientStore';
 
 const ClientSelector = ({ 
   selectedClient, 
@@ -20,23 +20,55 @@ const ClientSelector = ({
   ...props
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Filtrar clientes basado en la búsqueda
+  // Usar el store real de clientes
+  const { clients, loading, fetchClients, searchClients } = useClientStore();
+
+  // Cargar clientes iniciales
+  useEffect(() => {
+    if (clients.length === 0) {
+      fetchClients();
+    }
+  }, [fetchClients, clients.length]);
+
+  // Manejar búsqueda con debounce
+  useEffect(() => {
+    const debounceTimer = setTimeout(async () => {
+      if (searchTerm.trim().length >= 2) {
+        setIsSearching(true);
+        try {
+          const results = await searchClients(searchTerm);
+          setSearchResults(results);
+        } catch (error) {
+          console.error('Error buscando clientes:', error);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setIsSearching(false);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm, searchClients]);
+
+  // Filtrar clientes a mostrar
   const filteredClients = useMemo(() => {
-    if (!searchTerm) return MOCK_CLIENTS;
-    
-    const term = searchTerm.toLowerCase();
-    return MOCK_CLIENTS.filter(client =>
-      client.name.toLowerCase().includes(term) ||
-      client.email.toLowerCase().includes(term) ||
-      client.phone.includes(term)
-    );
-  }, [searchTerm]);
+    if (searchTerm.trim().length >= 2) {
+      return searchResults;
+    }
+    return clients.slice(0, 50); // Mostrar máximo 50 clientes si no hay búsqueda
+  }, [searchTerm, searchResults, clients]);
 
   // Obtener cliente seleccionado
   const selectedClientData = useMemo(() => {
-    return MOCK_CLIENTS.find(client => client.id === selectedClient);
-  }, [selectedClient]);
+    const allClients = [...clients, ...searchResults];
+    return allClients.find(client => client.id === selectedClient);
+  }, [selectedClient, clients, searchResults]);
 
   const { styles: themeStyles, isMaterial, isFluent, isNeoBrutalism } = useThemeStyles();
   const styles = {
@@ -78,16 +110,21 @@ const ClientSelector = ({
       {showSearch && (
         <div className={styles.searchContainer}>
           <div className="relative">
-            <Search className={`${styles.searchIcon} w-4 h-4`} />
+            {!isSearching ? (
+              <Search className={`${styles.searchIcon} w-4 h-4`} />
+            ) : (
+              <div className={`${styles.searchIcon} w-4 h-4 animate-spin border-2 border-current border-t-transparent rounded-full`} />
+            )}
             <input
               id={searchId}
               type="text"
-              placeholder="Buscar cliente..."
+              placeholder="Buscar cliente por nombre, email o teléfono (mín. 2 caracteres)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={styles.searchInput}
               data-testid="client-search-input"
               aria-label="Buscar cliente"
+              disabled={loading}
             />
           </div>
         </div>
@@ -105,9 +142,15 @@ const ClientSelector = ({
           <option value="">{placeholder}</option>
           {filteredClients.map((client) => (
             <option key={client.id} value={client.id} data-testid={`client-option-${client.id}`}>
-              {client.name} - {client.phone}
+              {client.name} {client.contact?.phone ? `- ${client.contact.phone}` : ''} {client.document_id ? `(${client.document_id})` : ''}
             </option>
           ))}
+          {loading && (
+            <option disabled>Cargando clientes...</option>
+          )}
+          {searchTerm.length >= 2 && searchResults.length === 0 && !isSearching && !loading && (
+            <option disabled>No se encontraron clientes para "{searchTerm}"</option>
+          )}
         </select>
       </div>
 
@@ -118,8 +161,15 @@ const ClientSelector = ({
             {selectedClientData.name}
           </div>
           <div className={styles.clientDetails} data-testid="client-details">
-            <div>📧 {selectedClientData.email}</div>
-            <div>📞 {selectedClientData.phone}</div>
+            {selectedClientData.contact?.email && (
+              <div>📧 {selectedClientData.contact.email}</div>
+            )}
+            {selectedClientData.contact?.phone && (
+              <div>📞 {selectedClientData.contact.phone}</div>
+            )}
+            {selectedClientData.document_id && (
+              <div>🆔 {selectedClientData.document_id}</div>
+            )}
           </div>
         </div>
       )}

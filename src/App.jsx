@@ -14,6 +14,7 @@ import Sales from '@/pages/Sales';
 import Reservations from '@/pages/Reservations';
 import Schedules from '@/pages/Schedules';
 import Inventory from '@/pages/Inventory';
+import PriceAdjustments from '@/pages/PriceAdjustments';
 // ISOLATED IMPORTS - Pages temporarily disabled for refactoring
 // import BookingSales from '@/pages/BookingSales';
 import Purchases from '@/pages/Purchases';
@@ -94,6 +95,7 @@ function AppContent() {
                     <Route path="/reservas" element={<Reservations />} />
                     <Route path="/horarios" element={<Schedules />} />
                     <Route path="/inventario" element={<Inventory />} />
+                    <Route path="/ajustes-precios" element={<PriceAdjustments />} />
 
                     {/* --- RUTAS AISLADAS TEMPORALMENTE PARA REFACTORING --- */}
                     <Route path="/compras" element={<Purchases />} />

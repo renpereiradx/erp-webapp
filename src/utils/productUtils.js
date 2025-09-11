@@ -23,21 +23,24 @@ export const isEnrichedProduct = (product) => {
 export const getProductStock = (product) => {
   if (!product) return null;
   
-  // Si el producto tiene datos de stock enriquecidos
+  // Nueva estructura financiera - stock_quantity directo
+  if (product.stock_quantity !== undefined) {
+    return {
+      quantity: product.stock_quantity,
+      hasStock: product.stock_quantity > 0,
+      status: product.stock_status || 'unknown',
+      updatedAt: product.stock_updated_at,
+      updatedBy: product.stock_updated_by
+    };
+  }
+  
+  // Si el producto tiene datos de stock enriquecidos (estructura anterior)
   if (product.stock && typeof product.stock === 'object') {
     return {
       quantity: product.stock.quantity || 0,
       effectiveDate: product.stock.effective_date,
       metadata: product.stock.metadata,
       hasStock: product.stock.quantity > 0
-    };
-  }
-  
-  // Fallback a campo básico de stock
-  if (product.stock_quantity !== undefined) {
-    return {
-      quantity: product.stock_quantity,
-      hasStock: product.stock_quantity > 0
     };
   }
   
@@ -50,7 +53,18 @@ export const getProductStock = (product) => {
 export const getProductPrice = (product) => {
   if (!product) return null;
   
-  // Si el producto tiene datos de precio enriquecidos
+  // Nueva estructura financiera - unit_prices
+  if (product.unit_prices && Array.isArray(product.unit_prices) && product.unit_prices.length > 0) {
+    const unitPrice = product.unit_prices[0];
+    return {
+      purchasePrice: unitPrice.price_per_unit,
+      effectiveDate: unitPrice.effective_date,
+      unit: unitPrice.unit,
+      formatted: formatPrice(unitPrice.price_per_unit)
+    };
+  }
+  
+  // Si el producto tiene datos de precio enriquecidos (estructura anterior)
   if (product.price && typeof product.price === 'object') {
     return {
       purchasePrice: product.price.purchase_price,
@@ -123,9 +137,9 @@ export const getProductCategory = (product) => {
 export const formatPrice = (price) => {
   if (price === null || price === undefined) return 'N/A';
   
-  return new Intl.NumberFormat('es-CO', {
+  return new Intl.NumberFormat('es-PY', {
     style: 'currency',
-    currency: 'COP',
+    currency: 'PYG',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(price);
@@ -193,16 +207,16 @@ export const createProductSummary = (product) => {
   const stockStatus = getStockStatus(product);
   
   return {
-    id: product.id,
-    name: product.name,
+    id: product.product_id || product.id,
+    name: product.product_name || product.name,
     isActive: isProductActive(product),
     isEnriched: isEnrichedProduct(product),
     
-    // Datos enriquecidos del nuevo backend
-    hasUnitPricing: product.has_unit_pricing || false,
-    hasValidPrice: product.has_valid_price || false,
-    hasValidStock: product.has_valid_stock || false,
-    priceFormatted: product.price_formatted || null,
+    // Datos financieros de la nueva estructura
+    hasUnitPricing: product.unit_prices?.length > 0 || product.has_unit_pricing || false,
+    hasValidPrice: product.has_valid_prices || product.unit_prices?.length > 0 || false,
+    hasValidStock: product.has_valid_stock || product.stock_quantity !== undefined || false,
+    priceFormatted: price?.formatted || product.price_formatted || null,
     
     // Datos enriquecidos procesados
     stock: stock,

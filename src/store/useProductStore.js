@@ -400,7 +400,7 @@ const useProductStore = create()(
             const startIndex = (currentPage - 1) * currentPageSize;
             const endIndex = startIndex + currentPageSize;
             const paginatedProducts = products.slice(startIndex, endIndex);
-            const byId = Object.fromEntries(products.map(p => [p.id, p]));
+            const byId = Object.fromEntries(products.map(p => [p.product_id || p.id, p]));
             set({
               products: paginatedProducts,
               productsById: byId,
@@ -418,7 +418,7 @@ const useProductStore = create()(
             const response = await get()._withRetry(() => productService.getProducts(currentPage, currentPageSize), { telemetryKey: 'products.fetch' });
             products = Array.isArray(response) ? response : [response];
             totalCount = products.length;
-            const byId = Object.fromEntries(products.map(p => [p.id, p]));
+            const byId = Object.fromEntries(products.map(p => [p.product_id || p.id, p]));
             set({
               products: products,
               productsById: byId,
@@ -513,7 +513,7 @@ const useProductStore = create()(
         telemetry.record('products.search.cache.hit', { term, age: now - cached.ts });
         const totalCount = cached.data.length;
         const paginated = cached.data.slice(0, pageSize);
-        const byId = Object.fromEntries(cached.data.map(p => [p.id, p]));
+        const byId = Object.fromEntries(cached.data.map(p => [p.product_id || p.id, p]));
         set({
           products: paginated,
           productsById: byId,
@@ -529,14 +529,14 @@ const useProductStore = create()(
         if ((now - cached.ts) > cacheTTL * 0.5 && !options.revalidate) {
           (async () => {
             try {
-              const fresh = await get()._withRetry(() => productService.searchProducts(term), { attempts: 2, telemetryKey: 'products.search.revalidate' });
+              const fresh = await get()._withRetry(() => productService.searchProductsFinancial(term), { attempts: 2, telemetryKey: 'products.search.revalidate' });
               const freshArr = Array.isArray(fresh) ? fresh : [fresh];
               set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: freshArr } } }));
               telemetry.record('products.search.revalidate.auto.success', { term, total: freshArr.length });
               // Si cambió el tamaño, actualizar vista
               if (freshArr.length !== totalCount) {
                 const pag = freshArr.slice(0, pageSize);
-                const freshById = Object.fromEntries(freshArr.map(p => [p.id, p]));
+                const freshById = Object.fromEntries(freshArr.map(p => [p.product_id || p.id, p]));
                 set({ products: pag, productsById: freshById, totalProducts: freshArr.length, totalPages: Math.ceil(freshArr.length / pageSize) });
               }
             } catch {
@@ -550,11 +550,12 @@ const useProductStore = create()(
       if (options.signal) {
         set((s)=>({ cacheMisses: s.cacheMisses + 1 }));
         telemetry.record('products.search.cache.miss', { term });
-        const response = await productService.searchProducts(term, { signal: options.signal });
+        // Usar financial search para obtener datos completos con precios y costos
+        const response = await productService.searchProductsFinancial(term, { signal: options.signal });
         const products = Array.isArray(response) ? response : [response];
         const totalCount = products.length;
         const paginated = products.slice(0, pageSize);
-        const byId = Object.fromEntries(products.map(p => [p.id, p]));
+        const byId = Object.fromEntries(products.map(p => [p.product_id || p.id, p]));
         set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: products } } }));
         // Trim searchCache si excede 30 entradas
         set((s) => {
@@ -585,11 +586,12 @@ const useProductStore = create()(
       const t = telemetry.startTimer('products.search');
       set((s)=>({ cacheMisses: s.cacheMisses + 1 }));
       telemetry.record('products.search.cache.miss', { term });
-      const response = await get()._withRetry(() => productService.searchProducts(term), { telemetryKey: 'products.search' });
+      // Usar financial search para obtener datos completos con precios y costos
+      const response = await get()._withRetry(() => productService.searchProductsFinancial(term), { telemetryKey: 'products.search' });
       const products = Array.isArray(response) ? response : [response];
       const totalCount = products.length;
       const paginated = products.slice(0, pageSize);
-      const byId = Object.fromEntries(products.map(p => [p.id, p]));
+      const byId = Object.fromEntries(products.map(p => [p.product_id || p.id, p]));
       set((s) => ({ searchCache: { ...s.searchCache, [cacheKey]: { ts: Date.now(), data: products } } }));
       // Trim searchCache si excede 30 entradas
       set((s) => {
@@ -692,7 +694,247 @@ const useProductStore = create()(
         }
       },
 
+      // =================== FINANCIAL ENRICHED PRODUCTS ===================
+      
+      // Obtener producto financieramente enriquecido por ID
+      fetchProductByIdFinancial: async (productId) => {
+        set({ loading: true, error: null });
+        
+        try {
+          const response = await get()._withRetry(
+            () => productService.getProductByIdFinancial(productId),
+            { telemetryKey: 'products.fetch_financial_by_id' }
+          );
+          
+          const product = response.data || response;
+          
+          set({
+            selectedProduct: product,
+            loading: false
+          });
+          
+          telemetry.record('products.fetch_financial_by_id.success', {
+            productId,
+            hasFinancialHealth: !!product?.financial_health,
+            hasCosts: !!product?.unit_costs_summary?.length,
+            hasPrices: !!product?.unit_prices?.length
+          });
+          
+          return product;
+        } catch (error) {
+          const errorMsg = error.message || 'Error al cargar producto financiero';
+          set({
+            error: errorMsg,
+            loading: false
+          });
+          
+          telemetry.record('products.fetch_financial_by_id.error', {
+            productId,
+            error: error.message
+          });
+          
+          throw error;
+        }
+      },
+      
+      // Buscar productos financieramente enriquecidos por código de barras
+      searchProductByBarcodeFinancial: async (barcode) => {
+        set({ loading: true, error: null });
+        
+        try {
+          const response = await get()._withRetry(
+            () => productService.getProductByBarcodeFinancial(barcode),
+            { telemetryKey: 'products.search_financial_by_barcode' }
+          );
+          
+          const product = response.data || response;
+          
+          set({
+            selectedProduct: product,
+            loading: false
+          });
+          
+          telemetry.record('products.search_financial_by_barcode.success', {
+            barcode,
+            productId: product?.product_id,
+            canSell: product?.financial_health?.has_prices && product?.has_valid_stock,
+            bestMargin: product?.best_margin_percent
+          });
+          
+          return product;
+        } catch (error) {
+          const errorMsg = error.message || 'Error al buscar producto por código de barras';
+          set({
+            error: errorMsg,
+            loading: false
+          });
+          
+          telemetry.record('products.search_financial_by_barcode.error', {
+            barcode,
+            error: error.message
+          });
+          
+          throw error;
+        }
+      },
+      
+      // Buscar productos financieramente enriquecidos por nombre
+      searchProductsFinancial: async (searchTerm, options = {}) => {
+        const { limit = 10, signal } = options;
+        const correlationId = `search_financial_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+        
+        if (!searchTerm?.trim()) {
+          return { data: [], total: 0 };
+        }
+        
+        // Short-circuit if circuit is open
+        if (get()._circuitOpen()) {
+          const stateNow = get();
+          const openUntil = stateNow.circuit?.openUntil || 0;
+          if (openUntil && Date.now() >= openUntil) {
+            try { if (stateNow.circuitTimeoutId) clearTimeout(stateNow.circuitTimeoutId); } catch (e) {}
+            get()._closeCircuit('cooldown-search-financial');
+          } else {
+            return { data: [], total: 0, circuitOpen: true };
+          }
+        }
+        
+        set({ loading: true, error: null });
+        
+        try {
+          const response = await get()._withRetry(
+            () => productService.searchProductsFinancial(searchTerm.trim(), { limit, signal }),
+            { telemetryKey: 'products.search_financial' }
+          );
+          
+          const products = Array.isArray(response) ? response : [response];
+          const totalCount = products.length;
+          const pageSize = get().pageSize || 10;
+          const paginated = products.slice(0, pageSize);
+          const byId = Object.fromEntries(products.map(p => [p.product_id || p.id, p]));
+          
+          set({
+            products: paginated,
+            productsById: byId,
+            totalProducts: totalCount,
+            totalPages: Math.ceil(totalCount / pageSize),
+            currentPage: 1,
+            pageSize,
+            loading: false,
+            lastSearchTerm: searchTerm.trim(),
+            error: null
+          });
+          
+          telemetry.record('products.search_financial.success', {
+            searchTerm,
+            total: totalCount,
+            withMargins: products.filter(p => p.best_margin_percent != null).length,
+            correlationId
+          });
+          
+          get()._recordSuccess();
+          return { data: paginated, total: totalCount };
+        } catch (error) {
+          if (!(error?.name === 'AbortError')) {
+            try { get()._recordFailure(); } catch (e) {}
+          }
+          
+          if (error?.name === 'AbortError') {
+            telemetry.record('products.search_financial.abort');
+            return { data: [], total: 0, aborted: true };
+          }
+          
+          const norm = toApiError(error, 'Error al buscar productos financieros', correlationId);
+          const code = norm.code || (isConnectionError(error) ? 'NETWORK' : null);
+          const hintKey = code ? get()._mapErrorCodeToHintKey(code) : null;
+          
+          let errorMessage = norm.message || 'Error al buscar productos financieros';
+          if (isConnectionError(error)) {
+            errorMessage = getConnectionErrorMessage(error);
+          }
+          
+          set({
+            products: [],
+            productsById: {},
+            totalProducts: 0,
+            totalPages: 0,
+            currentPage: 1,
+            loading: false,
+            error: errorMessage,
+            lastErrorCode: code,
+            lastErrorHintKey: hintKey,
+          });
+          
+          telemetry.record('products.search_financial.error', { 
+            searchTerm, 
+            code: norm.code, 
+            message: norm.message, 
+            correlationId 
+          });
+          
+          return { error: errorMessage, data: [], total: 0 };
+        }
+      },
+
       // Limpiar productos (para estado inicial)
+      // Obtener servicios de canchas para reservas (usando endpoint enriquecido)
+      fetchServiceCourts: async () => {
+        const startTime = Date.now();
+        set({ loading: true, error: null });
+        
+        try {
+          const result = await get()._withRetry(
+            async () => {
+              return await apiClient.get('/products/enriched/service-courts');
+            },
+            { telemetryKey: 'products.fetch_service_courts' }
+          );
+          
+          let services = [];
+          if (Array.isArray(result)) {
+            services = result;
+          } else if (result?.data && Array.isArray(result.data)) {
+            services = result.data;
+          }
+          
+          // Actualizar productos con los servicios específicos
+          const servicesById = Object.fromEntries(services.map(s => [s.id, s]));
+          set({
+            products: services,
+            productsById: servicesById,
+            totalProducts: services.length,
+            totalPages: 1,
+            currentPage: 1,
+            loading: false,
+            error: null
+          });
+          
+          telemetry.record('products.fetch_service_courts.success', {
+            duration: Date.now() - startTime,
+            count: services.length
+          });
+          
+          return services;
+        } catch (error) {
+          const errorMsg = error.message || 'Error al cargar servicios de canchas';
+          set({ 
+            products: [],
+            productsById: {},
+            totalProducts: 0,
+            totalPages: 0,
+            loading: false, 
+            error: errorMsg 
+          });
+          
+          telemetry.record('products.fetch_service_courts.error', {
+            duration: Date.now() - startTime,
+            error: error.message
+          });
+          
+          throw error;
+        }
+      },
+
       clearProducts: () => {
         set({ 
           products: [], 

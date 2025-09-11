@@ -49,6 +49,62 @@ export interface Product {
   updated_at?: string;
 }
 
+// ============================================================================
+// FINANCIAL ENRICHED PRODUCT TYPES
+// ============================================================================
+
+export interface UnitPrice {
+  id: number;
+  product_id: string;
+  unit: string;
+  price_per_unit: number;
+  effective_date: string; // ISO 8601 date string
+}
+
+export interface UnitCostSummary {
+  unit: string;
+  last_cost: number;
+  last_purchase_date: string; // ISO 8601 date string
+  weighted_avg_cost_6m: number;
+  total_purchases: number;
+  cost_variance_percent: number;
+}
+
+export interface FinancialHealth {
+  has_prices: boolean;
+  has_costs: boolean;
+  has_stock: boolean;
+  price_count: number;
+  cost_units_count: number;
+  last_updated: string; // ISO 8601 date string
+}
+
+export interface ProductFinancialEnriched {
+  product_id: string;
+  product_name: string;
+  barcode: string | null;
+  state: boolean;
+  category_id: number;
+  product_type: 'PHYSICAL' | 'SERVICE';
+  unit_prices: UnitPrice[];
+  unit_costs_summary: UnitCostSummary[];
+  stock_quantity: number | null;
+  stock_updated_at: string | null;
+  stock_updated_by: string | null;
+  description: string | null;
+  description_updated_at: string | null;
+  category_name: string;
+  category: Category;
+  financial_health: FinancialHealth;
+  stock_status: 'out_of_stock' | 'low_stock' | 'medium_stock' | 'in_stock' | 'no_stock_tracking' | 'unavailable' | 'limited_availability' | 'available';
+  has_valid_stock: boolean;
+  has_valid_prices: boolean;
+  has_valid_costs: boolean;
+  best_margin_unit: string | null;
+  best_margin_percent: number | null;
+  match_score?: number; // Only present in search results
+}
+
 export interface CreateProductRequest {
   name: string;
   categoryId: number;

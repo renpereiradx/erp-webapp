@@ -19,7 +19,7 @@ class BusinessManagementAPI {
 
   getAuthHeaders() {
     let token = localStorage.getItem('authToken');
-    const headers = token ? { 'Authorization': token } : {};
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
     return headers;
   }
 

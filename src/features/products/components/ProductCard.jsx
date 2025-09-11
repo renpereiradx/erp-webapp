@@ -9,11 +9,12 @@ import EditableField from '@/components/EditableField';
 const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onReactivate, onToggleSelect, selected, inlineEditing, onStartInlineEdit, onCancelInlineEdit, onInlineSave }) => {
   const { styles } = useThemeStyles();
   const { t } = useI18n();
+  
   const productSummary = createProductSummary(product);
   const stockStatus = getStockStatus(product);
-  const [editName, setEditName] = React.useState(product.name || '');
-  const [editPrice, setEditPrice] = React.useState(product.price ?? '');
-  const [editStock, setEditStock] = React.useState(product.stock_quantity ?? '');
+  const [editName, setEditName] = React.useState(productSummary.name || product.name || '');
+  const [editPrice, setEditPrice] = React.useState(productSummary.price?.purchasePrice ?? product.price ?? '');
+  const [editStock, setEditStock] = React.useState(productSummary.stock?.quantity ?? product.stock_quantity ?? '');
   const [errorMsg, setErrorMsg] = React.useState(null);
 
   const submitPatch = (patch) => {
@@ -27,7 +28,7 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onReactivat
       setErrorMsg('Stock inválido');
       return false;
     }
-    onInlineSave(product.id, patch);
+    onInlineSave(productSummary.id || product.product_id || product.id, patch);
     return true;
   };
 
@@ -82,13 +83,13 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onReactivat
                         overflow: 'hidden',
                         textOverflow: 'ellipsis'
                       }}
-                      title={product.name}>
-                    {product.name || t('field.no_name')}
+                      title={productSummary.name}>
+                    {productSummary.name || t('field.no_name')}
                   </h3>
                   <div className="space-y-1">
                     <p className={`text-xs text-muted-foreground ${styles.label()} flex items-center gap-1`}>
                       <Hash className="w-3 h-3" />
-                      {product.code || product.product_id || product.id}
+                      {product.code || productSummary.id}
                     </p>
                     {product.barcode && (
                       <p className={`text-xs text-muted-foreground ${styles.label()} flex items-center gap-1`}>
@@ -107,8 +108,8 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onReactivat
               )}
             </div>
           </div>
-          <div className={`text-xs px-2 py-1 rounded-full ${product.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-            {product.is_active ? t('status.active', 'Activo') : t('status.inactive', 'Inactivo')}
+          <div className={`text-xs px-2 py-1 rounded-full ${productSummary.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+            {productSummary.isActive ? t('status.active', 'Activo') : t('status.inactive', 'Inactivo')}
           </div>
         </div>
 
@@ -143,7 +144,7 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onReactivat
               />
             ) : (
               <div className="flex items-center gap-1 font-semibold" style={{ color: stockStatus.color }}>
-                <span>{stockStatus.text} ({product.stock_quantity ?? 'N/A'})</span>
+                <span>{stockStatus.text} ({productSummary.stock?.quantity ?? 'N/A'})</span>
                 {getStockIcon(stockStatus.status)}
               </div>
             )}
