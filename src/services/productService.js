@@ -199,6 +199,20 @@ export const productService = {
     }
   },
 
+  // Obtener productos de servicios de canchas (enriquecidos)
+  /**
+   * @returns {Promise<Product[]|any>}
+   */
+  getServiceCourts: async () => {
+    try {
+      return await retryWithBackoff(async () => {
+        return await apiClient.getServiceCourts();
+      });
+    } catch (error) {
+      throw toApiError(error, 'Error al obtener servicios de canchas enriquecidos');
+    }
+  },
+
   // Búsqueda inteligente: por ID, nombre o código de barras
   /**
    * @param {string} searchTerm

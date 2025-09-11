@@ -493,23 +493,23 @@ const MainLayout = ({ children }) => {
       badge: '4'
     },
     { 
+      name: 'Ajuste de inventario', 
+      href: '/inventario', 
+      icon: Package, 
+      color: 'purple',
+      badge: '5'
+    },
+    { 
       name: 'Ventas', 
       href: '/ventas', 
       icon: ShoppingCart, 
       color: 'green',
-      badge: '5'
+      badge: '6'
     },
     { 
       name: 'Reservas', 
       href: '/reservas', 
       icon: Calendar, 
-      color: 'purple',
-      badge: '6'
-    },
-    { 
-      name: 'Inventario', 
-      href: '/inventario', 
-      icon: Package, 
       color: 'purple',
       badge: '7'
     },

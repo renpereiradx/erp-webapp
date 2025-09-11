@@ -100,7 +100,7 @@ const Reservations = () => {
     clearError
   } = useReservationStore();
 
-  const { products, fetchProducts } = useProductStore();
+  const { products, fetchProducts, fetchServiceCourts } = useProductStore();
   const { clients, fetchClients } = useClientStore();
 
   // Estados locales para UI
@@ -155,6 +155,11 @@ const Reservations = () => {
     date: ''
   });
 
+  // Estados para modal de selección de servicios
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [availableServices, setAvailableServices] = useState([]);
+  const [loadingServices, setLoadingServices] = useState(false);
+
   // Función para cargar datos de forma explícita
   const handleLoadData = async () => {
     setLoadingData(true);
@@ -169,6 +174,20 @@ const Reservations = () => {
       console.error('Error loading data:', error);
     } finally {
       setLoadingData(false);
+    }
+  };
+
+  // Función para cargar servicios enriquecidos
+  const handleLoadServices = async () => {
+    setLoadingServices(true);
+    try {
+      const services = await fetchServiceCourts();
+      setAvailableServices(Array.isArray(services) ? services : []);
+    } catch (error) {
+      console.error('Error loading services:', error);
+      setAvailableServices([]);
+    } finally {
+      setLoadingServices(false);
     }
   };
 
@@ -719,7 +738,10 @@ const Reservations = () => {
                   {/* Botón para abrir modal de selección de servicios */}
                   <div className="text-center">
                     <Button
-                      onClick={() => setShowServiceModal(true)}
+                      onClick={() => {
+                        setShowServiceModal(true);
+                        handleLoadServices();
+                      }}
                       variant="outline"
                       size="lg"
                       className="w-full h-16 text-lg"
@@ -747,8 +769,23 @@ const Reservations = () => {
                             {selectedProduct.name}
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            Servicio seleccionado • ${selectedProduct.price || 'Precio a consultar'}/hora
+                            {selectedProduct.category_name || 'Servicio'} • {selectedProduct.price_formatted || 'Precio a consultar'}
                           </p>
+                          {selectedProduct.stock_status && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className={`w-2 h-2 rounded-full ${
+                                selectedProduct.stock_status === 'no_stock_tracking' ? 'bg-blue-500' : 
+                                selectedProduct.stock_status === 'available' ? 'bg-green-500' :
+                                selectedProduct.stock_status === 'limited_availability' ? 'bg-yellow-500' : 'bg-gray-500'
+                              }`} />
+                              <span className="text-xs text-muted-foreground">
+                                {selectedProduct.stock_status === 'no_stock_tracking' ? 'Sin control de stock' :
+                                 selectedProduct.stock_status === 'available' ? 'Disponible' :
+                                 selectedProduct.stock_status === 'limited_availability' ? 'Disponibilidad limitada' :
+                                 selectedProduct.stock_status === 'unavailable' ? 'No disponible' : selectedProduct.stock_status}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <CheckCircle className="w-6 h-6 text-primary" />
                       </div>
@@ -1457,14 +1494,31 @@ const Reservations = () => {
                 {/* Selector de producto y fecha */}
                 <div className="space-y-3 mb-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Servicio</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium">Servicio</label>
+                      <Button
+                        onClick={handleLoadServices}
+                        disabled={loadingServices}
+                        size="sm"
+                        variant="outline"
+                        className="text-xs"
+                      >
+                        {loadingServices ? (
+                          <div className="animate-spin w-3 h-3 border-2 border-current border-t-transparent rounded-full mr-1" />
+                        ) : (
+                          <RefreshCw className="w-3 h-3 mr-1" />
+                        )}
+                        Cargar
+                      </Button>
+                    </div>
                     <select
                       value={selectedProduct?.id || ''}
                       onChange={(e) => {
                         const productId = e.target.value;
-                        let product = products.find(p => p.id === productId);
+                        let product = availableServices.find(p => p.id === productId) || 
+                                     products.find(p => p.id === productId);
                         
-                        // Si no se encuentra en products, crear objeto temporal para IDs conocidos
+                        // Si no se encuentra, crear objeto temporal para IDs conocidos
                         if (!product && productId.startsWith('BT_Cancha_')) {
                           product = {
                             id: productId,
@@ -1479,6 +1533,19 @@ const Reservations = () => {
                       className="w-full p-2 border rounded"
                     >
                       <option value="">Seleccionar servicio...</option>
+                      {/* Servicios enriquecidos */}
+                      {availableServices && availableServices.length > 0 && (
+                        <optgroup label="Servicios de Canchas">
+                          {availableServices
+                            .filter(service => service.state) // Solo servicios activos
+                            .map((service) => (
+                              <option key={service.id} value={service.id}>
+                                {service.name} - {service.price_formatted || 'Sin precio'}
+                              </option>
+                            ))
+                          }
+                        </optgroup>
+                      )}
                       {/* Opción temporal: IDs conocidos del sistema */}
                       <optgroup label="Servicios Conocidos (Temporal)">
                         <option value="BT_Cancha_1_xyz123abc">Cancha de Beach Tennis 1</option>
@@ -1486,7 +1553,7 @@ const Reservations = () => {
                       </optgroup>
                       {/* Servicios cargados dinámicamente */}
                       {products && products.length > 0 && (
-                        <optgroup label="Servicios Cargados">
+                        <optgroup label="Otros Servicios">
                           {products
                             .filter(product => product.type === 'service' || product.reservable)
                             .map((product) => (
@@ -1497,7 +1564,7 @@ const Reservations = () => {
                           }
                         </optgroup>
                       )}
-                      {(!products || products.length === 0) && (
+                      {(!availableServices || availableServices.length === 0) && (!products || products.length === 0) && (
                         <option value="" disabled>
                           {t('reservations.no_services_available', 'No hay servicios disponibles')}
                         </option>
@@ -1766,6 +1833,126 @@ const Reservations = () => {
         </form>
       </EnhancedModal>
       
+      {/* Modal de Selección de Servicios */}
+      <EnhancedModal
+        isOpen={showServiceModal}
+        onClose={() => setShowServiceModal(false)}
+        title="Seleccionar Servicio"
+        subtitle="Elige el servicio que deseas reservar"
+        variant="default"
+        size="lg"
+        loading={loadingServices}
+        testId="service-selection-modal"
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={() => setShowServiceModal(false)}
+              disabled={loadingServices}
+            >
+              Cancelar
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {loadingServices ? (
+            <div className="text-center py-8">
+              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+              <p className="text-muted-foreground">Cargando servicios disponibles...</p>
+            </div>
+          ) : availableServices.length === 0 ? (
+            <div className="text-center py-8">
+              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="font-medium mb-2">No hay servicios disponibles</h3>
+              <p className="text-sm text-muted-foreground">
+                No se encontraron servicios de canchas disponibles para reservar.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 max-h-96 overflow-y-auto">
+              {availableServices.map((service) => (
+                <Card 
+                  key={service.id} 
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    selectedProduct?.id === service.id ? 'border-2 border-primary bg-primary/5' : ''
+                  }`}
+                  onClick={() => {
+                    handleSelectProduct(service);
+                    setShowServiceModal(false);
+                  }}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg mb-2">{service.name}</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {service.category_name || 'Servicio'}
+                            </Badge>
+                            <Badge 
+                              variant={service.state ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {service.state ? 'Activo' : 'Inactivo'}
+                            </Badge>
+                          </div>
+                          
+                          {service.price_formatted && (
+                            <div className="flex items-center gap-2 text-primary font-medium">
+                              <span className="text-base">{service.price_formatted}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-4 text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="w-3 h-3" />
+                              <span className="text-xs">
+                                {service.has_valid_price ? 'Precio válido' : 'Sin precio'}
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <div className={`w-2 h-2 rounded-full ${
+                                service.stock_status === 'no_stock_tracking' ? 'bg-blue-500' : 
+                                service.stock_status === 'available' ? 'bg-green-500' :
+                                service.stock_status === 'limited_availability' ? 'bg-yellow-500' : 'bg-gray-500'
+                              }`} />
+                              <span className="text-xs capitalize">
+                                {service.stock_status === 'no_stock_tracking' ? 'Sin control de stock' :
+                                 service.stock_status === 'available' ? 'Disponible' :
+                                 service.stock_status === 'limited_availability' ? 'Disponibilidad limitada' :
+                                 service.stock_status === 'unavailable' ? 'No disponible' : service.stock_status}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {service.description && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {service.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="ml-4">
+                        {selectedProduct?.id === service.id ? (
+                          <CheckCircle className="w-6 h-6 text-primary" />
+                        ) : (
+                          <div className="w-6 h-6 border-2 border-muted-foreground rounded-full" />
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </EnhancedModal>
+
       {/* Modal de Detalles de Horarios */}
       {schedulesModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

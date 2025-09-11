@@ -176,6 +176,71 @@ const useProductStore = create()(
 
       // =================== API CALLS ===================
 
+      // Obtener servicios de canchas enriquecidos
+      fetchServiceCourts: async () => {
+        const currentState = get();
+        if (currentState.loading) return currentState.products;
+        
+        set({ loading: true, error: null });
+        const t = telemetry.startTimer('products.fetchServiceCourts');
+        try {
+          // Short-circuit if circuit open
+          if (get()._circuitOpen()) {
+            const stateNow = get();
+            const openUntil = stateNow.circuit?.openUntil || 0;
+            if (openUntil && Date.now() >= openUntil) {
+              try { if (stateNow.circuitTimeoutId) clearTimeout(stateNow.circuitTimeoutId); } catch (e) {}
+              get()._closeCircuit('cooldown-fetchServiceCourts');
+            } else {
+              return { data: [], total: 0, circuitOpen: true };
+            }
+          }
+
+          const response = await get()._withRetry(() => productService.getServiceCourts(), { telemetryKey: 'products.fetchServiceCourts' });
+          const services = Array.isArray(response) ? response : [response];
+          const byId = Object.fromEntries(services.map(s => [s.id, s]));
+          
+          set({
+            products: services,
+            productsById: byId,
+            totalProducts: services.length,
+            totalPages: Math.ceil(services.length / currentState.pageSize),
+            currentPage: 1,
+            loading: false,
+            error: null
+          });
+          
+          telemetry.endTimer(t, { total: services.length, type: 'service-courts' });
+          get()._recordSuccess();
+          return services;
+        } catch (error) {
+          get()._recordFailure();
+          const norm = toApiError(error, 'Error al cargar servicios de canchas');
+          let errorMessage = norm.message;
+          let code = norm.code || null;
+          
+          if (isConnectionError(error)) {
+            errorMessage = getConnectionErrorMessage(error);
+            code = 'NETWORK';
+          }
+          
+          const hintKey = code ? get()._mapErrorCodeToHintKey(code) : null;
+          set({
+            products: [],
+            productsById: {},
+            totalProducts: 0,
+            totalPages: 0,
+            loading: false,
+            error: errorMessage,
+            lastErrorCode: code,
+            lastErrorHintKey: hintKey
+          });
+          
+          try { telemetry.record('products.error.store', { message: errorMessage, code }); } catch (e) {}
+          throw norm;
+        }
+      },
+
       fetchCategories: async () => {
         const currentState = get();
         // Evitar llamadas múltiples simultáneas
