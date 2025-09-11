@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import EnhancedModal from '@/components/ui/EnhancedModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useI18n } from '@/lib/i18n';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
@@ -184,7 +183,9 @@ const CashRegister = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="container mx-auto p-6 space-y-8 relative">
+      {/* Cash register content container */}
+      <div className="relative w-full space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -205,79 +206,97 @@ const CashRegister = () => {
             Abrir Caja
           </Button>
 
-          <EnhancedModal
-            isOpen={openCashRegisterDialog}
-            onClose={() => setOpenCashRegisterDialog(false)}
-            title="Abrir Nueva Caja Registradora"
-            subtitle="Configure los datos iniciales para la nueva caja registradora"
-            size="md"
-            variant="default"
-            loading={isOpeningCashRegister}
-            testId="open-cash-register-modal"
-            footer={
-              <div className="flex gap-3 justify-end">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setOpenCashRegisterDialog(false)}
-                  disabled={isOpeningCashRegister}
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  type="submit" 
-                  onClick={handleOpenCashRegister}
-                  disabled={isOpeningCashRegister}
-                >
-                  {isOpeningCashRegister ? 'Abriendo...' : 'Abrir Caja'}
-                </Button>
+          {openCashRegisterDialog && (
+            <div 
+              className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+              onClick={() => setOpenCashRegisterDialog(false)}
+            >
+              <div 
+                className="bg-background rounded-lg border shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 pb-4 border-b">
+                  <div>
+                    <h2 className="text-lg font-semibold">Abrir Nueva Caja Registradora</h2>
+                    <p className="text-sm text-muted-foreground">Configure los datos iniciales para la nueva caja registradora</p>
+                  </div>
+                  <button
+                    onClick={() => setOpenCashRegisterDialog(false)}
+                    className="text-muted-foreground hover:text-foreground p-1 rounded"
+                  >
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-6">
+                  <form onSubmit={handleOpenCashRegister} className="space-y-4">
+                    <div>
+                      <Label htmlFor="name">Nombre de la Caja</Label>
+                      <Input
+                        id="name"
+                        value={openCashRegisterForm.name}
+                        onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Ej: Caja Principal"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="initial_balance">Balance Inicial</Label>
+                      <Input
+                        id="initial_balance"
+                        type="number"
+                        step="0.01"
+                        value={openCashRegisterForm.initial_balance}
+                        onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, initial_balance: e.target.value }))}
+                        placeholder="0.00"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="location">Ubicación</Label>
+                      <Input
+                        id="location"
+                        value={openCashRegisterForm.location}
+                        onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, location: e.target.value }))}
+                        placeholder="Ej: Mostrador Principal"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="notes">Notas</Label>
+                      <Textarea
+                        id="notes"
+                        value={openCashRegisterForm.notes}
+                        onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Notas adicionales..."
+                        rows={3}
+                      />
+                    </div>
+                  </form>
+                </div>
+
+                {/* Footer */}
+                <div className="flex gap-3 justify-end p-6 pt-4 border-t">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setOpenCashRegisterDialog(false)}
+                    disabled={isOpeningCashRegister}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    onClick={handleOpenCashRegister}
+                    disabled={isOpeningCashRegister}
+                  >
+                    {isOpeningCashRegister ? 'Abriendo...' : 'Abrir Caja'}
+                  </Button>
+                </div>
               </div>
-            }
-          >
-            <form onSubmit={handleOpenCashRegister} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Nombre de la Caja</Label>
-                <Input
-                  id="name"
-                  value={openCashRegisterForm.name}
-                  onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Ej: Caja Principal"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="initial_balance">Balance Inicial</Label>
-                <Input
-                  id="initial_balance"
-                  type="number"
-                  step="0.01"
-                  value={openCashRegisterForm.initial_balance}
-                  onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, initial_balance: e.target.value }))}
-                  placeholder="0.00"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="location">Ubicación</Label>
-                <Input
-                  id="location"
-                  value={openCashRegisterForm.location}
-                  onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, location: e.target.value }))}
-                  placeholder="Ej: Mostrador Principal"
-                />
-              </div>
-              <div>
-                <Label htmlFor="notes">Notas</Label>
-                <Textarea
-                  id="notes"
-                  value={openCashRegisterForm.notes}
-                  onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Notas adicionales..."
-                  rows={3}
-                />
-              </div>
-            </form>
-          </EnhancedModal>
+            </div>
+          )}
         </div>
       </div>
 
@@ -322,87 +341,112 @@ const CashRegister = () => {
                 Registrar Movimiento
               </Button>
 
-              <EnhancedModal
-                isOpen={movementDialog}
-                onClose={() => setMovementDialog(false)}
-                title="Registrar Movimiento"
-                subtitle="Registre un movimiento manual de efectivo"
-                size="md"
-                variant="default"
-                loading={isRegisteringMovement}
-                testId="register-movement-modal"
-                footer={
-                  <div className="flex gap-3 justify-end">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setMovementDialog(false)}
-                      disabled={isRegisteringMovement}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      onClick={handleRegisterMovement}
-                      disabled={isRegisteringMovement}
-                    >
-                      {isRegisteringMovement ? 'Registrando...' : 'Registrar'}
-                    </Button>
+              {movementDialog && (
+                <div 
+                  className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                  onClick={() => setMovementDialog(false)}
+                >
+                  <div 
+                    className="bg-background rounded-lg border shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-6 pb-4 border-b">
+                      <div>
+                        <h2 className="text-lg font-semibold">Registrar Movimiento</h2>
+                        <p className="text-sm text-muted-foreground">Registre un movimiento manual de efectivo</p>
+                      </div>
+                      <button
+                        onClick={() => setMovementDialog(false)}
+                        className="text-muted-foreground hover:text-foreground p-1 rounded"
+                      >
+                        <XCircle className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                      {isRegisteringMovement ? (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+                          <span className="ml-3 text-sm text-muted-foreground">Procesando...</span>
+                        </div>
+                      ) : (
+                        <form onSubmit={handleRegisterMovement} className="space-y-4">
+                          <div>
+                            <Label htmlFor="movement_type">Tipo de Movimiento</Label>
+                            <Select 
+                              value={movementForm.movement_type} 
+                              onValueChange={(value) => setMovementForm(prev => ({ ...prev, movement_type: value }))}
+                              required
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccione el tipo" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="INCOME">Ingreso</SelectItem>
+                                <SelectItem value="EXPENSE">Gasto</SelectItem>
+                                <SelectItem value="ADJUSTMENT">Ajuste</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="amount">Monto</Label>
+                            <Input
+                              id="amount"
+                              type="number"
+                              step="0.01"
+                              value={movementForm.amount}
+                              onChange={(e) => setMovementForm(prev => ({ ...prev, amount: e.target.value }))}
+                              placeholder="0.00"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="concept">Concepto</Label>
+                            <Input
+                              id="concept"
+                              value={movementForm.concept}
+                              onChange={(e) => setMovementForm(prev => ({ ...prev, concept: e.target.value }))}
+                              placeholder="Descripción del movimiento"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="movement_notes">Notas</Label>
+                            <Textarea
+                              id="movement_notes"
+                              value={movementForm.notes}
+                              onChange={(e) => setMovementForm(prev => ({ ...prev, notes: e.target.value }))}
+                              placeholder="Notas adicionales..."
+                              rows={2}
+                            />
+                          </div>
+                        </form>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex gap-3 justify-end p-6 pt-4 border-t">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setMovementDialog(false)}
+                        disabled={isRegisteringMovement}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        onClick={handleRegisterMovement}
+                        disabled={isRegisteringMovement}
+                      >
+                        {isRegisteringMovement ? 'Registrando...' : 'Registrar'}
+                      </Button>
+                    </div>
                   </div>
-                }
-              >
-                <form onSubmit={handleRegisterMovement} className="space-y-4">
-                  <div>
-                    <Label htmlFor="movement_type">Tipo de Movimiento</Label>
-                    <Select 
-                      value={movementForm.movement_type} 
-                      onValueChange={(value) => setMovementForm(prev => ({ ...prev, movement_type: value }))}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccione el tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="INCOME">Ingreso</SelectItem>
-                        <SelectItem value="EXPENSE">Gasto</SelectItem>
-                        <SelectItem value="ADJUSTMENT">Ajuste</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="amount">Monto</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      step="0.01"
-                      value={movementForm.amount}
-                      onChange={(e) => setMovementForm(prev => ({ ...prev, amount: e.target.value }))}
-                      placeholder="0.00"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="concept">Concepto</Label>
-                    <Input
-                      id="concept"
-                      value={movementForm.concept}
-                      onChange={(e) => setMovementForm(prev => ({ ...prev, concept: e.target.value }))}
-                      placeholder="Descripción del movimiento"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="movement_notes">Notas</Label>
-                    <Textarea
-                      id="movement_notes"
-                      value={movementForm.notes}
-                      onChange={(e) => setMovementForm(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Notas adicionales..."
-                      rows={2}
-                    />
-                  </div>
-                </form>
-              </EnhancedModal>
+                </div>
+              )}
 
               <Button variant="outline" onClick={handleLoadMovements} disabled={isMovementsLoading}>
                 <Clock className="w-4 h-4 mr-2" />
@@ -419,64 +463,94 @@ const CashRegister = () => {
                 Cerrar Caja
               </Button>
 
-              <EnhancedModal
-                isOpen={closeCashRegisterDialog}
-                onClose={() => setCloseCashRegisterDialog(false)}
-                title="Cerrar Caja Registradora"
-                subtitle="Confirme el balance final y cierre la caja registradora"
-                size="md"
-                variant="warning"
-                loading={isClosingCashRegister}
-                testId="close-cash-register-modal"
-                footer={
-                  <div className="flex gap-3 justify-end">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setCloseCashRegisterDialog(false)}
-                      disabled={isClosingCashRegister}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      variant="destructive" 
-                      onClick={handleCloseCashRegister}
-                      disabled={isClosingCashRegister}
-                    >
-                      {isClosingCashRegister ? 'Cerrando...' : 'Cerrar Caja'}
-                    </Button>
+              {closeCashRegisterDialog && (
+                <div 
+                  className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                  onClick={() => setCloseCashRegisterDialog(false)}
+                >
+                  <div 
+                    className="bg-background rounded-lg border border-yellow-200 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-6 pb-4 border-b">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-yellow-100">
+                          <AlertCircle className="w-5 h-5 text-yellow-600" />
+                        </div>
+                        <div>
+                          <h2 className="text-lg font-semibold">Cerrar Caja Registradora</h2>
+                          <p className="text-sm text-muted-foreground">Confirme el balance final y cierre la caja registradora</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setCloseCashRegisterDialog(false)}
+                        className="text-muted-foreground hover:text-foreground p-1 rounded"
+                      >
+                        <XCircle className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                      {isClosingCashRegister ? (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+                          <span className="ml-3 text-sm text-muted-foreground">Cerrando...</span>
+                        </div>
+                      ) : (
+                        <form onSubmit={handleCloseCashRegister} className="space-y-4">
+                          <div>
+                            <Label htmlFor="final_balance">Balance Final Físico</Label>
+                            <Input
+                              id="final_balance"
+                              type="number"
+                              step="0.01"
+                              value={closeCashRegisterForm.final_balance}
+                              onChange={(e) => setCloseCashRegisterForm(prev => ({ ...prev, final_balance: e.target.value }))}
+                              placeholder={activeCashRegister?.current_balance?.toString() || "0.00"}
+                              required
+                            />
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Balance del sistema: ${activeCashRegister?.current_balance || 0}
+                            </p>
+                          </div>
+                          <div>
+                            <Label htmlFor="close_notes">Notas de Cierre</Label>
+                            <Textarea
+                              id="close_notes"
+                              value={closeCashRegisterForm.notes}
+                              onChange={(e) => setCloseCashRegisterForm(prev => ({ ...prev, notes: e.target.value }))}
+                              placeholder="Observaciones del cierre..."
+                              rows={3}
+                            />
+                          </div>
+                        </form>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex gap-3 justify-end p-6 pt-4 border-t">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setCloseCashRegisterDialog(false)}
+                        disabled={isClosingCashRegister}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        variant="destructive" 
+                        onClick={handleCloseCashRegister}
+                        disabled={isClosingCashRegister}
+                      >
+                        {isClosingCashRegister ? 'Cerrando...' : 'Cerrar Caja'}
+                      </Button>
+                    </div>
                   </div>
-                }
-              >
-                <form onSubmit={handleCloseCashRegister} className="space-y-4">
-                  <div>
-                    <Label htmlFor="final_balance">Balance Final Físico</Label>
-                    <Input
-                      id="final_balance"
-                      type="number"
-                      step="0.01"
-                      value={closeCashRegisterForm.final_balance}
-                      onChange={(e) => setCloseCashRegisterForm(prev => ({ ...prev, final_balance: e.target.value }))}
-                      placeholder={activeCashRegister?.current_balance?.toString() || "0.00"}
-                      required
-                    />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Balance del sistema: ${activeCashRegister?.current_balance || 0}
-                    </p>
-                  </div>
-                  <div>
-                    <Label htmlFor="close_notes">Notas de Cierre</Label>
-                    <Textarea
-                      id="close_notes"
-                      value={closeCashRegisterForm.notes}
-                      onChange={(e) => setCloseCashRegisterForm(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Observaciones del cierre..."
-                      rows={3}
-                    />
-                  </div>
-                </form>
-              </EnhancedModal>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -581,83 +655,109 @@ const CashRegister = () => {
       </Card>
 
       {/* Summary Modal */}
-      <EnhancedModal
-        isOpen={summaryDialog}
-        onClose={() => setSummaryDialog(false)}
-        title="Resumen de Caja"
-        subtitle="Detalles completos de la caja registradora"
-        size="lg"
-        variant="info"
-        testId="cash-register-summary-modal"
-        footer={
-          <div className="flex justify-end">
-            <Button onClick={() => setSummaryDialog(false)}>
-              Cerrar
-            </Button>
-          </div>
-        }
-      >
-        {cashRegisterSummary && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Ingresos</p>
-                <p className="text-lg font-semibold text-green-600">
-                  ${cashRegisterSummary.total_income}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Gastos</p>
-                <p className="text-lg font-semibold text-red-600">
-                  ${cashRegisterSummary.total_expenses}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Ventas</p>
-                <p className="text-lg font-semibold text-blue-600">
-                  ${cashRegisterSummary.total_sales}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Movimientos</p>
-                <p className="text-lg font-semibold">
-                  {cashRegisterSummary.total_movements}
-                </p>
-              </div>
-            </div>
-            
-            {cashRegisterSummary.expected_balance && (
-              <div className="border-t pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Balance Esperado</p>
-                    <p className="text-xl font-bold">
-                      ${cashRegisterSummary.expected_balance}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Balance Actual</p>
-                    <p className="text-xl font-bold">
-                      ${cashRegisterSummary.actual_balance}
-                    </p>
-                  </div>
+      {summaryDialog && (
+        <div 
+          className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setSummaryDialog(false)}
+        >
+          <div 
+            className="bg-background rounded-lg border border-blue-200 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 pb-4 border-b">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100">
+                  <Calculator className="w-5 h-5 text-blue-600" />
                 </div>
-                
-                {cashRegisterSummary.variance !== 0 && (
-                  <div className="mt-4">
-                    <p className="text-sm text-muted-foreground">Diferencia</p>
-                    <p className={`text-xl font-bold ${
-                      cashRegisterSummary.variance >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      ${cashRegisterSummary.variance}
-                    </p>
-                  </div>
-                )}
+                <div>
+                  <h2 className="text-lg font-semibold">Resumen de Caja</h2>
+                  <p className="text-sm text-muted-foreground">Detalles completos de la caja registradora</p>
+                </div>
               </div>
-            )}
+              <button
+                onClick={() => setSummaryDialog(false)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {cashRegisterSummary && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Ingresos</p>
+                      <p className="text-lg font-semibold text-green-600">
+                        ${cashRegisterSummary.total_income}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Gastos</p>
+                      <p className="text-lg font-semibold text-red-600">
+                        ${cashRegisterSummary.total_expenses}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Ventas</p>
+                      <p className="text-lg font-semibold text-blue-600">
+                        ${cashRegisterSummary.total_sales}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Movimientos</p>
+                      <p className="text-lg font-semibold">
+                        {cashRegisterSummary.total_movements}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {cashRegisterSummary.expected_balance && (
+                    <div className="border-t pt-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Balance Esperado</p>
+                          <p className="text-xl font-bold">
+                            ${cashRegisterSummary.expected_balance}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Balance Actual</p>
+                          <p className="text-xl font-bold">
+                            ${cashRegisterSummary.actual_balance}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {cashRegisterSummary.variance !== 0 && (
+                        <div className="mt-4">
+                          <p className="text-sm text-muted-foreground">Diferencia</p>
+                          <p className={`text-xl font-bold ${
+                            cashRegisterSummary.variance >= 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            ${cashRegisterSummary.variance}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end p-6 pt-4 border-t">
+              <Button onClick={() => setSummaryDialog(false)}>
+                Cerrar
+              </Button>
+            </div>
           </div>
-        )}
-      </EnhancedModal>
+        </div>
+      )}
+        </div>
+      </div>
     </div>
   );
 };
