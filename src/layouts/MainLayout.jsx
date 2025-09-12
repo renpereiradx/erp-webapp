@@ -9,15 +9,15 @@ import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { 
-  LayoutDashboard, 
-  Package, 
-  Users, 
+  LayoutDashboard,
+  Package,
+  Users,
   Truck,
   ShoppingCart,
   ShoppingBag,
   Calendar,
   Clock,
-  BarChart3, 
+  BarChart3,
   Settings,
   Search,
   Bell,
@@ -31,9 +31,6 @@ import {
   Edit
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-// TEMPORAL: Desactivamos useAuthStore
-// import useAuthStore from '@/store/useAuthStore';
 
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -877,28 +874,29 @@ const MainLayout = ({ children }) => {
                 style={{ overflow: 'visible', zIndex: 55, position: 'relative' }}
                          data-component="profile-menu" 
                          data-testid="profile-menu">
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="erp-profile-btn relative"
-                  style={{ 
-                    overflow: 'visible', 
+                {/* Single responsive button: icon + text (texto oculto en pantallas pequeñas) */}
+                <Button
+                  variant="ghost"
+                  className="erp-profile-btn inline-flex items-center justify-center gap-2 relative"
+                  style={{
+                    overflow: 'visible',
                     position: 'relative',
-                    width: '48px',
-                    height: '48px',
                     minWidth: '48px',
-                    minHeight: '48px'
+                    minHeight: '48px',
+                    height: '40px',
+                    padding: '0 0.75rem'
                   }}
-                  ref={profileBtnRef}
-                  onClick={() => {
-                    // Abrir el menú de usuario / ir a configuración
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setMenuPos({ top: rect.bottom + window.scrollY, right: rect.right + window.scrollX, width: 288 });
                     setShowUserMenu(prev => !prev);
                   }}
                   data-testid="profile-btn"
+                  aria-label="Abrir ajustes"
+                  ref={profileBtnRef}
                 >
-                  {/* Usamos el icono Settings para indicar acceso a configuración */}
-                  <Settings className="h-6 w-6" />
-                  {/* Badge removido — no mostramos contador de notificaciones no implementado */}
+                  <Settings className="h-5 w-5" />
+                  <span className="ml-2 text-sm font-medium hidden md:inline-flex">Ajustes</span>
                 </Button>
                 {showUserMenu && profileBtnRef.current && createPortal(
                   <div
