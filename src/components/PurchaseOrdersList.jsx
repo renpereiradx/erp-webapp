@@ -26,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/Input';
+import EmptyState from '@/components/ui/EmptyState';
 
 // Custom hooks
 import { usePurchaseOrders } from '@/hooks/usePurchaseOrders';
@@ -488,10 +489,23 @@ const PurchaseOrdersList = ({ theme }) => {
               <p>Cargando órdenes...</p>
             </div>
           ) : orders.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No se encontraron órdenes de compra</p>
-            </div>
+            filters.searchTerm ? (
+              <EmptyState
+                icon={Search}
+                title="No se encontraron órdenes"
+                description="Intenta con otros términos de búsqueda"
+                variant="search"
+                data-testid="purchase-orders-no-search-results"
+              />
+            ) : (
+              <EmptyState
+                icon={Package}
+                title="No hay órdenes de compra"
+                description="Las órdenes de compra aparecerán aquí cuando las crees"
+                variant="instruction"
+                data-testid="purchase-orders-empty-state"
+              />
+            )
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">

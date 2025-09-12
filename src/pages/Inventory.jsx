@@ -3,6 +3,7 @@ import { Plus, Search, Edit, Trash2, Eye, Package, AlertTriangle, CheckCircle, C
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import DataState from '@/components/ui/DataState';
+import EmptyState from '@/components/ui/EmptyState';
 import ProductSearchInput from '@/components/ui/ProductSearchInput';
 import ProductAdjustmentCard from '@/components/ui/ProductAdjustmentCard';
 import { useI18n } from '@/lib/i18n';
@@ -309,13 +310,13 @@ const InventoryPage = () => {
               )}
               
               {!selectedProduct && (
-                <div className="p-8 text-center text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
-                  <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-lg font-medium mb-2">Selecciona un producto</p>
-                  <p className="text-sm">
-                    Busca el producto que deseas ajustar usando el campo de búsqueda de arriba
-                  </p>
-                </div>
+                <EmptyState
+                  icon={Package}
+                  title="Selecciona un producto"
+                  description="Busca el producto que deseas ajustar usando el campo de búsqueda de arriba"
+                  variant="instruction"
+                  data-testid="inventory-product-selection"
+                />
               )}
             </div>
           )}
@@ -676,14 +677,19 @@ const InventoryPage = () => {
           </div>
 
           {/* Barra de búsqueda */}
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
+          <div className="relative group">
+            {/* Icono de búsqueda - posición exacta estilo Google */}
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+              <Search className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--primary))] transition-colors" />
+            </div>
+            {/* Input campo - padding calculado para evitar superposición */}
+            <input
               type="text"
               placeholder={t('inventory.search.placeholder', 'Buscar inventarios...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`pl-10 ${styles.input()}`}
+              className={`${styles.input()} pl-11 hover:border-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors w-full h-10`}
+              style={{ paddingLeft: '2.75rem' }}
             />
           </div>
 

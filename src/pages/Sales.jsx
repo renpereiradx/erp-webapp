@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import PageHeader from '@/components/ui/PageHeader';
 import { useI18n } from '@/lib/i18n';
 import DataState from '@/components/ui/DataState';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
@@ -297,15 +296,11 @@ const Sales = () => {
   };
 
   return (
-  <div className={styles.page('space-y-6')} data-testid="sales-page">
-      <PageHeader
-        title={t('sales.title', 'Ventas')}
-        subtitle={t('sales.subtitle', 'Gestiona las ventas de productos')}
-        breadcrumb={[
-          { label: t('navigation.operations', 'Operaciones'), href: '/dashboard' }, 
-          { label: t('sales.title', 'Ventas') }
-        ]}
-      />
+  <div className={styles.page('space-y-4')} data-testid="sales-page">
+      {/* Breadcrumb discreto para contexto */}
+      <nav className="flex items-center text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">{t('sales.title', 'Ventas')}</span>
+      </nav>
 
       <NotificationBanner />
  

@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import PageHeader from '@/components/ui/PageHeader';
 import { useI18n } from '@/lib/i18n';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 
@@ -367,43 +366,10 @@ const Schedules = () => {
 
   return (
     <div className={styles.container()} data-testid="schedules-page">
-      <PageHeader
-        title={t('schedules.title', 'Gestión de Horarios')}
-        subtitle={t('schedules.subtitle', 'Consulta disponibilidad y genera horarios para servicios reservables')}
-        breadcrumb={[
-          { label: t('navigation.operations', 'Operaciones'), href: '/dashboard' }, 
-          { label: t('schedules.title', 'Horarios') }
-        ]}
-        extra={
-          <div className="flex gap-2">
-            {/* Indicador rápido de estado de hoy */}
-            {generalQuery.hasChecked && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm">
-                {generalQuery.results?.count > 0 ? (
-                  <>
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>{generalQuery.results.count} disponibles hoy</span>
-                  </>
-                ) : (
-                  <>
-                    <Info className="w-4 h-4 text-amber-500" />
-                    <span>Sin horarios hoy</span>
-                  </>
-                )}
-              </div>
-            )}
-            <Button
-              onClick={() => setActionResults([])}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Limpiar
-            </Button>
-          </div>
-        }
-      />
+      {/* Breadcrumb discreto para contexto */}
+      <nav className="flex items-center text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">{t('schedules.title', 'Horarios')}</span>
+      </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Panel de Herramientas */}

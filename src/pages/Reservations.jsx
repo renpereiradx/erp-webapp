@@ -11,8 +11,8 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import PageHeader from '@/components/ui/PageHeader';
 import DataState from '@/components/ui/DataState';
+import EmptyState from '@/components/ui/EmptyState';
 import EnhancedModal from '@/components/ui/EnhancedModal';
 import ApiStatusIndicator from '@/components/ui/ApiStatusIndicator';
 import { useI18n } from '@/lib/i18n';
@@ -531,14 +531,10 @@ const Reservations = () => {
   if (!dataLoaded && (loading || loadingData)) {
     return (
       <div className={styles.container()} data-testid="reservations-page">
-        <PageHeader
-          title={t('reservations.title', 'Reservas')}
-          subtitle={t('reservations.subtitle', 'Gestiona reservas y horarios de servicios')}
-          breadcrumb={[
-            { label: t('navigation.operations', 'Operaciones'), href: '/dashboard' }, 
-            { label: t('reservations.title', 'Reservas') }
-          ]}
-        />
+        {/* Breadcrumb discreto para contexto */}
+        <nav className="flex items-center text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{t('reservations.title', 'Reservas')}</span>
+        </nav>
         
         {/* Loading skeleton */}
         <div className="space-y-6 animate-pulse">
@@ -602,14 +598,10 @@ const Reservations = () => {
   if ((loading || loadingData) && reservations.length === 0) {
     return (
       <div className={styles.container()} data-testid="reservations-page">
-        <PageHeader
-          title={t('reservations.title', 'Reservas')}
-          subtitle={t('reservations.subtitle', 'Gestiona reservas y horarios de servicios')}
-          breadcrumb={[
-            { label: t('navigation.operations', 'Operaciones'), href: '/dashboard' }, 
-            { label: t('reservations.title', 'Reservas') }
-          ]}
-        />
+        {/* Breadcrumb discreto para contexto */}
+        <nav className="flex items-center text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{t('reservations.title', 'Reservas')}</span>
+        </nav>
         <DataState variant="loading" skeletonVariant="list" />
       </div>
     );
@@ -619,14 +611,10 @@ const Reservations = () => {
   if (error && !dataLoaded) {
     return (
       <div className={styles.container()} data-testid="reservations-page">
-        <PageHeader
-          title={t('reservations.title', 'Reservas')}
-          subtitle={t('reservations.subtitle', 'Gestiona reservas y horarios de servicios')}
-          breadcrumb={[
-            { label: t('navigation.operations', 'Operaciones'), href: '/dashboard' }, 
-            { label: t('reservations.title', 'Reservas') }
-          ]}
-        />
+        {/* Breadcrumb discreto para contexto */}
+        <nav className="flex items-center text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{t('reservations.title', 'Reservas')}</span>
+        </nav>
         
         <div className="space-y-6">
           {/* Error alert but not blocking */}
@@ -707,14 +695,14 @@ const Reservations = () => {
 
   return (
     <div className={styles.container()} data-testid="reservations-page">
-      <PageHeader
-        title={t('reservations.title', 'Reservas')}
-        subtitle={t('reservations.subtitle', 'Gestiona reservas y horarios de servicios')}
-        breadcrumb={[
-          { label: t('navigation.operations', 'Operaciones'), href: '/dashboard' }, 
-          { label: t('reservations.title', 'Reservas') }
-        ]}
-        extra={
+      {/* Breadcrumb discreto para contexto */}
+      <nav className="flex items-center text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">{t('reservations.title', 'Reservas')}</span>
+      </nav>
+      
+      <div className="flex items-center justify-between mb-6">
+        <div></div>
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-3">
             {!dataLoaded ? (
               <Button
@@ -747,8 +735,7 @@ const Reservations = () => {
               <ApiStatusIndicator showDetails={false} />
             </div>
           </div>
-        }
-      />
+        </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className={styles.tab()}>
@@ -1372,13 +1359,19 @@ const Reservations = () => {
         <TabsContent value="list" className="space-y-6" data-testid="reservations-list-tab">
           {/* Búsqueda */}
           <div className="flex justify-between items-center">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
+            <div className="relative group max-w-md">
+              {/* Icono de búsqueda - posición exacta estilo Google */}
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                <Search className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--primary))] transition-colors" />
+              </div>
+              {/* Input campo - padding calculado para evitar superposición */}
+              <input
+                type="text"
                 placeholder={t('reservations.search.placeholder', 'Buscar reservas...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`pl-10 ${styles.input()}`}
+                className={`${styles.input()} pl-11 hover:border-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors w-full h-10`}
+                style={{ paddingLeft: '2.75rem' }}
               />
             </div>
             <Button onClick={() => setActiveTab('create')} variant="primary">
@@ -1389,13 +1382,25 @@ const Reservations = () => {
 
           {/* Lista de reservas */}
           {!loading && filteredReservations.length === 0 ? (
-            <DataState
-              variant="empty"
-              title={t('reservations.empty.title', 'Sin reservas')}
-              message={t('reservations.empty.message', 'No hay reservas registradas')}
-              actionLabel={t('reservations.new_reservation', 'Nueva Reserva')}
-              onAction={() => setActiveTab('create')}
-            />
+            searchTerm ? (
+              <EmptyState
+                icon={Calendar}
+                title="No se encontraron reservas"
+                description="Intenta con otros términos de búsqueda"
+                variant="search"
+                data-testid="reservations-no-search-results"
+              />
+            ) : (
+              <EmptyState
+                icon={Calendar}
+                title="No hay reservas"
+                description="Comienza creando tu primera reserva de servicio"
+                actionLabel="Nueva Reserva"
+                onAction={() => setActiveTab('create')}
+                variant="instruction"
+                data-testid="reservations-empty-state"
+              />
+            )
           ) : (
             <div className="grid gap-4">
               {filteredReservations.map(reservation => (
@@ -2314,6 +2319,7 @@ const Reservations = () => {
       )}
 
     </div>
+  </div>
   );
 };
 

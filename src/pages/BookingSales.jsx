@@ -15,7 +15,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import PageHeader from '@/components/ui/PageHeader';
 import { useI18n } from '@/lib/i18n';
 import DataState from '@/components/ui/DataState';
 
@@ -259,11 +258,10 @@ const BookingSales = () => {
 
   return (
   <div className={styles.container('space-y-6')} data-testid="booking-sales-page">
-      <PageHeader
-        title={t('booking.title') || 'Reservas y Ventas'}
-        subtitle={t('booking.subtitle') || 'Gestiona reservas de servicios y ventas de productos de forma integrada'}
-        breadcrumb={[{ label: 'Operaciones', href: '/dashboard' }, { label: t('booking.title') || 'Reservas y Ventas' }]}
-      />
+      {/* Breadcrumb discreto para contexto */}
+      <nav className="flex items-center text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">{t('bookingSales.title', 'Ventas con Reserva')}</span>
+      </nav>
 
       <NotificationBanner />
  

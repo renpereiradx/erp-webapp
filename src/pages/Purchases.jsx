@@ -36,7 +36,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import PageHeader from '@/components/ui/PageHeader';
 
 // Custom Hooks and Services
 import { useThemeStyles } from '@/hooks/useThemeStyles';
@@ -430,42 +429,41 @@ const Purchases = () => {
 
   return (
     <div className={styles.container()} data-testid="purchases-page">
-      <PageHeader
-        title={t('purchases.title') || 'Compras'}
-        subtitle={t('purchases.subtitle') || 'Crea órdenes de compra mejoradas con seguimiento de pagos y entrega'}
-        breadcrumb={[{ label: 'Operaciones', href: '/dashboard' }, { label: t('purchases.title') || 'Compras' }]}
-        extra={
-          <div className="flex items-center gap-3">
-            {!dataLoaded ? (
-              <Button
-                onClick={handleLoadData}
-                disabled={loadingData}
-                variant="primary"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Search className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">
-                  {loadingData ? 'Cargando...' : 'Cargar Datos'}
-                </span>
-              </Button>
-            ) : (
-              <Button
-                onClick={handleLoadData}
-                disabled={loadingData}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Search className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">
-                  {loadingData ? 'Actualizando...' : 'Actualizar'}
-                </span>
-              </Button>
-            )}
-          </div>
-        }
-      />
+      {/* Breadcrumb discreto con botones */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <nav className="flex items-center text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{t('purchases.title') || 'Compras'}</span>
+        </nav>
+        <div className="flex items-center gap-3">
+          {!dataLoaded ? (
+            <Button
+              onClick={handleLoadData}
+              disabled={loadingData}
+              variant="primary"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Search className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">
+                {loadingData ? 'Cargando...' : 'Cargar Datos'}
+              </span>
+            </Button>
+          ) : (
+            <Button
+              onClick={handleLoadData}
+              disabled={loadingData}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Search className={`w-4 h-4 ${loadingData ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">
+                {loadingData ? 'Actualizando...' : 'Actualizar'}
+              </span>
+            </Button>
+          )}
+        </div>
+      </div>
 
       <NotificationBanner />
 

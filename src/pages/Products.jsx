@@ -1,12 +1,12 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
-import { Plus, Search, Filter, X } from 'lucide-react';
+import { Plus, Search, Filter, X, Package } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import useProductStore from '@/store/useProductStore';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useI18n } from '@/lib/i18n';
 import DataState from '@/components/ui/DataState';
-import PageHeader from '@/components/ui/PageHeader';
+import EmptyState from '@/components/ui/EmptyState';
 import MetricsPanel from '@/components/MetricsPanel';
 import ProductGrid from '@/features/products/components/ProductGrid';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
@@ -229,66 +229,67 @@ const ProductsPage = () => {
   }, [apiSearchTerm]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {isOffline && <div className="bg-amber-100 text-amber-800 p-2 text-center text-sm rounded-md">{t('products.offline_banner')}</div>}
-      
-      <PageHeader
-        title={t('products.title')}
-        subtitle={t('products.subtitle')}
-        actions={<Button onClick={handleCreateProduct} variant="primary"><Plus className="w-4 h-4 mr-2" />{t('products.new')}</Button>}
-      />
+
+      {/* Breadcrumb discreto para contexto */}
+      <nav className="flex items-center text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">{t('products.title')}</span>
+      </nav>
 
       {showMetrics && <MetricsPanel />}
 
       {/* Contenedor principal con posición relativa para los modales */}
       <div className="relative" id="products-content-container">
         <div className={styles.card('p-4')}>
-          <form onSubmit={handleApiSearch} className="flex gap-2">
-            <div className="flex-1 relative">
-              <Input 
-                placeholder={
-                  searchType === 'barcode' 
-                    ? t('products.search.placeholder_barcode') || 'Buscar por código de barras...'
-                    : searchType === 'id' 
-                      ? t('products.search.placeholder_id') || 'Buscar por ID de producto...'
-                      : t('products.search.placeholder') || 'Buscar por nombre, ID o código de barras...'
-                }
-                value={apiSearchTerm}
-                onChange={(e) => {
-                  setApiSearchTerm(e.target.value);
-                  // Limpiar errores cuando el usuario empiece a escribir
-                  if (searchError) setSearchError(null);
-                }}
-                className={`flex-grow ${styles.input()}`}
-              />
-              {apiSearchTerm && (
-                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    searchType === 'id' 
-                      ? 'bg-blue-100 text-blue-800' 
-                      : 'bg-green-100 text-green-800'
-                  }`}>
-                    {searchType === 'id' ? 'ID' : 'Nombre'}
-                  </span>
+          <div className="flex flex-col sm:flex-row gap-3 mb-4">
+            <form onSubmit={handleApiSearch} className="flex-1">
+              <div className="relative group">
+                {/* Icono de búsqueda - posición exacta estilo Google */}
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                  <Search className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--primary))] transition-colors" />
                 </div>
-              )}
-            </div>
-            <Button 
-              type="submit" 
-              variant="secondary"
-              disabled={
-                !apiSearchTerm?.trim() || 
-                apiSearchTerm.trim().length < (searchType === 'id' ? 8 : 3) ||
-                isSearching
-              }
-            >
-              {isSearching ? 'Buscando...' : t('products.search')}
+                {/* Input campo - padding calculado para evitar superposición */}
+                <input
+                  type="text"
+                  placeholder={
+                    searchType === 'barcode' 
+                      ? t('products.search.placeholder_barcode') || 'Buscar por código de barras...'
+                      : searchType === 'id' 
+                        ? t('products.search.placeholder_id') || 'Buscar por ID de producto...'
+                        : t('products.search.placeholder') || 'Buscar por nombre, ID o código de barras...'
+                  }
+                  value={apiSearchTerm}
+                  onChange={(e) => {
+                    setApiSearchTerm(e.target.value);
+                    // Limpiar errores cuando el usuario empiece a escribir
+                    if (searchError) setSearchError(null);
+                  }}
+                  className={`${styles.input()} pl-11 hover:border-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors w-full h-10`}
+                  style={{ paddingLeft: '2.75rem' }}
+                />
+                {apiSearchTerm && (
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10">
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      searchType === 'id' 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-green-100 text-green-800'
+                    }`}>
+                      {searchType === 'id' ? 'ID' : 'Nombre'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </form>
+            <Button onClick={handleCreateProduct} variant="primary" className="sm:flex-shrink-0">
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo producto
             </Button>
-          </form>
+          </div>
           
           {/* Indicador de ayuda */}
           {apiSearchTerm && apiSearchTerm.length > 0 && !searchError && (
-            <div className="mt-2 text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               {searchType === 'id' 
                 ? `💡 Detectado como ID de producto (${apiSearchTerm.length}/8+ caracteres)`
                 : `💡 Buscando por nombre (${apiSearchTerm.length}/3+ caracteres)`
@@ -298,7 +299,7 @@ const ProductsPage = () => {
           
           {/* Error de búsqueda */}
           {searchError && (
-            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
               <div className="flex items-center gap-2 text-red-800">
                 <span className="text-sm font-medium">
                   {searchError.type === 'id' ? '🆔 Error de búsqueda por ID' : '📝 Error de búsqueda por nombre'}
@@ -415,7 +416,25 @@ const ProductsPage = () => {
         ) : error && displayProducts.length === 0 ? (
           <DataState variant="error" title={t('products.error.loading')} message={error} onRetry={() => fetchProducts()} />
         ) : displayProducts.length === 0 ? (
-          <DataState variant="empty" title={t('products.no_results')} description={t('products.no_products_loaded')} onAction={handleCreateProduct} actionLabel={t('products.create_first')} />
+          lastSearchTerm ? (
+            <EmptyState
+              icon={Search}
+              title="No se encontraron productos"
+              description="Intenta con otros términos de búsqueda o verifica el ID del producto"
+              variant="search"
+              size="medium"
+            />
+          ) : (
+            <EmptyState
+              icon={Package}
+              title="No hay productos"
+              description="Comienza agregando tu primer producto al inventario"
+              variant="instruction"
+              size="medium"
+              actionLabel="Nuevo producto"
+              onAction={handleCreateProduct}
+            />
+          )
         ) : (
           <ProductGrid 
             products={displayProducts}

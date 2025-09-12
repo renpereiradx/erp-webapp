@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, X } from 'lucide-react';
+import { Plus, Search, Filter, X, Users } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import DataState from '../components/ui/DataState';
+import EmptyState from '../components/ui/EmptyState';
 import EnhancedModal, { ConfirmationModal } from '../components/ui/EnhancedModal';
 import ClientListItem from '../components/clients/ClientListItem';
 import ClientDetailModal from '../components/clients/ClientDetailModal';
@@ -156,13 +157,19 @@ const ClientsPage = () => {
       {/* Búsqueda API */}
       <div className="space-y-4">
         <form onSubmit={handleApiSearch} className="flex gap-2 max-w-2xl">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
+          <div className="flex-1 relative group">
+            {/* Icono de búsqueda - posición exacta estilo Google */}
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+              <Search className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--primary))] transition-colors" />
+            </div>
+            {/* Input campo - padding calculado para evitar superposición */}
+            <input
+              type="text"
               placeholder={searchType === 'id' ? 'Buscar por ID de cliente...' : 'Buscar por nombre (min 2 caracteres)...'}
               value={apiSearchTerm}
               onChange={(e) => { setApiSearchTerm(e.target.value); if (searchError) setSearchError(null); }}
-              className={`pl-10 ${styles.input()}`}
+              className={`${styles.input()} pl-11 hover:border-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors w-full h-10`}
+              style={{ paddingLeft: '2.75rem' }}
             />
             {apiSearchTerm && (
               <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -170,13 +177,6 @@ const ClientsPage = () => {
               </div>
             )}
           </div>
-          <Button
-            type="submit"
-            variant="secondary"
-            disabled={!apiSearchTerm.trim() || apiSearchTerm.trim().length < (searchType === 'id' ? 8 : 2) || isSearching}
-          >
-            {isSearching ? 'Buscando...' : 'Buscar'}
-          </Button>
           <Button
             type="button"
             variant="outline"
@@ -200,13 +200,25 @@ const ClientsPage = () => {
       </div>
 
       {displayClients.length === 0 ? (
-        <DataState 
-          variant="empty" 
-          title={lastSearchTerm ? t('client.search.empty', 'No se encontraron clientes') : t('client.empty.title', 'No hay clientes cargados')} 
-          message={lastSearchTerm ? t('client.search.message', 'Intenta con otros términos de búsqueda') : t('client.empty.message', 'Usa "Buscar" o "Listar Todos" para cargar clientes.')} 
-          actionLabel={t('client.action.create', 'Crear Cliente')} 
-          onAction={handleCreate} 
-        />
+        lastSearchTerm ? (
+          <EmptyState
+            icon={Search}
+            title="No se encontraron clientes"
+            description="Intenta con otros términos de búsqueda o verifica el ID del cliente"
+            variant="search"
+            size="medium"
+          />
+        ) : (
+          <EmptyState
+            icon={Users}
+            title="No hay clientes"
+            description="Agrega tu primer cliente para comenzar a gestionar ventas"
+            variant="instruction"
+            size="medium"
+            actionLabel="Nuevo Cliente"
+            onAction={handleCreate}
+          />
+        )
       ) : (
         <>
           {/* Filtros locales */}

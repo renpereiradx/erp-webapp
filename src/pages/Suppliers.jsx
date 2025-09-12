@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, X } from 'lucide-react';
+import { Plus, Search, Filter, X, Truck } from 'lucide-react';
 import { useI18n } from '../lib/i18n';
 import useSupplierStore from '../store/useSupplierStore';
 import { useThemeStyles } from '../hooks/useThemeStyles';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import DataState from '../components/ui/DataState';
+import EmptyState from '../components/ui/EmptyState';
 import { ConfirmationModal } from '../components/ui/EnhancedModal';
 import SupplierListItem from '../components/suppliers/SupplierListItem';
 import SupplierModal from '../components/suppliers/SupplierModal';
@@ -168,13 +169,19 @@ const SuppliersPage = () => {
       {/* Búsqueda API */}
       <div className="space-y-4">
         <form onSubmit={handleApiSearch} className="flex gap-2 max-w-2xl">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
+          <div className="flex-1 relative group">
+            {/* Icono de búsqueda - posición exacta estilo Google */}
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+              <Search className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--primary))] transition-colors" />
+            </div>
+            {/* Input campo - padding calculado para evitar superposición */}
+            <input
+              type="text"
               placeholder={searchType === 'id' ? 'Buscar por ID de proveedor...' : 'Buscar por nombre (min 2 caracteres)...'}
               value={apiSearchTerm}
               onChange={(e) => { setApiSearchTerm(e.target.value); if (searchError) setSearchError(null); }}
-              className={`pl-10 ${styles.input()}`}
+              className={`${styles.input()} pl-11 hover:border-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors w-full h-10`}
+              style={{ paddingLeft: '2.75rem' }}
             />
             {apiSearchTerm && (
               <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -184,13 +191,6 @@ const SuppliersPage = () => {
               </div>
             )}
           </div>
-          <Button
-            type="submit"
-            variant="secondary"
-            disabled={!apiSearchTerm.trim() || apiSearchTerm.trim().length < (searchType === 'id' ? 1 : 2) || isSearching}
-          >
-            {isSearching ? 'Buscando...' : 'Buscar'}
-          </Button>
           <Button
             type="button"
             variant="outline"
@@ -214,13 +214,25 @@ const SuppliersPage = () => {
       </div>
 
       {displaySuppliers.length === 0 ? (
-        <DataState 
-          variant="empty" 
-          title={lastSearchTerm ? t('supplier.search.empty', 'No se encontraron proveedores') : t('supplier.empty.title', 'No hay proveedores cargados')} 
-          message={lastSearchTerm ? t('supplier.search.message', 'Intenta con otros términos de búsqueda') : t('supplier.empty.message', 'Usa "Buscar" o "Listar Todos" para cargar proveedores.')} 
-          actionLabel={t('supplier.action.create', 'Crear Proveedor')} 
-          onAction={handleCreate} 
-        />
+        lastSearchTerm ? (
+          <EmptyState
+            icon={Search}
+            title="No se encontraron proveedores"
+            description="Intenta con otros términos de búsqueda o verifica el ID del proveedor"
+            variant="search"
+            size="medium"
+          />
+        ) : (
+          <EmptyState
+            icon={Truck}
+            title="No hay proveedores"
+            description="Agrega proveedores para gestionar tus compras e inventario"
+            variant="instruction"
+            size="medium"
+            actionLabel="Nuevo Proveedor"
+            onAction={handleCreate}
+          />
+        )
       ) : (
         <>
           {/* Filtros locales */}
