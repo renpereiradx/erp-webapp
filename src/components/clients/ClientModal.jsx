@@ -15,8 +15,8 @@ import useClientStore from '@/store/useClientStore';
   status se controla vía endpoint delete para inactivar; no se actualiza directamente.
 */
 
-const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
-  const { styles } = useThemeStyles();
+const ClientModal = ({ isOpen, onClose, client, onSuccess, container = null }) => {
+  const { styles, isNeoBrutalism } = useThemeStyles();
   const { t } = useI18n();
   const { createClient, updateClient } = useClientStore();
 
@@ -102,9 +102,20 @@ const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {
     }
   };
 
+  if (!isOpen) return null;
+
+  // Usar fondo sólido según el tema
+  const overlayStyle = {
+    backgroundColor: isNeoBrutalism ? '#000000' : '#1a1a1a', // Fondo completamente sólido
+    backdropFilter: 'blur(4px)'
+  };
+
   return (
-    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className={`w-full max-w-lg max-h-[75vh] flex flex-col ${styles.card()} shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+      style={overlayStyle}
+    >
+      <div className={`w-full max-w-2xl max-h-[85vh] flex flex-col ${styles.card()} shadow-2xl animate-in slide-in-from-bottom-4 duration-300`}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center gap-3">

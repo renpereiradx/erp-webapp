@@ -12,6 +12,23 @@ const DEMO_CONFIG_PRICE_ADJUSTMENT = {
   useRealAPI: true, // Usar API real primero, fallback a demo si falla
 };
 
+// Helper function to transform API data to frontend format
+const transformAdjustmentData = (adjustments) => {
+  return (adjustments || []).map(adjustment => ({
+    ...adjustment,
+    id: adjustment.adjustment_id || adjustment.id,
+    old_price: adjustment.old_value ?? adjustment.old_price,
+    new_price: adjustment.new_value ?? adjustment.new_price,
+    price_change: adjustment.value_change ?? adjustment.price_change,
+    price_change_percent: adjustment.value_change !== undefined && adjustment.value_change !== 0 ? 
+      ((adjustment.value_change / (adjustment.old_value || 1)) * 100) : 
+      (adjustment.price_change_percent ?? 0),
+    created_at: adjustment.adjustment_date ?? adjustment.created_at,
+    unit: adjustment.metadata?.unit || adjustment.unit || 'UNIT',
+    product_id: adjustment.product_id || 'N/A'
+  }));
+};
+
 // Demo data for development/fallback
 const getDemoPriceAdjustments = async () => {
   // Simular delay de red
@@ -152,11 +169,16 @@ export const priceAdjustmentService = {
       console.log('🌐 PriceAdjustment: Creating price adjustment via API...');
       
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.post('/manual-price-adjustments', {
+        return await apiClient.post('/manual_adjustment/price', {
           product_id: adjustmentData.product_id,
           new_price: adjustmentData.new_price,
+          unit: adjustmentData.unit || 'UNIT',
           reason: adjustmentData.reason,
-          metadata: adjustmentData.metadata || {}
+          metadata: {
+            source: 'manual_api',
+            change_type: adjustmentData.new_price > (adjustmentData.old_price || 0) ? 'increase' : 'decrease',
+            ...adjustmentData.metadata
+          }
         });
       });
       
@@ -232,7 +254,7 @@ export const priceAdjustmentService = {
       
       console.log('🌐 PriceAdjustment: Loading history from API...');
       const result = await _fetchWithRetry(async () => {
-        const url = `/manual-price-adjustments?product_id=${productId}&limit=${limit}&offset=${offset}`;
+        const url = `/manual_adjustment/product/${productId}/history?limit=${limit}&offset=${offset}`;
         return await apiClient.get(url);
       });
       
@@ -268,7 +290,7 @@ export const priceAdjustmentService = {
    * Obtener ajustes recientes (para dashboard)
    * Nota: Este endpoint no existe en la API actual, usando demo data
    */
-  async getRecentAdjustments(limit = 20) {
+  async getRecentAdjustments(limit = 20, days = 7) {
     const startTime = Date.now();
     
     try {
@@ -282,7 +304,10 @@ export const priceAdjustmentService = {
       
       console.log('🌐 PriceAdjustment: Loading recent adjustments from API...');
       const result = await _fetchWithRetry(async () => {
-        const url = `/manual-price-adjustments?limit=${limit}&offset=0`;
+        // Use new recent adjustments endpoint
+        const days = 7; // Get adjustments from last 7 days
+        const apiLimit = Math.min(limit, 50); // API supports up to 50 per request
+        const url = `/manual_adjustment/price/recent?days=${days}&limit=${apiLimit}`;
         return await apiClient.get(url);
       });
       
@@ -292,7 +317,8 @@ export const priceAdjustmentService = {
       });
       
       console.log('✅ PriceAdjustment: Recent adjustments loaded from API');
-      return { data: result?.adjustments || [] };
+      // Transform the data to match expected frontend structure
+      return { data: transformAdjustmentData(result?.adjustments) };
     } catch (error) {
       console.error('❌ PriceAdjustment recent adjustments error:', error.message);
       
@@ -403,5 +429,72 @@ export const priceAdjustmentService = {
     }
     
     return errors;
+  },
+
+  // Alias methods for component compatibility
+  async create(adjustmentData) {
+    return this.createPriceAdjustment(adjustmentData);
+  },
+
+  async getRecent(limit = 20, days = 7) {
+    return this.getRecentAdjustments(limit, days);
+  },
+
+  async getByProduct(productId, limit = 10, offset = 0) {
+    return this.getProductHistory(productId, limit, offset);
+  },
+
+  // New method for date range queries
+  async getByDateRange(startDate, endDate, productId = null, limit = 50, offset = 0) {
+    const startTime = Date.now();
+    
+    try {
+      // Si demo está habilitado y no usar API real
+      if (DEMO_CONFIG_PRICE_ADJUSTMENT.enabled && !DEMO_CONFIG_PRICE_ADJUSTMENT.useRealAPI) {
+        console.log('🔄 PriceAdjustment: Loading date range adjustments (demo mode)...');
+        const result = await getDemoPriceAdjustments();
+        console.log('✅ PriceAdjustment: Date range adjustments loaded (demo)');
+        return { data: result.slice(0, limit) };
+      }
+      
+      console.log('🌐 PriceAdjustment: Loading adjustments by date range from API...');
+      const result = await _fetchWithRetry(async () => {
+        const params = new URLSearchParams();
+        if (startDate) params.append('start_date', startDate);
+        if (endDate) params.append('end_date', endDate);
+        if (productId) params.append('product_id', productId);
+        params.append('limit', limit.toString());
+        params.append('offset', offset.toString());
+        
+        const url = `/manual_adjustment/price/date-range?${params.toString()}`;
+        return await apiClient.get(url);
+      });
+      
+      telemetry.record('priceAdjustment.service.getByDateRange', {
+        duration: Date.now() - startTime,
+        count: result?.adjustments?.length || 0
+      });
+      
+      console.log('✅ PriceAdjustment: Date range adjustments loaded from API');
+      // Transform the data to match expected frontend structure
+      return { data: transformAdjustmentData(result?.adjustments) };
+    } catch (error) {
+      console.error('❌ PriceAdjustment date range error:', error.message);
+      
+      // Si falla API y demo está habilitado como fallback
+      if (DEMO_CONFIG_PRICE_ADJUSTMENT.enabled) {
+        console.log('🔄 PriceAdjustment: Falling back to demo date range adjustments...');
+        const result = await getDemoPriceAdjustments();
+        console.log('✅ PriceAdjustment: Demo date range adjustments fallback loaded');
+        return { data: result.slice(0, limit) };
+      }
+      
+      telemetry.record('priceAdjustment.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getByDateRange'
+      });
+      throw error;
+    }
   }
 };

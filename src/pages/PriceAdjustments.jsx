@@ -1,247 +1,308 @@
 /**
- * Página de Ajustes Manuales de Precios - Patrón MVP
- * Implementación simple y funcional siguiendo guía de desarrollo
+ * Página de Ajustes de Precios - Actualizada con nueva API v1.0
+ * Sistema completo de gestión de ajustes de precio
  */
 
-import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, DollarSign, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  DollarSign, 
+  Plus, 
+  Search, 
+  TrendingUp, 
+  TrendingDown, 
+  Eye, 
+  AlertCircle,
+  ArrowRight, 
+  Zap, 
+  BarChart3, 
+  Shield, 
+  Clock 
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import DataState from '@/components/ui/DataState';
-import ProductSearchInput from '@/components/ui/ProductSearchInput';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/lib/i18n';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
-import usePriceAdjustmentStore from '@/store/usePriceAdjustmentStore';
+import ProductSearchInput from '@/components/ui/ProductSearchInput';
+import { priceAdjustmentService } from '@/services/priceAdjustmentService';
 
 const PriceAdjustmentsPage = () => {
   const { t } = useI18n();
   const { styles } = useThemeStyles();
-  const {
-    adjustments,
-    loading,
-    error,
-    creating,
-    fetchRecentAdjustments,
-    createPriceAdjustment,
-    fetchProductHistory,
-    clearError
-  } = usePriceAdjustmentStore();
-  
-  // Estados locales para UI
+
+  // State management
+  const [adjustments, setAdjustments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [productHistory, setProductHistory] = useState([]);
+  const [creating, setCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Form data state
   const [formData, setFormData] = useState({
     new_price: '',
     unit: 'UNIT',
     reason: '',
-    metadata: {}
+    reasonTemplate: ''
   });
-  
-  // Cargar ajustes recientes al montar
-  useEffect(() => {
-    fetchRecentAdjustments();
-  }, [fetchRecentAdjustments]);
-  
-  // Filtrar ajustes localmente (MVP simple)
-  const filteredAdjustments = adjustments.filter(adjustment => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      (adjustment.product_id || '').toLowerCase().includes(searchLower) ||
-      (adjustment.reason || '').toLowerCase().includes(searchLower) ||
-      (adjustment.user_id || '').toLowerCase().includes(searchLower)
+
+  // Plantillas predefinidas para razones de ajuste
+  const reasonTemplates = [
+    { value: '', label: 'Seleccionar plantilla...' },
+    { value: 'MARKET_ADJUSTMENT', label: '📊 Ajuste por condiciones del mercado' },
+    { value: 'COST_INCREASE', label: '💰 Aumento de costos de proveedor' },
+    { value: 'COST_DECREASE', label: '💸 Reducción de costos de proveedor' },
+    { value: 'PROMOTIONAL_PRICING', label: '🎉 Precio promocional temporal' },
+    { value: 'COMPETITIVE_ADJUSTMENT', label: '⚔️ Ajuste por competencia' },
+    { value: 'INVENTORY_CLEARANCE', label: '📦 Liquidación de inventario' },
+    { value: 'QUALITY_ADJUSTMENT', label: '🔧 Ajuste por calidad del producto' },
+    { value: 'SEASONAL_ADJUSTMENT', label: '🌟 Ajuste estacional' },
+    { value: 'BULK_DISCOUNT', label: '📈 Descuento por volumen' },
+    { value: 'ERROR_CORRECTION', label: '🔄 Corrección de error previo' },
+    { value: 'MANAGEMENT_DECISION', label: '👔 Decisión gerencial' },
+    { value: 'SUPPLIER_NEGOTIATION', label: '🤝 Renegociación con proveedor' },
+    { value: 'CURRENCY_FLUCTUATION', label: '💱 Fluctuación cambiaria' },
+    { value: 'INITIAL_INVENTORY_SETUP', label: '🏗️ Carga inicial de inventario' },
+    { value: 'CUSTOM', label: '✏️ Razón personalizada...' }
+  ];
+
+  // No auto-load - user must explicitly request data
+
+  // Filter adjustments based on search term
+  const filteredAdjustments = useMemo(() => {
+    if (!searchTerm) return adjustments;
+    
+    const term = searchTerm.toLowerCase();
+    return adjustments.filter(adj => 
+      adj.product_id?.toLowerCase().includes(term) ||
+      adj.reason?.toLowerCase().includes(term) ||
+      adj.user_id?.toLowerCase().includes(term)
     );
-  });
-  
-  // Handlers
+  }, [adjustments, searchTerm]);
+
+  // Functions
+  const loadAdjustments = async (pageSize = 20, days = 7) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await priceAdjustmentService.getRecent(pageSize, days);
+      setAdjustments(response.data || []);
+    } catch (err) {
+      console.error('Error loading adjustments:', err);
+      setError('No se pudieron cargar los ajustes. Usando datos de demostración.');
+      // El servicio ya maneja el fallback automáticamente
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreateAdjustment = () => {
-    setSelectedProduct(null);
-    setFormData({ 
-      new_price: '', 
-      unit: 'UNIT', 
-      reason: '',
-      metadata: {}
-    });
     setShowModal(true);
   };
-  
+
   const handleProductSelect = (product) => {
     setSelectedProduct(product);
-    setFormData(prev => ({ 
+  };
+
+  const handleReasonTemplateChange = (templateValue) => {
+    setFormData(prev => ({
       ...prev,
-      metadata: {
-        ...prev.metadata,
-        product_name: product.name || product.product_name
-      }
+      reasonTemplate: templateValue,
+      reason: templateValue === 'CUSTOM' ? '' : getReasonText(templateValue)
     }));
   };
-  
+
+  const getReasonText = (templateValue) => {
+    const reasonTexts = {
+      'MARKET_ADJUSTMENT': 'Ajuste de precio por condiciones actuales del mercado',
+      'COST_INCREASE': 'Aumento de precio debido al incremento en costos de proveedor',
+      'COST_DECREASE': 'Reducción de precio por disminución en costos de proveedor',
+      'PROMOTIONAL_PRICING': 'Precio promocional temporal para impulsar ventas',
+      'COMPETITIVE_ADJUSTMENT': 'Ajuste de precio para mantener competitividad en el mercado',
+      'INVENTORY_CLEARANCE': 'Precio reducido para liquidación de inventario',
+      'QUALITY_ADJUSTMENT': 'Ajuste de precio por cambios en la calidad del producto',
+      'SEASONAL_ADJUSTMENT': 'Ajuste estacional por demanda del período',
+      'BULK_DISCOUNT': 'Descuento aplicado por compra en volumen',
+      'ERROR_CORRECTION': 'Corrección de error en precio anterior',
+      'MANAGEMENT_DECISION': 'Ajuste autorizado por decisión gerencial',
+      'SUPPLIER_NEGOTIATION': 'Nuevo precio por renegociación con proveedor',
+      'CURRENCY_FLUCTUATION': 'Ajuste por fluctuaciones en tipo de cambio',
+      'INITIAL_INVENTORY_SETUP': 'Declaración de precio inicial para carga de inventario'
+    };
+    return reasonTexts[templateValue] || '';
+  };
+
   const handleSaveAdjustment = async (e) => {
     e.preventDefault();
-    
-    if (!selectedProduct) {
-      alert(t('priceAdjustment.error.noProduct', 'Seleccione un producto'));
-      return;
-    }
-    
-    const adjustmentData = {
-      product_id: selectedProduct.id || selectedProduct.product_id,
-      new_price: parseFloat(formData.new_price),
-      unit: formData.unit,
-      reason: formData.reason,
-      metadata: {
-        ...formData.metadata,
-        source: 'manual_ui',
-        created_by: 'current_user'
-      }
-    };
-    
-    const result = await createPriceAdjustment(adjustmentData);
-    
-    if (result.success) {
-      setShowModal(false);
+    if (!selectedProduct || !formData.new_price || !formData.reason) return;
+
+    try {
+      setCreating(true);
+      setError(null);
+      
+      const adjustmentData = {
+        product_id: selectedProduct.id || selectedProduct.product_id,
+        old_price: selectedProduct.price || 0,
+        new_price: parseFloat(formData.new_price),
+        reason: formData.reason,
+        unit: formData.unit
+      };
+
+      await priceAdjustmentService.create(adjustmentData);
+      
+      // Reset form and close modal
+      setFormData({ new_price: '', unit: 'UNIT', reason: '', reasonTemplate: '' });
       setSelectedProduct(null);
-      setFormData({ 
-        new_price: '', 
-        unit: 'UNIT', 
-        reason: '',
-        metadata: {}
-      });
-      // Recargar ajustes recientes
-      fetchRecentAdjustments();
+      setShowModal(false);
+      
+      // Reload adjustments
+      await loadAdjustments();
+      
+    } catch (err) {
+      console.error('Error creating adjustment:', err);
+      setError(err.message || 'Error al crear el ajuste de precio');
+    } finally {
+      setCreating(false);
     }
-    // Error se maneja automáticamente en el store
   };
-  
+
   const handleViewHistory = async (adjustment) => {
-    const result = await fetchProductHistory(adjustment.product_id);
-    if (result.success) {
-      setProductHistory(result.data);
+    try {
+      const response = await priceAdjustmentService.getByProduct(adjustment.product_id);
+      setProductHistory(response.data || []);
       setShowHistory(true);
+    } catch (err) {
+      console.error('Error loading history:', err);
+      setError('Error al cargar el historial');
     }
   };
-  
-  // Formatear moneda
+
+  // Utility functions
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-PY', {
+    return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'PYG'
+      currency: 'EUR'
     }).format(amount);
   };
-  
-  // Formatear fecha
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('es-PY');
+
+  const getPriceChangeIcon = (change) => {
+    if (change > 0) return TrendingUp;
+    if (change < 0) return TrendingDown;
+    return DollarSign;
   };
-  
-  // Determinar color del cambio de precio
+
   const getPriceChangeColor = (change) => {
     if (change > 0) return 'text-green-600';
     if (change < 0) return 'text-red-600';
     return 'text-gray-600';
   };
   
-  // Determinar icono del cambio de precio
-  const getPriceChangeIcon = (change) => {
-    if (change > 0) return TrendingUp;
-    if (change < 0) return TrendingDown;
-    return DollarSign;
-  };
-  
-  // Estados de UI
-  if (loading && adjustments.length === 0) {
-    return <DataState variant="loading" skeletonVariant="list" />;
-  }
-  
-  if (error) {
-    return (
-      <DataState 
-        variant="error" 
-        title={t('priceAdjustment.error.title', 'Error al cargar ajustes')}
-        message={error}
-        onRetry={() => {
-          clearError();
-          fetchRecentAdjustments();
-        }}
-      />
-    );
-  }
-  
-  if (!loading && adjustments.length === 0) {
-    return (
-      <DataState
-        variant="empty"
-        title={t('priceAdjustment.empty.title', 'Sin ajustes de precios')}
-        message={t('priceAdjustment.empty.message', 'No hay ajustes de precios registrados')}
-        actionLabel={t('priceAdjustment.action.create', 'Crear Ajuste')}
-        onAction={handleCreateAdjustment}
-      />
-    );
-  }
-  
   return (
     <div className="space-y-6">
-      {/* Header con acción primaria */}
+      {/* Header con acciones */}
       <div className="flex justify-between items-center">
         <h1 className={styles.header('h1')}>
           <DollarSign className="w-8 h-8 mr-3 inline" />
           {t('priceAdjustment.title', 'Ajustes de Precios')}
         </h1>
-        <Button onClick={handleCreateAdjustment} className={styles.button('primary')}>
-          <Plus className="w-4 h-4 mr-2" />
-          {t('priceAdjustment.action.create', 'Nuevo Ajuste')}
-        </Button>
-      </div>
-      
-      {/* Búsqueda local */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder={t('priceAdjustment.search.placeholder', 'Buscar por producto, razón o usuario...')}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className={`pl-10 ${styles.input()}`}
-        />
-      </div>
-      
-      {/* Estadísticas rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className={styles.card('p-4')}>
-          <div className="flex items-center gap-3">
-            <DollarSign className="w-8 h-8 text-blue-600" />
-            <div>
-              <p className="text-sm text-gray-600">Total Ajustes</p>
-              <p className="text-2xl font-bold">{adjustments.length}</p>
-            </div>
+        <div className="flex gap-3">
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => loadAdjustments(20, 1)} 
+              variant="outline" 
+              className={styles.button('secondary')}
+              disabled={loading}
+              size="sm"
+            >
+              {loading ? '🔄' : '📅'} Hoy
+            </Button>
+            <Button 
+              onClick={() => loadAdjustments(20, 7)} 
+              variant="outline" 
+              className={styles.button('secondary')}
+              disabled={loading}
+              size="sm"
+            >
+              {loading ? '🔄' : '📊'} 7 días
+            </Button>
+            <Button 
+              onClick={() => loadAdjustments(50, 30)} 
+              variant="outline" 
+              className={styles.button('secondary')}
+              disabled={loading}
+              size="sm"
+            >
+              {loading ? '🔄' : '📈'} 30 días
+            </Button>
           </div>
-        </div>
-        
-        <div className={styles.card('p-4')}>
-          <div className="flex items-center gap-3">
-            <TrendingUp className="w-8 h-8 text-green-600" />
-            <div>
-              <p className="text-sm text-gray-600">Incrementos</p>
-              <p className="text-2xl font-bold">
-                {adjustments.filter(a => a.price_change > 0).length}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className={styles.card('p-4')}>
-          <div className="flex items-center gap-3">
-            <TrendingDown className="w-8 h-8 text-red-600" />
-            <div>
-              <p className="text-sm text-gray-600">Decrementos</p>
-              <p className="text-2xl font-bold">
-                {adjustments.filter(a => a.price_change < 0).length}
-              </p>
-            </div>
-          </div>
+          <Button onClick={handleCreateAdjustment} className={styles.button('primary')}>
+            <Plus className="w-4 h-4 mr-2" />
+            {t('priceAdjustment.action.create', 'Nuevo Ajuste')}
+          </Button>
         </div>
       </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-red-600" />
+            <p className="text-red-800 font-medium">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando ajustes de precios...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+      {/* Búsqueda local - solo activa cuando hay datos */}
+      {adjustments.length > 0 && (
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder={t('priceAdjustment.search.placeholder', 'Buscar por producto, razón o usuario...')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={`pl-10 ${styles.input()}`}
+          />
+        </div>
+      )}
+
+      {/* Estado sin datos */}
+      {!loading && adjustments.length === 0 && (
+        <div className="text-center py-12">
+          <DollarSign className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No hay ajustes cargados</h3>
+          <p className="text-gray-500 mb-6">Haz clic en "Cargar Ajustes" para ver los ajustes de precios recientes</p>
+          <Button 
+            onClick={() => loadAdjustments(20, 7)} 
+            className={styles.button('primary')}
+          >
+            📊 Cargar Ajustes (7 días)
+          </Button>
+        </div>
+      )}
       
       {/* Listado de ajustes */}
       <div className="grid gap-4">
@@ -399,23 +460,55 @@ const PriceAdjustmentsPage = () => {
                 </div>
               </div>
               
-              {/* Razón */}
+              {/* Plantilla de Razón */}
+              <div>
+                <label className={styles.label()}>
+                  {t('priceAdjustment.field.reasonTemplate', 'PLANTILLA DE RAZÓN')}
+                </label>
+                <select
+                  value={formData.reasonTemplate}
+                  onChange={(e) => handleReasonTemplateChange(e.target.value)}
+                  className={styles.input()}
+                  required
+                >
+                  {reasonTemplates.map((template) => (
+                    <option key={template.value} value={template.value}>
+                      {template.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Campo de Razón */}
               <div>
                 <label className={styles.label()}>
                   {t('priceAdjustment.field.reason', 'RAZÓN DEL AJUSTE')}
+                  <span className="text-xs text-gray-500 ml-2">
+                    {formData.reasonTemplate === 'CUSTOM' ? '(Personalizada)' : '(Generada automáticamente)'}
+                  </span>
                 </label>
-                <textarea
-                  value={formData.reason}
-                  onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
-                  className={styles.input()}
-                  placeholder={t('priceAdjustment.field.reason.placeholder', 'Explique la razón del ajuste de precio...')}
-                  rows={3}
-                  maxLength={500}
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {formData.reason.length}/500 caracteres
-                </p>
+                {formData.reasonTemplate === 'CUSTOM' ? (
+                  <textarea
+                    value={formData.reason}
+                    onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
+                    className={styles.input()}
+                    placeholder={t('priceAdjustment.field.reason.placeholder', 'Escriba la razón personalizada del ajuste de precio...')}
+                    rows={3}
+                    maxLength={500}
+                    required
+                  />
+                ) : (
+                  <div className={`${styles.input()} bg-gray-50 min-h-[80px] flex items-center`}>
+                    <p className="text-sm text-gray-700">
+                      {formData.reason || 'Seleccione una plantilla arriba para generar la razón automáticamente'}
+                    </p>
+                  </div>
+                )}
+                {formData.reasonTemplate === 'CUSTOM' && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.reason.length}/500 caracteres
+                  </p>
+                )}
               </div>
               
               {/* Botones */}
@@ -499,6 +592,8 @@ const PriceAdjustmentsPage = () => {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

@@ -13,7 +13,7 @@ import { DollarSign as CashIcon, Plus as PlusIcon, Minus as MinusIcon, Clock, Do
 
 const CashRegister = () => {
   const { t } = useI18n();
-  const { theme } = useThemeStyles();
+  const { styles, isNeoBrutalism } = useThemeStyles();
   
   const {
     activeCashRegister,
@@ -182,6 +182,12 @@ const CashRegister = () => {
     }
   };
 
+  // Función para obtener estilos de overlay basados en el tema
+  const getOverlayClasses = () => {
+    const baseClasses = "absolute inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm";
+    return isNeoBrutalism ? `${baseClasses} bg-black/70` : `${baseClasses} bg-black/60`;
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-8 relative">
       {/* Cash register content container */}
@@ -208,11 +214,11 @@ const CashRegister = () => {
 
           {openCashRegisterDialog && (
             <div 
-              className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+              className={getOverlayClasses()}
               onClick={() => setOpenCashRegisterDialog(false)}
             >
               <div 
-                className="bg-background rounded-lg border shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                className={`${styles.card()} w-full max-w-lg max-h-[90vh] overflow-y-auto`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
@@ -343,11 +349,11 @@ const CashRegister = () => {
 
               {movementDialog && (
                 <div 
-                  className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                  className={getOverlayClasses()}
                   onClick={() => setMovementDialog(false)}
                 >
                   <div 
-                    className="bg-background rounded-lg border shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                    className={`${styles.card()} w-full max-w-lg max-h-[90vh] overflow-y-auto`}
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Header */}
@@ -465,11 +471,11 @@ const CashRegister = () => {
 
               {closeCashRegisterDialog && (
                 <div 
-                  className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                  className={getOverlayClasses()}
                   onClick={() => setCloseCashRegisterDialog(false)}
                 >
                   <div 
-                    className="bg-background rounded-lg border border-yellow-200 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+                    className={`${styles.card()} border-yellow-200 w-full max-w-lg max-h-[90vh] overflow-y-auto`}
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Header */}
@@ -657,11 +663,11 @@ const CashRegister = () => {
       {/* Summary Modal */}
       {summaryDialog && (
         <div 
-          className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          className={getOverlayClasses()}
           onClick={() => setSummaryDialog(false)}
         >
           <div 
-            className="bg-background rounded-lg border border-blue-200 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            className={`${styles.card()} border-blue-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -756,7 +762,6 @@ const CashRegister = () => {
           </div>
         </div>
       )}
-        </div>
       </div>
     </div>
   );
