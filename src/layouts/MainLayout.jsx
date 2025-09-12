@@ -872,31 +872,11 @@ const MainLayout = ({ children }) => {
         style={{ overflow: 'visible', marginTop: '4px' }}
                  data-component="navbar-actions" 
                  data-testid="navbar-actions">
-              {/* Notifications */}
-                <Button 
-                variant="ghost" 
-                size="icon" 
-                className="erp-notifications-btn relative" 
-                style={{ 
-                  overflow: 'visible', 
-                  position: 'relative',
-                  width: '48px',
-                  height: '48px',
-                  minWidth: '48px',
-                  minHeight: '48px'
-                }}
-                data-testid="notifications-btn">
-                <Bell className="h-6 w-6" />
-                <span style={getBaseBadgeStyles('notification')} data-testid="notification-badge">
-                  3
-                </span>
-              </Button>
-
-              {/* Profile Menu */}
-        <div className="erp-profile-menu relative" 
-          style={{ overflow: 'visible', zIndex: 55, position: 'relative' }}
-                   data-component="profile-menu" 
-                   data-testid="profile-menu">
+              {/* Single settings button — reemplaza notificaciones + perfil */}
+              <div className="erp-profile-menu relative" 
+                style={{ overflow: 'visible', zIndex: 55, position: 'relative' }}
+                         data-component="profile-menu" 
+                         data-testid="profile-menu">
                 <Button 
                   variant="ghost" 
                   size="icon"
@@ -911,14 +891,14 @@ const MainLayout = ({ children }) => {
                   }}
                   ref={profileBtnRef}
                   onClick={() => {
+                    // Abrir el menú de usuario / ir a configuración
                     setShowUserMenu(prev => !prev);
                   }}
                   data-testid="profile-btn"
                 >
-                  <User className="h-6 w-6" />
-                  <span style={getBaseBadgeStyles('profile')}>
-                    1
-                  </span>
+                  {/* Usamos el icono Settings para indicar acceso a configuración */}
+                  <Settings className="h-6 w-6" />
+                  {/* Badge removido — no mostramos contador de notificaciones no implementado */}
                 </Button>
                 {showUserMenu && profileBtnRef.current && createPortal(
                   <div
