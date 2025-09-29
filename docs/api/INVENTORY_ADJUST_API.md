@@ -2,11 +2,13 @@
 
 ## 🎯 Descripción General
 
-Esta documentación especifica la API del sistema de inventarios y ajustes manuales implementada en el sistema de business management. Proporciona información técnica precisa sobre endpoints, modelos de datos, códigos de respuesta y validaciones basada en la implementación actual del código después de la optimización del 6 de Septiembre 2025.
+Esta documentación especifica la API del sistema de inventarios y ajustes manuales implementada en el sistema de business management. Proporciona información técnica precisa sobre endpoints, modelos de datos, códigos de respuesta y validaciones basada en la implementación actual del código después de la optimización del 15 de Septiembre 2025.
 
 **🔥 NUEVA IMPLEMENTACIÓN OPTIMIZADA**: Sistema completamente limpio con funciones integradas y naming simplificado.
 
-**🚀 ACTUALIZACIÓN**: `manage_inventory` convertido a FUNCIÓN para consistencia arquitectónica total.
+**🚀 ACTUALIZACIÓN CRÍTICA**: Todos los endpoints ahora requieren metadatos obligatorios para garantizar trazabilidad completa.
+
+**📋 METADATOS OBLIGATORIOS**: Sistema diseñado para auditoría y trazabilidad completa de todas las operaciones.
 
 ---
 
@@ -86,13 +88,14 @@ interface InventoryDiscrepancyReport {
 }
 ```
 
-### Inventory (NUEVO)
+### Inventory (CON METADATA OBLIGATORIA)
 ```typescript
 interface Inventory {
   id: number;                    // ID único del inventario (int)
   user_id: string;               // ID del usuario que realizó el inventario
   check_date: string;            // Fecha del conteo (ISO 8601)
   state: boolean;                // Estado del inventario (activo/inválido)
+  metadata: object;              // Metadatos adicionales (JSON) - CAMPO OBLIGATORIO
 }
 ```
 
@@ -137,7 +140,7 @@ interface ManualAdjustmentRequest {
   product_id: string;            // ID del producto (requerido)
   new_quantity: number;          // Nueva cantidad (requerido)
   reason: string;                // Motivo del ajuste (requerido)
-  metadata?: object;             // Metadatos opcionales
+  metadata: object;              // Metadatos obligatorios
 }
 
 interface StockTransactionRequest {
@@ -148,21 +151,21 @@ interface StockTransactionRequest {
   reference_type?: string;       // Tipo de referencia (opcional)
   reference_id?: string;         // ID de referencia (opcional)
   reason?: string;               // Motivo (opcional)
-  metadata?: object;             // Metadatos (opcional)
+  metadata: object;              // Metadatos obligatorios
 }
 
 interface InventoryRequest {
-  action: "insert" | "invalidate"; // Acción a realizar (requerido)
-  id_inventory?: number;         // ID del inventario (para invalidate)
-  check_date?: string;           // Fecha del conteo (para insert)
-  details?: InventoryItemInput[]; // Items del inventario (para insert)
+  items: InventoryItemInput[];   // Items del inventario (requerido)
+  metadata: object;              // Metadatos obligatorios
 }
 
 interface InventoryItemInput {
   product_id: string;            // ID del producto (requerido)
   quantity_checked: number;      // Cantidad contada (requerido)
-  cost?: number;                 // Costo opcional
-  price?: number;                // Precio opcional
+}
+
+interface InvalidateInventoryRequest {
+  // Se usa el ID en la URL, no hay body necesario
 }
 ```
 
@@ -358,7 +361,7 @@ const METADATA_TEMPLATES_OPTIONS = [
 
 ### 1. Crear Ajuste Manual de Stock 🔒
 ```http
-POST /manual-adjustment
+POST /manual_adjustment/
 Authorization: Bearer <jwt_token>
 Content-Type: application/json
 ```
@@ -443,7 +446,7 @@ Content-Type: application/json
 
 ### 2. Registrar Transacción de Stock 🔒
 ```http
-POST /stock-transaction
+POST /stock-transactions/
 Authorization: Bearer <jwt_token>
 Content-Type: application/json
 ```
@@ -485,19 +488,22 @@ Content-Type: application/json
   "reason": "Compra de mercancía",
   "metadata": {
     "supplier": "SUP_001",
-    "batch": "B2025090601"
+    "batch": "B2025090601",
+    "timestamp": "2025-09-15T12:00:00Z",
+    "operator": "purchasing_manager",
+    "source": "purchase_order"
   }
 }
 ```
 
 ### 3. Obtener Historial de Ajustes de Producto 🔒
 ```http
-GET /manual-adjustment/history/{product_id}?limit={limit}&offset={offset}
+GET /manual_adjustment/product/{productId}/history?limit={limit}&offset={offset}
 Authorization: Bearer <jwt_token>
 ```
 
 **Parámetros:**
-- `product_id` (path): ID del producto
+- `productId` (path): ID del producto
 - `limit` (query): Número máximo de registros (default: 50)
 - `offset` (query): Número de registros a saltar (default: 0)
 
@@ -514,7 +520,12 @@ Authorization: Bearer <jwt_token>
     "adjustment_date": "2025-09-06T12:00:00Z",
     "reason": "Ajuste por conteo físico",
     "metadata": {
-      "source": "physical_count"
+      "source": "physical_count",
+      "timestamp": "2025-09-15T12:00:00Z",
+      "operator": "warehouse_manager",
+      "location": "A1-B2",
+      "counting_method": "scanner",
+      "verification": "double_check"
     },
     "related_transaction_id": 123
   }
@@ -523,7 +534,7 @@ Authorization: Bearer <jwt_token>
 
 ### 4. Obtener Historial de Transacciones de Stock 🔒
 ```http
-GET /stock-transaction/history/{product_id}?limit={limit}&offset={offset}
+GET /stock-transactions/product/{product_id}?limit={limit}&offset={offset}
 Authorization: Bearer <jwt_token>
 ```
 
@@ -548,14 +559,21 @@ Authorization: Bearer <jwt_token>
     "user_id": "USR_789",
     "user_name": "Juan Pérez",
     "transaction_date": "2025-09-06T12:00:00Z",
-    "reason": "Ajuste por conteo físico"
+    "reason": "Ajuste por conteo físico",
+    "metadata": {
+      "source": "manual_adjustment",
+      "timestamp": "2025-09-15T12:00:00Z",
+      "operator": "warehouse_manager",
+      "reason_category": "physical_count",
+      "approval_level": "supervisor"
+    }
   }
 ]
 ```
 
 ### 5. Validar Consistencia de Stock 🔒
 ```http
-GET /stock-transaction/validate-consistency?product_id={product_id}
+GET /stock-transactions/validate-consistency?product_id={product_id}
 Authorization: Bearer <jwt_token>
 ```
 
@@ -576,14 +594,20 @@ Authorization: Bearer <jwt_token>
     "total_sales": 3,
     "total_adjustments": 2,
     "total_inventories": 1,
-    "recommendation": "Stock is consistent"
+    "recommendation": "Stock is consistent",
+    "metadata": {
+      "analysis_timestamp": "2025-09-15T12:00:00Z",
+      "operator": "system",
+      "source": "consistency_check",
+      "validation_method": "automatic"
+    }
   }
 ]
 ```
 
 ### 6. Obtener Reporte de Discrepancias de Inventario 🔒
 ```http
-GET /inventory/discrepancies?date_from={date}&date_to={date}
+GET /stock-transactions/discrepancy-report?date_from={date}&date_to={date}
 Authorization: Bearer <jwt_token>
 ```
 
@@ -603,14 +627,21 @@ Authorization: Bearer <jwt_token>
     "avg_variance": 7.75,
     "max_variance": 10.00,
     "last_inventory_date": "2025-09-01T10:00:00Z",
-    "needs_attention": false
+    "needs_attention": false,
+    "metadata": {
+      "report_timestamp": "2025-09-15T12:00:00Z",
+      "operator": "system",
+      "source": "discrepancy_analysis",
+      "analysis_period": "30_days",
+      "criteria": "variance_threshold"
+    }
   }
 ]
 ```
 
 ### 7. Verificar Integridad del Sistema 🔒
 ```http
-GET /system/integrity-check
+GET /manual_adjustment/integration/verify
 Authorization: Bearer <jwt_token>
 ```
 
@@ -630,13 +661,20 @@ Authorization: Bearer <jwt_token>
     "All adjustments have corresponding transactions",
     "No orphaned transactions found"
   ],
-  "verified_at": "2025-09-06T12:00:00Z"
+  "verified_at": "2025-09-15T12:00:00Z",
+  "metadata": {
+    "verification_timestamp": "2025-09-15T12:00:00Z",
+    "operator": "system",
+    "source": "integrity_check",
+    "check_type": "full_system_audit",
+    "validation_method": "automated"
+  }
 }
 ```
 
 ### 8. Obtener Transacciones por Rango de Fechas 🔒
 ```http
-GET /stock-transaction/by-date?start_date={date}&end_date={date}&type={type}&limit={limit}&offset={offset}
+GET /stock-transactions/by-date?start_date={date}&end_date={date}&type={type}&limit={limit}&offset={offset}
 Authorization: Bearer <jwt_token>
 ```
 
@@ -649,84 +687,84 @@ Authorization: Bearer <jwt_token>
 
 **Response:** `StockTransactionHistory[]`
 
-### 9. Crear Inventario Masivo 🔒
+### 9. Crear Inventario 🔒
 ```http
-POST /inventory
+POST /inventory/
 Authorization: Bearer <jwt_token>
 Content-Type: application/json
 ```
 
-**Descripción:** Crea un nuevo inventario masivo con múltiples productos y transacciones automáticas integradas.
+**Descripción:** Crea un nuevo inventario con múltiples productos y transacciones automáticas integradas. **Metadatos son obligatorios** para garantizar trazabilidad completa.
 
 **Body:** `InventoryRequest`
 ```json
 {
-  "action": "insert",
-  "check_date": "2025-09-06T12:00:00Z",
-  "details": [
+  "items": [
     {
       "product_id": "PROD_ABC_001",
-      "quantity_checked": 150.50
+      "quantity_checked": 150
     },
     {
       "product_id": "PROD_DEF_002",
-      "quantity_checked": 75.25
+      "quantity_checked": 75
     },
     {
       "product_id": "PROD_GHI_003",
-      "quantity_checked": 200.00
+      "quantity_checked": 200
     }
-  ]
+  ],
+  "metadata": {
+    "source": "physical_count",
+    "operator": "warehouse_manager",
+    "location": "main_warehouse",
+    "equipment": "barcode_scanner",
+    "timestamp": "2025-09-15T12:00:00Z",
+    "notes": "Monthly inventory check"
+  }
 }
 ```
 
-**Response:** `{ "inventory_id": number, "message": string }`
+**Response:** `{ "message": string }`
 ```json
 {
-  "inventory_id": 21,
-  "message": "Inventory created successfully with 3 items"
+  "message": "Inventory added"
 }
 ```
 
 **Errores:**
-- `400`: "Invalid request body" - JSON malformado o datos inválidos
+- `400`: "Invalid request body" - JSON malformado, datos inválidos o metadata faltante
 - `401`: "Unauthorized" - Token inválido
 - `500`: "Error creating inventory: {details}" - Error interno
 
 ### 10. Invalidar Inventario 🔒
 ```http
-POST /inventory/invalidate
+PUT /inventory/{id}
 Authorization: Bearer <jwt_token>
-Content-Type: application/json
 ```
 
 **Descripción:** Invalida un inventario existente y revierte automáticamente sus efectos en el stock.
 
-**Body:** `InventoryRequest`
-```json
-{
-  "action": "invalidate",
-  "id_inventory": 21
-}
-```
+**Parámetros:**
+- `id` (path): ID del inventario a invalidar
 
-**Response:** `{ "inventory_id": number, "message": string }`
+**Body:** No requiere body
+
+**Response:** `{ "message": string }`
 ```json
 {
-  "inventory_id": 21,
-  "message": "Inventory invalidated successfully"
+  "message": "Inventory invalidated"
 }
 ```
 
 ### 11. Obtener Lista de Inventarios 🔒
 ```http
-GET /inventory?page={page}&page_size={size}
+GET /inventory/{page}/{pageSize}
 Authorization: Bearer <jwt_token>
 ```
 
 **Query Parameters:**
-- `page` (opcional): Número de página (default: 1)
-- `page_size` (opcional): Elementos por página (default: 10)
+- `page` (path): Número de página
+- `pageSize` (path): Elementos por página
 
 **Response:** `Inventory[]`
 ```json
@@ -734,14 +772,31 @@ Authorization: Bearer <jwt_token>
   {
     "id": 21,
     "user_id": "USR_789",
-    "check_date": "2025-09-06T12:00:00Z",
-    "state": true
+    "check_date": "2025-09-15T12:00:00Z",
+    "state": true,
+    "metadata": {
+      "source": "physical_count",
+      "operator": "warehouse_manager",
+      "location": "main_warehouse",
+      "counting_method": "barcode_scanner",
+      "verification": "double_check",
+      "timestamp": "2025-09-15T12:00:00Z"
+    }
   },
   {
     "id": 20,
     "user_id": "USR_789", 
-    "check_date": "2025-09-05T10:30:00Z",
-    "state": false
+    "check_date": "2025-09-14T10:30:00Z",
+    "state": false,
+    "metadata": {
+      "source": "physical_count",
+      "operator": "warehouse_assistant",
+      "location": "secondary_warehouse",
+      "counting_method": "manual",
+      "verification": "single_check",
+      "timestamp": "2025-09-14T10:30:00Z",
+      "invalidation_reason": "counting_error"
+    }
   }
 ]
 ```
@@ -761,8 +816,18 @@ Authorization: Bearer <jwt_token>
   "inventory": {
     "id": 21,
     "user_id": "USR_789",
-    "check_date": "2025-09-06T12:00:00Z",
-    "state": true
+    "check_date": "2025-09-15T12:00:00Z",
+    "state": true,
+    "metadata": {
+      "source": "physical_count",
+      "operator": "warehouse_manager",
+      "location": "main_warehouse",
+      "counting_method": "barcode_scanner",
+      "verification": "double_check",
+      "timestamp": "2025-09-15T12:00:00Z",
+      "total_items": 2,
+      "total_value": 18750.00
+    }
   },
   "items": [
     {
@@ -785,7 +850,7 @@ Authorization: Bearer <jwt_token>
 
 ### 13. Obtener Transacción por ID 🔒
 ```http
-GET /stock-transaction/{id}
+GET /stock-transactions/{id}
 Authorization: Bearer <jwt_token>
 ```
 
@@ -816,12 +881,13 @@ Authorization: Bearer <jwt_token>
 - `product_id`: string (no vacío, debe existir en products)
 - `new_quantity`: number (≥ 0)
 - `reason`: string (no vacío) - *Se recomienda usar valores de DEFAULT_REASONS*
-- `metadata`: object (opcional) - *Se recomienda usar plantillas de DEFAULT_METADATA_TEMPLATES*
+- `metadata`: object (obligatorio) - *Debe incluir al menos campos mínimos requeridos*
 
 **StockTransactionRequest:**
 - `product_id`: string (no vacío, debe existir en products)
 - `transaction_type`: string (valores válidos: "PURCHASE", "SALE", "ADJUSTMENT", "INVENTORY", "INITIAL", "LOSS", "FOUND")
 - `quantity_change`: number (puede ser negativo para salidas)
+- `metadata`: object (obligatorio) - *Debe incluir información de trazabilidad*
 
 ### Validaciones de Frontend Recomendadas
 
@@ -839,24 +905,48 @@ const suggestReason = (reasonType) => {
 };
 ```
 
-**Para `metadata` estructura mínima:**
+**Para `metadata` estructura obligatoria:**
 ```javascript
-const validateMetadata = (metadata, reasonType) => {
+const validateMetadata = (metadata, operationType) => {
+  // Campos obligatorios para todos los tipos
   const required = {
     source: true,
-    timestamp: true
+    timestamp: true,
+    operator: true
   };
   
-  // Validaciones específicas por tipo
+  // Validaciones específicas por tipo de operación
   const typeValidations = {
-    PHYSICAL_COUNT: ['operator', 'location'],
+    PHYSICAL_COUNT: ['location', 'counting_method'],
     DAMAGED_GOODS: ['damage_type', 'disposal_method'],
-    SYSTEM_ERROR: ['error_type', 'detection_method']
+    SYSTEM_ERROR: ['error_type', 'detection_method'],
+    INVENTORY_CHECK: ['equipment', 'verification_method'],
+    MANUAL_ADJUSTMENT: ['reason_category', 'approval_level']
   };
   
-  const requiredFields = typeValidations[reasonType] || [];
-  return requiredFields.every(field => metadata[field]);
+  // Verificar campos obligatorios básicos
+  for (const field in required) {
+    if (!metadata[field] || metadata[field] === '') {
+      return { valid: false, missing: field };
+    }
+  }
+  
+  // Verificar campos específicos del tipo
+  const requiredFields = typeValidations[operationType] || [];
+  for (const field of requiredFields) {
+    if (!metadata[field] || metadata[field] === '') {
+      return { valid: false, missing: field };
+    }
+  }
+  
+  return { valid: true };
 };
+
+// Ejemplo de validación antes de enviar
+const metadataValidation = validateMetadata(inventoryMetadata, 'PHYSICAL_COUNT');
+if (!metadataValidation.valid) {
+  throw new Error(`Campo requerido faltante: ${metadataValidation.missing}`);
+}
 ```
 
 ### Tipos de Transacción Válidos
@@ -868,22 +958,127 @@ const validateMetadata = (metadata, reasonType) => {
 - **LOSS**: Pérdida/merma
 - **FOUND**: Encontrado/sobrante
 
-### InventoryRequest:**
-- `action`: string ("insert" o "invalidate") (requerido)
-- `check_date`: string (ISO 8601) (requerido para insert)
-- `details`: InventoryItemInput[] (requerido para insert)
+### InventoryRequest:
+- `items`: InventoryItemInput[] (requerido)
+- `metadata`: object (obligatorio) - Metadatos completos de trazabilidad
 
 **InventoryItemInput:**
 - `product_id`: string (no vacío, debe existir en products)
 - `quantity_checked`: number (≥ 0)
 
+### Campos Obligatorios en Metadata
+Todos los metadatos deben incluir como mínimo:
+- `source`: string (origen de la operación)
+- `timestamp`: string (fecha y hora ISO 8601)
+- `operator`: string (identificador del operador)
+- Campos específicos según el tipo de operación
+
 ### Reglas de Negocio
 1. **Cantidad después del movimiento** debe ser ≥ 0
 2. **Ajustes manuales** generan automáticamente una transacción de stock
-3. **Inventarios masivos** generan automáticamente múltiples transacciones de stock
+3. **Inventarios** generan automáticamente múltiples transacciones de stock
 4. **Consistencia obligatoria**: quantity_after = quantity_before + quantity_change
 5. **Auditoría completa**: Todos los movimientos se registran con trazabilidad
 6. **Invalidación de inventarios** revierte automáticamente todos los cambios
+7. **Metadatos obligatorios**: Todas las operaciones requieren metadatos completos para trazabilidad
+8. **Validación de metadatos**: El sistema valida que los metadatos contengan los campos mínimos requeridos
+9. **Trazabilidad garantizada**: Cada operación debe incluir operador, timestamp y origen
+
+---
+
+## � Metadatos Obligatorios
+
+### Estructura Mínima Requerida
+Todos los metadatos deben incluir obligatoriamente:
+
+```typescript
+interface MetadataMinima {
+  source: string;              // Origen: "physical_count", "system_correction", etc.
+  timestamp: string;           // Fecha y hora ISO 8601
+  operator: string;            // ID o nombre del operador
+}
+```
+
+### Plantillas de Metadatos Obligatorias
+El sistema ahora requiere metadatos específicos según el tipo de operación:
+
+```typescript
+const REQUIRED_METADATA_TEMPLATES = {
+  // Inventario Físico (OBLIGATORIO)
+  PHYSICAL_COUNT: {
+    source: "physical_count",
+    timestamp: string,           // OBLIGATORIO
+    operator: string,            // OBLIGATORIO
+    location: string,            // OBLIGATORIO
+    counting_method: string,     // OBLIGATORIO: "manual", "scanner", "rfid"
+    verification: string,        // OBLIGATORIO: "single_check", "double_check"
+    equipment?: string,          // Opcional: equipo utilizado
+    notes?: string              // Opcional: observaciones
+  },
+  
+  // Ajuste Manual (OBLIGATORIO)
+  MANUAL_ADJUSTMENT: {
+    source: "manual_adjustment",
+    timestamp: string,           // OBLIGATORIO
+    operator: string,            // OBLIGATORIO
+    reason_category: string,     // OBLIGATORIO: categoría del motivo
+    approval_level: string,      // OBLIGATORIO: nivel de aprobación
+    supervisor?: string,         // Opcional: supervisor que aprueba
+    documentation?: string      // Opcional: documentación de respaldo
+  },
+  
+  // Transacción de Stock (OBLIGATORIO)
+  STOCK_TRANSACTION: {
+    source: "stock_movement",
+    timestamp: string,           // OBLIGATORIO
+    operator: string,            // OBLIGATORIO
+    transaction_origin: string,  // OBLIGATORIO: origen de la transacción
+    verification_method: string, // OBLIGATORIO: método de verificación
+    reference_document?: string, // Opcional: documento de referencia
+    batch_info?: object         // Opcional: información de lote
+  }
+};
+```
+
+### Validación de Frontend Obligatoria
+```javascript
+function validateRequiredMetadata(metadata, operationType) {
+  const baseRequired = ['source', 'timestamp', 'operator'];
+  
+  const typeSpecific = {
+    'PHYSICAL_COUNT': ['location', 'counting_method', 'verification'],
+    'MANUAL_ADJUSTMENT': ['reason_category', 'approval_level'],
+    'STOCK_TRANSACTION': ['transaction_origin', 'verification_method']
+  };
+  
+  // Validar campos base
+  for (const field of baseRequired) {
+    if (!metadata[field] || metadata[field].trim() === '') {
+      throw new Error(`Campo obligatorio faltante: ${field}`);
+    }
+  }
+  
+  // Validar campos específicos
+  const specificFields = typeSpecific[operationType] || [];
+  for (const field of specificFields) {
+    if (!metadata[field] || metadata[field].trim() === '') {
+      throw new Error(`Campo específico obligatorio faltante: ${field}`);
+    }
+  }
+  
+  // Validar formato de timestamp
+  if (!isValidISO8601(metadata.timestamp)) {
+    throw new Error('timestamp debe estar en formato ISO 8601');
+  }
+  
+  return true;
+}
+
+function isValidISO8601(dateString) {
+  const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
+  return iso8601Regex.test(dateString) && !isNaN(Date.parse(dateString));
+}
+```
 
 ---
 
@@ -928,104 +1123,169 @@ Authorization: Bearer <jwt_token>
 ## 📝 Notas Técnicas
 
 1. **Integración automática**: Los ajustes manuales crean automáticamente transacciones de stock
-2. **Inventarios masivos**: Los inventarios crean automáticamente múltiples transacciones de stock
-3. **Consistencia arquitectónica**: Todas las operaciones principales son funciones (no procedimientos)
-4. **Trazabilidad completa**: Todas las operaciones son auditadas y retornan IDs
-5. **Consistencia garantizada**: Validaciones a nivel de base de datos
-6. **Metadata flexible**: Soporte para información adicional en formato JSON
-7. **Enriquecimiento automático**: Los historiales incluyen nombres de productos y usuarios
-8. **Invalidación segura**: Los inventarios pueden invalidarse revirtiendo automáticamente cambios
+2. **Metadatos obligatorios**: Todos los inventarios y ajustes requieren metadatos completos
+3. **Validación estricta**: El sistema valida que los metadatos contengan todos los campos requeridos
+4. **Trazabilidad garantizada**: Cada operación incluye operador, timestamp y origen obligatoriamente
+5. **Sin compatibilidad legacy**: Solo se acepta el formato con metadatos para garantizar auditoría completa
+6. **Consistencia garantizada**: Validaciones a nivel de base de datos y aplicación
+7. **Metadata estructurada**: Soporte para información específica según tipo de operación
+8. **Enriquecimiento automático**: Los historiales incluyen nombres de productos y usuarios
+9. **Invalidación segura**: Los inventarios pueden invalidarse revirtiendo automáticamente cambios
+10. **Endpoints RESTful**: URLs consistentes con convenciones REST (/inventory/, /manual_adjustment/, etc.)
 
 ---
 
-## 🎯 Ejemplos de Uso
+## 🎯 Ejemplos de Uso Actualizados
 
-### Flujo Típico: Ajuste por Conteo Físico
-1. **Realizar conteo físico** del producto
-2. **POST /manual_adjustment/** con la nueva cantidad usando valores por defecto:
+### Inventario con Metadatos Completos (OBLIGATORIO)
 ```javascript
-const adjustmentRequest = {
-  product_id: "PROD_ABC_001",
-  new_quantity: 150.50,
-  reason: "Ajuste por conteo físico", // Valor por defecto
-  metadata: {
-    source: "physical_count",
-    operator: "warehouse_manager", 
-    verification: "double_check",
-    location: "A1-B2",
-    counting_method: "scanner",
-    timestamp: new Date().toISOString()
+// Inventario con metadata completa y validación
+const createValidatedInventoryRequest = (items, operator, location) => {
+  // Validar parámetros requeridos
+  if (!operator || !location) {
+    throw new Error('Operador y ubicación son obligatorios');
   }
+  
+  const inventoryRequest = {
+    items: items,
+    metadata: {
+      source: "physical_count",
+      timestamp: new Date().toISOString(),
+      operator: operator,
+      location: location,
+      counting_method: "barcode_scanner",
+      verification: "double_check",
+      equipment: "handheld_scanner_001",
+      notes: "Inventory count performed with verification protocol",
+      session_id: generateSessionId(),
+      environmental_conditions: {
+        temperature: "22°C",
+        humidity: "45%"
+      }
+    }
+  };
+  
+  // Validar antes de enviar
+  validateRequiredMetadata(inventoryRequest.metadata, 'PHYSICAL_COUNT');
+  
+  return inventoryRequest;
 };
-```
-3. **Sistema crea automáticamente** la transacción de stock correspondiente
-4. **GET /manual_adjustment/product/{product_id}/history** para verificar el historial
 
-### Flujo Típico: Producto Dañado
-1. **Detectar producto dañado** durante inspección
-2. **POST /manual_adjustment/** con cantidad 0:
-```javascript
-const damagedProductRequest = {
-  product_id: "PROD_DEF_002",
-  new_quantity: 0,
-  reason: "Producto dañado o vencido", // Valor por defecto
-  metadata: {
-    source: "quality_control",
-    damage_type: "expired",
-    damage_severity: "total",
-    disposal_method: "discard",
-    batch_number: "LOT_2025_001"
-  }
-};
-```
+// Uso del inventario validado
+const items = [
+  { product_id: "PROD_ABC_001", quantity_checked: 150 },
+  { product_id: "PROD_DEF_002", quantity_checked: 75 }
+];
 
-### Flujo con Helper Function (Frontend)
-```javascript
-// Usando la función helper recomendada
-const adjustment1 = createAdjustmentRequest(
-  "PROD_ABC_001", 
-  150, 
-  "PHYSICAL_COUNT",
-  undefined, // usar reason por defecto
-  "PHYSICAL_COUNT",
-  { operator: "john_doe", location: "warehouse_a" }
+const validatedRequest = createValidatedInventoryRequest(
+  items, 
+  "warehouse_manager_001", 
+  "main_warehouse_section_a"
 );
 
-const adjustment2 = createAdjustmentRequest(
-  "PROD_DEF_002", 
-  0, 
-  "DAMAGED_GOODS",
-  "Producto vencido - revisar lote completo",
-  "DAMAGED_GOODS",
-  { damage_type: "expired", batch_affected: "LOT_001" }
-);
+// Enviar al endpoint
+fetch('/inventory/', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  },
+  body: JSON.stringify(validatedRequest)
+});
 ```
 
-### Flujo Típico: Inventario Masivo
-1. **Realizar conteo físico** de múltiples productos
-2. **POST /inventory** con la lista de productos y cantidades
-3. **Sistema crea automáticamente** el inventario y todas las transacciones
-4. **GET /inventory/{id}** para verificar los detalles del inventario
-5. **GET /inventory** para ver la lista de inventarios
+### Ajuste Manual con Metadatos Obligatorios
+```javascript
+const createValidatedAdjustmentRequest = (productId, newQuantity, reasonCategory, operator) => {
+  const adjustmentRequest = {
+    product_id: productId,
+    new_quantity: newQuantity,
+    reason: "Ajuste por conteo físico con discrepancia",
+    metadata: {
+      source: "manual_adjustment",
+      timestamp: new Date().toISOString(),
+      operator: operator,
+      reason_category: reasonCategory,
+      approval_level: "supervisor",
+      supervisor: "supervisor_001",
+      documentation: "FORM_ADJ_2025_001",
+      previous_count: {
+        system_quantity: 100,
+        physical_count: newQuantity,
+        variance: newQuantity - 100
+      },
+      verification_steps: [
+        "initial_count",
+        "supervisor_verification", 
+        "final_approval"
+      ]
+    }
+  };
+  
+  // Validar metadatos obligatorios
+  validateRequiredMetadata(adjustmentRequest.metadata, 'MANUAL_ADJUSTMENT');
+  
+  return adjustmentRequest;
+};
+```
 
-### Flujo Típico: Compra de Mercancía
-1. **POST /stock-transaction** con type="PURCHASE"
-2. **Sistema actualiza** automáticamente las cantidades
-3. **GET /stock-transaction/history/{product_id}** para ver el historial
+### Función Helper para Validación de Metadatos
+```javascript
+class MetadataValidator {
+  static validateInventoryMetadata(metadata) {
+    const required = ['source', 'timestamp', 'operator', 'location', 'counting_method', 'verification'];
+    
+    for (const field of required) {
+      if (!metadata[field] || metadata[field].trim() === '') {
+        throw new Error(`Campo obligatorio faltante en inventario: ${field}`);
+      }
+    }
+    
+    // Validaciones específicas
+    const validCountingMethods = ['manual', 'barcode_scanner', 'rfid', 'voice_picking'];
+    if (!validCountingMethods.includes(metadata.counting_method)) {
+      throw new Error(`Método de conteo inválido: ${metadata.counting_method}`);
+    }
+    
+    const validVerifications = ['single_check', 'double_check', 'triple_check'];
+    if (!validVerifications.includes(metadata.verification)) {
+      throw new Error(`Método de verificación inválido: ${metadata.verification}`);
+    }
+    
+    return true;
+  }
+  
+  static validateAdjustmentMetadata(metadata) {
+    const required = ['source', 'timestamp', 'operator', 'reason_category', 'approval_level'];
+    
+    for (const field of required) {
+      if (!metadata[field] || metadata[field].trim() === '') {
+        throw new Error(`Campo obligatorio faltante en ajuste: ${field}`);
+      }
+    }
+    
+    const validApprovalLevels = ['operator', 'supervisor', 'manager', 'admin'];
+    if (!validApprovalLevels.includes(metadata.approval_level)) {
+      throw new Error(`Nivel de aprobación inválido: ${metadata.approval_level}`);
+    }
+    
+    return true;
+  }
+}
 
-### Flujo Típico: Invalidación de Inventario
-1. **Identificar inventario** con problemas
-2. **POST /inventory/invalidate** con el ID del inventario
-3. **Sistema revierte automáticamente** todos los cambios de stock
-4. **GET /system/integrity-check** para verificar la corrección
-
-### Verificación de Integridad
-1. **GET /system/integrity-check** para verificar estado general
-2. **GET /stock-transaction/validate-consistency** para validar productos específicos
+// Uso de la validación
+try {
+  MetadataValidator.validateInventoryMetadata(inventoryMetadata);
+  // Proceder con la operación
+} catch (error) {
+  console.error('Validación fallida:', error.message);
+  // Mostrar error al usuario
+}
+```
 
 ---
 
-**Última actualización**: 8 de Septiembre de 2025  
-**Versión**: 2.2 (Frontend Defaults + Completamente Optimizada)  
-**Estado**: ✅ Sistema completamente limpio y optimizado + Valores por defecto para Frontend  
-**Basado en**: Nueva implementación con funciones optimizadas, consistencia total y helpers para frontend
+**Última actualización**: 15 de Septiembre de 2025  
+**Versión**: 4.0 (Metadatos Obligatorios - Trazabilidad Completa)  
+**Estado**: ✅ Sistema con metadatos obligatorios para garantizar auditoría y trazabilidad total  
+**Basado en**: Implementación con metadatos obligatorios, sin compatibilidad legacy, validación estricta

@@ -1,616 +1,1002 @@
-# API de Horarios (Schedules) - Especificación Técnica
+# Guía Frontend - Sistema de Generación de Horarios
 
-## 📋 Índice
-- [Visión General](#visión-general)
-- [Modelos de Datos](#modelos-de-datos)
-- [Endpoints](#endpoints)
-- [Códigos de Respuesta](#códigos-de-respuesta)
-- [Validaciones](#validaciones)
+## Descripción
 
----
+Esta guía proporciona ejemplos de implementación frontend para integrar el nuevo sistema de generación de horarios con rango personalizable. Incluye ejemplos en JavaScript vanilla, React, y Angular.
 
-## 🎯 Visión General
+## Configuración Base
 
-Sistema de gestión de horarios para productos reservables implementado en el sistema de business management. Permite consultar disponibilidad, generar horarios automáticamente y gestionar su estado basado en la implementación actual del código.
+### Headers de Autenticación
+Todos los endpoints requieren autenticación JWT:
 
-### Autenticación
-- **Endpoints de consulta**: No requieren autenticación
-- **Endpoints de modificación/generación**: Requieren JWT Bearer token
-
----
-
-## 📊 Modelos de Datos
-
-### Schedule
-```typescript
-interface Schedule {
-  id: number;              // ID numérico del horario (int64 en DB)
-  product_id: string;      // ID del producto reservable
-  start_time: string;      // Hora inicio (ISO 8601: "2024-01-15T14:00:00Z")
-  end_time: string;        // Hora fin (ISO 8601: "2024-01-15T15:00:00Z")
-  is_available: boolean;   // Disponibilidad para reserva
-}
+```javascript
+const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${jwtToken}`
+};
 ```
 
-### ScheduleRiched
-```typescript
-interface ScheduleRiched {
-  id: number;              // ID numérico (int64)
-  product_id: string;
-  start_time: string;
-  end_time: string;
-  is_available: boolean;
-  product_name: string;    // Nombre del producto (JOIN con products)
-}
+### URL Base
+```javascript
+const API_BASE_URL = 'http://localhost:8080'; // Ajustar según entorno
 ```
 
-### AvailableSchedulesResponse
-```typescript
-interface AvailableSchedulesResponse {
-  schedules: ScheduleRiched[];  // Lista de horarios disponibles
-  count: number;                // Cantidad de horarios encontrados
-  message: string;              // Mensaje informativo
-}
-```
+## Endpoint 1: Generar Horarios para Fecha Específica
 
-### Request Bodies
+### JavaScript Vanilla
 
-#### UpdateScheduleAvailabilityRequest
-```typescript
-interface UpdateScheduleAvailabilityRequest {
-  is_available: boolean;         // Nueva disponibilidad
-}
-```
+```javascript
+async function generateSchedulesForDate(targetDate, startHour = null, endHour = null, productIds = null) {
+    try {
+        const requestBody = {
+            target_date: targetDate
+        };
+        
+        // Agregar parámetros opcionales si se especifican
+        if (startHour !== null) requestBody.start_hour = parseInt(startHour);
+        if (endHour !== null) requestBody.end_hour = parseInt(endHour);
+        if (productIds && productIds.length > 0) requestBody.product_ids = productIds;
 
-#### GenerateScheduleForDateRequest
-```typescript
-interface GenerateScheduleForDateRequest {
-  target_date: string;           // Fecha en formato "YYYY-MM-DD"
-}
-```
+        const response = await fetch(`${API_BASE_URL}/schedules/generate/date`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(requestBody)
+        });
 
-#### GenerateSchedulesForNextNDaysRequest
-```typescript
-interface GenerateSchedulesForNextNDaysRequest {
-  days: number;                  // Número de días (1-365)
-}
-```
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
----
-
-## 🚀 Endpoints
-
-| Método | Endpoint | Auth | Descripción |
-|--------|----------|------|-------------|
-| `GET` | `/schedules/{id}` | No | Obtener horario por ID |
-| `GET` | `/schedules/available` | No | **NUEVO** - Horarios disponibles (todos los servicios) |
-| `GET` | `/schedules/today` | No | **NUEVO** - Horarios de servicios para HOY |
-| `GET` | `/schedules/product/{productId}/date/{date}/available` | No | Horarios disponibles para producto/fecha |
-| `GET` | `/schedules/product/{productId}/all` | No | **NUEVO** - Todos los horarios de un producto |
-| `GET` | `/schedules/product/{productId}` | No | **NUEVO** - Horarios de un producto (paginado) |
-| `PUT` | `/schedules/{id}/availability` | Sí | Actualizar disponibilidad ⚠️ |
-| `POST` | `/schedules/generate/daily` | Sí | Generar horarios diarios |
-| `POST` | `/schedules/generate/today` | Sí | **NUEVO** - Generar horarios para HOY |
-| `POST` | `/schedules/generate/tomorrow` | Sí | **NUEVO** - Generar horarios para MAÑANA |
-| `POST` | `/schedules/generate/date` | Sí | Generar para fecha específica |
-| `POST` | `/schedules/generate/next-days` | Sí | Generar para próximos N días |
-
-⚠️ **Nota**: El endpoint de actualización de disponibilidad está implementado pero no está actualmente incluido en las rutas.
-
-### 1. Obtener Horario por ID
-```http
-GET /schedules/{id}
-```
-
-**Parámetros:**
-- `id` (path): ID del horario (string en URL, se convierte internamente)
-
-**Response:** `Schedule`
-```json
-{
-  "id": 12345,
-  "product_id": "BT_Cancha_1_xyz123abc",
-  "start_time": "2024-01-15T14:00:00Z",
-  "end_time": "2024-01-15T15:00:00Z",
-  "is_available": true
-}
-```
-
-**Errores:**
-- `404`: "Schedule not found" - Horario no existe
-- `500`: Error interno del servidor
-
-### 2. 🆕 Obtener Horarios Disponibles (Todos los Servicios)
-```http
-GET /schedules/available?date=YYYY-MM-DD&limit=50
-```
-
-**Query Parameters:**
-- `date` (optional): Fecha específica en formato "YYYY-MM-DD". Si se omite, busca desde ahora en adelante
-- `limit` (optional): Máximo número de resultados (default: 50)
-
-**Response:** `AvailableSchedulesResponse`
-```json
-{
-  "schedules": [
-    {
-      "id": 12345,
-      "product_id": "BT_Cancha_1_xyz123abc",
-      "start_time": "2024-01-15T14:00:00Z",
-      "end_time": "2024-01-15T15:00:00Z",
-      "is_available": true,
-      "product_name": "Cancha de Tenis 1"
-    },
-    {
-      "id": 12346,
-      "product_id": "BT_Cancha_2_def456ghi",
-      "start_time": "2024-01-15T14:00:00Z",
-      "end_time": "2024-01-15T15:00:00Z",
-      "is_available": true,
-      "product_name": "Cancha de Tenis 2"
+        const result = await response.json();
+        console.log('Horarios generados:', result);
+        
+        // Mostrar mensaje de éxito
+        showSuccessMessage(result.message);
+        return result;
+        
+    } catch (error) {
+        console.error('Error generando horarios:', error);
+        showErrorMessage('Error al generar horarios: ' + error.message);
+        throw error;
     }
-  ],
-  "count": 2,
-  "message": "Horarios disponibles para 2024-01-15"
 }
-```
 
-**Sin horarios disponibles:**
-```json
-{
-  "schedules": [],
-  "count": 0,
-  "message": "No hay horarios disponibles para la fecha 2024-01-15"
-}
-```
-
-**Errores:**
-- `400`: "Invalid date format. Use YYYY-MM-DD" - Formato de fecha inválido
-- `500`: Error interno del servidor
-
-### 3. 🆕 Obtener Horarios de Servicios para HOY
-```http
-GET /schedules/today
-```
-
-**Descripción:** Obtiene todos los horarios programados para la fecha actual (HOY). No requiere parámetros y devuelve información enriquecida con nombres de productos.
-
-**Response:** `AvailableSchedulesResponse`
-```json
-{
-  "schedules": [
-    {
-      "id": 12345,
-      "product_id": "BT_Cancha_1_xyz123abc",
-      "start_time": "2025-09-05T14:00:00Z",
-      "end_time": "2025-09-05T15:00:00Z",
-      "is_available": true,
-      "product_name": "Cancha de Tenis 1"
-    },
-    {
-      "id": 12346,
-      "product_id": "BT_Cancha_2_def456ghi",
-      "start_time": "2025-09-05T15:00:00Z",
-      "end_time": "2025-09-05T16:00:00Z",
-      "is_available": false,
-      "product_name": "Cancha de Tenis 2"
+// Ejemplo de uso
+document.getElementById('generateBtn').addEventListener('click', async () => {
+    const dateInput = document.getElementById('targetDate');
+    const targetDate = dateInput.value;
+    
+    if (!targetDate) {
+        showErrorMessage('Por favor selecciona una fecha');
+        return;
     }
-  ],
-  "count": 2,
-  "message": "Horarios de servicios para hoy"
+    
+    // Generar horarios para todos los productos SERVICE de categoría "Alquiler de Canchas"
+    // con horario por defecto (14:00-23:00, incluye slot 22:00-23:00)
+    await generateSchedulesForDate(targetDate);
+});
+
+// Ejemplo con parámetros personalizados
+document.getElementById('generateCustomBtn').addEventListener('click', async () => {
+    const dateInput = document.getElementById('targetDate');
+    const startHour = document.getElementById('startHour');
+    const endHour = document.getElementById('endHour');
+    const productSelect = document.getElementById('productIds');
+    
+    const targetDate = dateInput.value;
+    const selectedProducts = Array.from(productSelect.selectedOptions).map(option => option.value);
+    
+    if (!targetDate) {
+        showErrorMessage('Por favor selecciona una fecha');
+        return;
+    }
+    
+    // Generar horarios con parámetros personalizados
+    await generateSchedulesForDate(
+        targetDate,
+        startHour.value || null,
+        endHour.value || null,
+        selectedProducts.length > 0 ? selectedProducts : null
+    );
+});
+```
+
+### React Hook
+
+```jsx
+import { useState, useCallback } from 'react';
+
+export const useScheduleGeneration = (authToken) => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    const generateSchedulesForDate = useCallback(async (targetDate, startHour = null, endHour = null, productIds = null) => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const requestBody = {
+                target_date: targetDate
+            };
+            
+            // Agregar parámetros opcionales si se especifican
+            if (startHour !== null) requestBody.start_hour = parseInt(startHour);
+            if (endHour !== null) requestBody.end_hour = parseInt(endHour);
+            if (productIds && productIds.length > 0) requestBody.product_ids = productIds;
+
+            const response = await fetch(`${API_BASE_URL}/schedules/generate/date`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            return result;
+
+        } catch (err) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [authToken]);
+
+    return {
+        generateSchedulesForDate,
+        loading,
+        error
+    };
+};
+
+// Componente de ejemplo
+const ScheduleGenerator = () => {
+    const [targetDate, setTargetDate] = useState('');
+    const [startHour, setStartHour] = useState('');
+    const [endHour, setEndHour] = useState('');
+    const [selectedProducts, setSelectedProducts] = useState([]);
+    const { generateSchedulesForDate, loading, error } = useScheduleGeneration(authToken);
+
+    const productOptions = [
+        { value: 'BT_Cancha_1_xyz123abc', label: 'Cancha 1' },
+        { value: 'BT_Cancha_2_def456ghi', label: 'Cancha 2' },
+        { value: 'CANCHA-01', label: 'Cancha de Beach Tennis' }
+    ];
+
+    const generateHourOptions = (start, end) => {
+        const options = [];
+        for (let i = start; i <= end; i++) {
+            options.push(
+                <option key={i} value={i}>{i}:00</option>
+            );
+        }
+        return options;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!targetDate) {
+            alert('Por favor selecciona una fecha');
+            return;
+        }
+
+        try {
+            const result = await generateSchedulesForDate(
+                targetDate,
+                startHour || null,
+                endHour || null,
+                selectedProducts.length > 0 ? selectedProducts : null
+            );
+            alert(result.message);
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div>
+                <label htmlFor="targetDate">Fecha:</label>
+                <input
+                    type="date"
+                    id="targetDate"
+                    value={targetDate}
+                    onChange={(e) => setTargetDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    required
+                />
+            </div>
+            
+            <div>
+                <label htmlFor="startHour">Hora de inicio (opcional):</label>
+                <select
+                    id="startHour"
+                    value={startHour}
+                    onChange={(e) => setStartHour(e.target.value)}
+                >
+                    <option value="">Por defecto (14:00)</option>
+                    {generateHourOptions(0, 21)}
+                </select>
+            </div>
+            
+            <div>
+                <label htmlFor="endHour">Hora de fin (opcional):</label>
+                <select
+                    id="endHour"
+                    value={endHour}
+                    onChange={(e) => setEndHour(e.target.value)}
+                >
+                    <option value="">Por defecto (23:00)</option>
+                    {generateHourOptions(1, 23)}
+                </select>
+            </div>
+            
+            <div>
+                <label htmlFor="productIds">Productos específicos (opcional):</label>
+                <select
+                    id="productIds"
+                    multiple
+                    value={selectedProducts}
+                    onChange={(e) => setSelectedProducts(Array.from(e.target.selectedOptions, option => option.value))}
+                    className="multi-select"
+                >
+                    {productOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
+                <small>Sin seleccionar = todos los productos SERVICE de "Alquiler de Canchas"</small>
+            </div>
+            
+            <button type="submit" disabled={loading}>
+                {loading ? 'Generando...' : 'Generar Horarios'}
+            </button>
+            
+            {error && <div className="error">{error}</div>}
+        </form>
+    );
+};
+```
+
+### Angular Service
+
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+export interface GenerateScheduleRequest {
+    target_date: string;
+    start_hour?: number;    // Opcional, por defecto 14
+    end_hour?: number;      // Opcional, por defecto 22
+    product_ids?: string[]; // Opcional, auto-descubre si no se especifica
+}
+
+export interface GenerateScheduleResponse {
+    success: boolean;
+    target_date: string;
+    auto_discovery: boolean;
+    time_range: {
+        start_hour: number;
+        end_hour: number;
+        total_hours: number;
+    };
+    validation: {
+        products_requested: number;
+        valid_products: number;
+        invalid_products: number;
+        requirements: {
+            product_type: string;
+            category_required: string;
+            status_required: string;
+        };
+    };
+    product_ids_processed: string[];
+    results: {
+        schedules_created: number;
+        schedules_skipped: number;
+        errors_count: number;
+        invalid_products_count: number;
+    };
+    errors: string[];
+    message: string;
+    generated_at: string;
+}
+
+@Injectable({
+    providedIn: 'root'
+})
+export class ScheduleService {
+    private apiUrl = 'http://localhost:8080';
+
+    constructor(private http: HttpClient) {}
+
+    private getHeaders(token: string): HttpHeaders {
+        return new HttpHeaders({
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        });
+    }
+
+    generateSchedulesForDate(
+        targetDate: string, 
+        token: string,
+        startHour?: number,
+        endHour?: number,
+        productIds?: string[]
+    ): Observable<GenerateScheduleResponse> {
+        const headers = this.getHeaders(token);
+        const body: GenerateScheduleRequest = {
+            target_date: targetDate
+        };
+        
+        // Agregar parámetros opcionales si se especifican
+        if (startHour !== undefined) body.start_hour = startHour;
+        if (endHour !== undefined) body.end_hour = endHour;
+        if (productIds && productIds.length > 0) body.product_ids = productIds;
+
+        return this.http.post<GenerateScheduleResponse>(
+            `${this.apiUrl}/schedules/generate/date`,
+            body,
+            { headers }
+        );
+    }
+}
+
+// Componente de ejemplo
+import { Component } from '@angular/core';
+import { ScheduleService } from './schedule.service';
+
+@Component({
+    selector: 'app-schedule-generator',
+    template: `
+        <form (ngSubmit)="onSubmit()">
+            <div>
+                <label for="targetDate">Fecha:</label>
+                <input 
+                    type="date" 
+                    id="targetDate"
+                    [(ngModel)]="targetDate"
+                    [min]="minDate"
+                    required
+                />
+            </div>
+            
+            <div>
+                <label for="startHour">Hora de inicio (opcional):</label>
+                <select id="startHour" [(ngModel)]="startHour">
+                    <option value="">Por defecto (14:00)</option>
+                    <option *ngFor="let hour of hours" [value]="hour">{{hour}}:00</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="endHour">Hora de fin (opcional):</label>
+                <select id="endHour" [(ngModel)]="endHour">
+                    <option value="">Por defecto (23:00)</option>
+                    <option *ngFor="let hour of hours" [value]="hour">{{hour}}:00</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="productIds">Productos específicos (opcional):</label>
+                <select id="productIds" [(ngModel)]="selectedProducts" multiple>
+                    <option value="BT_Cancha_1_xyz123abc">Cancha 1</option>
+                    <option value="BT_Cancha_2_def456ghi">Cancha 2</option>
+                    <option value="CANCHA-01">Cancha de Beach Tennis</option>
+                </select>
+                <small>Sin seleccionar = todos los productos SERVICE de "Alquiler de Canchas"</small>
+            </div>
+            
+            <button type="submit" [disabled]="loading">
+                {{ loading ? 'Generando...' : 'Generar Horarios' }}
+            </button>
+            
+            <div *ngIf="error" class="error">{{ error }}</div>
+            <div *ngIf="successMessage" class="success">{{ successMessage }}</div>
+        </form>
+    `
+})
+export class ScheduleGeneratorComponent {
+    targetDate: string = '';
+    startHour: string = '';
+    endHour: string = '';
+    selectedProducts: string[] = [];
+    loading = false;
+    error: string | null = null;
+    successMessage: string | null = null;
+    minDate = new Date().toISOString().split('T')[0];
+    hours = Array.from({length: 24}, (_, i) => i);
+
+    constructor(
+        private scheduleService: ScheduleService,
+        private authToken: string // Inyectar token de auth
+    ) {}
+
+    onSubmit() {
+        if (!this.targetDate) {
+            this.error = 'Por favor selecciona una fecha';
+            return;
+        }
+
+        this.loading = true;
+        this.error = null;
+        this.successMessage = null;
+
+        const startHour = this.startHour ? parseInt(this.startHour) : undefined;
+        const endHour = this.endHour ? parseInt(this.endHour) : undefined;
+        const productIds = this.selectedProducts.length > 0 ? this.selectedProducts : undefined;
+
+        this.scheduleService.generateSchedulesForDate(
+            this.targetDate, 
+            this.authToken,
+            startHour,
+            endHour,
+            productIds
+        ).subscribe({
+            next: (result) => {
+                this.successMessage = result.message;
+                this.loading = false;
+            },
+            error: (err) => {
+                this.error = 'Error: ' + err.message;
+                this.loading = false;
+            }
+        });
+    }
 }
 ```
 
-**Sin horarios programados:**
-```json
-{
-  "schedules": [],
-  "count": 0,
-  "message": "No hay horarios programados para hoy"
+## Endpoint: Generar Horarios con Parámetros Flexibles
+
+La función `generate_schedules_for_date` ahora soporta **auto-descubrimiento** de productos. Si no se especifican `product_ids`, automáticamente generará horarios para **todos** los productos de tipo SERVICE activos en la categoría "Alquiler de Canchas".
+
+### Parámetros de la Función
+
+- **`target_date`** (requerido): Fecha para generar horarios
+- **`start_hour`** (opcional): Hora de inicio (por defecto: 14)
+- **`end_hour`** (opcional): Hora de fin (por defecto: 23) - incluye el slot hasta esta hora
+- **`product_ids`** (opcional): Array de IDs de productos específicos
+
+### Comportamiento
+
+1. **Sin `product_ids`**: Auto-descubre todos los productos SERVICE de categoría "Alquiler de Canchas"
+2. **Con `product_ids`**: Valida que sean SERVICE y de la categoría correcta
+3. **Validaciones**: Solo productos activos, tipo SERVICE, categoría "Alquiler de Canchas"
+4. **Rango de horarios**: Genera slots de 1 hora desde `start_hour` hasta `end_hour-1:00 a end_hour:00`
+
+**Ejemplo**: Con `start_hour=14` y `end_hour=23`, genera 9 horarios:
+- 14:00-15:00, 15:00-16:00, ..., 21:00-22:00, **22:00-23:00**
+
+### JavaScript Vanilla Completo
+
+```javascript
+async function generateSchedulesWithOptions(targetDate, options = {}) {
+    try {
+        const requestBody = {
+            target_date: targetDate
+        };
+        
+        // Agregar parámetros opcionales
+        if (options.startHour !== undefined) requestBody.start_hour = parseInt(options.startHour);
+        if (options.endHour !== undefined) requestBody.end_hour = parseInt(options.endHour);
+        if (options.productIds && options.productIds.length > 0) requestBody.product_ids = options.productIds;
+
+        const response = await fetch(`${API_BASE_URL}/schedules/generate/date`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Horarios generados:', result);
+        
+        // Mensaje detallado
+        const message = result.auto_discovery 
+            ? `Auto-descubrimiento: ${result.message} (${result.validation.products_requested} productos encontrados)`
+            : result.message;
+            
+        showSuccessMessage(message);
+        return result;
+        
+    } catch (error) {
+        console.error('Error generando horarios:', error);
+        showErrorMessage('Error al generar horarios: ' + error.message);
+        throw error;
+    }
 }
-```
 
-**Errores:**
-- `500`: Error interno del servidor
+// Ejemplos de uso:
 
-### 4. Obtener Horarios Disponibles por Producto
-```http
-GET /schedules/product/{productId}/date/{date}/available
-```
+// 1. Generar para todos los productos SERVICE de "Alquiler de Canchas" (auto-descubrimiento)
+await generateSchedulesWithOptions('2025-09-16');
 
-**Parámetros:**
-- `productId` (path): ID del producto
-- `date` (path): Fecha en formato "YYYY-MM-DD"
+// 2. Con horario personalizado - ahora incluye 22:00-23:00
+await generateSchedulesWithOptions('2025-09-16', {
+    startHour: 8,
+    endHour: 23  // Genera hasta 22:00-23:00
+});
 
-**Response:** `Schedule[]`
-```json
-[
-  {
-    "id": 12345,
-    "product_id": "BT_Cancha_1_xyz123abc",
-    "start_time": "2024-01-15T14:00:00Z",
-    "end_time": "2024-01-15T15:00:00Z",
-    "is_available": true
-  }
-]
-```
+// 3. Para productos específicos
+await generateSchedulesWithOptions('2025-09-16', {
+    productIds: ['BT_Cancha_1_xyz123abc', 'BT_Cancha_2_def456ghi']
+});
 
-**Errores:**
-- `500`: Error interno del servidor
+// 4. Combinación completa
+await generateSchedulesWithOptions('2025-09-16', {
+    startHour: 10,
+    endHour: 18,
+    productIds: ['BT_Cancha_1_xyz123abc']
+});
 
-### 5. 🆕 Obtener Todos los Horarios de un Producto
-```http
-GET /schedules/product/{productId}/all
-```
+// Formulario HTML de ejemplo
+const scheduleForm = `
+<form id="scheduleForm">
+    <div>
+        <label for="targetDate">Fecha:</label>
+        <input type="date" id="targetDate" required>
+    </div>
+    
+    <div>
+        <label for="startHour">Hora de inicio (opcional):</label>
+        <select id="startHour">
+            <option value="">Por defecto (14:00)</option>
+            ${generateHourOptions(0, 21)}
+        </select>
+    </div>
+    
+    <div>
+        <label for="endHour">Hora de fin (opcional):</label>
+        <select id="endHour">
+            <option value="">Por defecto (23:00)</option>
+            ${generateHourOptions(1, 23)}
+        </select>
+    </div>
+    
+    <div>
+        <label for="productIds">Productos específicos (opcional):</label>
+        <select id="productIds" multiple>
+            <option value="BT_Cancha_1_xyz123abc">Cancha 1</option>
+            <option value="BT_Cancha_2_def456ghi">Cancha 2</option>
+            <option value="CANCHA-01">Cancha de Beach Tennis</option>
+        </select>
+        <small>Sin seleccionar = todos los productos SERVICE de "Alquiler de Canchas"</small>
+    </div>
+    
+    <button type="submit">Generar Horarios</button>
+</form>
+`;
 
-**Parámetros:**
-- `productId` (path): ID del producto
-
-**Response:** `Schedule[]`
-```json
-[
-  {
-    "id": 12345,
-    "product_id": "BT_Cancha_1_xyz123abc",
-    "start_time": "2024-01-15T14:00:00Z",
-    "end_time": "2024-01-15T15:00:00Z",
-    "is_available": true
-  }
-]
-```
-
-**Sin horarios:** Retorna array vacío `[]`
-
-**Errores:**
-- `500`: Error interno del servidor
-
-### 6. 🆕 Obtener Horarios de un Producto (Paginado)
-```http
-GET /schedules/product/{productId}?page=1&pageSize=50
-```
-
-**Parámetros:**
-- `productId` (path): ID del producto
-
-**Query Parameters:**
-- `page` (optional): Número de página (default: 1)
-- `pageSize` (optional): Elementos por página (default: 50)
-
-**Response:** `Schedule[]`
-```json
-[
-  {
-    "id": 12345,
-    "product_id": "BT_Cancha_1_xyz123abc",
-    "start_time": "2024-01-15T14:00:00Z",
-    "end_time": "2024-01-15T15:00:00Z",
-    "is_available": true
-  }
-]
-```
-
-**Errores:**
-- `500`: Error interno del servidor
-
-### 7. Actualizar Disponibilidad 🔒 ⚠️
-```http
-PUT /schedules/{id}/availability
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-```
-
-⚠️ **Nota**: Este endpoint está implementado en el handler pero no está incluido en las rutas actuales.
-
-**Parámetros:**
-- `id` (path): ID del horario
-
-**Body:** `UpdateScheduleAvailabilityRequest`
-```json
-{
-  "is_available": false
+function generateHourOptions(start, end) {
+    let options = '';
+    for (let i = start; i <= end; i++) {
+        options += `<option value="${i}">${i}:00</option>`;
+    }
+    return options;
 }
+
+// Event listener para el formulario
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('scheduleForm');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const targetDate = document.getElementById('targetDate').value;
+        const startHour = document.getElementById('startHour').value;
+        const endHour = document.getElementById('endHour').value;
+        const productSelect = document.getElementById('productIds');
+        const productIds = Array.from(productSelect.selectedOptions).map(option => option.value);
+        
+        // Validaciones
+        if (startHour && endHour && parseInt(startHour) >= parseInt(endHour)) {
+            showErrorMessage('La hora de inicio debe ser menor que la hora de fin');
+            return;
+        }
+        
+        const options = {};
+        if (startHour) options.startHour = parseInt(startHour);
+        if (endHour) options.endHour = parseInt(endHour);
+        if (productIds.length > 0) options.productIds = productIds;
+        
+        await generateSchedulesWithOptions(targetDate, options);
+    });
+});
 ```
 
-**Response:**
-```json
-{
-  "message": "Schedule availability updated successfully"
-}
+### React Component Completo
+
+```jsx
+import React, { useState } from 'react';
+
+const ScheduleGenerator = ({ authToken }) => {
+    const [formData, setFormData] = useState({
+        targetDate: '',
+        startHour: '',
+        endHour: '',
+        productIds: []
+    });
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
+
+    const productOptions = [
+        { value: 'BT_Cancha_1_xyz123abc', label: 'Cancha 1' },
+        { value: 'BT_Cancha_2_def456ghi', label: 'Cancha 2' },
+        { value: 'CANCHA-01', label: 'Cancha de Beach Tennis' }
+    ];
+
+    const generateHourOptions = (start, end) => {
+        const options = [];
+        for (let i = start; i <= end; i++) {
+            options.push(
+                <option key={i} value={i}>{i}:00</option>
+            );
+        }
+        return options;
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value, type } = e.target;
+        
+        if (type === 'select-multiple') {
+            const selectedValues = Array.from(e.target.selectedOptions, option => option.value);
+            setFormData(prev => ({
+                ...prev,
+                [name]: selectedValues
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setMessage('');
+
+        // Validaciones
+        if (!formData.targetDate) {
+            setError('Por favor selecciona una fecha');
+            return;
+        }
+
+        if (formData.startHour && formData.endHour && 
+            parseInt(formData.startHour) >= parseInt(formData.endHour)) {
+            setError('La hora de inicio debe ser menor que la hora de fin');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const requestBody = {
+                target_date: formData.targetDate
+            };
+
+            // Agregar parámetros opcionales
+            if (formData.startHour) requestBody.start_hour = parseInt(formData.startHour);
+            if (formData.endHour) requestBody.end_hour = parseInt(formData.endHour);
+            if (formData.productIds.length > 0) requestBody.product_ids = formData.productIds;
+
+            const response = await fetch('/schedules/generate/date', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            // Mensaje detallado basado en auto-descubrimiento
+            const detailedMessage = result.auto_discovery 
+                ? `${result.message} (Auto-descubrimiento: ${result.validation.products_requested} productos)`
+                : result.message;
+                
+            setMessage(detailedMessage);
+            
+            // Limpiar formulario
+            setFormData({
+                targetDate: '',
+                startHour: '',
+                endHour: '',
+                productIds: []
+            });
+
+        } catch (err) {
+            setError('Error: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="schedule-generator">
+            <h3>Generador de Horarios Inteligente</h3>
+            <p>Sin productos específicos = auto-descubre todos los productos SERVICE de "Alquiler de Canchas"</p>
+            
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label htmlFor="targetDate">Fecha:</label>
+                    <input
+                        type="date"
+                        id="targetDate"
+                        name="targetDate"
+                        value={formData.targetDate}
+                        onChange={handleInputChange}
+                        min={new Date().toISOString().split('T')[0]}
+                        required
+                    />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="startHour">Hora de inicio (opcional):</label>
+                    <select
+                        id="startHour"
+                        name="startHour"
+                        value={formData.startHour}
+                        onChange={handleInputChange}
+                    >
+                        <option value="">Por defecto (14:00)</option>
+                        {generateHourOptions(0, 21)}
+                    </select>
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="endHour">Hora de fin (opcional):</label>
+                    <select
+                        id="endHour"
+                        name="endHour"
+                        value={formData.endHour}
+                        onChange={handleInputChange}
+                    >
+                        <option value="">Por defecto (23:00)</option>
+                        {generateHourOptions(1, 23)}
+                    </select>
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="productIds">Productos específicos (opcional):</label>
+                    <select
+                        id="productIds"
+                        name="productIds"
+                        multiple
+                        value={formData.productIds}
+                        onChange={handleInputChange}
+                        className="multi-select"
+                    >
+                        {productOptions.map(option => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                    <small>Sin seleccionar = todos los productos SERVICE de "Alquiler de Canchas"</small>
+                </div>
+
+                <button type="submit" disabled={loading}>
+                    {loading ? 'Generando...' : 'Generar Horarios'}
+                </button>
+            </form>
+
+            {message && (
+                <div className="alert alert-success">
+                    {message}
+                </div>
+            )}
+
+            {error && (
+                <div className="alert alert-error">
+                    {error}
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default ScheduleGenerator;
 ```
 
-**Errores:**
-- `400`: Body JSON inválido
-- `401`: "Invalid token" - Token inválido o faltante
-- `500`: Error interno del servidor
-
-### 8. Generar Horarios Diarios 🔒
-```http
-POST /schedules/generate/daily
-Authorization: Bearer <jwt_token>
-```
-
-**Body:** Sin body requerido
-
-**Response:**
-```json
-{
-  "message": "Daily schedules generated successfully"
-}
-```
-
-**Errores:**
-- `401`: "Invalid token" - Token inválido o faltante
-- `500`: Error interno del servidor
-
-### 9. 🆕 Generar Horarios para HOY 🔒
-```http
-POST /schedules/generate/today
-Authorization: Bearer <jwt_token>
-```
-
-**Descripción:** Genera horarios para la fecha actual (HOY) en el rango de 14:00-23:00.
-
-**Body:** Sin body requerido
-
-**Response:**
-```json
-{
-  "message": "Schedules generated successfully for today"
-}
-```
-
-**Errores:**
-- `401`: "Invalid token" - Token inválido o faltante
-- `500`: Error interno del servidor
-
-### 10. 🆕 Generar Horarios para MAÑANA 🔒
-```http
-POST /schedules/generate/tomorrow
-Authorization: Bearer <jwt_token>
-```
-
-**Descripción:** Genera horarios para mañana en el rango de 14:00-23:00.
-
-**Body:** Sin body requerido
-
-**Response:**
-```json
-{
-  "message": "Schedules generated successfully for tomorrow"
-}
-```
-
-**Errores:**
-- `401`: "Invalid token" - Token inválido o faltante
-- `500`: Error interno del servidor
-
-### 11. Generar Horarios para Fecha Específica 🔒
-```http
-POST /schedules/generate/date
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-```
-
-**Body:** `GenerateScheduleForDateRequest`
-```json
-{
-  "target_date": "2024-01-20"
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Schedules generated successfully for 2024-01-20"
-}
-```
-
-**Errores:**
-- `400`: "Invalid date format. Use YYYY-MM-DD" - Formato de fecha inválido
-- `401`: "Invalid token" - Token inválido o faltante
-- `500`: Error interno del servidor
-
-### 12. Generar Horarios para Próximos N Días 🔒
-```http
-POST /schedules/generate/next-days
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-```
-
-**Body:** `GenerateSchedulesForNextNDaysRequest`
-```json
-{
-  "days": 7
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Schedules generated successfully for next 7 days",
-  "days": 7
-}
-```
-
-**Errores:**
-- `400`: "Days must be between 1 and 365" - Valor de days inválido
-- `401`: "Invalid token" - Token inválido o faltante
-- `500`: Error interno del servidor
-
----
-
-## 📋 Códigos de Respuesta
-
-| Código | Descripción | Cuándo se produce |
-|--------|-------------|-------------------|
-| `200` | OK | Operación exitosa |
-| `400` | Bad Request | Parámetros inválidos, JSON malformado o validación fallida |
-| `401` | Unauthorized | Token JWT inválido o faltante |
-| `404` | Not Found | Recurso no encontrado |
-| `500` | Internal Server Error | Error interno del servidor |
-
-## ✅ Validaciones y Restricciones
-
-### Autenticación por Endpoint
-- **GET endpoints**: No requieren autenticación
-- **PUT/POST endpoints**: Requieren JWT válido con `*models.TokenClaims`
-
-### Validaciones de Parámetros
-
-**Path Parameters:**
-- `id` (schedule): String en URL, se convierte internamente
-- `productId`: String, se pasa directamente al repositorio
-- `date`: String en formato "YYYY-MM-DD"
-
-**Query Parameters:**
-- `date`: String formato "YYYY-MM-DD" opcional para `/schedules/available`
-- `limit`: Number (default: 50) para `/schedules/available`
-- `page`: Number (default: 1) para endpoints paginados
-- `pageSize`: Number (default: 50) para endpoints paginados
-
-**Request Bodies:**
-- `is_available`: boolean (UpdateScheduleAvailabilityRequest)
-- `target_date`: string formato "YYYY-MM-DD" (GenerateScheduleForDateRequest)
-- `days`: number entre 1 y 365 (GenerateSchedulesForNextNDaysRequest)
+## Utilidades y Helpers
 
 ### Validación de Fechas
-- **target_date**: Se valida con `time.Parse("2006-01-02", req.TargetDate)`
-- **date query param**: Se valida con `time.Parse("2006-01-02", date)`
-- **Formato requerido**: "YYYY-MM-DD" (ISO date format)
-- **Error si inválido**: "Invalid date format. Use YYYY-MM-DD"
 
-### Restricciones de Días
-- **Mínimo**: 1 día
-- **Máximo**: 365 días
-- **Error si inválido**: "Days must be between 1 and 365"
-
-### Lógica de Consulta de Horarios
-- **Con fecha específica**: Filtra por `DATE(start_time) = fecha`
-- **Sin fecha**: Filtra por `start_time >= NOW()` (solo horarios futuros)
-- **Disponibilidad**: Filtra por `is_available = true`
-- **Ordenamiento**: Por `start_time` y `product_name`
-
----
-
-## ⏰ Horarios de Operación
-
-### Rango de Servicios
-**Horario de funcionamiento**: 14:00 - 23:00 (9 horarios por día)
-
-**Slots disponibles**:
-- 14:00-15:00, 15:00-16:00, 16:00-17:00, 17:00-18:00
-- 18:00-19:00, 19:00-20:00, 20:00-21:00, 21:00-22:00  
-- **22:00-23:00** ← Último horario del día
-
-### Generación Automática
-Los horarios se generan automáticamente para:
-- **Cancha 1**: `BT_Cancha_1_xyz123abc` (Cancha de Beach Tennis 1)
-- **Cancha 2**: `BT_Cancha_2_def456ghi` (Cancha de Beach Tennis 2)
-
-Cada horario:
-- ✅ Duración: 1 hora exacta
-- ✅ Disponibilidad inicial: `true`
-- ✅ Generación inteligente: No duplica horarios existentes
-
----
-
-## 🎯 Casos de Uso Principales
-
-### Frontend de Reservas
 ```javascript
-// Buscar horarios de HOY
-const todayResponse = await fetch('/schedules/today');
-const { schedules: todaySchedules, count, message } = await todayResponse.json();
-
-if (count > 0) {
-  console.log('Horarios de hoy:');
-  todaySchedules.forEach(schedule => {
-    console.log(`${schedule.product_name}: ${schedule.start_time} - ${schedule.end_time} (${schedule.is_available ? 'Disponible' : 'No disponible'})`);
-  });
-} else {
-  console.log(message); // "No hay horarios programados para hoy"
-}
-
-// Buscar horarios disponibles para fecha específica
-const response = await fetch('/schedules/available?date=2024-01-15&limit=20');
-const { schedules, count: availableCount, message: availableMessage } = await response.json();
-
-if (availableCount > 0) {
-  // Mostrar horarios disponibles con nombre del servicio
-  schedules.forEach(schedule => {
-    console.log(`${schedule.product_name}: ${schedule.start_time} - ${schedule.end_time}`);
-  });
-} else {
-  // Mostrar mensaje informativo
-  console.log(availableMessage); // "No hay horarios disponibles para la fecha 2024-01-15"
+function validateDate(dateString) {
+    const today = new Date();
+    const selectedDate = new Date(dateString);
+    
+    // Verificar que la fecha no sea en el pasado
+    if (selectedDate < today.setHours(0, 0, 0, 0)) {
+        throw new Error('No se pueden generar horarios para fechas pasadas');
+    }
+    
+    // Verificar formato
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateString)) {
+        throw new Error('Formato de fecha inválido. Use YYYY-MM-DD');
+    }
+    
+    return true;
 }
 ```
 
-### Administración de Horarios
-```javascript
-// Obtener todos los horarios de un producto específico
-const schedules = await fetch('/schedules/product/BT_Cancha_1_xyz123abc/all');
+### Formateo de Respuestas
 
-// Obtener horarios paginados para administración
-const paginatedSchedules = await fetch('/schedules/product/BT_Cancha_1_xyz123abc?page=1&pageSize=25');
+```javascript
+function formatScheduleResponse(response) {
+    return {
+        success: response.success,
+        message: response.message,
+        autoDiscovery: response.auto_discovery,
+        details: {
+            date: response.target_date,
+            timeRange: `${response.time_range.start_hour}:00 - ${response.time_range.end_hour}:00`,
+            totalHours: response.time_range.total_hours,
+            productsProcessed: response.validation.products_requested,
+            validProducts: response.validation.valid_products,
+            invalidProducts: response.validation.invalid_products
+        },
+        results: {
+            schedulesCreated: response.results.schedules_created,
+            schedulesSkipped: response.results.schedules_skipped,
+            errorsCount: response.results.errors_count
+        },
+        validation: {
+            requirements: response.validation.requirements,
+            productIds: response.product_ids_processed || []
+        },
+        errors: response.errors || []
+    };
+}
 ```
 
-### Generación de Horarios
+### Manejo de Errores
+
 ```javascript
-// Generar horarios para HOY (nueva funcionalidad)
-await fetch('/schedules/generate/today', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer ' + token
-  }
-});
-
-// Generar horarios para MAÑANA (nueva funcionalidad)
-await fetch('/schedules/generate/tomorrow', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer ' + token
-  }
-});
-
-// Generar horarios para fecha específica
-await fetch('/schedules/generate/date', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer ' + token,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({ target_date: '2024-01-16' })
-});
-
-// Generar horarios diarios (usa función de base de datos)
-await fetch('/schedules/generate/daily', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer ' + token
-  }
-});
+function handleApiError(error) {
+    console.error('API Error:', error);
+    
+    // Errores específicos
+    if (error.message.includes('401')) {
+        return 'Sesión expirada. Por favor inicia sesión nuevamente.';
+    }
+    
+    if (error.message.includes('400')) {
+        return 'Datos inválidos. Por favor verifica la información ingresada.';
+    }
+    
+    if (error.message.includes('500')) {
+        return 'Error interno del servidor. Por favor intenta más tarde.';
+    }
+    
+    return 'Error inesperado: ' + error.message;
+}
 ```
 
----
+## CSS Sugerido
 
-## 📝 Notas Técnicas
+```css
+.schedule-generator {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
 
-1. **Nuevos Endpoints**: Se agregaron 6 endpoints principales (4 de consulta sin autenticación, 2 de generación con autenticación)
-2. **Horarios Extendidos**: Rango operativo ampliado de 14:00-23:00 (9 horarios diarios por cancha)
-3. **Generación Granular**: Nuevos endpoints `/generate/today` y `/generate/tomorrow` para control específico
-4. **Respuestas Enriquecidas**: Los endpoints `/schedules/available` y `/schedules/today` incluyen nombre del producto y mensajes informativos
-5. **Sin Arrays Vacíos como Errores**: Los endpoints retornan arrays vacíos `[]` en lugar de errores 404
-6. **Servicios**: Los endpoints de generación usan `services.NewScheduleService(repository.GetRepository())`
-7. **Repositorio**: Los endpoints de consulta llaman directamente a `repository.*`
-8. **Content-Type**: Siempre se establece como `application/json` en responses
-9. **Errores**: Se retornan con `http.Error()` y detalles específicos
-10. **IDs**: Se procesan como strings desde la URL y se convierten según sea necesario
-11. **Paginación**: Valores por defecto optimizados para horarios (50 en lugar de 20)
-12. **⚠️ Orden de Rutas**: Las rutas específicas (`/available`, `/today`) se declaran antes que las genéricas (`/{id}`) para evitar conflictos de routing
+.form-group {
+    margin-bottom: 15px;
+}
 
----
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
 
-**Última actualización**: 8 de Septiembre de 2025  
-**Versión**: 2.2  
-**Basado en**: handlers/schedule.go, routes/routes.go, database/postgres/schedule.go
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.multi-select {
+    height: 80px;
+}
+
+button {
+    background: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.alert {
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 4px;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+```
+
+## Mejores Prácticas
+
+### 1. Manejo de Estado
+- Usar estados de loading para mejorar UX
+- Mostrar mensajes de error y éxito claramente
+- Limpiar formularios después de envío exitoso
+
+### 2. Validaciones
+- Validar datos en el frontend antes de enviar
+- Mostrar mensajes de validación específicos
+- Prevenir fechas pasadas
+
+### 3. Experiencia de Usuario
+- Usar spinners o indicadores de loading
+- Proporcionar feedback inmediato
+- Permitir cancelación de operaciones largas
+
+### 4. Seguridad
+- Validar tokens JWT antes de cada request
+- Manejar expiración de sesiones
+- Sanitizar inputs del usuario
+
+### 5. Performance
+- Implementar debouncing para búsquedas
+- Usar caché para datos frecuentemente accedidos
+- Minimizar requests innecesarios
+
+## Notas de Implementación
+
+1. **Auto-descubrimiento**: Si no se especifican `product_ids`, la función automáticamente encuentra todos los productos SERVICE activos de categoría "Alquiler de Canchas"
+2. **Tokens JWT**: Asegúrate de manejar la renovación de tokens apropiadamente
+3. **Dates**: Usa siempre formato ISO (YYYY-MM-DD) para fechas
+4. **Horas**: Las horas van de 0-23 (formato 24 horas), por defecto 14-23 (incluye slot 22:00-23:00)
+5. **Validaciones**: Solo productos SERVICE, activos, y de categoría "Alquiler de Canchas"
+6. **Errores**: Siempre maneja errores de red y de validación
+7. **Loading States**: Implementa estados de loading para mejor UX
+8. **Flexibilidad**: Un solo endpoint maneja tanto auto-descubrimiento como productos específicos

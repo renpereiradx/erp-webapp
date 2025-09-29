@@ -1,312 +1,212 @@
-# 🚀 Guía de Integración Frontend - API de Ventas, Pagos y Sesiones v2.0
+# 🛒 Guía de Integración API - Sistema de Ventas
 
-## 📋 Índice
-1. [Configuración General](#configuración-general)
-2. [Autenticación y Sesiones](#autenticación-y-sesiones)
-3. [API de Ventas](#api-de-ventas)
-4. [API de Pagos con Vuelto](#api-de-pagos-con-vuelto)
-5. [API de Gestión de Sesiones](#api-de-gestión-de-sesiones)
-6. [Códigos de Error](#códigos-de-error)
-7. [Ejemplos de Integración](#ejemplos-de-integración)
+## 🎯 Descripción General
 
-## 🔥 **Novedades en v2.0**
-- ✅ **Sistema de reversión mejorado** con preview de impacto
-- ✅ **API unificada** para ventas con y sin reserva
-- ✅ **Cálculo automático de vuelto** con validaciones
-- ✅ **Gestión avanzada de sesiones** con logout mejorado
-- ✅ **Manejo de errores expandido** con sugerencias
-- ✅ **Componentes React** de ejemplo actualizados
-- ✅ **Integración backend actualizada** (Agosto 2025) con procedimientos mejorados
+Esta guía cubre la implementación del **sistema de ventas completo** que incluye gestión de órdenes de venta, pagos, cancelaciones, seguimiento de transacciones y **validación de modificaciones de precio con justificación obligatoria**. El sistema está diseñado para manejar tanto ventas simples como complejas con múltiples métodos de pago y opciones de financiamiento.
 
----
+### 🚀 Funcionalidades Principales
 
-## 🔧 Configuración General
-
-### Base URL
-```
-http://localhost:5050
-```
-
-### Headers Requeridos
-```typescript
-{
-  "Content-Type": "application/json",
-  "Authorization": "Bearer <jwt_token>"
-}
-```
-
-### Formato de Respuesta Estándar
-```typescript
-interface APIResponse<T> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-  error_code?: string;
-}
-```
+- ✅ **Gestión de órdenes de venta**: Creación, consulta, modificación y cancelación
+- ✅ **Múltiples métodos de pago**: Efectivo, tarjeta, transferencia, crédito
+- ✅ **Facturación automática**: Generación de facturas con datos fiscales
+- ✅ **Control de stock**: Actualización automática de inventario
+- ✅ **Auditoría completa**: Trazabilidad de todas las transacciones
+- ✅ **Cancelación segura**: Reversión completa con control de integridad
+- ✅ **Reportes financieros**: Análisis de ventas por período, cliente y producto
+- 🆕 **Validación de precios**: Sistema de justificación obligatoria para descuentos
+- 🆕 **Control de modificaciones**: Autorización requerida para cambios de precio
+- 🆕 **Trazabilidad de descuentos**: Registro completo de cambios con metadata
 
 ---
 
-## 🔐 Autenticación y Sesiones
+## 📊 Modelos de Datos TypeScript
 
-### 1. Login
+### 🛒 Orden de Venta
+
 ```typescript
-// POST /login
-interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-interface LoginResponse {
-  token: string;           // JWT Token
-  role_id: string;        // ID del rol del usuario
-  session_id: number;     // ID de la sesión activa
-  expires_at: string;     // Fecha de expiración del token
-  user_id: string;        // ID del usuario
-}
-
-// Ejemplo de uso
-const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
-  const response = await fetch('/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials)
-  });
-  return response.json();
-};
-```
-
-### 2. Logout (Nuevo)
-```typescript
-// POST /sessions/{id}/revoke
-interface LogoutRequest {
-  session_id: number;
-  reason?: string;
-}
-
-interface LogoutResponse {
-  success: boolean;
-  message: string;
-  revoked_at: string;
-}
-
-// Ejemplo de uso
-const logoutUser = async (sessionId: number): Promise<LogoutResponse> => {
-  const response = await fetch(`/sessions/${sessionId}/revoke`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ reason: 'User logout' })
-  });
-  return response.json();
-};
-```
-
----
-
-## 🛒 API de Ventas
-
-### 1. Procesar Venta (Unificada)
-```typescript
-// POST /sale/ (endpoint principal - recomendado)
-// POST /sale/with-units (endpoint alternativo con soporte extendido de unidades)
-interface ProcessSaleRequest {
-  sale_id?: string;                    // Opcional, se genera automáticamente
-  client_id: string;                   // ID del cliente
-  product_details: ProductDetail[];    // Detalles de productos
-  payment_method_id?: number;          // Método de pago (opcional)
-  currency_id?: number;                // Moneda (opcional)
-  allow_price_modifications: boolean;  // Permitir modificaciones de precio
-  reserve_id?: number;                 // ID de reserva (opcional para ventas con reserva)
-}
-
-interface ProductDetail {
-  product_id: string;                  // ID del producto
-  quantity: number;                    // Cantidad (acepta decimales)
-  tax_rate_id?: number;                // ID de tasa de impuesto
-  sale_price?: number;                 // Precio modificado (opcional)
-  price_change_reason?: string;        // Razón del cambio de precio
-}
-
-interface ProcessSaleResponse {
-  success: boolean;
-  sale_id: string;
+interface SaleOrderRequest {
+  client_id: number;
+  sale_date?: string;         // Default: NOW()
+  payment_method_id: number;
+  currency_id?: number;       // Default: 1 (Guaraníes)
   total_amount: number;
-  items_processed: number;
-  price_modifications_enabled: boolean;
-  has_price_changes: boolean;
-  message: string;
-  error?: string;
+  items: SaleOrderItem[];
+  invoice_required?: boolean; // Default: true
+  notes?: string;
+  discount_percentage?: number; // Default: 0
+  allow_price_modifications?: boolean; // 🆕 Permitir modificaciones de precio
 }
 
-// Ejemplo de uso - Venta Normal
-const processSale = async (saleData: ProcessSaleRequest): Promise<ProcessSaleResponse> => {
-  const response = await fetch('/sale/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(saleData)
-  });
-  return response.json();
-};
+interface SaleOrderItem {
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  unit?: string;              // Default: 'unit'
+  discount_percentage?: number; // Default: 0
+  tax_rate_id?: number;       // Si no se especifica, usa el default
+  sale_price?: number;        // 🆕 Precio modificado (opcional)
+  price_change_reason?: string; // 🆕 Justificación del cambio (requerida si sale_price != unit_price)
+}
 
-// Ejemplo de uso - Venta con Reserva
-const processSaleWithReserve = async (saleData: ProcessSaleRequest): Promise<ProcessSaleResponse> => {
-  const saleWithReserve = {
-    ...saleData,
-    reserve_id: 123  // ID de la reserva
+interface SaleOrderResponse {
+  success: boolean;
+  sale_order_id?: number;
+  invoice_number?: string;
+  total_amount?: number;
+  items_processed?: number;
+  stock_updated?: number;
+  message?: string;
+  price_modifications_enabled?: boolean; // 🆕 Si se permitieron modificaciones
+  has_price_changes?: boolean;           // 🆕 Si hubo cambios de precio
+  validation_summary?: ValidationSummary; // 🆕 Resumen de validaciones
+  details?: {
+    client_name: string;
+    payment_method: string;
+    currency: string;
+    created_at: string;
   };
-  
-  return processSale(saleWithReserve);
-};
+}
+
+// 🆕 Resumen de validaciones aplicadas
+interface ValidationSummary {
+  price_modifications_allowed: boolean;
+  price_changes_detected: boolean;
+  reserve_integration: 'enabled' | 'disabled';
+}
 ```
 
-### 2. Obtener Venta por ID
+### 💰 Gestión de Pagos
+
 ```typescript
-// GET /sale/{id}
-interface SaleDetails {
-  id: string;
-  client_id: string;
-  client_name: string;
+interface SalePaymentRequest {
+  sale_order_id: number;
+  payment_method_id: number;
+  amount: number;
+  currency_id?: number;       // Default: 1
+  reference_number?: string;  // Para transferencias/tarjetas
+  notes?: string;
+}
+
+interface SalePaymentResponse {
+  success: boolean;
+  payment_id?: number;
+  remaining_balance?: number;
+  payment_status: 'PENDING' | 'PARTIAL' | 'COMPLETED' | 'OVERDUE';
+  message?: string;
+}
+```
+
+### 🔍 Consultas de Ventas
+
+```typescript
+interface SaleOrderEnriched {
+  sale_order: SaleOrderHeader;
+  items: SaleOrderItemDetail[];
+  payments: SalePaymentDetail[];
+  client: ClientInfo;
+  totals: SaleTotals;
+}
+
+interface SaleOrderHeader {
+  id: number;
+  client_id: number;
   sale_date: string;
   total_amount: number;
-  status: string;
-  user_id: string;
-  user_name: string;
-  payment_method_id?: number;
-  payment_method?: string;
-  currency_id?: number;
-  currency?: string;
-  details: SaleItemDetail[];
+  status: 'ACTIVE' | 'CANCELLED' | 'REFUNDED';
+  invoice_number: string;
+  payment_method_id: number;
+  currency_id: number;
+  created_by: string;
+  created_at: string;
 }
 
-interface SaleItemDetail {
+interface SaleOrderItemDetail {
   id: number;
-  order_id: string;
   product_id: string;
   product_name: string;
   quantity: number;
-  base_price: number;      // Precio base del producto
-  unit_price: number;      // Precio final de venta
-  subtotal: number;        // Cantidad × precio unitario
-  tax_amount: number;      // Monto del impuesto
-  total_with_tax: number;  // Subtotal + impuesto
-  price_modified: boolean; // Si el precio fue modificado
-  reserve_id: number;
+  unit_price: number;
+  unit: string;
+  line_total: number;
+  discount_percentage: number;
   tax_rate_id: number;
   tax_rate: number;
 }
-```
 
-### 3. Obtener Ventas por Rango de Fechas
-```typescript
-// GET /sale/date_range/?start_date=2024-01-01&end_date=2024-01-31&page=1&page_size=20
-interface SalesListResponse {
-  sales: SaleDetails[];
-  total_count: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
+interface SalePaymentDetail {
+  id: number;
+  payment_method_id: number;
+  payment_method_name: string;
+  amount: number;
+  currency_name: string;
+  payment_date: string;
+  reference_number: string;
+  status: string;
+}
+
+interface ClientInfo {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  document_number: string;
+}
+
+interface SaleTotals {
+  subtotal: number;
+  tax_amount: number;
+  discount_amount: number;
+  total_amount: number;
+  paid_amount: number;
+  remaining_balance: number;
 }
 ```
 
-### 4. Cancelar Venta (Reversión Mejorada)
+### ❌ Cancelación de Ventas
+
 ```typescript
-// PUT /sale/{id}
-interface CancelSaleRequest {
-  user_id: string;
-  reason?: string;
+interface SaleCancellationRequest {
+  sale_order_id: number;
+  cancellation_reason: string;
+  refund_method?: 'CASH' | 'TRANSFER' | 'CREDIT' | 'STORE_CREDIT';
+  refund_amount?: number;     // Si no se especifica, refund completo
+  cancel_invoice?: boolean;   // Default: true
 }
 
-interface CancelSaleResponse {
+interface SaleCancellationResponse {
   success: boolean;
-  message: string;
-  sale_id: string;
-  cancelled_at: string;
-  reversal_details?: {
-    payments_cancelled: number;
-    total_refunded: number;
-    stock_updates: number;
-    reserves_handled: number;
-    original_status: string;
+  cancelled_sale_id?: number;
+  stock_reverted?: number;
+  refund_processed?: boolean;
+  invoice_cancelled?: boolean;
+  message?: string;
+  details?: {
+    original_amount: number;
+    refund_amount: number;
+    stock_items_reverted: number;
+    cancellation_timestamp: string;
   };
 }
-
-// Nuevo: Preview de Impacto de Cancelación
-  // GET /sale/{id}/preview-cancellation
-  interface CancellationPreview {
-  success: boolean;
-  sale_info: {
-    sale_id: string;
-    current_status: string;
-    total_amount: number;
-    can_be_reverted: boolean;
-  };
-  impact_analysis: {
-    total_items: number;
-    physical_products: number;
-    service_products: number;
-    active_reserves: number;
-    payments_to_cancel: number;
-    total_to_refund: number;
-    requires_stock_adjustment: boolean;
-    requires_reserve_cancellation: boolean;
-    requires_payment_refund: boolean;
-  };
-  recommendations: {
-    action: 'no_action_needed' | 'refund_required' | 'reserve_cancellation_required' | 'simple_cancellation';
-    backup_recommended: boolean;
-    notify_customer: boolean;
-    estimated_complexity: 'low' | 'medium' | 'high';
-  };
-}
-
-  // Ejemplo de uso con preview
-  const previewCancellation = async (saleId: string): Promise<CancellationPreview> => {
-    const response = await fetch(`/sale/${saleId}/preview-cancellation`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return response.json();
-  };const cancelSaleWithPreview = async (saleId: string, reason?: string): Promise<CancelSaleResponse> => {
-  // 1. Obtener preview del impacto
-  const preview = await previewCancellation(saleId);
-  
-  if (!preview.sale_info.can_be_reverted) {
-    throw new Error('Esta venta no puede ser cancelada');
-  }
-
-  // 2. Mostrar información al usuario si es necesario
-  if (preview.recommendations.notify_customer && preview.impact_analysis.total_to_refund > 0) {
-    const confirmed = confirm(
-      `Esta cancelación requiere reembolso de $${preview.impact_analysis.total_to_refund}. ¿Continuar?`
-    );
-    if (!confirmed) return { success: false, message: 'Cancelación abortada por el usuario' } as any;
-  }
-
-  // 3. Proceder con la cancelación
-  const response = await fetch(`/sale/${saleId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ reason })
-  });
-  return response.json();
-};
 ```
 
-### 5. Reporte de Cambios de Precio
+### 🆕 Validación de Precios y Descuentos
+
 ```typescript
-// GET /sale/price-changes/report?sale_id={id}&start_date=2024-01-01&end_date=2024-01-31
-interface PriceChangeReport {
+// Estructura para cambios de precio con validación
+interface PriceChangeValidation {
+  product_id: string;
+  original_price: number;
+  modified_price: number;
+  price_difference: number;
+  percentage_change: number;
+  justification: string;        // Obligatorio para cualquier cambio
+  authorized_by: string;        // Usuario que autoriza
+  timestamp: string;
+}
+
+// Metadata de cambios de precio para auditoría
+interface PriceChangeMetadata {
   product_id: string;
   product_name: string;
   original_price: number;
@@ -318,852 +218,844 @@ interface PriceChangeReport {
   timestamp: string;
   change_id: string;
 }
+
+// Respuesta de error específica para validación de precios
+interface PriceValidationError {
+  success: false;
+  error: {
+    code: 'PRICE_MODIFICATION_NOT_ALLOWED' | 'PRICE_CHANGE_REASON_REQUIRED' | 'INSUFFICIENT_STOCK' | 'INVALID_RESERVATION';
+    message: string;
+    details: {
+      product_id?: string;
+      product_name?: string;
+      requested_price?: number;
+      original_price?: number;
+      error_code: string;
+    };
+  };
+}
 ```
 
 ---
 
-## 💰 API de Pagos con Vuelto
+## 🔗 Endpoints de la API
 
-### 1. Procesar Pago
-```typescript
-// POST /payment/process
-interface ProcessPaymentRequest {
-  sales_order_id: string;              // ID de la venta
-  amount_received: number;             // Monto recibido del cliente
-  payment_reference?: string;          // Referencia del pago (opcional)
-  payment_notes?: string;              // Notas del pago (opcional)
+### 1. 🛒 **Crear Orden de Venta**
+
+```http
+POST /sales/orders
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+**Request Body:**
+```json
+{
+  "client_id": 15,
+  "payment_method_id": 1,
+  "currency_id": 1,
+  "total_amount": 150000.00,
+  "allow_price_modifications": true,
+  "items": [
+    {
+      "product_id": "PROD_BANANA_001",
+      "quantity": 10,
+      "unit_price": 15000.00,
+      "sale_price": 12000.00,
+      "price_change_reason": "Descuento por cliente frecuente - 20% off por compras superiores a $500 en el mes",
+      "unit": "kg",
+      "tax_rate_id": 1
+    }
+  ],
+  "invoice_required": true,
+  "notes": "Venta con descuento autorizado"
 }
+```
 
-interface ProcessPaymentResponse {
-  success: boolean;
-  payment_id?: number;
-  sale_id: string;
-  client_name: string;
-  payment_details: PaymentDetails;
-  message: string;
-  requires_change: boolean;            // Si requiere dar vuelto
-  processed_at: string;
-  processed_by: string;
-  error?: string;
-  error_code?: string;
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "sale_order_id": 78,
+  "invoice_number": "FAC-2025-000078",
+  "total_amount": 120000.00,
+  "items_processed": 1,
+  "stock_updated": 1,
+  "price_modifications_enabled": true,
+  "has_price_changes": true,
+  "message": "Venta procesada exitosamente con cambios de precio justificados",
+  "validation_summary": {
+    "price_modifications_allowed": true,
+    "price_changes_detected": true,
+    "reserve_integration": "disabled"
+  },
+  "details": {
+    "client_name": "María González",
+    "payment_method": "Efectivo",
+    "currency": "Guaraníes",
+    "created_at": "2025-09-25T15:30:00Z"
+  }
 }
+```
 
-interface PaymentDetails {
-  total_due: number;                   // Total a pagar
-  amount_received: number;             // Monto recibido
-  change_amount: number;               // Vuelto a entregar
-  currency_code: string;               // Código de moneda
-  payment_method: string;              // Método de pago
-  payment_reference?: string;          // Referencia del pago
+### 2. 💰 **Procesar Pago de Venta**
+
+```http
+POST /sales/payments
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+**Request Body:**
+```json
+{
+  "sale_order_id": 78,
+  "payment_method_id": 1,
+  "amount": 150000.00,
+  "currency_id": 1,
+  "reference_number": "TXN-20250917-001",
+  "notes": "Pago completo en efectivo"
 }
+```
 
-// Ejemplo de uso
-const processPayment = async (paymentData: ProcessPaymentRequest): Promise<ProcessPaymentResponse> => {
-  const response = await fetch('/payment/process', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "payment_id": 156,
+  "remaining_balance": 0.00,
+  "payment_status": "COMPLETED",
+  "message": "Pago procesado exitosamente"
+}
+```
+
+### 3. 🔍 **Consultar Venta por ID**
+
+```http
+GET /sales/orders/{id}
+Authorization: Bearer {token}
+```
+
+**Response (200 OK):**
+```json
+{
+  "sale_order": {
+    "id": 78,
+    "client_id": 15,
+    "sale_date": "2025-09-17",
+    "total_amount": 150000.00,
+    "status": "ACTIVE",
+    "invoice_number": "FAC-2025-000078",
+    "payment_method_id": 1,
+    "currency_id": 1,
+    "created_by": "user_001",
+    "created_at": "2025-09-17T15:30:00Z"
+  },
+  "items": [
+    {
+      "id": 234,
+      "product_id": "PROD_BANANA_001",
+      "product_name": "Banana Premium",
+      "quantity": 10,
+      "unit_price": 15000.00,
+      "unit": "kg",
+      "line_total": 150000.00,
+      "discount_percentage": 0,
+      "tax_rate_id": 1,
+      "tax_rate": 10.00
+    }
+  ],
+  "payments": [
+    {
+      "id": 156,
+      "payment_method_id": 1,
+      "payment_method_name": "Efectivo",
+      "amount": 150000.00,
+      "currency_name": "Guaraníes",
+      "payment_date": "2025-09-17T15:30:00Z",
+      "reference_number": "TXN-20250917-001",
+      "status": "COMPLETED"
+    }
+  ],
+  "client": {
+    "id": 15,
+    "name": "María González",
+    "email": "maria.gonzalez@email.com",
+    "phone": "+595981234567",
+    "address": "Av. Principal 123, Asunción",
+    "document_number": "12345678"
+  },
+  "totals": {
+    "subtotal": 136363.64,
+    "tax_amount": 13636.36,
+    "discount_amount": 0.00,
+    "total_amount": 150000.00,
+    "paid_amount": 150000.00,
+    "remaining_balance": 0.00
+  }
+}
+```
+
+### 4. 📅 **Consultar Ventas por Rango de Fechas**
+
+```http
+GET /sales/orders/date-range?start_date=2025-09-01&end_date=2025-09-30&page=1&page_size=50
+Authorization: Bearer {token}
+```
+
+**Response (200 OK):**
+```json
+[
+  {
+    "sale_order": {
+      "id": 78,
+      "client_id": 15,
+      "sale_date": "2025-09-17",
+      "total_amount": 150000.00,
+      "status": "ACTIVE",
+      "invoice_number": "FAC-2025-000078"
     },
-    body: JSON.stringify(paymentData)
-  });
-  return response.json();
-};
+    "client": {
+      "name": "María González",
+      "document_number": "12345678"
+    },
+    "totals": {
+      "total_amount": 150000.00,
+      "paid_amount": 150000.00,
+      "remaining_balance": 0.00
+    }
+  }
+]
 ```
 
-### 2. Obtener Detalles de Pago
-```typescript
-// GET /payment/details/{saleId}
-interface PaymentDetailsQuery {
-  payment_id: number;
-  sales_order_id: string;
-  client_name: string;
-  amount_due: number;
-  amount_received: number;
-  change_amount: number;
-  currency_code: string;
-  payment_method_code: string;
-  payment_reference?: string;
-  payment_notes?: string;
-  payment_date: string;
-  processed_by_name: string;
-  status: string;
-}
+### 5. 👤 **Consultar Ventas por Cliente**
 
-// GET /payment/{paymentId} - Por ID específico de pago
+```http
+GET /sales/orders/client/{client_id}?page=1&page_size=20
+Authorization: Bearer {token}
 ```
 
-### 3. Estadísticas de Vueltos
-```typescript
-// GET /payment/statistics/change?start_date=2024-01-01&end_date=2024-01-31
-interface ChangeStatistics {
-  period: {
-    start_date: string;
-    end_date: string;
-  };
-  statistics: {
-    total_payments: number;
-    payments_with_change: number;
-    payments_exact_amount: number;
-    change_percentage: number;
-    total_change_given: number;
-    average_change_amount: number;
-    maximum_change_amount: number;
-  };
-  generated_at: string;
+### 6. ❌ **Cancelar Venta**
+
+```http
+POST /sales/orders/{id}/cancel
+Content-Type: application/json
+Authorization: Bearer {token}
+```
+
+**Request Body:**
+```json
+{
+  "cancellation_reason": "Cliente solicitó cancelación - producto defectuoso",
+  "refund_method": "CASH",
+  "refund_amount": 150000.00,
+  "cancel_invoice": true
 }
 ```
 
-### 4. Códigos de Error de Pagos
-```typescript
-enum PaymentErrorCodes {
-  SALE_NOT_FOUND = 'SALE_NOT_FOUND',
-  SALE_CANCELLED = 'SALE_CANCELLED',
-  SALE_ALREADY_PAID = 'SALE_ALREADY_PAID',
-  INSUFFICIENT_AMOUNT = 'INSUFFICIENT_AMOUNT',
-  SYSTEM_ERROR = 'SYSTEM_ERROR'
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "cancelled_sale_id": 78,
+  "stock_reverted": 1,
+  "refund_processed": true,
+  "invoice_cancelled": true,
+  "message": "Venta cancelada exitosamente",
+  "details": {
+    "original_amount": 150000.00,
+    "refund_amount": 150000.00,
+    "stock_items_reverted": 1,
+    "cancellation_timestamp": "2025-09-17T16:45:00Z"
+  }
+}
+```
+
+### 7. 📊 **Reportes de Ventas**
+
+```http
+GET /sales/reports/summary?start_date=2025-09-01&end_date=2025-09-30
+Authorization: Bearer {token}
+```
+
+**Response (200 OK):**
+```json
+{
+  "period": {
+    "start_date": "2025-09-01",
+    "end_date": "2025-09-30"
+  },
+  "summary": {
+    "total_sales": 15,
+    "total_amount": 2250000.00,
+    "total_items_sold": 125,
+    "average_sale_amount": 150000.00,
+    "cancelled_sales": 2,
+    "refund_amount": 300000.00
+  },
+  "top_products": [
+    {
+      "product_id": "PROD_BANANA_001",
+      "product_name": "Banana Premium",
+      "quantity_sold": 50,
+      "total_revenue": 750000.00
+    }
+  ],
+  "payment_methods": [
+    {
+      "method_name": "Efectivo",
+      "transaction_count": 10,
+      "total_amount": 1500000.00
+    }
+  ]
 }
 ```
 
 ---
 
-## 🔒 API de Gestión de Sesiones
+## 📋 Códigos de Respuesta
 
-### 1. Obtener Sesiones Activas
-```typescript
-// GET /sessions/active
-interface UserSession {
-  id: number;
-  user_id: string;
-  ip_address: string;
-  user_agent: string;
-  device_type: string;
-  is_active: boolean;
-  last_activity: string;
-  expires_at: string;
-  created_at: string;
-  location_info?: any;
-}
+### ✅ Éxito
+- **200 OK** - Operación exitosa
+- **201 Created** - Venta creada exitosamente
 
-interface ActiveSessionsResponse {
-  sessions: UserSession[];
-  total_count: number;
-  current_session_id: number;
-}
-```
+### ⚠️ Errores del Cliente
+- **400 Bad Request** - Datos inválidos en la venta
+- **401 Unauthorized** - Token inválido o faltante
+- **403 Forbidden** - Sin permisos para realizar ventas
+- **404 Not Found** - Venta o cliente no encontrado
+- **409 Conflict** - Conflicto en los datos (ej: stock insuficiente)
 
-### 2. Historial de Sesiones
-```typescript
-// GET /sessions/history?page=1&page_size=20
-interface SessionHistoryResponse {
-  sessions: UserSession[];
-  total_count: number;
-  page: number;
-  page_size: number;
-}
-```
+### 🚨 Errores del Servidor
+- **500 Internal Server Error** - Error en el procedimiento de base de datos
+- **503 Service Unavailable** - Base de datos no disponible
 
-### 3. Revocar Sesión Específica
-```typescript
-// POST /sessions/{id}/revoke
-interface RevokeSessionRequest {
-  reason?: string;
-}
+### 🔍 Errores Específicos
 
-interface RevokeSessionResponse {
-  success: boolean;
-  message: string;
-  session_id: number;
-  revoked_at: string;
+#### 🆕 Errores de Validación de Precios
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "PRICE_MODIFICATION_NOT_ALLOWED",
+    "message": "Price modifications are not allowed",
+    "details": {
+      "product_id": "PROD_BANANA_001",
+      "product_name": "Banana Premium",
+      "error_code": "PRICE_MODIFICATION_NOT_ALLOWED"
+    }
+  }
 }
 ```
 
-### 4. Revocar Todas las Sesiones
-```typescript
-// POST /sessions/revoke-all
-interface RevokeAllSessionsRequest {
-  reason?: string;
-  exclude_current?: boolean;  // Excluir sesión actual
-}
-
-interface RevokeAllSessionsResponse {
-  success: boolean;
-  message: string;
-  sessions_revoked: number;
-  revoked_at: string;
-}
-```
-
-### 5. Actividad del Usuario
-```typescript
-// GET /sessions/activity?page=1&page_size=50&activity_type=LOGIN
-interface UserActivity {
-  id: number;
-  user_id: string;
-  session_id?: number;
-  activity_type: string;        // LOGIN, LOGOUT, API_CALL, etc.
-  endpoint?: string;
-  http_method?: string;
-  ip_address?: string;
-  created_at: string;
-  duration_ms?: number;
-}
-
-interface UserActivityResponse {
-  activities: UserActivity[];
-  total_count: number;
-  page: number;
-  page_size: number;
+```json
+{
+  "success": false,
+  "error": {
+    "code": "PRICE_CHANGE_REASON_REQUIRED",
+    "message": "Price change justification is required",
+    "details": {
+      "product_id": "PROD_BANANA_001",
+      "product_name": "Banana Premium",
+      "original_price": 15000.00,
+      "requested_price": 12000.00,
+      "error_code": "PRICE_CHANGE_REASON_REQUIRED"
+    }
+  }
 }
 ```
 
-### 6. Configuración de Sesión
-```typescript
-// GET /sessions/config
-interface SessionConfig {
-  id: number;
-  role_id: string;
-  max_concurrent_sessions: number;
-  session_timeout_minutes: number;
-  inactivity_timeout_minutes: number;
-  require_device_verification: boolean;
-  allow_multiple_locations: boolean;
-  force_logout_on_password_change: boolean;
+#### 📦 Otros Errores Comunes
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INSUFFICIENT_STOCK",
+    "message": "Stock insuficiente para el producto PROD_BANANA_001",
+    "details": {
+      "product_id": "PROD_BANANA_001",
+      "requested_quantity": 50,
+      "available_stock": 25,
+      "error_code": "INSUFFICIENT_STOCK"
+    }
+  }
 }
 ```
 
-### 7. Endpoints de Administración (Solo Admin)
-```typescript
-// GET /admin/sessions/all - Todas las sesiones activas
-interface AdminSessionsResponse {
-  sessions: UserSessionWithUser[];
-  total_count: number;
+```json
+{
+  "success": false,
+  "error": {
+    "code": "CLIENT_INACTIVE",
+    "message": "Cliente inactivo o inexistente",
+    "details": {
+      "client_id": 99,
+      "error_code": "CLIENT_INACTIVE"
+    }
+  }
 }
+```
 
-interface UserSessionWithUser extends UserSession {
-  username: string;
-  email: string;
-  role_name: string;
-}
-
-// POST /admin/sessions/{id}/revoke - Revocar sesión de usuario
-interface AdminRevokeRequest {
-  reason: string;
-  notify_user?: boolean;
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_PAYMENT_METHOD",
+    "message": "Método de pago no disponible",
+    "details": {
+      "payment_method_id": 15,
+      "error_code": "INVALID_PAYMENT_METHOD"
+    }
+  }
 }
 ```
 
 ---
 
-## ⚠️ Códigos de Error
+## 🚨 Solución de Problemas Comunes
 
-### Ventas
-- `INVALID_PRODUCT_ID`: Producto no encontrado
-- `INSUFFICIENT_STOCK`: Stock insuficiente
-- `INVALID_CLIENT_ID`: Cliente no encontrado
-- `PRICE_MODIFICATION_NOT_ALLOWED`: Modificación de precio no permitida
-- `RESERVE_NOT_FOUND`: Reserva no encontrada
-- `RESERVE_ALREADY_USED`: Reserva ya utilizada
-- `SALE_NOT_FOUND`: Venta no encontrada para cancelación
-- `ALREADY_CANCELLED`: La venta ya está cancelada
-- `PRODUCT_NOT_FOUND`: Producto no encontrado durante reversión
-- `STOCK_NOT_FOUND`: No se pudo restaurar stock del producto
-- `RESERVE_NOT_UPDATED`: Reserva no pudo ser liberada
+### 🆕 Errores de Validación de Precios
 
-### Pagos
-- `SALE_NOT_FOUND`: Venta no encontrada
-- `SALE_CANCELLED`: No se puede pagar una venta cancelada
-- `SALE_ALREADY_PAID`: Venta ya está totalmente pagada
-- `INSUFFICIENT_AMOUNT`: Monto insuficiente para cubrir el total
-- `SYSTEM_ERROR`: Error interno del sistema
+#### ⚠️ Error: Modificación de Precio No Permitida
 
-### Sesiones
-- `SESSION_NOT_FOUND`: Sesión no encontrada
-- `SESSION_ALREADY_REVOKED`: Sesión ya revocada
-- `CANNOT_REVOKE_CURRENT_SESSION`: No se puede revocar la sesión actual
-- `MAX_SESSIONS_EXCEEDED`: Máximo de sesiones concurrentes excedido
-- `UNAUTHORIZED_ACCESS`: Acceso no autorizado
+**Síntoma:**
+```json
+{
+  "success": false,
+  "error": "PRICE_MODIFICATION_NOT_ALLOWED: No se permiten modificaciones de precio"
+}
+```
+
+**Causa:** Se intentó modificar el precio de un producto sin habilitar `allow_price_modifications`.
+
+**Solución:**
+1. Establecer `allow_price_modifications: true` en el request
+2. Verificar permisos del usuario para modificar precios
+3. Implementar flujo de autorización si es necesario
+
+#### ⚠️ Error: Falta Justificación de Cambio de Precio
+
+**Síntoma:**
+```json
+{
+  "success": false,
+  "error": "PRICE_CHANGE_REASON_REQUIRED: Se requiere justificación para cambiar el precio"
+}
+```
+
+**Causa:** Se modificó el precio pero no se proporcionó `price_change_reason`.
+
+**Solución:**
+1. Agregar campo `price_change_reason` con justificación detallada
+2. Verificar que la razón no esté vacía o nula
+3. Ejemplo: "Descuento por cliente frecuente - 15% off por volumen de compra"
+
+### ⚠️ Error: Stock Insuficiente
+
+**Síntoma:**
+```json
+{
+  "success": false,
+  "error": "Stock insuficiente para producto PROD_BANANA_001"
+}
+```
+
+**Causa:** El producto no tiene suficiente stock para completar la venta.
+
+**Solución:**
+1. Verificar stock actual:
+```sql
+SELECT id_product, quantity FROM products.stock WHERE id_product = 'PROD_BANANA_001';
+```
+
+2. Reducir cantidad en la orden o reabastecer stock.
+
+### ⚠️ Error: Cliente Inactivo
+
+**Síntoma:**
+```json
+{
+  "success": false,
+  "error": "Cliente inactivo o no encontrado"
+}
+```
+
+**Solución:**
+```sql
+UPDATE clients.clients SET state = true WHERE id = {client_id};
+```
+
+### ⚠️ Error: Método de Pago Inválido
+
+**Verificación:**
+```sql
+SELECT id, name, state FROM transactions.payment_methods WHERE state = true;
+```
 
 ---
 
-## 📝 Ejemplos de Integración
+## 🔐 Autenticación y Permisos
 
-### 1. Flujo Completo de Venta con Pago
-```typescript
-class SalesService {
-  private baseUrl = 'http://localhost:5050';
-  private token = localStorage.getItem('jwt_token');
+### 🔑 Headers Requeridos
+```http
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+X-User-ID: {user_id}  // Opcional, se extrae del token
+```
 
-  // Procesar venta (unificada - maneja ventas con y sin reserva)
-  async createSale(saleData: ProcessSaleRequest): Promise<ProcessSaleResponse> {
-    const response = await fetch(`${this.baseUrl}/sale/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`
-      },
-      body: JSON.stringify(saleData)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error en venta: ${response.statusText}`);
-    }
-
-    return response.json();
-  }
-
-  // Procesar pago con cálculo automático de vuelto
-  async processPayment(paymentData: ProcessPaymentRequest): Promise<ProcessPaymentResponse> {
-    const response = await fetch(`${this.baseUrl}/payment/process`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`
-      },
-      body: JSON.stringify(paymentData)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error en pago: ${response.statusText}`);
-    }
-
-    return response.json();
-  }
-
-  // Preview de cancelación antes de ejecutar
-  async previewCancellation(saleId: string): Promise<CancellationPreview> {
-    const response = await fetch(`${this.baseUrl}/sale/${saleId}/preview-cancellation`, {
-      headers: {
-        'Authorization': `Bearer ${this.token}`
-      }
-    });
-    return response.json();
-  }
-
-  // Cancelar venta con reversión completa (stock, pagos, reservas)
-  async cancelSale(saleId: string, reason?: string): Promise<CancelSaleResponse> {
-    const response = await fetch(`${this.baseUrl}/sale/${saleId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`
-      },
-      body: JSON.stringify({ reason })
-    });
-    return response.json();
-  }
-
-  // Flujo completo: venta + pago con manejo de vuelto
-  async completeSaleWithPayment(
-    saleData: ProcessSaleRequest, 
-    amountReceived: number
-  ): Promise<{ sale: ProcessSaleResponse; payment: ProcessPaymentResponse }> {
-    try {
-      // 1. Crear venta (funciona para ventas normales y con reserva)
-      const sale = await this.createSale(saleData);
-      
-      if (!sale.success) {
-        throw new Error(sale.error || 'Error al crear venta');
-      }
-
-      // 2. Procesar pago con cálculo automático de vuelto
-      const payment = await this.processPayment({
-        sales_order_id: sale.sale_id,
-        amount_received: amountReceived,
-        payment_reference: `PAY-${Date.now()}`
-      });
-
-      if (!payment.success) {
-        throw new Error(payment.error || 'Error al procesar pago');
-      }
-
-      // 3. Mostrar información del vuelto si aplica
-      if (payment.requires_change) {
-        console.log(`Vuelto a entregar: $${payment.payment_details.change_amount}`);
-      }
-
-      return { sale, payment };
-    } catch (error) {
-      console.error('Error en flujo de venta:', error);
-      throw error;
-    }
-  }
-
-  // Flujo completo con cancelación segura
-  async cancelSaleWithConfirmation(saleId: string, reason?: string): Promise<CancelSaleResponse> {
-    try {
-      // 1. Obtener preview del impacto
-      const preview = await this.previewCancellation(saleId);
-      
-      if (!preview.success) {
-        throw new Error('No se pudo obtener información de la venta');
-      }
-
-      if (!preview.sale_info.can_be_reverted) {
-        throw new Error('Esta venta no puede ser cancelada');
-      }
-
-      // 2. Mostrar información importante al usuario
-      if (preview.impact_analysis.requires_payment_refund) {
-        const confirmRefund = confirm(
-          `Esta cancelación requiere reembolso de $${preview.impact_analysis.total_to_refund} en ${preview.impact_analysis.payments_to_cancel} pago(s). ¿Continuar?`
-        );
-        if (!confirmRefund) {
-          return { success: false, message: 'Cancelación abortada por el usuario' } as any;
-        }
-      }
-
-      if (preview.impact_analysis.requires_reserve_cancellation) {
-        const confirmReserve = confirm(
-          `Esta cancelación liberará ${preview.impact_analysis.active_reserves} reserva(s). ¿Continuar?`
-        );
-        if (!confirmReserve) {
-          return { success: false, message: 'Cancelación abortada por el usuario' } as any;
-        }
-      }
-
-      // 3. Ejecutar cancelación
-      const result = await this.cancelSale(saleId, reason);
-
-      if (result.success && result.reversal_details) {
-        console.log('Cancelación completada:', {
-          pagosRevocados: result.reversal_details.payments_cancelled,
-          totalReembolsado: result.reversal_details.total_refunded,
-          stockActualizado: result.reversal_details.stock_updates,
-          reservasLiberadas: result.reversal_details.reserves_handled
-        });
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error en cancelación:', error);
-      throw error;
-    }
-  }
+### 👥 Permisos Necesarios
+```json
+{
+  "required_permissions": [
+    "sales.create",
+    "sales.read", 
+    "sales.update",
+    "sales.cancel",
+    "payments.process",
+    "invoices.generate"
+  ]
 }
 ```
 
-### 2. Gestión de Sesiones
+---
+
+## 🧪 Ejemplos de Implementación
+
+### 🔄 Hook de React para Crear Venta
+
 ```typescript
-class SessionService {
-  private baseUrl = 'http://localhost:5050';
-  private token = localStorage.getItem('jwt_token');
+import { useState } from 'react';
 
-  // Obtener sesiones activas
-  async getActiveSessions(): Promise<ActiveSessionsResponse> {
-    const response = await fetch(`${this.baseUrl}/sessions/active`, {
-      headers: {
-        'Authorization': `Bearer ${this.token}`
-      }
-    });
-    return response.json();
-  }
-
-  // Logout con revocación de sesión
-  async logout(sessionId: number): Promise<LogoutResponse> {
-    const response = await fetch(`${this.baseUrl}/sessions/${sessionId}/revoke`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`
-      },
-      body: JSON.stringify({ reason: 'User logout' })
-    });
-
-    const result = await response.json();
-    
-    if (result.success) {
-      // Limpiar token local
-      localStorage.removeItem('jwt_token');
-      localStorage.removeItem('session_id');
-      
-      // Redirigir a login
-      window.location.href = '/login';
-    }
-
-    return result;
-  }
-
-  // Revocar sesión específica (desde dashboard)
-  async revokeSession(sessionId: number, reason?: string): Promise<RevokeSessionResponse> {
-    const response = await fetch(`${this.baseUrl}/sessions/${sessionId}/revoke`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`
-      },
-      body: JSON.stringify({ reason: reason || 'Manual revocation' })
-    });
-    return response.json();
-  }
-}
-```
-
-### 3. Manejo de Errores
-```typescript
-class APIErrorHandler {
-  static handle(error: any, context: string) {
-    console.error(`Error en ${context}:`, error);
-
-    switch (error.error_code) {
-      // Errores de ventas
-      case 'SALE_NOT_FOUND':
-        return 'La venta especificada no existe';
-      
-      case 'ALREADY_CANCELLED':
-        return 'La venta ya está cancelada';
-      
-      case 'INVALID_PRODUCT_ID':
-        return 'Uno o más productos no existen';
-      
-      case 'INSUFFICIENT_STOCK':
-        return 'Stock insuficiente para uno o más productos';
-      
-      // Errores de pagos
-      case 'INSUFFICIENT_AMOUNT':
-        return `Monto insuficiente. Se requiere: ${error.amount_due}, recibido: ${error.amount_received}`;
-      
-      case 'SALE_ALREADY_PAID':
-        return 'Esta venta ya ha sido pagada completamente';
-      
-      case 'SALE_CANCELLED':
-        return 'No se puede procesar pago para una venta cancelada';
-      
-      // Errores de sesiones
-      case 'SESSION_EXPIRED':
-        localStorage.removeItem('jwt_token');
-        localStorage.removeItem('session_id');
-        window.location.href = '/login';
-        return 'Su sesión ha expirado, por favor inicie sesión nuevamente';
-      
-      case 'SESSION_NOT_FOUND':
-        return 'La sesión especificada no existe';
-      
-      case 'SESSION_ALREADY_REVOKED':
-        return 'La sesión ya ha sido revocada';
-      
-      case 'MAX_SESSIONS_EXCEEDED':
-        return 'Ha excedido el número máximo de sesiones concurrentes';
-      
-      case 'CANNOT_REVOKE_CURRENT_SESSION':
-        return 'No se puede revocar la sesión actual. Use logout normal.';
-      
-      // Errores de reversión
-      case 'PRODUCT_NOT_FOUND':
-        return 'Producto no encontrado durante la reversión';
-      
-      case 'STOCK_NOT_FOUND':
-        return 'No se pudo restaurar el stock del producto';
-      
-      case 'RESERVE_NOT_UPDATED':
-        return 'No se pudo liberar la reserva asociada';
-      
-      // Errores generales
-      case 'SYSTEM_ERROR':
-        return 'Error interno del sistema. Por favor contacte al administrador.';
-      
-      case 'UNAUTHORIZED_ACCESS':
-        return 'No tiene permisos para realizar esta acción';
-      
-      default:
-        return error.message || 'Error desconocido';
-    }
-  }
-
-  // Manejo específico para errores de cancelación
-  static handleCancellationError(error: any): string {
-    if (error.error_code?.startsWith('ERROR_REVERT_SALE')) {
-      const context = error.message?.split('Contexto: ')[1];
-      if (context) {
-        return `Error en cancelación: ${error.message}. Detalles: ${context}`;
-      }
-    }
-    return this.handle(error, 'cancelación de venta');
-  }
-
-  // Manejo específico para errores de pago
-  static handlePaymentError(error: any): { message: string; suggestion?: string } {
-    const message = this.handle(error, 'procesamiento de pago');
-    
-    let suggestion: string | undefined;
-    switch (error.error_code) {
-      case 'INSUFFICIENT_AMOUNT':
-        suggestion = 'Verifique el monto ingresado y el total de la venta';
-        break;
-      case 'SALE_NOT_FOUND':
-        suggestion = 'Verifique que la venta existe y no ha sido eliminada';
-        break;
-      case 'SALE_ALREADY_PAID':
-        suggestion = 'Revise el estado de la venta en el sistema';
-        break;
-    }
-
-    return { message, suggestion };
-  }
-}
-```
-
-### 4. Componente React de Ejemplo
-```typescript
-import React, { useState } from 'react';
-
-interface PaymentFormProps {
-  saleId: string;
-  totalAmount: number;
-  onPaymentComplete: (payment: ProcessPaymentResponse) => void;
+interface UseSalesReturn {
+  createSale: (data: SaleOrderRequest) => Promise<SaleOrderResponse>;
+  loading: boolean;
+  error: string | null;
 }
 
-const PaymentForm: React.FC<PaymentFormProps> = ({ saleId, totalAmount, onPaymentComplete }) => {
-  const [amountReceived, setAmountReceived] = useState<number>(totalAmount);
+export const useSales = (): UseSalesReturn => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
-  const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const createSale = async (data: SaleOrderRequest): Promise<SaleOrderResponse> => {
     setLoading(true);
-    setError('');
-
+    setError(null);
+    
     try {
-      const salesService = new SalesService();
-      const payment = await salesService.processPayment({
-        sales_order_id: saleId,
-        amount_received: amountReceived,
-        payment_reference: `PAY-${Date.now()}`
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/sales/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
       });
 
-      if (payment.success) {
-        onPaymentComplete(payment);
-      } else {
-        setError(payment.error || 'Error al procesar pago');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    } catch (err: any) {
-      const errorInfo = APIErrorHandler.handlePaymentError(err);
-      setError(errorInfo.message);
-      if (errorInfo.suggestion) {
-        console.info('Sugerencia:', errorInfo.suggestion);
-      }
+
+      const result = await response.json();
+      return result;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      setError(errorMessage);
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const changeAmount = amountReceived - totalAmount;
+  return { createSale, loading, error };
+};
+```
+
+### 📝 Formulario de Venta en React
+
+```typescript
+import React, { useState } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
+
+interface SalesFormData extends SaleOrderRequest {}
+
+export const SalesForm: React.FC = () => {
+  const { register, control, handleSubmit, formState: { errors } } = useForm<SalesFormData>({
+    defaultValues: {
+      currency_id: 1,
+      invoice_required: true,
+      items: [{ product_id: '', quantity: 1, unit_price: 0, unit: 'unit' }]
+    }
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'items'
+  });
+
+  const { createSale, loading, error } = useSales();
+
+  const onSubmit = async (data: SalesFormData) => {
+    try {
+      const result = await createSale(data);
+      alert(`Venta creada exitosamente: ${result.invoice_number}`);
+    } catch (err) {
+      console.error('Error creating sale:', err);
+    }
+  };
 
   return (
-    <form onSubmit={handlePayment} className="payment-form">
-      <div className="form-group">
-        <label>Total a Pagar:</label>
-        <span className="total-amount">${totalAmount.toFixed(2)}</span>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div>
+        <label>Cliente ID</label>
+        <input
+          type="number"
+          {...register('client_id', { required: true, min: 1 })}
+          className="border rounded px-3 py-2"
+        />
+        {errors.client_id && <span className="text-red-500">Cliente es requerido</span>}
       </div>
-      
-      <div className="form-group">
-        <label>Monto Recibido:</label>
+
+      <div>
+        <label>Método de Pago ID</label>
+        <input
+          type="number"
+          {...register('payment_method_id', { required: true })}
+          className="border rounded px-3 py-2"
+        />
+      </div>
+
+      <div>
+        <label>Monto Total</label>
         <input
           type="number"
           step="0.01"
-          min={totalAmount}
-          value={amountReceived}
-          onChange={(e) => setAmountReceived(parseFloat(e.target.value))}
-          required
+          {...register('total_amount', { required: true, min: 0.01 })}
+          className="border rounded px-3 py-2"
         />
       </div>
-      
-      {changeAmount > 0 && (
-        <div className="form-group change-info">
-          <label>Vuelto a Entregar:</label>
-          <span className="change-amount highlight">${changeAmount.toFixed(2)}</span>
-        </div>
-      )}
-      
-      {error && <div className="error-message">{error}</div>}
-      
-      <button type="submit" disabled={loading || amountReceived < totalAmount}>
-        {loading ? 'Procesando...' : 'Procesar Pago'}
+
+      <div>
+        <h3>Items de Venta</h3>
+        {fields.map((field, index) => (
+          <div key={field.id} className="border p-4 rounded">
+            <input
+              placeholder="ID del Producto"
+              {...register(`items.${index}.product_id`, { required: true })}
+              className="border rounded px-3 py-2 mr-2"
+            />
+            <input
+              type="number"
+              placeholder="Cantidad"
+              {...register(`items.${index}.quantity`, { required: true, min: 1 })}
+              className="border rounded px-3 py-2 mr-2"
+            />
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Precio Unitario"
+              {...register(`items.${index}.unit_price`, { required: true, min: 0.01 })}
+              className="border rounded px-3 py-2 mr-2"
+            />
+            <button
+              type="button"
+              onClick={() => remove(index)}
+              className="bg-red-500 text-white px-3 py-2 rounded"
+            >
+              Eliminar
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => append({ product_id: '', quantity: 1, unit_price: 0, unit: 'unit' })}
+          className="bg-blue-500 text-white px-3 py-2 rounded"
+        >
+          Agregar Item
+        </button>
+      </div>
+
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            {...register('invoice_required')}
+          />
+          Factura Requerida
+        </label>
+      </div>
+
+      <div>
+        <label>Notas</label>
+        <textarea
+          {...register('notes')}
+          className="border rounded px-3 py-2 w-full"
+          rows={3}
+        />
+      </div>
+
+      {error && <div className="text-red-500">{error}</div>}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="bg-green-500 text-white px-6 py-3 rounded"
+      >
+        {loading ? 'Procesando...' : 'Crear Venta'}
       </button>
     </form>
   );
 };
+```
 
-// Componente adicional: Modal de Cancelación con Preview
-interface CancellationModalProps {
-  saleId: string;
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: (reason: string) => void;
+### 🔍 Hook para Consultar Ventas
+
+```typescript
+import { useState, useEffect } from 'react';
+
+interface UseSaleQueryReturn {
+  sale: SaleOrderEnriched | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
 }
 
-const CancellationModal: React.FC<CancellationModalProps> = ({ 
-  saleId, 
-  isOpen, 
-  onClose, 
-  onConfirm 
-}) => {
-  const [preview, setPreview] = useState<CancellationPreview | null>(null);
-  const [reason, setReason] = useState('');
+export const useSaleQuery = (saleId: number | null): UseSaleQueryReturn => {
+  const [sale, setSale] = useState<SaleOrderEnriched | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadPreview = async () => {
-    if (!isOpen) return;
+  const fetchSale = async () => {
+    if (!saleId) return;
     
     setLoading(true);
+    setError(null);
+    
     try {
-      const salesService = new SalesService();
-      const previewData = await salesService.previewCancellation(saleId);
-      setPreview(previewData);
-    } catch (error) {
-      console.error('Error loading preview:', error);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/sales/orders/${saleId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setSale(data);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  React.useEffect(() => {
-    loadPreview();
-  }, [isOpen, saleId]);
+  useEffect(() => {
+    fetchSale();
+  }, [saleId]);
 
-  if (!isOpen) return null;
-
-  const handleConfirm = () => {
-    onConfirm(reason);
-    onClose();
-  };
-
-  return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>Cancelar Venta {saleId}</h3>
-        
-        {loading ? (
-          <div>Cargando información...</div>
-        ) : preview ? (
-          <div className="preview-info">
-            <div className="impact-summary">
-              <h4>Impacto de la Cancelación:</h4>
-              <ul>
-                <li>Productos físicos: {preview.impact_analysis.physical_products}</li>
-                <li>Productos de servicio: {preview.impact_analysis.service_products}</li>
-                {preview.impact_analysis.requires_payment_refund && (
-                  <li className="warning">
-                    Reembolso requerido: ${preview.impact_analysis.total_to_refund}
-                  </li>
-                )}
-                {preview.impact_analysis.requires_reserve_cancellation && (
-                  <li className="warning">
-                    Reservas a cancelar: {preview.impact_analysis.active_reserves}
-                  </li>
-                )}
-              </ul>
-            </div>
-            
-            <div className="complexity-indicator">
-              Complejidad: <span className={`complexity-${preview.recommendations.estimated_complexity}`}>
-                {preview.recommendations.estimated_complexity.toUpperCase()}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="error">No se pudo cargar la información de la venta</div>
-        )}
-        
-        <div className="form-group">
-          <label>Razón de cancelación:</label>
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="Ingrese el motivo de la cancelación..."
-            rows={3}
-          />
-        </div>
-        
-        <div className="modal-actions">
-          <button onClick={onClose} className="btn-secondary">
-            Cancelar
-          </button>
-          <button 
-            onClick={handleConfirm} 
-            className="btn-danger"
-            disabled={!preview?.sale_info.can_be_reverted || !reason.trim()}
-          >
-            Confirmar Cancelación
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  return { sale, loading, error, refetch: fetchSale };
 };
 ```
 
 ---
 
-## 🔄 Consideraciones de Estado
+## 📊 Flujo de Trabajo Recomendado
 
-### Manejo de Tokens JWT
-- Almacenar el token en `localStorage` o `sessionStorage`
-- Incluir `session_id` en requests críticos
-- Renovar token antes de expiración
-- Manejar revocación de sesión automáticamente
+### 1. **Flujo de Venta Estándar**
+1. Validar cliente activo
+2. Verificar stock disponible  
+3. Crear orden de venta
+4. Procesar pago(s)
+5. Generar factura
+6. Actualizar inventario
+7. Enviar confirmación
 
-### Estados de Sesión
-- **ACTIVE**: Sesión válida y activa
-- **EXPIRED**: Sesión expirada por tiempo
-- **REVOKED**: Sesión revocada manualmente
-- **INACTIVE**: Sesión inactiva por tiempo
+### 2. **Flujo de Cancelación**
+1. Verificar permisos de cancelación
+2. Validar estado de la venta
+3. Calcular monto de reembolso
+4. Revertir stock
+5. Procesar reembolso
+6. Cancelar factura
+7. Registrar auditoría
 
-### Sincronización de Estado
-- Verificar estado de sesión en navegación
-- Actualizar lista de sesiones activas en tiempo real
-- Notificar cambios de estado al usuario
-
----
-
-Esta guía proporciona toda la información necesaria para integrar correctamente las funcionalidades de ventas, pagos con cálculo de vuelto y gestión de sesiones con logout en el frontend.
-
-## 🔄 **Compatibilidad Backend**
-
-### **Estado de Integración**: ✅ COMPLETADO (Agosto 21, 2025)
-- **Cancelación de ventas**: Procedimiento `transactions.revert_sale` mejorado
-- **Preview de cancelación**: Función `transactions.preview_sale_reversion`
-- **Manejo de errores**: Códigos específicos implementados
-- **Endpoints disponibles**: 
-  - `GET /sale/{id}/preview-cancellation` ✅
-  - `PUT /sale/{id}` (cancelación mejorada) ✅
-  - `POST /sale/` (endpoint principal) ✅
-  - `POST /sale/with-units` (endpoint extendido) ✅
-
-### **Referencias de Implementación**
-- [Resumen de Integración Backend](../LATEST_BACKEND_INTEGRATION_SUMMARY.md)
-- [Script de Testing](../../test_latest_integration.sh)
-
-## 🆕 Características Nuevas en esta Versión
-
-### ✅ **Sistema de Reversión Mejorado**
-- **Preview de cancelación**: Analiza el impacto antes de cancelar
-- **Reversión automática**: Restaura stock, cancela reservas y reembolsa pagos
-- **Auditoría completa**: Metadata detallado de todas las operaciones
-- **Manejo inteligente**: Diferentes tipos de productos y situaciones
-
-### ✅ **API Unificada de Ventas**
-- **Una sola función**: `process_sale_with_reserve` maneja ventas con y sin reserva
-- **Optimización**: Elimina redundancia en el código
-- **Compatibilidad**: Mantiene la misma interfaz para el frontend
-
-### ✅ **Sistema de Pagos Robusto**
-- **Cálculo automático de vuelto**: No requiere cálculos manuales
-- **Validaciones completas**: Previene errores de pago
-- **Estadísticas avanzadas**: Reportes detallados de vueltos
-- **Estados de pago**: Manejo completo del ciclo de vida
-
-### ✅ **Gestión Avanzada de Sesiones**
-- **Logout mejorado**: Revoca sesiones en servidor
-- **Monitoreo de actividad**: Tracking completo de acciones
-- **Sesiones concurrentes**: Control por usuario y rol
-- **Seguridad mejorada**: Prevención de sesiones comprometidas
+### 3. **Flujo de Reportes**
+1. Definir período de análisis
+2. Consultar ventas por rango
+3. Agregar métricas
+4. Generar visualizaciones
+5. Exportar resultados
 
 ---
 
-## 📚 Recursos Adicionales
+## 🎯 Casos de Uso Comunes
 
-- Documentación completa de la base de datos
-- Ejemplos de implementación en diferentes frameworks
-- Guías de migración para sistemas existentes
-- Best practices de seguridad y rendimiento
+### 1. **Venta Simple en Efectivo**
+- Un cliente, un producto
+- Pago completo inmediato
+- Factura requerida
+
+### 2. **Venta con Múltiples Items**
+- Varios productos diferentes
+- Descuentos por línea
+- Múltiples métodos de pago
+
+### 3. **Venta a Crédito**
+- Cliente con línea de crédito
+- Pago diferido
+- Seguimiento de saldo pendiente
+
+### 4. **Cancelación de Venta**
+- Solicitud de reembolso
+- Reversión de stock
+- Cancelación de factura
+
+---
+
+## 🔄 Estado Actual del Sistema
+
+### ✅ Funcionalidades Implementadas (v2.0)
+
+- ✅ **Sistema de Validación de Precios:** Completo con justificaciones obligatorias
+- ✅ **Auditoría de Cambios:** Registro automático de modificaciones de precio
+- ✅ **Validación de Stock:** Control en tiempo real con reservas
+- ✅ **Gestión de Reservas:** Integración completa con inventario
+- ✅ **Múltiples Métodos de Pago:** Efectivo, tarjeta, transferencia, crédito
+- ✅ **Manejo de Errores:** Códigos específicos y mensajes descriptivos
+- ✅ **Soporte TypeScript:** Interfaces completas para desarrollo frontend
+
+### 🔄 Mejoras Recientes
+
+- **Octubre 2024:** Sistema de validación de precios con justificaciones
+- **Septiembre 2024:** Mejoras en manejo de errores y códigos específicos
+- **Agosto 2024:** Integración completa con sistema de reservas
+
+### 🎯 Recomendaciones para Frontend
+
+1. **Validación de Precios:** Implementar confirmación visual para cambios de precio
+2. **Justificaciones:** Campo de texto requerido cuando se modifiquen precios
+3. **Audit Trail:** Mostrar historial de cambios en interfaz administrativa
+4. **Error Handling:** Implementar notificaciones específicas para cada tipo de error
+5. **Real-time Updates:** Considerar WebSockets para actualizaciones de stock
+
+---
+
+**Última actualización**: 17 de Octubre de 2024  
+**Versión del sistema**: Sales API v2.0  
+**Compatibilidad**: Backend Go v2.1+, PostgreSQL 12+
+
+**Características principales:**
+- ✅ Sistema completo de ventas con trazabilidad y validación de precios
+- ✅ Integración con control de stock y facturación  
+- ✅ Soporte para múltiples métodos de pago
+- ✅ Cancelaciones seguras con reversión automática
+- ✅ Reportes detallados y métricas de rendimiento
+- ✅ API RESTful con autenticación JWT
+- ✅ **NUEVO:** Sistema de validación de precios con justificaciones obligatorias
+- ✅ **NUEVO:** Auditoría completa de cambios de precio con metadatos
+- ✅ **NUEVO:** Manejo específico de errores de validación de precios

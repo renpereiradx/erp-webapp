@@ -21,10 +21,12 @@ import Purchases from '@/pages/Purchases';
 import CashRegister from '@/pages/CashRegister';
 import PurchasePayment from '@/pages/PurchasePayment';
 import SalePayment from '@/pages/SalePayment';
+import PaymentManagement from '@/pages/PaymentManagement';
 import Login from '@/pages/Login';
 import Settings from '@/pages/Settings';
 // import ProductDetailTest from '@/components/ProductDetailTest';
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
+import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { AnnouncementProvider } from '@/contexts/AnnouncementContext';
@@ -104,10 +106,12 @@ function AppContent() {
                     <Route path="/caja-registradora" element={<CashRegister />} />
                     <Route path="/pagos-compras" element={<PurchasePayment />} />
                     <Route path="/pagos-ventas" element={<SalePayment />} />
+                    <Route path="/gestion-pagos" element={<PaymentManagement />} />
                     
                     <Route path="/configuracion" element={<Settings />} />
                     {/* <Route path="/test-products" element={<ProductDetailTest />} /> */}
                     {/* <Route path="/debug-products" element={<ProductComparisonDebug />} /> */}
+                    <Route path="/test-purchase-endpoints" element={<PurchaseEndpointsTest />} />
                     
                     {/* Ruta 404 */}
                     <Route path="*" element={

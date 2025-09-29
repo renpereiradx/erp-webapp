@@ -22,25 +22,27 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess, container = null })
   const { categories, fetchCategories, createProduct, updateProduct, fetchProducts } = useProductStore();
   const { success, info, error: toastError } = useToast();
 
-  const [formData, setFormData] = useState({ name: '', id_category: '', state: true, description: '' });
+  const [formData, setFormData] = useState({ name: '', id_category: '', state: true, description: '', barcode: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [categoriesLoading, setCategoriesLoading] = useState(false);
 
   useEffect(() => {
     if (product) {
+      console.log('🔍 Product data loaded in modal:', product);
       // Carga la descripción ya sea que venga como string directa o anidada en un objeto { description: "..." }
       const resolvedDescription = typeof product.description === 'string'
         ? product.description
         : (product.description?.description || '');
-      setFormData({ 
-        name: product.name || '', 
-        id_category: product.id_category || '', 
+      setFormData({
+        name: product.name || product.product_name || '',
+        id_category: product.id_category || product.category_id || '',
         state: product.state !== undefined ? product.state : true,
-        description: resolvedDescription
+        description: resolvedDescription,
+        barcode: product.barcode || ''
       });
     } else {
-      setFormData({ name: '', id_category: '', state: true, description: '' });
+      setFormData({ name: '', id_category: '', state: true, description: '', barcode: '' });
     }
     if (isOpen && categories.length === 0) {
       setCategoriesLoading(true);
@@ -77,13 +79,19 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess, container = null })
         id_category: isNaN(Number(formData.id_category)) ? formData.id_category : Number(formData.id_category),
         state: !!formData.state,
         product_type: product?.product_type || 'PHYSICAL',
-        description: formData.description?.trim() || ''
+        description: formData.description?.trim() || '',
+        barcode: formData.barcode?.trim() || ''
       };
 
+      console.log('🔍 About to save - isEditing:', isEditing, 'product:', product, 'payload:', payload);
+
       let savedProduct;
-      if (isEditing && product?.id) {
-        savedProduct = await updateProduct(product.id, payload);
+      const productId = product?.id || product?.product_id;
+      if (isEditing && productId) {
+        console.log('🔄 Updating product with ID:', productId);
+        savedProduct = await updateProduct(productId, payload);
       } else {
+        console.log('✨ Creating new product');
         savedProduct = await createProduct(payload);
       }
 
@@ -111,7 +119,7 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess, container = null })
 
   if (!isOpen) return null;
 
-  const isEditing = !!product;
+  const isEditing = !!product && !!(product.id || product.product_id);
 
   return (
     <div className={`${container ? 'absolute' : 'fixed'} inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 product-detail-modal ${container ? 'modal-in-container' : ''}`}>
@@ -127,7 +135,7 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess, container = null })
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Package className="h-4 w-4" />
-                    {isEditing ? `ID: ${product.id}` : 'Nuevo Producto'}
+                    {isEditing ? `ID: ${product.id || product.product_id}` : 'Nuevo Producto'}
                   </span>
                   {isEditing && (
                     <Badge variant={formData.state ? 'default' : 'secondary'} className="product-badge">
@@ -174,7 +182,20 @@ const ProductModal = ({ isOpen, onClose, product, onSuccess, container = null })
                     className={`${styles.input()}`} 
                   />
                 </div>
-                
+
+                <div>
+                  <label className={`${styles.label()} block text-sm font-medium mb-2`}>
+                    Código de Barras
+                  </label>
+                  <Input
+                    name="barcode"
+                    value={formData.barcode}
+                    onChange={handleChange}
+                    placeholder="Escanea o ingresa el código de barras"
+                    className={`${styles.input()}`}
+                  />
+                </div>
+
                 <div>
                   <label className={`${styles.label()} block text-sm font-medium mb-2`}>
                     {t('products.category_label')} *

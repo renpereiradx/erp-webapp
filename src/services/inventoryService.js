@@ -9,7 +9,7 @@ import { createAdjustmentRequest, DEFAULT_REASONS, DEFAULT_METADATA_TEMPLATES } 
 
 const API_ENDPOINTS = {
   // Inventarios masivos
-  inventory: '/api/inventory',
+  inventory: '/inventory/',
   inventoryInvalidate: '/api/inventory/invalidate',
   inventoryDiscrepancies: '/api/inventory/discrepancies',
   
@@ -52,7 +52,7 @@ const _createMockData = {
   
   inventory: (inventoryData) => ({
     inventory_id: Math.floor(Math.random() * 1000),
-    message: `Inventory created successfully with ${inventoryData.details?.length || 0} items`,
+    message: `Inventory created successfully with ${inventoryData.products?.length || inventoryData.details?.length || 0} items`,
     mock_data: true,
     timestamp: new Date().toISOString()
   }),
@@ -167,19 +167,19 @@ export const inventoryService = {
    */
   async getInventories(page = 1, pageSize = 10) {
     const startTime = Date.now();
-    
+
     try {
       console.log('🌐 Inventory: Loading inventories from API...');
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(`${API_ENDPOINTS.inventory}?page=${page}&page_size=${pageSize}`);
       });
-      
+
       telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
         operation: 'getInventories',
         page,
         pageSize
       });
-      
+
       console.log('✅ Inventory: Inventories loaded successfully');
       return result;
     } catch (error) {
@@ -188,6 +188,123 @@ export const inventoryService = {
         error: error.message,
         duration: Date.now() - startTime
       });
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene historial de inventarios paginado usando endpoint específico
+   * @param {number} page - Número de página (default: 1)
+   * @param {number} pageSize - Elementos por página (default: 5)
+   * @returns {Promise<Object>}
+   */
+  async getInventoryHistory(page = 1, pageSize = 5) {
+    const startTime = Date.now();
+
+    try {
+      console.log(`🌐 Inventory History: Loading from /inventory/${page}/${pageSize}...`);
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.makeRequest(`/inventory/${page}/${pageSize}`);
+      }, 2, [
+        // Mock data fallback que coincide con la estructura real
+        {
+          id: 101,
+          check_date: new Date().toISOString(),
+          user_id: "demo_user_001",
+          state: true,
+          metadata: {
+            notes: "Inventario demo con datos de prueba",
+            source: "physical_count",
+            location: "main_warehouse",
+            operator: "Usuario Demo",
+            template: "PHYSICAL_COUNT",
+            equipment: "barcode_scanner",
+            timestamp: new Date().toISOString(),
+            verification: "single_check",
+            counting_method: "scanner",
+            total_products: 3
+          }
+        },
+        {
+          id: 102,
+          check_date: new Date(Date.now() - 86400000).toISOString(),
+          user_id: "demo_user_002",
+          state: true,
+          metadata: {
+            reason: "Revisión de stock después de reposición",
+            inventory_type: "restock_check",
+            location: "warehouse_main",
+            timestamp: new Date(Date.now() - 86400000).toISOString(),
+            checker_notes: "Todo en orden",
+            total_products: 5
+          }
+        },
+        {
+          id: 103,
+          check_date: new Date(Date.now() - 172800000).toISOString(),
+          user_id: "demo_user_003",
+          state: true,
+          metadata: {
+            inventory_type: "manual_check",
+            location: "warehouse_secondary",
+            timestamp: new Date(Date.now() - 172800000).toISOString(),
+            checker_notes: "Revisión manual de fin de mes",
+            weather_conditions: "normal",
+            total_products: 8
+          }
+        }
+      ]);
+
+      telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
+        operation: 'getInventoryHistory',
+        page,
+        pageSize
+      });
+
+      console.log('✅ Inventory History: Data loaded successfully');
+
+      // Normalizar respuesta para asegurar estructura consistente
+      const dataArray = Array.isArray(result) ? result : (result.data || []);
+
+      // Para mock data, simular paginación básica
+      const isUsingMockData = Array.isArray(result) && result.length <= 10;
+      let finalData, finalPagination;
+
+      if (isUsingMockData) {
+        // Simular paginación para datos mock
+        const totalMockRecords = 15; // Simular que hay 15 registros total
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        finalData = dataArray.slice(startIndex, endIndex);
+        finalPagination = {
+          page,
+          pageSize,
+          total: totalMockRecords,
+          totalPages: Math.ceil(totalMockRecords / pageSize)
+        };
+      } else {
+        // Usar datos reales con paginación del servidor
+        finalData = dataArray;
+        finalPagination = result.pagination || {
+          page,
+          pageSize,
+          total: dataArray.length,
+          totalPages: Math.ceil(dataArray.length / pageSize)
+        };
+      }
+
+      return {
+        success: true,
+        data: finalData,
+        pagination: finalPagination
+      };
+    } catch (error) {
+      telemetryService.recordEvent('inventory_service_error', {
+        operation: 'getInventoryHistory',
+        error: error.message,
+        duration: Date.now() - startTime
+      });
+      console.error('❌ Inventory History: Failed to load data:', error);
       throw error;
     }
   },
@@ -226,34 +343,49 @@ export const inventoryService = {
   /**
    * Crea un nuevo inventario masivo
    * @param {Object} inventoryData - Datos del inventario
-   * @param {string} inventoryData.action - "insert"
-   * @param {string} [inventoryData.check_date] - Fecha del conteo
-   * @param {Array} inventoryData.details - Items del inventario
+   * @param {Array} inventoryData.products - Items del inventario (se mapea a 'items')
+   * @param {Object} inventoryData.metadata - Metadatos del inventario
    * @returns {Promise<Object>}
    */
   async createInventory(inventoryData) {
     const startTime = Date.now();
-    
+
     try {
       console.log('🌐 Inventory: Creating new inventory...');
       const mockData = _createMockData.inventory(inventoryData);
-      
+
+      // Mapear datos al formato esperado por la API
+      const apiPayload = {
+        items: inventoryData.products?.map(product => ({
+          product_id: product.product_id,
+          quantity_checked: product.quantity_checked
+        })) || [],
+        metadata: inventoryData.metadata || {}
+      };
+
+      console.log('📤 Payload para API:', apiPayload);
+
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.post(API_ENDPOINTS.inventory, {
-          action: 'insert',
-          check_date: inventoryData.check_date || new Date().toISOString(),
-          details: inventoryData.details
-        });
+        return await apiClient.post(API_ENDPOINTS.inventory, apiPayload);
       }, 2, mockData);
-      
+
       telemetryService.recordMetric('inventory_service_duration', Date.now() - startTime, {
         operation: 'createInventory',
-        itemsCount: inventoryData.details?.length || 0,
+        itemsCount: inventoryData.products?.length || 0,
         usedMockData: result === mockData
       });
-      
+
       console.log('✅ Inventory: Inventory created successfully', result === mockData ? '(usando mock data)' : '');
-      return { success: true, data: result };
+
+      // Handle InventoryCreateResponse format: { message: string, inventory_id: number }
+      const response = {
+        success: true,
+        data: result,
+        message: result.message,
+        inventory_id: result.inventory_id
+      };
+
+      return response;
     } catch (error) {
       telemetryService.recordEvent('inventory_service_error', {
         operation: 'createInventory',

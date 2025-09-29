@@ -60,6 +60,7 @@ const CashRegister = () => {
   });
 
   const [activeTab, setActiveTab] = useState('overview');
+  const [formError, setFormError] = useState('');
 
   const handleLoadActiveCashRegister = async () => {
     try {
@@ -79,17 +80,22 @@ const CashRegister = () => {
 
   const handleOpenCashRegister = async (e) => {
     e.preventDefault();
+    setFormError(''); // Limpiar error previo
+
     try {
       await openCashRegister({
         name: openCashRegisterForm.name,
         initial_balance: parseFloat(openCashRegisterForm.initial_balance) || 0,
         location: openCashRegisterForm.location,
-        notes: openCashRegisterForm.notes
+        description: openCashRegisterForm.notes
       });
       setOpenCashRegisterDialog(false);
       setOpenCashRegisterForm({ name: '', initial_balance: '', location: '', notes: '' });
+      setFormError(''); // Limpiar error en caso de éxito
     } catch (error) {
       console.error('Error opening cash register:', error);
+      // Mostrar error amigable al usuario
+      setFormError(error.message || 'Error al abrir la caja registradora');
     }
   };
 
@@ -207,7 +213,10 @@ const CashRegister = () => {
             {isActiveCashRegisterLoading ? 'Cargando...' : 'Cargar Caja Activa'}
           </Button>
           
-          <Button onClick={() => setOpenCashRegisterDialog(true)}>
+          <Button onClick={() => {
+            setOpenCashRegisterDialog(true);
+            setFormError(''); // Limpiar error al abrir modal
+          }}>
             <PlusIcon className="w-4 h-4 mr-2" />
             Abrir Caja
           </Button>
@@ -254,6 +263,7 @@ const CashRegister = () => {
                         id="initial_balance"
                         type="number"
                         step="0.01"
+                        min="0"
                         value={openCashRegisterForm.initial_balance}
                         onChange={(e) => setOpenCashRegisterForm(prev => ({ ...prev, initial_balance: e.target.value }))}
                         placeholder="0.00"
@@ -279,6 +289,13 @@ const CashRegister = () => {
                         rows={3}
                       />
                     </div>
+
+                    {/* Error Message */}
+                    {formError && (
+                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                        <p className="text-sm text-red-600">{formError}</p>
+                      </div>
+                    )}
                   </form>
                 </div>
 
@@ -320,28 +337,32 @@ const CashRegister = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">Balance Inicial</p>
-                <p className="text-2xl font-bold">${activeCashRegister.initial_balance}</p>
+                <p className="text-2xl font-bold">
+                  ${(activeCashRegister.initial_balance || 0).toLocaleString()}
+                </p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">Balance Actual</p>
-                <p className="text-2xl font-bold text-blue-600">${activeCashRegister.current_balance}</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  ${(activeCashRegister.current_balance || 0).toLocaleString()}
+                </p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">Diferencia</p>
                 <p className={`text-2xl font-bold ${
-                  (activeCashRegister.current_balance - activeCashRegister.initial_balance) >= 0 
-                    ? 'text-green-600' 
+                  ((activeCashRegister.current_balance || 0) - (activeCashRegister.initial_balance || 0)) >= 0
+                    ? 'text-green-600'
                     : 'text-red-600'
                 }`}>
-                  ${activeCashRegister.current_balance - activeCashRegister.initial_balance}
+                  ${((activeCashRegister.current_balance || 0) - (activeCashRegister.initial_balance || 0)).toLocaleString()}
                 </p>
               </div>
             </div>
             
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-3 flex-wrap justify-center mt-4">
               <Button variant="outline" onClick={() => setMovementDialog(true)}>
                 <DollarSign className="w-4 h-4 mr-2" />
                 Registrar Movimiento
@@ -464,7 +485,11 @@ const CashRegister = () => {
                 Ver Resumen
               </Button>
 
-              <Button variant="destructive" onClick={() => setCloseCashRegisterDialog(true)}>
+              <Button
+                variant="outline"
+                onClick={() => setCloseCashRegisterDialog(true)}
+                className="border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300"
+              >
                 <XCircle className="w-4 h-4 mr-2" />
                 Cerrar Caja
               </Button>
@@ -474,8 +499,8 @@ const CashRegister = () => {
                   className={getOverlayClasses()}
                   onClick={() => setCloseCashRegisterDialog(false)}
                 >
-                  <div 
-                    className={`${styles.card()} border-yellow-200 w-full max-w-lg max-h-[90vh] overflow-y-auto`}
+                  <div
+                    className={`${styles.card()} border-yellow-200 w-full max-w-lg max-h-[80vh] flex flex-col`}
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Header */}
@@ -498,7 +523,7 @@ const CashRegister = () => {
                     </div>
 
                     {/* Content */}
-                    <div className="p-6">
+                    <div className="flex-1 p-6 overflow-y-auto">
                       {isClosingCashRegister ? (
                         <div className="flex items-center justify-center py-12">
                           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -536,18 +561,18 @@ const CashRegister = () => {
                     </div>
 
                     {/* Footer */}
-                    <div className="flex gap-3 justify-end p-6 pt-4 border-t">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
+                    <div className="flex gap-3 justify-end p-6 pt-4 border-t bg-white/95 backdrop-blur-sm">
+                      <Button
+                        type="button"
+                        variant="outline"
                         onClick={() => setCloseCashRegisterDialog(false)}
                         disabled={isClosingCashRegister}
                       >
                         Cancelar
                       </Button>
-                      <Button 
-                        type="submit" 
-                        variant="destructive" 
+                      <Button
+                        type="submit"
+                        variant="destructive"
                         onClick={handleCloseCashRegister}
                         disabled={isClosingCashRegister}
                       >
@@ -571,7 +596,10 @@ const CashRegister = () => {
             <p className="text-muted-foreground mb-4">
               Debe abrir una caja registradora para comenzar a operar
             </p>
-            <Button onClick={() => setOpenCashRegisterDialog(true)}>
+            <Button onClick={() => {
+              setOpenCashRegisterDialog(true);
+              setFormError(''); // Limpiar error al abrir modal
+            }}>
               <PlusIcon className="w-4 h-4 mr-2" />
               Abrir Nueva Caja
             </Button>
@@ -640,10 +668,12 @@ const CashRegister = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className="font-medium">${cashRegister.current_balance}</p>
-                      {cashRegister.variance !== 0 && (
+                      <p className="font-medium">
+                        ${(cashRegister.current_balance || 0).toLocaleString()}
+                      </p>
+                      {cashRegister.variance !== undefined && cashRegister.variance !== null && cashRegister.variance !== 0 && (
                         <p className={`text-sm ${cashRegister.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          Var: ${cashRegister.variance}
+                          Var: ${(cashRegister.variance || 0).toLocaleString()}
                         </p>
                       )}
                     </div>

@@ -38,6 +38,24 @@ const usePriceAdjustmentStore = create(
               adjustments: [result, ...currentAdjustments],
               creating: false 
             });
+
+            // Invalidar cache de productos para que se reflejen los cambios de precio
+            try {
+              // Importar dinámicamente el store para evitar dependencias circulares
+              const { default: useProductStore } = await import('./useProductStore');
+              const productStore = useProductStore.getState();
+              
+              // Invalidar cache del producto con precio actualizado
+              if (productStore.invalidateProductCache) {
+                productStore.invalidateProductCache(adjustmentData.product_id);
+              }
+              
+              telemetry.record('products.cache.invalidated_after_price_change', { 
+                productId: adjustmentData.product_id 
+              });
+            } catch (err) {
+              console.warn('No se pudo invalidar cache de productos:', err);
+            }
           } else {
             set({ creating: false });
           }

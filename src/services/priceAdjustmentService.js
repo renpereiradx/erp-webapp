@@ -25,7 +25,7 @@ const transformAdjustmentData = (adjustments) => {
       (adjustment.price_change_percent ?? 0),
     created_at: adjustment.adjustment_date ?? adjustment.created_at,
     unit: adjustment.metadata?.unit || adjustment.unit || 'UNIT',
-    product_id: adjustment.product_id || 'N/A'
+    product_id: adjustment.product_id || adjustment.product_name || `AJUSTE_${adjustment.adjustment_id || adjustment.id || 'SIN_ID'}`
   }));
 };
 

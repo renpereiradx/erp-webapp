@@ -281,47 +281,63 @@ const PurchaseOrdersList = ({ theme }) => {
     const statusColor = PURCHASE_STATE_COLORS[order.status];
     const statusLabel = PURCHASE_STATE_LABELS[order.status] || order.status;
 
+    // Datos pueden venir en formato enriquecido o legacy
+    const orderData = order.purchase || order;
+    const supplierStatus = orderData.supplier_status;
+
     return (
       <tr className={styles.body('hover:bg-gray-50')}>
         <td className="px-4 py-3">
           <input
             type="checkbox"
             checked={isSelected}
-            onChange={(e) => onSelect(order.id, e.target.checked)}
+            onChange={(e) => onSelect(orderData.id, e.target.checked)}
             className="rounded border-gray-300"
           />
         </td>
-        <td className="px-4 py-3 font-medium">#{order.id}</td>
-        <td className="px-4 py-3">{order.supplier_name}</td>
+        <td className="px-4 py-3 font-medium">#{orderData.id}</td>
+        <td className="px-4 py-3">
+          <div className="flex items-center">
+            <span>{orderData.supplier_name}</span>
+            {supplierStatus === false && (
+              <Badge variant="destructive" className="ml-2 text-xs">
+                Inactivo
+              </Badge>
+            )}
+          </div>
+        </td>
         <td className="px-4 py-3">
           <Badge variant={statusColor}>{statusLabel}</Badge>
         </td>
-        <td className="px-4 py-3">${order.total_amount}</td>
+        <td className="px-4 py-3">${orderData.total_amount?.toLocaleString()}</td>
         <td className="px-4 py-3">
-          {new Date(order.order_date).toLocaleDateString()}
+          {new Date(orderData.order_date).toLocaleDateString()}
         </td>
         <td className="px-4 py-3">
           <div className="flex space-x-2">
             <Button
-              onClick={() => handleViewOrder(order)}
+              onClick={() => handleViewOrder(orderData)}
               size="sm"
               variant="secondary"
+              title="Ver detalles"
             >
               <Eye className="w-4 h-4" />
             </Button>
-            {order.status === PURCHASE_STATES.PENDING && (
+            {orderData.status === PURCHASE_STATES.PENDING && (
               <>
                 <Button
-                  onClick={() => updateOrderStatus(order.id, PURCHASE_STATES.CONFIRMED)}
+                  onClick={() => updateOrderStatus(orderData.id, PURCHASE_STATES.CONFIRMED)}
                   size="sm"
                   variant="green"
+                  title="Confirmar orden"
                 >
                   <Check className="w-4 h-4" />
                 </Button>
                 <Button
-                  onClick={() => cancelOrder(order.id, 'Cancelado por usuario')}
+                  onClick={() => cancelOrder(orderData.id, 'Cancelado por usuario')}
                   size="sm"
                   variant="destructive"
+                  title="Cancelar orden"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -436,6 +452,19 @@ const PurchaseOrdersList = ({ theme }) => {
                   onChange={(e) => handleFilterChange('supplier', e.target.value)}
                   className="h-8 text-xs"
                 />
+              </div>
+
+              {/* Filtro por estado de proveedor */}
+              <div>
+                <label className="text-xs font-medium mb-1 block">Estado Proveedor</label>
+                <select
+                  value={filters.showInactiveSuppliers ? 'all' : 'active'}
+                  onChange={(e) => handleFilterChange('showInactiveSuppliers', e.target.value === 'all')}
+                  className="w-full h-8 text-xs border border-gray-300 rounded px-2"
+                >
+                  <option value="active">Solo activos</option>
+                  <option value="all">Todos</option>
+                </select>
               </div>
 
               {/* Fecha inicio */}

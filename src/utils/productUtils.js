@@ -191,7 +191,12 @@ export const getStockStatus = (product) => {
  * Verifica si un producto está activo
  */
 export const isProductActive = (product) => {
-  return product.state === true || product.state === 'active';
+  // Check multiple possible active fields for better compatibility
+  return product.state === true ||
+         product.state === 'active' ||
+         product.is_active === true ||
+         product.active === true ||
+         product.status === true;
 };
 
 /**

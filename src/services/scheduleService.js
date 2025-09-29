@@ -83,99 +83,90 @@ export const scheduleService = {
   },
 
   async generateDaily() {
+    // generateDaily ahora usa la fecha de hoy con el endpoint correcto
+    const today = new Date().toISOString().split('T')[0];
+    return this.generateForDate(today);
+  },
+
+  // Generar horarios para fecha específica con parámetros flexibles (API v2 según documentación)
+  async generateForDate(targetDate, options = {}) {
     const startTime = Date.now();
     
     try {
+      const requestBody = {
+        target_date: targetDate
+      };
+      
+      // Agregar parámetros opcionales si se especifican
+      if (options.startHour !== undefined && options.startHour !== null) {
+        requestBody.start_hour = parseInt(options.startHour);
+      }
+      if (options.endHour !== undefined && options.endHour !== null) {
+        requestBody.end_hour = parseInt(options.endHour);
+      }
+      if (options.productIds && Array.isArray(options.productIds) && options.productIds.length > 0) {
+        requestBody.product_ids = options.productIds;
+      }
+      
       const result = await withRetry(async () => {
-        return await apiService.post(`${API_PREFIX}/generate/daily`);
+        return await apiService.post(`${API_PREFIX}/generate/date`, requestBody);
       });
       
-      telemetry.record('schedules.service.generate_daily', {
-        duration: Date.now() - startTime
+      telemetry.record('schedules.service.generate_for_date_flexible', {
+        duration: Date.now() - startTime,
+        target_date: targetDate,
+        has_custom_hours: !!(options.startHour || options.endHour),
+        has_product_filter: !!(options.productIds && options.productIds.length > 0),
+        auto_discovery: !options.productIds || options.productIds.length === 0
       });
       
+      console.log('✅ Horarios generados para fecha:', targetDate, {
+        autoDiscovery: result.auto_discovery,
+        productsProcessed: result.validation?.products_requested,
+        schedulesCreated: result.results?.schedules_created
+      });
       return result;
     } catch (error) {
       telemetry.record('schedules.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
-        operation: 'generateDaily'
+        operation: 'generateForDate',
+        target_date: targetDate
       });
+      console.error('❌ Error generando horarios para fecha:', targetDate, error);
       throw error;
     }
   },
 
-  // 🆕 Generar horarios para HOY (nuevo endpoint v2.2)
+  // Método deprecado - usar generateForDate con options
+  async generateWithCustomRange(targetDate, startHour, endHour, productIds = []) {
+    console.warn('⚠️ generateWithCustomRange está deprecado. Use generateForDate(targetDate, { startHour, endHour, productIds })');
+    return this.generateForDate(targetDate, {
+      startHour,
+      endHour,
+      productIds: productIds.length > 0 ? productIds : undefined
+    });
+  },
+
+  // Métodos compatibles con la implementación anterior (deprecated pero mantenidos por compatibilidad)
   async generateToday() {
-    const startTime = Date.now();
-    
-    try {
-      const result = await withRetry(async () => {
-        return await apiService.post(`${API_PREFIX}/generate/today`);
-      });
-      
-      telemetry.record('schedules.service.generate_today', {
-        duration: Date.now() - startTime
-      });
-      
-      return result;
-    } catch (error) {
-      telemetry.record('schedules.service.error', {
-        duration: Date.now() - startTime,
-        error: error.message,
-        operation: 'generateToday'
-      });
-      throw error;
-    }
+    const today = new Date().toISOString().split('T')[0];
+    return this.generateForDate(today);
   },
 
-  // 🆕 Generar horarios para MAÑANA (nuevo endpoint v2.2)
   async generateTomorrow() {
-    const startTime = Date.now();
-    
-    try {
-      const result = await withRetry(async () => {
-        return await apiService.post(`${API_PREFIX}/generate/tomorrow`);
-      });
-      
-      telemetry.record('schedules.service.generate_tomorrow', {
-        duration: Date.now() - startTime
-      });
-      
-      return result;
-    } catch (error) {
-      telemetry.record('schedules.service.error', {
-        duration: Date.now() - startTime,
-        error: error.message,
-        operation: 'generateTomorrow'
-      });
-      throw error;
-    }
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    return this.generateForDate(tomorrow);
   },
 
-  async generateForDate(targetDate) {
-    const startTime = Date.now();
-    
-    try {
-      const result = await withRetry(async () => {
-        return await apiService.post(`${API_PREFIX}/generate/date`, {
-          target_date: targetDate
-        });
-      });
-      
-      telemetry.record('schedules.service.generate_for_date', {
-        duration: Date.now() - startTime
-      });
-      
-      return result;
-    } catch (error) {
-      telemetry.record('schedules.service.error', {
-        duration: Date.now() - startTime,
-        error: error.message,
-        operation: 'generateForDate'
-      });
-      throw error;
-    }
+  // Método deprecado - usar generateForDate con options
+  async generateForDateWithCustomRange(targetDate, startHour, endHour, productIds = null) {
+    console.warn('⚠️ generateForDateWithCustomRange está deprecado. Use generateForDate(targetDate, { startHour, endHour, productIds })');
+    return this.generateForDate(targetDate, {
+      startHour,
+      endHour,
+      productIds: productIds && Array.isArray(productIds) && productIds.length > 0 ? productIds : undefined
+    });
   },
 
   async generateForNextDays(days) {
@@ -211,8 +202,36 @@ export const scheduleService = {
         return await apiService.get(`${API_PREFIX}/product/${productId}/date/${date}/available`);
       });
       
+      // Si no hay horarios disponibles, intentar generarlos automáticamente
+      if ((!result.data || result.data.length === 0) && productId && date) {
+        console.log('🔄 No schedules found, attempting to generate schedules for', { productId, date });
+        
+        try {
+          // Usar siempre generateForDate para cualquier fecha (endpoint correcto)
+          console.log('🔄 Intentando generar horarios para fecha:', date);
+          
+          const generationResult = await this.generateForDate(date);
+          
+          console.log('✅ Resultado de generación de horarios:', generationResult);
+          
+          // Reintentar la consulta después de la generación
+          const retryResult = await apiService.get(`${API_PREFIX}/product/${productId}/date/${date}/available`);
+          telemetry.record('schedules.service.load_available_after_generation', {
+            duration: Date.now() - startTime,
+            generated: true,
+            count: retryResult.data?.length || 0
+          });
+          
+          return retryResult;
+        } catch (generationError) {
+          console.warn('⚠️ Could not generate schedules:', generationError.message);
+          // Continuar con resultado vacío original
+        }
+      }
+      
       telemetry.record('schedules.service.load_available', {
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
+        count: result.data?.length || 0
       });
       
       return result;

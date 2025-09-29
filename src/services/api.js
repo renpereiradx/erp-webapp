@@ -88,10 +88,31 @@ export const apiService = {
   // Métodos de reservas con fallback robusto
   getReservationReport: async (params = {}) => {
     try {
+      // Ensure authentication first
+      await apiClient.ensureAuthentication();
+      
+      // Build query parameters as specified in RESERVES_API.md
+      const queryParams = new URLSearchParams();
+      if (params.start_date) queryParams.append('start_date', params.start_date);
+      if (params.end_date) queryParams.append('end_date', params.end_date);
+      if (params.product_id) queryParams.append('product_id', params.product_id);
+      if (params.client_id) queryParams.append('client_id', params.client_id);
+      if (params.status) queryParams.append('status', params.status);
+      
+      const endpoint = `/reserve/report${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      console.log('📊 Fetching reservation report from:', endpoint);
+      
       // Try the primary endpoint
-      return await apiClient.makeRequest('/reserve/report', { method: 'GET' });
+      return await apiClient.makeRequest(endpoint, { method: 'GET' });
     } catch (error) {
-      console.warn('⚠️ Reserve report failed, using mock data for development');
+      // Log more specific error information
+      if (error.status === 400) {
+        console.warn('⚠️ Reserve report failed - Bad Request (400). Posiblemente faltan parámetros requeridos.');
+      } else if (error.status === 401) {
+        console.warn('⚠️ Reserve report failed - Unauthorized (401). Autenticación fallida o token expirado.');
+      } else {
+        console.warn('⚠️ Reserve report failed:', error.message);
+      }
       
       // Return mock data structure matching ReservationReport interface
       return [

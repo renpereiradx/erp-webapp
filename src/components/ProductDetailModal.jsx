@@ -145,6 +145,12 @@ const ProductDetailModal = ({ isOpen, onClose, product, container = null }) => {
                     <Package className="h-4 w-4" />
                     ID: {processedProduct.product_id || processedProduct.id}
                   </span>
+                  {processedProduct.barcode && (
+                    <span className="flex items-center gap-1">
+                      <Tag className="h-4 w-4" />
+                      Barcode: {processedProduct.barcode}
+                    </span>
+                  )}
                   <Badge variant={processedProduct.isActive ? 'default' : 'secondary'} className="product-badge">
                     {processedProduct.isActive ? 'Activo' : 'Inactivo'}
                   </Badge>
@@ -188,14 +194,19 @@ const ProductDetailModal = ({ isOpen, onClose, product, container = null }) => {
                     type="category" 
                   />
                   <Separator />
-                  <DetailRow 
-                    label="Tipo de Producto" 
-                    value={processedProduct.productType} 
+                  <DetailRow
+                    label="Tipo de Producto"
+                    value={processedProduct.productType}
                   />
                   <Separator />
-                  <DetailRow 
-                    label="Estado" 
-                    value={processedProduct.isActive} 
+                  <DetailRow
+                    label="Código de Barras"
+                    value={processedProduct.barcode || 'No configurado'}
+                  />
+                  <Separator />
+                  <DetailRow
+                    label="Estado"
+                    value={processedProduct.isActive}
                     type="boolean" 
                   />
                   <Separator />

@@ -33,34 +33,69 @@ const useInventoryStore = create(
       fetchInventories: async (page = 1, pageSize = 10) => {
         set({ loading: true, error: null });
         const startTime = Date.now();
-        
+
         try {
           const result = await inventoryService.getInventories(page, pageSize);
-          
+
           // Manejar diferentes formatos de respuesta
           let data = [];
           if (result.success !== false) {
             const raw = result.inventories || result.data || result;
-            data = Array.isArray(raw) ? raw : 
+            data = Array.isArray(raw) ? raw :
                    Array.isArray(raw?.inventories) ? raw.inventories :
                    Array.isArray(raw?.data) ? raw.data : [];
           }
-          
+
           set({ inventories: data, loading: false });
-          
+
           telemetryService.recordEvent('inventory_fetch_success', {
             duration: Date.now() - startTime,
             count: data.length,
             page,
             pageSize
           });
-          
+
         } catch (error) {
           set({ error: error.message || 'Error al cargar inventarios', loading: false });
           telemetryService.recordEvent('inventory_fetch_error', {
             error: error.message,
             operation: 'fetchInventories'
           });
+        }
+      },
+
+      // Cargar historial de inventarios usando endpoint específico
+      fetchInventoryHistory: async (page = 1, pageSize = 5) => {
+        set({ loading: true, error: null });
+        const startTime = Date.now();
+
+        try {
+          const result = await inventoryService.getInventoryHistory(page, pageSize);
+
+          // Normalizar respuesta
+          let data = [];
+          if (result.success !== false) {
+            data = result.data || [];
+          }
+
+          set({ inventories: data, loading: false });
+
+          telemetryService.recordEvent('inventory_history_fetch_success', {
+            duration: Date.now() - startTime,
+            count: data.length,
+            page,
+            pageSize
+          });
+
+          return { success: true, data, pagination: result.pagination };
+
+        } catch (error) {
+          set({ error: error.message || 'Error al cargar historial de inventarios', loading: false });
+          telemetryService.recordEvent('inventory_history_fetch_error', {
+            error: error.message,
+            operation: 'fetchInventoryHistory'
+          });
+          return { success: false, error: error.message };
         }
       },
 
@@ -96,21 +131,29 @@ const useInventoryStore = create(
       createInventory: async (inventoryData) => {
         set({ loadingCreate: true, error: null });
         const startTime = Date.now();
-        
+
         try {
           const result = await inventoryService.createInventory(inventoryData);
-          
+
           if (result.success !== false) {
             // Recargar lista después de crear
             get().fetchInventories();
-            
+
             telemetryService.recordEvent('inventory_create_success', {
               duration: Date.now() - startTime,
-              itemsCount: inventoryData.details?.length || 0
+              itemsCount: inventoryData.products?.length || inventoryData.details?.length || 0,
+              inventory_id: result.inventory_id
             });
-            
+
             set({ loadingCreate: false });
-            return { success: true, data: result };
+
+            // Return response with inventory_id and message from server
+            return {
+              success: true,
+              data: result.data,
+              message: result.message,
+              inventory_id: result.inventory_id
+            };
           }
         } catch (error) {
           set({ error: error.message || 'Error al crear inventario', loadingCreate: false });

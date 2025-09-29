@@ -109,6 +109,14 @@ const ProductSearchInput = ({
     if (onClear) onClear();
   };
 
+  // Limpiar resultados cuando se desmonta el componente
+  useEffect(() => {
+    return () => {
+      setSearchResults([]);
+      setShowResults(false);
+    };
+  }, []);
+
   const getSearchTypeLabel = () => {
     switch (searchType) {
       case 'id': return 'ID';

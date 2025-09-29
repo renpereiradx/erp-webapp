@@ -86,7 +86,7 @@ export const cashRegisterService = {
    */
   async openCashRegister(cashRegisterData) {
     const startTime = Date.now();
-    
+
     try {
       console.log('🌐 CashRegister: Opening cash register...');
       const result = await _fetchWithRetry(async () => {
@@ -121,6 +121,7 @@ export const cashRegisterService = {
     
     try {
       console.log(`🌐 CashRegister: Closing cash register ${cashRegisterId}...`);
+      console.log('📤 Close payload:', JSON.stringify(closeData, null, 2));
       const result = await _fetchWithRetry(async () => {
         return await apiClient.put(API_ENDPOINTS.closeCashRegister(cashRegisterId), closeData);
       });
@@ -386,15 +387,15 @@ export const cashRegisterService = {
    */
   validateOpenCashRegisterData(data) {
     const errors = [];
-    
+
     if (!data.name || data.name.trim() === '') {
       errors.push('Nombre es requerido');
     }
-    
+
     if (typeof data.initial_balance !== 'number' || data.initial_balance < 0) {
       errors.push('Balance inicial debe ser un número positivo');
     }
-    
+
     return errors;
   },
 

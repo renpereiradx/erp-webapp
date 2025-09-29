@@ -4,7 +4,7 @@
  * Implementa manejo de sesiones, pagos y POS según SALE_API.md
  */
 
-import { apiService } from './api';
+import BusinessManagementAPI from './BusinessManagementAPI';
 import { telemetryService } from './telemetryService';
 import { MockDataService, MOCK_CONFIG } from '@/config/mockData';
 
@@ -153,16 +153,18 @@ export const saleService = {
     const startTime = performance.now();
     try {
       return await withRetry(async () => {
-        // Mapear datos al formato de la API de pagos
+        // Mapear datos al formato correcto de SALE_API.md
         const requestData = {
-          sales_order_id: saleId,
-          amount_received: paymentData.amountPaid || paymentData.amount_received,
-          payment_reference: paymentData.reference || paymentData.payment_reference || null,
-          payment_notes: paymentData.notes || paymentData.payment_notes || null
+          sale_order_id: saleId, // Usar nombre correcto del campo
+          payment_method_id: paymentData.payment_method_id || 1,
+          amount: paymentData.amount || paymentData.amountPaid,
+          currency_id: paymentData.currency_id || 1,
+          reference_number: paymentData.reference_number || paymentData.reference || null,
+          notes: paymentData.notes || null
         };
 
-        // Usar endpoint de procesamiento de pagos
-        const response = await apiService.post('/payment/process', requestData);
+        // Usar endpoint correcto según SALE_API.md
+        const response = await apiService.post('/sales/payments', requestData);
         
         telemetryService.recordMetric('payment_processed_unified', 1, {
           sale_id: saleId,
@@ -247,7 +249,7 @@ export const saleService = {
       }).toString();
 
       return await withRetry(async () => {
-        const response = await apiService.get(`/sale/date_range/?${queryParams}`);
+        const response = await apiService.get(`/sales/orders/date-range?${queryParams}`);
         telemetryService.recordMetric('sales_fetched_date_range', response.sales?.length || 0);
         return {
           success: true,
@@ -282,7 +284,7 @@ export const saleService = {
     const startTime = performance.now();
     try {
       return await withRetry(async () => {
-        const response = await apiService.get(`/sale/${id}`);
+        const response = await apiService.get(`/sales/orders/${id}`);
         telemetryService.recordMetric('sale_fetched_by_id', 1, { sale_id: id });
         return response;
       });
@@ -301,55 +303,113 @@ export const saleService = {
     }
   },
 
-  // Crear una nueva venta usando API unificada según SALE_API.md
+  // Crear una nueva venta usando API unificada según SALE_WITH_DISCOUNT_API.md
   createSale: async (saleData) => {
     const startTime = performance.now();
     try {
       return await withRetry(async () => {
-        // Mapear datos al formato de la API unificada
+        // Validar estructura según la nueva API
+        if (!saleData.client_id) {
+          throw new Error('client_id es requerido');
+        }
+        if (!saleData.product_details || !Array.isArray(saleData.product_details) || saleData.product_details.length === 0) {
+          throw new Error('product_details es requerido y debe contener al menos un producto');
+        }
+
+        // Transformar datos al formato esperado por la nueva API
         const requestData = {
-          sale_id: saleData.saleId || undefined, // Opcional, se genera automáticamente
-          client_id: saleData.clientId || saleData.client_id,
-          product_details: saleData.items?.map(item => ({
-            product_id: item.product_id || item.id,
-            quantity: item.quantity,
-            tax_rate_id: item.tax_rate_id || null,
-            sale_price: item.sale_price || item.unit_price,
-            price_change_reason: item.price_change_reason || null
-          })) || saleData.product_details || [],
-          payment_method_id: saleData.payment_method_id || null,
-          currency_id: saleData.currency_id || null,
-          allow_price_modifications: saleData.allow_price_modifications || false,
-          reserve_id: saleData.reserve_id || null // Para ventas con reserva
+          client_id: saleData.client_id,
+          product_details: saleData.product_details.map(item => {
+            const productDetail = {
+              product_id: item.product_id,
+              quantity: item.quantity
+            };
+
+            // Solo incluir campos opcionales si tienen valores
+            if (item.tax_rate_id) {
+              productDetail.tax_rate_id = item.tax_rate_id;
+            }
+            if (item.sale_price) {
+              productDetail.sale_price = item.sale_price;
+            }
+            if (item.price_change_reason) {
+              productDetail.price_change_reason = item.price_change_reason;
+            }
+            if (item.discount_amount) {
+              productDetail.discount_amount = item.discount_amount;
+            }
+            if (item.discount_percent) {
+              productDetail.discount_percent = item.discount_percent;
+            }
+            if (item.discount_reason) {
+              productDetail.discount_reason = item.discount_reason;
+            }
+
+            return productDetail;
+          }),
+          payment_method_id: saleData.payment_method_id || 1,
+          currency_id: saleData.currency_id || 1,
+          allow_price_modifications: saleData.allow_price_modifications || false
         };
 
-        // Usar endpoint principal recomendado
-        const response = await apiService.post('/sale/', requestData);
-        
-        telemetryService.recordMetric('sale_created_unified', 1, {
-          total_amount: response.total_amount,
-          items_processed: response.items_processed,
-          has_price_changes: response.has_price_changes
+        // Solo incluir campos opcionales de nivel superior si tienen valores
+        if (saleData.sale_id) {
+          requestData.sale_id = saleData.sale_id;
+        }
+        if (saleData.reserve_id) {
+          requestData.reserve_id = saleData.reserve_id;
+        }
+
+        // Validar que si hay descuentos, tienen justificación
+        for (const item of requestData.product_details) {
+          if ((item.discount_amount || item.discount_percent) && !item.discount_reason) {
+            throw new Error(`Se requiere justificación para el descuento aplicado al producto ${item.product_id}`);
+          }
+        }
+
+        // Log específico para reservas y descuentos
+        if (requestData.reserve_id) {
+          console.log('📋 Creating sale with reservation:', {
+            reserve_id: requestData.reserve_id,
+            client_id: requestData.client_id
+          });
+        }
+
+        const hasDiscounts = requestData.product_details.some(item =>
+          item.discount_amount || item.discount_percent || item.sale_price
+        );
+        if (hasDiscounts) {
+          console.log('💰 Creating sale with price modifications/discounts');
+        }
+
+        // Log completo del payload enviado al backend
+        console.log('📤 Complete payload being sent to backend:');
+        console.log(JSON.stringify(requestData, null, 2));
+
+        const api = new BusinessManagementAPI();
+        const response = await api.makeRequest('/sales/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
         });
-        
+
+        telemetryService.recordMetric('sale_created_with_discounts', 1, {
+          total_amount: response.total_amount || 0,
+          items_processed: requestData.product_details?.length || 0,
+          has_discounts: response.has_discounts || false,
+          has_price_changes: response.has_price_changes || false,
+          reserve_processed: response.reserve_processed || false
+        });
+
         return response;
       });
     } catch (error) {
-      console.warn('🔄 Sale API unavailable, using modular mock data...');
-      telemetryService.recordMetric('sale_mock_creation', 1);
-      const result = await demoService.createSale({
-        client_id: saleData.clientId,
-        total_amount: saleData.totalAmount,
-        payment_method: saleData.paymentMethod || 'cash',
-        amount_paid: saleData.amountPaid,
-        items: saleData.items
-      });
-      
-      if (MOCK_CONFIG.development?.verbose) {
-        console.log('✅ Sale created in modular mock system:', result.sale_id);
-      }
-      
-      return result;
+      console.error('❌ Error creating sale:', error);
+
+      // Re-lanzar el error para que el frontend lo maneje apropiadamente
+      throw error;
     } finally {
       const endTime = performance.now();
       telemetryService.recordMetric('create_sale_duration', endTime - startTime);
@@ -379,7 +439,7 @@ export const saleService = {
     const startTime = performance.now();
     try {
       return await withRetry(async () => {
-        const response = await apiService.get(`/sale/${saleId}/preview-cancellation`);
+        const response = await apiService.get(`/sales/orders/${saleId}/cancel-preview`);
         
         telemetryService.recordMetric('sale_cancellation_previewed', 1, {
           sale_id: saleId,
@@ -430,12 +490,13 @@ export const saleService = {
     try {
       return await withRetry(async () => {
         const requestData = {
-          user_id: 'current_user', // Se debe obtener del contexto de autenticación
-          reason: reason
+          cancellation_reason: reason || 'Cancelación solicitada por usuario',
+          refund_method: 'CASH', // Default
+          cancel_invoice: true // Default
         };
 
-        // Usar endpoint de cancelación mejorada
-        const response = await apiService.put(`/sale/${id}`, requestData);
+        // Usar endpoint correcto según SALE_API.md
+        const response = await apiService.post(`/sales/orders/${id}/cancel`, requestData);
         
         telemetryService.recordMetric('sale_cancelled_enhanced', 1, { 
           sale_id: id, 

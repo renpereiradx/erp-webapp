@@ -8,19 +8,71 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 
 const TAX_RATE = 0.16; // IVA 16%
 
+// Plantillas base para justificaciones de cambio de precio
+export const PRICE_CHANGE_REASONS = [
+  {
+    id: 'bulk_discount',
+    label: 'Descuento por volumen',
+    description: 'Descuento aplicado por compra de grandes cantidades',
+    requiresAuth: false
+  },
+  {
+    id: 'loyalty_discount',
+    label: 'Descuento por fidelidad',
+    description: 'Descuento especial para cliente frecuente',
+    requiresAuth: false
+  },
+  {
+    id: 'promotional_offer',
+    label: 'Oferta promocional',
+    description: 'Descuento por campaña promocional activa',
+    requiresAuth: false
+  },
+  {
+    id: 'damaged_product',
+    label: 'Producto con daño menor',
+    description: 'Descuento por imperfecciones cosméticas que no afectan funcionalidad',
+    requiresAuth: true
+  },
+  {
+    id: 'clearance_sale',
+    label: 'Liquidación de inventario',
+    description: 'Precio reducido para acelerar rotación de stock',
+    requiresAuth: true
+  },
+  {
+    id: 'price_match',
+    label: 'Igualación de precio',
+    description: 'Precio ajustado para igualar oferta de competencia',
+    requiresAuth: true
+  },
+  {
+    id: 'manager_approval',
+    label: 'Autorización gerencial',
+    description: 'Descuento especial autorizado por gerencia',
+    requiresAuth: true
+  },
+  {
+    id: 'customer_service',
+    label: 'Compensación al cliente',
+    description: 'Descuento como gesto de buena voluntad por inconvenientes',
+    requiresAuth: true
+  }
+];
+
 export const useSalesLogic = () => {
   const [saleItems, setSaleItems] = useState([]);
   const [selectedClient, setSelectedClient] = useState('');
+  const [selectedReserve, setSelectedReserve] = useState(null); // NUEVO: manejo de reservas
 
   // Cálculos de totales - memoizados para optimización
+  // Los precios ya incluyen IVA, solo mostramos el total
   const calculations = useMemo(() => {
-    const subtotal = saleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const tax = subtotal * TAX_RATE;
-    const total = subtotal + tax;
+    const total = saleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     return {
-      subtotal: Number(subtotal.toFixed(2)),
-      tax: Number(tax.toFixed(2)),
+      subtotal: Number(total.toFixed(2)), // Para UI simplificada, subtotal = total
+      tax: 0, // No mostramos IVA en punto de venta
       total: Number(total.toFixed(2)),
       itemCount: saleItems.reduce((sum, item) => sum + item.quantity, 0)
     };
@@ -31,25 +83,66 @@ export const useSalesLogic = () => {
     if (!product || quantity <= 0) return;
 
     setSaleItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === product.id);
-      
+      const productId = product.product_id || product.id;
+      const existingItem = prevItems.find(item => (item.product_id || item.id) === productId);
+
       if (existingItem) {
-        return prevItems.map(item => 
-          item.id === product.id 
+        return prevItems.map(item =>
+          (item.product_id || item.id) === productId
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       } else {
-        return [...prevItems, { ...product, quantity }];
+        // Normalizar producto para el carrito - convertir objetos a strings
+        const extractedPrice = product.price ||
+                              product.unit_prices?.[0]?.price_per_unit ||
+                              product.unit_prices?.[0]?.price ||
+                              product.unit_prices?.[0]?.selling_price ||
+                              product.unit_prices?.[0]?.base_price ||
+                              0;
+
+        const normalizedProduct = {
+          id: product.product_id || product.id,
+          product_id: product.product_id || product.id,
+          name: product.product_name || product.name,
+          product_name: product.product_name || product.name,
+          originalPrice: product.originalPrice || extractedPrice, // Usar originalPrice del producto si existe
+          price: product.price || extractedPrice, // Usar price del producto si existe
+          category: product.category ? String(product.category?.name || product.category) : '',
+          quantity,
+          // Mantener campos necesarios para la venta
+          stock_quantity: product.stock_quantity,
+          product_type: product.product_type,
+          state: product.state,
+          // Campos para manejo de descuentos según SALE_WITH_DISCOUNT_API.md
+          discountPercentage: 0,
+          discountAmount: 0,
+          hasDiscount: false,
+          priceChangeReason: null,
+          priceChangeJustification: '',
+          priceChangeAuthorizedBy: null,
+          // NUEVOS campos para API de descuentos
+          discount_amount: null, // Descuento en valor absoluto
+          discount_percent: null, // Descuento en porcentaje (0-100)
+          discount_reason: null, // Razón del descuento (OBLIGATORIO si hay descuento)
+          sale_price: null, // Precio modificado
+          // PRESERVAR PROPIEDADES ESPECIALES DE RESERVA SOLAMENTE
+          fromReservation: product.fromReservation || false,
+          reservation_id: product.reservation_id || null,
+          reservation_date: product.reservation_date || null,
+          start_time: product.start_time || null,
+          end_time: product.end_time || null
+        };
+        return [...prevItems, normalizedProduct];
       }
     });
   }, []);
 
   // Actualizar cantidad de un producto
   const updateQuantity = useCallback((itemId, change) => {
-    setSaleItems(prevItems => 
+    setSaleItems(prevItems =>
       prevItems.map(item => {
-        if (item.id === itemId) {
+        if ((item.product_id || item.id) === itemId) {
           const newQuantity = Math.max(0, item.quantity + change);
           return newQuantity === 0 ? null : { ...item, quantity: newQuantity };
         }
@@ -61,10 +154,10 @@ export const useSalesLogic = () => {
   // Establecer cantidad específica
   const setItemQuantity = useCallback((itemId, quantity) => {
     if (quantity < 0) return;
-    
-    setSaleItems(prevItems => 
+
+    setSaleItems(prevItems =>
       prevItems.map(item => {
-        if (item.id === itemId) {
+        if ((item.product_id || item.id) === itemId) {
           return quantity === 0 ? null : { ...item, quantity };
         }
         return item;
@@ -74,12 +167,135 @@ export const useSalesLogic = () => {
 
   // Remover producto del carrito
   const removeItem = useCallback((itemId) => {
-    setSaleItems(prevItems => prevItems.filter(item => item.id !== itemId));
+    setSaleItems(prevItems => prevItems.filter(item => (item.product_id || item.id) !== itemId));
   }, []);
 
   // Limpiar carrito
   const clearCart = useCallback(() => {
     setSaleItems([]);
+  }, []);
+
+  // Aplicar descuento por porcentaje según SALE_WITH_DISCOUNT_API.md
+  const applyPercentageDiscount = useCallback((itemId, percentage, reason, justification, authorizedBy = null) => {
+    if (percentage < 0 || percentage > 100) return;
+
+    setSaleItems(prevItems =>
+      prevItems.map(item => {
+        if ((item.product_id || item.id) === itemId) {
+          const discountAmount = (item.originalPrice * percentage) / 100;
+          const newPrice = item.originalPrice - discountAmount;
+
+          return {
+            ...item,
+            price: Number(newPrice.toFixed(2)),
+            discountPercentage: percentage,
+            discountAmount: Number(discountAmount.toFixed(2)),
+            hasDiscount: percentage > 0,
+            priceChangeReason: reason,
+            priceChangeJustification: justification,
+            priceChangeAuthorizedBy: authorizedBy,
+            // NUEVOS campos para API
+            discount_percent: percentage > 0 ? percentage : null,
+            discount_amount: null, // No mezclar tipos de descuento
+            discount_reason: percentage > 0 ? justification : null,
+            sale_price: null // No modificamos precio directo
+          };
+        }
+        return item;
+      })
+    );
+  }, []);
+
+  // Aplicar descuento por monto fijo según SALE_WITH_DISCOUNT_API.md
+  const applyFixedDiscount = useCallback((itemId, amount, reason, justification, authorizedBy = null) => {
+    if (amount < 0) return;
+
+    setSaleItems(prevItems =>
+      prevItems.map(item => {
+        if ((item.product_id || item.id) === itemId) {
+          const maxDiscount = item.originalPrice;
+          const discountAmount = Math.min(amount, maxDiscount);
+          const newPrice = item.originalPrice - discountAmount;
+          const percentage = (discountAmount / item.originalPrice) * 100;
+
+          return {
+            ...item,
+            price: Number(newPrice.toFixed(2)),
+            discountPercentage: Number(percentage.toFixed(2)),
+            discountAmount: Number(discountAmount.toFixed(2)),
+            hasDiscount: discountAmount > 0,
+            priceChangeReason: reason,
+            priceChangeJustification: justification,
+            priceChangeAuthorizedBy: authorizedBy,
+            // NUEVOS campos para API
+            discount_amount: discountAmount > 0 ? discountAmount : null,
+            discount_percent: null, // No mezclar tipos de descuento
+            discount_reason: discountAmount > 0 ? justification : null,
+            sale_price: null // No modificamos precio directo
+          };
+        }
+        return item;
+      })
+    );
+  }, []);
+
+  // Establecer precio directo (con justificación) según SALE_WITH_DISCOUNT_API.md
+  const setDirectPrice = useCallback((itemId, newPrice, reason, justification, authorizedBy = null) => {
+    if (newPrice < 0) return;
+
+    setSaleItems(prevItems =>
+      prevItems.map(item => {
+        if ((item.product_id || item.id) === itemId) {
+          const discountAmount = item.originalPrice - newPrice;
+          const percentage = discountAmount > 0 ? (discountAmount / item.originalPrice) * 100 : 0;
+
+          return {
+            ...item,
+            price: Number(newPrice.toFixed(2)),
+            discountPercentage: Number(percentage.toFixed(2)),
+            discountAmount: Number(discountAmount.toFixed(2)),
+            hasDiscount: Math.abs(newPrice - item.originalPrice) > 0.01,
+            priceChangeReason: reason,
+            priceChangeJustification: justification,
+            priceChangeAuthorizedBy: authorizedBy,
+            // NUEVOS campos para API - precio directo
+            sale_price: Math.abs(newPrice - item.originalPrice) > 0.01 ? newPrice : null,
+            price_change_reason: Math.abs(newPrice - item.originalPrice) > 0.01 ? justification : null,
+            discount_amount: null, // No mezclamos con descuentos
+            discount_percent: null,
+            discount_reason: null
+          };
+        }
+        return item;
+      })
+    );
+  }, []);
+
+  // Remover descuento según SALE_WITH_DISCOUNT_API.md
+  const removeDiscount = useCallback((itemId) => {
+    setSaleItems(prevItems =>
+      prevItems.map(item => {
+        if ((item.product_id || item.id) === itemId) {
+          return {
+            ...item,
+            price: item.originalPrice,
+            discountPercentage: 0,
+            discountAmount: 0,
+            hasDiscount: false,
+            priceChangeReason: null,
+            priceChangeJustification: '',
+            priceChangeAuthorizedBy: null,
+            // NUEVOS campos para API - limpiar todos
+            discount_amount: null,
+            discount_percent: null,
+            discount_reason: null,
+            sale_price: null,
+            price_change_reason: null
+          };
+        }
+        return item;
+      })
+    );
   }, []);
 
   // Validaciones
@@ -90,48 +306,128 @@ export const useSalesLogic = () => {
     hasValidQuantities: saleItems.every(item => item.quantity > 0),
   }), [saleItems, selectedClient]);
 
-  // Preparar datos para envío
+  // Preparar datos para envío según SALE_WITH_DISCOUNT_API.md
   const prepareSaleData = useCallback(() => {
     if (!validations.canProceed) {
       throw new Error('Faltan datos requeridos para completar la venta');
     }
 
-    return {
-      clientId: selectedClient,
-      items: saleItems.map(item => ({
-        productId: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        subtotal: item.price * item.quantity
-      })),
-      summary: {
-        subtotal: calculations.subtotal,
-        tax: calculations.tax,
-        total: calculations.total,
-        itemCount: calculations.itemCount
-      },
-      metadata: {
-        timestamp: new Date().toISOString(),
-        taxRate: TAX_RATE
-      }
+    const clientId = selectedClient ? selectedClient : null;
+
+    // Ahora que el backend arregló JSONB, enviamos todos los productos directamente
+    const allItems = saleItems;
+
+    const saleData = {
+      client_id: clientId,
+      product_details: allItems.map(item => {
+        const productDetail = {
+          product_id: item.product_id || item.id,
+          quantity: item.quantity
+        };
+
+        // Información adicional para productos de reserva (opcional)
+        if (item.fromReservation) {
+          productDetail.from_reservation = true;
+          productDetail.reservation_id = item.reservation_id;
+        }
+
+        // Solo agregar campos opcionales si tienen valores válidos
+        if (item.tax_rate_id) {
+          productDetail.tax_rate_id = item.tax_rate_id;
+        }
+
+        // MODIFICACIÓN DE PRECIOS (requiere allow_price_modifications = true)
+        if (item.sale_price && item.sale_price !== item.originalPrice) {
+          productDetail.sale_price = item.sale_price;
+        }
+        if (item.price_change_reason) {
+          productDetail.price_change_reason = item.price_change_reason;
+        }
+
+        // PRECIO ESPECIAL PARA PRODUCTOS DE RESERVA
+        if (item.fromReservation) {
+          // Siempre enviar el precio de la reserva como sale_price para evitar conflictos
+          productDetail.sale_price = item.price;
+          productDetail.price_change_reason = `Precio de reserva confirmada #${item.reservation_id} - Tarifa especial aplicada según reserva`;
+
+          console.log('🔍 Adding price justification for reservation product:', {
+            product_id: productDetail.product_id,
+            sale_price: productDetail.sale_price,
+            price_change_reason: productDetail.price_change_reason,
+            reservation_id: item.reservation_id
+          });
+        }
+
+        // DESCUENTOS (NUEVO) - Solo incluir si tienen valores
+        if (item.discount_amount && item.discount_amount > 0) {
+          productDetail.discount_amount = item.discount_amount;
+        }
+        if (item.discount_percent && item.discount_percent > 0) {
+          productDetail.discount_percent = item.discount_percent;
+        }
+        if (item.discount_reason && (item.discount_amount > 0 || item.discount_percent > 0)) {
+          productDetail.discount_reason = item.discount_reason;
+        }
+
+        return productDetail;
+      }),
+      payment_method_id: 1, // Default: Efectivo
+      currency_id: 1, // Default: Guaraníes
+      allow_price_modifications: true // Necesario para cambios de precio y descuentos
     };
-  }, [selectedClient, saleItems, calculations, validations.canProceed]);
+
+    // Solo agregar reserve_id si existe
+    if (selectedReserve?.id) {
+      saleData.reserve_id = selectedReserve.id;
+    }
+
+    console.log('🔍 Sale data prepared:', {
+      hasReserve: !!selectedReserve,
+      reserveId: selectedReserve?.id,
+      totalItems: allItems.length,
+      reservationItems: allItems.filter(item => item.fromReservation).length,
+      itemsWithDiscounts: allItems.filter(item =>
+        item.discount_amount > 0 || item.discount_percent > 0
+      ).length
+    });
+
+    // Log detallado de los productos para debugging de stock
+    console.log('📦 Products being sent to backend:');
+    allItems.forEach((item, index) => {
+      console.log(`   [${index}] Product Details:`, {
+        product_id: item.product_id,
+        product_name: item.name || item.product_name,
+        quantity: item.quantity,
+        price: item.price,
+        stock_quantity: item.stock_quantity,
+        originalPrice: item.originalPrice,
+        fromReservation: item.fromReservation || false,
+        discount_amount: item.discount_amount,
+        discount_percent: item.discount_percent,
+        sale_price: item.sale_price
+      });
+      console.log(`   [${index}] Full Item Object:`, item);
+    });
+
+    return saleData;
+  }, [selectedClient, selectedReserve, saleItems, validations.canProceed]);
 
   // Reset completo del estado
   const resetSale = useCallback(() => {
     setSaleItems([]);
     setSelectedClient('');
+    setSelectedReserve(null); // NUEVO: resetear reserva
   }, []);
 
   return {
     // Estado
     saleItems,
     selectedClient,
-    
+    selectedReserve, // NUEVO: estado de reserva
+
     // Cálculos
     ...calculations,
-    
+
     // Acciones
     addSaleItem,
     updateQuantity,
@@ -139,12 +435,19 @@ export const useSalesLogic = () => {
     removeItem,
     clearCart,
     setSelectedClient,
+    setSelectedReserve, // NUEVO: función para seleccionar reserva
     resetSale,
-    
+
+    // Funciones de descuento
+    applyPercentageDiscount,
+    applyFixedDiscount,
+    setDirectPrice,
+    removeDiscount,
+
     // Utilidades
     validations,
     prepareSaleData,
-    
+
     // Constantes
     TAX_RATE
   };

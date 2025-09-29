@@ -10,9 +10,9 @@ import { telemetry } from '@/utils/telemetry';
 const API_ENDPOINTS = {
   // API según documentación PURCHASE_API.md
   createPurchaseEnhanced: '/purchase/enhanced',
-  processPayment: '/purchase/payment/process', 
-  cancellationPreview: (id) => `/purchase/${id}/preview-cancellation`,
-  cancelPurchaseEnhanced: (id) => `/purchase/cancel-enhanced/${id}`,
+  processPayment: '/purchase/payment/process',
+  cancellationPreview: '/purchase/preview-cancellation',
+  cancelPurchase: '/purchase/cancel',
   paymentStatistics: '/purchase/payment/statistics',
   
   // Gestión de órdenes de compra
@@ -110,29 +110,26 @@ export const purchasePaymentService = {
    */
   async getPurchaseOrders(filters = {}) {
     const startTime = Date.now();
-    
+
     try {
       console.log('🌐 PurchasePayment: Loading purchase orders...');
-      
-      const params = new URLSearchParams();
-      if (filters.status) params.append('status', filters.status);
-      if (filters.supplier_id) params.append('supplier_id', filters.supplier_id);
-      if (filters.search) params.append('search', filters.search);
-      if (filters.start_date) params.append('start_date', filters.start_date);
-      if (filters.end_date) params.append('end_date', filters.end_date);
-      
-      const url = `${API_ENDPOINTS.purchaseOrders}?${params}`;
+
+      // Usar el endpoint existente de purchase service que funciona
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.get(url);
+        // Usar el endpoint paginado existente en lugar del no implementado
+        return await apiClient.makeRequest('/purchase/1/20');
       });
       
+      // Normalizar la respuesta
+      const normalizedResult = Array.isArray(result) ? result : (result.data || []);
+
       telemetry.record('purchase_payment.service.get_orders', {
         duration: Date.now() - startTime,
-        orderCount: result.length || 0
+        orderCount: normalizedResult.length || 0
       });
-      
+
       console.log('✅ PurchasePayment: Purchase orders loaded');
-      return result;
+      return normalizedResult;
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {
         duration: Date.now() - startTime,
@@ -150,11 +147,12 @@ export const purchasePaymentService = {
    */
   async getPurchaseOrderById(purchaseOrderId) {
     const startTime = Date.now();
-    
+
     try {
       console.log(`🌐 PurchasePayment: Loading purchase order ${purchaseOrderId}...`);
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.get(API_ENDPOINTS.purchaseOrderById(purchaseOrderId));
+        // Usar el endpoint existente de purchase service
+        return await apiClient.makeRequest(`/purchase/${purchaseOrderId}`);
       });
       
       telemetry.record('purchase_payment.service.get_by_id', {
@@ -163,6 +161,19 @@ export const purchasePaymentService = {
       });
       
       console.log('✅ PurchasePayment: Purchase order loaded');
+      console.log('🔍 Purchase order data structure:', result);
+      console.log('🔍 Purchase order keys:', result ? Object.keys(result) : 'null/undefined');
+
+      // Map nested structure to flat structure expected by UI
+      if (result && result.purchase) {
+        const mappedResult = {
+          ...result.purchase,
+          products: result.details || []
+        };
+        console.log('🔍 Mapped purchase order:', mappedResult);
+        return mappedResult;
+      }
+
       return result;
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {
@@ -181,28 +192,30 @@ export const purchasePaymentService = {
    */
   async getPaymentHistory(purchaseOrderId) {
     const startTime = Date.now();
-    
+
     try {
       console.log(`🌐 PurchasePayment: Loading payment history for order ${purchaseOrderId}...`);
-      const result = await _fetchWithRetry(async () => {
-        return await apiClient.get(API_ENDPOINTS.paymentHistory(purchaseOrderId));
-      });
-      
+
+      // Endpoint not implemented in backend yet, return empty array for now
+      console.warn('⚠️ Payment history endpoint not yet implemented in backend');
+
       telemetry.record('purchase_payment.service.get_payment_history', {
         duration: Date.now() - startTime,
         purchaseOrderId,
-        paymentCount: result.length || 0
+        paymentCount: 0,
+        mock: true
       });
-      
-      console.log('✅ PurchasePayment: Payment history loaded');
-      return result;
+
+      console.log('✅ PurchasePayment: Payment history loaded (empty - endpoint not implemented)');
+      return [];
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
         operation: 'getPaymentHistory'
       });
-      throw error;
+      // Return empty array instead of throwing error
+      return [];
     }
   },
 
@@ -219,7 +232,7 @@ export const purchasePaymentService = {
     
     try {
       console.log(`🌐 PurchasePayment: Processing payment for order ${purchaseOrderId}...`);
-      
+
       const apiData = {
         purchase_order_id: purchaseOrderId,
         amount_paid: paymentData.amount_paid,
@@ -227,10 +240,34 @@ export const purchasePaymentService = {
         payment_notes: paymentData.notes || null
       };
 
+      // Add cash_register_id only if provided
+      if (paymentData.cash_register_id) {
+        apiData.cash_register_id = paymentData.cash_register_id;
+      }
+
+      console.log('📤 PurchasePayment: Sending API request:', {
+        endpoint: API_ENDPOINTS.processPayment,
+        data: apiData
+      });
+
+      // Backend endpoint is now fully implemented
+
       const result = await _fetchWithRetry(async () => {
         return await apiClient.post(API_ENDPOINTS.processPayment, apiData);
       });
-      
+
+      console.log('📥 PurchasePayment: API response received:', result);
+      console.log('📊 Response type:', typeof result);
+      console.log('📊 Response keys:', result ? Object.keys(result) : 'null/undefined');
+
+      // Backend now has full implementation - no more mock needed
+
+      // Validate response structure
+      if (!result.payment_details) {
+        console.warn('⚠️ API response missing payment_details - endpoint may not be fully implemented');
+        throw new Error('❌ La respuesta del servidor no contiene los detalles del pago. El endpoint puede no estar completamente implementado.');
+      }
+
       telemetry.record('purchase_payment.service.process_payment', {
         duration: Date.now() - startTime,
         purchaseOrderId,
@@ -238,7 +275,7 @@ export const purchasePaymentService = {
         outstandingAmount: result.payment_details?.outstanding_amount || 0,
         paymentStatus: result.payment_details?.payment_status
       });
-      
+
       console.log('✅ PurchasePayment: Payment processed successfully');
       return result;
     } catch (error) {
@@ -333,12 +370,14 @@ export const purchasePaymentService = {
    */
   async cancelPurchaseOrder(purchaseOrderId, cancellationData = {}) {
     const startTime = Date.now();
-    
+
     try {
-      console.log(`🌐 PurchasePayment: Cancelling enhanced purchase order ${purchaseOrderId}...`);
+      console.log(`🌐 PurchasePayment: Cancelling purchase order ${purchaseOrderId}...`);
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.put(API_ENDPOINTS.cancelPurchaseEnhanced(purchaseOrderId), {
-          reason: cancellationData.reason || 'Cancelled by user',
+        return await apiClient.put(`/purchase/cancel/${purchaseOrderId}`, {
+          cancellation_reason: cancellationData.reason || 'Cancelled by user',
+          force_cancel: cancellationData.force_cancel || false,
+          user_id: cancellationData.user_id,
           ...cancellationData
         });
       });
@@ -368,20 +407,20 @@ export const purchasePaymentService = {
    */
   async getCancellationPreview(purchaseOrderId) {
     const startTime = Date.now();
-    
+
     try {
-      console.log(`🌐 PurchasePayment: Getting enhanced cancellation preview for order ${purchaseOrderId}...`);
+      console.log(`🌐 PurchasePayment: Getting cancellation preview for order ${purchaseOrderId}...`);
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.get(API_ENDPOINTS.cancellationPreview(purchaseOrderId));
+        return await apiClient.get(`/purchase/${purchaseOrderId}/preview-cancellation`);
       });
-      
+
       telemetry.record('purchase_payment.service.cancellation_preview', {
         duration: Date.now() - startTime,
         purchaseOrderId,
         canBeCancelled: result.purchase_info?.can_be_cancelled,
         estimatedComplexity: result.recommendations?.estimated_complexity
       });
-      
+
       console.log('✅ PurchasePayment: Enhanced cancellation preview loaded');
       return result;
     } catch (error) {

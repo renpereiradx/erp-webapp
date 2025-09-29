@@ -15,8 +15,13 @@ import { useI18n } from '@/lib/i18n';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { usePurchasePaymentStore } from '@/store/usePurchasePaymentStore';
 import { purchasePaymentService } from '@/services/purchasePaymentService';
+import purchaseService from '@/services/purchaseService';
 import useSupplierStore from '@/store/useSupplierStore';
 import useProductStore from '@/store/useProductStore';
+
+// Payment Components
+import CurrencySelector from '@/components/payment/CurrencySelector';
+import PaymentMethodSelector from '@/components/payment/PaymentMethodSelector';
 import { 
   ShoppingCart, Plus, CreditCard, Eye, X, Search, Package, Truck, DollarSign, 
   Calendar, CheckCircle, AlertTriangle, BarChart, TrendingUp, TrendingDown,
@@ -48,10 +53,10 @@ const PurchasePayment = () => {
     filterBySupplier
   } = usePurchasePaymentStore();
 
-  const { suppliers, getSuppliers } = useSupplierStore();
-  const { products, getProducts } = useProductStore();
+  const { suppliers, fetchSuppliers } = useSupplierStore();
+  const { products, fetchProducts } = useProductStore();
 
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('orders');
   const [createOrderDialog, setCreateOrderDialog] = useState(false);
   const [paymentDialog, setPaymentDialog] = useState(false);
   const [orderDetailDialog, setOrderDetailDialog] = useState(false);
@@ -63,7 +68,8 @@ const PurchasePayment = () => {
     supplier_id: '',
     products: [],
     notes: '',
-    expected_delivery_date: ''
+    expected_delivery_date: '',
+    currency_id: null
   });
 
   const [newProduct, setNewProduct] = useState({
@@ -75,11 +81,27 @@ const PurchasePayment = () => {
 
   const [paymentForm, setPaymentForm] = useState({
     amount_paid: '',
-    payment_method: 'BANK_TRANSFER',
     check_number: '',
     reference_number: '',
     notes: ''
   });
+
+  // Search states similar to Purchases page
+  const [searchMode, setSearchMode] = useState('recent'); // 'recent', 'supplier', 'dateRange'
+  const [supplierSearchTerm, setSupplierSearchTerm] = useState('');
+  const [showInactiveSuppliers, setShowInactiveSuppliers] = useState(false);
+  const [dateRange, setDateRange] = useState(() => {
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    return {
+      startDate: firstDayOfMonth.toISOString().split('T')[0],
+      endDate: today.toISOString().split('T')[0],
+      page: 1,
+      pageSize: 10
+    };
+  });
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   const [filters, setFilters] = useState({
     status: '',
@@ -92,18 +114,15 @@ const PurchasePayment = () => {
   const [paymentStats, setPaymentStats] = useState(null);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales - solo suppliers y productos, no órdenes automáticamente
   useEffect(() => {
-    handleLoadOrders();
     handleLoadSuppliers();
     handleLoadProducts();
   }, []);
 
-  // Cargar estadísticas de pagos
+  // Cargar estadísticas de pagos cuando sea necesario
   useEffect(() => {
-    if (activeTab === 'dashboard') {
-      loadPaymentStatistics();
-    }
+    // Removed dashboard dependency - statistics can be loaded on demand
   }, [activeTab]);
 
   const loadPaymentStatistics = async () => {
@@ -128,7 +147,7 @@ const PurchasePayment = () => {
 
   const handleLoadSuppliers = async () => {
     try {
-      await getSuppliers();
+      await fetchSuppliers();
     } catch (error) {
       console.error('Error loading suppliers:', error);
     }
@@ -136,7 +155,7 @@ const PurchasePayment = () => {
 
   const handleLoadProducts = async () => {
     try {
-      await getProducts();
+      await fetchProducts();
     } catch (error) {
       console.error('Error loading products:', error);
     }
@@ -195,8 +214,16 @@ const PurchasePayment = () => {
         products: createOrderForm.products,
         total_amount: calculateOrderTotal(),
         notes: createOrderForm.notes,
-        expected_delivery_date: createOrderForm.expected_delivery_date
+        expected_delivery_date: createOrderForm.expected_delivery_date,
+        currency_id: createOrderForm.currency_id
       };
+
+      // Debug: verificar valores antes de enviar
+      console.log('🔍 Create Order Debug - Form Data:', {
+        currency_id: createOrderForm.currency_id,
+        type: typeof createOrderForm.currency_id
+      });
+      console.log('🔍 Create Order Debug - Final Payload:', orderData);
 
       await createPurchaseOrder(orderData);
       setCreateOrderDialog(false);
@@ -204,7 +231,8 @@ const PurchasePayment = () => {
         supplier_id: '',
         products: [],
         notes: '',
-        expected_delivery_date: ''
+        expected_delivery_date: '',
+        currency_id: null
       });
     } catch (error) {
       console.error('Error creating purchase order:', error);
@@ -216,9 +244,16 @@ const PurchasePayment = () => {
     if (!selectedOrderId) return;
 
     try {
+      // Debug: verificar valores antes de enviar
+      console.log('🔍 Process Payment Debug - Form Data:', {
+        amount_paid: paymentForm.amount_paid,
+        check_number: paymentForm.check_number,
+        reference_number: paymentForm.reference_number,
+        notes: paymentForm.notes
+      });
+
       await processPayment(selectedOrderId, {
         amount_paid: parseFloat(paymentForm.amount_paid),
-        payment_method: paymentForm.payment_method,
         check_number: paymentForm.check_number || undefined,
         reference_number: paymentForm.reference_number || undefined,
         notes: paymentForm.notes
@@ -227,7 +262,6 @@ const PurchasePayment = () => {
       setPaymentDialog(false);
       setPaymentForm({
         amount_paid: '',
-        payment_method: '',
         check_number: '',
         reference_number: '',
         notes: ''
@@ -268,9 +302,9 @@ const PurchasePayment = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-MX', {
+    return new Intl.NumberFormat('es-PY', {
       style: 'currency',
-      currency: 'MXN'
+      currency: 'PYG'
     }).format(amount);
   };
 
@@ -290,6 +324,100 @@ const PurchasePayment = () => {
   };
 
   const stats = calculatePaymentStats();
+
+  // Search function similar to Purchases page
+  const searchPurchaseOrders = async () => {
+    setSearchLoading(true);
+    try {
+      let response;
+
+      switch (searchMode) {
+        case 'supplier':
+          if (!supplierSearchTerm.trim()) {
+            alert('Por favor ingresa el nombre del proveedor o ID de proveedor');
+            setSearchLoading(false);
+            return;
+          }
+
+          const searchTerm = supplierSearchTerm.trim();
+          const filterOptions = { showInactiveSuppliers };
+
+          if (/^\d+$/.test(searchTerm)) {
+            // Es un ID numérico, buscar por ID de proveedor
+            console.log('🔍 Buscando órdenes por ID de proveedor:', searchTerm);
+            response = await purchaseService.getPurchasesBySupplier(searchTerm, filterOptions);
+          } else {
+            // Es texto, buscar por nombre de proveedor
+            console.log('🔍 Buscando órdenes por nombre de proveedor:', searchTerm);
+            response = await purchaseService.getPurchasesBySupplierName(searchTerm, filterOptions);
+          }
+          break;
+
+        case 'dateRange':
+          if (!dateRange.startDate || !dateRange.endDate) {
+            alert('Por favor selecciona un rango de fechas válido');
+            setSearchLoading(false);
+            return;
+          }
+          response = await purchaseService.getPurchasesByDateRange(
+            dateRange.startDate,
+            dateRange.endDate,
+            dateRange.page,
+            dateRange.pageSize,
+            { showInactiveSuppliers }
+          );
+          break;
+
+        case 'recent':
+        default:
+          response = await purchaseService.getRecentPurchases(30, 1, 20, { showInactiveSuppliers });
+          break;
+      }
+
+      if (response.success) {
+        setSearchResults(response.data || []);
+        console.log('📦 Resultados de búsqueda:', response.data);
+      } else {
+        setSearchResults([]);
+        console.warn('⚠️ Error en búsqueda:', response.error);
+      }
+    } catch (error) {
+      console.error('Error buscando órdenes:', error);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Clear search results when leaving orders tab
+  useEffect(() => {
+    if (activeTab !== 'orders') {
+      setSearchResults([]);
+    }
+  }, [activeTab]);
+
+  // Re-execute search when supplier filter changes
+  useEffect(() => {
+    if (searchResults.length > 0 && (searchMode === 'supplier' || searchMode === 'dateRange' || searchMode === 'recent')) {
+      searchPurchaseOrders();
+    }
+  }, [showInactiveSuppliers]);
+
+  // Reset payment form when dialog closes or order changes
+  useEffect(() => {
+    if (!paymentDialog) {
+      setPaymentForm({
+        amount_paid: '',
+        check_number: '',
+        reference_number: '',
+        notes: ''
+      });
+    }
+  }, [paymentDialog]);
+
+  useEffect(() => {
+    setPaymentForm(prev => ({ ...prev, amount_paid: '' }));
+  }, [selectedOrderId]);
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -357,11 +485,11 @@ const PurchasePayment = () => {
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateOrder} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="supplier">Proveedor</Label>
-                    <Select 
-                      value={createOrderForm.supplier_id} 
+                    <Select
+                      value={createOrderForm.supplier_id}
                       onValueChange={(value) => setCreateOrderForm(prev => ({ ...prev, supplier_id: value }))}
                       required
                     >
@@ -376,17 +504,36 @@ const PurchasePayment = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button 
-                      type="button" 
-                      variant="link" 
-                      size="sm" 
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
                       onClick={handleLoadSuppliers}
                       className="p-0 h-auto"
                     >
                       Cargar proveedores
                     </Button>
                   </div>
-                  
+
+                  <div>
+                    <Label htmlFor="currency">Moneda</Label>
+                    <div className="mt-1">
+                      <CurrencySelector
+                        value={createOrderForm.currency_id}
+                        onChange={(currency) => {
+                          console.log('🔍 Currency Selected for Order:', currency);
+                          setCreateOrderForm(prev => ({
+                            ...prev,
+                            currency_id: currency?.id || null
+                          }));
+                        }}
+                        placeholder="Seleccionar moneda..."
+                        showSearch={true}
+                        size="sm"
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <Label htmlFor="expected_delivery_date">Fecha de Entrega Esperada</Label>
                     <Input
@@ -412,11 +559,14 @@ const PurchasePayment = () => {
                           <SelectValue placeholder="Seleccionar producto" />
                         </SelectTrigger>
                         <SelectContent>
-                          {products.map(product => (
-                            <SelectItem key={product.id} value={product.id.toString()}>
-                              {product.name}
-                            </SelectItem>
-                          ))}
+                          {products.filter(product => product.id || product.product_id).map(product => {
+                            const productId = product.id || product.product_id;
+                            return (
+                              <SelectItem key={productId} value={productId.toString()}>
+                                {product.name}
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                       <Button 
@@ -529,11 +679,7 @@ const PurchasePayment = () => {
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="dashboard" className="flex items-center gap-2">
-            <BarChart className="w-4 h-4" />
-            Dashboard
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="orders" className="flex items-center gap-2">
             <Package className="w-4 h-4" />
             Órdenes
@@ -548,323 +694,354 @@ const PurchasePayment = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Dashboard Tab */}
-        <TabsContent value="dashboard" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* Total Orders */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Órdenes</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalOrders}</div>
-                <p className="text-xs text-muted-foreground">
-                  Órdenes activas en el sistema
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Total Amount */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(stats.totalAmount)}</div>
-                <p className="text-xs text-muted-foreground">
-                  Suma de todas las órdenes
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Paid Amount */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Pagado</CardTitle>
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.paidAmount)}</div>
-                <p className="text-xs text-muted-foreground">
-                  {stats.totalAmount > 0 ? ((stats.paidAmount / stats.totalAmount) * 100).toFixed(1) : 0}% del total
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Pending Amount */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Monto Pendiente</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-orange-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-orange-600">{formatCurrency(stats.pendingAmount)}</div>
-                <p className="text-xs text-muted-foreground">
-                  Por pagar a proveedores
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Acciones Rápidas</CardTitle>
-              <CardDescription>Operaciones frecuentes del sistema de pagos</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button 
-                  onClick={handleLoadOrders} 
-                  disabled={isPurchaseOrdersLoading}
-                  className="h-20 flex flex-col items-center justify-center"
-                >
-                  <RefreshCw className={`w-6 h-6 mb-2 ${isPurchaseOrdersLoading ? 'animate-spin' : ''}`} />
-                  {isPurchaseOrdersLoading ? 'Cargando...' : 'Actualizar Órdenes'}
-                </Button>
-                
-                <Button 
-                  variant="outline"
-                  onClick={() => setCreateOrderDialog(true)}
-                  className="h-20 flex flex-col items-center justify-center"
-                >
-                  <Plus className="w-6 h-6 mb-2" />
-                  Nueva Orden
-                </Button>
-
-                <Button 
-                  variant="outline"
-                  onClick={() => setPaymentStatsDialog(true)}
-                  className="h-20 flex flex-col items-center justify-center"
-                >
-                  <BarChart className="w-6 h-6 mb-2" />
-                  Ver Estadísticas
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Orders */}
-          {purchaseOrders.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Órdenes Recientes</CardTitle>
-                <CardDescription>Últimas órdenes de compra creadas</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {purchaseOrders.slice(0, 5).map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium">Orden #{order.order_number}</span>
-                          {getStatusBadge(order.status)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {order.supplier_name} • {formatCurrency(order.total_amount)}
-                        </p>
-                        <div className="mt-2">
-                          <div className="flex items-center justify-between text-xs mb-1">
-                            <span>Progreso de pago</span>
-                            <span>{getPaymentProgress(order.amount_paid, order.total_amount).toFixed(1)}%</span>
-                          </div>
-                          <Progress 
-                            value={getPaymentProgress(order.amount_paid, order.total_amount)} 
-                            className="h-2"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewOrderDetail(order.id)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        {order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedOrderId(order.id);
-                              setPaymentDialog(true);
-                            }}
-                          >
-                            <CreditCard className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
 
         {/* Orders Tab */}
         <TabsContent value="orders" className="space-y-6">
-          {/* Filters */}
+          {/* Search Options */}
           <Card>
             <CardHeader>
-              <CardTitle>Filtros</CardTitle>
+              <CardTitle>Buscar Órdenes de Compra</CardTitle>
+              <CardDescription>Selecciona el método de búsqueda y filtros para encontrar órdenes</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-4">
-                <div className="flex gap-2">
-                  <Button
-                    variant={filters.status === '' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleFilterByStatus('')}
-                  >
-                    Todas
-                  </Button>
-                  <Button
-                    variant={filters.status === 'PENDING' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleFilterByStatus('PENDING')}
-                  >
-                    Pendientes
-                  </Button>
-                  <Button
-                    variant={filters.status === 'PARTIAL' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleFilterByStatus('PARTIAL')}
-                  >
-                    Parciales
-                  </Button>
-                  <Button
-                    variant={filters.status === 'COMPLETED' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleFilterByStatus('COMPLETED')}
-                  >
-                    Completadas
-                  </Button>
+            <CardContent className="space-y-4">
+              {/* Search Mode Selection */}
+              <div className="space-y-4">
+                <div className="text-sm font-medium">Método de búsqueda:</div>
+                <div className="flex gap-4">
+                  <div className="flex gap-2">
+                    <Button
+                      variant={searchMode === 'recent' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setSearchMode('recent');
+                        setSearchResults([]);
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Clock className="w-4 h-4" />
+                      Recientes
+                    </Button>
+                    <Button
+                      variant={searchMode === 'supplier' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setSearchMode('supplier');
+                        setSearchResults([]);
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Users className="w-4 h-4" />
+                      Por Proveedor
+                    </Button>
+                    <Button
+                      variant={searchMode === 'dateRange' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setSearchMode('dateRange');
+                        setSearchResults([]);
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Calendar className="w-4 h-4 mr-1" />
+                      Por Rango de Fechas
+                    </Button>
+                  </div>
                 </div>
-                
-                <Select value={filters.supplier_id || 'all'} onValueChange={handleFilterBySupplier}>
-                  <SelectTrigger className="w-64">
-                    <SelectValue placeholder="Filtrar por proveedor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los proveedores</SelectItem>
-                    {suppliers.map(supplier => (
-                      <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                        {supplier.company_name || supplier.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
 
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Fecha inicio"
-                    type="date"
-                    value={filters.start_date}
-                    onChange={(e) => setFilters(prev => ({ ...prev, start_date: e.target.value }))}
-                    className="w-40"
-                  />
-                  <Input
-                    placeholder="Fecha fin"
-                    type="date"
-                    value={filters.end_date}
-                    onChange={(e) => setFilters(prev => ({ ...prev, end_date: e.target.value }))}
-                    className="w-40"
-                  />
+                {/* Search by Supplier */}
+                {searchMode === 'supplier' && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <label className="text-sm font-medium min-w-fit">Nombre del proveedor o ID:</label>
+                      <Input
+                        placeholder="Ej: TechBody, Suministros Varios 55... o ID: 123"
+                        value={supplierSearchTerm}
+                        onChange={(e) => setSupplierSearchTerm(e.target.value)}
+                        className="flex-1"
+                        onKeyPress={(e) => e.key === 'Enter' && searchPurchaseOrders()}
+                      />
+                      <div className="text-xs text-muted-foreground">
+                        Busca por nombre de proveedor o ID de proveedor
+                      </div>
+                    </div>
+
+                    {/* Supplier Status Filter */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="showInactiveSuppliers"
+                        checked={showInactiveSuppliers}
+                        onChange={(e) => setShowInactiveSuppliers(e.target.checked)}
+                        className="rounded border border-input bg-background"
+                      />
+                      <label htmlFor="showInactiveSuppliers" className="text-sm">
+                        Incluir proveedores inactivos
+                      </label>
+                      <div className="text-xs text-muted-foreground ml-2">
+                        {showInactiveSuppliers ? 'Mostrando todos los proveedores' : 'Solo proveedores activos'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Search by Date Range */}
+                {searchMode === 'dateRange' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Fecha inicio:</label>
+                      <Input
+                        type="date"
+                        value={dateRange.startDate}
+                        onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Fecha fin:</label>
+                      <Input
+                        type="date"
+                        value={dateRange.endDate}
+                        onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Página:</label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={dateRange.page}
+                        onChange={(e) => setDateRange(prev => ({ ...prev, page: parseInt(e.target.value) || 1 }))}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Registros por página:</label>
+                      <select
+                        value={dateRange.pageSize}
+                        onChange={(e) => setDateRange(prev => ({ ...prev, pageSize: parseInt(e.target.value) }))}
+                        className="mt-1 w-full border rounded px-3 py-2"
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                      </select>
+                    </div>
+                    </div>
+
+                    {/* Supplier Status Filter for Date Range */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="showInactiveSuppliersDateRange"
+                        checked={showInactiveSuppliers}
+                        onChange={(e) => setShowInactiveSuppliers(e.target.checked)}
+                        className="rounded border border-input bg-background"
+                      />
+                      <label htmlFor="showInactiveSuppliersDateRange" className="text-sm">
+                        Incluir proveedores inactivos
+                      </label>
+                      <div className="text-xs text-muted-foreground ml-2">
+                        {showInactiveSuppliers ? 'Mostrando todos los proveedores' : 'Solo proveedores activos'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Search Button */}
+                <div className="flex justify-end">
+                  <Button
+                    onClick={searchPurchaseOrders}
+                    disabled={searchLoading}
+                    className="flex items-center gap-2"
+                  >
+                    {searchLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                    ) : (
+                      <Search className="w-4 h-4" />
+                    )}
+                    Buscar Órdenes
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Purchase Orders List */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Órdenes de Compra</CardTitle>
-              <CardDescription>Listado de órdenes de compra y su estado de pago</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {purchaseOrders.length > 0 ? (
-                <div className="space-y-2">
-                  {purchaseOrders.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold">Orden #{order.order_number}</h3>
-                          {getStatusBadge(order.status)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Proveedor: {order.supplier_name} • 
-                          Fecha: {new Date(order.created_at).toLocaleDateString()} •
-                          Total: {formatCurrency(order.total_amount)}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2">
-                          <span className="text-sm">
-                            Pagado: {formatCurrency(order.amount_paid)} / {formatCurrency(order.total_amount)}
-                          </span>
-                          <div className="flex-1 max-w-32">
-                            <Progress 
-                              value={getPaymentProgress(order.amount_paid, order.total_amount)} 
-                              className="h-2"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewOrderDetail(order.id)}
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          Ver Detalles
-                        </Button>
-                        
-                        {order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedOrderId(order.id);
-                                setPaymentDialog(true);
-                              }}
-                            >
-                              <CreditCard className="w-4 h-4 mr-2" />
-                              Pagar
-                            </Button>
-
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewCancellationPreview(order.id)}
-                            >
-                              <AlertTriangle className="w-4 h-4 mr-2" />
-                              Cancelar
-                            </Button>
-                          </>
+          {/* Search Results */}
+          {searchResults.length === 0 && !searchLoading ? (
+            <Card>
+              <CardContent className="py-8">
+                <div className="text-center text-muted-foreground">
+                  <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-medium mb-2">No hay órdenes para mostrar</h3>
+                  <p className="text-sm">
+                    Usa el botón "Buscar Órdenes" arriba para encontrar órdenes de compra existentes.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {/* Results Summary */}
+              {searchResults.length > 0 && (
+                <div className="border-0 bg-transparent">
+                  <div className="px-1 py-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="text-muted-foreground">
+                        <strong>{searchResults.length}</strong> órdenes encontradas
+                        {searchMode === 'supplier' && supplierSearchTerm && (
+                          <span> - "<strong>{supplierSearchTerm}</strong>"</span>
                         )}
+                        {searchMode === 'dateRange' && dateRange.startDate && (
+                          <span> - {dateRange.startDate} a {dateRange.endDate}</span>
+                        )}
+                        {searchMode === 'recent' && (
+                          <span> - últimos 30 días</span>
+                        )}
+                        <span className="text-xs ml-2">
+                          ({showInactiveSuppliers ? 'Todos los proveedores' : 'Solo proveedores activos'})
+                        </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {searchResults.reduce((total, order) => total + (order.details?.length || 0), 0)} productos
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No hay órdenes de compra</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Haga clic en "Actualizar" para ver las órdenes existentes o cree una nueva orden
-                  </p>
-                  <Button onClick={handleLoadOrders} disabled={isPurchaseOrdersLoading}>
-                    {isPurchaseOrdersLoading ? 'Cargando...' : 'Cargar Órdenes'}
-                  </Button>
+                  </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+
+              {/* Orders List */}
+              {searchResults.length > 0 && (
+                <div className="space-y-4">
+                  {searchResults.map((orderData, index) => {
+                    const order = orderData.purchase || orderData;
+                    const details = orderData.details || [];
+
+                    return (
+                      <Card key={order?.id || index} className="p-4">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3">
+                              <h3 className="font-bold">Orden #{order?.id}</h3>
+                              <Badge variant={order?.status === 'COMPLETED' ? 'success' : 'secondary'}>
+                                {order?.status || 'N/A'}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {details.length} productos
+                              </Badge>
+                              {order?.supplier_status === false && (
+                                <Badge variant="destructive" className="text-xs">
+                                  Proveedor Inactivo
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <Users className="w-4 h-4" />
+                                  <span className="font-medium">{order?.supplier_name}</span>
+                                  <span className="text-xs">(ID: {order?.supplier_id})</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="w-4 h-4" />
+                                  {order?.order_date ? new Date(order.order_date).toLocaleDateString('es-ES', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  }) : 'Fecha no disponible'}
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <DollarSign className="w-4 h-4" />
+                                  <span>Total: <strong>{formatCurrency(order?.total_amount || 0)}</strong></span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Users className="w-4 h-4" />
+                                  <span>Creado por: {order?.user_name || 'No disponible'}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewOrderDetail(order?.id)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+
+                            {/* Botón de Pago - solo para órdenes no completadas */}
+                            {order?.status !== 'COMPLETED' && order?.status !== 'CANCELLED' && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => {
+                                  setSelectedOrderId(order?.id);
+                                  setPaymentDialog(true);
+                                }}
+                              >
+                                <CreditCard className="w-4 h-4 mr-2" />
+                                Pagar
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Payment Progress */}
+                        <div className="mt-4 space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span>Progreso de pago</span>
+                            <span className="font-medium">
+                              {formatCurrency(order?.amount_paid || 0)} / {formatCurrency(order?.total_amount || 0)}
+                              {order?.total_amount > 0 && (
+                                <span className="ml-2 text-muted-foreground">
+                                  ({getPaymentProgress(order?.amount_paid || 0, order?.total_amount || 0).toFixed(1)}%)
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                          <Progress
+                            value={getPaymentProgress(order?.amount_paid || 0, order?.total_amount || 0)}
+                            className="h-2"
+                          />
+                        </div>
+
+                        {/* Product Details Preview */}
+                        {details.length > 0 && (
+                          <div className="mt-4">
+                            <div className="text-sm font-medium mb-2">Productos ({details.length}):</div>
+                            <div className="space-y-1">
+                              {details.slice(0, 3).map((item, itemIndex) => (
+                                <div key={itemIndex} className="flex justify-between text-xs text-muted-foreground">
+                                  <span>{item.product_name || `Producto ${itemIndex + 1}`}</span>
+                                  <span>
+                                    {item.quantity} × {formatCurrency(item.unit_price || 0)} = {formatCurrency((item.quantity || 0) * (item.unit_price || 0))}
+                                  </span>
+                                </div>
+                              ))}
+                              {details.length > 3 && (
+                                <div className="text-xs text-muted-foreground">
+                                  ... y {details.length - 3} productos más
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         {/* Payments Tab */}
@@ -956,71 +1133,109 @@ const PurchasePayment = () => {
 
       {/* Payment Dialog */}
       <Dialog open={paymentDialog} onOpenChange={setPaymentDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl" style={{ background: 'var(--background, white)', color: 'var(--foreground, black)' }}>
           <DialogHeader>
-            <DialogTitle>Procesar Pago</DialogTitle>
+            <DialogTitle>Procesar Pago - Orden #{selectedOrderId}</DialogTitle>
             <DialogDescription>
               Registre un pago para la orden de compra seleccionada
             </DialogDescription>
           </DialogHeader>
+
+          {/* Order Information */}
+          {selectedOrderId && (
+            <div className="mb-4 p-4 bg-muted rounded-lg">
+              <h4 className="font-medium mb-2">Información de la Orden</h4>
+              {(() => {
+                const selectedOrder = searchResults.find(orderData => {
+                  const order = orderData.purchase || orderData;
+                  return order?.id === selectedOrderId;
+                });
+
+                if (!selectedOrder) return <p className="text-sm text-muted-foreground">Orden no encontrada</p>;
+
+                const order = selectedOrder.purchase || selectedOrder;
+                const pendingAmount = (order?.total_amount || 0) - (order?.amount_paid || 0);
+
+                return (
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Proveedor:</span>
+                      <div className="font-medium">{order?.supplier_name}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Total:</span>
+                      <div className="font-medium">{formatCurrency(order?.total_amount || 0)}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Ya Pagado:</span>
+                      <div className="font-medium text-green-600">{formatCurrency(order?.amount_paid || 0)}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Pendiente:</span>
+                      <div className="font-medium text-orange-600">{formatCurrency(pendingAmount)}</div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
           <form onSubmit={handleProcessPayment} className="space-y-4">
             <div>
               <Label htmlFor="amount_paid">Monto a Pagar</Label>
-              <Input
-                id="amount_paid"
-                type="number"
-                step="0.01"
-                value={paymentForm.amount_paid}
-                onChange={(e) => setPaymentForm(prev => ({ ...prev, amount_paid: e.target.value }))}
-                placeholder="0.00"
-                required
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="amount_paid"
+                  type="number"
+                  step="0.01"
+                  value={paymentForm.amount_paid}
+                  onChange={(e) => setPaymentForm(prev => ({ ...prev, amount_paid: e.target.value }))}
+                  placeholder="0.00"
+                  className="flex-1"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const selectedOrder = searchResults.find(orderData => {
+                      const order = orderData.purchase || orderData;
+                      return order?.id === selectedOrderId;
+                    });
+
+                    if (selectedOrder) {
+                      const order = selectedOrder.purchase || selectedOrder;
+                      const pendingAmount = (order?.total_amount || 0) - (order?.amount_paid || 0);
+                      setPaymentForm(prev => ({ ...prev, amount_paid: pendingAmount.toString() }));
+                    }
+                  }}
+                >
+                  Pagar Total
+                </Button>
+              </div>
             </div>
             
-            <div>
-              <Label htmlFor="payment_method">Método de Pago</Label>
-              <Select 
-                value={paymentForm.payment_method} 
-                onValueChange={(value) => setPaymentForm(prev => ({ ...prev, payment_method: value }))}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccione método" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CASH">Efectivo</SelectItem>
-                  <SelectItem value="BANK_TRANSFER">Transferencia</SelectItem>
-                  <SelectItem value="CHECK">Cheque</SelectItem>
-                  <SelectItem value="CREDIT">Crédito</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
-            {paymentForm.payment_method === 'CHECK' && (
+            {/* Campos adicionales para métodos específicos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="check_number">Número de Cheque</Label>
+                <Label htmlFor="check_number">Número de Cheque (opcional)</Label>
                 <Input
                   id="check_number"
                   value={paymentForm.check_number}
                   onChange={(e) => setPaymentForm(prev => ({ ...prev, check_number: e.target.value }))}
-                  placeholder="Número de cheque"
-                  required
+                  placeholder="Si aplica"
                 />
               </div>
-            )}
-
-            {paymentForm.payment_method === 'BANK_TRANSFER' && (
               <div>
-                <Label htmlFor="reference_number">Número de Referencia</Label>
+                <Label htmlFor="reference_number">Número de Referencia (opcional)</Label>
                 <Input
                   id="reference_number"
                   value={paymentForm.reference_number}
                   onChange={(e) => setPaymentForm(prev => ({ ...prev, reference_number: e.target.value }))}
-                  placeholder="Número de referencia"
-                  required
+                  placeholder="Si aplica"
                 />
               </div>
-            )}
+            </div>
 
             <div>
               <Label htmlFor="payment_notes">Notas</Label>
@@ -1037,8 +1252,22 @@ const PurchasePayment = () => {
               <Button type="button" variant="outline" onClick={() => setPaymentDialog(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isProcessingPayment}>
-                {isProcessingPayment ? 'Procesando...' : 'Procesar Pago'}
+              <Button
+                type="submit"
+                disabled={isProcessingPayment}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Procesar Pago
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -1140,7 +1369,7 @@ const PurchasePayment = () => {
 
       {/* Order Detail Dialog */}
       <Dialog open={orderDetailDialog} onOpenChange={setOrderDetailDialog}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-none max-h-none w-[95vw] h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalles de la Orden</DialogTitle>
             <DialogDescription>
@@ -1155,25 +1384,25 @@ const PurchasePayment = () => {
                 <div>
                   <h3 className="font-semibold mb-2">Información de la Orden</h3>
                   <div className="space-y-1 text-sm">
-                    <p><strong>Número:</strong> {currentPurchaseOrder.order_number}</p>
-                    <p><strong>Proveedor:</strong> {currentPurchaseOrder.supplier_name}</p>
-                    <p><strong>Fecha:</strong> {new Date(currentPurchaseOrder.created_at).toLocaleDateString()}</p>
-                    <p><strong>Estado:</strong> {getStatusBadge(currentPurchaseOrder.status)}</p>
+                    <p><strong>Número:</strong> {currentPurchaseOrder.order_number || currentPurchaseOrder.id || 'N/A'}</p>
+                    <p><strong>Proveedor:</strong> {currentPurchaseOrder.supplier_name || currentPurchaseOrder.supplier?.name || 'N/A'}</p>
+                    <p><strong>Fecha:</strong> {currentPurchaseOrder.created_at ? new Date(currentPurchaseOrder.created_at).toLocaleDateString() : (currentPurchaseOrder.order_date ? new Date(currentPurchaseOrder.order_date).toLocaleDateString() : 'N/A')}</p>
+                    <p><strong>Estado:</strong> {getStatusBadge(currentPurchaseOrder.status || 'PENDING')}</p>
                   </div>
                 </div>
                 <div>
                   <h3 className="font-semibold mb-2">Información de Pago</h3>
                   <div className="space-y-1 text-sm">
-                    <p><strong>Total:</strong> {formatCurrency(currentPurchaseOrder.total_amount)}</p>
-                    <p><strong>Pagado:</strong> {formatCurrency(currentPurchaseOrder.amount_paid)}</p>
-                    <p><strong>Pendiente:</strong> {formatCurrency(currentPurchaseOrder.remaining_amount || (currentPurchaseOrder.total_amount - currentPurchaseOrder.amount_paid))}</p>
+                    <p><strong>Total:</strong> {formatCurrency(currentPurchaseOrder.total_amount || 0)}</p>
+                    <p><strong>Pagado:</strong> {formatCurrency(currentPurchaseOrder.amount_paid || 0)}</p>
+                    <p><strong>Pendiente:</strong> {formatCurrency(currentPurchaseOrder.remaining_amount || ((currentPurchaseOrder.total_amount || 0) - (currentPurchaseOrder.amount_paid || 0)))}</p>
                     <div className="mt-2">
-                      <Progress 
-                        value={getPaymentProgress(currentPurchaseOrder.amount_paid, currentPurchaseOrder.total_amount)} 
+                      <Progress
+                        value={getPaymentProgress(currentPurchaseOrder.amount_paid || 0, currentPurchaseOrder.total_amount || 0)}
                         className="h-3"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        {getPaymentProgress(currentPurchaseOrder.amount_paid, currentPurchaseOrder.total_amount).toFixed(1)}% completado
+                        {getPaymentProgress(currentPurchaseOrder.amount_paid || 0, currentPurchaseOrder.total_amount || 0).toFixed(1)}% completado
                       </p>
                     </div>
                   </div>
@@ -1184,7 +1413,8 @@ const PurchasePayment = () => {
               {currentPurchaseOrder.products && (
                 <div>
                   <h3 className="font-semibold mb-2">Productos</h3>
-                  <Table>
+                  <div className="overflow-x-auto">
+                    <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Producto</TableHead>
@@ -1196,14 +1426,15 @@ const PurchasePayment = () => {
                     <TableBody>
                       {currentPurchaseOrder.products.map((product, index) => (
                         <TableRow key={index}>
-                          <TableCell>{product.product_name}</TableCell>
-                          <TableCell>{product.quantity}</TableCell>
-                          <TableCell>{formatCurrency(product.unit_cost)}</TableCell>
-                          <TableCell>{formatCurrency(product.total_cost)}</TableCell>
+                          <TableCell>{product.product_name || 'N/A'}</TableCell>
+                          <TableCell>{product.quantity || 0}</TableCell>
+                          <TableCell>{formatCurrency(product.unit_cost || product.unit_price || 0)}</TableCell>
+                          <TableCell>{formatCurrency(product.total_cost || ((product.quantity || 0) * (product.unit_cost || product.unit_price || 0)))}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
-                  </Table>
+                    </Table>
+                  </div>
                 </div>
               )}
 

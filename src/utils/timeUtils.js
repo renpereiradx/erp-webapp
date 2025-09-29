@@ -19,28 +19,34 @@ export const convertUTCToParaguayTime = (utcTime) => {
 };
 
 /**
- * Formatea una hora UTC para mostrar en hora local de Paraguay (UTC-3)
- * Implementación directa para asegurar conversión correcta
- * @param {string|Date} utcTime - Tiempo en UTC (ej: "2025-09-09T14:00:00Z")
+ * Formatea una hora para mostrar en hora local de Paraguay (UTC-3)
+ * Usa la zona horaria nativa del navegador para conversión correcta
+ * @param {string|Date} timeString - Tiempo (puede ser UTC o local)
  * @param {Object} options - Opciones de formato
- * @returns {string} - Hora formateada en hora local (ej: "11:00" para UTC 14:00)
+ * @returns {string} - Hora formateada en hora local (ej: "16:00")
  */
-export const formatTimeInParaguayTimezone = (utcTime, options = {}) => {
-  const date = new Date(utcTime);
+export const formatTimeInParaguayTimezone = (timeString, options = {}) => {
+  if (!timeString) return '';
   
-  // Paraguay está en UTC-3, restar 3 horas del tiempo UTC
-  const paraguayTime = new Date(date.getTime() - (3 * 60 * 60 * 1000));
+  const date = new Date(timeString);
+  
+  // Verificar que la fecha es válida
+  if (isNaN(date.getTime())) {
+    console.warn('Invalid date passed to formatTimeInParaguayTimezone:', timeString);
+    return '';
+  }
   
   const defaultOptions = {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false, // formato 24 horas
+    timeZone: PARAGUAY_TIMEZONE
   };
 
   const formatOptions = { ...defaultOptions, ...options };
   
-  // Usar UTC para evitar problemas de zona horaria del navegador
-  return paraguayTime.toISOString().substr(11, 5); // Extrae "HH:MM" de "YYYY-MM-DDTHH:MM:SS.SSSZ"
+  // Usar toLocaleTimeString para manejar la zona horaria correctamente
+  return date.toLocaleTimeString('es-PY', formatOptions);
 };
 
 /**
@@ -154,5 +160,116 @@ export const debugTimeConversion = (utcTime) => {
     formatted_time: formatTimeInParaguayTimezone(utcTime),
     expected_conversion: `UTC ${originalDate.getUTCHours()}:00 -> Paraguay ${originalDate.getUTCHours() - 3}:00`,
     browser_timezone_offset: originalDate.getTimezoneOffset() / 60
+  };
+};
+
+/**
+ * Formatea el campo reserve_date para mostrar información de auditoría
+ * Según la documentación API, reserve_date es auto-generado con CURRENT_TIMESTAMP
+ * @param {string} reserveDate - Fecha de creación ISO 8601 (ej: "2025-09-13T15:43:21.528508Z")
+ * @returns {Object} - Objeto con formatos útiles para UI
+ */
+export const formatReserveDate = (reserveDate) => {
+  if (!reserveDate) return null;
+
+  const date = new Date(reserveDate);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+  return {
+    // Formato de fecha completa
+    fullDate: date.toLocaleDateString('es-PY', {
+      timeZone: PARAGUAY_TIMEZONE,
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }),
+
+    // Fecha corta
+    shortDate: date.toLocaleDateString('es-PY', {
+      timeZone: PARAGUAY_TIMEZONE,
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit'
+    }),
+
+    // Hora completa
+    fullTime: date.toLocaleTimeString('es-PY', {
+      timeZone: PARAGUAY_TIMEZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }),
+
+    // Hora sin segundos
+    shortTime: date.toLocaleTimeString('es-PY', {
+      timeZone: PARAGUAY_TIMEZONE,
+      hour: '2-digit',
+      minute: '2-digit'
+    }),
+
+    // Formato para mostrar "hace X tiempo"
+    relativeTime: getRelativeTimeText(diffDays, diffHours, diffMinutes),
+
+    // Datos numéricos útiles
+    daysAgo: diffDays,
+    hoursAgo: diffHours,
+    minutesAgo: diffMinutes,
+
+    // Fecha raw para comparaciones
+    dateObject: date
+  };
+};
+
+/**
+ * Genera texto legible para mostrar "hace X tiempo"
+ * @param {number} days - Días transcurridos
+ * @param {number} hours - Horas transcurridas
+ * @param {number} minutes - Minutos transcurridos
+ * @returns {string} - Texto formateado
+ */
+const getRelativeTimeText = (days, hours, minutes) => {
+  if (days > 0) {
+    return days === 1 ? 'hace 1 día' : `hace ${days} días`;
+  } else if (hours > 0) {
+    return hours === 1 ? 'hace 1 hora' : `hace ${hours} horas`;
+  } else if (minutes > 0) {
+    return minutes === 1 ? 'hace 1 minuto' : `hace ${minutes} minutos`;
+  } else {
+    return 'recién creada';
+  }
+};
+
+/**
+ * Convierte datos de reserva para incluir información de auditoría formateada
+ * Implementa el patrón recomendado en RESERVES_API.md líneas 586-601
+ * @param {Object} reserve - Datos de reserva con reserve_date
+ * @returns {Object} - Reserva con campos de auditoría agregados
+ */
+export const formatReserveForDisplay = (reserve) => {
+  if (!reserve || !reserve.reserve_date) return reserve;
+
+  const formattedDate = formatReserveDate(reserve.reserve_date);
+
+  return {
+    ...reserve,
+    // Mapear reserve_date a created_at como recomienda la documentación
+    created_at: reserve.reserve_date,
+
+    // Formatos listos para mostrar en UI
+    created_date_display: formattedDate.shortDate,
+    created_time_display: formattedDate.shortTime,
+    created_full_display: `${formattedDate.shortDate} ${formattedDate.shortTime}`,
+    created_relative_display: formattedDate.relativeTime,
+
+    // Para ordenamiento y filtros
+    days_since_creation: formattedDate.daysAgo,
+    hours_since_creation: formattedDate.hoursAgo,
+
+    // Datos completos de formato
+    _reserveDateFormat: formattedDate
   };
 };

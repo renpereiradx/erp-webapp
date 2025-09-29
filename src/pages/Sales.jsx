@@ -3,8 +3,8 @@
  * Siguiendo guía MVP: funcionalidad básica navegable
  */
 
-import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Save, Check, AlertCircle, CreditCard, DollarSign, Calculator } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { ShoppingCart, Save, Check, AlertCircle, CreditCard, DollarSign, Calculator, User, Plus, Minus, Trash2, Package, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/label';
@@ -23,13 +23,18 @@ import { useSalesLogic } from '@/hooks/useSalesLogic';
 // Componentes especializados
 import ClientSelector from '@/components/ClientSelector';
 import SaleItemsManager from '@/components/SaleItemsManager';
+import DiscountModal from '@/components/DiscountModal';
 
 // Constantes centralizadas
 import { SYSTEM_MESSAGES } from '@/constants/mockData';
 
 // Store y servicios
 import useSaleStore from '@/store/useSaleStore';
-import { saleService } from '@/services/saleService';
+import useProductStore from '@/store/useProductStore';
+import useClientStore from '@/store/useClientStore';
+import useReservationStore from '@/store/useReservationStore'; // NUEVO: store de reservas
+import saleService from '@/services/saleService';
+import { validateDiscount, validateReserve } from '@/utils/discountValidation'; // NUEVO: validaciones
 
 // Métodos de pago disponibles
 const PAYMENT_METHODS = [
@@ -48,6 +53,17 @@ const Sales = () => {
   const [notification, setNotification] = useState(null);
   const [showPaymentSection, setShowPaymentSection] = useState(false);
   const [amountPaidInput, setAmountPaidInput] = useState('');
+  const [selectedCurrency, setSelectedCurrency] = useState('PYG');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [selectedItemForDiscount, setSelectedItemForDiscount] = useState(null);
+  // NUEVO: estados para reservas
+  const [showReservationModal, setShowReservationModal] = useState(false);
+  const [reservationSearchQuery, setReservationSearchQuery] = useState('');
 
   // Store de ventas con funcionalidad de pagos
   const {
@@ -57,30 +73,215 @@ const Sales = () => {
     setCurrentSaleClient,
     setPaymentMethod,
     calculateChange,
-    createSale,
     canProcessSale,
     getCurrentSaleTotal,
     getChangeAmount,
     clearCurrentSale
   } = useSaleStore();
 
+  // Store de productos
+  const {
+    products,
+    loading: productsLoading,
+    error: productsError,
+    searchProducts: searchProductsStore,
+    clearProducts
+  } = useProductStore();
+
+  // Store de clientes
+  const { clients, fetchClients, searchClients } = useClientStore();
+
+  // Store de reservas (NUEVO)
+  const {
+    reservations,
+    fetchReservations,
+    fetchReservationsByClient,
+    loading: reservationsLoading,
+    error: reservationsError
+  } = useReservationStore();
+
+  // Filtrar productos activos y disponibles para venta
+  const availableProducts = useMemo(() => {
+    const filtered = products.filter(product => {
+      // Usar los campos correctos: product_id y product_name
+      const hasValidData = product.product_name && product.product_id;
+      const isActive = product.active !== false && product.state !== false;
+      const stockValue = product.stock_quantity || product.stock || product.quantity || 0;
+      const hasStock = stockValue > 0 ||
+                       (!product.hasOwnProperty('stock_quantity') &&
+                        !product.hasOwnProperty('stock') &&
+                        !product.hasOwnProperty('quantity')); // Si no tiene info de stock, permitir
+
+      return hasValidData && isActive && hasStock;
+    });
+
+    return filtered;
+  }, [products]);
+
+  // Filtrar productos basado en la búsqueda
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return availableProducts;
+    }
+
+    // Si hay búsqueda, usar los productos del store que ya fueron filtrados por la API
+    return availableProducts;
+  }, [availableProducts, searchQuery]);
+
+  // Filtrar clientes basado en la búsqueda
+  const filteredClients = useMemo(() => {
+    if (!clientSearchQuery.trim()) {
+      return clients;
+    }
+
+    const query = clientSearchQuery.toLowerCase().trim();
+    return clients.filter(client => {
+      return (
+        client.name?.toLowerCase().includes(query) ||
+        client.document_id?.toLowerCase().includes(query) ||
+        client.contact?.email?.toLowerCase().includes(query) ||
+        client.contact?.phone?.toLowerCase().includes(query)
+      );
+    });
+  }, [clients, clientSearchQuery]);
+
   // Lógica de ventas mediante custom hook (para compatibilidad)
   const salesLogic = useSalesLogic();
   const {
     saleItems,
-    selectedClient,
-    setSelectedClient,
     subtotal,
     tax,
     total,
-    validations
+    validations,
+    selectedReserve, // NUEVO: reserva seleccionada
+    setSelectedReserve, // NUEVO: función para establecer reserva
+    // Funciones de descuento
+    applyPercentageDiscount,
+    applyFixedDiscount,
+    setDirectPrice,
+    removeDiscount
   } = salesLogic;
+
+  // Filtrar reservas confirmadas del cliente seleccionado
+  const availableReservations = useMemo(() => {
+    if (!salesLogic.selectedClient) {
+      return [];
+    }
+
+    return reservations.filter(reservation => {
+      // Comparación flexible de estado (mayúsculas/minúsculas)
+      const statusMatch = reservation.status?.toLowerCase() === 'confirmed';
+
+      // Comparación flexible de cliente (string vs number)
+      const clientMatch =
+        reservation.client_id === salesLogic.selectedClient ||
+        reservation.client_id?.toString() === salesLogic.selectedClient?.toString();
+
+      return statusMatch && clientMatch;
+    });
+  }, [reservations, salesLogic.selectedClient]);
+
+  // Funciones para parsear y formatear errores específicos
+  const parseStockError = (errorDetails) => {
+    const regex = /Stock insuficiente para producto "([^"]+)" \(ID: ([^)]+)\)\. Disponible: ([0-9.]+), Requerido: ([0-9.]+)/;
+    const match = errorDetails.match(regex);
+
+    if (match) {
+      return {
+        productName: match[1],
+        productId: match[2],
+        available: parseFloat(match[3]),
+        required: parseFloat(match[4])
+      };
+    }
+    return null;
+  };
+
+  const formatStockError = (stockError) => {
+    return `⚠️ Stock insuficiente para "${stockError.productName}"\n\n` +
+           `• Disponible: ${stockError.available}\n` +
+           `• Requerido: ${stockError.required}\n\n` +
+           `Por favor, ajuste la cantidad o verifique el inventario.`;
+  };
+
+  const parseDiscountError = (errorDetails) => {
+    const regex = /El descuento \(([0-9.]+)\) no puede ser mayor al precio \(([0-9.]+)\) para producto ([^(]+) \(([^)]+)\)/;
+    const match = errorDetails.match(regex);
+
+    if (match) {
+      return {
+        discount: parseFloat(match[1]),
+        price: parseFloat(match[2]),
+        productName: match[3].trim(),
+        productId: match[4]
+      };
+    }
+    return null;
+  };
+
+  const formatDiscountError = (discountError) => {
+    return `⚠️ Error en descuento para "${discountError.productName}"\n\n` +
+           `• Precio del producto: $${discountError.price.toLocaleString()}\n` +
+           `• Descuento aplicado: $${discountError.discount.toLocaleString()}\n\n` +
+           `El descuento no puede ser mayor al precio del producto.`;
+  };
 
   // Función para mostrar notificaciones
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 5000);
   };
+
+  // Cargar clientes al inicializar
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
+
+  // Cargar reservas cuando se selecciona un cliente
+  useEffect(() => {
+    if (salesLogic.selectedClient) {
+      fetchReservationsByClient(salesLogic.selectedClient).catch(error => {
+        console.error('Error loading client reservations:', error);
+      });
+    } else {
+      // Si no hay cliente seleccionado, limpiar reserva
+      salesLogic.setSelectedReserve(null);
+    }
+  }, [salesLogic.selectedClient, fetchReservationsByClient, salesLogic.setSelectedReserve]);
+
+  // Cargar productos iniciales con una búsqueda vacía (como en Products.jsx)
+  useEffect(() => {
+    if (products.length === 0 && !productsLoading) {
+      searchProductsStore('').catch(error => {
+        console.error('Error loading initial products:', error);
+      });
+    }
+  }, [products.length, productsLoading, searchProductsStore]);
+
+  // Función para buscar productos usando la API del store
+  const handleProductSearch = async (query) => {
+    try {
+      const searchTerm = query.trim();
+      const result = await searchProductsStore(searchTerm);
+    } catch (error) {
+      console.error('Error searching products:', error);
+      showNotification(`Error al buscar productos: ${error.message}`, 'error');
+    }
+  };
+
+  // Efecto para realizar búsqueda cuando cambia el query
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const debounceTimer = setTimeout(() => {
+        handleProductSearch(searchQuery);
+      }, 300); // Debounce de 300ms
+
+      return () => clearTimeout(debounceTimer);
+    } else {
+      // No limpiar productos, solo hacer búsqueda vacía para cargar productos iniciales
+      handleProductSearch('');
+    }
+  }, [searchQuery]);
 
   // Efecto para sincronizar cambios de pago
   useEffect(() => {
@@ -107,66 +308,268 @@ const Sales = () => {
     setAmountPaidInput(value);
   };
 
-  // Manejar envío de venta
+  // Handlers para modal de descuentos
+  const handleOpenDiscountModal = (item) => {
+    setSelectedItemForDiscount(item);
+    setShowDiscountModal(true);
+  };
+
+  const handleCloseDiscountModal = () => {
+    setShowDiscountModal(false);
+    setSelectedItemForDiscount(null);
+  };
+
+  // Handlers para reservas en el carrito
+  const handleAddReservationToCart = (reservation) => {
+    // Intentar obtener el precio de múltiples campos posibles
+    const price = reservation.total_amount ||
+                  reservation.amount ||
+                  reservation.price ||
+                  reservation.total ||
+                  0;
+
+    // Crear un producto virtual basado en la reserva
+    const reservationProduct = {
+      product_id: reservation.product_id || `reservation_${reservation.id}`,
+      id: reservation.product_id || `reservation_${reservation.id}`,
+      product_name: reservation.product_name || reservation.service_name || `Servicio Reserva #${reservation.id}`,
+      name: reservation.product_name || reservation.service_name || `Servicio Reserva #${reservation.id}`,
+      price: price,
+      originalPrice: price, // Para reservas, el precio original es el precio de la reserva
+      category: 'Servicio Reservado',
+      stock_quantity: 1,
+      product_type: 'SERVICE',
+      state: true,
+      // Marcar como proveniente de reserva
+      fromReservation: true,
+      reservation_id: reservation.id,
+      reservation_date: reservation.reservation_date,
+      start_time: reservation.start_time,
+      end_time: reservation.end_time,
+      // Información de precios para justificación si es necesario
+      reservationPrice: price,
+      baseProductPrice: null // Se determinará si es necesario
+    };
+
+    // Agregar al carrito con cantidad 1
+    salesLogic.addSaleItem(reservationProduct, 1);
+
+    // Marcar la reserva como seleccionada para el envío de la venta
+    salesLogic.setSelectedReserve(reservation);
+
+    showNotification(`Servicio de reserva "${reservationProduct.name}" agregado al carrito`);
+  };
+
+  const handleRemoveReservationFromCart = (reservation) => {
+    // Buscar y remover el item del carrito
+    const itemToRemove = saleItems.find(item =>
+      item.reservation_id === reservation.id ||
+      (item.product_id === reservation.product_id && item.fromReservation)
+    );
+
+    if (itemToRemove) {
+      salesLogic.removeItem(itemToRemove.product_id || itemToRemove.id);
+
+      // Si no hay más items de reserva, limpiar la reserva seleccionada
+      const hasOtherReservationItems = saleItems.some(item =>
+        item.fromReservation && item.reservation_id !== reservation.id
+      );
+
+      if (!hasOtherReservationItems) {
+        salesLogic.setSelectedReserve(null);
+      }
+
+      showNotification(`Servicio de reserva removido del carrito`);
+    }
+  };
+
+  // Manejar envío de venta según SALE_WITH_DISCOUNT_API.md
   const handleSaleSubmit = async () => {
-    if (!canProcessSale()) {
+    if (!salesLogic.validations.canProceed) {
       showNotification(SYSTEM_MESSAGES.ERROR.VALIDATION_ERROR, 'error');
       announceError('Venta', 'Validación');
       return;
     }
 
-    const paymentMethod = currentSaleData.paymentMethod;
-    const amountPaid = parseFloat(amountPaidInput) || currentSaleData.totalAmount;
-    
-    // Validaciones de pago en efectivo
-    if (paymentMethod === 'cash' && amountPaid < currentSaleData.totalAmount) {
-      showNotification('El monto pagado debe ser mayor o igual al total', 'error');
+    if (!salesLogic.selectedClient) {
+      showNotification('Debe seleccionar un cliente', 'error');
       return;
+    }
+
+    if (!selectedPaymentMethod) {
+      showNotification('Debe seleccionar un método de pago', 'error');
+      return;
+    }
+
+    // NUEVO: Validar reserva si existe
+    if (selectedReserve) {
+      const reserveValidation = validateReserve(selectedReserve, salesLogic.selectedClient);
+      if (!reserveValidation.isValid) {
+        showNotification(`Error en reserva: ${reserveValidation.errors.join(', ')}`, 'error');
+        return;
+      }
+
+      // Información adicional para el usuario
+      console.log('📋 Procesando venta con reserva:', {
+        reserveId: selectedReserve.id,
+        serviceName: selectedReserve.product_name || selectedReserve.service_name,
+        amount: selectedReserve.total_amount || selectedReserve.amount,
+        date: selectedReserve.reservation_date
+      });
     }
 
     setLoading(true);
     try {
-      // Actualizar datos de pago en el store
-      currentSaleData.amountPaid = amountPaid;
-      
-      const response = await createSale();
-      
+      // Preparar datos según SALE_API.md usando useSalesLogic
+      const saleData = salesLogic.prepareSaleData();
+
+      // Mapear método de pago seleccionado en UI
+      const paymentMethodMap = {
+        'cash': 1,
+        'card': 2,
+        'transfer': 3
+      };
+
+      // Completar con datos de la UI
+      const finalSaleData = {
+        ...saleData,
+        payment_method_id: paymentMethodMap[selectedPaymentMethod] || 1,
+        currency_id: selectedCurrency === 'USD' ? 2 : selectedCurrency === 'EUR' ? 3 : 1,
+      };
+
+
+      const response = await saleService.createSale(finalSaleData);
+
       if (response.success) {
-        showNotification(SYSTEM_MESSAGES.SUCCESS.SALE_COMPLETED);
+        const successMessage = selectedReserve
+          ? `Venta con reserva #${selectedReserve.id} creada exitosamente. ${response.message || ''}`
+          : `Venta creada exitosamente. Factura: ${response.invoice_number || 'N/A'}`;
+
+        showNotification(successMessage);
         announceSuccess('Venta');
-        
-        // Mostrar cambio si es pago en efectivo
-        if (paymentMethod === 'cash' && amountPaid > currentSaleData.totalAmount) {
-          const change = amountPaid - currentSaleData.totalAmount;
-          showNotification(`Venta completada. Cambio: $${change.toFixed(2)}`,'success');
-          announceSuccess('Cambio calculado');
+
+        // Log para debugging
+        if (response.reserve_processed) {
+          console.log('✅ Reserva procesada exitosamente en la venta');
         }
-        
+
         // Resetear formulario
-        clearCurrentSale();
+        salesLogic.resetSale();
+        setSelectedPaymentMethod('');
         setAmountPaidInput('');
         setShowPaymentSection(false);
       }
     } catch (error) {
       console.error('Error creating sale:', error);
-      showNotification(SYSTEM_MESSAGES.ERROR.NETWORK_ERROR, 'error');
-      announceError('Venta', 'Error de red');
+
+      let errorMessage = 'Error desconocido al procesar la venta';
+
+      // Manejar diferentes tipos de errores del backend
+      if (error.response?.data) {
+        const responseData = error.response.data;
+
+        // Error con formato estructurado
+        if (responseData.error_code) {
+          switch (responseData.error_code) {
+            case 'PROCESSING_ERROR':
+              if (responseData.details?.includes('permission denied')) {
+                errorMessage = 'Error de permisos en el servidor. Contacte al administrador.';
+              } else if (responseData.details?.includes('Stock insuficiente')) {
+                // Extraer información específica del error de stock
+                const stockError = parseStockError(responseData.details);
+                errorMessage = stockError ? formatStockError(stockError) : 'Stock insuficiente para completar la venta';
+              } else if (responseData.details?.includes('EXCESSIVE_DISCOUNT_AMOUNT')) {
+                // Extraer información específica del error de descuento
+                const discountError = parseDiscountError(responseData.details);
+                errorMessage = discountError ? formatDiscountError(discountError) : 'Error en el cálculo de descuentos';
+              } else {
+                errorMessage = `Error de procesamiento: ${responseData.message || responseData.details}`;
+              }
+              break;
+            case 'INSUFFICIENT_STOCK':
+              errorMessage = `Stock insuficiente: ${responseData.message}`;
+              break;
+            case 'CLIENT_INACTIVE':
+              errorMessage = 'Cliente inactivo. Por favor seleccione otro cliente.';
+              break;
+            case 'PRICE_MODIFICATION_NOT_ALLOWED':
+              errorMessage = 'Modificación de precio no permitida';
+              break;
+            default:
+              errorMessage = responseData.message || responseData.details || 'Error al procesar la venta';
+          }
+        }
+        // Error con formato simple (string)
+        else if (typeof responseData === 'string') {
+          errorMessage = responseData;
+        }
+        // Error con mensaje directo
+        else if (responseData.message) {
+          errorMessage = responseData.message;
+        }
+      }
+      // Error de red o timeout
+      else if (error.code === 'NETWORK_ERROR' || error.message?.includes('timeout')) {
+        errorMessage = 'Error de conexión. Verifique su conexión a internet.';
+      }
+      // Error de autenticación
+      else if (error.response?.status === 401) {
+        errorMessage = 'Sesión expirada. Por favor inicie sesión nuevamente.';
+      }
+      // Otros errores HTTP
+      else if (error.response?.status) {
+        errorMessage = `Error del servidor (${error.response.status}). Intente nuevamente.`;
+      }
+
+      showNotification(errorMessage, 'error');
+      announceError('Venta', 'Error de procesamiento');
     } finally {
       setLoading(false);
     }
   };
 
-  // Componente de notificación
+  // Componente de notificación mejorado
   const NotificationBanner = () => {
     if (!notification) return null;
     const isError = notification.type === 'error';
     const icon = isError ? AlertCircle : Check;
     const variant = isError ? 'error' : 'success';
-    const bannerClasses = styles.card(variant, { density: 'compact', extra: 'flex items-center gap-2 mb-6' });
+
+    // Separar mensaje por saltos de línea para mejor formato
+    const messageLines = notification.message.split('\n').filter(line => line.trim());
+    const title = messageLines[0];
+    const details = messageLines.slice(1);
+
+    const bannerClasses = styles.card(variant, { density: 'compact', extra: 'mb-6' });
+
     return (
       <div className={bannerClasses} role={isError ? 'alert' : 'status'}>
-        {React.createElement(icon, { className: 'w-5 h-5 shrink-0' })}
-        <span className="text-sm font-medium leading-snug flex-1">{notification.message}</span>
+        <div className="flex items-start gap-3">
+          {React.createElement(icon, { className: 'w-5 h-5 shrink-0 mt-0.5' })}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium leading-snug mb-1">
+              {title}
+            </div>
+            {details.length > 0 && (
+              <div className="text-xs leading-relaxed opacity-90 space-y-1">
+                {details.map((line, index) => (
+                  <div key={index} className="whitespace-pre-line">
+                    {line}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => setNotification(null)}
+            className="shrink-0 text-current hover:opacity-70 transition-opacity p-1 -m-1"
+            aria-label="Cerrar notificación"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
     );
   };
@@ -185,10 +588,12 @@ const Sales = () => {
             <span>{t('sales.summary.subtotal', 'Subtotal:')}</span>
             <span>${subtotal}</span>
           </div>
-          <div className="flex justify-between">
-            <span>{t('sales.summary.tax', 'IVA (16%):')}</span>
-            <span>${tax}</span>
-          </div>
+          {selectedReserve && (
+            <div className="flex justify-between text-green-600">
+              <span>Reserva aplicada:</span>
+              <span>-₲{selectedReserve.amount?.toLocaleString()}</span>
+            </div>
+          )}
           <Separator className="my-2" />
           <div className="flex justify-between">
             <span className="font-medium">{t('sales.summary.total', 'Total:')}</span>
@@ -197,6 +602,345 @@ const Sales = () => {
           <Badge variant="outline" className="w-full justify-center">
             {saleItems.reduce((sum, item) => sum + item.quantity, 0)} {t('sales.summary.items', 'artículos')}
           </Badge>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Función para manejar búsqueda de productos con Enter
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      // Si hay texto, buscar productos antes de abrir modal
+      if (searchQuery.trim()) {
+        handleProductSearch(searchQuery);
+      }
+      setShowProductModal(true);
+    }
+  };
+
+  // Función para abrir modal de productos
+  const openProductModal = () => {
+    // Si no hay productos y no hay búsqueda, cargar productos iniciales
+    if (products.length === 0 && !searchQuery.trim()) {
+      handleProductSearch('');
+    } else if (searchQuery.trim()) {
+      // Si hay texto, buscar productos antes de abrir modal
+      handleProductSearch(searchQuery);
+    }
+    setShowProductModal(true);
+  };
+
+  // Función para manejar búsqueda de clientes con Enter
+  const handleClientSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      setShowClientModal(true);
+    }
+  };
+
+  // Componente del modal de selección de productos
+  const ProductSelectionModal = () => {
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [quantity, setQuantity] = useState(1);
+
+    const handleProductSelect = (product) => {
+      setSelectedProduct(product);
+    };
+
+    const handleAddProduct = () => {
+      if (!selectedProduct) return;
+
+      salesLogic.addSaleItem(selectedProduct, quantity);
+      setSelectedProduct(null);
+      setQuantity(1);
+      setShowProductModal(false);
+      setSearchQuery(''); // Limpiar búsqueda al agregar producto
+    };
+
+    if (!showProductModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowProductModal(false)}>
+        <Card className="w-full max-w-2xl m-4 bg-white shadow-xl max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <CardHeader className="bg-white">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Package className="w-5 h-5 mr-2" />
+                Seleccionar Producto
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowProductModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="bg-white p-0">
+            {/* Info y búsqueda */}
+            <div className="p-4 border-b">
+              <div className="text-sm text-gray-600 mb-2">
+                {productsLoading && <span className="text-blue-600">🔍 Buscando productos...</span>}
+                {!productsLoading && (
+                  <>
+                    {availableProducts.length} productos disponibles
+                    {searchQuery && <span> (búsqueda: "{searchQuery}")</span>}
+                  </>
+                )}
+                {productsError && <span className="text-red-600">❌ {String(productsError)}</span>}
+              </div>
+            </div>
+
+            {/* Lista de productos */}
+            <div className="max-h-60 overflow-y-auto">
+              {filteredProducts.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No se encontraron productos</p>
+                  {searchQuery && <p className="text-sm">Intenta con otro término de búsqueda</p>}
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {filteredProducts.map(product => (
+                    <div
+                      key={product.product_id}
+                      onClick={() => handleProductSelect(product)}
+                      className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                        selectedProduct?.product_id === product.product_id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900">{product.product_name || 'Sin nombre'}</h3>
+                          {product.category && (
+                            <p className="text-sm text-gray-500">{String(product.category)}</p>
+                          )}
+                          {product.product_id && (
+                            <p className="text-xs text-gray-400">ID: {String(product.product_id)}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full font-medium">
+                            ₲{(product.price ||
+                              product.unit_prices?.[0]?.price_per_unit ||
+                              product.unit_prices?.[0]?.price ||
+                              product.unit_prices?.[0]?.selling_price ||
+                              product.unit_prices?.[0]?.base_price ||
+                              0).toLocaleString()}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            (product.stock_quantity || product.stock || 0) > 10 ? 'bg-green-100 text-green-700' :
+                            (product.stock_quantity || product.stock || 0) > 0 ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            Stock: {product.stock_quantity || product.stock || 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Cantidad y botones */}
+            {selectedProduct && (
+              <div className="p-4 border-t bg-gray-50">
+                <div className="mb-4">
+                  <Label className="text-sm font-medium">Producto seleccionado:</Label>
+                  <p className="text-sm text-gray-600">{selectedProduct?.product_name || 'Sin nombre'}</p>
+                </div>
+
+                <div className="mb-4">
+                  <Label className="text-sm font-medium mb-2 block">Cantidad</Label>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    <Input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 text-center"
+                      min="1"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setQuantity(quantity + 1)}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Botones de acción */}
+            <div className="p-4 border-t">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowProductModal(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleAddProduct}
+                  disabled={!selectedProduct}
+                >
+                  Agregar Producto
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  // Componente de tabla de productos
+  const ProductsTable = () => {
+    if (saleItems.length === 0) {
+      return (
+        <Card>
+          <CardContent className="p-8 text-center text-muted-foreground">
+            <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium">No hay productos agregados</p>
+            <p className="text-sm">Usa el botón "Agregar Producto" para comenzar</p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Productos Seleccionados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Producto</th>
+                  <th className="text-center p-2">Cantidad</th>
+                  <th className="text-right p-2">Precio Unit.</th>
+                  <th className="text-right p-2">Subtotal</th>
+                  <th className="text-center p-2">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {saleItems.map(item => (
+                  <tr key={item.product_id || item.id} className="border-b">
+                    <td className="p-2">
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium">{item.name}</div>
+                        {item.fromReservation && (
+                          <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700">
+                            📅 Reserva
+                          </Badge>
+                        )}
+                      </div>
+                      {item.category && (
+                        <div className="text-sm text-muted-foreground">{item.category}</div>
+                      )}
+                      {item.fromReservation && item.reservation_date && (
+                        <div className="text-xs text-blue-600 mt-1">
+                          📅 {item.reservation_date} • 🕒 {item.start_time} - {item.end_time}
+                        </div>
+                      )}
+                      {item.hasDiscount && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <Badge variant="secondary" className="text-xs">
+                            -{item.discountPercentage?.toFixed(1)}%
+                          </Badge>
+                          <span className="text-xs text-green-600">
+                            Ahorras ₲{item.discountAmount?.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-2 text-center">
+                      {item.fromReservation ? (
+                        <div className="flex items-center justify-center">
+                          <Badge variant="secondary" className="text-xs">
+                            Cantidad fija: {item.quantity}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => salesLogic.updateQuantity(item.product_id || item.id, -1)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <span className="mx-2 min-w-8 text-center">{item.quantity}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => salesLogic.updateQuantity(item.product_id || item.id, 1)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-2 text-right">
+                      {item.hasDiscount ? (
+                        <div className="space-y-1">
+                          <div className="text-sm text-gray-500 line-through">
+                            ₲{item.originalPrice?.toLocaleString()}
+                          </div>
+                          <div className="font-medium text-green-600">
+                            ₲{item.price?.toLocaleString()}
+                          </div>
+                        </div>
+                      ) : (
+                        <div>₲{item.price?.toLocaleString()}</div>
+                      )}
+                    </td>
+                    <td className="p-2 text-right font-medium">
+                      ₲{(item.price * item.quantity).toLocaleString()}
+                    </td>
+                    <td className="p-2 text-center">
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenDiscountModal(item)}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          title="Aplicar descuento"
+                        >
+                          <Calculator className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => salesLogic.removeItem(item.product_id || item.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="Eliminar producto"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
     );
@@ -218,30 +962,42 @@ const Sales = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Selector de método de pago */}
-          <div>
-            <Label htmlFor="payment-method" className={styles.label()}>{t('sales.payment.method', 'Método de Pago')}</Label>
-            <Select
-              value={currentSaleData.paymentMethod}
-              onValueChange={handlePaymentMethodChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar método" />
-              </SelectTrigger>
-              <SelectContent>
-                {PAYMENT_METHODS.map(method => {
-                  const IconComponent = method.icon;
-                  return (
-                    <SelectItem key={method.value} value={method.value}>
-                      <div className="flex items-center">
-                        <IconComponent className="w-4 h-4 mr-2" />
-                        {method.label}
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Selector de método de pago */}
+            <div>
+              <Label htmlFor="payment-method" className={styles.label()}>{t('sales.payment.method', 'Método de Pago')}</Label>
+              <Select
+                value={currentSaleData.paymentMethod}
+                onValueChange={handlePaymentMethodChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar método" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map(method => {
+                    const IconComponent = method.icon;
+                    return (
+                      <SelectItem key={method.value} value={method.value}>
+                        <div className="flex items-center">
+                          <IconComponent className="w-4 h-4 mr-2" />
+                          {method.label}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Selector de moneda */}
+            <div>
+              <Label htmlFor="currency" className={styles.label()}>{t('sales.payment.currency', 'Moneda')}</Label>
+              <CurrencySelector
+                value={selectedCurrency}
+                onChange={setSelectedCurrency}
+                placeholder="Seleccionar moneda..."
+              />
+            </div>
           </div>
 
           {/* Campo de monto pagado (solo para efectivo) */}
@@ -295,61 +1051,428 @@ const Sales = () => {
     );
   };
 
+  // Componente del modal de selección de clientes
+  const ClientSelectionModal = () => {
+    const [selectedClientInModal, setSelectedClientInModal] = useState(null);
+
+    const handleClientSelect = (client) => {
+      setSelectedClientInModal(client);
+    };
+
+    const handleSelectClient = () => {
+      if (!selectedClientInModal) return;
+
+      salesLogic.setSelectedClient(selectedClientInModal.id);
+      setSelectedClientInModal(null);
+      setShowClientModal(false);
+      setClientSearchQuery(''); // Limpiar búsqueda al seleccionar cliente
+    };
+
+    if (!showClientModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowClientModal(false)}>
+        <Card className="w-full max-w-2xl m-4 bg-white shadow-xl max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <CardHeader className="bg-white">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <User className="w-5 h-5 mr-2" />
+                Seleccionar Cliente
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowClientModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="bg-white p-0">
+            {/* Info y búsqueda */}
+            <div className="p-4 border-b">
+              <div className="text-sm text-gray-600 mb-2">
+                {clients.length} clientes disponibles, {filteredClients.length} después del filtro
+                {clientSearchQuery && <span> (búsqueda: "{clientSearchQuery}")</span>}
+              </div>
+            </div>
+
+            {/* Lista de clientes */}
+            <div className="max-h-60 overflow-y-auto">
+              {filteredClients.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No se encontraron clientes</p>
+                  {clientSearchQuery && <p className="text-sm">Intenta con otro término de búsqueda</p>}
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {filteredClients.map(client => (
+                    <div
+                      key={client.id}
+                      onClick={() => handleClientSelect(client)}
+                      className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                        selectedClientInModal?.id === client.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900">{client.name || 'Sin nombre'}</h3>
+                          {client.contact?.email && (
+                            <p className="text-sm text-gray-500">📧 {client.contact.email}</p>
+                          )}
+                          {client.contact?.phone && (
+                            <p className="text-sm text-gray-500">📞 {client.contact.phone}</p>
+                          )}
+                          {client.id && (
+                            <p className="text-xs text-gray-400">ID: {client.id}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {client.document_id && (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                              {client.document_id}
+                            </span>
+                          )}
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            client.status !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {client.status !== false ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Cliente seleccionado */}
+            {selectedClientInModal && (
+              <div className="p-4 border-t bg-gray-50">
+                <div className="mb-4">
+                  <Label className="text-sm font-medium">Cliente seleccionado:</Label>
+                  <p className="text-sm text-gray-600">{selectedClientInModal.name}</p>
+                  {selectedClientInModal.contact?.email && (
+                    <p className="text-xs text-gray-500">📧 {selectedClientInModal.contact.email}</p>
+                  )}
+                  {selectedClientInModal.contact?.phone && (
+                    <p className="text-xs text-gray-500">📞 {selectedClientInModal.contact.phone}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Botones de acción */}
+            <div className="p-4 border-t">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowClientModal(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleSelectClient}
+                  disabled={!selectedClientInModal}
+                >
+                  Seleccionar Cliente
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
   return (
-  <div className={styles.page('space-y-4')} data-testid="sales-page">
-      {/* Breadcrumb discreto para contexto */}
-      <nav className="flex items-center text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">{t('sales.title', 'Ventas')}</span>
-      </nav>
+    <div className={styles.page('space-y-6')} data-testid="sales-page">
+      {/* Header con título */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{t('sales.title', 'Ventas')}</h1>
+      </div>
 
       <NotificationBanner />
- 
-      {loading && saleItems.length === 0 && !selectedClient ? (
+
+      {loading && saleItems.length === 0 && !salesLogic.selectedClient ? (
         <DataState variant="loading" skeletonVariant="list" testId="sales-loading" skeletonProps={{ count: 4 }} />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Panel de productos */}
-          <div className="space-y-6">
-            <Card className={styles.card(isMaterial ? 'elevated' : 'elevated', { density: 'comfy' })}>
-              <CardHeader>
-                <CardTitle className={styles.header('h3')}>{t('sales.new_sale', 'Nueva Venta')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <ClientSelector
-                  selectedClient={selectedClient}
-                  onClientChange={setSelectedClient}
-                />
-                
-                <SaleItemsManager
-                  {...salesLogic}
-                />
-              </CardContent>
-            </Card>
+        <div className="space-y-6">
+          {/* Header Superior - Cliente, Pago, Moneda y Productos */}
+          <Card className={styles.card(isMaterial ? 'elevated' : 'elevated', { density: 'comfy' })}>
+            <CardHeader>
+              <CardTitle className="text-lg">Información de Venta</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                {/* Cliente con búsqueda */}
+                <div>
+                  <Label className="text-sm font-medium">Cliente</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={clientSearchQuery}
+                      onChange={(e) => setClientSearchQuery(e.target.value)}
+                      onKeyPress={handleClientSearchKeyPress}
+                      placeholder="Buscar cliente..."
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={() => setShowClientModal(true)}
+                      variant="outline"
+                      className="shrink-0"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Buscar Cliente
+                    </Button>
+                  </div>
+                  {salesLogic.selectedClient && (
+                    <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
+                      Cliente seleccionado: {clients.find(c => c.id === salesLogic.selectedClient)?.name || salesLogic.selectedClient}
+                    </div>
+                  )}
+                </div>
 
-            {/* Botón de completar venta */}
-            {canProcessSale() && (
-              <Button
-                onClick={handleSaleSubmit}
-                disabled={loading || paymentInProgress}
-                className="w-full"
-                variant={isMaterial ? 'filled' : 'primary'}
-              >
-                <Check className="w-4 h-4 mr-2" />
-                {loading || paymentInProgress ? 
-                  t('sales.processing', 'Procesando...') : 
-                  t('sales.complete', 'Completar Venta')
-                }
-              </Button>
-            )}
-          </div>
+                {/* Reservas del Cliente */}
+                <div className="col-span-full">
+                  <Label className="text-sm font-medium mb-3 block">Reservas del Cliente</Label>
+                  {!salesLogic.selectedClient ? (
+                    <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500 text-sm">
+                      Selecciona un cliente para ver sus reservas
+                    </div>
+                  ) : reservationsLoading ? (
+                    <div className="p-4 bg-blue-50 rounded-lg text-center text-blue-600 text-sm">
+                      <RefreshCw className="w-4 h-4 animate-spin inline mr-2" />
+                      Cargando reservas...
+                    </div>
+                  ) : availableReservations.length === 0 ? (
+                    <div className="p-4 bg-yellow-50 rounded-lg text-center text-yellow-700 text-sm">
+                      Este cliente no tiene reservas confirmadas
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {availableReservations.map(reservation => {
+                        const isInCart = saleItems.some(item =>
+                          item.reservation_id === reservation.id ||
+                          (item.product_id === reservation.product_id && item.fromReservation)
+                        );
 
-          {/* Panel de resumen y pago */}
-          <div className="space-y-6">
-            <SaleSummary />
-            <PaymentSection />
-          </div>
+                        return (
+                          <Card key={reservation.id} className={`cursor-pointer transition-all hover:shadow-md ${
+                            isInCart ? 'ring-2 ring-green-500 bg-green-50' : 'hover:bg-gray-50'
+                          }`}>
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm">
+                                    {reservation.service_name || reservation.product_name || `Servicio #${reservation.id}`}
+                                  </div>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    📅 {reservation.reservation_date}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    🕒 {reservation.start_time} - {reservation.end_time}
+                                  </div>
+                                </div>
+                                <Badge variant={isInCart ? "default" : "secondary"} className="text-xs">
+                                  ₲{reservation.amount?.toLocaleString()}
+                                </Badge>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <Badge variant="outline" className="text-xs bg-green-100 text-green-700">
+                                  Confirmada
+                                </Badge>
+
+                                {isInCart ? (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleRemoveReservationFromCart(reservation)}
+                                    className="text-red-600 hover:bg-red-50 text-xs px-2 py-1"
+                                  >
+                                    <Trash2 className="w-3 h-3 mr-1" />
+                                    Quitar
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleAddReservationToCart(reservation)}
+                                    className="text-xs px-2 py-1"
+                                  >
+                                    <Plus className="w-3 h-3 mr-1" />
+                                    Agregar
+                                  </Button>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Método de Pago */}
+                <div>
+                  <Label className="text-sm font-medium">Método de Pago</Label>
+                  <Select
+                    value={selectedPaymentMethod}
+                    onValueChange={setSelectedPaymentMethod}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar método" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAYMENT_METHODS.map(method => {
+                        const IconComponent = method.icon;
+                        return (
+                          <SelectItem key={method.value} value={method.value}>
+                            <div className="flex items-center">
+                              <IconComponent className="w-4 h-4 mr-2" />
+                              {method.label}
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Moneda */}
+                <div>
+                  <Label className="text-sm font-medium">Moneda</Label>
+                  <Select
+                    value={selectedCurrency}
+                    onValueChange={setSelectedCurrency}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar moneda..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PYG">
+                        <div className="flex items-center">
+                          <span className="font-mono font-bold mr-2">PYG</span>
+                          <span>Guaraní Paraguayo</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="USD">
+                        <div className="flex items-center">
+                          <span className="font-mono font-bold mr-2">USD</span>
+                          <span>Dólar Americano</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="EUR">
+                        <div className="flex items-center">
+                          <span className="font-mono font-bold mr-2">EUR</span>
+                          <span>Euro</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Búsqueda y Botón de Productos */}
+                <div className="flex flex-col justify-end">
+                  <Label className="text-sm font-medium mb-2">Buscar Producto</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyPress={handleSearchKeyPress}
+                      placeholder="Nombre, ID o código de barras..."
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={openProductModal}
+                      variant="outline"
+                      className="shrink-0"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Buscar Producto
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tabla de Productos */}
+          <ProductsTable />
+
+          {/* Resumen y Botón de Venta - Solo si hay productos */}
+          {saleItems.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Resumen de Venta */}
+              <div className="lg:col-span-2">
+                <SaleSummary />
+              </div>
+
+              {/* Botón de Completar Venta */}
+              <div className="flex flex-col justify-end">
+                {salesLogic.validations.canProceed && salesLogic.selectedClient && selectedPaymentMethod ? (
+                  <Button
+                    onClick={handleSaleSubmit}
+                    disabled={loading || paymentInProgress}
+                    className="w-full h-full min-h-[120px]"
+                    size="lg"
+                    variant={isMaterial ? 'filled' : 'primary'}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <Check className="w-6 h-6" />
+                      <span className="text-lg font-semibold">
+                        {loading || paymentInProgress ?
+                          t('sales.processing', 'Procesando...') :
+                          t('sales.complete', 'Completar Venta')
+                        }
+                      </span>
+                      {total > 0 && (
+                        <span className="text-xl font-bold">
+                          ${total.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                  </Button>
+                ) : (
+                  <Card className="min-h-[120px] flex items-center justify-center">
+                    <CardContent className="text-center">
+                      <AlertCircle className="w-8 h-8 mx-auto mb-2 text-orange-500" />
+                      <p className="text-sm font-medium mb-2">Para completar la venta:</p>
+                      <div className="space-y-1 text-xs text-muted-foreground">
+                        {!salesLogic.validations.canProceed && <p>• Agrega productos al carrito</p>}
+                        {!salesLogic.selectedClient && <p>• Selecciona un cliente</p>}
+                        {!selectedPaymentMethod && <p>• Selecciona método de pago</p>}
+                        {selectedReserve && <p className="text-green-600">• Reserva #{selectedReserve.id} será procesada</p>}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
+
+      {/* Modal de Selección de Productos */}
+      <ProductSelectionModal />
+
+      {/* Modal de Selección de Clientes */}
+      <ClientSelectionModal />
+
+      {/* Modal de Descuentos */}
+      <DiscountModal
+        isOpen={showDiscountModal}
+        onClose={handleCloseDiscountModal}
+        item={selectedItemForDiscount}
+        onApplyPercentageDiscount={applyPercentageDiscount}
+        onApplyFixedDiscount={applyFixedDiscount}
+        onSetDirectPrice={setDirectPrice}
+        onRemoveDiscount={removeDiscount}
+        currentUser={{ id: 1, name: 'Usuario Actual' }} // TODO: Get from auth store
+      />
     </div>
   );
 };

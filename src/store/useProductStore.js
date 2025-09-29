@@ -833,12 +833,28 @@ const useProductStore = create()(
             services = result.data;
           }
           
-          // Actualizar productos con los servicios específicos
-          const servicesById = Object.fromEntries(services.map(s => [s.id, s]));
+          // Enriquecer servicios con información de precios y datos procesados
+          const { createProductSummary } = await import('@/utils/productUtils');
+          const enrichedServices = services.map(service => {
+            const summary = createProductSummary(service);
+            return {
+              ...service,
+              // Añadir las propiedades que necesita la UI de reservas
+              price_formatted: summary?.priceFormatted || 
+                              (service.price ? `PYG ${service.price.toLocaleString('es-ES')}` : null) ||
+                              (service.purchase_price ? `PYG ${service.purchase_price.toLocaleString('es-ES')}` : null),
+              has_valid_price: summary?.hasValidPrice || 
+                              !!(service.price || service.purchase_price || service.unit_prices?.length),
+              state: service.state !== undefined ? service.state : service.is_active !== undefined ? service.is_active : true
+            };
+          });
+          
+          // Actualizar productos con los servicios específicos enriquecidos
+          const servicesById = Object.fromEntries(enrichedServices.map(s => [s.id, s]));
           set({
-            products: services,
+            products: enrichedServices,
             productsById: servicesById,
-            totalProducts: services.length,
+            totalProducts: enrichedServices.length,
             totalPages: 1,
             currentPage: 1,
             loading: false,
@@ -847,10 +863,11 @@ const useProductStore = create()(
           
           telemetry.record('products.fetch_service_courts.success', {
             duration: Date.now() - startTime,
-            count: services.length
+            count: enrichedServices.length,
+            withPrices: enrichedServices.filter(s => s.has_valid_price).length
           });
           
-          return services;
+          return enrichedServices;
         } catch (error) {
           const errorMsg = error.message || 'Error al cargar servicios de canchas';
           set({ 
@@ -885,6 +902,118 @@ const useProductStore = create()(
           lastErrorCode: null,
           lastErrorHintKey: null,
         });
+      },
+
+      // Limpiar búsquedas y cache al cambiar de página
+      clearSearchState: () => {
+        set({
+          products: [],
+          productsById: {},
+          searchCache: {},
+          lastSearchTerm: '',
+          totalProducts: 0,
+          totalPages: 0,
+          currentPage: 1,
+          rawProducts: [],
+          error: null,
+          lastErrorCode: null,
+          lastErrorHintKey: null
+        });
+      },
+
+      // Invalidar cache de un producto específico después de cambios de precio
+      invalidateProductCache: (productId) => {
+        const state = get();
+        
+        // Limpiar de searchCache todas las entradas que contengan este producto
+        const newSearchCache = {};
+        Object.keys(state.searchCache).forEach(key => {
+          const cached = state.searchCache[key];
+          if (cached && cached.data) {
+            // Filtrar este producto del cache
+            const filteredData = cached.data.filter(p => 
+              (p.product_id || p.id) !== productId
+            );
+            // Solo mantener la entrada si todavía tiene productos
+            if (filteredData.length > 0) {
+              newSearchCache[key] = {
+                ...cached,
+                data: filteredData
+              };
+            }
+          }
+        });
+
+        // Limpiar de productos actuales si está presente
+        const newProducts = state.products.filter(p => 
+          (p.product_id || p.id) !== productId
+        );
+        
+        // Limpiar de productsById
+        const newProductsById = { ...state.productsById };
+        delete newProductsById[productId];
+
+        set({
+          searchCache: newSearchCache,
+          products: newProducts,
+          productsById: newProductsById,
+          totalProducts: newProducts.length
+        });
+
+        telemetry.record('products.cache.invalidate', { productId });
+      },
+
+      // Refrescar datos de un producto específico después de cambios
+      refreshProductData: async (productId) => {
+        try {
+          // Obtener datos actualizados del producto
+          const updatedProduct = await productService.getProductByIdFinancial(productId);
+          const product = updatedProduct.data || updatedProduct;
+          
+          const state = get();
+          
+          // Actualizar en productos actuales si está presente
+          const updatedProducts = state.products.map(p => 
+            (p.product_id || p.id) === productId ? { ...p, ...product } : p
+          );
+          
+          // Actualizar en productsById
+          const updatedProductsById = { ...state.productsById };
+          if (updatedProductsById[productId]) {
+            updatedProductsById[productId] = { ...updatedProductsById[productId], ...product };
+          }
+          
+          // Actualizar en searchCache
+          const updatedSearchCache = {};
+          Object.keys(state.searchCache).forEach(key => {
+            const cached = state.searchCache[key];
+            if (cached && cached.data) {
+              const updatedCachedData = cached.data.map(p => 
+                (p.product_id || p.id) === productId ? { ...p, ...product } : p
+              );
+              updatedSearchCache[key] = {
+                ...cached,
+                data: updatedCachedData
+              };
+            } else {
+              updatedSearchCache[key] = cached;
+            }
+          });
+
+          set({
+            products: updatedProducts,
+            productsById: updatedProductsById,
+            searchCache: updatedSearchCache
+          });
+
+          telemetry.record('products.refresh.success', { productId });
+          return product;
+        } catch (error) {
+          telemetry.record('products.refresh.error', { productId, error: error.message });
+          // Si falla, al menos invalidar el cache
+          get().invalidateProductCache(productId);
+          throw error;
+        }
       },
 
       fetchProductById: async (productId) => {

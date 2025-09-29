@@ -26,6 +26,92 @@ const withRetry = async (fn, attempts = RETRY_ATTEMPTS) => {
 };
 
 export const reservationService = {
+  // Método unificado para todas las operaciones de reserva
+  async manageReservation(action, data) {
+    const startTime = Date.now();
+    console.log('🛠️ Service: manageReservation called with:', { action, data });
+    
+    try {
+      // Construir el payload según la action
+      let reservationData = { action };
+      
+      switch (action.toLowerCase()) {
+        case 'create':
+          reservationData = {
+            action: action.toUpperCase(), // API requiere mayúsculas
+            product_id: data.product_id,
+            client_id: data.client_id,
+            start_time: data.start_time,
+            duration: parseInt(data.duration)
+          };
+          break;
+          
+        case 'update':
+          reservationData = {
+            action: action.toUpperCase(), // API requiere mayúsculas
+            reserve_id: parseInt(data.reserve_id || data.id),
+            product_id: data.product_id,
+            client_id: data.client_id,
+            start_time: data.start_time,
+            duration: parseInt(data.duration)
+          };
+          break;
+          
+        case 'cancel':
+        case 'confirm':
+          // Formato simplificado para cancel/confirm
+          reservationData = {
+            action: action.toUpperCase(), // API acepta CANCEL/CONFIRM en mayúsculas
+            reserve_id: parseInt(data.reserve_id || data.id)
+          };
+          break;
+          
+        default:
+          throw new Error(`Acción no soportada: ${action}`);
+      }
+
+      // Validaciones básicas
+      if (['cancel', 'confirm'].includes(action.toLowerCase()) && !reservationData.reserve_id) {
+        throw new Error(`Para ${action} es obligatorio: reserve_id`);
+      }
+      
+      if (['create', 'update'].includes(action.toLowerCase())) {
+        if (!reservationData.product_id || !reservationData.client_id || 
+            !reservationData.start_time || !reservationData.duration) {
+          throw new Error(`Para ${action} faltan campos obligatorios`);
+        }
+      }
+
+      console.log(`🌐 Managing reservation (${action}):`, reservationData);
+      console.log(`📤 Sending POST to ${API_PREFIX}/manage`);
+      
+      const result = await withRetry(async () => {
+        return await apiClient.post(`${API_PREFIX}/manage`, reservationData);
+      });
+      
+      console.log('📥 API Response:', result);
+      console.log('📊 API Response details:', {
+        status: result?.status,
+        data: result?.data,
+        dataKeys: result?.data ? Object.keys(result.data) : [],
+        fullResponse: JSON.stringify(result, null, 2)
+      });
+      
+      telemetry.record(`reservations.service.${action}`, {
+        duration: Date.now() - startTime
+      });
+      
+      return result;
+    } catch (error) {
+      telemetry.record('reservations.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: `manage_${action}`
+      });
+      throw error;
+    }
+  },
+
   // Get service courts for reservations
   async getServiceCourts() {
     const startTime = Date.now();
@@ -103,142 +189,19 @@ export const reservationService = {
   },
 
   async createReservation(data) {
-    const startTime = Date.now();
-    
-    try {
-      // Validar estructura ReserveRequest según API spec
-      const reservationData = {
-        action: 'create',
-        product_id: data.product_id,
-        client_id: data.client_id,
-        start_time: data.start_time,
-        duration: parseInt(data.duration) // Debe ser int
-      };
-
-      // Validaciones según API spec
-      if (!reservationData.product_id || !reservationData.client_id || 
-          !reservationData.start_time || !reservationData.duration) {
-        throw new Error('Faltan campos obligatorios: product_id, client_id, start_time, duration');
-      }
-
-      if (reservationData.duration < 1) {
-        throw new Error('La duración debe ser mayor o igual a 1 hora');
-      }
-
-      // Validar formato ISO 8601 para start_time
-      try {
-        new Date(reservationData.start_time).toISOString();
-      } catch {
-        throw new Error('start_time debe ser formato ISO 8601 válido');
-      }
-
-      console.log('🌐 Creating reservation:', reservationData);
-      
-      const result = await withRetry(async () => {
-        return await apiClient.post(`${API_PREFIX}/manage`, reservationData);
-      });
-      
-      telemetry.record('reservations.service.create', {
-        duration: Date.now() - startTime
-      });
-      
-      return result;
-    } catch (error) {
-      telemetry.record('reservations.service.error', {
-        duration: Date.now() - startTime,
-        error: error.message,
-        operation: 'create'
-      });
-      throw error;
-    }
+    return this.manageReservation(data.action || 'create', data);
   },
 
   async updateReservation(id, data) {
-    const startTime = Date.now();
-    
-    try {
-      // Para update, reserve_id es OBLIGATORIO según API spec
-      const reservationData = {
-        action: 'update',
-        reserve_id: parseInt(id), // int64 según spec
-        product_id: data.product_id,
-        client_id: data.client_id,
-        start_time: data.start_time,
-        duration: parseInt(data.duration) // int según spec
-      };
-
-      // Validaciones según API spec
-      if (!reservationData.reserve_id || !reservationData.product_id || 
-          !reservationData.client_id || !reservationData.start_time || 
-          !reservationData.duration) {
-        throw new Error('Para update son obligatorios: reserve_id, product_id, client_id, start_time, duration');
-      }
-
-      if (reservationData.duration < 1) {
-        throw new Error('La duración debe ser mayor o igual a 1 hora');
-      }
-
-      console.log('🌐 Updating reservation:', reservationData);
-
-      const result = await withRetry(async () => {
-        return await apiClient.post(`${API_PREFIX}/manage`, reservationData);
-      });
-      
-      telemetry.record('reservations.service.update', {
-        duration: Date.now() - startTime
-      });
-      
-      return result;
-    } catch (error) {
-      telemetry.record('reservations.service.error', {
-        duration: Date.now() - startTime,
-        error: error.message,
-        operation: 'update'
-      });
-      throw error;
-    }
+    return this.manageReservation(data.action || 'update', { ...data, id });
   },
 
   async cancelReservation(data) {
-    const startTime = Date.now();
-    
-    try {
-      // Para cancel, según API spec necesitamos TODOS los campos
-      const reservationData = {
-        action: 'cancel',
-        reserve_id: parseInt(data.reserve_id || data.id), // int64 según spec
-        product_id: data.product_id,
-        client_id: data.client_id,
-        start_time: data.start_time,
-        duration: parseInt(data.duration) // int según spec
-      };
+    return this.manageReservation(data.action || 'cancel', data);
+  },
 
-      // Validaciones según API spec - todos los campos son obligatorios para cancel
-      if (!reservationData.reserve_id || !reservationData.product_id || 
-          !reservationData.client_id || !reservationData.start_time || 
-          !reservationData.duration) {
-        throw new Error('Para cancel son obligatorios: reserve_id, product_id, client_id, start_time, duration');
-      }
-
-      console.log('🌐 Canceling reservation:', reservationData);
-
-      const result = await withRetry(async () => {
-        return await apiClient.post(`${API_PREFIX}/manage`, reservationData);
-      });
-      
-      telemetry.record('reservations.service.cancel', {
-        duration: Date.now() - startTime
-      });
-      
-      return result;
-    } catch (error) {
-      telemetry.record('reservations.service.error', {
-        duration: Date.now() - startTime,
-        error: error.message,
-        operation: 'cancel'
-      });
-      throw error;
-    }
+  async confirmReservation(data) {
+    return this.manageReservation('confirm', data);
   },
 
   async getReservationsByProduct(productId) {

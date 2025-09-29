@@ -448,6 +448,9 @@ Object.assign(DICTIONARY.es, {
   'purchases.empty.action': 'Seleccionar Proveedor',
   'purchases.create': 'Crear Compra',
   'purchases.saving': 'Creando Compra...',
+  'purchases.status.pending': 'Pendiente',
+  'purchases.status.completed': 'Completado',
+  'purchases.status.cancelled': 'Cancelado',
 });
 Object.assign(DICTIONARY.en, {
   'purchases.title': 'Purchases',
@@ -475,6 +478,9 @@ Object.assign(DICTIONARY.en, {
   'purchases.empty.action': 'Select Supplier',
   'purchases.create': 'Create Purchase',
   'purchases.saving': 'Creating Purchase...',
+  'purchases.status.pending': 'Pending',
+  'purchases.status.completed': 'Completed',
+  'purchases.status.cancelled': 'Cancelled',
 });
 
 // Booking & Sales Page

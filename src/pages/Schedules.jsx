@@ -31,6 +31,7 @@ const Schedules = () => {
     generateTodaySchedules,
     generateTomorrowSchedules,
     generateSchedulesForDate,
+    generateSchedulesForDateWithCustomRange,
     generateSchedulesForNextDays,
     clearError
   } = useScheduleStore();
@@ -49,6 +50,15 @@ const Schedules = () => {
   
   const [bulkGeneration, setBulkGeneration] = useState({
     days: 7,
+    isGenerating: false
+  });
+
+  // 🆕 Estado para generación con rango personalizado
+  const [customRangeGeneration, setCustomRangeGeneration] = useState({
+    targetDate: '',
+    startHour: 6,
+    endHour: 23,
+    selectedProducts: [],
     isGenerating: false
   });
 
@@ -204,6 +214,48 @@ const Schedules = () => {
     }
   };
 
+  // 🆕 Acción 3b: Generar horarios con rango personalizado
+  const handleCustomRangeGenerate = async () => {
+    if (!customRangeGeneration.targetDate) {
+      addActionResult('custom_range', false, 'Selecciona una fecha primero');
+      return;
+    }
+
+    if (customRangeGeneration.startHour >= customRangeGeneration.endHour) {
+      addActionResult('custom_range', false, 'La hora de inicio debe ser menor que la hora de fin');
+      return;
+    }
+
+    setCustomRangeGeneration(prev => ({ ...prev, isGenerating: true }));
+    try {
+      const productIds = customRangeGeneration.selectedProducts.length > 0 
+        ? customRangeGeneration.selectedProducts 
+        : null;
+
+      const result = await generateSchedulesForDateWithCustomRange(
+        customRangeGeneration.targetDate,
+        customRangeGeneration.startHour,
+        customRangeGeneration.endHour,
+        productIds
+      );
+      
+      addActionResult(
+        'custom_range', 
+        true, 
+        `Horarios generados para ${customRangeGeneration.targetDate} de ${customRangeGeneration.startHour}:00 a ${customRangeGeneration.endHour}:00${productIds ? ` (${productIds.length} productos específicos)` : ''}`,
+        result
+      );
+    } catch (error) {
+      addActionResult(
+        'custom_range', 
+        false, 
+        `Error en generación con rango personalizado: ${error.message}`
+      );
+    } finally {
+      setCustomRangeGeneration(prev => ({ ...prev, isGenerating: false }));
+    }
+  };
+
   // Acción 4: Consultar horarios específicos
   const handleQuerySchedules = async () => {
     if (!scheduleQuery.productId || !scheduleQuery.date) {
@@ -343,6 +395,7 @@ const Schedules = () => {
       case 'generate_tomorrow': return 'border-l-cyan-500';
       case 'generate_date': return 'border-l-green-500';
       case 'bulk_generate': return 'border-l-purple-500';
+      case 'custom_range': return 'border-l-indigo-500';
       case 'query': return 'border-l-orange-500';
       case 'check_general': return 'border-l-teal-500';
       case 'load_products': return 'border-l-gray-500';
@@ -705,6 +758,104 @@ const Schedules = () => {
             </CardContent>
           </Card>
 
+          {/* 🆕 Herramienta 3b: Generación con Rango Personalizado */}
+          <Card className={styles.card()}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-indigo-500" />
+                Rango Personalizado
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Fecha</label>
+                  <Input
+                    type="date"
+                    value={customRangeGeneration.targetDate}
+                    onChange={(e) => setCustomRangeGeneration(prev => ({ 
+                      ...prev, 
+                      targetDate: e.target.value 
+                    }))}
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Inicio</label>
+                    <select
+                      value={customRangeGeneration.startHour}
+                      onChange={(e) => setCustomRangeGeneration(prev => ({ 
+                        ...prev, 
+                        startHour: parseInt(e.target.value) 
+                      }))}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <option key={i} value={i}>{i}:00</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Fin</label>
+                    <select
+                      value={customRangeGeneration.endHour}
+                      onChange={(e) => setCustomRangeGeneration(prev => ({ 
+                        ...prev, 
+                        endHour: parseInt(e.target.value) 
+                      }))}
+                      className="w-full p-2 border rounded text-sm"
+                    >
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <option key={i} value={i}>{i}:00</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Productos (opcional)</label>
+                <select
+                  multiple
+                  value={customRangeGeneration.selectedProducts}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, option => option.value);
+                    setCustomRangeGeneration(prev => ({ 
+                      ...prev, 
+                      selectedProducts: selected 
+                    }));
+                  }}
+                  className="w-full p-2 border rounded text-sm h-20"
+                  size={3}
+                >
+                  {products.map(product => (
+                    <option key={product.id} value={product.id}>
+                      {product.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sin selección = todos los productos activos
+                </p>
+              </div>
+
+              <Button
+                onClick={handleCustomRangeGenerate}
+                disabled={customRangeGeneration.isGenerating || !customRangeGeneration.targetDate}
+                variant="primary"
+                className="w-full flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700"
+              >
+                {customRangeGeneration.isGenerating ? (
+                  <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
+                Generar con Rango Personalizado
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Herramienta 4: Consulta Específica */}
           <Card className={styles.card()}>
             <CardHeader>
@@ -723,11 +874,6 @@ const Schedules = () => {
                     className="w-full p-2 border rounded"
                   >
                     <option value="">Seleccionar...</option>
-                    {/* Opción temporal: IDs conocidos del sistema */}
-                    <optgroup label="Servicios Conocidos (Temporal)">
-                      <option value="BT_Cancha_1_xyz123abc">Cancha de Beach Tennis 1</option>
-                      <option value="BT_Cancha_2_def456ghi">Cancha de Beach Tennis 2</option>
-                    </optgroup>
                     {/* Servicios cargados dinámicamente */}
                     {products.length > 0 && (
                       <optgroup label="Servicios Cargados">

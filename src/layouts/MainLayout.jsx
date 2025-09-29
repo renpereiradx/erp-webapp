@@ -28,13 +28,16 @@ import {
   CreditCard,
   Receipt,
   DollarSign,
-  Edit
+  Edit,
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState({});
   const profileBtnRef = useRef(null);
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0, width: 288 });
 
@@ -518,33 +521,45 @@ const MainLayout = ({ children }) => {
       color: 'purple',
       badge: '8'
     },
-    { 
-      name: 'Compras', 
-      href: '/compras', 
-      icon: ShoppingBag, 
+    {
+      name: 'Compras',
+      href: '/compras',
+      icon: ShoppingBag,
       color: 'indigo',
       badge: '9'
     },
-    { 
-      name: 'Caja Registradora', 
-      href: '/caja-registradora', 
-      icon: DollarSign, 
+    {
+      name: 'Pagos',
+      href: '#',
+      icon: DollarSign,
       color: 'green',
-      badge: '10'
-    },
-    { 
-      name: 'Pagos Compras', 
-      href: '/pagos-compras', 
-      icon: CreditCard, 
-      color: 'blue',
-      badge: '11'
-    },
-    { 
-      name: 'Pagos Ventas', 
-      href: '/pagos-ventas', 
-      icon: Receipt, 
-      color: 'emerald',
-      badge: '12'
+      badge: '10',
+      children: [
+        {
+          name: 'Caja Registradora',
+          href: '/caja-registradora',
+          icon: DollarSign,
+          color: 'green'
+        },
+        {
+          name: 'Pagos Compras',
+          href: '/pagos-compras',
+          icon: CreditCard,
+          color: 'blue'
+        },
+        {
+          name: 'Pagos Ventas',
+          href: '/pagos-ventas',
+          icon: Receipt,
+          color: 'emerald'
+        },
+        {
+          name: 'Gestión de Pagos',
+          href: '/gestion-pagos',
+          icon: Settings,
+          color: 'purple'
+        }
+      ]
     },
     { 
       name: 'Reportes', 
@@ -556,6 +571,21 @@ const MainLayout = ({ children }) => {
   ];
 
   const isActive = (href) => location.pathname === href;
+
+  const isParentActive = (item) => {
+    if (isActive(item.href)) return true;
+    if (item.children) {
+      return item.children.some(child => isActive(child.href));
+    }
+    return false;
+  };
+
+  const toggleMenu = (menuName) => {
+    setExpandedMenus(prev => ({
+      ...prev,
+      [menuName]: !prev[menuName]
+    }));
+  };
 
   // Aplicar estilos condicionales según el tema
   const getLayoutStyles = () => {
@@ -649,67 +679,182 @@ const MainLayout = ({ children }) => {
           <nav className={`erp-sidebar-nav mt-4 flex-1 px-4 pb-4 ${computedStyles.css.navSpacing} overflow-y-auto`} data-component="sidebar-nav" data-testid="sidebar-nav">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const active = isActive(item.href);
+              const hasChildren = item.children && item.children.length > 0;
+              const isExpanded = expandedMenus[item.name];
+              const active = hasChildren ? isParentActive(item) : isActive(item.href);
               const navStyles = getNavItemStyles(active, item);
-              
+
               return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`erp-nav-item group flex items-center px-3 py-2 text-xs ${getTitleClass('body')} ${isNeoBrutalismValue ? '' : isFluentValue ? 'fluent-radius-small' : 'rounded-md'} transition-all duration-150`}
-                  style={navStyles}
-                  data-component="nav-item" 
-                  data-testid={`nav-item-${item.name.toLowerCase()}`}
-                  data-active={active}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      const themeType = isNeoBrutalismValue ? 'neo' : isFluentValue ? 'fluent' : isMaterialValue ? 'material' : 'default';
-                      const hoverStyles = computedStyles.getNavItemHoverStyles(themeType);
-                      
-                      // Apply hover styles smoothly
-                      Object.entries(hoverStyles).forEach(([prop, value]) => {
-                        e.target.style.setProperty(prop, value, 'important');
-                      });
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      // Reset all hover styles to original values
-                      const originalStyles = navStyles;
-                      Object.entries(originalStyles).forEach(([prop, value]) => {
-                        e.target.style.setProperty(prop, value, 'important');
-                      });
-                      
-                      // Ensure transform is reset for neo-brutalism
-                      if (isNeoBrutalismValue && !active) {
-                        e.target.style.setProperty('transform', 'translate(0px, 0px)', 'important');
-                        e.target.style.setProperty('box-shadow', 'none', 'important');
-                      }
-                    }
-                  }}
-                >
-                  <Icon className="erp-nav-icon mr-2 h-4 w-4 flex-shrink-0" />
-                  <span className="erp-nav-text flex-1">{item.name}</span>
-                  {isNeoBrutalismValue ? (
-                    <span className={`erp-nav-badge ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
-                          style={{ 
-                            backgroundColor: `var(--brutalist-${item.color})`,
-                            boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)'
-                          }}
-                          data-testid={`nav-badge-${item.name.toLowerCase()}`}>
-                      {item.badge}
-                    </span>
+                <div key={item.name} className="relative">
+                  {/* Main menu item */}
+                  {hasChildren ? (
+                    <button
+                      onClick={() => toggleMenu(item.name)}
+                      className={`erp-nav-item group flex items-center w-full px-3 py-2 text-xs ${getTitleClass('body')} ${isNeoBrutalismValue ? '' : isFluentValue ? 'fluent-radius-small' : 'rounded-md'} transition-all duration-150`}
+                      style={navStyles}
+                      data-component="nav-item"
+                      data-testid={`nav-item-${item.name.toLowerCase()}`}
+                      data-active={active}
+                      onMouseEnter={(e) => {
+                        if (!active) {
+                          const themeType = isNeoBrutalismValue ? 'neo' : isFluentValue ? 'fluent' : isMaterialValue ? 'material' : 'default';
+                          const hoverStyles = computedStyles.getNavItemHoverStyles(themeType);
+
+                          Object.entries(hoverStyles).forEach(([prop, value]) => {
+                            e.target.style.setProperty(prop, value, 'important');
+                          });
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!active) {
+                          const originalStyles = navStyles;
+                          Object.entries(originalStyles).forEach(([prop, value]) => {
+                            e.target.style.setProperty(prop, value, 'important');
+                          });
+
+                          if (isNeoBrutalismValue && !active) {
+                            e.target.style.setProperty('transform', 'translate(0px, 0px)', 'important');
+                            e.target.style.setProperty('box-shadow', 'none', 'important');
+                          }
+                        }
+                      }}
+                    >
+                      <Icon className="erp-nav-icon mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="erp-nav-text flex-1">{item.name}</span>
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                      {item.badge && (
+                        isNeoBrutalismValue ? (
+                          <span className={`erp-nav-badge ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
+                                style={{
+                                  backgroundColor: `var(--brutalist-${item.color})`,
+                                  boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)'
+                                }}
+                                data-testid={`nav-badge-${item.name.toLowerCase()}`}>
+                            {item.badge}
+                          </span>
+                        ) : (
+                          <span className="erp-nav-badge ml-2 px-2 py-1 text-xs font-medium rounded-full"
+                                style={{
+                                  backgroundColor: 'var(--muted)',
+                                  color: 'var(--muted-foreground)'
+                                }}
+                                data-testid={`nav-badge-${item.name.toLowerCase()}`}>
+                            {item.badge}
+                          </span>
+                        )
+                      )}
+                    </button>
                   ) : (
-                    <span className="erp-nav-badge ml-2 px-2 py-1 text-xs font-medium rounded-full"
-                          style={{ 
-                            backgroundColor: 'var(--muted)', 
-                            color: 'var(--muted-foreground)' 
-                          }}
-                          data-testid={`nav-badge-${item.name.toLowerCase()}`}>
-                      {item.badge}
-                    </span>
+                    <Link
+                      to={item.href}
+                      className={`erp-nav-item group flex items-center px-3 py-2 text-xs ${getTitleClass('body')} ${isNeoBrutalismValue ? '' : isFluentValue ? 'fluent-radius-small' : 'rounded-md'} transition-all duration-150`}
+                      style={navStyles}
+                      data-component="nav-item"
+                      data-testid={`nav-item-${item.name.toLowerCase()}`}
+                      data-active={active}
+                      onMouseEnter={(e) => {
+                        if (!active) {
+                          const themeType = isNeoBrutalismValue ? 'neo' : isFluentValue ? 'fluent' : isMaterialValue ? 'material' : 'default';
+                          const hoverStyles = computedStyles.getNavItemHoverStyles(themeType);
+
+                          Object.entries(hoverStyles).forEach(([prop, value]) => {
+                            e.target.style.setProperty(prop, value, 'important');
+                          });
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!active) {
+                          const originalStyles = navStyles;
+                          Object.entries(originalStyles).forEach(([prop, value]) => {
+                            e.target.style.setProperty(prop, value, 'important');
+                          });
+
+                          if (isNeoBrutalismValue && !active) {
+                            e.target.style.setProperty('transform', 'translate(0px, 0px)', 'important');
+                            e.target.style.setProperty('box-shadow', 'none', 'important');
+                          }
+                        }
+                      }}
+                    >
+                      <Icon className="erp-nav-icon mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="erp-nav-text flex-1">{item.name}</span>
+                      {item.badge && (
+                        isNeoBrutalismValue ? (
+                          <span className={`erp-nav-badge ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
+                                style={{
+                                  backgroundColor: `var(--brutalist-${item.color})`,
+                                  boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)'
+                                }}
+                                data-testid={`nav-badge-${item.name.toLowerCase()}`}>
+                            {item.badge}
+                          </span>
+                        ) : (
+                          <span className="erp-nav-badge ml-2 px-2 py-1 text-xs font-medium rounded-full"
+                                style={{
+                                  backgroundColor: 'var(--muted)',
+                                  color: 'var(--muted-foreground)'
+                                }}
+                                data-testid={`nav-badge-${item.name.toLowerCase()}`}>
+                            {item.badge}
+                          </span>
+                        )
+                      )}
+                    </Link>
                   )}
-                </Link>
+
+                  {/* Submenu items */}
+                  {hasChildren && isExpanded && (
+                    <div className="ml-4 mt-1 space-y-1">
+                      {item.children.map((child) => {
+                        const ChildIcon = child.icon;
+                        const childActive = isActive(child.href);
+                        const childNavStyles = getNavItemStyles(childActive, child);
+
+                        return (
+                          <Link
+                            key={child.name}
+                            to={child.href}
+                            className={`erp-nav-sub-item group flex items-center px-3 py-2 text-xs ${getTitleClass('body')} ${isNeoBrutalismValue ? '' : isFluentValue ? 'fluent-radius-small' : 'rounded-md'} transition-all duration-150`}
+                            style={childNavStyles}
+                            data-component="nav-sub-item"
+                            data-testid={`nav-sub-item-${child.name.toLowerCase()}`}
+                            data-active={childActive}
+                            onMouseEnter={(e) => {
+                              if (!childActive) {
+                                const themeType = isNeoBrutalismValue ? 'neo' : isFluentValue ? 'fluent' : isMaterialValue ? 'material' : 'default';
+                                const hoverStyles = computedStyles.getNavItemHoverStyles(themeType);
+
+                                Object.entries(hoverStyles).forEach(([prop, value]) => {
+                                  e.target.style.setProperty(prop, value, 'important');
+                                });
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!childActive) {
+                                const originalStyles = childNavStyles;
+                                Object.entries(originalStyles).forEach(([prop, value]) => {
+                                  e.target.style.setProperty(prop, value, 'important');
+                                });
+
+                                if (isNeoBrutalismValue && !childActive) {
+                                  e.target.style.setProperty('transform', 'translate(0px, 0px)', 'important');
+                                  e.target.style.setProperty('box-shadow', 'none', 'important');
+                                }
+                              }
+                            }}
+                          >
+                            <ChildIcon className="erp-nav-icon mr-2 h-4 w-4 flex-shrink-0" />
+                            <span className="erp-nav-text flex-1">{child.name}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
@@ -766,63 +911,171 @@ const MainLayout = ({ children }) => {
               <nav className={`mt-4 flex-1 px-4 pb-4 ${isNeoBrutalismValue ? 'space-y-2' : 'space-y-1'} overflow-y-auto`}>
                 {navigation.map((item) => {
                   const Icon = item.icon;
-                  const active = isActive(item.href);
+                  const hasChildren = item.children && item.children.length > 0;
+                  const isExpanded = expandedMenus[item.name];
+                  const active = hasChildren ? isParentActive(item) : isActive(item.href);
                   const navStyles = getNavItemStyles(active, item);
-                  
+
                   return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`group flex items-center px-3 py-2 text-xs ${computedStyles.css.mediumClass} ${isNeoBrutalismValue ? '' : 'rounded-md'} transition-all duration-150`}
-                      style={navStyles}
-                      onMouseEnter={(e) => {
-                        if (!active) {
-                          const themeType = isNeoBrutalismValue ? 'neo' : isFluentValue ? 'fluent' : isMaterialValue ? 'material' : 'default';
-                          const hoverStyles = computedStyles.getNavItemHoverStyles(themeType);
-                          
-                          // Apply hover styles smoothly
-                          Object.entries(hoverStyles).forEach(([prop, value]) => {
-                            e.target.style.setProperty(prop, value, 'important');
-                          });
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!active) {
-                          // Reset all hover styles to original values
-                          const originalStyles = navStyles;
-                          Object.entries(originalStyles).forEach(([prop, value]) => {
-                            e.target.style.setProperty(prop, value, 'important');
-                          });
-                          
-                          // Ensure transform is reset for neo-brutalism
-                          if (isNeoBrutalismValue && !active) {
-                            e.target.style.setProperty('transform', 'translate(0px, 0px)', 'important');
-                            e.target.style.setProperty('box-shadow', 'none', 'important');
-                          }
-                        }
-                      }}
-                    >
-                      <Icon className="mr-2 h-4 w-4 flex-shrink-0" />
-                      <span className="flex-1">{item.name}</span>
-                      {isNeoBrutalismValue ? (
-                        <span className={`ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
-                              style={{ 
-                                backgroundColor: `var(--brutalist-${item.color})`,
-                                boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)'
-                              }}>
-                          {item.badge}
-                        </span>
+                    <div key={item.name} className="relative">
+                      {/* Main menu item */}
+                      {hasChildren ? (
+                        <button
+                          onClick={() => toggleMenu(item.name)}
+                          className={`group flex items-center w-full px-3 py-2 text-xs ${computedStyles.css.mediumClass} ${isNeoBrutalismValue ? '' : 'rounded-md'} transition-all duration-150`}
+                          style={navStyles}
+                          onMouseEnter={(e) => {
+                            if (!active) {
+                              const themeType = isNeoBrutalismValue ? 'neo' : isFluentValue ? 'fluent' : isMaterialValue ? 'material' : 'default';
+                              const hoverStyles = computedStyles.getNavItemHoverStyles(themeType);
+
+                              Object.entries(hoverStyles).forEach(([prop, value]) => {
+                                e.target.style.setProperty(prop, value, 'important');
+                              });
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!active) {
+                              const originalStyles = navStyles;
+                              Object.entries(originalStyles).forEach(([prop, value]) => {
+                                e.target.style.setProperty(prop, value, 'important');
+                              });
+
+                              if (isNeoBrutalismValue && !active) {
+                                e.target.style.setProperty('transform', 'translate(0px, 0px)', 'important');
+                                e.target.style.setProperty('box-shadow', 'none', 'important');
+                              }
+                            }
+                          }}
+                        >
+                          <Icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                          <span className="flex-1">{item.name}</span>
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                          {item.badge && (
+                            isNeoBrutalismValue ? (
+                              <span className={`ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
+                                    style={{
+                                      backgroundColor: `var(--brutalist-${item.color})`,
+                                      boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)'
+                                    }}>
+                                {item.badge}
+                              </span>
+                            ) : (
+                              <span className="ml-2 px-2 py-1 text-xs font-medium rounded-full"
+                                    style={{
+                                      backgroundColor: 'var(--muted)',
+                                      color: 'var(--muted-foreground)'
+                                    }}>
+                                {item.badge}
+                              </span>
+                            )
+                          )}
+                        </button>
                       ) : (
-                        <span className="ml-2 px-2 py-1 text-xs font-medium rounded-full"
-                              style={{ 
-                                backgroundColor: 'var(--muted)', 
-                                color: 'var(--muted-foreground)' 
-                              }}>
-                          {item.badge}
-                        </span>
+                        <Link
+                          to={item.href}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`group flex items-center px-3 py-2 text-xs ${computedStyles.css.mediumClass} ${isNeoBrutalismValue ? '' : 'rounded-md'} transition-all duration-150`}
+                          style={navStyles}
+                          onMouseEnter={(e) => {
+                            if (!active) {
+                              const themeType = isNeoBrutalismValue ? 'neo' : isFluentValue ? 'fluent' : isMaterialValue ? 'material' : 'default';
+                              const hoverStyles = computedStyles.getNavItemHoverStyles(themeType);
+
+                              Object.entries(hoverStyles).forEach(([prop, value]) => {
+                                e.target.style.setProperty(prop, value, 'important');
+                              });
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!active) {
+                              const originalStyles = navStyles;
+                              Object.entries(originalStyles).forEach(([prop, value]) => {
+                                e.target.style.setProperty(prop, value, 'important');
+                              });
+
+                              if (isNeoBrutalismValue && !active) {
+                                e.target.style.setProperty('transform', 'translate(0px, 0px)', 'important');
+                                e.target.style.setProperty('box-shadow', 'none', 'important');
+                              }
+                            }
+                          }}
+                        >
+                          <Icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                          <span className="flex-1">{item.name}</span>
+                          {item.badge && (
+                            isNeoBrutalismValue ? (
+                              <span className={`ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
+                                    style={{
+                                      backgroundColor: `var(--brutalist-${item.color})`,
+                                      boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)'
+                                    }}>
+                                {item.badge}
+                              </span>
+                            ) : (
+                              <span className="ml-2 px-2 py-1 text-xs font-medium rounded-full"
+                                    style={{
+                                      backgroundColor: 'var(--muted)',
+                                      color: 'var(--muted-foreground)'
+                                    }}>
+                                {item.badge}
+                              </span>
+                            )
+                          )}
+                        </Link>
                       )}
-                    </Link>
+
+                      {/* Submenu items */}
+                      {hasChildren && isExpanded && (
+                        <div className="ml-4 mt-1 space-y-1">
+                          {item.children.map((child) => {
+                            const ChildIcon = child.icon;
+                            const childActive = isActive(child.href);
+                            const childNavStyles = getNavItemStyles(childActive, child);
+
+                            return (
+                              <Link
+                                key={child.name}
+                                to={child.href}
+                                onClick={() => setSidebarOpen(false)}
+                                className={`group flex items-center px-3 py-2 text-xs ${computedStyles.css.mediumClass} ${isNeoBrutalismValue ? '' : 'rounded-md'} transition-all duration-150`}
+                                style={childNavStyles}
+                                onMouseEnter={(e) => {
+                                  if (!childActive) {
+                                    const themeType = isNeoBrutalismValue ? 'neo' : isFluentValue ? 'fluent' : isMaterialValue ? 'material' : 'default';
+                                    const hoverStyles = computedStyles.getNavItemHoverStyles(themeType);
+
+                                    Object.entries(hoverStyles).forEach(([prop, value]) => {
+                                      e.target.style.setProperty(prop, value, 'important');
+                                    });
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!childActive) {
+                                    const originalStyles = childNavStyles;
+                                    Object.entries(originalStyles).forEach(([prop, value]) => {
+                                      e.target.style.setProperty(prop, value, 'important');
+                                    });
+
+                                    if (isNeoBrutalismValue && !childActive) {
+                                      e.target.style.setProperty('transform', 'translate(0px, 0px)', 'important');
+                                      e.target.style.setProperty('box-shadow', 'none', 'important');
+                                    }
+                                  }
+                                }}
+                              >
+                                <ChildIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                                <span className="flex-1">{child.name}</span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </nav>

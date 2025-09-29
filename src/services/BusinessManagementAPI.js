@@ -119,24 +119,47 @@ class BusinessManagementAPI {
           const retryResponse = await fetch(url, retryConfig);
           if (retryResponse.ok) {
             const contentType = retryResponse.headers.get('content-type');
+
             if (contentType && contentType.includes('application/json')) {
               return await retryResponse.json();
             }
-            
+
             // Si es texto plano, verificar si es un mensaje de error conocido
             const textResponse = await retryResponse.text();
+
             if (textResponse === 'Product not found' || textResponse.includes('not found')) {
               throw new Error('Producto no encontrado');
             }
-            
-            return textResponse;
+
+            // Para texto plano que no es error, intentar parsearlo como JSON
+            try {
+              return JSON.parse(textResponse);
+            } catch (e) {
+              return textResponse;
+            }
+          } else {
+            // Capturar el error específico del retry request
+            console.error(`❌ Retry request falló con status ${retryResponse.status}`);
+            let errorMessage = `Error ${retryResponse.status}: ${retryResponse.statusText}`;
+
+            try {
+              const errorBody = await retryResponse.text();
+              console.error('Error body del servidor:', errorBody);
+              if (errorBody) {
+                errorMessage = errorBody;
+              }
+            } catch (e) {
+              console.error('No se pudo leer el cuerpo del error:', e);
+            }
+
+            throw new ApiError(`HTTP_${retryResponse.status}`, errorMessage);
           }
         } else {
           console.error('❌ Auto-login falló - verifique credenciales o servidor');
         }
-        
+
         this.handleUnauthorized();
-        throw new ApiError('UNAUTHORIZED', 
+        throw new ApiError('UNAUTHORIZED',
           'Error de autenticación. El sistema no pudo autenticarse automáticamente. ' +
           'Verifique que el servidor esté funcionando y las credenciales sean correctas.');
       }
@@ -187,7 +210,29 @@ class BusinessManagementAPI {
         throw new ApiError('INTERNAL', `Error interno del servidor (${response.status}). Contacta al administrador.`);
       }
       
-      throw new ApiError('HTTP_ERROR', `HTTP error! status: ${response.status}`);
+      // Capturar detalles del error para debugging
+      let errorDetails = `HTTP error! status: ${response.status}`;
+      try {
+        const errorResponse = await response.json();
+        console.error('🚨 Server error response (JSON):', errorResponse);
+        errorDetails = errorResponse.message || errorResponse.error || errorDetails;
+        if (errorResponse.details) {
+          console.error('🔍 Error details:', errorResponse.details);
+        }
+      } catch (e) {
+        // Si no es JSON, intentar leer como texto
+        try {
+          const textResponse = await response.text();
+          console.error('🚨 Server error response (TEXT):', textResponse);
+          if (textResponse && textResponse.trim()) {
+            errorDetails = textResponse;
+          }
+        } catch (textError) {
+          console.error('Could not parse error response as JSON or text');
+        }
+      }
+
+      throw new ApiError('HTTP_ERROR', errorDetails);
     }
 
     const contentType = response.headers.get('content-type');

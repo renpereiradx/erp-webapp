@@ -154,6 +154,26 @@ const useScheduleStore = create(
         }
       },
 
+      // 🆕 Generar horarios para fecha específica con rango de horas personalizado
+      generateSchedulesForDateWithCustomRange: async (targetDate, startHour, endHour, productIds = null) => {
+        try {
+          const result = await scheduleService.generateForDateWithCustomRange(targetDate, startHour, endHour, productIds);
+          if (result.success !== false) {
+            // Recargar lista después de generar (opcional - hacer manualmente)
+            // get().fetchSchedules();
+          }
+          telemetry.record('feature.schedules.generate_for_date_custom_range', {
+            start_hour: startHour,
+            end_hour: endHour,
+            has_product_filter: !!productIds
+          });
+          return { success: true, data: result };
+        } catch (error) {
+          set({ error: error.message || 'Error al generar horarios con rango personalizado' });
+          return { success: false, error: error.message };
+        }
+      },
+
       // Generar horarios para próximos N días
       generateSchedulesForNextDays: async (days) => {
         try {

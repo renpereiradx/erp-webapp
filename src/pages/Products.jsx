@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input';
 import useProductStore from '@/store/useProductStore';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useI18n } from '@/lib/i18n';
+import { useRouteChange } from '@/hooks/useRouteChange';
 import DataState from '@/components/ui/DataState';
 import EmptyState from '@/components/ui/EmptyState';
 import MetricsPanel from '@/components/MetricsPanel';
@@ -31,6 +32,8 @@ const ProductsPage = () => {
   const reactivateProduct = useProductStore(state => state.reactivateProduct);
   const fetchProducts = useProductStore(state => state.fetchProducts);
   const hydrateFromStorage = useProductStore(state => state.hydrateFromStorage);
+  const clearSearchState = useProductStore(state => state.clearSearchState);
+  const refreshProductData = useProductStore(state => state.refreshProductData);
 
   // Local UI state
   const [showProductModal, setShowProductModal] = useState(false);
@@ -43,7 +46,18 @@ const ProductsPage = () => {
   const [inlineFlag] = useFeatureFlag('newInlineEdit', true);
   const [inlineEditingId, setInlineEditingId] = useState(null);
 
+  // Detectar cambios de ruta para limpiar búsquedas
+  useRouteChange((prevLocation, currentLocation) => {
+    // Solo limpiar si venimos de otra página que no sea productos
+    if (prevLocation.pathname !== '/productos' && currentLocation.pathname === '/productos') {
+      clearSearchState();
+    }
+  });
+
   useEffect(() => {
+    // Limpiar estado de búsquedas previas al montar la página
+    clearSearchState();
+    
     if (typeof hydrateFromStorage === 'function') {
       hydrateFromStorage();
     }
@@ -244,13 +258,14 @@ const ProductsPage = () => {
         <div className={styles.card('p-4')}>
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <form onSubmit={handleApiSearch} className="flex-1">
-              <div className="relative group">
-                {/* Icono de búsqueda - posición exacta estilo Google */}
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                  <Search className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--primary))] transition-colors" />
-                </div>
-                {/* Input campo - padding calculado para evitar superposición */}
-                <input
+              <div className="flex gap-2">
+                <div className="relative group flex-1">
+                  {/* Icono de búsqueda - posición exacta estilo Google */}
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                    <Search className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--primary))] transition-colors" />
+                  </div>
+                  {/* Input campo - padding calculado para evitar superposición */}
+                  <input
                   type="text"
                   placeholder={
                     searchType === 'barcode' 
@@ -279,6 +294,10 @@ const ProductsPage = () => {
                     </span>
                   </div>
                 )}
+                </div>
+                <Button type="submit" variant="outline" className="px-4 h-10">
+                  <Search className="h-4 w-4" />
+                </Button>
               </div>
             </form>
             <Button onClick={handleCreateProduct} variant="primary" className="sm:flex-shrink-0">
