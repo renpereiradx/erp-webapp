@@ -914,127 +914,182 @@ const PurchasePayment = () => {
 
               {/* Orders List */}
               {searchResults.length > 0 && (
-                <div className="space-y-4">
+                <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))' }}>
                   {searchResults.map((orderData, index) => {
                     const order = orderData.purchase || orderData;
                     const details = orderData.details || [];
+                    const paymentPercentage = getPaymentProgress(order?.amount_paid || 0, order?.total_amount || 0);
+
+                    // Traducir estados
+                    const statusLabels = {
+                      'COMPLETED': 'Completada',
+                      'PENDING': 'Pendiente',
+                      'PARTIAL_PAYMENT': 'Pago Parcial',
+                      'CANCELLED': 'Cancelada',
+                      'PROCESSING': 'En Proceso'
+                    };
 
                     return (
-                      <Card key={order?.id || index} className="p-4">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-3">
-                              <h3 className="font-bold">Orden #{order?.id}</h3>
-                              <Badge variant={order?.status === 'COMPLETED' ? 'success' : 'secondary'}>
-                                {order?.status || 'N/A'}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {details.length} productos
-                              </Badge>
-                              {order?.supplier_status === false && (
-                                <Badge variant="destructive" className="text-xs">
-                                  Proveedor Inactivo
+                      <Card key={order?.id || index} className="overflow-hidden border-l-4" style={{
+                        borderLeftColor: order?.status === 'COMPLETED' ? 'hsl(var(--chart-2))' :
+                                        order?.status === 'PENDING' ? 'hsl(var(--chart-3))' :
+                                        'hsl(var(--chart-5))'
+                      }}>
+                        <div className="p-5">
+                          {/* Header Section */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1 space-y-3">
+                              {/* Title Row */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h3 className="font-bold text-lg">Orden #{order?.id}</h3>
+                                <Badge
+                                  variant={order?.status === 'COMPLETED' ? 'default' : order?.status === 'PENDING' ? 'secondary' : 'outline'}
+                                  className="font-medium"
+                                >
+                                  {statusLabels[order?.status] || order?.status || 'N/A'}
                                 </Badge>
-                              )}
+                                <Badge variant="outline" className="text-xs">
+                                  {details.length} {details.length === 1 ? 'producto' : 'productos'}
+                                </Badge>
+                                {order?.supplier_status === false && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    ⚠ Proveedor Inactivo
+                                  </Badge>
+                                )}
+                              </div>
+
+                              {/* Info Grid */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                                {/* Left Column */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <span className="text-muted-foreground text-xs">Proveedor:</span>
+                                      <span className="font-semibold truncate">{order?.supplier_name || 'N/A'}</span>
+                                      <span className="text-xs text-muted-foreground">(ID: {order?.supplier_id})</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-muted-foreground text-xs">Fecha:</span>
+                                      <span className="font-medium">
+                                        {order?.order_date ? new Date(order.order_date).toLocaleDateString('es-ES', {
+                                          day: '2-digit',
+                                          month: '2-digit',
+                                          year: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        }) : 'No disponible'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Right Column */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <DollarSign className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-muted-foreground text-xs">Total:</span>
+                                      <span className="font-bold text-base">{formatCurrency(order?.total_amount || 0)}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-muted-foreground text-xs">Creado por:</span>
+                                      <span className="font-medium">{order?.user_name || 'No disponible'}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <Users className="w-4 h-4" />
-                                  <span className="font-medium">{order?.supplier_name}</span>
-                                  <span className="text-xs">(ID: {order?.supplier_id})</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="w-4 h-4" />
-                                  {order?.order_date ? new Date(order.order_date).toLocaleDateString('es-ES', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  }) : 'Fecha no disponible'}
-                                </div>
-                              </div>
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <DollarSign className="w-4 h-4" />
-                                  <span>Total: <strong>{formatCurrency(order?.total_amount || 0)}</strong></span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Users className="w-4 h-4" />
-                                  <span>Creado por: {order?.user_name || 'No disponible'}</span>
-                                </div>
-                              </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-2 ml-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewOrderDetail(order?.id)}
+                                title="Ver detalles"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+
+                              {/* Botón de Pago - solo para órdenes no completadas */}
+                              {order?.status !== 'COMPLETED' && order?.status !== 'CANCELLED' && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+                                  onClick={() => {
+                                    setSelectedOrderId(order?.id);
+                                    setPaymentDialog(true);
+                                  }}
+                                >
+                                  <CreditCard className="w-4 h-4 mr-2" />
+                                  Pagar
+                                </Button>
+                              )}
                             </div>
                           </div>
 
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewOrderDetail(order?.id)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-
-                            {/* Botón de Pago - solo para órdenes no completadas */}
-                            {order?.status !== 'COMPLETED' && order?.status !== 'CANCELLED' && (
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700"
-                                onClick={() => {
-                                  setSelectedOrderId(order?.id);
-                                  setPaymentDialog(true);
-                                }}
-                              >
-                                <CreditCard className="w-4 h-4 mr-2" />
-                                Pagar
-                              </Button>
+                          {/* Payment Progress Section */}
+                          <div className="mt-4 p-3 bg-accent/20 rounded-lg space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="font-medium text-muted-foreground">Progreso de pago</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-base">
+                                  {formatCurrency(order?.amount_paid || 0)}
+                                </span>
+                                <span className="text-muted-foreground">/</span>
+                                <span className="font-semibold">
+                                  {formatCurrency(order?.total_amount || 0)}
+                                </span>
+                                <Badge variant="secondary" className="ml-2">
+                                  {paymentPercentage.toFixed(0)}%
+                                </Badge>
+                              </div>
+                            </div>
+                            <Progress
+                              value={paymentPercentage}
+                              className="h-2.5"
+                            />
+                            {paymentPercentage > 0 && paymentPercentage < 100 && (
+                              <p className="text-xs text-muted-foreground text-right">
+                                Resta: {formatCurrency((order?.total_amount || 0) - (order?.amount_paid || 0))}
+                              </p>
                             )}
                           </div>
-                        </div>
 
-                        {/* Payment Progress */}
-                        <div className="mt-4 space-y-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <span>Progreso de pago</span>
-                            <span className="font-medium">
-                              {formatCurrency(order?.amount_paid || 0)} / {formatCurrency(order?.total_amount || 0)}
-                              {order?.total_amount > 0 && (
-                                <span className="ml-2 text-muted-foreground">
-                                  ({getPaymentProgress(order?.amount_paid || 0, order?.total_amount || 0).toFixed(1)}%)
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                          <Progress
-                            value={getPaymentProgress(order?.amount_paid || 0, order?.total_amount || 0)}
-                            className="h-2"
-                          />
-                        </div>
-
-                        {/* Product Details Preview */}
-                        {details.length > 0 && (
-                          <div className="mt-4">
-                            <div className="text-sm font-medium mb-2">Productos ({details.length}):</div>
-                            <div className="space-y-1">
-                              {details.slice(0, 3).map((item, itemIndex) => (
-                                <div key={itemIndex} className="flex justify-between text-xs text-muted-foreground">
-                                  <span>{item.product_name || `Producto ${itemIndex + 1}`}</span>
-                                  <span>
-                                    {item.quantity} × {formatCurrency(item.unit_price || 0)} = {formatCurrency((item.quantity || 0) * (item.unit_price || 0))}
-                                  </span>
-                                </div>
-                              ))}
-                              {details.length > 3 && (
-                                <div className="text-xs text-muted-foreground">
-                                  ... y {details.length - 3} productos más
-                                </div>
-                              )}
+                          {/* Product Details Preview */}
+                          {details.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-border">
+                              <div className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                                Productos ({details.length}):
+                              </div>
+                              <div className="space-y-1.5">
+                                {details.slice(0, 2).map((item, itemIndex) => (
+                                  <div key={itemIndex} className="flex justify-between items-start text-xs bg-accent/10 p-2 rounded">
+                                    <span className="font-medium flex-1 min-w-0 truncate pr-2">
+                                      {item.product_name || `Producto ${itemIndex + 1}`}
+                                    </span>
+                                    <span className="text-muted-foreground whitespace-nowrap">
+                                      {item.quantity} × {formatCurrency(item.unit_price || 0)}
+                                    </span>
+                                  </div>
+                                ))}
+                                {details.length > 2 && (
+                                  <div className="text-xs text-muted-foreground text-center py-1">
+                                    + {details.length - 2} producto{details.length - 2 !== 1 ? 's' : ''} más
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </Card>
                     );
                   })}

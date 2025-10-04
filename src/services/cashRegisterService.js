@@ -64,12 +64,15 @@ export const cashRegisterService = {
       console.log('✅ CashRegister: Active cash register loaded');
       return result;
     } catch (error) {
-      // 404 significa no hay caja activa - no es un error real
-      if (error.status === 404) {
-        console.log('📭 CashRegister: No active cash register found');
+      // 204 No Content o 404 significa no hay caja activa - no es un error real
+      if (error.status === 204 || error.status === 404) {
+        console.log('📭 CashRegister: No active cash register found (HTTP ' + error.status + ')');
+        telemetry.record('cash_register.service.no_active', {
+          duration: Date.now() - startTime
+        });
         return null;
       }
-      
+
       telemetry.record('cash_register.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -214,10 +217,28 @@ export const cashRegisterService = {
   },
 
   /**
-   * Obtiene movimientos de una caja registradora
-   * @param {number} cashRegisterId
-   * @param {Object} filters
-   * @returns {Promise<Array>}
+   * Obtiene movimientos enriquecidos de una caja registradora (v2.1)
+   *
+   * Retorna información completa y enriquecida de cada movimiento:
+   * - Balance acumulado (running_balance) calculado automáticamente
+   * - Información del usuario que creó el movimiento
+   * - Información de ventas relacionadas (total, estado, cliente, método de pago)
+   * - Información de compras relacionadas (total, estado, proveedor)
+   *
+   * @param {number} cashRegisterId - ID de la caja registradora
+   * @param {Object} filters - Filtros opcionales
+   * @returns {Promise<import('@/types/cashRegister').EnrichedCashMovement[]>}
+   *
+   * @example
+   * const movements = await getMovements(6);
+   * movements.forEach(m => {
+   *   console.log(`${m.movement_type}: $${m.amount}`);
+   *   console.log(`Balance: $${m.running_balance}`);
+   *   console.log(`Usuario: ${m.user_full_name}`);
+   *   if (m.related_sale_id) {
+   *     console.log(`Venta: ${m.related_sale_id} - Cliente: ${m.sale_client_name}`);
+   *   }
+   * });
    */
   async getMovements(cashRegisterId, filters = {}) {
     const startTime = Date.now();

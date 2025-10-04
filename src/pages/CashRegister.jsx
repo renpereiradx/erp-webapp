@@ -172,19 +172,28 @@ const CashRegister = () => {
 
   const getMovementTypeColor = (type) => {
     switch (type) {
-      case 'INCOME': return 'text-green-600';
-      case 'EXPENSE': return 'text-red-600';
-      case 'ADJUSTMENT': return 'text-blue-600';
-      default: return 'text-gray-600';
+      case 'INCOME': return 'text-green-600 dark:text-green-400';
+      case 'EXPENSE': return 'text-red-600 dark:text-red-400';
+      case 'ADJUSTMENT': return 'text-blue-600 dark:text-blue-400';
+      default: return 'text-muted-foreground';
     }
   };
 
   const getMovementTypeIcon = (type) => {
     switch (type) {
-      case 'INCOME': return <PlusIcon className="w-4 h-4 text-green-600" />;
-      case 'EXPENSE': return <MinusIcon className="w-4 h-4 text-red-600" />;
-      case 'ADJUSTMENT': return <Calculator className="w-4 h-4 text-blue-600" />;
-      default: return <DollarSign className="w-4 h-4" />;
+      case 'INCOME': return <PlusIcon className="w-4 h-4 text-green-600 dark:text-green-400" />;
+      case 'EXPENSE': return <MinusIcon className="w-4 h-4 text-red-600 dark:text-red-400" />;
+      case 'ADJUSTMENT': return <Calculator className="w-4 h-4 text-blue-600 dark:text-blue-400" />;
+      default: return <DollarSign className="w-4 h-4 text-muted-foreground" />;
+    }
+  };
+
+  const getMovementBorderColor = (type) => {
+    switch (type) {
+      case 'INCOME': return isNeoBrutalism ? '#10b981' : 'hsl(var(--chart-2))';
+      case 'EXPENSE': return isNeoBrutalism ? '#ef4444' : 'hsl(var(--chart-1))';
+      case 'ADJUSTMENT': return isNeoBrutalism ? '#3b82f6' : 'hsl(var(--chart-3))';
+      default: return 'hsl(var(--border))';
     }
   };
 
@@ -607,7 +616,7 @@ const CashRegister = () => {
         </Card>
       )}
 
-      {/* Movements List */}
+      {/* Movements List - Using Enriched Data v2.1 */}
       {movements.length > 0 && (
         <Card>
           <CardHeader>
@@ -615,25 +624,125 @@ const CashRegister = () => {
             <CardDescription>Historial de movimientos de efectivo</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {movements.map((movement) => (
-                <div key={movement.id} className="flex items-center justify-between p-3 border rounded">
-                  <div className="flex items-center gap-3">
-                    {getMovementTypeIcon(movement.movement_type)}
-                    <div>
-                      <p className="font-medium">{movement.concept}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(movement.created_at).toLocaleString()}
-                      </p>
+                <div
+                  key={movement.movement_id}
+                  className="group relative p-4 border-l-4 border rounded-lg hover:shadow-md transition-all duration-200 bg-card"
+                  style={{
+                    borderLeftColor: getMovementBorderColor(movement.movement_type)
+                  }}
+                >
+                  {/* Main Row */}
+                  <div className="flex items-start justify-between gap-4">
+                    {/* Left Section: Icon + Content */}
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className="mt-1 flex-shrink-0">
+                        {getMovementTypeIcon(movement.movement_type)}
+                      </div>
+
+                      <div className="flex-1 min-w-0 space-y-2">
+                        {/* Concept */}
+                        <p className="font-semibold text-base leading-tight">{movement.concept}</p>
+
+                        {/* Metadata Row */}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {new Date(movement.created_at).toLocaleString('es-ES', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                          {movement.user_full_name && (
+                            <span className="flex items-center gap-1">
+                              <span className="font-medium">Por:</span>
+                              {movement.user_full_name}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Enriched Data: Sale Details */}
+                        {movement.related_sale_id && (
+                          <div className="flex items-start gap-2 p-2.5 bg-accent/30 rounded-md border border-border">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-semibold text-sm text-primary">
+                                  Venta: {movement.related_sale_id}
+                                </p>
+                                {movement.sale_status && (
+                                  <Badge variant="secondary" className="text-xs h-5">
+                                    {movement.sale_status}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="space-y-0.5 text-xs text-muted-foreground">
+                                {movement.sale_client_name && (
+                                  <p className="flex items-center gap-1.5">
+                                    <span className="font-medium text-foreground">Cliente:</span>
+                                    <span className="truncate">{movement.sale_client_name}</span>
+                                  </p>
+                                )}
+                                {movement.sale_payment_method && (
+                                  <p className="flex items-center gap-1.5">
+                                    <span className="font-medium text-foreground">Método:</span>
+                                    <span>{movement.sale_payment_method}</span>
+                                  </p>
+                                )}
+                                {movement.sale_total !== null && (
+                                  <p className="flex items-center gap-1.5">
+                                    <span className="font-medium text-foreground">Total Venta:</span>
+                                    <span className="font-semibold text-foreground">${movement.sale_total.toLocaleString()}</span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Enriched Data: Purchase Details */}
+                        {movement.related_purchase_id && (
+                          <div className="flex items-start gap-2 p-2.5 bg-accent/30 rounded-md border border-border">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-sm text-primary mb-1">
+                                Compra #{movement.related_purchase_id}
+                              </p>
+                              <div className="space-y-0.5 text-xs text-muted-foreground">
+                                {movement.purchase_supplier && (
+                                  <p className="flex items-center gap-1.5">
+                                    <span className="font-medium text-foreground">Proveedor:</span>
+                                    <span className="truncate">{movement.purchase_supplier}</span>
+                                  </p>
+                                )}
+                                {movement.purchase_total !== null && (
+                                  <p className="flex items-center gap-1.5">
+                                    <span className="font-medium text-foreground">Total:</span>
+                                    <span className="font-semibold text-foreground">${movement.purchase_total.toLocaleString()}</span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-semibold ${getMovementTypeColor(movement.movement_type)}`}>
-                      {movement.movement_type === 'EXPENSE' ? '-' : '+'}${movement.amount}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Balance: ${movement.balance_after}
-                    </p>
+
+                    {/* Right Section: Amount + Balance */}
+                    <div className="text-right flex-shrink-0 space-y-1">
+                      <p className={`font-bold text-xl ${getMovementTypeColor(movement.movement_type)}`}>
+                        {movement.movement_type === 'EXPENSE' ? '-' : '+'}${movement.amount.toLocaleString()}
+                      </p>
+                      {/* Enriched data: Running balance */}
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 rounded-md">
+                        <span className="text-xs font-medium text-muted-foreground">Balance:</span>
+                        <span className="text-sm font-bold text-primary">
+                          ${movement.running_balance?.toLocaleString() || '0'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
