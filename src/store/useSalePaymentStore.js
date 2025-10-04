@@ -94,19 +94,19 @@ export const useSalePaymentStore = create()(
        */
       getSaleById: async (saleId) => {
         set({ isCurrentSaleLoading: true, currentSaleError: null });
-        
+
         try {
           const sale = await salePaymentService.getSaleById(saleId);
-          set({ 
-            currentSale: sale, 
-            isCurrentSaleLoading: false 
+          set({
+            currentSale: sale,
+            isCurrentSaleLoading: false
           });
           return sale;
         } catch (error) {
           console.warn('Error loading sale:', error);
-          set({ 
-            currentSaleError: error, 
-            isCurrentSaleLoading: false 
+          set({
+            currentSaleError: error,
+            isCurrentSaleLoading: false
           });
           throw error;
         }

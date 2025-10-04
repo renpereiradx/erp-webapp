@@ -8,6 +8,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   LayoutDashboard,
   Package,
@@ -65,9 +66,9 @@ const MainLayout = ({ children }) => {
   const [isClient, setIsClient] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  // TEMPORAL: Desactivamos la autenticación
-  // const { user, logout } = useAuthStore();
-  const user = { name: 'Demo User', email: 'demo@erp.com' }; // Usuario temporal
+  const { user, logout } = useAuth();
+  // Fallback si no hay usuario
+  const currentUser = user || { name: 'Demo User', email: 'demo@erp.com' };
   // Usar Context para temas (compatible con React 19)
   const { theme, isNeoBrutalism, isMaterial, isFluent } = useTheme();
   
@@ -417,9 +418,10 @@ const MainLayout = ({ children }) => {
   // ...existing code...
 
 
-  // Manejar logout - TEMPORAL: Desactivado
+  // Manejar logout
   const handleLogout = () => {
-    // Logout temporalmente desactivado para development
+    logout();
+    navigate('/login');
   };
 
   // Helper functions para generar clases según el tema activo
@@ -507,17 +509,17 @@ const MainLayout = ({ children }) => {
       color: 'orange',
       badge: '6'
     },
-    { 
-      name: 'Ventas', 
-      href: '/ventas', 
-      icon: ShoppingCart, 
+    {
+      name: 'Ventas',
+      href: '/ventas',
+      icon: ShoppingCart,
       color: 'green',
       badge: '7'
     },
-    { 
-      name: 'Reservas', 
-      href: '/reservas', 
-      icon: Calendar, 
+    {
+      name: 'Reservas',
+      href: '/reservas',
+      icon: Calendar,
       color: 'purple',
       badge: '8'
     },

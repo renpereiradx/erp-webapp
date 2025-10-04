@@ -1,126 +1,114 @@
-# Manual Price Adjustments - Frontend Integration Guide
+# Guía de API de Productos para Desarrolladores Frontend
 
-This guide provides comprehensive documentation for integrating the Manual Price Adjustments system into frontend applications. It covers API endpoints, data structures, authentication, and implementation guidelines.
+**Versión**: 2.0.0 - Sistema Financiero Enriquecido  
+**Fecha**: 9 de Septiembre, 2025  
+**Estado**: ✅ Completamente actualizado con sistema financiero enriquecido  
 
-## Table of Contents
+Esta guía proporciona documentación completa de todos los endpoints de productos disponibles para integración con aplicaciones frontend, incluyendo los nuevos endpoints financieramente enriquecidos que combinan información de precios, costos, stock y salud financiera.
 
-1. [Quick Start](#quick-start)
-2. [API Overview](#api-overview)
-3. [Authentication](#authentication)
-4. [Product Financial Data Endpoint](#product-financial-data-endpoint)
-5. [Manual Price Adjustments API](#manual-price-adjustments-api)
-6. [Data Structure Reference](#data-structure-reference)
-7. [Helper Functions](#helper-functions)
-8. [Error Handling](#error-handling)
-9. [Best Practices](#best-practices)
-10. [Troubleshooting Guide](#troubleshooting-guide)
-11. [Performance Optimization](#performance-optimization)
-12. [Security Considerations](#security-considerations)
-
-## Quick Start
-
-### Basic Implementation Steps
-
-1. **Authentication**: Obtain JWT token from login endpoint
-2. **Fetch Product Data**: Use `/products/financial/{id}` to get current pricing information
-3. **Display Price Information**: Extract price from `unit_prices[0].price_per_unit`
-4. **Create Price Adjustment**: POST to `/manual-price-adjustments` with new price and reason
-5. **Handle Response**: Process success/error responses appropriately
-
-### Essential Endpoints
-
+## Base URL
 ```
-GET  /products/financial/{id}          # Get product with pricing data
-GET  /products/financial/name/{name}   # Get product by name
-POST /manual-price-adjustments         # Create price adjustment
-GET  /manual-price-adjustments         # Get adjustment history
+http://localhost:5050
 ```
 
-## API Overview
-
-### Base Configuration
-
-- **Base URL**: Your API server URL
-- **Authentication**: JWT Bearer token
-- **Content-Type**: `application/json`
-- **Timeout**: Recommended 10 seconds
-
-### Common Headers
-
-```http
-Authorization: Bearer {jwt_token}
-Content-Type: application/json
-Accept: application/json
+## Autenticación
+Todos los endpoints requieren autenticación JWT. Incluye el token en el header:
+```
+Authorization: Bearer <jwt_token>
 ```
 
-## Authentication
+---
 
-### Getting JWT Token
+## ¿Qué son los Productos Financieramente Enriquecidos? 🆕
 
-```http
-POST /auth/login
-Content-Type: application/json
+Los **Productos Financieramente Enriquecidos** (`ProductFinancialEnriched`) son la evolución más avanzada del sistema de productos. Contienen información financiera completa incluyendo:
 
-{
-  "username": "your_username",
-  "password": "your_password"
-}
-```
+- **Datos básicos**: ID, nombre, estado, categoría, tipo
+- **Información de precios**: Array completo de precios por unidad (`unit_prices`)
+- **Resumen de costos**: Información agregada de costos por unidad (`unit_costs_summary`) incluyendo:
+  - Último costo de compra
+  - Costo promedio ponderado de los últimos 6 meses
+  - Fecha de última compra
+  - Número total de compras
+  - Porcentaje de variación de costos
+- **Información de stock**: Cantidad actual, fechas de actualización
+- **Descripción**: Descripción actual del producto
+- **Salud financiera**: Indicadores de estado financiero (`financial_health`)
+- **Campos calculados**: Mejor margen por unidad, validaciones financieras
 
-**Response:**
+### Nuevos Endpoints Financieramente Enriquecidos:
+- `GET /products/financial/{id}` - **🆕 NUEVO**: Producto con información financiera completa
+- `GET /products/financial/barcode/{barcode}` - **🆕 NUEVO**: Búsqueda financiera por código de barras  
+- `GET /products/financial/name/{name}` - **🆕 NUEVO**: Búsqueda financiera por nombre con score de coincidencia
+
+---
+
+## ¿Qué son los Productos Enriquecidos?
+
+Los **Productos Enriquecidos** (`ProductEnriched`) contienen información completa del producto incluyendo:
+- **Datos básicos**: ID, nombre, estado, categoría, tipo
+- **Información de stock**: Cantidad actual, fechas de actualización, usuario que modificó
+- **Información de precios**: Precios generales y precios por unidades específicas
+- **Descripción**: Descripción actual del producto
+- **Campos calculados**: Estado del stock, precio formateado, validaciones
+
+Esta estructura es ideal para mostrar productos en interfaces de usuario donde necesitas toda la información de una sola vez.
+
+### Endpoints que devuelven Productos Enriquecidos:
+- `GET /products/{id}` - **ACTUALIZADO**: Información unificada de precios y costos
+- `GET /products/name/{name}` - **ACTUALIZADO**: Búsqueda enriquecida con nuevo sistema de precios  
+- `GET /products/barcode/{barcode}` - **NUEVO**: Producto enriquecido por código de barras
+- `GET /products/{page}/{pageSize}` - Listado paginado enriquecido
+- `GET /products/enriched/all` - Todos los productos enriquecidos
+
+---
+
+## 🆕 Endpoints Financieramente Enriquecidos
+
+Estos nuevos endpoints proporcionan información financiera completa combinando precios de venta, costos de compra, análisis de márgenes y salud financiera del producto.
+
+### 1. Obtener Producto Financieramente Enriquecido por ID
+**GET** `/products/financial/{id}`
+
+Obtiene información financiera completa de un producto específico.
+
+**Response (200):**
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "bearer",
-  "expires_in": 3600
-}
-```
-
-### Using Authentication Token
-
-Include the token in all API requests:
-
-```http
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-## Product Financial Data Endpoint
-
-### Get Product Financial Information
-
-```http
-GET /products/financial/{productId}
-```
-
-**Example Response:**
-```json
-{
-  "product_id": "bcYdWdKNR",
-  "product_name": "Puma MB.01",
-  "stock_quantity": 15,
-  "description": "Calzado deportivo de alto rendimiento",
+  "product_id": "GA4w4YlYpVP1LNji17o9FKbp8Dg",
+  "product_name": "Onion - Dried",
+  "barcode": null,
+  "state": true,
+  "category_id": 1,
+  "product_type": "PHYSICAL",
   "unit_prices": [
     {
-      "id": 20,
+      "id": 18,
+      "product_id": "GA4w4YlYpVP1LNji17o9FKbp8Dg",
       "unit": "unit",
-      "price_per_unit": 1625000,
+      "price_per_unit": 24.05,
       "effective_date": "2025-05-26T17:39:41.446265Z"
     }
   ],
   "unit_costs_summary": [
     {
       "unit": "unit",
-      "last_cost": 1250000,
-      "last_purchase_date": "2025-06-03T14:33:52.613475Z",
-      "weighted_avg_cost_6m": 1250000,
+      "last_cost": 18.50,
+      "last_purchase_date": "2025-09-04T13:08:47.529294Z",
+      "weighted_avg_cost_6m": 18.50,
       "total_purchases": 1,
-      "cost_variance_percent": 0
+      "cost_variance_percent": 0.0
     }
   ],
+  "stock_quantity": 50.0,
+  "stock_updated_at": "2025-09-08T09:59:02.860103Z",
+  "stock_updated_by": "user123",
+  "description": "Cebolla deshidratada premium",
+  "description_updated_at": "2025-09-01T10:00:00Z",
+  "category_name": "Vegetables",
   "category": {
-    "id": 5,
-    "name": "Shoes",
-    "description": ""
+    "id": 1,
+    "name": "Vegetables"
   },
   "financial_health": {
     "has_prices": true,
@@ -128,1019 +116,1898 @@ GET /products/financial/{productId}
     "has_stock": true,
     "price_count": 1,
     "cost_units_count": 1,
-    "last_updated": "2025-09-08T12:09:36.744967Z"
+    "last_updated": "2025-09-08T09:59:02.860103Z"
   },
-  "has_valid_prices": true,
+  "stock_status": "in_stock",
   "has_valid_stock": true,
-  "stock_status": "in_stock"
+  "has_valid_prices": true,
+  "has_valid_costs": true,
+  "best_margin_unit": "unit",
+  "best_margin_percent": 23.06
 }
 ```
 
-### Get Product by Name
+**Campos específicos del endpoint financiero:**
 
-```http
-GET /products/financial/name/{productName}
-```
+- **`unit_costs_summary`**: Array con información de costos por unidad
+  - `last_cost`: Último costo de compra registrado
+  - `last_purchase_date`: Fecha de la última compra
+  - `weighted_avg_cost_6m`: Promedio ponderado de los últimos 6 meses
+  - `total_purchases`: Número total de compras registradas
+  - `cost_variance_percent`: Porcentaje de variación entre el costo más bajo y más alto
 
-**Note**: Use URL-encoded product names for names with spaces or special characters.
+- **`financial_health`**: Indicadores de salud financiera
+  - `has_prices`: Si el producto tiene precios configurados
+  - `has_costs`: Si el producto tiene costos registrados
+  - `has_stock`: Si el producto tiene stock disponible
+  - `price_count`: Número de precios por unidad configurados
+  - `cost_units_count`: Número de unidades con costos registrados
+  - `last_updated`: Fecha de última actualización de datos
 
-## Manual Price Adjustments API
+- **`best_margin_unit`**: Unidad con el mejor margen de ganancia
+- **`best_margin_percent`**: Porcentaje del mejor margen encontrado
 
-### Create Price Adjustment
-
-```http
-POST /manual-price-adjustments
-Content-Type: application/json
-
-{
-  "product_id": "bcYdWdKNR",
-  "new_price": 1700000,
-  "reason": "Competitor pricing analysis - adjusting to maintain market position",
-  "metadata": {
-    "source": "frontend_app",
-    "user_agent": "Mozilla/5.0...",
-    "timestamp": "2025-01-15T10:30:00Z"
-  }
-}
-```
-
-**Response:**
+**Response (404):**
 ```json
 {
-  "id": 15,
-  "product_id": "bcYdWdKNR",
-  "product_name": "Puma MB.01",
-  "old_price": 1625000,
-  "new_price": 1700000,
-  "reason": "Competitor pricing analysis - adjusting to maintain market position",
-  "created_at": "2025-01-15T10:30:45.123456Z",
-  "user_id": 1,
-  "username": "admin",
-  "metadata": {
-    "source": "frontend_app",
-    "user_agent": "Mozilla/5.0...",
-    "timestamp": "2025-01-15T10:30:00Z"
-  }
-}
-```
-
-### Get Price Adjustment History
-
-```http
-GET /manual-price-adjustments?product_id={productId}&limit=10&offset=0
-```
-
-**Query Parameters:**
-- `product_id` (optional): Filter by specific product
-- `limit` (optional): Number of results per page (default: 50)
-- `offset` (optional): Number of results to skip (default: 0)
-
-**Response:**
-```json
-{
-  "adjustments": [
-    {
-      "id": 15,
-      "product_id": "bcYdWdKNR",
-      "product_name": "Puma MB.01",
-      "old_price": 1625000,
-      "new_price": 1700000,
-      "reason": "Competitor pricing analysis",
-      "created_at": "2025-01-15T10:30:45.123456Z",
-      "user_id": 1,
-      "username": "admin"
-    }
-  ],
-  "total": 1,
-  "limit": 10,
-  "offset": 0
-}
-```
-
-## Data Structure Reference
-
-### Product Financial Data
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `product_id` | string | Unique product identifier |
-| `product_name` | string | Product display name |
-| `stock_quantity` | number | Current stock quantity |
-| `description` | string | Product description |
-| `unit_prices` | array | Current pricing information by unit |
-| `unit_costs_summary` | array | Cost analysis summary |
-| `category` | object | Product category information |
-| `financial_health` | object | Data completeness indicators |
-| `has_valid_prices` | boolean | Whether product has pricing data |
-| `has_valid_stock` | boolean | Whether product has stock data |
-| `stock_status` | string | Stock level indicator |
-
-### Unit Price Object
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | number | Price record ID |
-| `unit` | string | Unit type (unit, kg, box, case) |
-| `price_per_unit` | number | Price in cents/smallest currency unit |
-| `effective_date` | string | ISO 8601 date when price became effective |
-
-### Unit Cost Summary Object
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `unit` | string | Unit type |
-| `last_cost` | number | Most recent cost |
-| `last_purchase_date` | string | Date of last purchase |
-| `weighted_avg_cost_6m` | number | 6-month weighted average cost |
-| `total_purchases` | number | Total purchase transactions |
-| `cost_variance_percent` | number | Cost variance percentage |
-
-## Helper Functions
-
-### Accessing Price Data
-
-```javascript
-// Get current selling price
-function getCurrentSellingPrice(product) {
-    if (product?.unit_prices && product.unit_prices.length > 0) {
-        return product.unit_prices[0].price_per_unit;
-    }
-    return null;
-}
-
-// Get current cost price
-function getCurrentCostPrice(product) {
-    if (product?.unit_costs_summary && product.unit_costs_summary.length > 0) {
-        return product.unit_costs_summary[0].last_cost;
-    }
-    return null;
-}
-
-// Safe price access with fallback
-function safeGetPrice(product, fallback = null) {
-    try {
-        return getCurrentSellingPrice(product) || fallback;
-    } catch (error) {
-        console.warn('Error accessing price data:', error);
-        return fallback;
-    }
-}
-
-// Format price for display
-function formatPrice(price, currency = 'COP') {
-    if (!price) return 'N/A';
-    
-    return new Intl.NumberFormat('es-CO', {
-        style: 'currency',
-        currency: currency,
-        minimumFractionDigits: 0
-    }).format(price);
-}
-
-// Calculate price change percentage
-function calculatePriceChange(oldPrice, newPrice) {
-    if (!oldPrice || !newPrice) return null;
-    
-    const change = newPrice - oldPrice;
-    const changePercent = (change / oldPrice) * 100;
-    
-    return {
-        absolute: change,
-        percent: changePercent,
-        direction: change >= 0 ? 'increase' : 'decrease'
-    };
-}
-```
-
-### API Request Helpers
-
-```javascript
-// Generic API request function
-async function apiRequest(endpoint, options = {}) {
-    const token = localStorage.getItem('auth_token');
-    
-    const config = {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            ...options.headers
-        },
-        ...options
-    };
-    
-    const response = await fetch(endpoint, config);
-    
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || `HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    return response.json();
-}
-
-// Fetch product financial data
-async function fetchProductFinancial(productId) {
-    return apiRequest(`/products/financial/${productId}`);
-}
-
-// Create price adjustment
-async function createPriceAdjustment(productId, newPrice, reason, metadata = {}) {
-    return apiRequest('/manual-price-adjustments', {
-        method: 'POST',
-        body: JSON.stringify({
-            product_id: productId,
-            new_price: newPrice,
-            reason: reason,
-            metadata: {
-                timestamp: new Date().toISOString(),
-                ...metadata
-            }
-        })
-    });
-}
-
-// Get price adjustment history
-async function getPriceAdjustmentHistory(productId = null, options = {}) {
-    const params = new URLSearchParams({
-        ...(productId && { product_id: productId }),
-        ...options
-    });
-    
-    return apiRequest(`/manual-price-adjustments?${params}`);
-}
-```
-
-## Error Handling
-
-### Common HTTP Error Responses
-
-| Status | Error | Description | Solution |
-|--------|-------|-------------|----------|
-| 400 | Bad Request | Invalid request data | Validate input data format |
-| 401 | Unauthorized | Invalid or expired token | Refresh authentication token |
-| 404 | Not Found | Product or resource not found | Verify product ID exists |
-| 422 | Unprocessable Entity | Validation failed | Check field requirements |
-| 500 | Internal Server Error | Server-side error | Retry request or contact support |
-
-### Error Response Format
-
-```json
-{
-  "error": "Product not found",
-  "details": "No product found with ID: invalid_id",
-  "timestamp": "2025-01-15T10:30:45.123456Z",
-  "path": "/products/financial/invalid_id"
-}
-```
-
-### Validation Error Response
-
-```json
-{
-  "error": "Validation failed",
-  "validation_errors": {
-    "new_price": "Price must be a positive number",
-    "reason": "Reason must be at least 10 characters"
-  },
-  "timestamp": "2025-01-15T10:30:45.123456Z"
-}
-```
-
-### Error Handling Implementation
-
-```javascript
-function handleApiError(error) {
-    console.error('API Error:', error);
-    
-    // Handle specific error types
-    if (error.message.includes('401')) {
-        // Authentication error
-        localStorage.removeItem('auth_token');
-        window.location.href = '/login';
-        return 'Authentication required. Please log in again.';
-    }
-    
-    if (error.message.includes('404')) {
-        return 'Product not found. Please check the product ID.';
-    }
-    
-    if (error.message.includes('400') || error.message.includes('422')) {
-        return 'Invalid request data. Please check your input.';
-    }
-    
-    // Generic error
-    return 'An error occurred. Please try again later.';
-}
-
-// Usage in API calls
-try {
-    const product = await fetchProductFinancial(productId);
-    // Handle success
-} catch (error) {
-    const userMessage = handleApiError(error);
-    // Display user message
-}
-```
-
-## Best Practices
-
-### 1. Data Validation
-
-```javascript
-// Validate product data structure
-function validateProductData(product) {
-    const errors = [];
-    
-    if (!product) {
-        errors.push('Product data is missing');
-        return errors;
-    }
-    
-    if (!product.product_id) {
-        errors.push('Product ID is required');
-    }
-    
-    if (!product.unit_prices || !Array.isArray(product.unit_prices)) {
-        errors.push('Price data structure is invalid');
-    }
-    
-    return errors;
-}
-
-// Validate price adjustment form
-function validatePriceForm(formData, currentPrice) {
-    const errors = {};
-    
-    if (!formData.newPrice) {
-        errors.newPrice = 'New price is required';
-    } else {
-        const price = parseFloat(formData.newPrice);
-        if (isNaN(price) || price <= 0) {
-            errors.newPrice = 'Price must be a positive number';
-        } else if (price === currentPrice) {
-            errors.newPrice = 'New price must be different from current price';
-        }
-    }
-    
-    if (!formData.reason || formData.reason.trim().length < 10) {
-        errors.reason = 'Reason must be at least 10 characters';
-    }
-    
-    return {
-        isValid: Object.keys(errors).length === 0,
-        errors
-    };
-}
-```
-
-### 2. Loading States Management
-
-```javascript
-class LoadingManager {
-    constructor() {
-        this.loadingStates = new Map();
-        this.listeners = new Set();
-    }
-    
-    setLoading(key, isLoading) {
-        this.loadingStates.set(key, isLoading);
-        this.notifyListeners();
-    }
-    
-    isLoading(key) {
-        return this.loadingStates.get(key) || false;
-    }
-    
-    isAnyLoading() {
-        return Array.from(this.loadingStates.values()).some(loading => loading);
-    }
-    
-    addListener(callback) {
-        this.listeners.add(callback);
-        return () => this.listeners.delete(callback);
-    }
-    
-    notifyListeners() {
-        this.listeners.forEach(callback => callback(this.loadingStates));
-    }
-}
-
-// Usage
-const loadingManager = new LoadingManager();
-
-async function loadProduct(productId) {
-    loadingManager.setLoading('product', true);
-    try {
-        const product = await fetchProductFinancial(productId);
-        return product;
-    } finally {
-        loadingManager.setLoading('product', false);
-    }
-}
-```
-
-### 3. Caching Strategy
-
-```javascript
-class APICache {
-    constructor(ttl = 5 * 60 * 1000) { // 5 minutes default
-        this.cache = new Map();
-        this.ttl = ttl;
-    }
-    
-    set(key, value) {
-        this.cache.set(key, {
-            value,
-            timestamp: Date.now()
-        });
-    }
-    
-    get(key) {
-        const cached = this.cache.get(key);
-        if (!cached) return null;
-        
-        if (Date.now() - cached.timestamp > this.ttl) {
-            this.cache.delete(key);
-            return null;
-        }
-        
-        return cached.value;
-    }
-    
-    clear() {
-        this.cache.clear();
-    }
-    
-    invalidate(pattern) {
-        if (typeof pattern === 'string') {
-            this.cache.delete(pattern);
-        } else if (pattern instanceof RegExp) {
-            for (let key of this.cache.keys()) {
-                if (pattern.test(key)) {
-                    this.cache.delete(key);
-                }
-            }
-        }
-    }
-}
-
-// Usage
-const productCache = new APICache();
-
-async function fetchProductWithCache(productId) {
-    const cacheKey = `product_${productId}`;
-    const cached = productCache.get(cacheKey);
-    
-    if (cached) {
-        return cached;
-    }
-    
-    const product = await fetchProductFinancial(productId);
-    productCache.set(cacheKey, product);
-    
-    return product;
-}
-```
-
-### 4. Optimistic Updates
-
-```javascript
-async function createPriceAdjustmentOptimistic(productId, newPrice, reason, onUpdate) {
-    // Create optimistic update
-    const optimisticUpdate = {
-        id: 'temp-' + Date.now(),
-        product_id: productId,
-        new_price: newPrice,
-        reason: reason,
-        created_at: new Date().toISOString(),
-        status: 'pending'
-    };
-    
-    // Update UI immediately
-    onUpdate(optimisticUpdate, 'add');
-    
-    try {
-        // Make actual API call
-        const result = await createPriceAdjustment(productId, newPrice, reason);
-        
-        // Replace optimistic update with real data
-        onUpdate(optimisticUpdate, 'remove');
-        onUpdate(result, 'add');
-        
-        return result;
-    } catch (error) {
-        // Remove optimistic update on error
-        onUpdate(optimisticUpdate, 'remove');
-        throw error;
-    }
-}
-```
-
-## Troubleshooting Guide
-
-### Issue: "Cannot read property 'price_per_unit' of undefined"
-
-**Cause**: Trying to access price data before it's loaded or when the structure is different than expected.
-
-**Solution**:
-```javascript
-// Always check data structure before accessing
-function getProductPrice(product) {
-    if (!product || !product.unit_prices || !Array.isArray(product.unit_prices)) {
-        console.warn('Product price data structure is invalid:', product);
-        return null;
-    }
-    
-    if (product.unit_prices.length === 0) {
-        console.warn('No price data available for product');
-        return null;
-    }
-    
-    return product.unit_prices[0].price_per_unit;
-}
-```
-
-### Issue: "Network request failed"
-
-**Cause**: API endpoint issues, CORS problems, or network connectivity.
-
-**Solution**:
-```javascript
-// Add retry logic with exponential backoff
-async function fetchWithRetry(url, options, maxRetries = 3) {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            const response = await fetch(url, options);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            return response;
-        } catch (error) {
-            console.warn(`Attempt ${i + 1} failed:`, error);
-            
-            if (i === maxRetries - 1) {
-                throw error;
-            }
-            
-            // Wait before retrying (exponential backoff)
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
-        }
-    }
-}
-```
-
-### Issue: "Price adjustment appears successful but product price doesn't update"
-
-**Cause**: Cache not being invalidated or component not re-fetching data.
-
-**Solution**:
-```javascript
-async function handleAdjustmentSuccess(result) {
-    console.log('Price adjustment successful:', result);
-    
-    // Clear relevant cache entries
-    if (productCache) {
-        productCache.invalidate(new RegExp(`product_${result.product_id}`));
-    }
-    
-    // Force data refresh
-    await loadProductData(result.product_id);
-    
-    // Show success message
-    showSuccessMessage('Price adjusted successfully');
-}
-```
-
-### Issue: "Authentication token expired"
-
-**Cause**: Long-running sessions or clock skew.
-
-**Solution**:
-```javascript
-async function refreshAuthToken() {
-    try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (!refreshToken) {
-            throw new Error('No refresh token available');
-        }
-        
-        const response = await fetch('/auth/refresh', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ refresh_token: refreshToken })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Token refresh failed');
-        }
-        
-        const { access_token } = await response.json();
-        localStorage.setItem('auth_token', access_token);
-        
-        return access_token;
-    } catch (error) {
-        // Clear tokens and redirect to login
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
-        throw error;
-    }
-}
-```
-
-## Performance Optimization
-
-### 1. Debounced Search
-
-```javascript
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Usage for search
-const debouncedSearch = debounce(async (query) => {
-    if (query.length >= 2) {
-        const results = await searchProducts(query);
-        updateSearchResults(results);
-    }
-}, 300);
-```
-
-### 2. Request Batching
-
-```javascript
-class RequestBatcher {
-    constructor(batchSize = 10, delay = 100) {
-        this.batchSize = batchSize;
-        this.delay = delay;
-        this.queue = [];
-        this.timeoutId = null;
-    }
-    
-    add(request) {
-        return new Promise((resolve, reject) => {
-            this.queue.push({ request, resolve, reject });
-            
-            if (this.queue.length >= this.batchSize) {
-                this.flush();
-            } else if (!this.timeoutId) {
-                this.timeoutId = setTimeout(() => this.flush(), this.delay);
-            }
-        });
-    }
-    
-    async flush() {
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
-            this.timeoutId = null;
-        }
-        
-        if (this.queue.length === 0) return;
-        
-        const batch = this.queue.splice(0, this.batchSize);
-        
-        try {
-            // Process batch of requests
-            const results = await this.processBatch(batch);
-            batch.forEach((item, index) => {
-                item.resolve(results[index]);
-            });
-        } catch (error) {
-            batch.forEach(item => {
-                item.reject(error);
-            });
-        }
-    }
-    
-    async processBatch(batch) {
-        // Implement batch processing logic
-        return Promise.all(batch.map(item => item.request()));
-    }
-}
-```
-
-### 3. Memory Management
-
-```javascript
-class ResourceManager {
-    constructor() {
-        this.resources = new Set();
-        this.cleanupCallbacks = new Map();
-    }
-    
-    register(resource, cleanupCallback) {
-        this.resources.add(resource);
-        if (cleanupCallback) {
-            this.cleanupCallbacks.set(resource, cleanupCallback);
-        }
-    }
-    
-    unregister(resource) {
-        const cleanup = this.cleanupCallbacks.get(resource);
-        if (cleanup) {
-            cleanup();
-            this.cleanupCallbacks.delete(resource);
-        }
-        this.resources.delete(resource);
-    }
-    
-    cleanup() {
-        for (let resource of this.resources) {
-            this.unregister(resource);
-        }
-    }
-}
-
-// Usage
-const resourceManager = new ResourceManager();
-
-// Register cleanup for event listeners, intervals, etc.
-const intervalId = setInterval(() => {}, 1000);
-resourceManager.register(intervalId, () => clearInterval(intervalId));
-
-// Cleanup when component unmounts
-window.addEventListener('beforeunload', () => {
-    resourceManager.cleanup();
-});
-```
-
-## Security Considerations
-
-### 1. Input Sanitization
-
-```javascript
-// Sanitize price input
-function sanitizePriceInput(input) {
-    // Remove non-numeric characters except decimal point
-    const cleaned = input.replace(/[^\d.]/g, '');
-    
-    // Ensure only one decimal point
-    const parts = cleaned.split('.');
-    if (parts.length > 2) {
-        return parts[0] + '.' + parts.slice(1).join('');
-    }
-    
-    return cleaned;
-}
-
-// Validate price range
-function validatePriceRange(price, min = 0, max = 1000000000) {
-    const numPrice = parseFloat(price);
-    return numPrice >= min && numPrice <= max;
-}
-
-// Sanitize text input
-function sanitizeTextInput(input, maxLength = 1000) {
-    if (typeof input !== 'string') return '';
-    
-    return input
-        .trim()
-        .substring(0, maxLength)
-        .replace(/[<>]/g, ''); // Basic XSS prevention
-}
-```
-
-### 2. Rate Limiting
-
-```javascript
-class RateLimiter {
-    constructor(maxRequests = 10, windowMs = 60000) {
-        this.maxRequests = maxRequests;
-        this.windowMs = windowMs;
-        this.requests = [];
-    }
-    
-    canMakeRequest() {
-        const now = Date.now();
-        this.requests = this.requests.filter(time => now - time < this.windowMs);
-        
-        if (this.requests.length >= this.maxRequests) {
-            return false;
-        }
-        
-        this.requests.push(now);
-        return true;
-    }
-    
-    getTimeUntilNextRequest() {
-        if (this.requests.length < this.maxRequests) {
-            return 0;
-        }
-        
-        const oldestRequest = Math.min(...this.requests);
-        return Math.max(0, this.windowMs - (Date.now() - oldestRequest));
-    }
-}
-
-// Usage
-const adjustmentRateLimiter = new RateLimiter(5, 60000); // 5 adjustments per minute
-
-async function createAdjustment(data) {
-    if (!adjustmentRateLimiter.canMakeRequest()) {
-        const waitTime = adjustmentRateLimiter.getTimeUntilNextRequest();
-        throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(waitTime / 1000)} seconds.`);
-    }
-    
-    return await createPriceAdjustment(data);
-}
-```
-
-### 3. Secure Storage
-
-```javascript
-class SecureStorage {
-    constructor() {
-        this.prefix = 'secure_';
-    }
-    
-    setItem(key, value, expirationMs = null) {
-        const item = {
-            value: value,
-            timestamp: Date.now(),
-            expiration: expirationMs ? Date.now() + expirationMs : null
-        };
-        
-        try {
-            localStorage.setItem(this.prefix + key, JSON.stringify(item));
-        } catch (error) {
-            console.warn('Failed to store item:', error);
-        }
-    }
-    
-    getItem(key) {
-        try {
-            const stored = localStorage.getItem(this.prefix + key);
-            if (!stored) return null;
-            
-            const item = JSON.parse(stored);
-            
-            // Check expiration
-            if (item.expiration && Date.now() > item.expiration) {
-                this.removeItem(key);
-                return null;
-            }
-            
-            return item.value;
-        } catch (error) {
-            console.warn('Failed to retrieve item:', error);
-            return null;
-        }
-    }
-    
-    removeItem(key) {
-        localStorage.removeItem(this.prefix + key);
-    }
-    
-    clear() {
-        const keys = Object.keys(localStorage).filter(key => 
-            key.startsWith(this.prefix)
-        );
-        keys.forEach(key => localStorage.removeItem(key));
-    }
-}
-
-// Usage
-const secureStorage = new SecureStorage();
-
-// Store token with expiration
-secureStorage.setItem('auth_token', token, 3600000); // 1 hour
-
-// Retrieve token
-const token = secureStorage.getItem('auth_token');
-```
-
-### 4. Content Security Policy
-
-Recommend implementing CSP headers:
-
-```http
-Content-Security-Policy: default-src 'self'; 
-                        script-src 'self' 'unsafe-inline'; 
-                        style-src 'self' 'unsafe-inline'; 
-                        connect-src 'self' https://api.yourdomain.com;
-```
-
-## Debug Tools
-
-### Development Mode Logging
-
-```javascript
-class Logger {
-    constructor(prefix = 'API', enabled = true) {
-        this.prefix = prefix;
-        this.enabled = enabled && (process.env.NODE_ENV === 'development' || window.DEBUG);
-    }
-    
-    log(message, data = null) {
-        if (!this.enabled) return;
-        console.log(`[${this.prefix}] ${message}`, data || '');
-    }
-    
-    warn(message, data = null) {
-        if (!this.enabled) return;
-        console.warn(`[${this.prefix}] ${message}`, data || '');
-    }
-    
-    error(message, data = null) {
-        if (!this.enabled) return;
-        console.error(`[${this.prefix}] ${message}`, data || '');
-    }
-    
-    group(label) {
-        if (!this.enabled) return;
-        console.group(`[${this.prefix}] ${label}`);
-    }
-    
-    groupEnd() {
-        if (!this.enabled) return;
-        console.groupEnd();
-    }
-}
-
-// Usage
-const logger = new Logger('PriceAdjustment');
-
-logger.group('Creating price adjustment');
-logger.log('Product ID:', productId);
-logger.log('New Price:', newPrice);
-logger.log('Reason:', reason);
-logger.groupEnd();
-```
-
-### API Request Inspector
-
-```javascript
-function createAPIInspector() {
-    const originalFetch = window.fetch;
-    
-    window.fetch = async (...args) => {
-        const [url, options = {}] = args;
-        
-        console.group(`API Request: ${options.method || 'GET'} ${url}`);
-        console.log('Headers:', options.headers);
-        if (options.body) {
-            console.log('Body:', options.body);
-        }
-        
-        const startTime = performance.now();
-        
-        try {
-            const response = await originalFetch(...args);
-            const endTime = performance.now();
-            
-            console.log(`Status: ${response.status} ${response.statusText}`);
-            console.log(`Duration: ${Math.round(endTime - startTime)}ms`);
-            
-            // Clone response to log body without consuming it
-            const clonedResponse = response.clone();
-            try {
-                const responseBody = await clonedResponse.json();
-                console.log('Response:', responseBody);
-            } catch {
-                console.log('Response: (non-JSON)');
-            }
-            
-            console.groupEnd();
-            return response;
-        } catch (error) {
-            const endTime = performance.now();
-            console.error(`Error after ${Math.round(endTime - startTime)}ms:`, error);
-            console.groupEnd();
-            throw error;
-        }
-    };
-    
-    // Return function to restore original fetch
-    return () => {
-        window.fetch = originalFetch;
-    };
-}
-
-// Enable in development
-if (process.env.NODE_ENV === 'development') {
-    const restoreFetch = createAPIInspector();
-    
-    // Cleanup when needed
-    window.addEventListener('beforeunload', restoreFetch);
+  "error": "Product not found"
 }
 ```
 
 ---
 
-**Last Updated**: January 2025  
-**API Version**: 1.0  
-**Support**: Contact development team for issues
+### 2. Obtener Producto Financieramente Enriquecido por Código de Barras
+**GET** `/products/financial/barcode/{barcode}`
 
-This guide provides all the essential information for frontend integration without assuming specific frameworks or technologies. The implementation details are left to the frontend team's preferred tools and patterns.
+Busca un producto por código de barras con información financiera completa.
+
+**Parámetros de ruta:**
+- `barcode` (string): El código de barras del producto
+
+**Response (200):**
+```json
+{
+  "product_id": "EKrR80U3aw50tStb21c3kkfhezP",
+  "product_name": "Coffee - Decafenated",
+  "barcode": "7891234567892",
+  "state": true,
+  "category_id": 2,
+  "product_type": "PHYSICAL",
+  "unit_prices": [],
+  "unit_costs_summary": [],
+  "stock_quantity": null,
+  "stock_updated_at": null,
+  "stock_updated_by": null,
+  "description": null,
+  "description_updated_at": null,
+  "category_name": "Beverages",
+  "financial_health": {
+    "has_prices": false,
+    "has_costs": false,
+    "has_stock": false,
+    "price_count": 0,
+    "cost_units_count": 0,
+    "last_updated": "1900-01-01T00:00:00Z"
+  },
+  "stock_status": "out_of_stock",
+  "has_valid_stock": false,
+  "has_valid_prices": false,
+  "has_valid_costs": false,
+  "best_margin_unit": null,
+  "best_margin_percent": null
+}
+```
+
+**Casos de uso:**
+- Escáner de código de barras en puntos de venta
+- Verificación rápida de información financiera
+- Análisis de márgenes por producto escaneado
+
+---
+
+### 3. Buscar Productos Financieramente Enriquecidos por Nombre
+**GET** `/products/financial/name/{name}?limit=10`
+
+Busca productos por nombre con información financiera completa y score de coincidencia.
+
+**Parámetros de ruta:**
+- `name` (string): Término de búsqueda (búsqueda parcial)
+
+**Query Parameters:**
+- `limit` (int, opcional): Número máximo de resultados (default: 50)
+
+**Response (200):**
+```json
+[
+  {
+    "product_id": "EKrR80U3aw50tStb21c3kkfhezP",
+    "product_name": "Coffee - Decafenated",
+    "barcode": "7891234567892",
+    "state": true,
+    "category_id": 2,
+    "product_type": "PHYSICAL",
+    "unit_prices": [],
+    "unit_costs_summary": [],
+    "stock_quantity": null,
+    "stock_updated_at": null,
+    "stock_updated_by": null,
+    "description": null,
+    "description_updated_at": null,
+    "category_name": "Beverages",
+    "financial_health": {
+      "has_prices": false,
+      "has_costs": false,
+      "has_stock": false,
+      "price_count": 0,
+      "cost_units_count": 0,
+      "last_updated": "1900-01-01T00:00:00Z"
+    },
+    "stock_status": "out_of_stock",
+    "has_valid_stock": false,
+    "has_valid_prices": false,
+    "has_valid_costs": false,
+    "best_margin_unit": null,
+    "best_margin_percent": null,
+    "match_score": 0.8
+  }
+]
+```
+
+**Campo específico:**
+- **`match_score`**: Puntuación de coincidencia (0.0 - 1.0)
+  - `1.0`: Coincidencia exacta en el nombre
+  - `0.8`: Nombre empieza con el término de búsqueda
+  - `0.6`: Nombre contiene el término de búsqueda
+  - `0.4`: Descripción contiene el término de búsqueda
+  - `0.2`: Coincidencia genérica
+
+**Casos de uso:**
+- Búsqueda avanzada con análisis financiero
+- Comparación de márgenes entre productos similares
+- Análisis de rentabilidad por categoría de productos
+
+---
+
+## 📏 Unidades de Medida Estándar
+
+El sistema utiliza **31 unidades de medida estandarizadas** con validación a nivel de base de datos mediante CHECK constraints. Todas las unidades están en **minúsculas** e **inglés**.
+
+### Endpoint de Unidades Disponibles
+
+#### Obtener Lista de Unidades
+**GET** `/products/units`
+
+Obtiene todas las unidades disponibles organizadas por categoría.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "total": 31,
+  "units": [
+    {
+      "value": "unit",
+      "label": "Unidad individual",
+      "category": "basic",
+      "allow_decimals": false,
+      "input_type": "integer",
+      "step": 1,
+      "min": 1,
+      "examples": ["1", "2", "10"]
+    },
+    {
+      "value": "kg",
+      "label": "Kilogramo",
+      "category": "weight",
+      "allow_decimals": true,
+      "input_type": "decimal",
+      "step": 0.01,
+      "min": 0.01,
+      "examples": ["0.5", "1.25", "2.75"]
+    }
+  ]
+}
+```
+
+### Categorías y Reglas de Validación
+
+#### 📦 Básicas (Sin Decimales)
+| Unidad | Descripción | Decimales | Tipo Input | Step | Ejemplos |
+|--------|-------------|-----------|------------|------|----------|
+| `unit` | Unidad individual | ❌ No | integer | 1 | 1, 2, 10, 50 |
+| `pair` | Par | ❌ No | integer | 1 | 1, 2, 5 |
+| `set` | Conjunto/Set | ❌ No | integer | 1 | 1, 2, 3 |
+
+#### ⚖️ Peso (Con Decimales)
+| Unidad | Descripción | Decimales | Tipo Input | Step | Ejemplos |
+|--------|-------------|-----------|------------|------|----------|
+| `kg` | Kilogramo | ✅ Sí | decimal | 0.01 | 0.5, 1.25, 2.75 |
+| `g` | Gramo | ✅ Sí | decimal | 0.1 | 10.5, 250.0 |
+| `lb` | Libra | ✅ Sí | decimal | 0.01 | 0.5, 1.5, 2.25 |
+| `oz` | Onza | ✅ Sí | decimal | 0.1 | 8.5, 16.0 |
+| `ton` | Tonelada | ✅ Sí | decimal | 0.001 | 0.5, 1.0, 2.5 |
+
+#### 🧪 Volumen (Con Decimales)
+| Unidad | Descripción | Decimales | Tipo Input | Step | Ejemplos |
+|--------|-------------|-----------|------------|------|----------|
+| `l` | Litro | ✅ Sí | decimal | 0.01 | 0.5, 1.0, 1.5 |
+| `ml` | Mililitro | ✅ Sí | decimal | 1 | 250.0, 500.0 |
+| `gal` | Galón | ✅ Sí | decimal | 0.1 | 1.0, 2.5, 5.0 |
+
+#### 📦 Empaque (Sin Decimales)
+| Unidad | Descripción | Decimales | Tipo Input | Step | Ejemplos |
+|--------|-------------|-----------|------------|------|----------|
+| `box` | Caja | ❌ No | integer | 1 | 1, 5, 10 |
+| `pack` | Paquete | ❌ No | integer | 1 | 1, 2, 6 |
+| `bag` | Bolsa | ❌ No | integer | 1 | 1, 2, 5 |
+| `case` | Cajón/Cartón | ❌ No | integer | 1 | 1, 2, 3 |
+| `dozen` | Docena | ❌ No | integer | 1 | 1, 2, 5 |
+| `bundle` | Atado | ❌ No | integer | 1 | 1, 2, 3 |
+
+#### 📏 Longitud/Área (Con Decimales)
+| Unidad | Descripción | Decimales | Tipo Input | Step | Ejemplos |
+|--------|-------------|-----------|------------|------|----------|
+| `meter` | Metro | ✅ Sí | decimal | 0.01 | 1.5, 2.75, 10.0 |
+| `cm` | Centímetro | ✅ Sí | decimal | 0.1 | 10.5, 25.0, 50.5 |
+| `sqm` | Metro cuadrado | ✅ Sí | decimal | 0.01 | 1.5, 2.25, 10.0 |
+| `roll` | Rollo | ❌ No | integer | 1 | 1, 2, 5 |
+
+#### ⏰ Servicios (Sin Decimales para hour/day, Con Decimales para month)
+| Unidad | Descripción | Decimales | Tipo Input | Step | Ejemplos |
+|--------|-------------|-----------|------------|------|----------|
+| `hour` | Hora | ❌ No | integer | 1 | 1, 2, 3, 8 |
+| `day` | Día | ❌ No | integer | 1 | 1, 7, 15, 30 |
+| `month` | Mes | ✅ Sí | decimal | 0.5 | 1.0, 1.5, 6.0 |
+
+#### 🏪 Especiales Supermercado (Sin Decimales)
+| Unidad | Descripción | Decimales | Tipo Input | Step | Ejemplos |
+|--------|-------------|-----------|------------|------|----------|
+| `tray` | Bandeja | ❌ No | integer | 1 | 1, 2, 5 |
+| `bottle` | Botella | ❌ No | integer | 1 | 1, 6, 12 |
+| `can` | Lata | ❌ No | integer | 1 | 1, 6, 12, 24 |
+| `jar` | Frasco | ❌ No | integer | 1 | 1, 2, 6 |
+| `carton` | Tetrapack | ❌ No | integer | 1 | 1, 6, 12 |
+| `stick` | Barra | ❌ No | integer | 1 | 1, 2, 5 |
+| `slice` | Rodaja/Rebanada | ❌ No | integer | 1 | 1, 5, 10 |
+| `portion` | Porción | ❌ No | integer | 1 | 1, 2, 5 |
+
+### Reglas de Validación Frontend
+
+#### ✅ Unidades CON Decimales (10 unidades)
+```javascript
+const DECIMAL_UNITS = ['kg', 'g', 'lb', 'oz', 'ton', 'l', 'ml', 'gal', 'meter', 'cm', 'sqm', 'month'];
+
+// Configuración de input
+{
+  type: "number",
+  step: "0.01", // o "0.1" o "0.001" según la unidad
+  min: "0.01",
+  pattern: "[0-9]+([.][0-9]{1,2})?",
+  placeholder: "1.5"
+}
+```
+
+**Ejemplos de valores válidos:**
+- `0.5`, `1.25`, `2.75`, `10.0`, `15.33`
+
+**Validación JavaScript:**
+```javascript
+function validateDecimalUnit(value, unit) {
+  const num = parseFloat(value);
+  if (isNaN(num) || num <= 0) return false;
+  
+  // Permitir hasta 2 decimales para la mayoría
+  const decimals = (value.split('.')[1] || '').length;
+  if (unit === 'g' || unit === 'ml') return decimals <= 1;
+  if (unit === 'ton') return decimals <= 3;
+  return decimals <= 2;
+}
+```
+
+#### ❌ Unidades SIN Decimales (21 unidades)
+```javascript
+const INTEGER_UNITS = [
+  'unit', 'pair', 'set',           // Básicas
+  'box', 'pack', 'bag', 'case',    // Empaque
+  'dozen', 'bundle', 'roll',       // Empaque y longitud
+  'hour', 'day',                   // Servicios
+  'tray', 'bottle', 'can', 'jar',  // Supermercado
+  'carton', 'stick', 'slice', 'portion'
+];
+
+// Configuración de input
+{
+  type: "number",
+  step: "1",
+  min: "1",
+  pattern: "[0-9]+",
+  placeholder: "1"
+}
+```
+
+**Ejemplos de valores válidos:**
+- `1`, `2`, `5`, `10`, `50`, `100`
+
+**Validación JavaScript:**
+```javascript
+function validateIntegerUnit(value) {
+  const num = parseInt(value, 10);
+  return num > 0 && Number.isInteger(num);
+}
+```
+
+### Implementación Frontend Recomendada
+
+#### React/TypeScript - Componente de Input con Validación
+```typescript
+interface UnitConfig {
+  value: string;
+  label: string;
+  category: string;
+  allow_decimals: boolean;
+  input_type: 'integer' | 'decimal';
+  step: number;
+  min: number;
+  examples: string[];
+}
+
+const UNIT_CONFIGS: Record<string, UnitConfig> = {
+  // Básicas (sin decimales)
+  unit: { value: 'unit', label: 'Unidad', category: 'basic', allow_decimals: false, input_type: 'integer', step: 1, min: 1, examples: ['1', '2', '10'] },
+  pair: { value: 'pair', label: 'Par', category: 'basic', allow_decimals: false, input_type: 'integer', step: 1, min: 1, examples: ['1', '2', '5'] },
+  
+  // Peso (con decimales)
+  kg: { value: 'kg', label: 'Kilogramo', category: 'weight', allow_decimals: true, input_type: 'decimal', step: 0.01, min: 0.01, examples: ['0.5', '1.25', '2.75'] },
+  g: { value: 'g', label: 'Gramo', category: 'weight', allow_decimals: true, input_type: 'decimal', step: 0.1, min: 0.1, examples: ['10.5', '250.0'] },
+  
+  // ... (incluir todas las 31 unidades)
+};
+
+const QuantityInput: React.FC<{ unit: string; value: number; onChange: (value: number) => void }> = ({ unit, value, onChange }) => {
+  const config = UNIT_CONFIGS[unit] || UNIT_CONFIGS.unit;
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const numValue = config.allow_decimals ? parseFloat(inputValue) : parseInt(inputValue, 10);
+    
+    if (!isNaN(numValue) && numValue >= config.min) {
+      onChange(numValue);
+    }
+  };
+  
+  return (
+    <div className="quantity-input">
+      <label>Cantidad ({config.label})</label>
+      <input
+        type="number"
+        value={value}
+        onChange={handleChange}
+        step={config.step}
+        min={config.min}
+        placeholder={config.examples[0]}
+        aria-describedby={`unit-help-${unit}`}
+      />
+      <small id={`unit-help-${unit}`}>
+        {config.allow_decimals 
+          ? `Decimales permitidos (ej: ${config.examples.join(', ')})` 
+          : `Solo números enteros (ej: ${config.examples.join(', ')})`}
+      </small>
+    </div>
+  );
+};
+```
+
+#### Vue.js - Directiva de Validación
+```javascript
+// unitValidation.js
+export const unitValidation = {
+  mounted(el, binding) {
+    const unit = binding.value;
+    const config = UNIT_CONFIGS[unit] || UNIT_CONFIGS.unit;
+    
+    el.setAttribute('type', 'number');
+    el.setAttribute('step', config.step.toString());
+    el.setAttribute('min', config.min.toString());
+    
+    if (!config.allow_decimals) {
+      el.setAttribute('pattern', '[0-9]+');
+    }
+    
+    el.addEventListener('input', (e) => {
+      const value = e.target.value;
+      const isValid = config.allow_decimals 
+        ? /^\d+(\.\d{1,2})?$/.test(value)
+        : /^\d+$/.test(value);
+      
+      el.classList.toggle('invalid', !isValid);
+    });
+  }
+};
+
+// Uso en componente
+<input v-unit-validation="selectedUnit" v-model="quantity" />
+```
+
+#### Validación de Formulario Completa
+```javascript
+function validateQuantityForUnit(quantity, unit) {
+  const config = UNIT_CONFIGS[unit];
+  
+  if (!config) {
+    return { valid: false, error: 'Unidad no válida' };
+  }
+  
+  const num = parseFloat(quantity);
+  
+  if (isNaN(num)) {
+    return { valid: false, error: 'Debe ingresar un número' };
+  }
+  
+  if (num < config.min) {
+    return { valid: false, error: `El mínimo es ${config.min}` };
+  }
+  
+  if (!config.allow_decimals && !Number.isInteger(num)) {
+    return { valid: false, error: `${config.label} no permite decimales. Use números enteros.` };
+  }
+  
+  if (config.allow_decimals) {
+    const decimals = (quantity.toString().split('.')[1] || '').length;
+    const maxDecimals = config.step < 0.01 ? 3 : (config.step < 0.1 ? 2 : 1);
+    
+    if (decimals > maxDecimals) {
+      return { valid: false, error: `Máximo ${maxDecimals} decimales para ${config.label}` };
+    }
+  }
+  
+  return { valid: true, error: null };
+}
+```
+
+### Ejemplo de Selector de Unidades con Validación Dinámica
+```jsx
+const UnitQuantitySelector = () => {
+  const [selectedUnit, setSelectedUnit] = useState('unit');
+  const [quantity, setQuantity] = useState('1');
+  const [error, setError] = useState(null);
+  
+  const handleQuantityChange = (value) => {
+    setQuantity(value);
+    const validation = validateQuantityForUnit(value, selectedUnit);
+    setError(validation.error);
+  };
+  
+  const config = UNIT_CONFIGS[selectedUnit];
+  
+  return (
+    <div className="unit-quantity-form">
+      <div className="form-group">
+        <label>Unidad de Medida</label>
+        <select 
+          value={selectedUnit} 
+          onChange={(e) => {
+            setSelectedUnit(e.target.value);
+            setQuantity(UNIT_CONFIGS[e.target.value].min.toString());
+          }}
+        >
+          <optgroup label="Básicas">
+            <option value="unit">Unidad individual</option>
+            <option value="pair">Par</option>
+            <option value="set">Conjunto/Set</option>
+          </optgroup>
+          <optgroup label="Peso">
+            <option value="kg">Kilogramo (kg)</option>
+            <option value="g">Gramo (g)</option>
+            <option value="lb">Libra (lb)</option>
+            <option value="oz">Onza (oz)</option>
+            <option value="ton">Tonelada (ton)</option>
+          </optgroup>
+          <optgroup label="Volumen">
+            <option value="l">Litro (l)</option>
+            <option value="ml">Mililitro (ml)</option>
+            <option value="gal">Galón (gal)</option>
+          </optgroup>
+          <optgroup label="Empaque">
+            <option value="box">Caja</option>
+            <option value="pack">Paquete</option>
+            <option value="bag">Bolsa</option>
+            <option value="case">Cajón/Cartón</option>
+            <option value="dozen">Docena</option>
+            <option value="bundle">Atado</option>
+          </optgroup>
+          <optgroup label="Longitud/Área">
+            <option value="meter">Metro (m)</option>
+            <option value="cm">Centímetro (cm)</option>
+            <option value="sqm">Metro cuadrado (m²)</option>
+            <option value="roll">Rollo</option>
+          </optgroup>
+          <optgroup label="Servicios">
+            <option value="hour">Hora</option>
+            <option value="day">Día</option>
+            <option value="month">Mes</option>
+          </optgroup>
+          <optgroup label="Supermercado">
+            <option value="tray">Bandeja</option>
+            <option value="bottle">Botella</option>
+            <option value="can">Lata</option>
+            <option value="jar">Frasco</option>
+            <option value="carton">Tetrapack</option>
+            <option value="stick">Barra</option>
+            <option value="slice">Rodaja/Rebanada</option>
+            <option value="portion">Porción</option>
+          </optgroup>
+        </select>
+      </div>
+      
+      <div className="form-group">
+        <label>Cantidad</label>
+        <input
+          type="number"
+          value={quantity}
+          onChange={(e) => handleQuantityChange(e.target.value)}
+          step={config.step}
+          min={config.min}
+          className={error ? 'error' : ''}
+        />
+        {error && <span className="error-message">{error}</span>}
+        <small className="help-text">
+          {config.allow_decimals 
+            ? `✅ Decimales permitidos (ej: ${config.examples.join(', ')})` 
+            : `❌ Solo enteros (ej: ${config.examples.join(', ')})`}
+        </small>
+      </div>
+    </div>
+  );
+};
+```
+
+### Resumen de Validaciones por Categoría
+
+| Categoría | Unidades | Decimales | Input Type | Casos de Uso |
+|-----------|----------|-----------|------------|--------------|
+| **Básicas** | unit, pair, set | ❌ No | integer | Productos individuales |
+| **Peso** | kg, g, lb, oz, ton | ✅ Sí | decimal | Productos a granel |
+| **Volumen** | l, ml, gal | ✅ Sí | decimal | Líquidos |
+| **Empaque** | box, pack, bag, case, dozen, bundle | ❌ No | integer | Productos empaquetados |
+| **Longitud/Área** | meter, cm, sqm (con decimales), roll (sin) | Mixto | mixto | Mediciones |
+| **Servicios** | hour, day (sin decimales), month (con) | Mixto | mixto | Alquiler/Suscripciones |
+| **Supermercado** | tray, bottle, can, jar, carton, stick, slice, portion | ❌ No | integer | Productos de supermercado |
+
+---
+
+## Endpoints de Productos
+
+#### 5. Create Product
+`POST /products`
+
+Crea un nuevo producto.
+
+**Request Body:**
+```json
+{
+  "name": "Producto Nuevo",
+  "barcode": "7891234567890",
+  "category_id": 1,
+  "product_type": "PHYSICAL",
+  "purchase_price": 15000.00
+}
+```
+
+**Campos:**
+- `name` (string, requerido): Nombre del producto
+- `barcode` (string, opcional): Código de barras del producto (máximo 50 caracteres)
+- `category_id` (int, requerido): ID de la categoría
+- `product_type` (string, opcional): Tipo de producto ("PHYSICAL" o "SERVICE"). Por defecto: "PHYSICAL"
+- `purchase_price` (float, requerido): Precio de compra del producto
+
+**Response (200):**
+```json
+{
+  "message": "Product and description added successfully"
+}
+```
+
+**Response (400):**
+```json
+{
+  "error": "Description is required"
+}
+```
+
+---
+
+#### 1. Get Product by ID - **ACTUALIZADO**
+`GET /products/{id}`
+
+**🆕 NUEVO**: Ahora devuelve información unificada de precios y costos usando el nuevo sistema de `products.unit_prices` y `products.unit_costs`.
+
+**Parámetros de consulta opcionales:**
+- `unit` (string): Unidad específica para obtener información de precios
+
+**Response (200) - Información unificada de precios:**
+```json
+{
+  "product_id": "PRODUCT-001",
+  "product_name": "Arroz Premium",
+  "unit": "kg",
+  "current_cost": 8500.00,
+  "weighted_avg_cost": 8350.00,
+  "selling_price": 12000.00,
+  "margin_amount": 3500.00,
+  "margin_percent": 41.18,
+  "cost_source": "unit_costs",
+  "price_source": "unit_prices"
+}
+```
+
+**Ejemplo de uso:**
+```bash
+GET /products/PRODUCT-001?unit=kg
+```
+
+#### 2. Get Product by Barcode - **🆕 RECIÉN ACTUALIZADO**
+`GET /products/barcode/{barcode}`
+
+**⚠️ CAMBIO IMPORTANTE**: Este endpoint ahora devuelve un **producto enriquecido** en lugar de un producto básico, consistente con el nuevo sistema de precios.
+
+**Parámetros de ruta:**
+- `barcode` (string): El código de barras del producto
+
+**Response (200) - Producto enriquecido:**
+```json
+{
+  "id": "PRODUCT-001",
+  "name": "Arroz Premium",
+  "barcode": "1234567890123",
+  "state": true,
+  "purchase_price": 8500.00,
+  "stock_quantity": 150.0,
+  "stock_status": "in_stock",
+  "price_formatted": "PYG 12,000",
+  "has_valid_price": true,
+  "has_valid_stock": true,
+  "has_unit_pricing": true,
+  "unit_prices": [
+    {
+      "unit": "kg",
+      "price_per_unit": 12000.00,
+      "effective_date": "2025-09-01T00:00:00Z"
+    },
+    {
+      "unit": "caja",
+      "price_per_unit": 240000.00,
+      "effective_date": "2025-09-01T00:00:00Z"
+    }
+  ],
+  "category": {
+    "id": 1,
+    "name": "Granos"
+  },
+  "product_type": "PHYSICAL"
+}
+```
+
+**Response (404):**
+```json
+{
+  "error": "Producto no encontrado"
+}
+```
+
+**Valores de `stock_status`:**
+- `"out_of_stock"`: Sin stock (cantidad <= 0)
+- `"low_stock"`: Stock bajo (cantidad <= 5)
+- `"medium_stock"`: Stock medio (cantidad <= 20)
+- `"in_stock"`: En stock (cantidad > 20)
+
+**Response (404):**
+```json
+{
+  "error": "Product not found"
+}
+```
+
+---
+
+### 3. Buscar Productos Enriquecidos por Nombre
+**GET** `/products/name/{name}`
+
+Busca productos enriquecidos por nombre (búsqueda parcial). Devuelve productos con información completa de stock, precios y descripción.
+
+**Response (200):**
+```json
+[
+  {
+    "id": "abc123",
+    "name": "Producto Ejemplo",
+    "barcode": "7891234567890",
+    "state": true,
+    "category": {
+      "id": 1,
+      "name": "Electrónicos"
+    },
+    "category_id": 1,
+    "category_name": "Electrónicos",
+    "product_type": "PHYSICAL",
+    "user_id": "user123",
+    "purchase_price": 15000.00,
+    "price_id": 1,
+    "price_updated_at": "2024-01-15T10:30:00Z",
+    "price_updated_by": "user123",
+    "unit_prices": [
+      {
+        "id": 1,
+        "product_id": "abc123",
+        "unit": "unidad",
+        "price_per_unit": 15000.00,
+        "effective_date": "2024-01-15T10:30:00Z"
+      }
+    ],
+    "has_unit_pricing": true,
+    "stock_quantity": 25.5,
+    "stock_id": 1,
+    "stock_updated_at": "2024-01-15T10:30:00Z",
+    "stock_updated_by": "user123",
+    "description": "Descripción completa del producto",
+    "description_id": 1,
+    "stock_status": "in_stock",
+    "price_formatted": "PYG 15000",
+    "has_valid_stock": true,
+    "has_valid_price": true
+  }
+]
+```
+
+---
+
+### 4. Obtener Productos Enriquecidos Paginados
+**GET** `/products/{page}/{pageSize}`
+
+Obtiene productos enriquecidos con paginación. Devuelve productos con información completa de stock, precios y descripción.
+
+**Parámetros de URL:**
+- `page` (int): Número de página (empezando desde 1)
+- `pageSize` (int): Cantidad de elementos por página
+
+**Response (200):**
+```json
+[
+  {
+    "id": "abc123",
+    "name": "Producto 1",
+    "state": true,
+    "category": {
+      "id": 1,
+      "name": "Electrónicos"
+    },
+    "category_id": 1,
+    "category_name": "Electrónicos",
+    "product_type": "PHYSICAL",
+    "user_id": "user123",
+    "purchase_price": 15000.00,
+    "price_id": 1,
+    "price_updated_at": "2024-01-15T10:30:00Z",
+    "price_updated_by": "user123",
+    "unit_prices": [],
+    "has_unit_pricing": false,
+    "stock_quantity": 25.5,
+    "stock_id": 1,
+    "stock_updated_at": "2024-01-15T10:30:00Z",
+    "stock_updated_by": "user123",
+    "description": "Descripción del producto",
+    "description_id": 1,
+    "stock_status": "in_stock",
+    "price_formatted": "PYG 15000",
+    "has_valid_stock": true,
+    "has_valid_price": true
+  }
+]
+```
+
+---
+
+### 5. Obtener Todos los Productos Enriquecidos (Sin Paginación)
+**GET** `/products/enriched/all`
+
+Obtiene **todos** los productos enriquecidos sin paginación. Útil para componentes como selectores o cuando necesitas la lista completa.
+
+**Response (200):**
+```json
+[
+  {
+    "id": "abc123",
+    "name": "Producto Ejemplo",
+    "state": true,
+    "category": {
+      "id": 1,
+      "name": "Electrónicos"
+    },
+    "product_type": "PHYSICAL",
+    "stock_quantity": 25.5,
+    "stock_status": "in_stock",
+    "purchase_price": 15000.00,
+    "unit_prices": [],
+    "has_unit_pricing": false,
+    "description": "Descripción del producto",
+    "price_formatted": "PYG 15000",
+    "has_valid_stock": true,
+    "has_valid_price": true
+  }
+]
+```
+
+---
+
+### 6. Obtener Productos de Servicios de Canchas (Enriquecidos)
+**GET** `/products/enriched/service-courts`
+
+Obtiene productos de tipo **SERVICE** específicamente de categorías relacionadas con canchas deportivas. Incluye información completa de stock, precios y descripción optimizada para servicios de reserva.
+
+**Filtros aplicados automáticamente:**
+- `product_type = 'SERVICE'`
+- `state = true` (solo productos activos)
+- Categorías: "Alquiler de Canchas", "Sports", o cualquier categoría que contenga "cancha", "court", "field"
+- Nombres de productos que contengan "cancha" o "court"
+
+**Response (200):**
+```json
+[
+  {
+    "id": "BT_Cancha_1_xyz123abc",
+    "name": "Cancha de Beach Tennis 1",
+    "state": true,
+    "category": {
+      "id": 3,
+      "name": "Alquiler de Canchas"
+    },
+    "category_id": 3,
+    "category_name": "Alquiler de Canchas",
+    "product_type": "SERVICE",
+    "user_id": "2pmK5NPfHiRwZUkcd3d3cETC2JW",
+    "purchase_price": 70000.00,
+    "price_id": 77,
+    "price_updated_at": "2025-06-09T14:52:07Z",
+    "price_updated_by": "2pmK5NPfHiRwZUkcd3d3cETC2JW",
+    "unit_prices": [],
+    "has_unit_pricing": false,
+    "stock_quantity": null,
+    "stock_id": null,
+    "stock_updated_at": null,
+    "stock_updated_by": null,
+    "description": null,
+    "description_id": null,
+    "stock_status": "no_stock_tracking",
+    "price_formatted": "PYG 70000/hora",
+    "has_valid_stock": false,
+    "has_valid_price": true
+  }
+]
+```
+
+**Estados de `stock_status` para servicios:**
+- `"no_stock_tracking"`: Servicio sin control de stock
+- `"unavailable"`: Servicio temporalmente no disponible
+- `"limited_availability"`: Disponibilidad limitada
+- `"available"`: Servicio disponible
+
+**Características especiales para servicios:**
+- `price_formatted`: Muestra formato "PYG XXXX/hora" para servicios
+- `has_valid_stock`: `false` para servicios sin control de inventario
+- `stock_quantity`: Puede ser `null` para servicios
+
+---
+
+### 7. Obtener Productos por Categoría
+**GET** `/products/by-category?categories=1,2,3`
+
+Obtiene productos filtrados por categorías específicas con información de precios.
+
+**Query Parameters:**
+- `categories` (string, requerido): IDs de categorías separadas por comas
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "product_id": "abc123",
+      "product_name": "Producto Ejemplo",
+      "category_name": "Electrónicos",
+      "price": 15000.00,
+      "unit": "unidad",
+      "price_source": "unit_price",
+      "has_unit_pricing": true
+    }
+  ],
+  "count": 1
+}
+```
+
+---
+
+### 8. Actualizar Producto
+**PUT** `/products/{id}`
+
+Actualiza un producto existente junto con su descripción.
+
+**Request Body:**
+```json
+{
+  "name": "Nombre Actualizado",
+  "state": true,
+  "id_category": 2,
+  "product_type": "SERVICE",
+  "description": "Nueva descripción"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Product and description updated successfully"
+}
+```
+
+---
+
+### 9. Eliminar Producto
+**DELETE** `/products/{id}`
+
+Elimina un producto (eliminación lógica).
+
+**Response (200):**
+```json
+{
+  "message": "Product and description deleted successfully"
+}
+```
+
+---
+
+### 7. Actualizar Producto
+**PUT** `/products/{id}`
+
+Actualiza un producto existente junto con su descripción.
+
+**Request Body:**
+```json
+{
+  "name": "Nombre Actualizado",
+  "state": true,
+  "id_category": 2,
+  "product_type": "SERVICE",
+  "description": "Nueva descripción"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Product and description updated successfully"
+}
+```
+
+---
+
+### 8. Eliminar Producto
+**DELETE** `/products/{id}`
+
+Elimina un producto (eliminación lógica).
+
+**Response (200):**
+```json
+{
+  "message": "Product and description deleted successfully"
+}
+```
+
+---
+
+## Endpoints de Inventario y Ajustes
+
+### 10. Crear Inventario
+**POST** `/inventory`
+
+Crea un nuevo inventario físico con múltiples productos.
+
+**Request Body:**
+```json
+{
+  "check_date": "2025-09-01T10:00:00Z",
+  "details": [
+    {
+      "id_product": "abc123",
+      "quantity_checked": 25.5
+    },
+    {
+      "id_product": "def456", 
+      "quantity_checked": 10.0
+    }
+  ]
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "inventory_id": 18,
+  "message": "Inventory created successfully",
+  "products_processed": 2
+}
+```
+
+---
+
+### 15. Obtener Detalles Completos del Producto
+**GET** `/products/{id}/details`
+
+Obtiene información completa del producto incluyendo stock y precios históricos.
+
+**Response (200):**
+```json
+{
+  "id": "abc123",
+  "name": "Producto Ejemplo",
+  "state": true,
+  "category": {
+    "id": 1,
+    "name": "Electrónicos"
+  },
+  "product_type": "PHYSICAL",
+  "price": 15000.00,
+  "stock_quantity": 25.5,
+  "description": "Descripción completa"
+}
+```
+
+---
+
+### 16. Buscar Detalles de Productos por Nombre
+**GET** `/products/search/details/{name}`
+
+Busca productos por nombre y devuelve información detallada.
+
+**Response (200):**
+```json
+[
+  {
+    "id": "abc123",
+    "name": "Producto Ejemplo",
+    "state": true,
+    "category": {
+      "id": 1,
+      "name": "Electrónicos"
+    },
+    "product_type": "PHYSICAL",
+    "price": 15000.00,
+    "stock_quantity": 25.5,
+    "description": "Descripción completa"
+  }
+]
+```
+
+---
+
+### 17. Obtener Producto con Descripción
+**GET** `/products/{id}/with-description`
+
+Obtiene un producto específico con su descripción en formato optimizado.
+
+**Response (200):**
+```json
+{
+  "id": "abc123",
+  "name": "Producto Ejemplo",
+  "state": true,
+  "category": {
+    "id": 1,
+    "name": "Electrónicos"
+  },
+  "product_type": "PHYSICAL",
+  "description": "Descripción del producto",
+  "effective_date": "2024-01-15T10:30:00Z",
+  "user_id": "user123"
+}
+```
+
+---
+
+## Endpoints de Precios de Productos
+
+### 18. Obtener Precio del Producto
+**GET** `/products/{id}/price?unit=unidad`
+
+Obtiene información de precios específica para un producto.
+
+**Query Parameters:**
+- `unit` (string, opcional): Unidad específica para obtener el precio
+
+**Response (200):**
+```json
+{
+  "data": {
+    "product_id": "abc123",
+    "product_name": "Producto Ejemplo",
+    "category_name": "Electrónicos",
+    "price": 15000.00,
+    "unit": "unidad",
+    "price_source": "unit_price",
+    "has_unit_pricing": true
+  }
+}
+```
+
+---
+
+### 19. Obtener Unidades del Producto
+**GET** `/products/{id}/units`
+
+Obtiene todas las unidades de medida disponibles para un producto con sus precios.
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "product_id": "abc123",
+      "unit": "unidad",
+      "price_per_unit": 15000.00,
+      "effective_date": "2024-01-15T10:30:00Z"
+    },
+    {
+      "id": 2,
+      "product_id": "abc123",
+      "unit": "docena",
+      "price_per_unit": 150000.00,
+      "effective_date": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 20. Crear Precio por Unidad
+**POST** `/products/{id}/units`
+
+Crea un nuevo precio por unidad para un producto.
+
+**Request Body:**
+```json
+{
+  "unit": "docena",
+  "price_per_unit": 150000.00
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Unit price created successfully",
+  "data": {
+    "product_id": "abc123",
+    "unit": "docena",
+    "price_per_unit": 150000.00,
+    "effective_date": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+## Códigos de Respuesta HTTP
+
+| Código | Descripción |
+|--------|-------------|
+| 200    | Operación exitosa |
+| 400    | Solicitud inválida |
+| 401    | No autorizado (token JWT inválido) |
+| 404    | Recurso no encontrado |
+| 500    | Error interno del servidor |
+
+---
+
+## Cuándo Usar Cada Endpoint
+
+### 🆕 Productos Financieramente Enriquecidos (Recomendado para Análisis Financiero)
+Usa estos endpoints cuando necesites análisis financiero completo:
+- **Análisis de rentabilidad**: `/products/financial/{id}` - Para analizar márgenes y costos
+- **Punto de venta avanzado**: `/products/financial/barcode/{barcode}` - Verificación financiera por código de barras
+- **Búsqueda con análisis**: `/products/financial/name/{name}` - Comparación financiera entre productos
+- **Reportes financieros**: Cualquier endpoint financiero para dashboards de administración
+- **Gestión de precios**: Análisis de costos vs precios para optimización de márgenes
+
+### Productos Enriquecidos (Recomendado para UI General)
+Usa estos endpoints cuando necesites mostrar productos en la interfaz con toda la información:
+- **Catálogo de productos**: `/products/enriched/all` o `/products/{page}/{pageSize}`
+- **Búsqueda de productos**: `/products/name/{name}`
+- **Detalles de producto**: `/products/{id}`
+- **Inventario/Stock**: Cualquier endpoint enriquecido incluye información de stock
+
+### Productos de Servicios de Canchas
+- **Listado de canchas**: `/products/enriched/service-courts` - Específico para mostrar canchas deportivas disponibles
+- **Sistemas de reservas**: Ideal para integración con el sistema de reservas
+- **Precios por hora**: Formato optimizado para servicios de alquiler
+- **Disponibilidad de servicios**: Información de estado específica para servicios
+
+### Productos con Información Específica
+- **Precios por categoría**: `/products/by-category?categories=1,2,3`
+- **Precios específicos**: `/products/{id}/price`
+- **Unidades disponibles**: `/products/{id}/units`
+- **Solo descripción**: `/products/{id}/with-description`
+
+---
+
+## Ejemplos de Uso con JavaScript/TypeScript
+
+### 🆕 Endpoints Financieramente Enriquecidos
+
+#### Obtener producto con información financiera completa
+```typescript
+const getProductFinancialEnriched = async (productId: string) => {
+  try {
+    const response = await fetch(`/api/products/financial/${productId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const product = await response.json();
+    
+    // Procesar información financiera
+    return {
+      ...product,
+      // Campos calculados útiles para UI
+      profitMargins: product.unit_costs_summary.map(cost => {
+        const price = product.unit_prices.find(p => p.unit === cost.unit);
+        if (price) {
+          const margin = ((price.price_per_unit - cost.last_cost) / price.price_per_unit) * 100;
+          return {
+            unit: cost.unit,
+            cost: cost.last_cost,
+            price: price.price_per_unit,
+            margin: margin.toFixed(2),
+            marginAmount: price.price_per_unit - cost.last_cost
+          };
+        }
+        return null;
+      }).filter(Boolean),
+      
+      // Indicadores de salud financiera
+      isFinanciallyHealthy: product.financial_health.has_prices && 
+                           product.financial_health.has_costs && 
+                           product.financial_health.has_stock,
+      
+      // Estado de inventario con contexto financiero
+      inventoryValue: product.stock_quantity ? 
+        product.unit_costs_summary.reduce((total, cost) => 
+          total + (cost.last_cost * (product.stock_quantity || 0)), 0
+        ) : 0,
+        
+      // Recomendaciones
+      needsPriceUpdate: product.financial_health.price_count === 0,
+      needsCostUpdate: product.financial_health.cost_units_count === 0,
+      lowMarginWarning: product.best_margin_percent !== null && product.best_margin_percent < 20
+    };
+  } catch (error) {
+    console.error('Error fetching financial enriched product:', error);
+    throw error;
+  }
+};
+
+// Ejemplo de uso en componente React
+const ProductFinancialDashboard = ({ productId }: { productId: string }) => {
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadProduct = async () => {
+      try {
+        const productData = await getProductFinancialEnriched(productId);
+        setProduct(productData);
+      } catch (error) {
+        console.error('Error loading product:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadProduct();
+  }, [productId]);
+  
+  if (loading) return <div>Cargando información financiera...</div>;
+  if (!product) return <div>Producto no encontrado</div>;
+  
+  return (
+    <div className="product-financial-dashboard">
+      <h2>{product.product_name}</h2>
+      
+      {/* Indicadores de salud financiera */}
+      <div className="financial-health">
+        <span className={`status ${product.isFinanciallyHealthy ? 'healthy' : 'warning'}`}>
+          {product.isFinanciallyHealthy ? '✅ Saludable' : '⚠️ Requiere atención'}
+        </span>
+      </div>
+      
+      {/* Márgenes de ganancia */}
+      <div className="profit-margins">
+        <h3>Márgenes por Unidad</h3>
+        {product.profitMargins.map(margin => (
+          <div key={margin.unit} className="margin-item">
+            <span>{margin.unit}</span>
+            <span>Costo: ${margin.cost}</span>
+            <span>Precio: ${margin.price}</span>
+            <span className={`margin ${margin.margin < 20 ? 'low' : 'good'}`}>
+              Margen: {margin.margin}%
+            </span>
+          </div>
+        ))}
+      </div>
+      
+      {/* Valor de inventario */}
+      <div className="inventory-value">
+        <h3>Valor de Inventario</h3>
+        <p>Cantidad: {product.stock_quantity}</p>
+        <p>Valor Total: ${product.inventoryValue.toFixed(2)}</p>
+      </div>
+      
+      {/* Alertas y recomendaciones */}
+      <div className="recommendations">
+        {product.needsPriceUpdate && (
+          <div className="alert warning">⚠️ Este producto no tiene precios configurados</div>
+        )}
+        {product.needsCostUpdate && (
+          <div className="alert warning">⚠️ Este producto no tiene costos registrados</div>
+        )}
+        {product.lowMarginWarning && (
+          <div className="alert danger">🚨 Margen bajo ({product.best_margin_percent}%)</div>
+        )}
+      </div>
+    </div>
+  );
+};
+```
+
+#### Buscar producto por código de barras con información financiera
+```typescript
+const searchProductByBarcodeFinancial = async (barcode: string) => {
+  try {
+    const response = await fetch(`/api/products/financial/barcode/${encodeURIComponent(barcode)}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null; // Producto no encontrado
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const product = await response.json();
+    
+    // Análisis inmediato para punto de venta
+    return {
+      ...product,
+      // Verificaciones para venta
+      canSell: product.financial_health.has_prices && product.has_valid_stock,
+      sellPrice: product.unit_prices.length > 0 ? product.unit_prices[0].price_per_unit : null,
+      costPrice: product.unit_costs_summary.length > 0 ? product.unit_costs_summary[0].last_cost : null,
+      
+      // Alertas inmediatas
+      alerts: [
+        ...(!product.financial_health.has_prices ? ['Sin precio configurado'] : []),
+        ...(!product.has_valid_stock ? ['Sin stock disponible'] : []),
+        ...(!product.financial_health.has_costs ? ['Sin costo registrado'] : []),
+        ...(product.stock_status === 'low_stock' ? ['Stock bajo'] : [])
+      ]
+    };
+  } catch (error) {
+    console.error('Error fetching product by barcode:', error);
+    throw error;
+  }
+};
+
+// Ejemplo de uso en escáner de punto de venta
+const handleBarcodeScanned = async (scannedBarcode: string) => {
+  try {
+    const product = await searchProductByBarcodeFinancial(scannedBarcode);
+    
+    if (!product) {
+      alert('Producto no encontrado con código de barras: ' + scannedBarcode);
+      return;
+    }
+    
+    // Mostrar alertas si las hay
+    if (product.alerts.length > 0) {
+      console.warn('Alertas del producto:', product.alerts);
+    }
+    
+    // Verificar si se puede vender
+    if (product.canSell) {
+      // Agregar al carrito o continuar con venta
+      addToCart(product);
+    } else {
+      alert(`No se puede vender este producto: ${product.alerts.join(', ')}`);
+    }
+    
+  } catch (error) {
+    console.error('Error al escanear código de barras:', error);
+    alert('Error al buscar el producto');
+  }
+};
+```
+
+#### Buscar productos por nombre con análisis financiero
+```typescript
+const searchProductsFinancialByName = async (searchTerm: string, limit: number = 10) => {
+  try {
+    const response = await fetch(`/api/products/financial/name/${encodeURIComponent(searchTerm)}?limit=${limit}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const products = await response.json();
+    
+    // Procesar productos con análisis financiero
+    return products
+      .sort((a, b) => b.match_score - a.match_score) // Ordenar por relevancia
+      .map(product => ({
+        ...product,
+        // Análisis de rentabilidad
+        profitabilityScore: calculateProfitabilityScore(product),
+        
+        // Recomendaciones de precio
+        priceRecommendation: getPriceRecommendation(product),
+        
+        // Estado financiero resumido
+        financialStatus: getFinancialStatus(product),
+        
+        // Valor de búsqueda
+        searchRelevance: getSearchRelevance(product.match_score)
+      }));
+      
+  } catch (error) {
+    console.error('Error searching products financially by name:', error);
+    throw error;
+  }
+};
+
+// Funciones auxiliares para análisis
+const calculateProfitabilityScore = (product) => {
+  if (!product.best_margin_percent) return 0;
+  
+  // Puntuación basada en margen, stock y ventas
+  const marginScore = Math.min(product.best_margin_percent / 50 * 100, 100);
+  const stockScore = product.has_valid_stock ? 100 : 0;
+  const priceScore = product.financial_health.has_prices ? 100 : 0;
+  
+  return Math.round((marginScore + stockScore + priceScore) / 3);
+};
+
+const getPriceRecommendation = (product) => {
+  if (!product.financial_health.has_costs) return 'Registrar costos primero';
+  if (!product.financial_health.has_prices) return 'Configurar precios';
+  if (product.best_margin_percent < 20) return 'Considerar incremento de precio';
+  if (product.best_margin_percent > 60) return 'Precio competitivo';
+  return 'Precio adecuado';
+};
+
+const getFinancialStatus = (product) => {
+  const { financial_health } = product;
+  
+  if (financial_health.has_prices && financial_health.has_costs && financial_health.has_stock) {
+    return { status: 'complete', label: '✅ Completo', color: 'green' };
+  } else if (financial_health.has_prices && financial_health.has_costs) {
+    return { status: 'partial', label: '⚠️ Sin stock', color: 'orange' };
+  } else if (financial_health.has_prices || financial_health.has_costs) {
+    return { status: 'incomplete', label: '⚠️ Incompleto', color: 'orange' };
+  } else {
+    return { status: 'empty', label: '❌ Sin datos', color: 'red' };
+  }
+};
+
+const getSearchRelevance = (score) => {
+  if (score >= 0.9) return 'Muy relevante';
+  if (score >= 0.7) return 'Relevante';
+  if (score >= 0.5) return 'Parcialmente relevante';
+  return 'Poco relevante';
+};
+
+// Ejemplo de uso en componente de búsqueda
+const ProductFinancialSearch = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+    
+    setLoading(true);
+    try {
+      const results = await searchProductsFinancialByName(searchTerm, 20);
+      setProducts(results);
+    } catch (error) {
+      console.error('Error searching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <div className="product-financial-search">
+      <div className="search-input">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          placeholder="Buscar productos con análisis financiero..."
+        />
+        <button onClick={handleSearch} disabled={loading}>
+          {loading ? 'Buscando...' : 'Buscar'}
+        </button>
+      </div>
+      
+      <div className="search-results">
+        {products.map(product => (
+          <div key={product.product_id} className="product-financial-card">
+            <div className="product-header">
+              <h3>{product.product_name}</h3>
+              <span className={`status ${product.financialStatus.status}`}>
+                {product.financialStatus.label}
+              </span>
+            </div>
+            
+            <div className="financial-summary">
+              <div>Rentabilidad: {product.profitabilityScore}/100</div>
+              <div>Margen: {product.best_margin_percent?.toFixed(1) || 'N/A'}%</div>
+              <div>Stock: {product.stock_quantity || 'Sin stock'}</div>
+            </div>
+            
+            <div className="recommendations">
+              <small>{product.priceRecommendation}</small>
+            </div>
+            
+            <div className="search-meta">
+              <small>Relevancia: {product.searchRelevance} ({product.match_score.toFixed(2)})</small>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+```
+
+### Obtener productos de servicios de canchas
+```typescript
+const getServiceCourts = async () => {
+  try {
+    const response = await fetch('/api/products/enriched/service-courts', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const courts = await response.json();
+    
+    // Procesar específicamente para servicios de canchas
+    return courts.map(court => ({
+      ...court,
+      // Campos útiles para UI de reservas
+      isAvailable: court.stock_status !== 'unavailable',
+      hourlyRate: court.purchase_price || 0,
+      displayName: `${court.name} - ${court.category_name}`,
+      priceDisplay: court.price_formatted || 'Precio no disponible',
+      // Para integración con sistema de reservas
+      reservationEnabled: court.has_valid_price && court.state,
+      categoryType: court.category_name || 'Sin categoría'
+    }));
+  } catch (error) {
+    console.error('Error fetching service courts:', error);
+    throw error;
+  }
+};
+
+// Ejemplo de uso en un selector de canchas
+const CourtSelector = () => {
+  const [courts, setCourts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadCourts = async () => {
+      try {
+        const courtsData = await getServiceCourts();
+        setCourts(courtsData.filter(court => court.isAvailable));
+      } catch (error) {
+        console.error('Error loading courts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadCourts();
+  }, []);
+  
+  if (loading) return <div>Cargando canchas...</div>;
+  
+  return (
+    <select>
+      <option value="">Seleccionar cancha</option>
+      {courts.map(court => (
+        <option key={court.id} value={court.id}>
+          {court.displayName} - {court.priceDisplay}
+        </option>
+      ))}
+    </select>
+  );
+};
+```
+
+### Obtener todos los productos enriquecidos
+```typescript
+const getProducts = async () => {
+  try {
+    const response = await fetch('/api/products/enriched/all', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const products = await response.json();
+    return products;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
+};
+```
+
+### Crear un producto
+```typescript
+const createProduct = async (productData: {
+  name: string;
+  barcode?: string;
+  category_id: number;
+  product_type?: 'PHYSICAL' | 'SERVICE';
+  purchase_price: number;
+}) => {
+  try {
+    const response = await fetch('/api/products/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(productData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error creating product:', error);
+    throw error;
+  }
+};
+```
+
+### Buscar productos enriquecidos por nombre
+```typescript
+const searchEnrichedProducts = async (searchTerm: string) => {
+  try {
+    const response = await fetch(`/api/products/name/${encodeURIComponent(searchTerm)}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const products = await response.json();
+    // Los productos ya incluyen stock, precios, descripción, etc.
+    return products.map(product => ({
+      ...product,
+      // Ejemplo: agregar lógica personalizada basada en campos calculados
+      canSell: product.has_valid_stock && product.has_valid_price,
+      displayPrice: product.price_formatted || 'Sin precio'
+    }));
+  } catch (error) {
+    console.error('Error searching enriched products:', error);
+    throw error;
+  }
+};
+```
+
+### Obtener productos enriquecidos con paginación
+```typescript
+const getEnrichedProductsPaginated = async (page: number, pageSize: number) => {
+  try {
+    const response = await fetch(`/api/products/${page}/${pageSize}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const products = await response.json();
+    return products.map(product => ({
+      ...product,
+      // Agregar campos útiles para la UI
+      isLowStock: product.stock_status === 'low_stock',
+      isOutOfStock: product.stock_status === 'out_of_stock',
+      hasDescription: !!product.description,
+      categoryDisplayName: product.category?.name || 'Sin categoría'
+    }));
+  } catch (error) {
+    console.error('Error fetching paginated enriched products:', error);
+    throw error;
+  }
+};
+```
+
+### Buscar productos por categoría
+```typescript
+const getProductsByCategory = async (categoryIds: number[]) => {
+  try {
+    const categoriesParam = categoryIds.join(',');
+    const response = await fetch(`/api/products/by-category?categories=${categoriesParam}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Error fetching products by category:', error);
+    throw error;
+  }
+};
+```
+
+### Buscar producto por código de barras
+```typescript
+const getProductByBarcode = async (barcode: string) => {
+  try {
+    const response = await fetch(`/api/products/barcode/${encodeURIComponent(barcode)}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null; // Producto no encontrado
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const product = await response.json();
+    return product;
+  } catch (error) {
+    console.error('Error fetching product by barcode:', error);
+    throw error;
+  }
+};
+
+// Ejemplo de uso en un escáner de código de barras
+const handleBarcodeScanned = async (scannedBarcode: string) => {
+  try {
+    const product = await getProductByBarcode(scannedBarcode);
+    if (product) {
+      console.log('Producto encontrado:', product);
+      // Agregar al carrito, mostrar detalles, etc.
+    } else {
+      console.log('Producto no encontrado con ese código de barras');
+      // Mostrar mensaje al usuario
+    }
+  } catch (error) {
+    console.error('Error al buscar producto:', error);
+  }
+};
+```
+
+---
+
+## Notas Importantes
+
+1. **Autenticación**: Todos los endpoints requieren un token JWT válido.
+
+2. **🆕 Endpoints Financieramente Enriquecidos**: 
+   - Proporcionan análisis financiero completo con márgenes de ganancia
+   - Incluyen información de costos históricos y promedios ponderados
+   - Calculan automáticamente la salud financiera del producto
+   - Ideales para reportes administrativos y análisis de rentabilidad
+
+3. **Productos Enriquecidos**: La mayoría de endpoints devuelven `ProductEnriched` con información completa (stock, precios, descripción).
+
+4. **Tipos de Producto**: Solo se permiten "PHYSICAL" y "SERVICE".
+
+5. **Stock Decimal**: El sistema soporta cantidades decimales para stock (campo `stock_quantity` es `float64`).
+
+6. **Precios por Unidad**: Los productos pueden tener múltiples precios según la unidad de medida en el array `unit_prices`.
+
+7. **Campos Calculados**: Los productos enriquecidos incluyen campos como `stock_status`, `price_formatted`, `has_valid_stock`.
+
+8. **Código de Barras**: El campo `barcode` es opcional, único (si se proporciona), y tiene un máximo de 50 caracteres. Se puede buscar productos específicamente por código de barras.
+
+9. **Eliminación Lógica**: Los productos eliminados no se borran físicamente de la base de datos.
+
+10. **Paginación vs Sin Paginación**: 
+    - Use `/products/{page}/{pageSize}` para listas grandes con paginación
+    - Use `/products/enriched/all` para obtener todos los productos de una vez (selectores, etc.)
+
+11. **🆕 Análisis Financiero**: 
+    - Los endpoints financieros incluyen cálculo automático de márgenes
+    - Proporcionan alertas de salud financiera
+    - Incluyen costos promedio ponderados y análisis de variación
+    - Ideales para optimización de precios y análisis de rentabilidad
+
+12. **Optimización**: Los endpoints enriquecidos y financieros hacen múltiples consultas internamente, son ideales para UI pero considera el rendimiento.
+
+### Estructura de Respuestas por Tipo
+- **ProductFinancialEnriched**: 🆕 Información financiera completa con análisis de costos, márgenes y salud financiera
+- **ProductEnriched**: Información completa, ideal para mostrar en UI
+- **ProductWithPricing**: Solo información de precios por categoría  
+- **ProductDetails**: Información básica con precios y stock
+- **ProductWithDescription**: Solo producto con su descripción
+
+### Diferencias entre Endpoints Enriquecidos:
+- **Financieramente Enriquecidos** (`/products/financial/*`): 
+  - ✅ Información de costos y márgenes
+  - ✅ Análisis de salud financiera
+  - ✅ Cálculo automático de rentabilidad
+  - ✅ Histórico de costos y promedios
+  - 🎯 **Uso**: Administración, reportes, análisis financiero
+
+- **Enriquecidos Regulares** (`/products/*`): 
+  - ✅ Información básica completa
+  - ✅ Stock y precios de venta
+  - ✅ Descripción y categoría
+  - ❌ Sin análisis de costos
+  - 🎯 **Uso**: Catálogo, ventas, UI general
+
+Esta documentación cubre todos los endpoints relacionados con productos incluyendo los productos enriquecidos. Para dudas adicionales, consulte el código fuente en `/handlers/product.go` y `/models/product.go`.

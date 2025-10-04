@@ -222,13 +222,19 @@ class BusinessManagementAPI {
       } catch (e) {
         // Si no es JSON, intentar leer como texto
         try {
-          const textResponse = await response.text();
+          const clonedResponse = response.clone();
+          const textResponse = await clonedResponse.text();
           console.error('🚨 Server error response (TEXT):', textResponse);
+          console.error('🚨 Response status:', response.status, response.statusText);
+          console.error('🚨 Response headers:', [...response.headers.entries()]);
           if (textResponse && textResponse.trim()) {
             errorDetails = textResponse;
+          } else {
+            errorDetails = `HTTP ${response.status}: ${response.statusText}`;
           }
         } catch (textError) {
-          console.error('Could not parse error response as JSON or text');
+          console.error('Could not parse error response as JSON or text', textError);
+          errorDetails = `HTTP ${response.status}: Unable to read response body`;
         }
       }
 

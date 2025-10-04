@@ -3,7 +3,7 @@
  * Siguiendo guía MVP: funcionalidad básica navegable
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ShoppingCart, Save, Check, AlertCircle, CreditCard, DollarSign, Calculator, User, Plus, Minus, Trash2, Package, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -24,6 +24,8 @@ import { useSalesLogic } from '@/hooks/useSalesLogic';
 import ClientSelector from '@/components/ClientSelector';
 import SaleItemsManager from '@/components/SaleItemsManager';
 import DiscountModal from '@/components/DiscountModal';
+import SalesHistorySection from '@/components/SalesHistorySection';
+import CurrencySelector from '@/components/payment/CurrencySelector';
 
 // Constantes centralizadas
 import { SYSTEM_MESSAGES } from '@/constants/mockData';
@@ -64,6 +66,11 @@ const Sales = () => {
   // NUEVO: estados para reservas
   const [showReservationModal, setShowReservationModal] = useState(false);
   const [reservationSearchQuery, setReservationSearchQuery] = useState('');
+  // Estado para tabs
+  const [activeTab, setActiveTab] = useState('new');
+
+  // Ref para refrescar el historial de ventas
+  const salesHistoryRef = useRef(null);
 
   // Store de ventas con funcionalidad de pagos
   const {
@@ -138,6 +145,7 @@ const Sales = () => {
     return clients.filter(client => {
       return (
         client.name?.toLowerCase().includes(query) ||
+        client.last_name?.toLowerCase().includes(query) ||
         client.document_id?.toLowerCase().includes(query) ||
         client.contact?.email?.toLowerCase().includes(query) ||
         client.contact?.phone?.toLowerCase().includes(query)
@@ -232,9 +240,9 @@ const Sales = () => {
     setTimeout(() => setNotification(null), 5000);
   };
 
-  // Cargar clientes al inicializar
+  // Cargar clientes al inicializar (todos para búsqueda)
   useEffect(() => {
-    fetchClients();
+    fetchClients(1000); // Cargar hasta 1000 clientes para búsqueda local
   }, [fetchClients]);
 
   // Cargar reservas cuando se selecciona un cliente
@@ -321,12 +329,11 @@ const Sales = () => {
 
   // Handlers para reservas en el carrito
   const handleAddReservationToCart = (reservation) => {
-    // Intentar obtener el precio de múltiples campos posibles
-    const price = reservation.total_amount ||
-                  reservation.amount ||
-                  reservation.price ||
-                  reservation.total ||
-                  0;
+    // El precio viene en total_amount según RESERVES_API.md
+    const price = reservation.total_amount || 0;
+
+    // Extraer fecha del start_time (viene como timestamp ISO completo)
+    const reservationDate = reservation.start_time ? reservation.start_time.split('T')[0] : null;
 
     // Crear un producto virtual basado en la reserva
     const reservationProduct = {
@@ -343,7 +350,7 @@ const Sales = () => {
       // Marcar como proveniente de reserva
       fromReservation: true,
       reservation_id: reservation.id,
-      reservation_date: reservation.reservation_date,
+      reservation_date: reservationDate,
       start_time: reservation.start_time,
       end_time: reservation.end_time,
       // Información de precios para justificación si es necesario
@@ -451,6 +458,11 @@ const Sales = () => {
         // Log para debugging
         if (response.reserve_processed) {
           console.log('✅ Reserva procesada exitosamente en la venta');
+        }
+
+        // Refrescar el historial de ventas
+        if (salesHistoryRef.current) {
+          salesHistoryRef.current.refreshToday();
         }
 
         // Resetear formulario
@@ -637,26 +649,128 @@ const Sales = () => {
     }
   };
 
+  // Utilidad para obtener configuración de unidad
+  const getUnitConfig = (unit) => {
+    // Unidades con decimales
+    const DECIMAL_UNITS = {
+      'kg': { step: 0.01, min: 0.01, decimals: 2, label: 'Kilogramo' },
+      'g': { step: 0.1, min: 0.1, decimals: 1, label: 'Gramo' },
+      'lb': { step: 0.01, min: 0.01, decimals: 2, label: 'Libra' },
+      'oz': { step: 0.1, min: 0.1, decimals: 1, label: 'Onza' },
+      'ton': { step: 0.001, min: 0.001, decimals: 3, label: 'Tonelada' },
+      'l': { step: 0.01, min: 0.01, decimals: 2, label: 'Litro' },
+      'ml': { step: 1, min: 1, decimals: 0, label: 'Mililitro' },
+      'gal': { step: 0.1, min: 0.1, decimals: 1, label: 'Galón' },
+      'meter': { step: 0.01, min: 0.01, decimals: 2, label: 'Metro' },
+      'cm': { step: 0.1, min: 0.1, decimals: 1, label: 'Centímetro' },
+      'sqm': { step: 0.01, min: 0.01, decimals: 2, label: 'Metro cuadrado' },
+      'month': { step: 0.5, min: 0.5, decimals: 1, label: 'Mes' }
+    };
+
+    // Unidades enteras (por defecto)
+    const INTEGER_CONFIG = { step: 1, min: 1, decimals: 0, allowDecimals: false };
+
+    if (DECIMAL_UNITS[unit]) {
+      return { ...DECIMAL_UNITS[unit], allowDecimals: true };
+    }
+
+    return { ...INTEGER_CONFIG, label: unit || 'unidad' };
+  };
+
+  // Validar cantidad según unidad
+  const validateQuantity = (value, unit) => {
+    const config = getUnitConfig(unit);
+
+    // Validar que value sea un string o número válido
+    const valueStr = String(value).trim();
+    if (!valueStr || valueStr === '') {
+      return { valid: false, error: 'Ingrese una cantidad' };
+    }
+
+    const num = parseFloat(valueStr);
+
+    // Validar que sea un número válido
+    if (isNaN(num)) {
+      return { valid: false, error: 'Debe ser un número válido' };
+    }
+
+    // Validar mínimo
+    if (num < config.min) {
+      return { valid: false, error: `Mínimo: ${config.min}` };
+    }
+
+    // Validar decimales para unidades que NO permiten decimales
+    if (!config.allowDecimals) {
+      // Verificar si el string contiene un punto decimal
+      if (valueStr.includes('.') || valueStr.includes(',')) {
+        return { valid: false, error: 'Solo números enteros permitidos' };
+      }
+      // Verificar que sea un entero
+      if (!Number.isInteger(num)) {
+        return { valid: false, error: 'Solo números enteros permitidos' };
+      }
+    }
+
+    // Validar cantidad de decimales para unidades que SÍ permiten decimales
+    if (config.allowDecimals && config.decimals !== undefined) {
+      const decimalPart = valueStr.split('.')[1];
+      if (decimalPart && decimalPart.length > config.decimals) {
+        return { valid: false, error: `Máximo ${config.decimals} decimal${config.decimals > 1 ? 'es' : ''}` };
+      }
+    }
+
+    return { valid: true, error: null };
+  };
+
   // Componente del modal de selección de productos
   const ProductSelectionModal = () => {
     const [selectedProduct, setSelectedProduct] = useState(null);
-    const [quantity, setQuantity] = useState(1);
+    const [quantity, setQuantity] = useState('1');
+    const [quantityError, setQuantityError] = useState(null);
 
     const handleProductSelect = (product) => {
       setSelectedProduct(product);
+      // Reset cantidad al seleccionar producto
+      const unit = product.unit || 'unit';
+      const config = getUnitConfig(unit);
+      setQuantity(config.min.toString());
+      setQuantityError(null);
+    };
+
+    const handleQuantityChange = (value) => {
+      setQuantity(value);
+
+      if (selectedProduct) {
+        const unit = selectedProduct.unit || 'unit';
+        const validation = validateQuantity(value, unit);
+        setQuantityError(validation.error);
+      }
     };
 
     const handleAddProduct = () => {
       if (!selectedProduct) return;
 
-      salesLogic.addSaleItem(selectedProduct, quantity);
+      const unit = selectedProduct.unit || 'unit';
+      const validation = validateQuantity(quantity, unit);
+
+      if (!validation.valid) {
+        setQuantityError(validation.error);
+        return;
+      }
+
+      const numQuantity = parseFloat(quantity);
+      salesLogic.addSaleItem(selectedProduct, numQuantity);
       setSelectedProduct(null);
-      setQuantity(1);
+      setQuantity('1');
+      setQuantityError(null);
       setShowProductModal(false);
       setSearchQuery(''); // Limpiar búsqueda al agregar producto
     };
 
     if (!showProductModal) return null;
+
+    const selectedUnit = selectedProduct?.unit || 'unit';
+    const unitConfig = getUnitConfig(selectedUnit);
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowProductModal(false)}>
@@ -716,8 +830,13 @@ const Sales = () => {
                           {product.category && (
                             <p className="text-sm text-gray-500">{String(product.category)}</p>
                           )}
+                          {product.unit && (
+                            <Badge variant="outline" className="mt-1 text-xs">
+                              📏 {getUnitConfig(product.unit).label}
+                            </Badge>
+                          )}
                           {product.product_id && (
-                            <p className="text-xs text-gray-400">ID: {String(product.product_id)}</p>
+                            <p className="text-xs text-gray-400 mt-1">ID: {String(product.product_id)}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -750,33 +869,67 @@ const Sales = () => {
                 <div className="mb-4">
                   <Label className="text-sm font-medium">Producto seleccionado:</Label>
                   <p className="text-sm text-gray-600">{selectedProduct?.product_name || 'Sin nombre'}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="secondary" className="text-xs">
+                      📏 {unitConfig.label}
+                    </Badge>
+                    <span className="text-xs text-gray-500">
+                      {unitConfig.allowDecimals
+                        ? `✅ Decimales permitidos (hasta ${unitConfig.decimals})`
+                        : '❌ Solo números enteros'}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="mb-4">
-                  <Label className="text-sm font-medium mb-2 block">Cantidad</Label>
+                  <Label className="text-sm font-medium mb-2 block">
+                    Cantidad ({unitConfig.label})
+                  </Label>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      onClick={() => {
+                        const current = parseFloat(quantity) || unitConfig.min;
+                        const newVal = Math.max(unitConfig.min, current - unitConfig.step);
+                        handleQuantityChange(newVal.toFixed(unitConfig.decimals));
+                      }}
                     >
                       <Minus className="w-4 h-4" />
                     </Button>
                     <Input
                       type="number"
                       value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-20 text-center"
-                      min="1"
+                      onChange={(e) => handleQuantityChange(e.target.value)}
+                      onKeyDown={(e) => {
+                        // Bloquear punto decimal para unidades enteras
+                        if (!unitConfig.allowDecimals && (e.key === '.' || e.key === ',')) {
+                          e.preventDefault();
+                        }
+                      }}
+                      className={`w-24 text-center ${quantityError ? 'border-red-500' : ''}`}
+                      min={unitConfig.min}
+                      step={unitConfig.step}
+                      placeholder={unitConfig.min.toString()}
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setQuantity(quantity + 1)}
+                      onClick={() => {
+                        const current = parseFloat(quantity) || unitConfig.min;
+                        const newVal = current + unitConfig.step;
+                        handleQuantityChange(newVal.toFixed(unitConfig.decimals));
+                      }}
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
+                  {quantityError && (
+                    <p className="text-red-500 text-xs mt-1">{quantityError}</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Ejemplos: {unitConfig.allowDecimals ? '0.5, 1.25, 2.5' : '1, 2, 5, 10'}
+                  </p>
                 </div>
               </div>
             )}
@@ -794,7 +947,7 @@ const Sales = () => {
                 <Button
                   className="flex-1"
                   onClick={handleAddProduct}
-                  disabled={!selectedProduct}
+                  disabled={!selectedProduct || !!quantityError}
                 >
                   Agregar Producto
                 </Button>
@@ -849,12 +1002,32 @@ const Sales = () => {
                           </Badge>
                         )}
                       </div>
-                      {item.category && (
+                      {item.category && !item.fromReservation && (
                         <div className="text-sm text-muted-foreground">{item.category}</div>
                       )}
                       {item.fromReservation && item.reservation_date && (
-                        <div className="text-xs text-blue-600 mt-1">
-                          📅 {item.reservation_date} • 🕒 {item.start_time} - {item.end_time}
+                        <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700 border-blue-300">
+                              📅 {new Date(item.reservation_date).toLocaleDateString('es-PY', {
+                                weekday: 'short',
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between text-xs bg-white rounded px-2 py-1">
+                            <div className="flex items-center gap-1">
+                              <span className="text-gray-500">🕒 Inicio:</span>
+                              <span className="font-semibold">{item.start_time}</span>
+                            </div>
+                            <span className="text-gray-400">→</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-gray-500">Fin:</span>
+                              <span className="font-semibold">{item.end_time}</span>
+                            </div>
+                          </div>
                         </div>
                       )}
                       {item.hasDiscount && (
@@ -1191,14 +1364,41 @@ const Sales = () => {
 
   return (
     <div className={styles.page('space-y-6')} data-testid="sales-page">
-      {/* Header con título */}
+      {/* Header con título y tabs */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{t('sales.title', 'Ventas')}</h1>
       </div>
 
       <NotificationBanner />
 
-      {loading && saleItems.length === 0 && !salesLogic.selectedClient ? (
+      {/* Tabs para Nueva Venta e Historial */}
+      <div className="flex gap-2 border-b">
+        <button
+          onClick={() => setActiveTab('new')}
+          className={`px-4 py-2 font-medium transition-colors ${
+            activeTab === 'new'
+              ? 'border-b-2 border-primary text-primary'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Nueva Venta
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`px-4 py-2 font-medium transition-colors ${
+            activeTab === 'history'
+              ? 'border-b-2 border-primary text-primary'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Historial de Ventas
+        </button>
+      </div>
+
+      {/* Contenido según tab activo */}
+      {activeTab === 'history' ? (
+        <SalesHistorySection ref={salesHistoryRef} />
+      ) : loading && saleItems.length === 0 && !salesLogic.selectedClient ? (
         <DataState variant="loading" skeletonVariant="list" testId="sales-loading" skeletonProps={{ count: 4 }} />
       ) : (
         <div className="space-y-6">
@@ -1260,50 +1460,145 @@ const Sales = () => {
                           (item.product_id === reservation.product_id && item.fromReservation)
                         );
 
+                        // Formatear fecha desde start_time (timestamp ISO completo)
+                        const formatDateFromTimestamp = (timestamp) => {
+                          if (!timestamp) return { formatted: null, raw: null };
+
+                          try {
+                            const date = new Date(timestamp);
+
+                            // Validar que la fecha sea válida
+                            if (!date || isNaN(date.getTime())) {
+                              return { formatted: null, raw: timestamp };
+                            }
+
+                            // Formatear la fecha
+                            const formatted = date.toLocaleDateString('es-PY', {
+                              weekday: 'short',
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric'
+                            });
+
+                            return { formatted, raw: timestamp };
+                          } catch (e) {
+                            console.error('Error formateando fecha:', e, timestamp);
+                            return { formatted: null, raw: String(timestamp) };
+                          }
+                        };
+
+                        // Formatear hora de manera más legible
+                        const formatTime = (timeStr) => {
+                          if (!timeStr) return '--:--';
+                          // Si viene como timestamp completo, extraer solo la hora
+                          if (timeStr.includes('T')) {
+                            const time = timeStr.split('T')[1]?.substring(0, 5);
+                            return time || '--:--';
+                          }
+                          // Si viene como HH:MM:SS, tomar solo HH:MM
+                          return timeStr.substring(0, 5);
+                        };
+
+                        // Calcular duración del servicio
+                        const calculateDuration = (start, end) => {
+                          if (!start || !end) return null;
+                          try {
+                            const startTime = formatTime(start);
+                            const endTime = formatTime(end);
+                            const [startH, startM] = startTime.split(':').map(Number);
+                            const [endH, endM] = endTime.split(':').map(Number);
+
+                            if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return null;
+
+                            const durationMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+                            if (durationMinutes <= 0) return null;
+
+                            const hours = Math.floor(durationMinutes / 60);
+                            const minutes = durationMinutes % 60;
+                            return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                          } catch (e) {
+                            return null;
+                          }
+                        };
+
+                        // Usar start_time para extraer la fecha (es un timestamp ISO completo)
+                        const dateInfo = formatDateFromTimestamp(reservation.start_time);
+                        const startTime = formatTime(reservation.start_time);
+                        const endTime = formatTime(reservation.end_time);
+                        const duration = calculateDuration(reservation.start_time, reservation.end_time);
+
                         return (
-                          <Card key={reservation.id} className={`cursor-pointer transition-all hover:shadow-md ${
-                            isInCart ? 'ring-2 ring-green-500 bg-green-50' : 'hover:bg-gray-50'
+                          <Card key={reservation.id} className={`transition-all border ${
+                            isInCart
+                              ? 'border-green-500 bg-green-50 shadow-md'
+                              : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                           }`}>
                             <CardContent className="p-4">
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="flex-1">
-                                  <div className="font-medium text-sm">
+                              {/* Header: Título y Status */}
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold text-gray-900 text-sm mb-1 truncate">
                                     {reservation.service_name || reservation.product_name || `Servicio #${reservation.id}`}
-                                  </div>
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    📅 {reservation.reservation_date}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    🕒 {reservation.start_time} - {reservation.end_time}
-                                  </div>
+                                  </h4>
+                                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200 px-2 py-0.5">
+                                    ✓ Confirmada
+                                  </Badge>
                                 </div>
-                                <Badge variant={isInCart ? "default" : "secondary"} className="text-xs">
-                                  ₲{reservation.amount?.toLocaleString()}
-                                </Badge>
+                                <span className="text-sm font-bold text-gray-900 ml-2 whitespace-nowrap">
+                                  ₲{(reservation.total_amount || 0).toLocaleString()}
+                                </span>
                               </div>
 
-                              <div className="flex items-center justify-between">
-                                <Badge variant="outline" className="text-xs bg-green-100 text-green-700">
-                                  Confirmada
-                                </Badge>
+                              {/* Fecha - mostrar formateada o raw */}
+                              <div className="mb-2 flex items-center gap-1.5 text-xs">
+                                <span className="text-blue-600">📅</span>
+                                {dateInfo.formatted ? (
+                                  <span className="font-medium text-gray-700">{dateInfo.formatted}</span>
+                                ) : dateInfo.raw ? (
+                                  <span className="font-medium text-orange-600">{dateInfo.raw}</span>
+                                ) : (
+                                  <span className="text-gray-400">Sin fecha</span>
+                                )}
+                              </div>
 
+                              {/* Horario en caja destacada */}
+                              <div className="mb-3 p-2.5 bg-white rounded border border-gray-200 shadow-sm">
+                                <div className="flex items-center justify-between text-xs">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-gray-500">🕒</span>
+                                    <span className="font-semibold text-gray-900">{startTime}</span>
+                                  </div>
+                                  <span className="text-gray-400 px-2">→</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-semibold text-gray-900">{endTime}</span>
+                                  </div>
+                                </div>
+                                {duration && (
+                                  <div className="text-xs text-center text-gray-600 mt-1.5 pt-1.5 border-t border-gray-200">
+                                    Duración: <span className="font-semibold text-blue-600">{duration}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Botón de acción */}
+                              <div className="flex justify-end">
                                 {isInCart ? (
                                   <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={() => handleRemoveReservationFromCart(reservation)}
-                                    className="text-red-600 hover:bg-red-50 text-xs px-2 py-1"
+                                    className="text-red-600 hover:bg-red-50 border-red-300 text-xs px-3 py-1.5 h-auto"
                                   >
-                                    <Trash2 className="w-3 h-3 mr-1" />
+                                    <Trash2 className="w-3 h-3 mr-1.5" />
                                     Quitar
                                   </Button>
                                 ) : (
                                   <Button
                                     size="sm"
                                     onClick={() => handleAddReservationToCart(reservation)}
-                                    className="text-xs px-2 py-1"
+                                    className="bg-primary hover:bg-primary/90 text-white text-xs px-3 py-1.5 h-auto"
                                   >
-                                    <Plus className="w-3 h-3 mr-1" />
+                                    <Plus className="w-3 h-3 mr-1.5" />
                                     Agregar
                                   </Button>
                                 )}

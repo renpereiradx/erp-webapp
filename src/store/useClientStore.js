@@ -32,11 +32,12 @@ const useClientStore = create()(
       clearClients: () => set({ clients: [], error: null }),
 
       // Cargar datos
-      fetchClients: async () => {
-        const { page, pageSize } = get();
+      fetchClients: async (customPageSize = null) => {
+        const { page, pageSize: defaultPageSize } = get();
+        const pageSizeToUse = customPageSize !== null ? customPageSize : defaultPageSize;
         set({ loading: true, error: null });
         try {
-          const result = await clientService.getAll({ page, pageSize });
+          const result = await clientService.getAll({ page, pageSize: pageSizeToUse });
           if (typeof window !== 'undefined') {
             console.log('[useClientStore.fetchClients] raw result:', result);
           }
@@ -139,7 +140,7 @@ const useClientStore = create()(
             dataArray.length ||
             cleaned.length || 0
           );
-          const computedTotalPages = total && pageSize ? Math.max(1, Math.ceil(total / pageSize)) : 1;
+          const computedTotalPages = total && pageSizeToUse ? Math.max(1, Math.ceil(total / pageSizeToUse)) : 1;
 
           set({
             clients: cleaned,

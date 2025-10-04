@@ -52,8 +52,10 @@ const DiscountModal = ({
       newErrors.auth = 'Este tipo de descuento requiere autorización';
     }
 
-    if (!justification.trim()) {
-      newErrors.justification = 'Debe proporcionar una justificación';
+    // La justificación detallada es opcional si hay una razón predeterminada seleccionada
+    // Solo es obligatoria si no hay razón predeterminada
+    if (!selectedReason && !justification.trim()) {
+      newErrors.justification = 'Debe proporcionar una justificación o seleccionar una razón predeterminada';
     }
 
     if (discountType === 'percentage') {
@@ -86,13 +88,16 @@ const DiscountModal = ({
     const selectedReasonObj = PRICE_CHANGE_REASONS.find(r => r.id === selectedReason);
     const authorizedBy = selectedReasonObj?.requiresAuth ? currentUser?.id : null;
 
+    // Usar justificación detallada si existe, sino usar la descripción de la razón predeterminada
+    const finalJustification = justification.trim() || selectedReasonObj?.description || '';
+
     try {
       if (discountType === 'percentage') {
         onApplyPercentageDiscount(
           item.product_id || item.id,
           parseFloat(percentageValue),
           selectedReason,
-          justification.trim(),
+          finalJustification,
           authorizedBy
         );
       } else if (discountType === 'fixed') {
@@ -100,7 +105,7 @@ const DiscountModal = ({
           item.product_id || item.id,
           parseFloat(fixedAmount),
           selectedReason,
-          justification.trim(),
+          finalJustification,
           authorizedBy
         );
       } else if (discountType === 'direct') {
@@ -108,7 +113,7 @@ const DiscountModal = ({
           item.product_id || item.id,
           parseFloat(directPrice),
           selectedReason,
-          justification.trim(),
+          finalJustification,
           authorizedBy
         );
       }
@@ -328,15 +333,18 @@ const DiscountModal = ({
           <div>
             <Label htmlFor="justification">
               Justificación detallada
-              {selectedReasonObj?.requiresAuth && (
-                <span className="text-orange-500 ml-1">*</span>
+              {!selectedReason && (
+                <span className="text-red-500 ml-1">*</span>
+              )}
+              {selectedReason && (
+                <span className="text-gray-500 text-xs ml-2">(Opcional - se usará la razón predeterminada si está vacío)</span>
               )}
             </Label>
             <Textarea
               id="justification"
               value={justification}
               onChange={(e) => setJustification(e.target.value)}
-              placeholder="Explique el motivo específico para este cambio de precio..."
+              placeholder={selectedReason ? "Opcional: Añade detalles específicos si es necesario..." : "Explique el motivo específico para este cambio de precio..."}
               rows={3}
             />
             {errors.justification && (

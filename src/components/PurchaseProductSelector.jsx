@@ -9,8 +9,8 @@ import { Search, Package, Plus, DollarSign, Hash } from 'lucide-react';
 // useThemeStyles removido para MVP - sin hooks problemáticos
 import { MOCK_PURCHASE_PRODUCTS } from '../constants/purchaseData';
 
-const PurchaseProductSelector = ({ 
-  onProductAdd, 
+const PurchaseProductSelector = ({
+  onProductAdd,
   theme = 'neo-brutalism',
   supplierId = null,
   className = ''
@@ -18,12 +18,91 @@ const PurchaseProductSelector = ({
   // Para MVP - estilos fijos sin hooks problemáticos
   const themeStyles = { styles: { input: () => 'input-class', card: (classes = '') => `card-class ${classes}`, button: () => 'button-class' } };
   const styles = themeStyles.styles || themeStyles;
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState('1');
+  const [quantityError, setQuantityError] = useState(null);
   const [customPrice, setCustomPrice] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+
+  // Utilidad para obtener configuración de unidad
+  const getUnitConfig = (unit) => {
+    // Unidades con decimales
+    const DECIMAL_UNITS = {
+      'kg': { step: 0.01, min: 0.01, decimals: 2, label: 'Kilogramo' },
+      'g': { step: 0.1, min: 0.1, decimals: 1, label: 'Gramo' },
+      'lb': { step: 0.01, min: 0.01, decimals: 2, label: 'Libra' },
+      'oz': { step: 0.1, min: 0.1, decimals: 1, label: 'Onza' },
+      'ton': { step: 0.001, min: 0.001, decimals: 3, label: 'Tonelada' },
+      'l': { step: 0.01, min: 0.01, decimals: 2, label: 'Litro' },
+      'ml': { step: 1, min: 1, decimals: 0, label: 'Mililitro' },
+      'gal': { step: 0.1, min: 0.1, decimals: 1, label: 'Galón' },
+      'meter': { step: 0.01, min: 0.01, decimals: 2, label: 'Metro' },
+      'cm': { step: 0.1, min: 0.1, decimals: 1, label: 'Centímetro' },
+      'sqm': { step: 0.01, min: 0.01, decimals: 2, label: 'Metro cuadrado' },
+      'month': { step: 0.5, min: 0.5, decimals: 1, label: 'Mes' }
+    };
+
+    // Unidades enteras (por defecto)
+    const INTEGER_CONFIG = { step: 1, min: 1, decimals: 0, allowDecimals: false };
+
+    if (DECIMAL_UNITS[unit]) {
+      return { ...DECIMAL_UNITS[unit], allowDecimals: true };
+    }
+
+    return { ...INTEGER_CONFIG, label: unit || 'unidad' };
+  };
+
+  // Validar cantidad según unidad
+  const validateQuantity = (value, unit, minOrderQty) => {
+    const config = getUnitConfig(unit);
+
+    // Validar que value sea un string o número válido
+    const valueStr = String(value).trim();
+    if (!valueStr || valueStr === '') {
+      return { valid: false, error: 'Ingrese una cantidad' };
+    }
+
+    const num = parseFloat(valueStr);
+
+    // Validar que sea un número válido
+    if (isNaN(num)) {
+      return { valid: false, error: 'Debe ser un número válido' };
+    }
+
+    // Validar mínimo
+    if (num < config.min) {
+      return { valid: false, error: `Mínimo: ${config.min}` };
+    }
+
+    // Validar cantidad mínima de pedido
+    if (minOrderQty && num < minOrderQty) {
+      return { valid: false, error: `Pedido mínimo: ${minOrderQty}` };
+    }
+
+    // Validar decimales para unidades que NO permiten decimales
+    if (!config.allowDecimals) {
+      // Verificar si el string contiene un punto decimal
+      if (valueStr.includes('.') || valueStr.includes(',')) {
+        return { valid: false, error: 'Solo números enteros permitidos' };
+      }
+      // Verificar que sea un entero
+      if (!Number.isInteger(num)) {
+        return { valid: false, error: 'Solo números enteros permitidos' };
+      }
+    }
+
+    // Validar cantidad de decimales para unidades que SÍ permiten decimales
+    if (config.allowDecimals && config.decimals !== undefined) {
+      const decimalPart = valueStr.split('.')[1];
+      if (decimalPart && decimalPart.length > config.decimals) {
+        return { valid: false, error: `Máximo ${config.decimals} decimal${config.decimals > 1 ? 'es' : ''}` };
+      }
+    }
+
+    return { valid: true, error: null };
+  };
 
   // Filtrar productos por búsqueda incluyendo código de barras
   const filteredProducts = MOCK_PURCHASE_PRODUCTS.filter(product => {
@@ -41,7 +120,8 @@ const PurchaseProductSelector = ({
   // Resetear formulario
   const resetForm = () => {
     setSelectedProduct(null);
-    setQuantity(1);
+    setQuantity('1');
+    setQuantityError(null);
     setCustomPrice('');
     setShowAddForm(false);
     setSearchTerm('');
@@ -50,26 +130,52 @@ const PurchaseProductSelector = ({
   // Manejar selección de producto
   const handleProductSelect = (product) => {
     setSelectedProduct(product);
-    setQuantity(product.min_order_quantity || 1);
+    const unit = product.unit || 'unit';
+    const config = getUnitConfig(unit);
+    const minQty = product.min_order_quantity || config.min;
+    setQuantity(minQty.toString());
+    setQuantityError(null);
     setCustomPrice(product.supplier_price?.toString() || '');
     setShowAddForm(true);
+  };
+
+  // Manejar cambio de cantidad
+  const handleQuantityChange = (value) => {
+    setQuantity(value);
+
+    if (selectedProduct) {
+      const unit = selectedProduct.unit || 'unit';
+      const minOrderQty = selectedProduct.min_order_quantity;
+      const validation = validateQuantity(value, unit, minOrderQty);
+      setQuantityError(validation.error);
+    }
   };
 
   // Agregar producto al pedido
   const handleAddProduct = () => {
     if (!selectedProduct) return;
 
-    const finalPrice = customPrice ? parseFloat(customPrice) : selectedProduct.supplier_price;
-    const finalQuantity = Math.max(quantity, selectedProduct.min_order_quantity || 1);
+    const unit = selectedProduct.unit || 'unit';
+    const minOrderQty = selectedProduct.min_order_quantity;
+    const validation = validateQuantity(quantity, unit, minOrderQty);
 
-    onProductAdd(selectedProduct, finalQuantity, finalPrice);
+    if (!validation.valid) {
+      setQuantityError(validation.error);
+      return;
+    }
+
+    const finalPrice = customPrice ? parseFloat(customPrice) : selectedProduct.supplier_price;
+    const numQuantity = parseFloat(quantity);
+
+    onProductAdd(selectedProduct, numQuantity, finalPrice);
     resetForm();
   };
 
   // Validaciones
-  const canAdd = selectedProduct && 
-                 quantity > 0 && 
-                 quantity >= (selectedProduct.min_order_quantity || 1) &&
+  const canAdd = selectedProduct &&
+                 !quantityError &&
+                 quantity &&
+                 parseFloat(quantity) > 0 &&
                  (customPrice ? parseFloat(customPrice) > 0 : true);
 
   return (
@@ -164,19 +270,69 @@ const PurchaseProductSelector = ({
             <div>
               <label className={styles.label()}>
                 <Hash className="inline w-4 h-4 mr-2" />
-                Cantidad
+                Cantidad ({getUnitConfig(selectedProduct.unit || 'unit').label})
               </label>
-              <input
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
-                min={selectedProduct.min_order_quantity || 1}
-                className={styles.input()}
-              />
-              {selectedProduct.min_order_quantity && (
-                <div className="text-xs text-gray-600 mt-1">
-                  Mínimo: {selectedProduct.min_order_quantity} {selectedProduct.unit}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const unit = selectedProduct.unit || 'unit';
+                    const config = getUnitConfig(unit);
+                    const current = parseFloat(quantity) || config.min;
+                    const newVal = Math.max(config.min, current - config.step);
+                    handleQuantityChange(newVal.toFixed(config.decimals));
+                  }}
+                  className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => handleQuantityChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    const unit = selectedProduct.unit || 'unit';
+                    const config = getUnitConfig(unit);
+                    // Bloquear punto decimal para unidades enteras
+                    if (!config.allowDecimals && (e.key === '.' || e.key === ',')) {
+                      e.preventDefault();
+                    }
+                  }}
+                  min={selectedProduct.min_order_quantity || getUnitConfig(selectedProduct.unit || 'unit').min}
+                  step={getUnitConfig(selectedProduct.unit || 'unit').step}
+                  className={`flex-1 ${styles.input()} ${quantityError ? 'border-red-500' : ''}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const unit = selectedProduct.unit || 'unit';
+                    const config = getUnitConfig(unit);
+                    const current = parseFloat(quantity) || config.min;
+                    const newVal = current + config.step;
+                    handleQuantityChange(newVal.toFixed(config.decimals));
+                  }}
+                  className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                >
+                  +
+                </button>
+              </div>
+              {quantityError ? (
+                <div className="text-xs text-red-600 mt-1">
+                  {quantityError}
                 </div>
+              ) : (
+                <>
+                  {selectedProduct.min_order_quantity && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      Pedido mínimo: {selectedProduct.min_order_quantity} {selectedProduct.unit}
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-500 mt-1">
+                    {getUnitConfig(selectedProduct.unit || 'unit').allowDecimals
+                      ? '✅ Decimales permitidos'
+                      : '❌ Solo números enteros'}
+                  </div>
+                </>
               )}
             </div>
 

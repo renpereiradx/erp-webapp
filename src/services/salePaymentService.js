@@ -8,21 +8,28 @@ import { apiClient } from '@/services/api';
 import { telemetry } from '@/utils/telemetry';
 
 const API_ENDPOINTS = {
-  // API correcta según documentación SALE_PAYMENT_API.md
+  // API v3.0 - Nuevo endpoint unificado de pagos
+  processPaymentPartial: '/payment/process-partial',
+
+  // API Legacy (mantener por compatibilidad)
   processPayment: '/payment/process',
   paymentDetails: (saleId) => `/payment/details/${saleId}`,
   paymentById: (paymentId) => `/payment/${paymentId}`,
   paymentStatistics: '/payment/statistics/change',
-  
+
   // Gestión de ventas
   saleById: (id) => `/sale/${id}`,
   salesByDateRange: '/sale/date_range',
   cancelSale: (id) => `/sale/${id}`,
   cancellationPreview: (id) => `/sale/${id}/preview-cancellation`,
   priceChangeReport: '/sale/price-changes/report',
-  
-  // Integración con caja registradora  
-  salePaymentWithCashRegister: '/cash-registers/payments/sale',
+
+  // Nuevos endpoints de estado de pago (v3.0)
+  salePaymentStatus: (id) => `/sale/${id}/payment-status`,
+  salesByDateRangeWithPaymentStatus: '/sale/date_range/payment-status',
+  salesByClientNameWithPaymentStatus: (name) => `/sale/client_name/${name}/payment-status`,
+
+  // Cajas registradoras
   verifyIntegration: '/cash-registers/verify-integration'
 };
 
@@ -154,27 +161,43 @@ export const salePaymentService = {
   },
 
   /**
-   * Procesa pago con integración de caja registradora
+   * Procesa pago con integración de caja registradora (API v3.0)
    * @param {ProcessSalePaymentCashRegisterRequest} paymentData
    * @returns {Promise<SalePaymentWithCashRegisterResponse>}
    */
   async processSalePaymentWithCashRegister(paymentData) {
     const startTime = Date.now();
-    
+
     try {
       console.log(`🌐 SalePayment: Processing sale payment with cash register for ${paymentData.sales_order_id}...`);
+
+      // Construir payload según API v3.0
+      const payload = {
+        sales_order_id: paymentData.sales_order_id,
+        amount_received: paymentData.amount_received,
+        cash_register_id: paymentData.cash_register_id,
+        payment_reference: paymentData.payment_reference,
+        payment_notes: paymentData.payment_notes
+      };
+
+      // Si el usuario especificó amount_to_apply, incluirlo
+      if (paymentData.amount_to_apply) {
+        payload.amount_to_apply = paymentData.amount_to_apply;
+      }
+
       const result = await _fetchWithRetry(async () => {
-        return await apiClient.post(API_ENDPOINTS.salePaymentWithCashRegister, paymentData);
+        return await apiClient.post(API_ENDPOINTS.processPaymentPartial, payload);
       });
-      
+
+      // Telemetry con nueva estructura de respuesta
       telemetry.record('sale_payment.service.cash_register_payment', {
         duration: Date.now() - startTime,
         saleId: paymentData.sales_order_id,
-        amountReceived: paymentData.amount_received,
+        amountReceived: result.cash_summary?.cash_received || paymentData.amount_received,
         requiresChange: result.requires_change,
-        netCashImpact: result.cash_register_integration?.net_cash_impact || 0
+        netCashImpact: result.cash_summary?.net_cash_impact || 0
       });
-      
+
       console.log('✅ SalePayment: Sale payment with cash register processed successfully');
       return result;
     } catch (error) {
@@ -434,6 +457,147 @@ export const salePaymentService = {
     }
     
     return errors;
+  },
+
+  // =================== CONSULTAS DE ESTADO DE PAGO (v3.0) ===================
+
+  /**
+   * Obtiene el estado de pago de una venta individual con historial completo
+   * @param {string} saleId - ID de la venta
+   * @returns {Promise<SalePaymentStatusResponse>}
+   */
+  async getSalePaymentStatus(saleId) {
+    const startTime = Date.now();
+
+    try {
+      console.log(`🌐 SalePayment: Loading payment status for sale ${saleId}...`);
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.get(API_ENDPOINTS.salePaymentStatus(saleId));
+      });
+
+      telemetry.record('sale_payment.service.payment_status', {
+        duration: Date.now() - startTime,
+        saleId,
+        balanceDue: result.balance_due,
+        paymentProgress: result.payment_progress
+      });
+
+      console.log('✅ SalePayment: Payment status loaded');
+      return result;
+    } catch (error) {
+      telemetry.record('sale_payment.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getSalePaymentStatus'
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene ventas por rango de fechas con resumen de estado de pago
+   * @param {Object} filters - Filtros (start_date, end_date, page, page_size)
+   * @returns {Promise<PaginatedSalesPaymentStatusResponse>}
+   */
+  async getSalesByDateRangeWithPaymentStatus(filters = {}) {
+    const startTime = Date.now();
+
+    try {
+      const params = new URLSearchParams(filters);
+      const url = `${API_ENDPOINTS.salesByDateRangeWithPaymentStatus}?${params}`;
+
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔵 REQUEST TO BACKEND - getSalesByDateRangeWithPaymentStatus');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📍 Endpoint:', 'GET', url);
+      console.log('📋 Filters:', JSON.stringify(filters, null, 2));
+      console.log('🔗 Full URL:', `http://localhost:5050${url}`);
+      console.log('⏰ Timestamp:', new Date().toISOString());
+
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.get(url);
+      });
+
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🟢 RESPONSE FROM BACKEND - getSalesByDateRangeWithPaymentStatus');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📊 Response Structure:', {
+        hasData: !!result?.data,
+        dataType: Array.isArray(result?.data) ? 'array' : typeof result?.data,
+        dataLength: result?.data?.length,
+        hasPagination: !!result?.pagination,
+        paginationKeys: result?.pagination ? Object.keys(result.pagination) : []
+      });
+      console.log('📦 Full Response:', JSON.stringify(result, null, 2));
+      console.log('⏱️ Duration:', Date.now() - startTime, 'ms');
+
+      if (result?.data?.length > 0) {
+        console.log('🔍 First Sale Sample:', JSON.stringify(result.data[0], null, 2));
+        console.log('🔑 First Sale Keys:', Object.keys(result.data[0]));
+      }
+
+      telemetry.record('sale_payment.service.list_with_payment_status', {
+        duration: Date.now() - startTime,
+        count: result?.data?.length || 0,
+        totalRecords: result?.pagination?.total_records || 0
+      });
+
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      return result;
+    } catch (error) {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔴 ERROR FROM BACKEND - getSalesByDateRangeWithPaymentStatus');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('❌ Error Message:', error.message);
+      console.log('📍 Endpoint:', `GET /sale/date_range/payment-status?${new URLSearchParams(filters)}`);
+      console.log('📋 Filters:', JSON.stringify(filters, null, 2));
+      console.log('🔍 Error Details:', error);
+      console.log('⏱️ Duration:', Date.now() - startTime, 'ms');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+      telemetry.record('sale_payment.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getSalesByDateRangeWithPaymentStatus'
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Busca ventas por nombre de cliente con resumen de estado de pago
+   * @param {string} clientName - Nombre del cliente (búsqueda parcial)
+   * @param {Object} filters - Filtros adicionales (page, page_size)
+   * @returns {Promise<PaginatedSalesPaymentStatusResponse>}
+   */
+  async getSalesByClientNameWithPaymentStatus(clientName, filters = {}) {
+    const startTime = Date.now();
+
+    try {
+      console.log(`🌐 SalePayment: Loading sales for client "${clientName}" with payment status...`);
+      const params = new URLSearchParams(filters);
+      const url = `${API_ENDPOINTS.salesByClientNameWithPaymentStatus(clientName)}?${params}`;
+
+      const result = await _fetchWithRetry(async () => {
+        return await apiClient.get(url);
+      });
+
+      telemetry.record('sale_payment.service.client_search_with_payment_status', {
+        duration: Date.now() - startTime,
+        clientName,
+        count: result?.data?.length || 0
+      });
+
+      console.log('✅ SalePayment: Sales for client with payment status loaded');
+      return result;
+    } catch (error) {
+      telemetry.record('sale_payment.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getSalesByClientNameWithPaymentStatus'
+      });
+      throw error;
+    }
   },
 
   // =================== UTILIDADES DE BÚSQUEDA ===================

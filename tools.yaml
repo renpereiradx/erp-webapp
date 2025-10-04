@@ -1,0 +1,19 @@
+toolset:
+  name: database_toolset
+  tools:
+    - name: postgres-execute-sql
+      description: "Execute SQL queries on PostgreSQL database"
+      source:
+        type: postgres
+        connection:
+          host: 127.0.0.1
+          port: 5432
+          database: business_management
+          user: dev_user
+          password: aDmin404942
+      parameters:
+        type: object
+        properties:
+          query:
+            type: string
+            description: "SQL query to execute"

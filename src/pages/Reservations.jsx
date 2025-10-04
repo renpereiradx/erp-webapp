@@ -353,25 +353,49 @@ const Reservations = () => {
       let result = [];
 
       switch (detectedType) {
-        case 'client_id':
-          // Buscar directamente por client_id
-          result = await fetchReservationsByClient(term);
+        case 'client_id': {
+          // Buscar directamente por client_id - validar que el cliente esté activo
+          try {
+            // Primero verificar que el cliente existe y está activo
+            const client = clients.find(c => c.id === term);
+            if (client && client.status !== false && client.state !== false) {
+              result = await fetchReservationsByClient(term);
+            } else if (client && (client.status === false || client.state === false)) {
+              console.warn('Cliente inactivo:', term);
+              setError('El cliente está inactivo. Solo se pueden buscar clientes activos.');
+              result = [];
+            } else {
+              // Si no está en la lista local, intentar buscar de todos modos
+              result = await fetchReservationsByClient(term);
+            }
+          } catch (err) {
+            console.error('Error buscando por client_id:', err);
+            result = [];
+          }
           break;
+        }
 
-        case 'client_name':
+        case 'client_name': {
           // Primero buscar el cliente por nombre, luego sus reservas
           try {
             const clientResult = await apiClient.get(`/client/name/${encodeURIComponent(term)}`);
-            if (clientResult && clientResult.id) {
+            // Validar que el cliente exista Y esté activo
+            if (clientResult && clientResult.id && clientResult.status !== false && clientResult.state !== false) {
               result = await fetchReservationsByClient(clientResult.id);
+            } else if (clientResult && clientResult.id && (clientResult.status === false || clientResult.state === false)) {
+              // Cliente encontrado pero inactivo
+              console.warn('Cliente encontrado pero está inactivo:', term);
+              setError('El cliente está inactivo. Solo se pueden buscar clientes activos.');
+              result = [];
             } else {
               result = [];
             }
-          } catch (error) {
+          } catch (err) {
             console.warn('No se encontró cliente con ese nombre:', term);
             result = [];
           }
           break;
+        }
 
         case 'product_id':
           result = await fetchReservationsByProduct(term);
@@ -2718,11 +2742,13 @@ const Reservations = () => {
               >
                 <option value="">Seleccionar cliente...</option>
                 {clients && clients.length > 0 ? (
-                  clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name}
-                    </option>
-                  ))
+                  clients
+                    .filter(client => client.status !== false && client.state !== false)
+                    .map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.name}
+                      </option>
+                    ))
                 ) : (
                   <option value="" disabled>
                     {t('reservations.no_clients_available', 'No hay clientes disponibles')}

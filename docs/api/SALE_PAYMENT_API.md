@@ -1,1694 +1,1158 @@
-# 🚀 Guía de Integración Frontend - API de Ventas, Pagos y Sesiones v2.1
+# Guía API - Procesamiento de Pagos de Ventas
 
-## 📋 Índice
-1. [Configuración General](#configuración-general)
-2. [Autenticación y Sesiones](#autenticación-y-sesiones)
-3. [API de Ventas](#api-de-ventas)
-4. [API de Pagos con Vuelto](#api-de-pagos-con-vuelto)
-5. [🆕 API de Pagos con Cajas Registradoras](#api-de-pagos-con-cajas-registradoras)
-6. [API de Gestión de Sesiones](#api-de-gestión-de-sesiones)
-7. [Códigos de Error](#códigos-de-error)
-8. [Ejemplos de Integración](#ejemplos-de-integración)
-
-## 🔥 **Novedades en v2.1 (Sept 2025)**
-- ✅ **🆕 Integración completa con cajas registradoras** - Control automático de efectivo
-- ✅ **🆕 Pagos orquestados** - Procesamiento automático con movimientos de caja
-- ✅ **🆕 Validaciones de seguridad** - Prevención de pagos en cajas cerradas
-- ✅ **Sistema de reversión mejorado** con preview de impacto
-- ✅ **API unificada** para ventas con y sin reserva
-- ✅ **Cálculo automático de vuelto** con validaciones
-- ✅ **Gestión avanzada de sesiones** con logout mejorado
-- ✅ **Manejo de errores expandido** con sugerencias
-- ✅ **Componentes React** de ejemplo actualizados
-- ✅ **Integración backend actualizada** (Sept 2025) con procedimientos mejorados
+**Versión:** 3.0 (Refactorizada)  
+**Fecha:** 02 de Octubre de 2025  
+**Endpoint:** `/payment/process-partial`
 
 ---
 
-## 🔧 Configuración General
+## 📋 Descripción General
 
-### Base URL
-```
-http://localhost:5050
+API para procesar pagos parciales o completos de ventas con **soporte completo para vuelto flexible**. El sistema ahora separa correctamente el efectivo recibido del monto aplicado a la venta, permitiendo que un cliente entregue más dinero del necesario y reciba vuelto sin restricciones.
+
+### Características Principales
+
+- ✅ **Vuelto flexible**: Cliente puede dar cualquier monto superior al requerido
+- ✅ Procesa pagos parciales y completos
+- ✅ Calcula automáticamente vuelto/cambio
+- ✅ Actualiza estado de venta (PENDING → PARTIAL_PAYMENT → PAID)
+- ✅ Integración obligatoria con caja registradora
+- ✅ Registra movimientos de efectivo separados (INCOME + EXPENSE)
+- ✅ Validaciones completas de negocio
+- ✅ Garantiza integridad: impacto neto en caja = monto aplicado a venta
+
+---
+
+## 🔐 Autenticación
+
+Requiere token JWT en el header:
+
+```http
+Authorization: Bearer <token>
 ```
 
-### Headers Requeridos
-```typescript
+El token debe contener el `user_id` del usuario que procesa el pago.
+
+---
+
+## 📡 Endpoint Principal
+
+### **POST** `/payment/process-partial`
+
+Procesa un pago de venta con integración obligatoria de caja registradora.
+
+#### Request
+
+**Headers:**
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
+
+**Body:**
+```json
 {
-  "Content-Type": "application/json",
-  "Authorization": "Bearer <jwt_token>"
+  "sales_order_id": "23tjXmPNR",
+  "amount_received": 200000.00,
+  "amount_to_apply": 164000.00,
+  "cash_register_id": 6,
+  "payment_reference": "PAY-001",
+  "payment_notes": "Pago con vuelto grande"
 }
 ```
 
-### Formato de Respuesta Estándar
-```typescript
-interface APIResponse<T> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-  error_code?: string;
+#### Parámetros del Request
+
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| `sales_order_id` | string | ✅ Sí | ID de la orden de venta |
+| `amount_received` | number | ✅ Sí | Efectivo recibido del cliente (debe ser > 0) |
+| `amount_to_apply` | number | ❌ No | Monto a aplicar a la venta (≤ `amount_received`). Si se omite, se aplica todo el efectivo recibido |
+| `cash_register_id` | number | ⚠️ Condicional | **Obligatorio** si se usa `amount_to_apply`. Opcional si solo se envía `amount_received` (sistema busca caja abierta automáticamente) |
+| `payment_reference` | string | ❌ No | Referencia del pago (auto-generada si se omite) |
+| `payment_notes` | string | ❌ No | Notas adicionales del pago |
+
+#### ⚠️ Reglas Importantes
+
+1. **Vuelto Flexible**: Si `amount_received > saldo_pendiente`, el sistema calcula automáticamente el vuelto
+2. **Dos Modos de Operación**:
+   - **Modo Simple**: Solo enviar `amount_received` → Sistema aplica todo el monto y busca caja abierta
+   - **Modo Avanzado**: Enviar `amount_received + amount_to_apply + cash_register_id` → Control total sobre el vuelto
+3. **Validación**: `amount_received` debe ser ≥ `amount_to_apply`
+4. **Validación**: `amount_to_apply` debe ser ≤ saldo pendiente de la venta
+
+---
+
+## 📤 Respuestas
+
+### ✅ Respuesta Exitosa (200 OK)
+
+#### Pago Parcial Sin Vuelto
+
+```json
+{
+  "success": true,
+  "message": "Partial payment processed",
+  "payment_id": 30,
+  "payment_summary": {
+    "total_sale_amount": 264000.00,
+    "previous_payments": 0.00,
+    "current_payment": 100000.00,
+    "total_paid": 100000.00,
+    "remaining_balance": 164000.00,
+    "sale_status": "PARTIAL_PAYMENT"
+  },
+  "cash_summary": {
+    "cash_received": 100000.00,
+    "amount_applied": 100000.00,
+    "change_given": 0.00,
+    "net_cash_impact": 100000.00
+  },
+  "payment_complete": false,
+  "requires_change": false
 }
+```
+
+#### Pago Total Con Vuelto Grande
+
+```json
+{
+  "success": true,
+  "message": "Payment completed",
+  "payment_id": 32,
+  "payment_summary": {
+    "total_sale_amount": 264000.00,
+    "previous_payments": 100000.00,
+    "current_payment": 164000.00,
+    "total_paid": 264000.00,
+    "remaining_balance": 0.00,
+    "sale_status": "PAID"
+  },
+  "cash_summary": {
+    "cash_received": 200000.00,
+    "amount_applied": 164000.00,
+    "change_given": 36000.00,
+    "net_cash_impact": 164000.00
+  },
+  "payment_complete": true,
+  "requires_change": true
+}
+```
+
+#### Estructura del Response
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `success` | boolean | Indica si el pago fue exitoso |
+| `message` | string | Mensaje descriptivo del resultado |
+| `payment_id` | number | ID del pago registrado en `sale_payments` |
+| `payment_summary` | object | Resumen del estado de la venta (ver detalles abajo) |
+| `cash_summary` | object | **⭐ NUEVO**: Detalle del manejo de efectivo y vuelto |
+| `payment_complete` | boolean | `true` si la venta quedó completamente pagada |
+| `requires_change` | boolean | `true` si `change_given` > 0 (hay vuelto para entregar) |
+
+#### Objeto `payment_summary`
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `total_sale_amount` | number | Monto total de la venta |
+| `previous_payments` | number | Suma de pagos anteriores aplicados a la venta |
+| `current_payment` | number | **Monto aplicado** a la venta en este pago (no necesariamente igual al recibido) |
+| `total_paid` | number | Total pagado hasta el momento (previous + current) |
+| `remaining_balance` | number | Balance pendiente (0 si está completamente pagada) |
+| `sale_status` | string | `PAID` \| `PARTIAL_PAYMENT` \| `PENDING` |
+
+#### Objeto `cash_summary` ⭐ NUEVO
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `cash_received` | number | **Efectivo físico recibido** del cliente |
+| `amount_applied` | number | **Monto aplicado** a la venta (siempre ≤ `cash_received`) |
+| `change_given` | number | **Vuelto entregado** al cliente (`cash_received - amount_applied`) |
+| `net_cash_impact` | number | **Impacto neto en caja** (igual a `amount_applied`). Útil para validaciones |
+
+#### ⚠️ Diferencia Clave: `cash_received` vs `amount_applied`
+
+- **`cash_received`**: Efectivo que el cliente entregó físicamente
+- **`amount_applied`**: Monto que se aplicó al saldo de la venta
+- **Ejemplo**: Cliente debe $164k pero da $200k → `cash_received=200000`, `amount_applied=164000`, `change_given=36000`
+
+---
+
+### ❌ Respuestas de Error
+
+#### Venta No Encontrada (404)
+
+```json
+{
+  "success": false,
+  "error": "Sale not found"
+}
+```
+
+#### Venta Cancelada (400)
+
+```json
+{
+  "success": false,
+  "error": "Cannot process payment for cancelled sale"
+}
+```
+
+#### Venta Ya Pagada (400)
+
+```json
+{
+  "success": false,
+  "error": "Sale already fully paid"
+}
+```
+
+#### Monto Inválido (400)
+
+```json
+{
+  "success": false,
+  "error": "Payment amount must be greater than zero"
+}
+```
+
+#### Efectivo Insuficiente (400) ⭐ NUEVO
+
+```json
+{
+  "success": false,
+  "error": "Cash received must be greater than or equal to amount to apply"
+}
+```
+
+**Causa**: Se intentó aplicar más dinero del que se recibió (`amount_to_apply > amount_received`)
+
+#### Monto Excede Balance (400) ⭐ NUEVO
+
+```json
+{
+  "success": false,
+  "error": "Amount to apply exceeds remaining balance"
+}
+```
+
+**Causa**: Se intentó aplicar más dinero del que se debe (`amount_to_apply > saldo_pendiente`)
+
+#### Caja Cerrada (400)
+
+```json
+{
+  "success": false,
+  "error": "Cash register is not open"
+}
+```
+
+**Causa**: La caja registradora especificada no está abierta
+
+#### Caja No Encontrada (404)
+
+```json
+{
+  "success": false,
+  "error": "No open cash register found"
+}
+```
+
+**Causa**: No se especificó `cash_register_id` y el sistema no encontró ninguna caja abierta automáticamente
+
+#### Error del Sistema (500)
+
+```json
+{
+  "success": false,
+  "error": "Error message details"
+}
+```
+
+#### Códigos de Error y Prevención
+
+| Error | HTTP Status | Prevención |
+|-------|-------------|-----------|
+| `Sale not found` | 404 | Validar que el `sales_order_id` existe antes de enviar |
+| `Sale cancelled` | 400 | Verificar que `status != 'CANCELLED'` |
+| `Sale already paid` | 400 | Verificar que `remaining_balance > 0` antes de pagar |
+| `Invalid amount` | 400 | Validar que `amount_received > 0` en el frontend |
+| `Insufficient cash` | 400 | Validar que `amount_received >= amount_to_apply` |
+| `Amount exceeds balance` | 400 | Validar que `amount_to_apply <= remaining_balance` |
+| `Cash register closed` | 400 | Verificar estado de caja antes de procesar pago |
+| `No open cash register` | 404 | Asegurar que hay una caja abierta o especificar `cash_register_id` |
+
+---
+
+## 🔄 Casos de Uso
+
+### Caso 1: Pago Exacto (Modo Simple)
+
+**Escenario:** Cliente paga exactamente lo que debe, sin vuelto.
+
+```json
+POST /payment/process-partial
+{
+  "sales_order_id": "23tjXmPNR",
+  "amount_received": 100000.00
+}
+```
+
+**Resultado:**
+- ✅ `amount_applied` = $100,000
+- ✅ `change_given` = $0
+- ✅ `sale_status` = "PARTIAL_PAYMENT"
+- ✅ Movimiento INCOME: $100,000
+
+---
+
+### Caso 2: Pago con Vuelto Pequeño (Modo Simple)
+
+**Escenario:** Cliente da un poco más del saldo, vuelto menor a $10k.
+
+```json
+POST /payment/process-partial
+{
+  "sales_order_id": "SALE-100",
+  "amount_received": 170000.00
+}
+```
+
+Si el saldo era $164,000:
+
+**Resultado:**
+- ✅ `amount_applied` = $164,000
+- ✅ `change_given` = $6,000
+- ✅ `sale_status` = "PAID"
+- ✅ Movimiento INCOME: $170,000
+- ✅ Movimiento EXPENSE: $6,000 (vuelto)
+
+---
+
+### Caso 3: Pago con Vuelto Grande (Modo Avanzado) ⭐
+
+**Escenario:** Cliente da mucho más del saldo (por ejemplo, billete grande), vuelto significativo.
+
+```json
+POST /payment/process-partial
+{
+  "sales_order_id": "23tjXmPNR",
+  "amount_received": 200000.00,
+  "amount_to_apply": 164000.00,
+  "cash_register_id": 6
+}
+```
+
+**Resultado:**
+- ✅ `cash_received` = $200,000
+- ✅ `amount_applied` = $164,000
+- ✅ `change_given` = $36,000
+- ✅ `sale_status` = "PAID"
+- ✅ Movimiento INCOME: $200,000
+- ✅ Movimiento EXPENSE: $36,000 (vuelto)
+- ✅ `net_cash_impact` = $164,000
+
+**💡 Ventaja:** Permite al cajero registrar exactamente el efectivo recibido y el vuelto dado, útil para auditoría.
+
+---
+
+### Caso 4: Múltiples Pagos Parciales
+
+**Escenario:** Venta de $264,000 pagada en 2 cuotas.
+
+#### Pago 1:
+```json
+POST /payment/process-partial
+{
+  "sales_order_id": "23tjXmPNR",
+  "amount_received": 100000.00,
+  "cash_register_id": 6
+}
+```
+**Resultado:** `remaining_balance` = $164,000, `sale_status` = "PARTIAL_PAYMENT"
+
+#### Pago 2 (con vuelto):
+```json
+POST /payment/process-partial
+{
+  "sales_order_id": "23tjXmPNR",
+  "amount_received": 200000.00,
+  "amount_to_apply": 164000.00,
+  "cash_register_id": 6
+}
+```
+**Resultado:** `remaining_balance` = $0, `sale_status` = "PAID", `change_given` = $36,000
+
+---
+
+## 💡 Consideraciones Importantes
+
+### Arquitectura de Pagos
+
+**Nueva separación de conceptos:**
+
+1. **`sale_payments.amount_paid`**: Solo almacena el monto **aplicado** a la venta
+2. **`cash_movements`**: Registra flujo de efectivo real:
+   - **INCOME**: Efectivo recibido del cliente
+   - **EXPENSE**: Vuelto entregado al cliente
+3. **Integridad garantizada**: `Σ(INCOME) - Σ(EXPENSE) = amount_paid`
+
+### Integración con Caja Registradora
+
+1. **Obligatoriedad:**
+   - Si usas `amount_to_apply` → `cash_register_id` es **obligatorio**
+   - Si solo usas `amount_received` → `cash_register_id` es opcional (sistema busca caja abierta)
+
+2. **Validaciones Automáticas:**
+   - La caja DEBE estar en estado `OPEN`
+   - `cash_received` ≥ `amount_to_apply`
+   - `amount_to_apply` ≤ saldo pendiente
+   - Si falla cualquier validación, el pago NO se procesa (transacción atómica)
+
+3. **Movimientos de Efectivo:**
+   - **INCOME**: Siempre se registra con `cash_received` (monto bruto)
+   - **EXPENSE**: Se registra solo si `change_given > 0`
+   - Ambos movimientos quedan vinculados al `payment_id` y `sales_order_id`
+
+### Cálculo de Vuelto
+
+El sistema calcula automáticamente:
+
+```
+Si amount_to_apply no se especifica:
+  amount_to_apply = min(amount_received, remaining_balance)
+  
+change_given = amount_received - amount_to_apply
+net_cash_impact = amount_to_apply
+```
+
+### Estados de Venta
+
+| Estado | Descripción | Transición |
+|--------|-------------|-----------|
+| `PENDING` | Sin pagos registrados | → `PARTIAL_PAYMENT` o `PAID` |
+| `PARTIAL_PAYMENT` | Hay pagos pero `remaining_balance > 0` | → `PAID` |
+| `PAID` | Completamente pagada (`remaining_balance = 0`) | Estado final |
+| `CANCELLED` | No se pueden procesar pagos | Estado final |
+
+### Estados de Pago
+
+| Estado | Descripción |
+|--------|-------------|
+| `PARTIAL` | Pago parcial, aún queda balance en la venta |
+| `COMPLETED` | Pago que completa la venta (último pago) |
+| `REFUNDED` | Pago reembolsado |
+| `CANCELLED` | Pago cancelado |
+
+---
+
+## 🎯 Recomendaciones de Implementación
+
+### Validación en Frontend
+
+**Antes de enviar el request:**
+
+1. **Validar saldo pendiente:**
+   ```
+   GET /sales/{sales_order_id}
+   → Obtener remaining_balance actual
+   ```
+
+2. **Validar montos:**
+   ```javascript
+   if (amountReceived <= 0) {
+     error("Monto debe ser mayor a cero");
+   }
+   
+   if (amountToApply && amountToApply > amountReceived) {
+     error("No se puede aplicar más de lo recibido");
+   }
+   
+   if (amountToApply > remainingBalance) {
+     error("Monto excede el saldo pendiente");
+   }
+   ```
+
+3. **Verificar caja abierta:**
+   ```
+   GET /cash-registers/active
+   → Si retorna 404, solicitar apertura de caja
+   ```
+
+### Manejo de Vuelto en UI
+
+**Mostrar cálculo en tiempo real:**
+
+```javascript
+const calculateChange = (received, balance) => {
+  const toApply = Math.min(received, balance);
+  const change = received - toApply;
+  return { toApply, change };
+};
+
+// Actualizar UI mientras el usuario escribe
+onAmountReceivedChange((value) => {
+  const { toApply, change } = calculateChange(value, remainingBalance);
+  
+  displayAppliedAmount(toApply);
+  
+  if (change > 0) {
+    highlightChangeAmount(change); // ⚠️ Destacar vuelto
+  }
+});
+```
+
+### Después del Pago Exitoso
+
+**Acciones recomendadas:**
+
+1. **Si `requires_change = true`:**
+   - Mostrar alerta prominente con el monto del vuelto
+   - No cerrar modal hasta que el usuario confirme que entregó el vuelto
+
+2. **Si `payment_complete = true`:**
+   - Imprimir ticket/recibo
+   - Actualizar lista de ventas
+   - Redirigir o limpiar formulario
+
+3. **Actualizar balance de caja:**
+   - Usar `cash_summary.net_cash_impact` para actualizar UI de caja
+   - Mostrar movimientos registrados
+
+### Ejemplos cURL
+
+#### Pago simple (modo automático):
+```bash
+curl -X POST http://localhost:5050/payment/process-partial \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "sales_order_id": "23tjXmPNR",
+    "amount_received": 100000
+  }'
+```
+
+#### Pago con vuelto grande (modo avanzado):
+```bash
+curl -X POST http://localhost:5050/payment/process-partial \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{
+    "sales_order_id": "23tjXmPNR",
+    "amount_received": 200000,
+    "amount_to_apply": 164000,
+    "cash_register_id": 6,
+    "payment_notes": "Cliente pagó con billete de 200k"
+  }'
 ```
 
 ---
 
-## 🔐 Autenticación y Sesiones
+## 🔍 Validaciones del Sistema
 
-### 1. Login
-```typescript
-// POST /login
-interface LoginRequest {
-  email: string;
-  password: string;
-}
+### Pre-Procesamiento
 
-interface LoginResponse {
-  token: string;           // JWT Token
-  role_id: string;        // ID del rol del usuario
-  session_id: number;     // ID de la sesión activa
-  expires_at: string;     // Fecha de expiración del token
-  user_id: string;        // ID del usuario
-}
+1. ✅ Venta existe y no está cancelada
+2. ✅ Venta tiene saldo pendiente (`remaining_balance > 0`)
+3. ✅ `amount_received > 0`
+4. ✅ Si se envía `amount_to_apply`: `amount_received >= amount_to_apply`
+5. ✅ `amount_to_apply <= remaining_balance`
+6. ✅ Caja registradora existe y está abierta
 
-// Ejemplo de uso
-const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
-  const response = await fetch('/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials)
-  });
-  return response.json();
-};
+### Post-Procesamiento
+
+1. ✅ Pago registrado en `sale_payments` con `amount_paid = amount_to_apply`
+2. ✅ Estado de venta actualizado (`PARTIAL_PAYMENT` o `PAID`)
+3. ✅ Movimiento INCOME registrado con `cash_received`
+4. ✅ Movimiento EXPENSE registrado si `change_given > 0`
+5. ✅ Constraint verificado: `amount_paid ≤ total_amount`
+6. ✅ Transacción atómica: todo o nada
+
+---
+
+## � Migración desde Versión Anterior
+
+### Cambios de API
+
+| Antes (v2.0) | Ahora (v3.0) | Notas |
+|--------------|--------------|-------|
+| `change_amount` | `cash_summary.change_given` | Ahora dentro de objeto `cash_summary` |
+| N/A | `cash_summary.cash_received` | **Nuevo**: Efectivo recibido |
+| N/A | `cash_summary.amount_applied` | **Nuevo**: Monto aplicado a venta |
+| N/A | `cash_summary.net_cash_impact` | **Nuevo**: Impacto neto en caja |
+| N/A | `amount_to_apply` (request) | **Nuevo**: Control opcional sobre el monto aplicado |
+
+### Compatibilidad
+
+✅ **Backward compatible**: Si no envías `amount_to_apply`, funciona igual que v2.0
+
+⚠️ **Cambio en response**: `cash_summary` es un objeto nuevo, ajustar parseo en frontend
+
+---
+
+## 📊 Auditoría y Trazabilidad
+
+### Datos Registrados Automáticamente
+
+**En `sale_payments`:**
+- `payment_id` - ID único del pago
+- `sales_order_id` - Venta asociada
+- `amount_paid` - Monto aplicado a la venta
+- `cash_register_id` - Caja utilizada
+- `payment_date` - Timestamp del pago
+- `payment_reference` - Referencia única
+- `status` - Estado del pago
+
+**En `cash_movements`:**
+- `movement_id` - ID único del movimiento
+- `movement_type` - INCOME o EXPENSE
+- `amount` - Monto del movimiento
+- `concept` - Descripción automática
+- `sales_order_id` - Venta asociada
+- `payment_id` - Pago asociado
+
+### Triggers Activos
+
+1. **Validación de caja abierta**: Previene pagos en caja cerrada
+2. **Constraint check**: `amount_paid ≤ total_amount` siempre se verifica
+3. **Auditoría automática**: Todos los cambios quedan registrados
+
+---
+
+## ⚡ Performance
+
+- **Tiempo de respuesta típico:** 50-150ms
+- **Transacciones atómicas:** Sí (PostgreSQL)
+- **Manejo de concurrencia:** Locks a nivel de row
+- **Validaciones en DB:** Garantizadas por constraints y functions
+
+---
+
+## � Información Adicional
+
+**Versión API:** 3.0  
+**Versión DB Functions:** 
+- `process_sale_partial_payment(7 params)` - Control completo
+- `process_sale_partial_payment(5 params)` - Backward compatible
+
+**Documentación Técnica:**
+- Backend: `/PAYMENT_REFACTORING_SUCCESS.md`
+- Base de Datos: `/docs/SALE_PAYMENT_FLEXIBLE_CHANGE.md`
+
+**Repositorio:** [github.com/renpereiradx/business_management](https://github.com/renpereiradx/business_management)
+
+---
+
+**Última actualización:** 02 de Octubre de 2025  
+**Estado:** ✅ Production Ready  
+
+**Próxima revisión:** 02 de Noviembre de 2025
+
+# 🔄 Actualización: Endpoints de Estado de Pagos
+
+**Fecha:** 2 de Octubre, 2025  
+**Autor:** Sistema de Pagos - Backend  
+**Estado:** ✅ Implementado y Probado
+
+---
+
+## 📋 Resumen Ejecutivo
+
+
+Se implementaron **3 nuevos endpoints** para consultar el estado de pagos de ventas, proporcionando al frontend acceso completo a:
+
+- **Saldo pendiente** (balance_due)
+- **Progreso de pago** (payment_progress)
+- **Historial de pagos** (lista completa de transacciones)
+- **Estado de pago** (COMPLETED/PARTIAL/CANCELLED/REFUNDED)
+
+Además, se corrigió un **bug crítico** en la función SQL `process_payment_FINAL.sql` donde todos los pagos se marcaban como "COMPLETED" incluso cuando eran parciales.
+
+---
+
+## 🐛 Bug Corregido
+
+
+### Problema
+
+La función `process_payment_FINAL.sql` asignaba estado "COMPLETED" a todos los pagos en la tabla `sale_payments`, sin importar si la venta quedaba completamente pagada o parcialmente pagada.
+
+**Ejemplo del bug:**
+
+- Venta: SALE-1759430699-12
+- Total: ₲9,100
+- Pago realizado: ₲5,000
+- Estado esperado: `PARTIAL` ❌
+- Estado actual: `COMPLETED` ✅ (incorrecto)
+
+
+### Solución
+
+Se modificó la función SQL para establecer el estado condicionalmente:
+
+```sql
+-- ANTES (incorrecto)
+INSERT INTO transactions.sale_payments (..., status)
+VALUES (..., 'COMPLETED');
+
+-- DESPUÉS (correcto)
+INSERT INTO transactions.sale_payments (..., status)
+VALUES (..., 
+  CASE 
+    WHEN v_new_status = 'PAID' THEN 'COMPLETED'
+    ELSE 'PARTIAL'
+  END
+);
 ```
 
-### 2. Logout (Nuevo)
-```typescript
-// POST /sessions/{id}/revoke
-interface LogoutRequest {
-  session_id: number;
-  reason?: string;
-}
+**Archivo modificado:** `database/sql/process_payment_FINAL.sql`
 
-interface LogoutResponse {
-  success: boolean;
-  message: string;
-  revoked_at: string;
-}
+---
 
-// Ejemplo de uso
-const logoutUser = async (sessionId: number): Promise<LogoutResponse> => {
-  const response = await fetch(`/sessions/${sessionId}/revoke`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+## 🆕 Endpoints Implementados
+
+### 1️⃣ Consulta Individual
+
+```http
+GET /sale/{id}/payment-status
+```
+
+**Propósito:** Obtener información completa de pagos de UNA venta específica
+
+
+**Características:**
+
+- ✅ Incluye lista completa de pagos individuales
+- ✅ Información de usuario que procesó cada pago
+- ✅ Información de caja registradora
+- ✅ Balance pendiente (balance_due)
+- ✅ Progreso de pago en porcentaje
+
+
+**Ejemplo de Respuesta:**
+
+```json
+{
+  "sale_id": "SALE-1759430699-12",
+  "client_name": "Charlie Brown",
+  "total_amount": 9100,
+  "total_paid": 7000,
+  "balance_due": 2100,           // ⬅️ SALDO PENDIENTE
+  "payment_progress": 76.92,     // ⬅️ PORCENTAJE PAGADO
+  "payment_count": 2,
+  "is_fully_paid": false,
+  "requires_payment": true,
+  "payments": [
+    {
+      "payment_id": 44,
+      "amount_paid": 5000,
+      "status": "PARTIAL",
+      "payment_date": "2025-10-02 15:46:42",
+      "processed_by_name": "Pedro Sanchez",
+      "cash_register_name": "principal"
     },
-    body: JSON.stringify({ reason: 'User logout' })
-  });
-  return response.json();
-};
+    {
+      "payment_id": 45,
+      "amount_paid": 2000,
+      "status": "PARTIAL",
+      "payment_date": "2025-10-02 15:58:01",
+      "processed_by_name": "Pedro Sanchez",
+      "cash_register_name": "principal"
+    }
+  ]
+}
+```
+
+
+**Uso Frontend:**
+
+```javascript
+const response = await fetch(`/sale/${saleId}/payment-status`, {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const data = await response.json();
+
+if (data.requires_payment) {
+  alert(`Saldo pendiente: ₲${data.balance_due.toLocaleString()}`);
+}
 ```
 
 ---
 
-## 🛒 API de Ventas
+### 2️⃣ Búsqueda por Rango de Fechas
 
-### 1. Procesar Venta (Unificada)
-```typescript
-// POST /sale/ (endpoint principal - recomendado)
-// POST /sale/with-units (endpoint alternativo con soporte extendido de unidades)
-interface ProcessSaleRequest {
-  sale_id?: string;                    // Opcional, se genera automáticamente
-  client_id: string;                   // ID del cliente
-  product_details: ProductDetail[];    // Detalles de productos
-  payment_method_id?: number;          // Método de pago (opcional)
-  currency_id?: number;                // Moneda (opcional)
-  allow_price_modifications: boolean;  // Permitir modificaciones de precio
-  reserve_id?: number;                 // ID de reserva (opcional para ventas con reserva)
-}
+```http
+GET /sale/date_range/payment-status?start_date={start}&end_date={end}&page={page}&page_size={size}
+```
 
-interface ProductDetail {
-  product_id: string;                  // ID del producto
-  quantity: number;                    // Cantidad (acepta decimales)
-  tax_rate_id?: number;                // ID de tasa de impuesto
-  sale_price?: number;                 // Precio modificado (opcional)
-  price_change_reason?: string;        // Razón del cambio de precio
-}
+**Propósito:** Listar ventas por período con resumen de estado de pago
 
-interface ProcessSaleResponse {
-  success: boolean;
-  sale_id: string;
-  total_amount: number;
-  items_processed: number;
-  price_modifications_enabled: boolean;
-  has_price_changes: boolean;
-  message: string;
-  error?: string;
-}
 
-// Ejemplo de uso - Venta Normal
-const processSale = async (saleData: ProcessSaleRequest): Promise<ProcessSaleResponse> => {
-  const response = await fetch('/sale/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+**Características:**
+
+- ✅ Búsqueda por rango de fechas
+- ✅ Paginación (page, page_size)
+- ✅ NO incluye lista individual de pagos (solo resumen)
+- ✅ Balance pendiente por cada venta
+- ✅ Ideal para reportes y listados
+
+
+**Parámetros:**
+
+| Parámetro  | Tipo   | Requerido | Ejemplo              |
+|------------|--------|-----------|----------------------|
+| start_date | string | Sí        | 2025-10-02 00:00:00  |
+| end_date   | string | Sí        | 2025-10-02 23:59:59  |
+| page       | int    | No        | 1 (default)          |
+| page_size  | int    | No        | 10 (default)         |
+
+
+**Ejemplo de Respuesta:**
+
+```json
+{
+  "pagination": {
+    "page": 1,
+    "page_size": 5,
+    "total_records": 22,
+    "total_pages": 5,
+    "has_next": true,
+    "has_previous": false
+  },
+  "data": [
+    {
+      "sale_id": "SALE-1759430699-12",
+      "client_name": "Charlie Brown",
+      "total_amount": 9100,
+      "total_paid": 7000,
+      "balance_due": 2100,          // ⬅️ SALDO PENDIENTE
+      "payment_progress": 76.92,
+      "payment_count": 2,
+      "is_fully_paid": false
     },
-    body: JSON.stringify(saleData)
-  });
-  return response.json();
-};
-
-// Ejemplo de uso - Venta con Reserva
-const processSaleWithReserve = async (saleData: ProcessSaleRequest): Promise<ProcessSaleResponse> => {
-  const saleWithReserve = {
-    ...saleData,
-    reserve_id: 123  // ID de la reserva
-  };
-  
-  return processSale(saleWithReserve);
-};
-```
-
-### 2. Obtener Venta por ID
-```typescript
-// GET /sale/{id}
-interface SaleDetails {
-  id: string;
-  client_id: string;
-  client_name: string;
-  sale_date: string;
-  total_amount: number;
-  status: string;
-  user_id: string;
-  user_name: string;
-  payment_method_id?: number;
-  payment_method?: string;
-  currency_id?: number;
-  currency?: string;
-  details: SaleItemDetail[];
-}
-
-interface SaleItemDetail {
-  id: number;
-  order_id: string;
-  product_id: string;
-  product_name: string;
-  quantity: number;
-  base_price: number;      // Precio base del producto
-  unit_price: number;      // Precio final de venta
-  subtotal: number;        // Cantidad × precio unitario
-  tax_amount: number;      // Monto del impuesto
-  total_with_tax: number;  // Subtotal + impuesto
-  price_modified: boolean; // Si el precio fue modificado
-  reserve_id: number;
-  tax_rate_id: number;
-  tax_rate: number;
-}
-```
-
-### 3. Obtener Ventas por Rango de Fechas
-```typescript
-// GET /sale/date_range/?start_date=2024-01-01&end_date=2024-01-31&page=1&page_size=20
-interface SalesListResponse {
-  sales: SaleDetails[];
-  total_count: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
-}
-```
-
-### 4. Cancelar Venta (Reversión Mejorada)
-```typescript
-// PUT /sale/{id}
-interface CancelSaleRequest {
-  user_id: string;
-  reason?: string;
-}
-
-interface CancelSaleResponse {
-  success: boolean;
-  message: string;
-  sale_id: string;
-  cancelled_at: string;
-  reversal_details?: {
-    payments_cancelled: number;
-    total_refunded: number;
-    stock_updates: number;
-    reserves_handled: number;
-    original_status: string;
-  };
-}
-
-// Nuevo: Preview de Impacto de Cancelación
-  // GET /sale/{id}/preview-cancellation
-  interface CancellationPreview {
-  success: boolean;
-  sale_info: {
-    sale_id: string;
-    current_status: string;
-    total_amount: number;
-    can_be_reverted: boolean;
-  };
-  impact_analysis: {
-    total_items: number;
-    physical_products: number;
-    service_products: number;
-    active_reserves: number;
-    payments_to_cancel: number;
-    total_to_refund: number;
-    requires_stock_adjustment: boolean;
-    requires_reserve_cancellation: boolean;
-    requires_payment_refund: boolean;
-  };
-  recommendations: {
-    action: 'no_action_needed' | 'refund_required' | 'reserve_cancellation_required' | 'simple_cancellation';
-    backup_recommended: boolean;
-    notify_customer: boolean;
-    estimated_complexity: 'low' | 'medium' | 'high';
-  };
-}
-
-  // Ejemplo de uso con preview
-  const previewCancellation = async (saleId: string): Promise<CancellationPreview> => {
-    const response = await fetch(`/sale/${saleId}/preview-cancellation`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return response.json();
-  };const cancelSaleWithPreview = async (saleId: string, reason?: string): Promise<CancelSaleResponse> => {
-  // 1. Obtener preview del impacto
-  const preview = await previewCancellation(saleId);
-  
-  if (!preview.sale_info.can_be_reverted) {
-    throw new Error('Esta venta no puede ser cancelada');
-  }
-
-  // 2. Mostrar información al usuario si es necesario
-  if (preview.recommendations.notify_customer && preview.impact_analysis.total_to_refund > 0) {
-    const confirmed = confirm(
-      `Esta cancelación requiere reembolso de $${preview.impact_analysis.total_to_refund}. ¿Continuar?`
-    );
-    if (!confirmed) return { success: false, message: 'Cancelación abortada por el usuario' } as any;
-  }
-
-  // 3. Proceder con la cancelación
-  const response = await fetch(`/sale/${saleId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ reason })
-  });
-  return response.json();
-};
-```
-
-### 5. Reporte de Cambios de Precio
-```typescript
-// GET /sale/price-changes/report?sale_id={id}&start_date=2024-01-01&end_date=2024-01-31
-interface PriceChangeReport {
-  product_id: string;
-  product_name: string;
-  original_price: number;
-  modified_price: number;
-  price_difference: number;
-  percentage_change: number;
-  user_id: string;
-  reason: string;
-  timestamp: string;
-  change_id: string;
-}
-```
-
----
-
-## 💰 API de Pagos con Vuelto
-
-### 1. Procesar Pago
-```typescript
-// POST /payment/process
-interface ProcessPaymentRequest {
-  sales_order_id: string;              // ID de la venta
-  amount_received: number;             // Monto recibido del cliente
-  payment_reference?: string;          // Referencia del pago (opcional)
-  payment_notes?: string;              // Notas del pago (opcional)
-}
-
-interface ProcessPaymentResponse {
-  success: boolean;
-  payment_id?: number;
-  sale_id: string;
-  client_name: string;
-  payment_details: PaymentDetails;
-  message: string;
-  requires_change: boolean;            // Si requiere dar vuelto
-  processed_at: string;
-  processed_by: string;
-  error?: string;
-  error_code?: string;
-}
-
-interface PaymentDetails {
-  total_due: number;                   // Total a pagar
-  amount_received: number;             // Monto recibido
-  change_amount: number;               // Vuelto a entregar
-  currency_code: string;               // Código de moneda
-  payment_method: string;              // Método de pago
-  payment_reference?: string;          // Referencia del pago
-}
-
-// Ejemplo de uso
-const processPayment = async (paymentData: ProcessPaymentRequest): Promise<ProcessPaymentResponse> => {
-  const response = await fetch('/payment/process', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(paymentData)
-  });
-  return response.json();
-};
-```
-
-### 2. Obtener Detalles de Pago
-```typescript
-// GET /payment/details/{saleId}
-interface PaymentDetailsQuery {
-  payment_id: number;
-  sales_order_id: string;
-  client_name: string;
-  amount_due: number;
-  amount_received: number;
-  change_amount: number;
-  currency_code: string;
-  payment_method_code: string;
-  payment_reference?: string;
-  payment_notes?: string;
-  payment_date: string;
-  processed_by_name: string;
-  status: string;
-}
-
-// GET /payment/{paymentId} - Por ID específico de pago
-```
-
-### 3. Estadísticas de Vueltos
-```typescript
-// GET /payment/statistics/change?start_date=2024-01-01&end_date=2024-01-31
-interface ChangeStatistics {
-  period: {
-    start_date: string;
-    end_date: string;
-  };
-  statistics: {
-    total_payments: number;
-    payments_with_change: number;
-    payments_exact_amount: number;
-    change_percentage: number;
-    total_change_given: number;
-    average_change_amount: number;
-    maximum_change_amount: number;
-  };
-  generated_at: string;
-}
-```
-
-### 4. Códigos de Error de Pagos
-```typescript
-enum PaymentErrorCodes {
-  SALE_NOT_FOUND = 'SALE_NOT_FOUND',
-  SALE_CANCELLED = 'SALE_CANCELLED',
-  SALE_ALREADY_PAID = 'SALE_ALREADY_PAID',
-  INSUFFICIENT_AMOUNT = 'INSUFFICIENT_AMOUNT',
-  SYSTEM_ERROR = 'SYSTEM_ERROR'
-}
-```
-
----
-
-## � 🆕 API de Pagos con Cajas Registradoras
-
-### **Características Principales**
-- ✅ **Procesamiento automático**: Los pagos se registran automáticamente en la caja activa
-- ✅ **Movimientos de efectivo**: Control automático de ingresos y egresos
-- ✅ **Validaciones de seguridad**: No se permiten pagos en cajas cerradas
-- ✅ **Cálculo de vuelto integrado**: Incluye registro automático de vuelto como egreso
-- ✅ **Trazabilidad completa**: Auditoría de todos los movimientos
-
-### 1. Procesar Pago de Venta con Caja Registradora ⭐
-**Endpoint:** `POST /cash-registers/payments/sale`
-
-```typescript
-interface ProcessSalePaymentCashRegisterRequest {
-  sales_order_id: string;      // ID de la orden de venta
-  amount_received: number;     // Monto recibido del cliente
-  payment_reference?: string;  // Referencia del pago
-  payment_notes?: string;      // Notas adicionales
-}
-
-interface SalePaymentWithCashRegisterResponse {
-  success: boolean;
-  message: string;
-  payment_id: number;
-  sale_id: string;
-  client_name: string;
-  payment_details: {
-    total_due: number;
-    amount_received: number;
-    change_amount: number;
-    currency_code: string;
-    payment_method: string;
-    payment_reference?: string;
-  };
-  requires_change: boolean;
-  processed_at: string;
-  processed_by: number;
-  
-  // 🆕 Información de integración con caja
-  cash_register_integration: {
-    cash_register_id: number;
-    income_movement_registered: boolean;
-    change_movement_registered: boolean;
-    net_cash_impact: number; // Impacto neto en efectivo
-  };
-}
-```
-
-#### Ejemplo de Uso
-```javascript
-const processSalePaymentWithCashRegister = async (salePaymentData) => {
-  try {
-    const response = await fetch('/cash-registers/payments/sale', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        sales_order_id: salePaymentData.salesOrderId,
-        amount_received: salePaymentData.amountReceived,
-        payment_reference: salePaymentData.reference || `VENTA_${Date.now()}`,
-        payment_notes: salePaymentData.notes || 'Pago en efectivo'
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      console.log('✅ Pago procesado con integración de caja');
-      console.log(`💰 Total: $${result.payment_details.total_due}`);
-      console.log(`💵 Recibido: $${result.payment_details.amount_received}`);
-      
-      if (result.requires_change) {
-        console.log(`🔄 Vuelto: $${result.payment_details.change_amount}`);
-        
-        // Mostrar alerta visual de vuelto
-        showChangeAlert(result.payment_details.change_amount);
-      }
-      
-      // Información de caja registradora
-      const cashInfo = result.cash_register_integration;
-      console.log(`📊 Caja ID: ${cashInfo.cash_register_id}`);
-      console.log(`💹 Impacto neto: $${cashInfo.net_cash_impact}`);
-      
-      // Actualizar UI con nuevo balance
-      updateCashRegisterDisplay(cashInfo);
-      
-      return result;
-    } else {
-      throw new Error(result.message || 'Error procesando pago');
+    {
+      "sale_id": "SALE-1759429694-278",
+      "client_name": "Erika Magdalena Maciel",
+      "total_amount": 84100,
+      "total_paid": 84100,
+      "balance_due": 0,              // ⬅️ COMPLETAMENTE PAGADA
+      "payment_progress": 100,
+      "payment_count": 1,
+      "is_fully_paid": true
     }
-    
-  } catch (error) {
-    console.error('❌ Error en pago con caja:', error);
-    
-    // Manejar errores específicos
-    if (error.message.includes('CASH_REGISTER_CLOSED')) {
-      showErrorModal('Debe abrir una caja registradora antes de procesar pagos');
-    } else {
-      showErrorModal(`Error procesando pago: ${error.message}`);
-    }
-    
-    throw error;
-  }
-};
-
-// Función auxiliar para mostrar alerta de vuelto
-const showChangeAlert = (changeAmount) => {
-  const alertDiv = document.createElement('div');
-  alertDiv.className = 'change-alert';
-  alertDiv.innerHTML = `
-    <div class="change-notification">
-      <h3>💵 ENTREGAR VUELTO</h3>
-      <div class="change-amount">$${changeAmount.toLocaleString()}</div>
-      <button onclick="this.parentElement.parentElement.remove()">✓ Entregado</button>
-    </div>
-  `;
-  document.body.appendChild(alertDiv);
-};
-```
-
-### 2. Procesar Pago de Compra con Caja Registradora
-**Endpoint:** `POST /cash-registers/payments/purchase`
-
-```typescript
-interface ProcessPurchasePaymentCashRegisterRequest {
-  purchase_order_id: number;
-  amount_paid: number;
-  payment_reference?: string;
-  payment_notes?: string;
-}
-
-interface PurchasePaymentWithCashRegisterResponse {
-  success: boolean;
-  payment_id: number;
-  purchase_order_id: number;
-  payment_details: {
-    amount_paid: number;
-    outstanding_amount: number;
-    total_paid_so_far: number;
-    total_order_amount: number;
-    payment_status: string;
-    order_fully_paid: boolean;
-  };
-  message: string;
-  processed_at: string;
-  processed_by: number;
-  
-  // Información de integración con caja
-  cash_register_integration: {
-    cash_register_id: number;
-    expense_movement_registered: boolean;
-    cash_impact: number; // Impacto negativo en efectivo
-    movement_id: number;
-  };
+  ]
 }
 ```
 
-#### Ejemplo de Uso
-```javascript
-const processPurchasePaymentWithCashRegister = async (purchasePaymentData) => {
-  try {
-    const response = await fetch('/cash-registers/payments/purchase', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        purchase_order_id: purchasePaymentData.purchaseOrderId,
-        amount_paid: purchasePaymentData.amountPaid,
-        payment_reference: purchasePaymentData.reference || `COMPRA_${Date.now()}`,
-        payment_notes: purchasePaymentData.notes || 'Pago a proveedor'
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      console.log('✅ Pago de compra procesado');
-      console.log(`💸 Pagado: $${result.payment_details.amount_paid}`);
-      
-      if (result.payment_details.order_fully_paid) {
-        console.log('🎉 Orden de compra completamente pagada');
-      } else {
-        console.log(`💰 Saldo pendiente: $${result.payment_details.outstanding_amount}`);
-      }
-      
-      // Actualizar caja registradora (egreso)
-      const cashInfo = result.cash_register_integration;
-      console.log(`📉 Egreso registrado: $${Math.abs(cashInfo.cash_impact)}`);
-      updateCashRegisterDisplay(cashInfo);
-      
-      return result;
-    }
-    
-  } catch (error) {
-    console.error('❌ Error en pago de compra:', error);
-    throw error;
-  }
-};
-```
 
-### 3. Comparación: Pago Tradicional vs Pago con Caja
+**Uso Frontend:**
 
 ```javascript
-// ❌ Pago Tradicional (sin integración de caja)
-const traditionalPayment = async (saleData) => {
-  const response = await fetch('/payment/process', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify({
-      sales_order_id: saleData.salesOrderId,
-      amount_received: saleData.amountReceived
-    })
-  });
-  
-  // Solo registra el pago, NO registra movimientos de efectivo
-  return response.json();
-};
+const params = new URLSearchParams({
+  start_date: '2025-10-02 00:00:00',
+  end_date: '2025-10-02 23:59:59',
+  page: 1,
+  page_size: 10
+});
 
-// ✅ Pago con Caja (RECOMENDADO)
-const cashRegisterPayment = async (saleData) => {
-  const response = await fetch('/cash-registers/payments/sale', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify({
-      sales_order_id: saleData.salesOrderId,
-      amount_received: saleData.amountReceived
-    })
-  });
-  
-  // Registra el pago + movimientos automáticos de efectivo + validaciones
-  return response.json();
-};
+const response = await fetch(`/sale/date_range/payment-status?${params}`, {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const result = await response.json();
+
+// Calcular total pendiente del período
+const totalPending = result.data.reduce((sum, sale) => sum + sale.balance_due, 0);
+console.log(`Total pendiente de cobro: ₲${totalPending.toLocaleString()}`);
 ```
 
-### 4. Validaciones y Manejo de Errores
+---
+
+### 3️⃣ Búsqueda por Nombre de Cliente
+
+```http
+GET /sale/client_name/{name}/payment-status?page={page}&page_size={size}
+```
+
+**Propósito:** Listar ventas de un cliente con resumen de estado de pago
+
+
+**Características:**
+
+- ✅ Búsqueda parcial por nombre o apellido
+- ✅ Case-insensitive (no distingue mayúsculas/minúsculas)
+- ✅ Paginación (page, page_size)
+- ✅ NO incluye lista individual de pagos (solo resumen)
+- ✅ Ideal para ver deuda total de un cliente
+
+
+**Parámetros:**
+
+| Parámetro  | Tipo   | Requerido | Ejemplo  |
+|------------|--------|-----------|----------|
+| name       | string | Sí        | Charlie  |
+| page       | int    | No        | 1        |
+| page_size  | int    | No        | 10       |
+
+
+**Ejemplo de Respuesta:**
+
+```json
+{
+  "pagination": {
+    "page": 1,
+    "page_size": 5,
+    "total_records": 1,
+    "total_pages": 1
+  },
+  "data": [
+    {
+      "sale_id": "SALE-1759430699-12",
+      "client_name": "Charlie Brown",
+      "total_amount": 9100,
+      "total_paid": 7000,
+      "balance_due": 2100,          // ⬅️ SALDO PENDIENTE
+      "payment_progress": 76.92,
+      "payment_count": 2,
+      "is_fully_paid": false,
+      "requires_payment": true
+    }
+  ]
+}
+```
+
+
+**Uso Frontend:**
 
 ```javascript
-const handlePaymentErrors = (error) => {
-  switch (error.error_code) {
-    case 'CASH_REGISTER_CLOSED':
-      return {
-        title: 'Caja Cerrada',
-        message: 'Debe abrir una caja registradora antes de procesar pagos.',
-        action: 'Abrir Caja',
-        actionCallback: () => openCashRegisterModal()
-      };
-      
-    case 'NO_ACTIVE_CASH_REGISTER':
-      return {
-        title: 'Sin Caja Activa',
-        message: 'No se encontró una caja registradora activa para este usuario.',
-        action: 'Crear Caja',
-        actionCallback: () => createCashRegisterModal()
-      };
-      
-    case 'SALE_NOT_FOUND':
-      return {
-        title: 'Venta No Encontrada',
-        message: 'La venta especificada no existe o no es válida.',
-        action: 'Verificar ID',
-        actionCallback: () => validateSaleId()
-      };
-      
-    case 'INSUFFICIENT_AMOUNT':
-      return {
-        title: 'Monto Insuficiente',
-        message: `El monto recibido es menor al total requerido.`,
-        action: 'Corregir Monto',
-        actionCallback: () => focusAmountInput()
-      };
-      
-    default:
-      return {
-        title: 'Error de Sistema',
-        message: error.message || 'Error desconocido procesando el pago.',
-        action: 'Reintentar',
-        actionCallback: () => retryPayment()
-      };
-  }
-};
+const clientName = "Charlie";
+const response = await fetch(`/sale/client_name/${encodeURIComponent(clientName)}/payment-status?page=1&page_size=10`, {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const result = await response.json();
 
-// Uso del manejador de errores
-const processPaymentWithErrorHandling = async (paymentData) => {
-  try {
-    return await processSalePaymentWithCashRegister(paymentData);
-  } catch (error) {
-    const errorInfo = handlePaymentErrors(error);
-    showErrorDialog(errorInfo);
-    throw error;
-  }
-};
-```
+// Calcular deuda total del cliente
+const totalDebt = result.data
+  .filter(sale => !sale.is_fully_paid)
+  .reduce((sum, sale) => sum + sale.balance_due, 0);
 
-### 5. Componente React - PaymentWithCashRegister
-
-```jsx
-import React, { useState } from 'react';
-import { useCashRegister } from '../hooks/useCashRegister';
-
-const PaymentWithCashRegister = ({ saleData, onPaymentComplete }) => {
-  const [amountReceived, setAmountReceived] = useState('');
-  const [paymentNotes, setPaymentNotes] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { activeCashRegister, processSalePayment } = useCashRegister();
-
-  const handlePayment = async (e) => {
-    e.preventDefault();
-    
-    if (!activeCashRegister) {
-      alert('Debe abrir una caja registradora primero');
-      return;
-    }
-
-    if (!amountReceived || parseFloat(amountReceived) <= 0) {
-      alert('Ingrese un monto válido');
-      return;
-    }
-
-    setIsProcessing(true);
-    
-    try {
-      const result = await processSalePayment({
-        sales_order_id: saleData.id,
-        amount_received: parseFloat(amountReceived),
-        payment_reference: `VENTA_${Date.now()}`,
-        payment_notes: paymentNotes
-      });
-
-      if (result.success) {
-        // Mostrar resultado exitoso
-        if (result.requires_change) {
-          alert(`💵 Pago exitoso. Entregar vuelto: $${result.payment_details.change_amount}`);
-        } else {
-          alert('✅ Pago procesado exitosamente');
-        }
-        
-        // Callback para actualizar componente padre
-        onPaymentComplete(result);
-        
-        // Limpiar formulario
-        setAmountReceived('');
-        setPaymentNotes('');
-      }
-    } catch (error) {
-      console.error('Error en pago:', error);
-      alert(`Error procesando pago: ${error.message}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  if (!activeCashRegister) {
-    return (
-      <div className="no-cash-register-warning">
-        <p>⚠️ No hay caja registradora activa</p>
-        <p>Debe abrir una caja antes de procesar pagos</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="payment-with-cash-register">
-      <div className="cash-register-info">
-        <h4>💰 Caja Activa: {activeCashRegister.name}</h4>
-        <p>Balance: ${activeCashRegister.current_balance}</p>
-      </div>
-      
-      <form onSubmit={handlePayment} className="payment-form">
-        <div className="sale-info">
-          <h3>Venta: {saleData.id}</h3>
-          <p>Total a pagar: <strong>${saleData.total_amount}</strong></p>
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="amountReceived">Monto Recibido:</label>
-          <input
-            type="number"
-            id="amountReceived"
-            value={amountReceived}
-            onChange={(e) => setAmountReceived(e.target.value)}
-            min={saleData.total_amount}
-            step="0.01"
-            required
-            placeholder="0.00"
-            className="amount-input"
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="paymentNotes">Notas del Pago:</label>
-          <textarea
-            id="paymentNotes"
-            value={paymentNotes}
-            onChange={(e) => setPaymentNotes(e.target.value)}
-            placeholder="Notas adicionales (opcional)"
-            rows="3"
-          />
-        </div>
-        
-        {amountReceived && parseFloat(amountReceived) > saleData.total_amount && (
-          <div className="change-info">
-            <p>💵 Vuelto a entregar: 
-              <strong>${(parseFloat(amountReceived) - saleData.total_amount).toFixed(2)}</strong>
-            </p>
-          </div>
-        )}
-        
-        <button 
-          type="submit" 
-          disabled={isProcessing || !amountReceived}
-          className="btn-process-payment"
-        >
-          {isProcessing ? 'Procesando...' : '💳 Procesar Pago'}
-        </button>
-      </form>
-    </div>
-  );
-};
-
-export default PaymentWithCashRegister;
-```
-
-### 6. Hook personalizado - useCashRegisterPayments
-
-```javascript
-import { useState } from 'react';
-import { useCashRegister } from './useCashRegister';
-
-export const useCashRegisterPayments = () => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [lastPaymentResult, setLastPaymentResult] = useState(null);
-  const { activeCashRegister } = useCashRegister();
-
-  const processSalePayment = async (paymentData) => {
-    if (!activeCashRegister) {
-      throw new Error('No hay caja registradora activa');
-    }
-
-    setIsProcessing(true);
-    
-    try {
-      const response = await fetch('/cash-registers/payments/sale', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(paymentData)
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Error procesando pago');
-      }
-
-      const result = await response.json();
-      setLastPaymentResult(result);
-      
-      return result;
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const processPurchasePayment = async (paymentData) => {
-    if (!activeCashRegister) {
-      throw new Error('No hay caja registradora activa');
-    }
-
-    setIsProcessing(true);
-    
-    try {
-      const response = await fetch('/cash-registers/payments/purchase', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(paymentData)
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Error procesando pago');
-      }
-
-      const result = await response.json();
-      setLastPaymentResult(result);
-      
-      return result;
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  return {
-    processSalePayment,
-    processPurchasePayment,
-    isProcessing,
-    lastPaymentResult,
-    hasActiveCashRegister: !!activeCashRegister,
-    activeCashRegister
-  };
-};
-```
-
-### 💡 Mejores Prácticas
-
-1. **Siempre verificar caja activa** antes de procesar pagos
-2. **Manejar errores específicos** con mensajes claros para el usuario
-3. **Mostrar información visual** del vuelto cuando aplique
-4. **Actualizar el estado de la caja** en tiempo real en la UI
-5. **Implementar validaciones** de monto mínimo y máximo
-6. **Registrar eventos** para auditoría y debugging
-
----
-
-## �🔒 API de Gestión de Sesiones
-
-### 1. Obtener Sesiones Activas
-```typescript
-// GET /sessions/active
-interface UserSession {
-  id: number;
-  user_id: string;
-  ip_address: string;
-  user_agent: string;
-  device_type: string;
-  is_active: boolean;
-  last_activity: string;
-  expires_at: string;
-  created_at: string;
-  location_info?: any;
-}
-
-interface ActiveSessionsResponse {
-  sessions: UserSession[];
-  total_count: number;
-  current_session_id: number;
-}
-```
-
-### 2. Historial de Sesiones
-```typescript
-// GET /sessions/history?page=1&page_size=20
-interface SessionHistoryResponse {
-  sessions: UserSession[];
-  total_count: number;
-  page: number;
-  page_size: number;
-}
-```
-
-### 3. Revocar Sesión Específica
-```typescript
-// POST /sessions/{id}/revoke
-interface RevokeSessionRequest {
-  reason?: string;
-}
-
-interface RevokeSessionResponse {
-  success: boolean;
-  message: string;
-  session_id: number;
-  revoked_at: string;
-}
-```
-
-### 4. Revocar Todas las Sesiones
-```typescript
-// POST /sessions/revoke-all
-interface RevokeAllSessionsRequest {
-  reason?: string;
-  exclude_current?: boolean;  // Excluir sesión actual
-}
-
-interface RevokeAllSessionsResponse {
-  success: boolean;
-  message: string;
-  sessions_revoked: number;
-  revoked_at: string;
-}
-```
-
-### 5. Actividad del Usuario
-```typescript
-// GET /sessions/activity?page=1&page_size=50&activity_type=LOGIN
-interface UserActivity {
-  id: number;
-  user_id: string;
-  session_id?: number;
-  activity_type: string;        // LOGIN, LOGOUT, API_CALL, etc.
-  endpoint?: string;
-  http_method?: string;
-  ip_address?: string;
-  created_at: string;
-  duration_ms?: number;
-}
-
-interface UserActivityResponse {
-  activities: UserActivity[];
-  total_count: number;
-  page: number;
-  page_size: number;
-}
-```
-
-### 6. Configuración de Sesión
-```typescript
-// GET /sessions/config
-interface SessionConfig {
-  id: number;
-  role_id: string;
-  max_concurrent_sessions: number;
-  session_timeout_minutes: number;
-  inactivity_timeout_minutes: number;
-  require_device_verification: boolean;
-  allow_multiple_locations: boolean;
-  force_logout_on_password_change: boolean;
-}
-```
-
-### 7. Endpoints de Administración (Solo Admin)
-```typescript
-// GET /admin/sessions/all - Todas las sesiones activas
-interface AdminSessionsResponse {
-  sessions: UserSessionWithUser[];
-  total_count: number;
-}
-
-interface UserSessionWithUser extends UserSession {
-  username: string;
-  email: string;
-  role_name: string;
-}
-
-// POST /admin/sessions/{id}/revoke - Revocar sesión de usuario
-interface AdminRevokeRequest {
-  reason: string;
-  notify_user?: boolean;
-}
+console.log(`Deuda total de ${clientName}: ₲${totalDebt.toLocaleString()}`);
 ```
 
 ---
 
-## ⚠️ Códigos de Error
+## 📊 Comparación de Endpoints
 
-### Ventas
-- `INVALID_PRODUCT_ID`: Producto no encontrado
-- `INSUFFICIENT_STOCK`: Stock insuficiente
-- `INVALID_CLIENT_ID`: Cliente no encontrado
-- `PRICE_MODIFICATION_NOT_ALLOWED`: Modificación de precio no permitida
-- `RESERVE_NOT_FOUND`: Reserva no encontrada
-- `RESERVE_ALREADY_USED`: Reserva ya utilizada
-- `SALE_NOT_FOUND`: Venta no encontrada para cancelación
-- `ALREADY_CANCELLED`: La venta ya está cancelada
-- `PRODUCT_NOT_FOUND`: Producto no encontrado durante reversión
-- `STOCK_NOT_FOUND`: No se pudo restaurar stock del producto
-- `RESERVE_NOT_UPDATED`: Reserva no pudo ser liberada
 
-### Pagos
-- `SALE_NOT_FOUND`: Venta no encontrada
-- `SALE_CANCELLED`: No se puede pagar una venta cancelada
-- `SALE_ALREADY_PAID`: Venta ya está totalmente pagada
-- `INSUFFICIENT_AMOUNT`: Monto insuficiente para cubrir el total
-- `SYSTEM_ERROR`: Error interno del sistema
-
-### Sesiones
-- `SESSION_NOT_FOUND`: Sesión no encontrada
-- `SESSION_ALREADY_REVOKED`: Sesión ya revocada
-- `CANNOT_REVOKE_CURRENT_SESSION`: No se puede revocar la sesión actual
-- `MAX_SESSIONS_EXCEEDED`: Máximo de sesiones concurrentes excedido
-- `UNAUTHORIZED_ACCESS`: Acceso no autorizado
+| Característica                 | Individual         | Rango de Fechas    | Nombre de Cliente  |
+|--------------------------------|--------------------|--------------------|---------------------|
+| **URL**                        | `/{id}/payment-status` | `/date_range/payment-status` | `/client_name/{name}/payment-status` |
+| **Múltiples ventas**           | ❌ No              | ✅ Sí              | ✅ Sí               |
+| **Lista de pagos**             | ✅ Sí (array)      | ❌ No              | ❌ No               |
+| **Resumen de pagos**           | ✅ Sí              | ✅ Sí              | ✅ Sí               |
+| **Paginación**                 | ❌ No aplica       | ✅ Sí              | ✅ Sí               |
+| **balance_due**                | ✅ Sí              | ✅ Sí              | ✅ Sí               |
+| **payment_progress**           | ✅ Sí              | ✅ Sí              | ✅ Sí               |
+| **Uso principal**              | Detalle venta      | Reportes período   | Búsqueda cliente    |
 
 ---
 
-## 📝 Ejemplos de Integración
+## 🗂️ Archivos Modificados
 
-### 1. Flujo Completo de Venta con Pago
-```typescript
-class SalesService {
-  private baseUrl = 'http://localhost:5050';
-  private token = localStorage.getItem('jwt_token');
 
-  // Procesar venta (unificada - maneja ventas con y sin reserva)
-  async createSale(saleData: ProcessSaleRequest): Promise<ProcessSaleResponse> {
-    const response = await fetch(`${this.baseUrl}/sale/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`
-      },
-      body: JSON.stringify(saleData)
-    });
+### 1. SQL Function
 
-    if (!response.ok) {
-      throw new Error(`Error en venta: ${response.statusText}`);
-    }
+- **Archivo:** `database/sql/process_payment_FINAL.sql`
+- **Cambio:** Estado de pago condicional (COMPLETED/PARTIAL)
 
-    return response.json();
-  }
+### 2. Models
 
-  // Procesar pago con cálculo automático de vuelto
-  async processPayment(paymentData: ProcessPaymentRequest): Promise<ProcessPaymentResponse> {
-    const response = await fetch(`${this.baseUrl}/payment/process`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`
-      },
-      body: JSON.stringify(paymentData)
-    });
+- **Archivo:** `models/sale.go`
+- **Agregados:**
+  - `SalePaymentInfo` - Información de un pago individual
+  - `SalePaymentStatusResponse` - Respuesta del endpoint individual
+  - `SalePaymentStatusSummary` - Resumen sin lista de pagos
+  - `PaginatedSalesPaymentStatusResponse` - Respuesta paginada
 
-    if (!response.ok) {
-      throw new Error(`Error en pago: ${response.statusText}`);
-    }
+### 3. Repository
 
-    return response.json();
-  }
+- **Archivo:** `database/postgres/sale.go`
+- **Funciones agregadas:**
+  - `GetSalePaymentStatus()` - Consulta individual
+  - `GetSalesByDateRangeWithPaymentStatus()` - Búsqueda por fechas
+  - `GetSalesByClientNameWithPaymentStatus()` - Búsqueda por cliente
 
-  // Preview de cancelación antes de ejecutar
-  async previewCancellation(saleId: string): Promise<CancellationPreview> {
-    const response = await fetch(`${this.baseUrl}/sale/${saleId}/preview-cancellation`, {
-      headers: {
-        'Authorization': `Bearer ${this.token}`
-      }
-    });
-    return response.json();
-  }
+### 4. Handlers
 
-  // Cancelar venta con reversión completa (stock, pagos, reservas)
-  async cancelSale(saleId: string, reason?: string): Promise<CancelSaleResponse> {
-    const response = await fetch(`${this.baseUrl}/sale/${saleId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`
-      },
-      body: JSON.stringify({ reason })
-    });
-    return response.json();
-  }
+- **Archivo:** `handlers/sale.go`
+- **Handlers agregados:**
+  - `GetSalePaymentStatusHandler()`
+  - `GetSalesByDateRangeWithPaymentStatusHandler()`
+  - `GetSalesByClientNameWithPaymentStatusHandler()`
 
-  // Flujo completo: venta + pago con manejo de vuelto
-  async completeSaleWithPayment(
-    saleData: ProcessSaleRequest, 
-    amountReceived: number
-  ): Promise<{ sale: ProcessSaleResponse; payment: ProcessPaymentResponse }> {
-    try {
-      // 1. Crear venta (funciona para ventas normales y con reserva)
-      const sale = await this.createSale(saleData);
-      
-      if (!sale.success) {
-        throw new Error(sale.error || 'Error al crear venta');
-      }
+### 5. Repository Interface
 
-      // 2. Procesar pago con cálculo automático de vuelto
-      const payment = await this.processPayment({
-        sales_order_id: sale.sale_id,
-        amount_received: amountReceived,
-        payment_reference: `PAY-${Date.now()}`
-      });
+- **Archivo:** `repository/repository.go`
+- **Métodos agregados:** 3 nuevos métodos de interface
 
-      if (!payment.success) {
-        throw new Error(payment.error || 'Error al procesar pago');
-      }
+### 6. Routes
 
-      // 3. Mostrar información del vuelto si aplica
-      if (payment.requires_change) {
-        console.log(`Vuelto a entregar: $${payment.payment_details.change_amount}`);
-      }
+- **Archivo:** `routes/routes.go`
+- **Rutas agregadas:**
+  - `GET /sale/date_range/payment-status`
+  - `GET /sale/client_name/{name}/payment-status`
+  - `GET /sale/{id}/payment-status`
+- **Fix crítico:** Reordenadas rutas (literales antes de parametrizadas)
 
-      return { sale, payment };
-    } catch (error) {
-      console.error('Error en flujo de venta:', error);
-      throw error;
-    }
-  }
+---
 
-  // Flujo completo con cancelación segura
-  async cancelSaleWithConfirmation(saleId: string, reason?: string): Promise<CancelSaleResponse> {
-    try {
-      // 1. Obtener preview del impacto
-      const preview = await this.previewCancellation(saleId);
-      
-      if (!preview.success) {
-        throw new Error('No se pudo obtener información de la venta');
-      }
+## ✅ Pruebas Realizadas
 
-      if (!preview.sale_info.can_be_reverted) {
-        throw new Error('Esta venta no puede ser cancelada');
-      }
 
-      // 2. Mostrar información importante al usuario
-      if (preview.impact_analysis.requires_payment_refund) {
-        const confirmRefund = confirm(
-          `Esta cancelación requiere reembolso de $${preview.impact_analysis.total_to_refund} en ${preview.impact_analysis.payments_to_cancel} pago(s). ¿Continuar?`
-        );
-        if (!confirmRefund) {
-          return { success: false, message: 'Cancelación abortada por el usuario' } as any;
-        }
-      }
+### Test 1: Endpoint Individual
 
-      if (preview.impact_analysis.requires_reserve_cancellation) {
-        const confirmReserve = confirm(
-          `Esta cancelación liberará ${preview.impact_analysis.active_reserves} reserva(s). ¿Continuar?`
-        );
-        if (!confirmReserve) {
-          return { success: false, message: 'Cancelación abortada por el usuario' } as any;
-        }
-      }
-
-      // 3. Ejecutar cancelación
-      const result = await this.cancelSale(saleId, reason);
-
-      if (result.success && result.reversal_details) {
-        console.log('Cancelación completada:', {
-          pagosRevocados: result.reversal_details.payments_cancelled,
-          totalReembolsado: result.reversal_details.total_refunded,
-          stockActualizado: result.reversal_details.stock_updates,
-          reservasLiberadas: result.reversal_details.reserves_handled
-        });
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Error en cancelación:', error);
-      throw error;
-    }
-  }
-}
+```bash
+curl -X GET "http://localhost:5050/sale/SALE-1759430699-12/payment-status" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
-### 2. Gestión de Sesiones
-```typescript
-class SessionService {
-  private baseUrl = 'http://localhost:5050';
-  private token = localStorage.getItem('jwt_token');
+**Resultado:** ✅ SUCCESS
 
-  // Obtener sesiones activas
-  async getActiveSessions(): Promise<ActiveSessionsResponse> {
-    const response = await fetch(`${this.baseUrl}/sessions/active`, {
-      headers: {
-        'Authorization': `Bearer ${this.token}`
-      }
-    });
-    return response.json();
-  }
+- Total: ₲9,100
+- Pagado: ₲7,000
+- Saldo: ₲2,100
+- Progreso: 76.92%
+- Pagos: 2
 
-  // Logout con revocación de sesión
-  async logout(sessionId: number): Promise<LogoutResponse> {
-    const response = await fetch(`${this.baseUrl}/sessions/${sessionId}/revoke`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`
-      },
-      body: JSON.stringify({ reason: 'User logout' })
-    });
+### Test 2: Rango de Fechas
 
-    const result = await response.json();
-    
-    if (result.success) {
-      // Limpiar token local
-      localStorage.removeItem('jwt_token');
-      localStorage.removeItem('session_id');
-      
-      // Redirigir a login
-      window.location.href = '/login';
-    }
-
-    return result;
-  }
-
-  // Revocar sesión específica (desde dashboard)
-  async revokeSession(sessionId: number, reason?: string): Promise<RevokeSessionResponse> {
-    const response = await fetch(`${this.baseUrl}/sessions/${sessionId}/revoke`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.token}`
-      },
-      body: JSON.stringify({ reason: reason || 'Manual revocation' })
-    });
-    return response.json();
-  }
-}
+```bash
+curl -X GET "http://localhost:5050/sale/date_range/payment-status?start_date=2025-10-02%2000:00:00&end_date=2025-10-02%2023:59:59&page=1&page_size=2"
 ```
 
-### 3. Manejo de Errores
-```typescript
-class APIErrorHandler {
-  static handle(error: any, context: string) {
-    console.error(`Error en ${context}:`, error);
+**Resultado:** ✅ SUCCESS
 
-    switch (error.error_code) {
-      // Errores de ventas
-      case 'SALE_NOT_FOUND':
-        return 'La venta especificada no existe';
-      
-      case 'ALREADY_CANCELLED':
-        return 'La venta ya está cancelada';
-      
-      case 'INVALID_PRODUCT_ID':
-        return 'Uno o más productos no existen';
-      
-      case 'INSUFFICIENT_STOCK':
-        return 'Stock insuficiente para uno o más productos';
-      
-      // Errores de pagos
-      case 'INSUFFICIENT_AMOUNT':
-        return `Monto insuficiente. Se requiere: ${error.amount_due}, recibido: ${error.amount_received}`;
-      
-      case 'SALE_ALREADY_PAID':
-        return 'Esta venta ya ha sido pagada completamente';
-      
-      case 'SALE_CANCELLED':
-        return 'No se puede procesar pago para una venta cancelada';
-      
-      // Errores de sesiones
-      case 'SESSION_EXPIRED':
-        localStorage.removeItem('jwt_token');
-        localStorage.removeItem('session_id');
-        window.location.href = '/login';
-        return 'Su sesión ha expirado, por favor inicie sesión nuevamente';
-      
-      case 'SESSION_NOT_FOUND':
-        return 'La sesión especificada no existe';
-      
-      case 'SESSION_ALREADY_REVOKED':
-        return 'La sesión ya ha sido revocada';
-      
-      case 'MAX_SESSIONS_EXCEEDED':
-        return 'Ha excedido el número máximo de sesiones concurrentes';
-      
-      case 'CANNOT_REVOKE_CURRENT_SESSION':
-        return 'No se puede revocar la sesión actual. Use logout normal.';
-      
-      // Errores de reversión
-      case 'PRODUCT_NOT_FOUND':
-        return 'Producto no encontrado durante la reversión';
-      
-      case 'STOCK_NOT_FOUND':
-        return 'No se pudo restaurar el stock del producto';
-      
-      case 'RESERVE_NOT_UPDATED':
-        return 'No se pudo liberar la reserva asociada';
-      
-      // Errores generales
-      case 'SYSTEM_ERROR':
-        return 'Error interno del sistema. Por favor contacte al administrador.';
-      
-      case 'UNAUTHORIZED_ACCESS':
-        return 'No tiene permisos para realizar esta acción';
-      
-      default:
-        return error.message || 'Error desconocido';
-    }
-  }
+- Total registros: 5
+- Total páginas: 3
+- Página actual: 1
+- Registros mostrados: 2
 
-  // Manejo específico para errores de cancelación
-  static handleCancellationError(error: any): string {
-    if (error.error_code?.startsWith('ERROR_REVERT_SALE')) {
-      const context = error.message?.split('Contexto: ')[1];
-      if (context) {
-        return `Error en cancelación: ${error.message}. Detalles: ${context}`;
-      }
-    }
-    return this.handle(error, 'cancelación de venta');
-  }
+### Test 3: Nombre de Cliente
 
-  // Manejo específico para errores de pago
-  static handlePaymentError(error: any): { message: string; suggestion?: string } {
-    const message = this.handle(error, 'procesamiento de pago');
-    
-    let suggestion: string | undefined;
-    switch (error.error_code) {
-      case 'INSUFFICIENT_AMOUNT':
-        suggestion = 'Verifique el monto ingresado y el total de la venta';
-        break;
-      case 'SALE_NOT_FOUND':
-        suggestion = 'Verifique que la venta existe y no ha sido eliminada';
-        break;
-      case 'SALE_ALREADY_PAID':
-        suggestion = 'Revise el estado de la venta en el sistema';
-        break;
-    }
-
-    return { message, suggestion };
-  }
-}
+```bash
+curl -X GET "http://localhost:5050/sale/client_name/Charlie/payment-status?page=1&page_size=5"
 ```
 
-### 4. Componente React de Ejemplo
-```typescript
-import React, { useState } from 'react';
+**Resultado:** ✅ SUCCESS
 
-interface PaymentFormProps {
-  saleId: string;
-  totalAmount: number;
-  onPaymentComplete: (payment: ProcessPaymentResponse) => void;
-}
+- Cliente encontrado: Charlie Brown
+- Total ventas: 1
+- Saldo pendiente: ₲2,100
+- Progreso: 76.92%
 
-const PaymentForm: React.FC<PaymentFormProps> = ({ saleId, totalAmount, onPaymentComplete }) => {
-  const [amountReceived, setAmountReceived] = useState<number>(totalAmount);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+### Test 4: Cliente con Múltiples Ventas
 
-  const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+```bash
+curl -X GET "http://localhost:5050/sale/client_name/Erika/payment-status?page=1&page_size=3"
+```
 
-    try {
-      const salesService = new SalesService();
-      const payment = await salesService.processPayment({
-        sales_order_id: saleId,
-        amount_received: amountReceived,
-        payment_reference: `PAY-${Date.now()}`
-      });
+**Resultado:** ✅ SUCCESS
 
-      if (payment.success) {
-        onPaymentComplete(payment);
-      } else {
-        setError(payment.error || 'Error al procesar pago');
-      }
-    } catch (err: any) {
-      const errorInfo = APIErrorHandler.handlePaymentError(err);
-      setError(errorInfo.message);
-      if (errorInfo.suggestion) {
-        console.info('Sugerencia:', errorInfo.suggestion);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+- Cliente: Erika (Erika Magdalena Maciel)
+- Total ventas: 22
+- Ventas en página: 3
+  - 2 completamente pagadas (balance_due: 0)
+  - 1 sin pagar (balance_due: ₲1,625,000)
 
-  const changeAmount = amountReceived - totalAmount;
+---
 
-  return (
-    <form onSubmit={handlePayment} className="payment-form">
-      <div className="form-group">
-        <label>Total a Pagar:</label>
-        <span className="total-amount">${totalAmount.toFixed(2)}</span>
-      </div>
-      
-      <div className="form-group">
-        <label>Monto Recibido:</label>
-        <input
-          type="number"
-          step="0.01"
-          min={totalAmount}
-          value={amountReceived}
-          onChange={(e) => setAmountReceived(parseFloat(e.target.value))}
-          required
-        />
-      </div>
-      
-      {changeAmount > 0 && (
-        <div className="form-group change-info">
-          <label>Vuelto a Entregar:</label>
-          <span className="change-amount highlight">${changeAmount.toFixed(2)}</span>
-        </div>
-      )}
-      
-      {error && <div className="error-message">{error}</div>}
-      
-      <button type="submit" disabled={loading || amountReceived < totalAmount}>
-        {loading ? 'Procesando...' : 'Procesar Pago'}
-      </button>
-    </form>
-  );
-};
+## 🎯 Beneficios de la Implementación
 
-// Componente adicional: Modal de Cancelación con Preview
-interface CancellationModalProps {
-  saleId: string;
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: (reason: string) => void;
-}
+### Para el Frontend
 
-const CancellationModal: React.FC<CancellationModalProps> = ({ 
-  saleId, 
-  isOpen, 
-  onClose, 
-  onConfirm 
-}) => {
-  const [preview, setPreview] = useState<CancellationPreview | null>(null);
-  const [reason, setReason] = useState('');
-  const [loading, setLoading] = useState(false);
+1. **Saldo pendiente siempre disponible:** Campo `balance_due` en todas las respuestas
+2. **Validación antes de pagos:** Verificar `requires_payment` antes de procesar
+3. **Progreso visual:** Campo `payment_progress` para barras de progreso
+4. **Sin cálculos manuales:** Backend calcula automáticamente totales y porcentajes
+5. **Búsqueda flexible:** 3 formas diferentes de buscar ventas con estado de pago
+6. **Paginación eficiente:** Manejo de grandes volúmenes de datos
 
-  const loadPreview = async () => {
-    if (!isOpen) return;
-    
-    setLoading(true);
-    try {
-      const salesService = new SalesService();
-      const previewData = await salesService.previewCancellation(saleId);
-      setPreview(previewData);
-    } catch (error) {
-      console.error('Error loading preview:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+### Para el Backend
 
-  React.useEffect(() => {
-    loadPreview();
-  }, [isOpen, saleId]);
+1. **Estados consistentes:** Bug de estados corregido en la fuente (SQL function)
+2. **Queries optimizadas:** Uso de CTEs para cálculos eficientes
+3. **Trazabilidad completa:** Historial de pagos con usuario y caja
+4. **Código reutilizable:** Modelos y funciones compartidas
+5. **Mantenibilidad:** Lógica centralizada en repository layer
 
-  if (!isOpen) return null;
+### Para el Negocio
 
-  const handleConfirm = () => {
-    onConfirm(reason);
-    onClose();
-  };
+1. **Mejor control de cobranza:** Identificar rápidamente ventas con saldo pendiente
+2. **Análisis de flujo de caja:** Reportes por período con totales exactos
+3. **Seguimiento de clientes:** Detectar clientes con deudas acumuladas
+4. **Auditoría mejorada:** Historial completo de pagos con responsables
 
-  return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>Cancelar Venta {saleId}</h3>
-        
-        {loading ? (
-          <div>Cargando información...</div>
-        ) : preview ? (
-          <div className="preview-info">
-            <div className="impact-summary">
-              <h4>Impacto de la Cancelación:</h4>
-              <ul>
-                <li>Productos físicos: {preview.impact_analysis.physical_products}</li>
-                <li>Productos de servicio: {preview.impact_analysis.service_products}</li>
-                {preview.impact_analysis.requires_payment_refund && (
-                  <li className="warning">
-                    Reembolso requerido: ${preview.impact_analysis.total_to_refund}
-                  </li>
-                )}
-                {preview.impact_analysis.requires_reserve_cancellation && (
-                  <li className="warning">
-                    Reservas a cancelar: {preview.impact_analysis.active_reserves}
-                  </li>
-                )}
-              </ul>
-            </div>
-            
-            <div className="complexity-indicator">
-              Complejidad: <span className={`complexity-${preview.recommendations.estimated_complexity}`}>
-                {preview.recommendations.estimated_complexity.toUpperCase()}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <div className="error">No se pudo cargar la información de la venta</div>
-        )}
-        
-        <div className="form-group">
-          <label>Razón de cancelación:</label>
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="Ingrese el motivo de la cancelación..."
-            rows={3}
-          />
-        </div>
-        
-        <div className="modal-actions">
-          <button onClick={onClose} className="btn-secondary">
-            Cancelar
-          </button>
-          <button 
-            onClick={handleConfirm} 
-            className="btn-danger"
-            disabled={!preview?.sale_info.can_be_reverted || !reason.trim()}
-          >
-            Confirmar Cancelación
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+---
+
+## 📝 Notas Importantes
+
+### Estados de Pago
+
+| Estado      | Descripción                                    | Se incluye en total_paid |
+|-------------|------------------------------------------------|--------------------------|
+| COMPLETED   | Pago que completó la venta                     | ✅ Sí                    |
+| PARTIAL     | Pago parcial, queda saldo pendiente            | ✅ Sí                    |
+| CANCELLED   | Pago cancelado/anulado                         | ❌ No                    |
+| REFUNDED    | Pago reembolsado                               | ❌ No                    |
+
+### Cálculos Automáticos
+
+```
+total_paid = SUM(amount_paid) WHERE status IN ('COMPLETED', 'PARTIAL')
+balance_due = total_amount - total_paid
+payment_progress = (total_paid / total_amount) * 100
+is_fully_paid = (balance_due <= 0)
+requires_payment = (balance_due > 0 AND status != 'CANCELLED')
+```
+
+### Ordenamiento de Rutas
+
+**⚠️ IMPORTANTE:** Las rutas literales DEBEN ir antes de las parametrizadas:
+
+```go
+// ✅ CORRECTO
+r.HandleFunc("/sale/date_range/payment-status", handler1)      // Literal
+r.HandleFunc("/sale/client_name/{name}/payment-status", handler2)  // Parametrizada
+r.HandleFunc("/sale/{id}/payment-status", handler3)            // Parametrizada
+
+// ❌ INCORRECTO
+r.HandleFunc("/sale/{id}/payment-status", handler3)            // Parametrizada primero
+r.HandleFunc("/sale/date_range/payment-status", handler1)      // Literal después - NUNCA SE EJECUTA
 ```
 
 ---
 
-## 🔄 Consideraciones de Estado
+## 🔗 Documentación Adicional
 
-### Manejo de Tokens JWT
-- Almacenar el token en `localStorage` o `sessionStorage`
-- Incluir `session_id` en requests críticos
-- Renovar token antes de expiración
-- Manejar revocación de sesión automáticamente
-
-### Estados de Sesión
-- **ACTIVE**: Sesión válida y activa
-- **EXPIRED**: Sesión expirada por tiempo
-- **REVOKED**: Sesión revocada manualmente
-- **INACTIVE**: Sesión inactiva por tiempo
-
-### Sincronización de Estado
-- Verificar estado de sesión en navegación
-- Actualizar lista de sesiones activas en tiempo real
-- Notificar cambios de estado al usuario
+- **Documentación completa:** `/docs/SALE_PAYMENT_STATUS_ENDPOINT.md`
+- **Ejemplos de código:** Ver sección de ejemplos en documentación
+- **Componentes React:** Incluidos en documentación
 
 ---
 
-Esta guía proporciona toda la información necesaria para integrar correctamente las funcionalidades de ventas, pagos con cálculo de vuelto y gestión de sesiones con logout en el frontend.
+## 📅 Próximos Pasos
 
-## 🔄 **Compatibilidad Backend**
+### Sugerencias de Mejora Futura
 
-### **Estado de Integración**: ✅ COMPLETADO (Agosto 21, 2025)
-- **Cancelación de ventas**: Procedimiento `transactions.revert_sale` mejorado
-- **Preview de cancelación**: Función `transactions.preview_sale_reversion`
-- **Manejo de errores**: Códigos específicos implementados
-- **Endpoints disponibles**: 
-  - `GET /sale/{id}/preview-cancellation` ✅
-  - `PUT /sale/{id}` (cancelación mejorada) ✅
-  - `POST /sale/` (endpoint principal) ✅
-  - `POST /sale/with-units` (endpoint extendido) ✅
-
-### **Referencias de Implementación**
-- [Resumen de Integración Backend](../LATEST_BACKEND_INTEGRATION_SUMMARY.md)
-- [Script de Testing](../../test_latest_integration.sh)
-
-## 🆕 Características Nuevas en esta Versión
-
-### ✅ **Sistema de Reversión Mejorado**
-- **Preview de cancelación**: Analiza el impacto antes de cancelar
-- **Reversión automática**: Restaura stock, cancela reservas y reembolsa pagos
-- **Auditoría completa**: Metadata detallado de todas las operaciones
-- **Manejo inteligente**: Diferentes tipos de productos y situaciones
-
-### ✅ **API Unificada de Ventas**
-- **Una sola función**: `process_sale_with_reserve` maneja ventas con y sin reserva
-- **Optimización**: Elimina redundancia en el código
-- **Compatibilidad**: Mantiene la misma interfaz para el frontend
-
-### ✅ **Sistema de Pagos Robusto**
-- **Cálculo automático de vuelto**: No requiere cálculos manuales
-- **Validaciones completas**: Previene errores de pago
-- **Estadísticas avanzadas**: Reportes detallados de vueltos
-- **Estados de pago**: Manejo completo del ciclo de vida
-
-### ✅ **Gestión Avanzada de Sesiones**
-- **Logout mejorado**: Revoca sesiones en servidor
-- **Monitoreo de actividad**: Tracking completo de acciones
-- **Sesiones concurrentes**: Control por usuario y rol
-- **Seguridad mejorada**: Prevención de sesiones comprometidas
+1. **WebSocket para actualizaciones en tiempo real** cuando se procese un pago
+2. **Filtros adicionales** en búsqueda por fechas (por estado, por monto, etc.)
+3. **Exportación a Excel/PDF** de reportes de cobranza
+4. **Notificaciones automáticas** para ventas con saldo pendiente > X días
+5. **Dashboard de cobranza** con gráficos y estadísticas
 
 ---
 
-## 📚 Recursos Adicionales
-
-- Documentación completa de la base de datos
-- Ejemplos de implementación en diferentes frameworks
-- Guías de migración para sistemas existentes
-- Best practices de seguridad y rendimiento
+**✅ Estado:** Implementación completada y probada  
+**📅 Fecha de actualización:** 2 de Octubre, 2025  
+**🔧 Servidor:** http://localhost:5050  
+**🗄️ Base de datos:** business_management (PostgreSQL)

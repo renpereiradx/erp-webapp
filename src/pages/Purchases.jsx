@@ -75,6 +75,15 @@ const PurchasesPage = () => {
   const { products, searchProducts, searchProductByBarcodeFinancial, loading: productsLoading } = useProductStore();
   const { searchResults: suppliers, searchSuppliers, loading: suppliersLoading } = useSupplierStore();
 
+  // Función para formatear moneda en Guaraníes
+  const formatGuaranies = (amount) => {
+    if (amount === null || amount === undefined || isNaN(amount)) return '₲0';
+    return `₲${Number(amount).toLocaleString('es-PY', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    })}`;
+  };
+
   // Local states
   const [activeTab, setActiveTab] = useState('create');
   const [selectedSupplier, setSelectedSupplier] = useState(null);
@@ -717,7 +726,7 @@ const PurchasesPage = () => {
                   </span>
                   <div className="text-right">
                     <div className="text-sm text-muted-foreground">Total:</div>
-                    <div className="text-lg font-bold">${orderTotals.total.toFixed(2)}</div>
+                    <div className="text-lg font-bold">{formatGuaranies(orderTotals.total)}</div>
                   </div>
                 </CardTitle>
               </CardHeader>
@@ -768,14 +777,54 @@ const PurchasesPage = () => {
                             <select
                               value={product.unit}
                               onChange={(e) => handleUpdateProduct(product.product_id, 'unit', e.target.value)}
-                              className="border rounded px-2 py-1 text-sm"
+                              className="border rounded px-2 py-1 text-sm bg-white hover:bg-gray-50"
                             >
-                              <option value="unit">unit</option>
-                              <option value="kg">kg</option>
-                              <option value="g">g</option>
-                              <option value="l">l</option>
-                              <option value="ml">ml</option>
-                              <option value="box">box</option>
+                              <optgroup label="📦 Básicas">
+                                <option value="unit">unidad</option>
+                                <option value="pair">par</option>
+                                <option value="set">set</option>
+                              </optgroup>
+                              <optgroup label="⚖️ Peso">
+                                <option value="kg">kilogramo</option>
+                                <option value="g">gramo</option>
+                                <option value="lb">libra</option>
+                                <option value="oz">onza</option>
+                                <option value="ton">tonelada</option>
+                              </optgroup>
+                              <optgroup label="💧 Volumen">
+                                <option value="l">litro</option>
+                                <option value="ml">mililitro</option>
+                                <option value="gal">galón</option>
+                              </optgroup>
+                              <optgroup label="📏 Longitud/Área">
+                                <option value="meter">metro</option>
+                                <option value="cm">centímetro</option>
+                                <option value="sqm">metro cuadrado</option>
+                                <option value="roll">rollo</option>
+                              </optgroup>
+                              <optgroup label="📦 Empaque">
+                                <option value="box">caja</option>
+                                <option value="pack">paquete</option>
+                                <option value="bag">bolsa</option>
+                                <option value="case">estuche</option>
+                                <option value="dozen">docena</option>
+                                <option value="bundle">bulto</option>
+                              </optgroup>
+                              <optgroup label="🍽️ Supermercado">
+                                <option value="tray">bandeja</option>
+                                <option value="bottle">botella</option>
+                                <option value="can">lata</option>
+                                <option value="jar">frasco</option>
+                                <option value="carton">cartón</option>
+                                <option value="stick">barra</option>
+                                <option value="slice">tajada</option>
+                                <option value="portion">porción</option>
+                              </optgroup>
+                              <optgroup label="⏱️ Tiempo">
+                                <option value="hour">hora</option>
+                                <option value="day">día</option>
+                                <option value="month">mes</option>
+                              </optgroup>
                             </select>
                           </td>
                           <td className="p-3 text-center">
@@ -804,7 +853,7 @@ const PurchasesPage = () => {
                             </select>
                           </td>
                           <td className="p-3 text-center font-medium">
-                            ${(product.quantity * product.unit_price).toFixed(2)}
+                            {formatGuaranies(product.quantity * product.unit_price)}
                           </td>
                           <td className="p-3 text-center">
                             <Button
@@ -833,17 +882,17 @@ const PurchasesPage = () => {
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <div className="text-sm text-muted-foreground">Base (sin IVA)</div>
-                      <div className="font-medium text-muted-foreground">${orderTotals.subtotal.toFixed(2)}</div>
+                      <div className="font-medium text-muted-foreground">{formatGuaranies(orderTotals.subtotal)}</div>
                     </div>
                     <div>
                       <div className="text-sm text-muted-foreground">
                         IVA incluido ({orderTotals.taxRate.toFixed(1)}%)
                       </div>
-                      <div className="font-medium text-muted-foreground">${orderTotals.tax.toFixed(2)}</div>
+                      <div className="font-medium text-muted-foreground">{formatGuaranies(orderTotals.tax)}</div>
                     </div>
                     <div>
                       <div className="text-sm text-muted-foreground">Total a Pagar</div>
-                      <div className="text-lg font-bold">${orderTotals.total.toFixed(2)}</div>
+                      <div className="text-lg font-bold">{formatGuaranies(orderTotals.total)}</div>
                     </div>
                   </div>
                 </div>
@@ -868,17 +917,17 @@ const PurchasesPage = () => {
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Base (sin IVA)</div>
-                    <div className="font-medium text-muted-foreground">${orderTotals.subtotal.toFixed(2)}</div>
+                    <div className="font-medium text-muted-foreground">{formatGuaranies(orderTotals.subtotal)}</div>
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">
                       IVA incluido ({orderTotals.taxRate.toFixed(1)}%)
                     </div>
-                    <div className="font-medium text-muted-foreground">${orderTotals.tax.toFixed(2)}</div>
+                    <div className="font-medium text-muted-foreground">{formatGuaranies(orderTotals.tax)}</div>
                   </div>
                   <div>
                     <div className="text-sm text-muted-foreground">Total a Pagar</div>
-                    <div className="text-lg font-bold">${orderTotals.total.toFixed(2)}</div>
+                    <div className="text-lg font-bold">{formatGuaranies(orderTotals.total)}</div>
                   </div>
                 </div>
 
@@ -1182,7 +1231,7 @@ const PurchasesPage = () => {
                                 <div className="flex items-center gap-2">
                                   <DollarSign className="w-4 h-4" />
                                   <span className="font-bold text-green-600 text-base">
-                                    ${order?.total_amount?.toLocaleString() || '0'}
+                                    {formatGuaranies(order?.total_amount)}
                                   </span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -1258,17 +1307,17 @@ const PurchasesPage = () => {
                                         )}
                                       </td>
                                       <td className="p-2 text-center">{detail.quantity}</td>
-                                      <td className="p-2 text-center">${detail.unit_price?.toLocaleString()}</td>
+                                      <td className="p-2 text-center">{formatGuaranies(detail.unit_price)}</td>
                                       <td className="p-2 text-center">
                                         <Badge variant="outline" className="text-xs">
                                           {detail.unit || detail.metadata?.unit || 'unit'}
                                         </Badge>
                                       </td>
                                       <td className="p-2 text-center font-medium text-green-600">
-                                        ${detail.subtotal?.toLocaleString()}
+                                        {formatGuaranies(detail.subtotal)}
                                       </td>
                                       <td className="p-2 text-center font-medium text-blue-600">
-                                        {detail.sale_price ? `$${detail.sale_price.toLocaleString()}` : 'N/A'}
+                                        {detail.sale_price ? formatGuaranies(detail.sale_price) : 'N/A'}
                                         {detail.profit_pct && (
                                           <div className="text-xs text-muted-foreground">
                                             {detail.profit_pct}% margen
@@ -1359,7 +1408,7 @@ const PurchasesPage = () => {
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
                       <div className="text-2xl font-bold text-green-600">
-                        ${showAnalysis.analysis.order_info?.total_amount?.toFixed(2) || '0.00'}
+                        {formatGuaranies(showAnalysis.analysis.order_info?.total_amount)}
                       </div>
                       <div className="text-sm text-green-600">Total</div>
                     </div>
@@ -1436,7 +1485,7 @@ const PurchasesPage = () => {
                           <div>
                             <label className="text-sm font-medium text-muted-foreground">Total</label>
                             <div className="font-bold text-green-600">
-                              ${showOrderDetails.data.purchase.total_amount?.toLocaleString() || '0'}
+                              {formatGuaranies(showOrderDetails.data.purchase?.total_amount)}
                             </div>
                           </div>
                           <div>
@@ -1508,17 +1557,17 @@ const PurchasesPage = () => {
                                     <div className="text-xs text-muted-foreground">ID: {detail.product_id}</div>
                                   </td>
                                   <td className="p-3 text-center">{detail.quantity}</td>
-                                  <td className="p-3 text-center">${detail.unit_price?.toLocaleString()}</td>
+                                  <td className="p-3 text-center">{formatGuaranies(detail.unit_price)}</td>
                                   <td className="p-3 text-center">
                                     <Badge variant="outline" className="text-xs">
                                       {detail.unit || 'unit'}
                                     </Badge>
                                   </td>
                                   <td className="p-3 text-center font-medium text-green-600">
-                                    ${detail.subtotal?.toLocaleString()}
+                                    {formatGuaranies(detail.subtotal)}
                                   </td>
                                   <td className="p-3 text-center font-medium text-blue-600">
-                                    ${detail.sale_price?.toLocaleString() || 'N/A'}
+                                    {detail.sale_price ? formatGuaranies(detail.sale_price) : 'N/A'}
                                   </td>
                                   <td className="p-3 text-center">
                                     <div className="flex items-center justify-center gap-1">
@@ -1551,13 +1600,13 @@ const PurchasesPage = () => {
                             <div>
                               <div className="text-sm text-muted-foreground">Subtotal Productos</div>
                               <div className="font-bold text-green-600">
-                                ${showOrderDetails.data.details.reduce((sum, detail) => sum + (detail.subtotal || 0), 0).toLocaleString()}
+                                {formatGuaranies(showOrderDetails.data.details.reduce((sum, detail) => sum + (detail.subtotal || 0), 0))}
                               </div>
                             </div>
                             <div>
                               <div className="text-sm text-muted-foreground">Total Orden</div>
                               <div className="text-lg font-bold text-green-600">
-                                ${showOrderDetails.data.purchase?.total_amount?.toLocaleString() || '0'}
+                                {formatGuaranies(showOrderDetails.data.purchase?.total_amount)}
                               </div>
                             </div>
                           </div>

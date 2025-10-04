@@ -57,10 +57,19 @@ const authService = {
         // El endpoint real es /login, apiService ya lo conoce
         return await apiService.login(credentials.email, credentials.password);
       });
+
       telemetry.record('auth.login.success', {
         duration: Date.now() - startTime,
       });
-      return result;
+
+      // Normalizar la respuesta del backend para que tenga success: true
+      return {
+        success: true,
+        token: result.token,
+        user: result.user,
+        role_id: result.role_id,
+        ...result
+      };
     } catch (error) {
       // Si la API falla y demo está habilitado, mostrar mensaje informativo
       if (DEMO_CONFIG.enabled) {

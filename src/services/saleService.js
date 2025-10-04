@@ -27,14 +27,43 @@ const withRetry = async (fn, attempts = RETRY_ATTEMPTS) => {
 // Fallback demo service usando sistema modular
 const demoService = {
   getSales: async (params = {}) => {
-    return await MockDataService.getSales({
+    const response = await MockDataService.getSales({
       page: parseInt(params.page) || 1,
-      pageSize: parseInt(params.limit) || 10,
+      pageSize: parseInt(params.limit || params.page_size) || 10,
       client_id: params.clientId,
       status: params.status,
-      date_from: params.dateFrom,
-      date_to: params.dateTo
+      date_from: params.dateFrom || params.start_date,
+      date_to: params.dateTo || params.end_date
     });
+
+    // Transformar a la estructura esperada por SALE_GET_BY_RANGE_API.md
+    const transformedData = response.data.map(sale => ({
+      sale: {
+        sale_id: sale.id || sale.sale_id || `MOCK-${Math.random().toString(36).substr(2, 9)}`,
+        client_id: sale.client_id,
+        client_name: sale.client_name || 'Cliente Demo',
+        sale_date: sale.sale_date || new Date().toISOString(),
+        total_amount: sale.total_amount || 0,
+        status: sale.status || 'PAID',
+        user_id: 'demo-user',
+        user_name: 'Usuario Demo',
+        payment_method_id: 1,
+        payment_method: sale.payment_method || 'Efectivo',
+        currency_id: 1,
+        currency: 'Guaraní Paraguayo',
+        metadata: {
+          discounts: [],
+          price_changes: [],
+          reserve_details: null
+        }
+      },
+      details: sale.items || []
+    }));
+
+    return {
+      ...response,
+      data: transformedData
+    };
   },
   
   getSaleById: async (id) => {
@@ -236,47 +265,235 @@ export const saleService = {
   },
 
   // ============ CRUD OPERATIONS ============
-  // Obtener ventas por rango de fechas según SALE_API.md
-  getSales: async (params = {}) => {
+
+  // Obtener ventas por rango de fechas según SALE_GET_BY_RANGE_API.md
+  // ACTUALIZADO: Usa query parameters (estándar HTTP correcto)
+  getSalesByDateRange: async (params = {}) => {
     const startTime = performance.now();
     try {
-      // Construir query params para el endpoint de date_range
-      const queryParams = new URLSearchParams({
-        start_date: params.dateFrom || params.start_date || '',
-        end_date: params.dateTo || params.end_date || '',
-        page: params.page || 1,
-        page_size: params.limit || params.page_size || 20
-      }).toString();
-
       return await withRetry(async () => {
-        const response = await apiService.get(`/sales/orders/date-range?${queryParams}`);
-        telemetryService.recordMetric('sales_fetched_date_range', response.sales?.length || 0);
+        const api = new BusinessManagementAPI();
+
+        // Validar parámetros según documentación
+        const page = Math.max(1, parseInt(params.page || 1));
+        const pageSize = Math.min(100, Math.max(1, parseInt(params.page_size || params.limit || 50)));
+        const startDate = params.start_date || params.dateFrom;
+        const endDate = params.end_date || params.dateTo;
+
+        // Validar que las fechas requeridas estén presentes
+        if (!startDate || !endDate) {
+          throw new Error('start_date and end_date are required');
+        }
+
+        // Construir query parameters usando URLSearchParams (estándar HTTP)
+        const queryParams = new URLSearchParams({
+          start_date: startDate,
+          end_date: endDate,
+          page: page.toString(),
+          page_size: pageSize.toString()
+        });
+
+        // GET con query parameters (estándar HTTP correcto)
+        const response = await api.makeRequest(`/sale/date_range/?${queryParams.toString()}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        telemetryService.recordMetric('sales_fetched_by_date_range', response?.data?.length || 0);
+
+        // 🔧 NORMALIZAR: Backend cambió estructura de respuesta
+        // Antes: { id, client_name, status, ... }
+        // Ahora: { sale: { sale_id, client_name, status, ... }, details: [...] }
+        const normalizedData = response?.data?.map(item => {
+          // Si tiene estructura anidada, aplanarla
+          if (item.sale) {
+            return {
+              id: item.sale.sale_id,
+              client_id: item.sale.client_id,
+              client_name: item.sale.client_name,
+              sale_date: item.sale.sale_date,
+              total_amount: item.sale.total_amount,
+              status: item.sale.status,
+              user_id: item.sale.user_id,
+              user_name: item.sale.user_name,
+              payment_method_id: item.sale.payment_method_id,
+              payment_method: item.sale.payment_method,
+              created_at: item.sale.created_at,
+              updated_at: item.sale.updated_at,
+              remaining_balance: item.sale.remaining_balance,
+              total_paid: item.sale.total_paid,
+              // Preservar details si existen
+              details: item.details || []
+            };
+          }
+          // Si ya está en formato plano, retornar como está
+          return item;
+        }) || [];
+
+        // Respuesta con paginación según SALE_GET_BY_RANGE_API.md
         return {
           success: true,
-          data: response.sales || [],
-          pagination: {
-            total: response.total_count || 0,
-            totalPages: response.total_pages || 0,
-            currentPage: response.page || 1,
-            hasNext: response.page < response.total_pages,
-            hasPrevious: response.page > 1
+          data: normalizedData,
+          pagination: response?.pagination || {
+            page: page,
+            page_size: pageSize,
+            total_records: 0,
+            total_pages: 0,
+            has_next: false,
+            has_previous: false
           }
         };
       });
     } catch (error) {
-      console.warn('🔄 Sales API unavailable, using modular mock data...');
+      console.warn('🔄 Sales date range API unavailable, using modular mock data...');
       telemetryService.recordMetric('sales_mock_fallback', 1);
+
       const result = await demoService.getSales(params);
-      
+
       if (MOCK_CONFIG.development?.verbose) {
         console.log('✅ Sales loaded from modular mock system:', result.data.length);
       }
-      
+
       return result;
     } finally {
       const endTime = performance.now();
-      telemetryService.recordMetric('get_sales_duration', endTime - startTime);
+      telemetryService.recordMetric('get_sales_by_date_range_duration', endTime - startTime);
     }
+  },
+
+  // Obtener ventas del día actual
+  getTodaySales: async (params = {}) => {
+    const startTime = performance.now();
+    try {
+      // Usar fecha local en lugar de UTC para evitar problemas de zona horaria
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const todayDate = `${year}-${month}-${day}`;
+
+      return await saleService.getSalesByDateRange({
+        start_date: todayDate,
+        end_date: todayDate,
+        page: params.page || 1,
+        page_size: params.page_size || params.limit || 50
+      });
+    } catch (error) {
+      console.warn('API unavailable, filtering demo sales for today');
+      // También usar fecha local en el fallback
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const todayDate = `${year}-${month}-${day}`;
+      const todaySales = DEMO_CONFIG_SALES.filter(sale => sale.sale_date.startsWith(todayDate));
+      return {
+        success: true,
+        data: todaySales,
+        summary: {
+          count: todaySales.length,
+          total_revenue: todaySales.reduce((sum, sale) => sum + sale.total_amount, 0)
+        }
+      };
+    } finally {
+      const endTime = performance.now();
+      telemetryService.recordMetric('get_today_sales_duration', endTime - startTime);
+    }
+  },
+
+  // Obtener ventas por nombre de cliente
+  getSalesByClientName: async (clientName, params = {}) => {
+    const startTime = performance.now();
+    try {
+      return await withRetry(async () => {
+        const api = new BusinessManagementAPI();
+
+        // Validar parámetros
+        const page = Math.max(1, parseInt(params.page || 1));
+        const pageSize = Math.min(100, Math.max(1, parseInt(params.page_size || 50)));
+
+        if (!clientName || clientName.trim() === '') {
+          throw new Error('client name is required');
+        }
+
+        // Construir query parameters
+        const queryParams = new URLSearchParams({
+          page: page.toString(),
+          page_size: pageSize.toString()
+        });
+
+        // Codificar el nombre del cliente para caracteres especiales
+        const encodedName = encodeURIComponent(clientName.trim());
+
+        // GET con nombre en la ruta y paginación en query params
+        const response = await api.makeRequest(
+          `/sale/client_name/${encodedName}?${queryParams.toString()}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        telemetryService.recordMetric('sales_fetched_by_client_name', response?.data?.length || 0);
+
+        return {
+          success: true,
+          data: response?.data || [],
+          pagination: response?.pagination || {
+            page: page,
+            page_size: pageSize,
+            total_records: 0,
+            total_pages: 0,
+            has_next: false,
+            has_previous: false
+          }
+        };
+      });
+    } catch (error) {
+      console.warn(`🔄 Sales client name search API unavailable for "${clientName}", using modular mock data...`);
+      telemetryService.recordMetric('sales_client_name_mock_fallback', 1);
+
+      // Filtrar mock data por nombre de cliente (case-insensitive partial search)
+      const searchLower = clientName.toLowerCase();
+      const result = await demoService.getSales({
+        ...params,
+        clientName: searchLower
+      });
+
+      // Filtrar por nombre
+      const filteredData = result.data.filter(saleData => {
+        const sale = saleData.sale || saleData;
+        const name = sale.client_name || '';
+        return name.toLowerCase().includes(searchLower);
+      });
+
+      if (MOCK_CONFIG.development?.verbose) {
+        console.log(`✅ Sales filtered by client name "${clientName}":`, filteredData.length);
+      }
+
+      return {
+        ...result,
+        data: filteredData,
+        pagination: {
+          ...result.pagination,
+          total_records: filteredData.length,
+          total_pages: Math.ceil(filteredData.length / (params.page_size || 50))
+        }
+      };
+    } finally {
+      const endTime = performance.now();
+      telemetryService.recordMetric('get_sales_by_client_name_duration', endTime - startTime);
+    }
+  },
+
+  // DEPRECATED: Usar getSalesByDateRange en su lugar
+  getSales: async (params = {}) => {
+    console.warn('⚠️  getSales is deprecated. Use getSalesByDateRange instead.');
+    return await saleService.getSalesByDateRange(params);
   },
 
   // Obtener una venta por ID según SALE_API.md
@@ -387,7 +604,8 @@ export const saleService = {
         console.log(JSON.stringify(requestData, null, 2));
 
         const api = new BusinessManagementAPI();
-        const response = await api.makeRequest('/sales/orders', {
+        // ACTUALIZADO: Usar /sale/ según SALE_GET_BY_RANGE_API.md
+        const response = await api.makeRequest('/sale/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -434,86 +652,118 @@ export const saleService = {
     }
   },
 
-  // Preview de impacto de cancelación según SALE_API.md
-  previewCancellation: async (saleId) => {
+  // ============ REVERSIÓN DE VENTAS según REVERT_SALE_API.md ============
+
+  // Vista previa de reversión de venta
+  previewSaleCancellation: async (saleId) => {
     const startTime = performance.now();
     try {
       return await withRetry(async () => {
-        const response = await apiService.get(`/sales/orders/${saleId}/cancel-preview`);
-        
-        telemetryService.recordMetric('sale_cancellation_previewed', 1, {
-          sale_id: saleId,
-          can_be_reverted: response.sale_info?.can_be_reverted
+        const api = new BusinessManagementAPI();
+        // Ruta correcta según documentación actualizada
+        const response = await api.makeRequest(`/sale/${saleId}/preview-cancellation`, {
+          method: 'GET'
         });
-        
+
+        telemetryService.recordMetric('sale_reversion_previewed', 1, {
+          sale_id: saleId,
+          total_products: response.summary?.total_products || 0,
+          total_refund: response.summary?.total_refund || 0
+        });
+
         return response;
       });
     } catch (error) {
-      console.warn(`API unavailable, cannot preview cancellation for sale ${saleId}`);
-      
+      console.warn(`API unavailable, cannot preview sale cancellation for ${saleId}`);
+
       // Demo fallback
       return {
         success: true,
-        sale_info: {
-          sale_id: saleId,
-          current_status: 'completed',
-          total_amount: 100.00,
-          can_be_reverted: true
+        sale: {
+          id: saleId,
+          status: 'PAID',
+          total_amount: 1625000.00,
+          client_id: 'CLI001',
+          sale_date: new Date().toISOString()
         },
-        impact_analysis: {
-          total_items: 2,
-          physical_products: 1,
-          service_products: 1,
-          active_reserves: 0,
-          payments_to_cancel: 1,
-          total_to_refund: 100.00,
-          requires_stock_adjustment: true,
-          requires_reserve_cancellation: false,
-          requires_payment_refund: true
-        },
-        recommendations: {
-          action: 'refund_required',
-          backup_recommended: true,
-          notify_customer: true,
-          estimated_complexity: 'medium'
+        products: [
+          {
+            product_id: 'PROD001',
+            product_name: 'Producto Demo',
+            product_type: 'PHYSICAL',
+            quantity: 2.00,
+            unit_price: 812500.00,
+            will_restore_stock: true,
+            will_revert_reserve: false,
+            reserve_id: null
+          }
+        ],
+        reserves: [],
+        payments: [
+          {
+            payment_id: 1,
+            amount_received: 1625000.00,
+            payment_date: new Date().toISOString(),
+            status: 'COMPLETED'
+          }
+        ],
+        summary: {
+          total_products: 1,
+          stock_movements: 1,
+          reserves_to_handle: 0,
+          payments_to_refund: 1,
+          total_refund: 1625000.00
         }
       };
     } finally {
       const endTime = performance.now();
-      telemetryService.recordMetric('preview_cancellation_duration', endTime - startTime);
+      telemetryService.recordMetric('preview_sale_cancellation_duration', endTime - startTime);
     }
   },
 
-  // Cancelar una venta con reversión mejorada según SALE_API.md
-  cancelSale: async (id, reason = '') => {
+  // Ejecutar reversión de venta
+  revertSale: async (saleId, reason = 'Manual cancellation from API') => {
     const startTime = performance.now();
     try {
       return await withRetry(async () => {
-        const requestData = {
-          cancellation_reason: reason || 'Cancelación solicitada por usuario',
-          refund_method: 'CASH', // Default
-          cancel_invoice: true // Default
-        };
-
-        // Usar endpoint correcto según SALE_API.md
-        const response = await apiService.post(`/sales/orders/${id}/cancel`, requestData);
-        
-        telemetryService.recordMetric('sale_cancelled_enhanced', 1, { 
-          sale_id: id, 
-          reason,
-          payments_cancelled: response.reversal_details?.payments_cancelled || 0,
-          total_refunded: response.reversal_details?.total_refunded || 0
+        const api = new BusinessManagementAPI();
+        // Ruta correcta según documentación actualizada
+        const response = await api.makeRequest(`/sale/${saleId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ reason })
         });
-        
+
+        telemetryService.recordMetric('sale_reverted', 1, {
+          sale_id: saleId,
+          has_reason: !!reason
+        });
+
         return response;
       });
     } catch (error) {
-      console.warn(`API unavailable, cannot cancel sale ${id}`);
-      throw new Error('Sale cancellation unavailable in offline mode');
+      console.error(`Error reverting sale ${saleId}:`, error);
+
+      // Re-lanzar el error para que el frontend lo maneje
+      throw error;
     } finally {
       const endTime = performance.now();
-      telemetryService.recordMetric('cancel_sale_duration', endTime - startTime);
+      telemetryService.recordMetric('revert_sale_duration', endTime - startTime);
     }
+  },
+
+  // Preview de impacto de cancelación según SALE_API.md (DEPRECATED - usar previewSaleCancellation)
+  previewCancellation: async (saleId) => {
+    console.warn('⚠️  previewCancellation is deprecated. Use previewSaleCancellation instead.');
+    return await saleService.previewSaleCancellation(saleId);
+  },
+
+  // Cancelar una venta con reversión mejorada según SALE_API.md (DEPRECATED - usar revertSale)
+  cancelSale: async (id, reason = '') => {
+    console.warn('⚠️  cancelSale is deprecated. Use revertSale instead.');
+    return await saleService.revertSale(id, reason);
   },
 
   // Completar una venta
@@ -655,31 +905,6 @@ export const saleService = {
     }
   },
 
-  // Obtener ventas del día
-  getTodaySales: async () => {
-    const startTime = performance.now();
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      return await withRetry(async () => {
-        return await apiService.get(`/sales/today/${today}`);
-      });
-    } catch (error) {
-      console.warn('API unavailable, filtering demo sales for today');
-      const today = new Date().toISOString().split('T')[0];
-      const todaySales = DEMO_CONFIG_SALES.filter(sale => sale.sale_date.startsWith(today));
-      return {
-        success: true,
-        data: todaySales,
-        summary: {
-          count: todaySales.length,
-          total_revenue: todaySales.reduce((sum, sale) => sum + sale.total_amount, 0)
-        }
-      };
-    } finally {
-      const endTime = performance.now();
-      telemetryService.recordMetric('get_today_sales_duration', endTime - startTime);
-    }
-  },
 
   // Obtener productos más vendidos
   getTopSellingProducts: async (params = {}) => {
