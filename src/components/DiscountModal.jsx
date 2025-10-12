@@ -135,38 +135,42 @@ const DiscountModal = ({
     if (!item) return null;
 
     let newPrice = item.originalPrice;
-    let discountAmount = 0;
+    let changeAmount = 0;
     let percentage = 0;
+    let isPriceIncrease = false;
 
     if (discountType === 'percentage' && percentageValue) {
       const percent = parseFloat(percentageValue);
       if (!isNaN(percent)) {
-        discountAmount = (item.originalPrice * percent) / 100;
-        newPrice = item.originalPrice - discountAmount;
+        changeAmount = (item.originalPrice * percent) / 100;
+        newPrice = item.originalPrice - changeAmount;
         percentage = percent;
       }
     } else if (discountType === 'fixed' && fixedAmount) {
       const fixed = parseFloat(fixedAmount);
       if (!isNaN(fixed)) {
-        discountAmount = Math.min(fixed, item.originalPrice);
-        newPrice = item.originalPrice - discountAmount;
-        percentage = (discountAmount / item.originalPrice) * 100;
+        changeAmount = Math.min(fixed, item.originalPrice);
+        newPrice = item.originalPrice - changeAmount;
+        percentage = (changeAmount / item.originalPrice) * 100;
       }
     } else if (discountType === 'direct' && directPrice) {
       const direct = parseFloat(directPrice);
       if (!isNaN(direct)) {
         newPrice = direct;
-        discountAmount = item.originalPrice - direct;
-        percentage = discountAmount > 0 ? (discountAmount / item.originalPrice) * 100 : 0;
+        changeAmount = Math.abs(item.originalPrice - direct);
+        isPriceIncrease = direct > item.originalPrice;
+        percentage = changeAmount > 0 ? (changeAmount / item.originalPrice) * 100 : 0;
       }
     }
 
     return {
       originalPrice: item.originalPrice,
       newPrice: Math.max(0, newPrice),
-      discountAmount: Math.max(0, discountAmount),
-      percentage: Math.max(0, percentage),
-      savings: Math.max(0, discountAmount)
+      changeAmount: Math.abs(changeAmount),
+      percentage: Math.abs(percentage),
+      isPriceIncrease,
+      isDiscount: !isPriceIncrease && changeAmount > 0,
+      savings: isPriceIncrease ? 0 : Math.max(0, changeAmount)
     };
   };
 
@@ -375,25 +379,56 @@ const DiscountModal = ({
 
           {/* Vista previa */}
           {preview && (preview.newPrice !== preview.originalPrice) && (
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Vista previa:</h4>
+            <div className={`p-4 rounded-lg border-2 ${
+              preview.isPriceIncrease
+                ? 'bg-orange-50 border-orange-200'
+                : 'bg-green-50 border-green-200'
+            }`}>
+              <h4 className="font-medium mb-2 flex items-center gap-2">
+                {preview.isPriceIncrease ? (
+                  <>
+                    <span className="text-orange-600">🔺</span>
+                    Vista previa - AUMENTO DE PRECIO
+                  </>
+                ) : (
+                  <>
+                    <span className="text-green-600">🔻</span>
+                    Vista previa - DESCUENTO
+                  </>
+                )}
+              </h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span>Precio original:</span>
-                  <span>₲{preview.originalPrice.toLocaleString()}</span>
+                  <span className="font-medium">₲{preview.originalPrice.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-red-600">
-                  <span>Descuento:</span>
-                  <span>-₲{preview.discountAmount.toLocaleString()} ({preview.percentage.toFixed(1)}%)</span>
+                <div className={`flex justify-between font-medium ${
+                  preview.isPriceIncrease ? 'text-orange-600' : 'text-red-600'
+                }`}>
+                  <span>{preview.isPriceIncrease ? 'Aumento:' : 'Descuento:'}</span>
+                  <span>
+                    {preview.isPriceIncrease ? '+' : '-'}₲{preview.changeAmount.toLocaleString()}
+                    ({preview.percentage.toFixed(1)}%)
+                  </span>
                 </div>
-                <div className="flex justify-between font-bold text-green-600">
+                <div className={`flex justify-between font-bold text-lg ${
+                  preview.isPriceIncrease ? 'text-orange-700' : 'text-green-700'
+                }`}>
                   <span>Precio final:</span>
                   <span>₲{preview.newPrice.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-blue-600">
-                  <span>Ahorro:</span>
-                  <span>₲{preview.savings.toLocaleString()}</span>
-                </div>
+                {preview.isDiscount && preview.savings > 0 && (
+                  <div className="flex justify-between text-blue-600 pt-2 border-t border-blue-200">
+                    <span>💰 Cliente ahorra:</span>
+                    <span className="font-semibold">₲{preview.savings.toLocaleString()}</span>
+                  </div>
+                )}
+                {preview.isPriceIncrease && (
+                  <div className="flex justify-between text-orange-600 pt-2 border-t border-orange-200">
+                    <span>⚡ Cargo adicional:</span>
+                    <span className="font-semibold">₲{preview.changeAmount.toLocaleString()}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}

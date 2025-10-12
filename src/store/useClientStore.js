@@ -38,9 +38,6 @@ const useClientStore = create()(
         set({ loading: true, error: null });
         try {
           const result = await clientService.getAll({ page, pageSize: pageSizeToUse });
-          if (typeof window !== 'undefined') {
-            console.log('[useClientStore.fetchClients] raw result:', result);
-          }
           // Normalizamos la forma del payload porque el backend puede devolver:
           // 1) Un array directo
           // 2) Un objeto { data: [...], total, page, pageSize }
@@ -128,9 +125,6 @@ const useClientStore = create()(
 
           // Limpiar entradas inválidas (sin id y sin nombre) o respuestas de error/mensaje
           const cleaned = normalized.filter(c => c && (c.id || c.name) && !c.error && !c.message);
-          if (typeof window !== 'undefined') {
-            console.log('[useClientStore.fetchClients] dataArray:', dataArray, 'normalized:', normalized, 'cleaned:', cleaned);
-          }
 
           // Totales (si el backend los provee los usamos; si no, fallback al length de la página actual)
           const total = Number(
@@ -239,9 +233,6 @@ const useClientStore = create()(
           };
           const normalized = result.map(normalizeClientSearch).filter(Boolean);
           const cleaned = normalized.filter(c => c && (c.id || c.name) && !c.error && !c.message);
-          if (typeof window !== 'undefined') {
-            console.log('[useClientStore.searchClients] result:', result, 'normalized:', normalized, 'cleaned:', cleaned);
-          }
           set({ searchResults: cleaned, lastSearchTerm: trimmed, loading: false });
           return cleaned;
         } catch (e) {

@@ -37,38 +37,29 @@ export const autoLogin = async () => {
         });
         
         if (response.ok) {
-          console.log('🔑 Token existente válido, saltando auto-login');
           return existingToken;
         } else {
-          console.log('🔄 Token existente inválido, removiendo...');
           localStorage.removeItem('authToken');
         }
       } catch (error) {
-        console.log('🔄 Error verificando token existente, removiendo...');
         localStorage.removeItem('authToken');
       }
     }
 
-    console.log('🧪 Iniciando auto-login de desarrollo...');
-    
     // Intentar login primero
     try {
       const loginResponse = await apiClient.login(DEV_USER.email, DEV_USER.password);
-      console.log('✅ Auto-login exitoso con usuario existente');
       return loginResponse.token;
     } catch (loginError) {
       if (loginError.message.includes('not found') || loginError.message.includes('404')) {
         // Usuario no existe, crear cuenta
-        console.log('👤 Usuario de desarrollo no existe, creando cuenta...');
         const signupResponse = await apiClient.signup(DEV_USER.email, DEV_USER.password);
-        console.log('✅ Usuario de desarrollo creado y logueado automáticamente');
         return signupResponse.token;
       } else {
         throw loginError;
       }
     }
   } catch (error) {
-    console.warn('⚠️ Auto-login falló:', error.message);
     throw error;
   }
 };
@@ -85,7 +76,6 @@ export const isDevelopment = () => {
  */
 export const enableDevAuth = async () => {
   if (!isDevelopment()) {
-    console.log('🚫 Dev auth deshabilitado en producción');
     return false;
   }
 
@@ -93,7 +83,6 @@ export const enableDevAuth = async () => {
     await autoLogin();
     return true;
   } catch (error) {
-    console.error('❌ Error habilitando dev auth:', error);
     return false;
   }
 };
@@ -108,13 +97,9 @@ export const initDevAuth = async () => {
   }
 
   try {
-    console.log('🚀 Inicializando autenticación de desarrollo...');
     await autoLogin();
-    console.log('✅ Autenticación de desarrollo inicializada');
     return true;
   } catch (error) {
-    console.warn('⚠️ No se pudo inicializar autenticación de desarrollo:', error.message);
-    console.log('💡 Las funciones de API usarán datos mock como fallback');
     return false;
   }
 };
@@ -125,7 +110,6 @@ export const initDevAuth = async () => {
 export const cleanupDevAuth = () => {
   if (isDevelopment()) {
     localStorage.removeItem('authToken');
-    console.log('🧹 Token de desarrollo removido');
   }
 };
 

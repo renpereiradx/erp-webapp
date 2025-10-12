@@ -30,7 +30,6 @@ const applyThemeToDOM = (themeId) => {
   
   const themeConfig = getThemeById(themeId);
   if (!themeConfig) {
-    console.error(`Invalid theme: ${themeId}`);
     return false;
   }
   
@@ -55,7 +54,6 @@ const applyThemeToDOM = (themeId) => {
     
     return true;
   } catch (error) {
-    console.error('Failed to apply theme to DOM:', error);
     return false;
   }
 };
@@ -81,13 +79,11 @@ const getInitialTheme = () => {
     
     // Si el tema guardado no es válido, usar el por defecto
     if (savedTheme && !isValidTheme(savedTheme)) {
-      console.warn(`Invalid saved theme: ${savedTheme}. Using default: ${DEFAULT_THEME}`);
       localStorage.setItem(STORAGE_KEY, DEFAULT_THEME);
     }
     
     return DEFAULT_THEME;
   } catch (error) {
-    console.warn('Error loading theme from localStorage:', error);
     return DEFAULT_THEME;
   }
 };
@@ -104,7 +100,6 @@ const persistTheme = (themeId) => {
     localStorage.setItem(STORAGE_KEY, themeId);
     return true;
   } catch (error) {
-    console.error('Failed to persist theme:', error);
     return false;
   }
 };
@@ -121,7 +116,6 @@ export const ThemeProvider = ({ children }) => {
   const setTheme = useCallback((newThemeId) => {
     // Validar que el tema existe
     if (!isValidTheme(newThemeId)) {
-      console.error(`Invalid theme ID: ${newThemeId}`);
       return false;
     }
 
@@ -138,10 +132,7 @@ export const ThemeProvider = ({ children }) => {
       }
 
       // Persistir en localStorage
-      const persisted = persistTheme(newThemeId);
-      if (!persisted) {
-        console.warn('Theme applied but not persisted');
-      }
+      persistTheme(newThemeId);
 
       // Actualizar estado
       setThemeState(newThemeId);
@@ -150,7 +141,6 @@ export const ThemeProvider = ({ children }) => {
 
       return true;
     } catch (error) {
-      console.error('Failed to set theme:', error);
       return false;
     }
   }, [theme]);

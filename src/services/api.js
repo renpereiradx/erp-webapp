@@ -4,20 +4,22 @@
  */
 
 import BusinessManagementAPI from './BusinessManagementAPI';
+import API_CONFIG from '@/config/api.config';
 
-// Configuración del cliente API
-const apiConfig = {
-  baseUrl: (import.meta.env.VITE_API_URL || 'http://localhost:5050').replace(/\/+$/, ''),
-  timeout: parseInt(import.meta.env.VITE_API_TIMEOUT) || 10000,
-  defaultHeaders: {
-    'Content-Type': 'application/json'
-  }
-};
-
-// Instancia única del cliente API
-const businessAPI = new BusinessManagementAPI(apiConfig);
+// Instancia única del cliente API usando configuración centralizada
+const businessAPI = new BusinessManagementAPI({
+  baseUrl: API_CONFIG.baseUrl,
+  timeout: API_CONFIG.timeout,
+  defaultHeaders: API_CONFIG.defaultHeaders
+});
 
 // Business Management API client initialized
+if (API_CONFIG.isDevelopment()) {
+  console.log('✅ API Service initialized with config:', {
+    baseUrl: API_CONFIG.baseUrl,
+    environment: API_CONFIG.environment
+  });
+}
 
 export const apiClient = businessAPI;
 

@@ -27,7 +27,13 @@ Thumbs.db
 *.sln
 
 # Env files
-.env*
+.env.local
+.env*.local
+
+# Keep example and environment-specific configs
+!.env.example
+!.env.development
+!.env.production
 
 # Development and backup files
 *_backup.*

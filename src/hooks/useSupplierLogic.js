@@ -60,7 +60,6 @@ export const useSupplierLogic = () => {
       }
     } catch (err) {
       setError('Error al cargar proveedores');
-      console.error('Error loading suppliers:', err);
     } finally {
       setLoading(false);
     }
@@ -82,7 +81,6 @@ export const useSupplierLogic = () => {
       }
     } catch (err) {
       setError('Error al cargar proveedores activos');
-      console.error('Error loading active suppliers:', err);
     } finally {
       setLoading(false);
     }
@@ -109,7 +107,6 @@ export const useSupplierLogic = () => {
       }
     } catch (err) {
       setError('Error en la búsqueda');
-      console.error('Error searching suppliers:', err);
     } finally {
       setLoading(false);
     }
@@ -148,7 +145,6 @@ export const useSupplierLogic = () => {
       }
     } catch (err) {
       setError('Error al cargar el proveedor');
-      console.error('Error loading supplier by ID:', err);
       return null;
     } finally {
       setLoading(false);

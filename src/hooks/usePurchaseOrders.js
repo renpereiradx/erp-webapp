@@ -60,7 +60,6 @@ export const usePurchaseOrders = () => {
       }
     } catch (err) {
       setError('Error al cargar órdenes de compra');
-      console.error('Error loading purchase orders:', err);
     } finally {
       setLoading(false);
     }

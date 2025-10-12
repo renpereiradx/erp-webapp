@@ -78,7 +78,6 @@ export const useReservationLogic = () => {
 
       setAvailableSlots(availableSlots);
     } catch (error) {
-      console.error('Error loading available slots:', error);
       setAvailableSlots([]);
     } finally {
       setLoading(false);

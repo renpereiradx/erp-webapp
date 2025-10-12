@@ -92,38 +92,34 @@ const BookingSales = () => {
       const reservationData = prepareReservationData();
       await reservationService.createReservation(reservationData);
       
-  showNotification(SYSTEM_MESSAGES.SUCCESS.RESERVATION_CREATED);
-  announceSuccess('Reserva');
-      resetReservation();
-    } catch (error) {
-      console.error('Error creating reservation:', error);
-      showNotification(SYSTEM_MESSAGES.ERROR.NETWORK_ERROR, 'error');
-  announceError('Reserva', 'Error creando la reserva');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Manejar envío de venta
-  const handleSaleSubmit = async () => {
-    if (!salesValidations.canProceed) {
-      showNotification(SYSTEM_MESSAGES.ERROR.VALIDATION_ERROR, 'error');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const saleData = prepareSaleData();
-      await saleService.createSale(saleData);
-      
-  showNotification(SYSTEM_MESSAGES.SUCCESS.SALE_COMPLETED);
-  announceSuccess('Venta');
-      resetSale();
-    } catch (error) {
-      console.error('Error creating sale:', error);
-      showNotification(SYSTEM_MESSAGES.ERROR.NETWORK_ERROR, 'error');
-  announceError('Venta', 'Error completando la venta');
-    } finally {
+        showNotification(SYSTEM_MESSAGES.SUCCESS.RESERVATION_CREATED);
+    announceSuccess('Reserva');
+        resetReservation();
+      } catch (error) {
+        showNotification(SYSTEM_MESSAGES.ERROR.NETWORK_ERROR, 'error');
+    announceError('Reserva', 'Error creando la reserva');      } finally {
+        setLoading(false);
+      }
+    };
+  
+    // Manejar envío de venta
+    const handleSaleSubmit = async () => {
+      if (!salesValidations.canProceed) {
+        showNotification(SYSTEM_MESSAGES.ERROR.VALIDATION_ERROR, 'error');
+        return;
+      }
+  
+      setLoading(true);
+      try {
+        const saleData = prepareSaleData();
+        await saleService.createSale(saleData);
+        
+    showNotification(SYSTEM_MESSAGES.SUCCESS.SALE_COMPLETED);
+    announceSuccess('Venta');
+        resetSale();
+      } catch (error) {
+        showNotification(SYSTEM_MESSAGES.ERROR.NETWORK_ERROR, 'error');
+    announceError('Venta', 'Error completando la venta');    } finally {
       setLoading(false);
     }
   };

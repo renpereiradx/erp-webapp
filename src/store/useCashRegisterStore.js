@@ -4,9 +4,10 @@
  * Funcionalidad: apertura/cierre de cajas, movimientos, integración con pagos
  */
 
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { cashRegisterService } from '@/services/cashRegisterService';
+import { create } from 'zustand'
+import { devtools } from 'zustand/middleware'
+import { cashRegisterService } from '@/services/cashRegisterService'
+import { calculateCashRegisterBalance } from '@/utils/cashRegisterUtils'
 
 const initialState = {
   // Estado de caja registradora activa
@@ -46,8 +47,8 @@ const initialState = {
   // Estado de verificación
   integrationStatus: null,
   isVerifyingIntegration: false,
-  verificationError: null
-};
+  verificationError: null,
+}
 
 export const useCashRegisterStore = create()(
   devtools(
@@ -58,60 +59,110 @@ export const useCashRegisterStore = create()(
 
       /**
        * Obtiene la caja registradora activa
+       * 🔧 WORKAROUND: Calcula current_balance si el backend no lo envía
        */
       getActiveCashRegister: async () => {
-        set({ isActiveCashRegisterLoading: true, activeCashRegisterError: null });
-        
+        set({
+          isActiveCashRegisterLoading: true,
+          activeCashRegisterError: null,
+        })
+
         try {
-          const activeCashRegister = await cashRegisterService.getActiveCashRegister();
-          set({ 
-            activeCashRegister, 
-            isActiveCashRegisterLoading: false 
-          });
-          return activeCashRegister;
+          const activeCashRegister =
+            await cashRegisterService.getActiveCashRegister()
+
+          // 🔧 WORKAROUND: Si no hay current_balance o es 0, calcularlo desde movimientos
+          if (
+            activeCashRegister &&
+            (!activeCashRegister.current_balance ||
+              activeCashRegister.current_balance === 0)
+          ) {
+            try {
+              console.log(
+                '⚠️ Backend no envía current_balance, calculando desde movimientos...'
+              )
+              const movements = await cashRegisterService.getMovements(
+                activeCashRegister.id
+              )
+              const cashRegisterWithBalance = calculateCashRegisterBalance(
+                activeCashRegister,
+                movements
+              )
+
+              set({
+                activeCashRegister: cashRegisterWithBalance,
+                movements, // También guardar movimientos
+                isActiveCashRegisterLoading: false,
+              })
+
+              return cashRegisterWithBalance
+            } catch (movementsError) {
+              console.warn(
+                'No se pudieron cargar movimientos para calcular balance:',
+                movementsError
+              )
+              // Si falla, usar la caja sin balance calculado
+              set({
+                activeCashRegister,
+                isActiveCashRegisterLoading: false,
+              })
+              return activeCashRegister
+            }
+          }
+
+          set({
+            activeCashRegister,
+            isActiveCashRegisterLoading: false,
+          })
+          return activeCashRegister
         } catch (error) {
-          console.warn('Error loading active cash register:', error);
-          set({ 
-            activeCashRegisterError: error, 
-            isActiveCashRegisterLoading: false 
-          });
-          throw error;
+          console.warn('Error loading active cash register:', error)
+          set({
+            activeCashRegisterError: error,
+            isActiveCashRegisterLoading: false,
+          })
+          throw error
         }
       },
 
       /**
        * Abre una nueva caja registradora
        */
-      openCashRegister: async (cashRegisterData) => {
+      openCashRegister: async cashRegisterData => {
         // Validar datos antes de enviar
-        const validationErrors = cashRegisterService.validateOpenCashRegisterData(cashRegisterData);
+        const validationErrors =
+          cashRegisterService.validateOpenCashRegisterData(cashRegisterData)
         if (validationErrors.length > 0) {
-          const error = new Error(`Datos inválidos: ${validationErrors.join(', ')}`);
-          set({ openCashRegisterError: error });
-          throw error;
+          const error = new Error(
+            `Datos inválidos: ${validationErrors.join(', ')}`
+          )
+          set({ openCashRegisterError: error })
+          throw error
         }
 
-        set({ isOpeningCashRegister: true, openCashRegisterError: null });
-        
+        set({ isOpeningCashRegister: true, openCashRegisterError: null })
+
         try {
-          const newCashRegister = await cashRegisterService.openCashRegister(cashRegisterData);
-          
+          const newCashRegister = await cashRegisterService.openCashRegister(
+            cashRegisterData
+          )
+
           // Actualizar estado: nueva caja activa y agregar a lista
-          const { cashRegisters } = get();
-          set({ 
+          const { cashRegisters } = get()
+          set({
             activeCashRegister: newCashRegister,
             cashRegisters: [newCashRegister, ...cashRegisters],
-            isOpeningCashRegister: false 
-          });
-          
-          return newCashRegister;
+            isOpeningCashRegister: false,
+          })
+
+          return newCashRegister
         } catch (error) {
-          console.warn('Error opening cash register:', error);
-          set({ 
-            openCashRegisterError: error, 
-            isOpeningCashRegister: false 
-          });
-          throw error;
+          console.warn('Error opening cash register:', error)
+          set({
+            openCashRegisterError: error,
+            isOpeningCashRegister: false,
+          })
+          throw error
         }
       },
 
@@ -119,31 +170,35 @@ export const useCashRegisterStore = create()(
        * Cierra la caja registradora activa
        */
       closeCashRegister: async (cashRegisterId, closeData = {}) => {
-        set({ isClosingCashRegister: true, closeCashRegisterError: null });
-        
+        set({ isClosingCashRegister: true, closeCashRegisterError: null })
+
         try {
-          const closedCashRegister = await cashRegisterService.closeCashRegister(cashRegisterId, closeData);
-          
+          const closedCashRegister =
+            await cashRegisterService.closeCashRegister(
+              cashRegisterId,
+              closeData
+            )
+
           // Actualizar estado: quitar caja activa y actualizar en lista
-          const { cashRegisters } = get();
-          const updatedCashRegisters = cashRegisters.map(cr => 
+          const { cashRegisters } = get()
+          const updatedCashRegisters = cashRegisters.map(cr =>
             cr.id === cashRegisterId ? closedCashRegister : cr
-          );
-          
-          set({ 
+          )
+
+          set({
             activeCashRegister: null, // Ya no hay caja activa
             cashRegisters: updatedCashRegisters,
-            isClosingCashRegister: false 
-          });
-          
-          return closedCashRegister;
+            isClosingCashRegister: false,
+          })
+
+          return closedCashRegister
         } catch (error) {
-          console.warn('Error closing cash register:', error);
-          set({ 
-            closeCashRegisterError: error, 
-            isClosingCashRegister: false 
-          });
-          throw error;
+          console.warn('Error closing cash register:', error)
+          set({
+            closeCashRegisterError: error,
+            isClosingCashRegister: false,
+          })
+          throw error
         }
       },
 
@@ -153,22 +208,24 @@ export const useCashRegisterStore = create()(
        * Obtiene lista de cajas registradoras con filtros
        */
       getCashRegisters: async (filters = {}) => {
-        set({ isCashRegistersLoading: true, cashRegistersError: null });
-        
+        set({ isCashRegistersLoading: true, cashRegistersError: null })
+
         try {
-          const cashRegisters = await cashRegisterService.getCashRegisters(filters);
-          set({ 
-            cashRegisters, 
-            isCashRegistersLoading: false 
-          });
-          return cashRegisters;
+          const cashRegisters = await cashRegisterService.getCashRegisters(
+            filters
+          )
+          set({
+            cashRegisters,
+            isCashRegistersLoading: false,
+          })
+          return cashRegisters
         } catch (error) {
-          console.warn('Error loading cash registers:', error);
-          set({ 
-            cashRegistersError: error, 
-            isCashRegistersLoading: false 
-          });
-          throw error;
+          console.warn('Error loading cash registers:', error)
+          set({
+            cashRegistersError: error,
+            isCashRegistersLoading: false,
+          })
+          throw error
         }
       },
 
@@ -179,38 +236,44 @@ export const useCashRegisterStore = create()(
        */
       registerMovement: async (cashRegisterId, movementData) => {
         // Validar datos de movimiento
-        const validationErrors = cashRegisterService.validateMovementData(movementData);
+        const validationErrors =
+          cashRegisterService.validateMovementData(movementData)
         if (validationErrors.length > 0) {
-          const error = new Error(`Datos inválidos: ${validationErrors.join(', ')}`);
-          set({ registerMovementError: error });
-          throw error;
+          const error = new Error(
+            `Datos inválidos: ${validationErrors.join(', ')}`
+          )
+          set({ registerMovementError: error })
+          throw error
         }
 
-        set({ isRegisteringMovement: true, registerMovementError: null });
-        
+        set({ isRegisteringMovement: true, registerMovementError: null })
+
         try {
-          const movement = await cashRegisterService.registerMovement(cashRegisterId, movementData);
-          
+          const movement = await cashRegisterService.registerMovement(
+            cashRegisterId,
+            movementData
+          )
+
           // Actualizar lista de movimientos
-          const { movements } = get();
-          set({ 
+          const { movements } = get()
+          set({
             movements: [movement, ...movements],
-            isRegisteringMovement: false 
-          });
-          
+            isRegisteringMovement: false,
+          })
+
           // Refrescar caja activa para actualizar balance
           if (get().activeCashRegister?.id === cashRegisterId) {
-            get().getActiveCashRegister();
+            get().getActiveCashRegister()
           }
-          
-          return movement;
+
+          return movement
         } catch (error) {
-          console.warn('Error registering movement:', error);
-          set({ 
-            registerMovementError: error, 
-            isRegisteringMovement: false 
-          });
-          throw error;
+          console.warn('Error registering movement:', error)
+          set({
+            registerMovementError: error,
+            isRegisteringMovement: false,
+          })
+          throw error
         }
       },
 
@@ -218,45 +281,50 @@ export const useCashRegisterStore = create()(
        * Obtiene movimientos de una caja
        */
       getMovements: async (cashRegisterId, filters = {}) => {
-        set({ isMovementsLoading: true, movementsError: null });
-        
+        set({ isMovementsLoading: true, movementsError: null })
+
         try {
-          const movements = await cashRegisterService.getMovements(cashRegisterId, filters);
-          set({ 
-            movements, 
-            isMovementsLoading: false 
-          });
-          return movements;
+          const movements = await cashRegisterService.getMovements(
+            cashRegisterId,
+            filters
+          )
+          set({
+            movements,
+            isMovementsLoading: false,
+          })
+          return movements
         } catch (error) {
-          console.warn('Error loading movements:', error);
-          set({ 
-            movementsError: error, 
-            isMovementsLoading: false 
-          });
-          throw error;
+          console.warn('Error loading movements:', error)
+          set({
+            movementsError: error,
+            isMovementsLoading: false,
+          })
+          throw error
         }
       },
 
       /**
        * Obtiene resumen de caja
        */
-      getCashRegisterSummary: async (cashRegisterId) => {
-        set({ isSummaryLoading: true, summaryError: null });
-        
+      getCashRegisterSummary: async cashRegisterId => {
+        set({ isSummaryLoading: true, summaryError: null })
+
         try {
-          const summary = await cashRegisterService.getCashRegisterSummary(cashRegisterId);
-          set({ 
-            cashRegisterSummary: summary, 
-            isSummaryLoading: false 
-          });
-          return summary;
+          const summary = await cashRegisterService.getCashRegisterSummary(
+            cashRegisterId
+          )
+          set({
+            cashRegisterSummary: summary,
+            isSummaryLoading: false,
+          })
+          return summary
         } catch (error) {
-          console.warn('Error loading cash register summary:', error);
-          set({ 
-            summaryError: error, 
-            isSummaryLoading: false 
-          });
-          throw error;
+          console.warn('Error loading cash register summary:', error)
+          set({
+            summaryError: error,
+            isSummaryLoading: false,
+          })
+          throw error
         }
       },
 
@@ -265,52 +333,64 @@ export const useCashRegisterStore = create()(
       /**
        * Procesa pago de venta con integración automática de caja
        */
-      processSalePaymentWithCashRegister: async (paymentData) => {
-        set({ isProcessingSalePayment: true, salePaymentError: null });
-        
+      processSalePaymentWithCashRegister: async paymentData => {
+        set({ isProcessingSalePayment: true, salePaymentError: null })
+
         try {
-          const result = await cashRegisterService.processSalePaymentWithCashRegister(paymentData);
-          
+          const result =
+            await cashRegisterService.processSalePaymentWithCashRegister(
+              paymentData
+            )
+
           // Refrescar caja activa para actualizar balance
           if (get().activeCashRegister) {
-            get().getActiveCashRegister();
+            get().getActiveCashRegister()
           }
-          
-          set({ isProcessingSalePayment: false });
-          return result;
+
+          set({ isProcessingSalePayment: false })
+          return result
         } catch (error) {
-          console.warn('Error processing sale payment with cash register:', error);
-          set({ 
-            salePaymentError: error, 
-            isProcessingSalePayment: false 
-          });
-          throw error;
+          console.warn(
+            'Error processing sale payment with cash register:',
+            error
+          )
+          set({
+            salePaymentError: error,
+            isProcessingSalePayment: false,
+          })
+          throw error
         }
       },
 
       /**
        * Procesa pago de compra con integración automática de caja
        */
-      processPurchasePaymentWithCashRegister: async (paymentData) => {
-        set({ isProcessingPurchasePayment: true, purchasePaymentError: null });
-        
+      processPurchasePaymentWithCashRegister: async paymentData => {
+        set({ isProcessingPurchasePayment: true, purchasePaymentError: null })
+
         try {
-          const result = await cashRegisterService.processPurchasePaymentWithCashRegister(paymentData);
-          
+          const result =
+            await cashRegisterService.processPurchasePaymentWithCashRegister(
+              paymentData
+            )
+
           // Refrescar caja activa para actualizar balance
           if (get().activeCashRegister) {
-            get().getActiveCashRegister();
+            get().getActiveCashRegister()
           }
-          
-          set({ isProcessingPurchasePayment: false });
-          return result;
+
+          set({ isProcessingPurchasePayment: false })
+          return result
         } catch (error) {
-          console.warn('Error processing purchase payment with cash register:', error);
-          set({ 
-            purchasePaymentError: error, 
-            isProcessingPurchasePayment: false 
-          });
-          throw error;
+          console.warn(
+            'Error processing purchase payment with cash register:',
+            error
+          )
+          set({
+            purchasePaymentError: error,
+            isProcessingPurchasePayment: false,
+          })
+          throw error
         }
       },
 
@@ -320,22 +400,23 @@ export const useCashRegisterStore = create()(
        * Verifica la integridad de la integración
        */
       verifyIntegration: async () => {
-        set({ isVerifyingIntegration: true, verificationError: null });
-        
+        set({ isVerifyingIntegration: true, verificationError: null })
+
         try {
-          const integrationStatus = await cashRegisterService.verifyIntegration();
-          set({ 
-            integrationStatus, 
-            isVerifyingIntegration: false 
-          });
-          return integrationStatus;
+          const integrationStatus =
+            await cashRegisterService.verifyIntegration()
+          set({
+            integrationStatus,
+            isVerifyingIntegration: false,
+          })
+          return integrationStatus
         } catch (error) {
-          console.warn('Error verifying integration:', error);
-          set({ 
-            verificationError: error, 
-            isVerifyingIntegration: false 
-          });
-          throw error;
+          console.warn('Error verifying integration:', error)
+          set({
+            verificationError: error,
+            isVerifyingIntegration: false,
+          })
+          throw error
         }
       },
 
@@ -344,8 +425,8 @@ export const useCashRegisterStore = create()(
       /**
        * Limpia errores específicos
        */
-      clearError: (errorType) => {
-        set({ [`${errorType}Error`]: null });
+      clearError: errorType => {
+        set({ [`${errorType}Error`]: null })
       },
 
       /**
@@ -362,20 +443,20 @@ export const useCashRegisterStore = create()(
           registerMovementError: null,
           salePaymentError: null,
           purchasePaymentError: null,
-          verificationError: null
-        });
+          verificationError: null,
+        })
       },
 
       /**
        * Reset completo del store
        */
       reset: () => {
-        set(initialState);
-      }
+        set(initialState)
+      },
     }),
     {
       name: 'cash-register-store',
-      version: 1
+      version: 1,
     }
   )
-);
+)

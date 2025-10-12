@@ -175,12 +175,39 @@ const SaleItemsManager = ({
                     <div className="flex items-center justify-between">
                       {/* Información del producto */}
                       <div className="flex-1">
-                        <h4 className="font-medium text-sm">
+                        <h4 className="font-medium text-sm flex items-center gap-2">
                           {item.name}
+                          {/* Indicador de modificación de precio */}
+                          {item.hasPriceIncrease && (
+                            <span className="px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold">
+                              🔺 +{item.priceIncreasePercentage?.toFixed(0)}%
+                            </span>
+                          )}
+                          {item.hasDiscount && (
+                            <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold">
+                              🔻 -{item.discountPercentage?.toFixed(0)}%
+                            </span>
+                          )}
                         </h4>
                         <div className="flex items-center space-x-3 mt-1">
-                          <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs font-medium">
+                          {/* Mostrar precio original tachado si fue modificado */}
+                          {item.isPriceModified && (
+                            <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-500 text-xs font-medium line-through">
+                              ${item.originalPrice?.toFixed(2)}
+                            </span>
+                          )}
+                          <span className={cn(
+                            "px-2 py-0.5 rounded text-xs font-medium",
+                            item.hasPriceIncrease ? "bg-orange-100 text-orange-700" :
+                            item.hasDiscount ? "bg-green-100 text-green-700" :
+                            "bg-primary/10 text-primary"
+                          )}>
                             ${item.price?.toFixed(2) || '0.00'}
+                            {item.isPriceModified && (
+                              <span className="ml-1 text-[10px]">
+                                {item.hasPriceIncrease ? '↗' : '↘'}
+                              </span>
+                            )}
                           </span>
                           <span className="text-xs text-gray-600 font-medium">
                             × {item.quantity}
@@ -191,6 +218,12 @@ const SaleItemsManager = ({
                             </span>
                           )}
                         </div>
+                        {/* Mostrar razón del cambio de precio si existe */}
+                        {item.priceChangeReason && (
+                          <div className="mt-1.5 text-xs text-muted-foreground italic">
+                            💬 {item.priceChangeJustification || item.priceChangeReason}
+                          </div>
+                        )}
                       </div>
 
                       {/* Controles de cantidad */}

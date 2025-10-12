@@ -1,0 +1,85 @@
+version: "3.8"
+
+services:
+  # =========================================
+  # FRONTEND - React + Nginx
+  # =========================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    container_name: erp-frontend
+    ports:
+      - "8080:80"
+      - "8443:443" # Si usas HTTPS
+    environment:
+      # Las variables de entorno se toman de .env.production
+      # durante el build, no en runtime
+      - NODE_ENV=production
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - erp-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      # Opcional: logs de Nginx
+      - ./logs/nginx:/var/log/nginx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # =========================================
+  # BACKEND - API (Go)
+  # =========================================
+  backend:
+    image: erp-backend:latest
+    container_name: erp-backend
+    ports:
+      - "5050:5050"
+    environment:
+      - PORT=:5050
+      - JWT_SECRET=pwdUltraSecreta
+      - DATABASE_URL=host=host.docker.internal port=5432 user=dev_user password=aDmin404942 dbname=erp_db sslmode=disable
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_USER=dev_user
+      - DB_PASSWORD=aDmin404942
+      - DB_NAME=erp_db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - erp-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:5050/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  erp-network:
+    driver: bridge
+
+# =========================================
+# VOLÚMENES (opcional)
+# =========================================
+volumes:
+  nginx-logs:
+    driver: local

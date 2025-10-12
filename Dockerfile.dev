@@ -1,0 +1,21 @@
+# =====================================
+# Dockerfile para Desarrollo Local
+# =====================================
+# Este Dockerfile es para pruebas locales del build de producción
+# NO usar en producción, usar el Dockerfile principal
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY pnpm-lock.yaml* ./
+
+RUN npm install -g pnpm || true
+RUN pnpm install --frozen-lockfile || npm ci
+
+COPY . .
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

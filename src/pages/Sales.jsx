@@ -37,13 +37,8 @@ import useClientStore from '@/store/useClientStore';
 import useReservationStore from '@/store/useReservationStore'; // NUEVO: store de reservas
 import saleService from '@/services/saleService';
 import { validateDiscount, validateReserve } from '@/utils/discountValidation'; // NUEVO: validaciones
-
-// Métodos de pago disponibles
-const PAYMENT_METHODS = [
-  { value: 'cash', label: 'Efectivo', icon: DollarSign },
-  { value: 'card', label: 'Tarjeta', icon: CreditCard },
-  { value: 'transfer', label: 'Transferencia', icon: CreditCard }
-];
+import { PaymentMethodService } from '@/services/paymentMethodService';
+import { CurrencyService } from '@/services/currencyService';
 
 const Sales = () => {
   const { t } = useI18n();
@@ -71,6 +66,11 @@ const Sales = () => {
 
   // Ref para refrescar el historial de ventas
   const salesHistoryRef = useRef(null);
+
+  // Estados para datos dinámicos
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
+  const [loadingPaymentData, setLoadingPaymentData] = useState(true);
 
   // Store de ventas con funcionalidad de pagos
   const {
@@ -244,6 +244,74 @@ const Sales = () => {
   useEffect(() => {
     fetchClients(1000); // Cargar hasta 1000 clientes para búsqueda local
   }, [fetchClients]);
+
+  // Cargar métodos de pago y monedas dinámicamente
+  useEffect(() => {
+    const loadPaymentData = async () => {
+      setLoadingPaymentData(true);
+      try {
+        // Cargar métodos de pago y monedas en paralelo
+        const [methodsData, currenciesData] = await Promise.all([
+          PaymentMethodService.getAll().catch(err => {
+            console.warn('Error loading payment methods, using defaults:', err);
+            return [
+              { id: 1, method_code: 'CASH', description: 'Efectivo' },
+              { id: 2, method_code: 'CARD', description: 'Tarjeta' },
+              { id: 3, method_code: 'TRANSFER', description: 'Transferencia' }
+            ];
+          }),
+          CurrencyService.getAll().catch(err => {
+            console.warn('Error loading currencies, using defaults:', err);
+            return [
+              { id: 1, currency_code: 'PYG', name: 'Guaraní' },
+              { id: 2, currency_code: 'USD', name: 'Dólar' },
+              { id: 3, currency_code: 'EUR', name: 'Euro' }
+            ];
+          })
+        ]);
+
+        // Mapear métodos de pago al formato esperado por el frontend
+        const mappedMethods = methodsData.map(method => {
+          const iconMap = {
+            'CASH': DollarSign,
+            'CARD': CreditCard,
+            'TRANSFER': CreditCard,
+            'EFECTIVO': DollarSign,
+            'TARJETA': CreditCard,
+            'TRANSFERENCIA': CreditCard
+          };
+
+          return {
+            id: method.id,
+            value: method.method_code.toLowerCase(),
+            label: method.description,
+            icon: iconMap[method.method_code.toUpperCase()] || DollarSign,
+            methodCode: method.method_code
+          };
+        });
+
+        setPaymentMethods(mappedMethods);
+        setCurrencies(currenciesData);
+      } catch (error) {
+        console.error('Error loading payment data:', error);
+        // Usar valores por defecto en caso de error
+        setPaymentMethods([
+          { id: 1, value: 'cash', label: 'Efectivo', icon: DollarSign, methodCode: 'CASH' },
+          { id: 2, value: 'card', label: 'Tarjeta', icon: CreditCard, methodCode: 'CARD' },
+          { id: 3, value: 'transfer', label: 'Transferencia', icon: CreditCard, methodCode: 'TRANSFER' }
+        ]);
+        setCurrencies([
+          { id: 1, currency_code: 'PYG', name: 'Guaraní' },
+          { id: 2, currency_code: 'USD', name: 'Dólar' },
+          { id: 3, currency_code: 'EUR', name: 'Euro' }
+        ]);
+      } finally {
+        setLoadingPaymentData(false);
+      }
+    };
+
+    loadPaymentData();
+  }, []);
 
   // Cargar reservas cuando se selecciona un cliente
   useEffect(() => {
@@ -430,18 +498,14 @@ const Sales = () => {
       // Preparar datos según SALE_API.md usando useSalesLogic
       const saleData = salesLogic.prepareSaleData();
 
-      // Mapear método de pago seleccionado en UI
-      const paymentMethodMap = {
-        'cash': 1,
-        'card': 2,
-        'transfer': 3
-      };
+      // Obtener IDs correctos de método de pago y moneda desde los datos cargados
+      const paymentMethod = paymentMethods.find(m => m.value === selectedPaymentMethod);
+      const currency = currencies.find(c => c.currency_code === selectedCurrency);
 
-      // Completar con datos de la UI
       const finalSaleData = {
         ...saleData,
-        payment_method_id: paymentMethodMap[selectedPaymentMethod] || 1,
-        currency_id: selectedCurrency === 'USD' ? 2 : selectedCurrency === 'EUR' ? 3 : 1,
+        payment_method_id: paymentMethod?.id || 1,
+        currency_id: currency?.id || 1,
       };
 
 
@@ -520,17 +584,50 @@ const Sales = () => {
           errorMessage = responseData.message;
         }
       }
+      // Error de autenticación (ApiError o response 401)
+      else if (
+        error.name === 'UNAUTHORIZED' ||
+        error.code === 'UNAUTHORIZED' ||
+        error.response?.status === 401 ||
+        error.message?.includes('Sesión expirada') ||
+        error.message?.includes('token inválido')
+      ) {
+        // Mostrar información detallada del error para debugging
+        const tokenPreview = localStorage.getItem('authToken')?.substring(0, 50) + '...';
+        console.error('❌ Error de autenticación - Detalles completos:', {
+          errorName: error.name,
+          errorCode: error.code,
+          errorMessage: error.message,
+          responseStatus: error.response?.status,
+          tokenPreview: tokenPreview,
+          fullError: error
+        });
+
+        errorMessage = '🔒 Error de Autenticación (401)\n\n' +
+          'El backend rechazó el token.\n\n' +
+          '📋 Información técnica:\n' +
+          `• Error: ${error.message}\n` +
+          `• Token: ${tokenPreview}\n\n` +
+          '🔧 Soluciones:\n' +
+          '1. Verifica logs de la consola (F12)\n' +
+          '2. Haz logout manual\n' +
+          '3. Verifica que el backend esté actualizado\n\n' +
+          '⚠️ NO se cerrará sesión automáticamente';
+
+        // REMOVIDO: Ya no redirigimos automáticamente
+        // Esto permite al usuario ver y copiar los logs
+      }
       // Error de red o timeout
       else if (error.code === 'NETWORK_ERROR' || error.message?.includes('timeout')) {
         errorMessage = 'Error de conexión. Verifique su conexión a internet.';
       }
-      // Error de autenticación
-      else if (error.response?.status === 401) {
-        errorMessage = 'Sesión expirada. Por favor inicie sesión nuevamente.';
-      }
       // Otros errores HTTP
       else if (error.response?.status) {
         errorMessage = `Error del servidor (${error.response.status}). Intente nuevamente.`;
+      }
+      // Error genérico con mensaje
+      else if (error.message) {
+        errorMessage = error.message;
       }
 
       showNotification(errorMessage, 'error');
@@ -1147,7 +1244,7 @@ const Sales = () => {
                   <SelectValue placeholder="Seleccionar método" />
                 </SelectTrigger>
                 <SelectContent>
-                  {PAYMENT_METHODS.map(method => {
+                  {paymentMethods.map(method => {
                     const IconComponent = method.icon;
                     return (
                       <SelectItem key={method.value} value={method.value}>
@@ -1167,8 +1264,10 @@ const Sales = () => {
               <Label htmlFor="currency" className={styles.label()}>{t('sales.payment.currency', 'Moneda')}</Label>
               <CurrencySelector
                 value={selectedCurrency}
-                onChange={setSelectedCurrency}
+                onChange={(currency) => setSelectedCurrency(currency.currency_code || currency)}
                 placeholder="Seleccionar moneda..."
+                currencies={currencies}
+                loading={loadingPaymentData}
               />
             </div>
           </div>
@@ -1214,7 +1313,7 @@ const Sales = () => {
               <div className="flex justify-between items-center mt-2">
                 <span className="text-sm text-gray-600">{t('sales.payment.method', 'Método:')}</span>
                 <Badge variant="outline">
-                  {PAYMENT_METHODS.find(m => m.value === currentSaleData.paymentMethod)?.label}
+                  {paymentMethods.find(m => m.value === currentSaleData.paymentMethod)?.label}
                 </Badge>
               </div>
             )}
@@ -1622,7 +1721,7 @@ const Sales = () => {
                       <SelectValue placeholder="Seleccionar método" />
                     </SelectTrigger>
                     <SelectContent>
-                      {PAYMENT_METHODS.map(method => {
+                      {paymentMethods.map(method => {
                         const IconComponent = method.icon;
                         return (
                           <SelectItem key={method.value} value={method.value}>
@@ -1643,29 +1742,20 @@ const Sales = () => {
                   <Select
                     value={selectedCurrency}
                     onValueChange={setSelectedCurrency}
+                    disabled={loadingPaymentData}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar moneda..." />
+                      <SelectValue placeholder={loadingPaymentData ? "Cargando..." : "Seleccionar moneda..."} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PYG">
-                        <div className="flex items-center">
-                          <span className="font-mono font-bold mr-2">PYG</span>
-                          <span>Guaraní Paraguayo</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="USD">
-                        <div className="flex items-center">
-                          <span className="font-mono font-bold mr-2">USD</span>
-                          <span>Dólar Americano</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="EUR">
-                        <div className="flex items-center">
-                          <span className="font-mono font-bold mr-2">EUR</span>
-                          <span>Euro</span>
-                        </div>
-                      </SelectItem>
+                      {currencies.map(currency => (
+                        <SelectItem key={currency.id} value={currency.currency_code}>
+                          <div className="flex items-center">
+                            <span className="font-mono font-bold mr-2">{currency.currency_code}</span>
+                            <span>{currency.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

@@ -39,18 +39,11 @@ export const clientService = {
         endpoint = API_PREFIX; // fallback no paginado (si backend lo permite)
       }
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
-      if (typeof window !== 'undefined') {
-        // Debug: estructura cruda de la respuesta
-        console.log('[clientService.getAll] endpoint:', endpoint, 'raw result:', result);
-      }
       // Parsear si la respuesta es string JSON
       let parsedResult = result;
       if (typeof result === 'string') {
         try {
           parsedResult = JSON.parse(result);
-          if (typeof window !== 'undefined') {
-            console.log('[clientService.getAll] parsed result:', parsedResult);
-          }
         } catch (e) {
           console.error('[clientService.getAll] JSON parse error:', e);
         }
@@ -68,17 +61,11 @@ export const clientService = {
     try {
       const endpoint = `${API_PREFIX}/name/${encodeURIComponent(name)}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
-      if (typeof window !== 'undefined') {
-        console.log('[clientService.searchByName] endpoint:', endpoint, 'raw result:', result);
-      }
       // Parsear si la respuesta es string JSON
       let parsedResult = result;
       if (typeof result === 'string') {
         try {
           parsedResult = JSON.parse(result);
-          if (typeof window !== 'undefined') {
-            console.log('[clientService.searchByName] parsed result:', parsedResult);
-          }
         } catch (e) {
           console.error('[clientService.searchByName] JSON parse error:', e);
         }
@@ -96,17 +83,11 @@ export const clientService = {
     try {
       const endpoint = `${API_PREFIX}/${id}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
-      if (typeof window !== 'undefined') {
-        console.log('[clientService.getById] endpoint:', endpoint, 'raw result:', result);
-      }
       // Parsear si la respuesta es string JSON
       let parsedResult = result;
       if (typeof result === 'string') {
         try {
           parsedResult = JSON.parse(result);
-          if (typeof window !== 'undefined') {
-            console.log('[clientService.getById] parsed result:', parsedResult);
-          }
         } catch (e) {
           console.error('[clientService.getById] JSON parse error:', e);
         }

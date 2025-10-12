@@ -114,7 +114,6 @@ const ProductDetailTest = () => {
           product={product}
           onRefresh={() => {
             // Refresh logic if needed
-            console.log('Refrescando producto...');
           }}
             />
           </Suspense>

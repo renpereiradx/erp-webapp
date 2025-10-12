@@ -151,9 +151,6 @@ const InventoryPage = () => {
       return;
     }
 
-    console.log('🔍 selectedProductForBulk completo:', selectedProductForBulk);
-    console.log('🔍 Propiedades disponibles:', Object.keys(selectedProductForBulk));
-
     const newAdjustment = {
       product_id: selectedProductForBulk.product_id || selectedProductForBulk.id,
       name: selectedProductForBulk.product_name || selectedProductForBulk.name || selectedProductForBulk.product_id,
@@ -190,8 +187,6 @@ const InventoryPage = () => {
         adjustment_reason: ''
       }
     });
-
-    console.log('✅ Producto agregado al inventario masivo:', newAdjustment);
   }, [selectedProductForBulk, bulkProductData, bulkAdjustments, inventoryMetadata]);
 
   const removeBulkAdjustment = useCallback((productId) => {
@@ -225,8 +220,6 @@ const InventoryPage = () => {
       }
     };
 
-    console.log('📦 Guardando inventario masivo:', inventoryData);
-
     try {
       const result = await createInventory(inventoryData);
       if (result && result.success) {
@@ -255,7 +248,6 @@ const InventoryPage = () => {
         setHistoryPagination({});
       }
     } catch (error) {
-      console.error('Error loading history:', error);
       setHistoryData([]);
       setHistoryPagination({});
     }
@@ -288,8 +280,6 @@ const InventoryPage = () => {
       alert('Datos de ajuste inválidos');
       return;
     }
-
-    console.log('💾 Guardando ajuste manual:', adjustmentRequest);
 
     try {
       const result = await createManualAdjustment(adjustmentRequest);
@@ -549,7 +539,6 @@ const InventoryPage = () => {
                   <Button
                     type="button"
                     onClick={() => {
-                      console.log('🔍 Abriendo modal de búsqueda - Unit Adjustment');
                       setShowProductSearchModal(true);
                     }}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 flex items-center gap-3"
@@ -717,7 +706,6 @@ const InventoryPage = () => {
                   <Button
                     type="button"
                     onClick={() => {
-                      console.log('🔍 Abriendo modal de búsqueda - Bulk Adjustment');
                       setShowProductSearchModal(true);
                     }}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 flex items-center gap-3"
@@ -1110,7 +1098,6 @@ const InventoryPage = () => {
                         <Button
                           onClick={() => {
                             const newPage = Math.max(1, historyPage - 1);
-                            console.log('📄 Anterior: página actual', historyPage, '→ nueva página', newPage);
                             setHistoryPage(newPage);
                           }}
                           disabled={historyPage === 1 || historyLoading}
@@ -1126,7 +1113,6 @@ const InventoryPage = () => {
                           onClick={() => {
                             const newPage = historyPage + 1;
                             const maxPages = historyPagination.totalPages || 1;
-                            console.log('📄 Siguiente: página actual', historyPage, '→ nueva página', newPage, 'max:', maxPages);
                             if (newPage <= maxPages) {
                               setHistoryPage(newPage);
                             }
@@ -1171,7 +1157,6 @@ const InventoryPage = () => {
               <h2 className={styles.header('h2')}>Seleccionar Producto</h2>
               <Button
                 onClick={() => {
-                  console.log('❌ Cerrando modal de búsqueda');
                   setShowProductSearchModal(false);
                 }}
                 className="text-2xl hover:bg-gray-100 px-3 py-1 rounded"
@@ -1183,7 +1168,6 @@ const InventoryPage = () => {
             <div className="space-y-4">
               <ProductSearchInput
                 onProductSelect={(product) => {
-                  console.log('✅ Producto seleccionado:', product, 'Tab actual:', activeTab);
                   if (activeTab === 'unit-adjustment') {
                     handleProductSelect(product);
                   } else if (activeTab === 'bulk-adjustment') {

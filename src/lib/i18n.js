@@ -1,6 +1,6 @@
 // Simple i18n utility (extensible)
 // Usage: const { t, lang, setLang } = useI18n(); t('products.title')
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react'
 
 const DICTIONARY = {
   es: {
@@ -23,8 +23,10 @@ const DICTIONARY = {
     'products.no_products_loaded': 'No hay productos cargados',
     'products.no_results': 'No se encontraron productos',
     'products.no_results_for': 'No hay productos que coincidan con "{term}"',
-    'products.search.help1': 'Puedes buscar por nombre (ej: "Puma") o por ID completo (ej: "bcYdWdKNR")',
-    'products.search.help2': 'Búsqueda automática: mínimo {minChars} caracteres. Atajo: "/" para enfocar.',
+    'products.search.help1':
+      'Puedes buscar por nombre (ej: "Puma") o por ID completo (ej: "bcYdWdKNR")',
+    'products.search.help2':
+      'Búsqueda automática: mínimo {minChars} caracteres. Atajo: "/" para enfocar.',
     'products.page_size_label': 'Productos por página:',
     'validation.required': 'Requerido',
     'validation.price.invalid': 'Precio inválido',
@@ -51,32 +53,36 @@ const DICTIONARY = {
     'priceAdjustment.action.create': 'Crear Ajuste',
     'priceAdjustment.action.creating': 'Creando...',
     'priceAdjustment.action.viewHistory': 'Ver Historial',
-    
+
     // Estados
     'priceAdjustment.empty.title': 'Sin ajustes de precios',
     'priceAdjustment.empty.message': 'No hay ajustes de precios registrados',
     'priceAdjustment.error.title': 'Error al cargar ajustes',
     'priceAdjustment.error.noProduct': 'Seleccione un producto',
-    
+
     // Modales
     'priceAdjustment.modal.create': 'CREAR AJUSTE DE PRECIO',
     'priceAdjustment.modal.history': 'HISTORIAL DE AJUSTES',
-    
+
     // Búsqueda
-    'priceAdjustment.search.placeholder': 'Buscar por producto, razón o usuario...',
-    
+    'priceAdjustment.search.placeholder':
+      'Buscar por producto, razón o usuario...',
+
     // Campos del formulario
     'priceAdjustment.field.product': 'PRODUCTO',
-    'priceAdjustment.field.product.placeholder': 'Buscar producto por ID, nombre o código...',
+    'priceAdjustment.field.product.placeholder':
+      'Buscar producto por ID, nombre o código...',
     'priceAdjustment.field.newPrice': 'NUEVO PRECIO',
     'priceAdjustment.field.unit': 'UNIDAD',
     'priceAdjustment.field.reason': 'RAZÓN DEL AJUSTE',
-    'priceAdjustment.field.reason.placeholder': 'Explique la razón del ajuste de precio...',
+    'priceAdjustment.field.reason.placeholder':
+      'Explique la razón del ajuste de precio...',
 
     // Clients - MVP strings
     'clients.title': 'Clientes',
     'clients.action.primary': 'Nuevo Cliente',
-    'clients.error.generic': 'Error al procesar la solicitud. Por favor, intente nuevamente.',
+    'clients.error.generic':
+      'Error al procesar la solicitud. Por favor, intente nuevamente.',
 
     // Error hints
     'errors.hint.INTERNAL': 'Problema interno, intenta más tarde.',
@@ -84,7 +90,8 @@ const DICTIONARY = {
     'errors.hint.UNAUTHORIZED': 'Reinicia sesión para continuar.',
     'errors.hint.NOT_FOUND': 'El recurso no existe o fue eliminado.',
     'errors.hint.VALIDATION': 'Revisa los datos ingresados.',
-    'errors.hint.RATE_LIMIT': 'Demasiadas solicitudes, espera e intenta de nuevo.',
+    'errors.hint.RATE_LIMIT':
+      'Demasiadas solicitudes, espera e intenta de nuevo.',
     'errors.hint.CONFLICT': 'Conflicto de estado, refresca los datos.',
     'errors.hint.UNKNOWN': 'Ocurrió un error inesperado.',
 
@@ -115,7 +122,8 @@ const DICTIONARY = {
     'products.delete_subtitle': 'Esta acción no se puede deshacer',
     'products.id_label': 'ID Producto',
     'products.info_title': 'Información Importante',
-    'products.delete_hint.soft': 'El producto será marcado como eliminado (soft delete)',
+    'products.delete_hint.soft':
+      'El producto será marcado como eliminado (soft delete)',
     'products.deleting': 'Eliminando...',
     'products.delete_action': 'Eliminar',
 
@@ -133,6 +141,7 @@ const DICTIONARY = {
     'products.tabs.description': 'Descripción',
     'products.tabs.price': 'Precios',
     'products.tabs.stock': 'Stock',
+    'products.tabs.manufacturing': 'Manufactura',
     'products.info_general': 'Información General',
     'products.description_info': 'Información de Descripción',
     'products.description_heading': 'Descripción del Producto',
@@ -141,7 +150,8 @@ const DICTIONARY = {
     'products.stock_info': 'Información de Stock',
     'products.configure_stock': 'Configurar Inventario',
     'products.enriched_title': 'Producto con datos enriquecidos',
-    'products.unit_pricing_title': 'Producto con precios por unidad (kg, caja, etc.)',
+    'products.unit_pricing_title':
+      'Producto con precios por unidad (kg, caja, etc.)',
     'products.multiple_units_title': 'Múltiples unidades disponibles',
     'products.list_label': 'Listado de productos',
     'products.item_aria': 'Producto {nameOrId}',
@@ -166,20 +176,24 @@ const DICTIONARY = {
     'client.modal.edit_subtitle': 'Modifica la información del cliente',
     'client.modal.create_subtitle': 'Ingresa los datos del nuevo cliente',
 
-    // Supplier modals  
+    // Supplier modals
     'supplier.modal.edit_subtitle': 'Modifica los datos del proveedor',
-    'supplier.modal.create_subtitle': 'Registra un nuevo proveedor en el sistema',
+    'supplier.modal.create_subtitle':
+      'Registra un nuevo proveedor en el sistema',
 
     // Reservation modals
     'reservations.modal.edit_subtitle': 'Modifica los detalles de la reserva',
-    'reservations.modal.create_subtitle': 'Programa una nueva reserva de servicio',
+    'reservations.modal.create_subtitle':
+      'Programa una nueva reserva de servicio',
 
     // Delete confirmations
     'client.delete.title': 'Eliminar Cliente',
-    'client.delete.message': 'Esta acción eliminará permanentemente al cliente "{name}" y no se puede deshacer.',
+    'client.delete.message':
+      'Esta acción eliminará permanentemente al cliente "{name}" y no se puede deshacer.',
     'client.delete.confirm': 'Eliminar Cliente',
     'supplier.delete.title': 'Eliminar Proveedor',
-    'supplier.delete.message': 'Esta acción eliminará permanentemente al proveedor "{name}" y no se puede deshacer.',
+    'supplier.delete.message':
+      'Esta acción eliminará permanentemente al proveedor "{name}" y no se puede deshacer.',
     'supplier.delete.confirm': 'Eliminar Proveedor',
   },
   en: {
@@ -201,8 +215,10 @@ const DICTIONARY = {
     'products.no_products_loaded': 'No products loaded',
     'products.no_results': 'No products found',
     'products.no_results_for': 'No products matched "{term}"',
-    'products.search.help1': 'You can search by name (e.g. "Puma") or by full ID (e.g. "bcYdWdKNR")',
-    'products.search.help2': 'Auto-search: minimum {minChars} characters. Shortcut: "/" to focus.',
+    'products.search.help1':
+      'You can search by name (e.g. "Puma") or by full ID (e.g. "bcYdWdKNR")',
+    'products.search.help2':
+      'Auto-search: minimum {minChars} characters. Shortcut: "/" to focus.',
     'products.page_size_label': 'Products per page:',
     'validation.required': 'Required',
     'validation.price.invalid': 'Invalid price',
@@ -260,7 +276,8 @@ const DICTIONARY = {
     'products.delete_subtitle': 'This action cannot be undone',
     'products.id_label': 'Product ID',
     'products.info_title': 'Important information',
-    'products.delete_hint.soft': 'The product will be marked as deleted (soft delete)',
+    'products.delete_hint.soft':
+      'The product will be marked as deleted (soft delete)',
     'products.deleting': 'Deleting...',
     'products.delete_action': 'Delete',
 
@@ -278,6 +295,7 @@ const DICTIONARY = {
     'products.tabs.description': 'Description',
     'products.tabs.price': 'Prices',
     'products.tabs.stock': 'Stock',
+    'products.tabs.manufacturing': 'Manufacturing',
     'products.info_general': 'General Information',
     'products.description_info': 'Description Information',
     'products.description_heading': 'Product Description',
@@ -299,19 +317,21 @@ const DICTIONARY = {
 
     'errors.code_label': 'Error code: {code}',
     'errors.hint.label': 'Hint',
-  }
-};
+  },
+}
 
 // Add additional product-level messages and banners
 // (kept after DICTIONARY to avoid large duplicate blocks)
 Object.assign(DICTIONARY.es, {
-  'products.offline_banner': 'Estás sin conexión. Los datos pueden estar desactualizados.',
+  'products.offline_banner':
+    'Estás sin conexión. Los datos pueden estar desactualizados.',
   'products.auto_login_success': 'Auto-login exitoso! Recargando categorías...',
   'products.auto_login_error': 'Error en auto-login',
   'products.operation_success': 'Operación completada exitosamente',
   'products.deleted_success': 'Producto "{name}" eliminado exitosamente',
   'products.updated_notice': 'Producto {id} actualizado',
-  'products.subtitle': 'Administra tu inventario con la Business Management API',
+  'products.subtitle':
+    'Administra tu inventario con la Business Management API',
   'products.filter.current_results_title': 'Filtrar Resultados Actuales',
   'products.filter.name_placeholder': 'Filtrar por nombre...',
   'products.filter.all_categories': 'Todas las categorías',
@@ -320,7 +340,8 @@ Object.assign(DICTIONARY.es, {
   'products.filter.status.inactive': 'Inactivos',
   'products.filter.products_label': 'Productos',
   'products.bulk.selected_count': '{count} seleccionados',
-  'products.pagination.showing_page_count': 'Mostrando {shown} de {pageCount} productos en esta página',
+  'products.pagination.showing_page_count':
+    'Mostrando {shown} de {pageCount} productos en esta página',
   'products.pagination.search_prefix': 'Búsqueda:',
   'products.pagination.by_id': 'por ID',
   'products.pagination.by_name': 'por nombre',
@@ -338,10 +359,11 @@ Object.assign(DICTIONARY.es, {
   'booking.reservation.service.label': 'Servicio',
   'booking.reservation.select_service.placeholder': 'Seleccionar servicio...',
   'booking.reservation.duration.minutes': '{minutes}min',
-});
+})
 Object.assign(DICTIONARY.en, {
   'products.offline_banner': 'You are offline. Data may be stale.',
-  'products.auto_login_success': 'Auto-login successful! Reloading categories...',
+  'products.auto_login_success':
+    'Auto-login successful! Reloading categories...',
   'products.auto_login_error': 'Auto-login error',
   'products.operation_success': 'Operation completed successfully',
   'products.deleted_success': 'Product "{name}" deleted successfully',
@@ -355,7 +377,8 @@ Object.assign(DICTIONARY.en, {
   'products.filter.status.inactive': 'Inactive',
   'products.filter.products_label': 'Products',
   'products.bulk.selected_count': '{count} selected',
-  'products.pagination.showing_page_count': 'Showing {shown} of {pageCount} products on this page',
+  'products.pagination.showing_page_count':
+    'Showing {shown} of {pageCount} products on this page',
   'products.pagination.search_prefix': 'Search:',
   'products.pagination.by_id': 'by ID',
   'products.pagination.by_name': 'by name',
@@ -373,7 +396,7 @@ Object.assign(DICTIONARY.en, {
   'booking.reservation.service.label': 'Service',
   'booking.reservation.select_service.placeholder': 'Select service...',
   'booking.reservation.duration.minutes': '{minutes}min',
-});
+})
 
 // Login Page
 Object.assign(DICTIONARY.es, {
@@ -395,9 +418,11 @@ Object.assign(DICTIONARY.es, {
   'login.validation.username.required': 'El email o usuario es requerido',
   'login.validation.username.min': 'Debe tener al menos 3 caracteres',
   'login.validation.password.required': 'La contraseña es requerida',
-  'login.validation.password.min': 'La contraseña debe tener al menos 6 caracteres',
-  'login.error.failed_examples': 'Login fallido. Prueba: admin/admin123, test/test123, demo/demo123, user/user123',
-});
+  'login.validation.password.min':
+    'La contraseña debe tener al menos 6 caracteres',
+  'login.error.failed_examples':
+    'Login fallido. Prueba: admin/admin123, test/test123, demo/demo123, user/user123',
+})
 Object.assign(DICTIONARY.en, {
   'login.access': 'System Access',
   'login.sign_in': 'Sign In',
@@ -418,13 +443,15 @@ Object.assign(DICTIONARY.en, {
   'login.validation.username.min': 'Must be at least 3 characters',
   'login.validation.password.required': 'Password is required',
   'login.validation.password.min': 'Password must be at least 6 characters',
-  'login.error.failed_examples': 'Login failed. Try: admin/admin123, test/test123, demo/demo123, user/user123',
-});
+  'login.error.failed_examples':
+    'Login failed. Try: admin/admin123, test/test123, demo/demo123, user/user123',
+})
 
 // Purchases Page
 Object.assign(DICTIONARY.es, {
   'purchases.title': 'Compras',
-  'purchases.subtitle': 'Administra compras a proveedores, controla inventario y órdenes de compra',
+  'purchases.subtitle':
+    'Administra compras a proveedores, controla inventario y órdenes de compra',
   'purchases.tab.new': 'Nueva Compra',
   'purchases.tab.list': 'Lista de Compras',
   'purchases.config.title': 'Configuración de Compra',
@@ -444,17 +471,19 @@ Object.assign(DICTIONARY.es, {
   'purchases.todo.items': 'Agregar productos',
   'purchases.todo.valid_items': 'Verificar cantidades',
   'purchases.empty.title': 'Comienza una compra',
-  'purchases.empty.description': 'Selecciona un proveedor para empezar o crea uno nuevo.',
+  'purchases.empty.description':
+    'Selecciona un proveedor para empezar o crea uno nuevo.',
   'purchases.empty.action': 'Seleccionar Proveedor',
   'purchases.create': 'Crear Compra',
   'purchases.saving': 'Creando Compra...',
   'purchases.status.pending': 'Pendiente',
   'purchases.status.completed': 'Completado',
   'purchases.status.cancelled': 'Cancelado',
-});
+})
 Object.assign(DICTIONARY.en, {
   'purchases.title': 'Purchases',
-  'purchases.subtitle': 'Manage supplier purchases, inventory control and purchase orders',
+  'purchases.subtitle':
+    'Manage supplier purchases, inventory control and purchase orders',
   'purchases.tab.new': 'New Purchase',
   'purchases.tab.list': 'Purchase List',
   'purchases.config.title': 'Purchase Configuration',
@@ -462,7 +491,8 @@ Object.assign(DICTIONARY.en, {
   'purchases.config.payment_terms': 'Payment Terms',
   'purchases.config.delivery_method': 'Delivery Method',
   'purchases.config.notes': 'Notes',
-  'purchases.config.notes.placeholder': 'Additional notes about the purchase...',
+  'purchases.config.notes.placeholder':
+    'Additional notes about the purchase...',
   'purchases.supplier.info': 'Supplier Information',
   'purchases.products.title': 'Products',
   'purchases.items.title': 'Order Items ({count})',
@@ -474,19 +504,21 @@ Object.assign(DICTIONARY.en, {
   'purchases.todo.items': 'Add products',
   'purchases.todo.valid_items': 'Verify quantities',
   'purchases.empty.title': 'Start a purchase',
-  'purchases.empty.description': 'Select a supplier to begin or create a new one.',
+  'purchases.empty.description':
+    'Select a supplier to begin or create a new one.',
   'purchases.empty.action': 'Select Supplier',
   'purchases.create': 'Create Purchase',
   'purchases.saving': 'Creating Purchase...',
   'purchases.status.pending': 'Pending',
   'purchases.status.completed': 'Completed',
   'purchases.status.cancelled': 'Cancelled',
-});
+})
 
 // Booking & Sales Page
 Object.assign(DICTIONARY.es, {
   'booking.title': 'Reservas y Ventas',
-  'booking.subtitle': 'Gestiona reservas de servicios y ventas de productos de forma integrada',
+  'booking.subtitle':
+    'Gestiona reservas de servicios y ventas de productos de forma integrada',
   'booking.tab.reservations': 'Reservas',
   'booking.tab.sales': 'Ventas',
   'booking.reservation.new': 'Nueva Reserva',
@@ -516,7 +548,8 @@ Object.assign(DICTIONARY.es, {
   'login.submit': 'Iniciar Sesión',
   'login.loading': 'Iniciando Sesión...',
   'login.forgot_password': '¿Olvidaste tu contraseña?',
-  'login.error.generic': 'Error: Credenciales incorrectas o problema del servidor.',
+  'login.error.generic':
+    'Error: Credenciales incorrectas o problema del servidor.',
 
   // Dashboard Page
   'dashboard.title': 'Dashboard',
@@ -540,11 +573,13 @@ Object.assign(DICTIONARY.es, {
   // Settings Page
   'settings.title': 'Configuración',
   'settings.theme.title': 'Tema de Apariencia',
-  'settings.theme.description': 'Selecciona el tema que mejor se adapte a tus preferencias.',
+  'settings.theme.description':
+    'Selecciona el tema que mejor se adapte a tus preferencias.',
   'settings.language.title': 'Idioma',
   'settings.language.description': 'Próximamente: Opciones de idioma.',
   'settings.notifications.title': 'Notificaciones',
-  'settings.notifications.description': 'Próximamente: Ajustes de notificaciones.',
+  'settings.notifications.description':
+    'Próximamente: Ajustes de notificaciones.',
 
   // Inventory - MVP strings
   'inventory.title': 'Gestión de Inventario',
@@ -553,20 +588,20 @@ Object.assign(DICTIONARY.es, {
   'inventory.action.adjustment': 'Ajuste Manual',
   'inventory.action.transaction': 'Nueva Transacción',
   'inventory.action.validate': 'Validar Consistencia',
-  
+
   'inventory.empty.title': 'Sin inventarios',
   'inventory.empty.message': 'No hay inventarios registrados',
   'inventory.error.title': 'Error al cargar',
   'inventory.error.generic': 'Error al procesar. Intente nuevamente.',
-  
+
   'inventory.search.placeholder': 'Buscar inventarios...',
-  
+
   'inventory.modal.create': 'CREAR INVENTARIO',
   'inventory.modal.edit': 'EDITAR INVENTARIO',
   'inventory.modal.adjustment': 'AJUSTE MANUAL',
   'inventory.modal.transaction': 'NUEVA TRANSACCIÓN',
   'inventory.modal.details': 'DETALLES DEL INVENTARIO',
-  
+
   'inventory.field.check_date': 'Fecha de Conteo',
   'inventory.field.product_id': 'Producto',
   'inventory.field.quantity_checked': 'Cantidad Contada',
@@ -575,17 +610,17 @@ Object.assign(DICTIONARY.es, {
   'inventory.field.transaction_type': 'Tipo de Transacción',
   'inventory.field.quantity_change': 'Cambio en Cantidad',
   'inventory.field.unit_price': 'Precio Unitario',
-  
+
   'inventory.status.active': 'Activo',
   'inventory.status.invalid': 'Invalidado',
-  
+
   'inventory.card.id': 'ID:',
   'inventory.card.date': 'FECHA:',
   'inventory.card.user': 'USUARIO:',
   'inventory.card.status': 'ESTADO:',
   'inventory.card.items': 'PRODUCTOS:',
   'inventory.card.changes': 'CAMBIOS:',
-  
+
   'inventory.transactions.title': 'Historial de Transacciones',
   'inventory.transactions.empty': 'Sin transacciones',
   'inventory.transactions.type.PURCHASE': 'Compra',
@@ -595,7 +630,7 @@ Object.assign(DICTIONARY.es, {
   'inventory.transactions.type.INITIAL': 'Inicial',
   'inventory.transactions.type.LOSS': 'Pérdida',
   'inventory.transactions.type.FOUND': 'Hallazgo',
-  
+
   'inventory.consistency.title': 'Validación de Consistencia',
   'inventory.consistency.run': 'Ejecutar Validación',
   'inventory.consistency.total': 'Total de Productos:',
@@ -603,17 +638,17 @@ Object.assign(DICTIONARY.es, {
   'inventory.consistency.rate': 'Tasa de Consistencia:',
   'inventory.consistency.status.consistent': 'Consistente',
   'inventory.consistency.status.inconsistent': 'Inconsistente',
-  
+
   'inventory.buttons.invalidate': 'Invalidar',
   'inventory.buttons.view_details': 'Ver Detalles',
   'inventory.buttons.add_item': 'Agregar Producto',
   'inventory.buttons.remove_item': 'Quitar',
-  
+
   'inventory.validation.product_required': 'Producto es requerido',
   'inventory.validation.quantity_required': 'Cantidad es requerida',
   'inventory.validation.quantity_positive': 'Cantidad debe ser mayor a 0',
   'inventory.validation.reason_required': 'Motivo es requerido',
-});
+})
 Object.assign(DICTIONARY.en, {
   'booking.title': 'Bookings & Sales',
   'booking.subtitle': 'Manage service bookings and product sales in one place',
@@ -635,38 +670,38 @@ Object.assign(DICTIONARY.en, {
   'booking.summary.subtotal': 'Subtotal:',
   'booking.summary.tax': 'VAT (16%):',
   'booking.summary.items_count': '{count} items',
-});
+})
 // Clients & Suppliers internal labels
 Object.assign(DICTIONARY.es, {
   'clients.stats.shown': 'CLIENTES MOSTRADOS',
   'suppliers.stats.shown': 'PROVEEDORES MOSTRADOS',
   'clients.card.document': 'DOCUMENTO:',
   'clients.card.contact': 'CONTACTO:',
-      'clients.card.registered': 'REGISTRO:',
+  'clients.card.registered': 'REGISTRO:',
 
-    // Clients - MVP strings from new page
-    'client.title': 'Clientes',
-    'client.action.create': 'Nuevo Cliente',
-    'client.search.placeholder': 'Buscar cliente...',
-    'client.error.title': 'Error al cargar clientes',
-    'client.empty.title': 'Sin clientes',
-    'client.empty.message': 'No hay clientes registrados todavía.',
-    'client.modal.edit': 'EDITAR CLIENTE',
-    'client.modal.create': 'CREAR CLIENTE',
-    'field.email': 'EMAIL',
-    'field.phone': 'TELÉFONO',
-    'field.tax_id': 'RFC',
-    'action.saving': 'Guardando...',
-    'action.update': 'Actualizar',
-    'action.cancel': 'Cancelar',
-    'action.delete': 'Eliminar',
+  // Clients - MVP strings from new page
+  'client.title': 'Clientes',
+  'client.action.create': 'Nuevo Cliente',
+  'client.search.placeholder': 'Buscar cliente...',
+  'client.error.title': 'Error al cargar clientes',
+  'client.empty.title': 'Sin clientes',
+  'client.empty.message': 'No hay clientes registrados todavía.',
+  'client.modal.edit': 'EDITAR CLIENTE',
+  'client.modal.create': 'CREAR CLIENTE',
+  'field.email': 'EMAIL',
+  'field.phone': 'TELÉFONO',
+  'field.tax_id': 'RFC',
+  'action.saving': 'Guardando...',
+  'action.update': 'Actualizar',
+  'action.cancel': 'Cancelar',
+  'action.delete': 'Eliminar',
 
   'suppliers.card.ruc': 'RUC:',
   'suppliers.card.phone': 'TELÉFONO:',
   'suppliers.card.fax': 'FAX:',
   'suppliers.card.address': 'DIRECCIÓN:',
   'suppliers.card.registered': 'REGISTRO:',
-});
+})
 Object.assign(DICTIONARY.en, {
   'clients.stats.shown': 'CLIENTS SHOWN',
   'suppliers.stats.shown': 'SUPPLIERS SHOWN',
@@ -678,7 +713,7 @@ Object.assign(DICTIONARY.en, {
   'suppliers.card.fax': 'FAX:',
   'suppliers.card.address': 'ADDRESS:',
   'suppliers.card.registered': 'REGISTERED:',
-});
+})
 
 // Clients (placeholder i18n minimal)
 Object.assign(DICTIONARY.es, {
@@ -692,13 +727,14 @@ Object.assign(DICTIONARY.es, {
   'clients.filter.all_status': 'Todos los estados',
   'clients.filter.status.active': 'Activos',
   'clients.filter.status.inactive': 'Inactivos',
-  'clients.pagination.showing_page_count': 'Mostrando {shown} de {total} clientes',
+  'clients.pagination.showing_page_count':
+    'Mostrando {shown} de {total} clientes',
   'clients.pagination.first': 'Primera',
   'clients.pagination.prev': 'Anterior',
   'clients.pagination.next': 'Siguiente',
   'clients.pagination.last': 'Última',
   'clients.pagination.page_of': 'Página {page} de {totalPages}',
-});
+})
 Object.assign(DICTIONARY.en, {
   'clients.search.db': 'Search in Database',
   'clients.search.placeholder': 'Search by name, document or ID...',
@@ -716,7 +752,7 @@ Object.assign(DICTIONARY.en, {
   'clients.pagination.next': 'Next',
   'clients.pagination.last': 'Last',
   'clients.pagination.page_of': 'Page {page} of {totalPages}',
-});
+})
 
 // Sales - MVP strings
 Object.assign(DICTIONARY.es, {
@@ -739,7 +775,7 @@ Object.assign(DICTIONARY.es, {
   'sales.session.start': 'Iniciar Sesión de Ventas',
   'sales.session.end': 'Finalizar Sesión',
   'sales.session.active': 'Sesión Activa',
-});
+})
 
 Object.assign(DICTIONARY.en, {
   'sales.title': 'Sales',
@@ -761,7 +797,7 @@ Object.assign(DICTIONARY.en, {
   'sales.session.start': 'Start Sales Session',
   'sales.session.end': 'End Session',
   'sales.session.active': 'Active Session',
-});
+})
 
 // Reservations - MVP strings
 Object.assign(DICTIONARY.es, {
@@ -791,18 +827,23 @@ Object.assign(DICTIONARY.es, {
   'reservations.status.pending': 'Pendiente',
   'reservations.status.reserved': 'Reservada',
   'reservations.welcome.title': 'Sistema de Reservas',
-  'reservations.welcome.description': 'Este sistema te permite gestionar reservas y horarios de servicios. Para comenzar, necesitas cargar los datos desde la API.',
+  'reservations.welcome.description':
+    'Este sistema te permite gestionar reservas y horarios de servicios. Para comenzar, necesitas cargar los datos desde la API.',
   'reservations.welcome.loading': 'Cargando...',
   'reservations.welcome.load_data': 'Cargar Datos del Sistema',
   'reservations.start_datetime': 'Fecha y Hora de Inicio',
   'reservations.no_services_available': 'No hay servicios disponibles',
   'reservations.no_clients_available': 'No hay clientes disponibles',
   'reservations.no_schedules_available': 'Sin horarios disponibles',
-  'reservations.no_schedules_help': 'Prueba seleccionando otra fecha, producto o contacta al administrador para generar horarios.',
-  'reservations.error.api_unavailable': 'No se pudo conectar con el servidor. Verifique su conexión a internet y que el servidor esté funcionando.',
-  'reservations.error.endpoint_not_implemented': 'Los servicios de productos aún no están configurados en el servidor. Contacte al administrador del sistema para completar la configuración de la API.',
-  'reservations.error.endpoint_not_found': 'Algunas funcionalidades aún no están disponibles. El sistema está en proceso de configuración.',
-});
+  'reservations.no_schedules_help':
+    'Prueba seleccionando otra fecha, producto o contacta al administrador para generar horarios.',
+  'reservations.error.api_unavailable':
+    'No se pudo conectar con el servidor. Verifique su conexión a internet y que el servidor esté funcionando.',
+  'reservations.error.endpoint_not_implemented':
+    'Los servicios de productos aún no están configurados en el servidor. Contacte al administrador del sistema para completar la configuración de la API.',
+  'reservations.error.endpoint_not_found':
+    'Algunas funcionalidades aún no están disponibles. El sistema está en proceso de configuración.',
+})
 
 Object.assign(DICTIONARY.en, {
   'reservations.title': 'Reservations',
@@ -831,29 +872,36 @@ Object.assign(DICTIONARY.en, {
   'reservations.status.pending': 'Pending',
   'reservations.status.reserved': 'Reserved',
   'reservations.welcome.title': 'Reservations System',
-  'reservations.welcome.description': 'This system allows you to manage service reservations and schedules. To get started, you need to load data from the API.',
+  'reservations.welcome.description':
+    'This system allows you to manage service reservations and schedules. To get started, you need to load data from the API.',
   'reservations.welcome.loading': 'Loading...',
   'reservations.welcome.load_data': 'Load System Data',
   'reservations.start_datetime': 'Start Date and Time',
   'reservations.no_services_available': 'No services available',
   'reservations.no_clients_available': 'No clients available',
   'reservations.no_schedules_available': 'No schedules available',
-  'reservations.no_schedules_help': 'Try selecting another date, product or contact the administrator to generate schedules.',
-  'reservations.error.api_unavailable': 'Could not connect to the server. Check your internet connection and that the server is running.',
-  'reservations.error.endpoint_not_implemented': 'Product services are not yet configured on the server. Contact the system administrator to complete API configuration.',
-  'reservations.error.endpoint_not_found': 'Some features are not yet available. The system is in the process of configuration.',
-});
+  'reservations.no_schedules_help':
+    'Try selecting another date, product or contact the administrator to generate schedules.',
+  'reservations.error.api_unavailable':
+    'Could not connect to the server. Check your internet connection and that the server is running.',
+  'reservations.error.endpoint_not_implemented':
+    'Product services are not yet configured on the server. Contact the system administrator to complete API configuration.',
+  'reservations.error.endpoint_not_found':
+    'Some features are not yet available. The system is in the process of configuration.',
+})
 
 // Schedules - MVP strings
 Object.assign(DICTIONARY.es, {
   'schedules.title': 'Gestión de Horarios',
-  'schedules.subtitle': 'Administra la disponibilidad de horarios para servicios',
+  'schedules.subtitle':
+    'Administra la disponibilidad de horarios para servicios',
   'schedules.search.placeholder': 'Buscar horarios...',
   'schedules.filter.all_products': 'Todos los servicios',
   'schedules.filter.date': 'Filtrar por fecha',
   'schedules.generate': 'Generar Horarios',
   'schedules.empty.title': 'Sin horarios',
-  'schedules.empty.message': 'No hay horarios registrados para los filtros actuales',
+  'schedules.empty.message':
+    'No hay horarios registrados para los filtros actuales',
   'schedules.error.title': 'Error',
   'schedules.status.available': 'Disponible',
   'schedules.status.unavailable': 'No Disponible',
@@ -870,10 +918,12 @@ Object.assign(DICTIONARY.es, {
   'schedules.generate.title': 'Generar Horarios',
   'schedules.available.title': 'Horarios del Día',
   'schedules.no_schedules': 'Sin horarios para esta fecha',
-  'schedules.generate_help': 'Utiliza el panel de la izquierda para generar horarios o contacta al administrador del sistema',
+  'schedules.generate_help':
+    'Utiliza el panel de la izquierda para generar horarios o contacta al administrador del sistema',
   'schedules.select_service_date': 'Selecciona servicio y fecha',
-  'schedules.select_help': 'Elige un servicio y una fecha para ver y gestionar los horarios disponibles',
-});
+  'schedules.select_help':
+    'Elige un servicio y una fecha para ver y gestionar los horarios disponibles',
+})
 
 Object.assign(DICTIONARY.en, {
   'schedules.title': 'Schedule Management',
@@ -900,19 +950,21 @@ Object.assign(DICTIONARY.en, {
   'schedules.generate.title': 'Generate Schedules',
   'schedules.available.title': 'Day Schedules',
   'schedules.no_schedules': 'No schedules for this date',
-  'schedules.generate_help': 'Use the left panel to generate schedules or contact the system administrator',
+  'schedules.generate_help':
+    'Use the left panel to generate schedules or contact the system administrator',
   'schedules.select_service_date': 'Select service and date',
-  'schedules.select_help': 'Choose a service and a date to view and manage available schedules',
-});
+  'schedules.select_help':
+    'Choose a service and a date to view and manage available schedules',
+})
 
 // Navigation strings
 Object.assign(DICTIONARY.es, {
   'navigation.operations': 'Operaciones',
-});
+})
 
 Object.assign(DICTIONARY.en, {
   'navigation.operations': 'Operations',
-});
+})
 
 // Action strings
 Object.assign(DICTIONARY.es, {
@@ -926,7 +978,7 @@ Object.assign(DICTIONARY.es, {
   'action.delete': 'Eliminar',
   'action.refresh': 'Actualizar',
   'action.refreshing': 'Actualizando...',
-});
+})
 
 Object.assign(DICTIONARY.en, {
   'action.generating': 'Generating...',
@@ -939,7 +991,7 @@ Object.assign(DICTIONARY.en, {
   'action.delete': 'Delete',
   'action.refresh': 'Refresh',
   'action.refreshing': 'Refreshing...',
-});
+})
 
 // Suppliers - MVP strings
 Object.assign(DICTIONARY.es, {
@@ -951,7 +1003,7 @@ Object.assign(DICTIONARY.es, {
   'suppliers.modal.create': 'CREAR PROVEEDOR',
   'suppliers.modal.edit': 'EDITAR PROVEEDOR',
   'suppliers.search.placeholder': 'Buscar proveedor...',
-});
+})
 Object.assign(DICTIONARY.en, {
   'suppliers.title': 'Suppliers',
   'suppliers.action.create': 'Create Supplier',
@@ -961,32 +1013,56 @@ Object.assign(DICTIONARY.en, {
   'suppliers.modal.create': 'CREATE SUPPLIER',
   'suppliers.modal.edit': 'EDIT SUPPLIER',
   'suppliers.search.placeholder': 'Search supplier...',
-});
+})
 
-let currentLang = 'es';
-export const setI18nLang = (l) => { if (DICTIONARY[l]) currentLang = l; };
-export const tRaw = (key) => (DICTIONARY[currentLang] && DICTIONARY[currentLang][key]) || key;
+let currentLang = 'es'
+export const setI18nLang = l => {
+  if (DICTIONARY[l]) currentLang = l
+}
+export const tRaw = key =>
+  (DICTIONARY[currentLang] && DICTIONARY[currentLang][key]) || key
 
 export function useI18n() {
   try {
-    const [lang, setLangState] = useState(currentLang);
-    const setLang = useCallback((l) => { if (DICTIONARY[l]) { currentLang = l; setLangState(l); } }, []);
+    const [lang, setLangState] = useState(currentLang)
+    const setLang = useCallback(l => {
+      if (DICTIONARY[l]) {
+        currentLang = l
+        setLangState(l)
+      }
+    }, [])
     // soporta interpolación simple: t('key', { a: 1 }) -> reemplaza {a}
-    const t = useCallback((key, vars) => {
-      const template = (DICTIONARY[lang] && DICTIONARY[lang][key]) || key;
-      if (!vars) return template;
-      return String(template).replace(/\{(\w+)\}/g, (_, k) => (Object.prototype.hasOwnProperty.call(vars, k) ? String(vars[k]) : `{${k}}`));
-    }, [lang]);
-    return { t, lang, setLang };
+    const t = useCallback(
+      (key, vars) => {
+        const template = (DICTIONARY[lang] && DICTIONARY[lang][key]) || key
+        if (!vars) return template
+        return String(template).replace(/\{(\w+)\}/g, (_, k) =>
+          Object.prototype.hasOwnProperty.call(vars, k)
+            ? String(vars[k])
+            : `{${k}}`
+        )
+      },
+      [lang]
+    )
+    return { t, lang, setLang }
   } catch (error) {
     // Fallback for React 19 hooks compatibility
-    const lang = currentLang;
-    const setLang = (l) => { if (DICTIONARY[l]) { currentLang = l; } };
+    const lang = currentLang
+    const setLang = l => {
+      if (DICTIONARY[l]) {
+        currentLang = l
+      }
+    }
     const t = (key, vars) => {
-      const template = (DICTIONARY[currentLang] && DICTIONARY[currentLang][key]) || key;
-      if (!vars) return template;
-      return String(template).replace(/\{(\w+)\}/g, (_, k) => (Object.prototype.hasOwnProperty.call(vars, k) ? String(vars[k]) : `{${k}}`));
-    };
-    return { t, lang, setLang };
+      const template =
+        (DICTIONARY[currentLang] && DICTIONARY[currentLang][key]) || key
+      if (!vars) return template
+      return String(template).replace(/\{(\w+)\}/g, (_, k) =>
+        Object.prototype.hasOwnProperty.call(vars, k)
+          ? String(vars[k])
+          : `{${k}}`
+      )
+    }
+    return { t, lang, setLang }
   }
 }

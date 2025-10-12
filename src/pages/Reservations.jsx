@@ -25,6 +25,7 @@ import {
   formatReserveDate
 } from '@/utils/timeUtils';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useAnnouncement } from '@/contexts/AnnouncementContext';
 
 // Stores
 import useReservationStore from '@/store/useReservationStore';
@@ -91,7 +92,8 @@ const ReservationSteps = ({ currentStep, steps }) => {
 const Reservations = () => {
   const { t } = useI18n();
   const { styles } = useThemeStyles();
-  
+  const { announceSuccess, announceError } = useAnnouncement();
+
   // Estados del store
   const {
     reservations,
@@ -502,14 +504,41 @@ const Reservations = () => {
       console.log('🔄 Creating reservation with data:', reservationData);
       const result = await createReservation(reservationData);
       console.log('✅ Reservation creation result:', result);
-      
+
+      // ⚠️ VERIFICAR SI LA OPERACIÓN FUE EXITOSA
+      if (!result || result.success === false) {
+        // Error del backend
+        const errorMessage = result?.error || 'Error desconocido al crear la reserva';
+
+        // Mostrar error específico según el tipo
+        if (errorMessage.includes('No price found')) {
+          const productName = selectedProduct?.name || 'este producto';
+          announceError(
+            `❌ No se puede reservar ${productName}: No tiene precio configurado. ` +
+            `Por favor, configura un precio en la sección de Productos antes de crear reservas.`
+          );
+        } else if (errorMessage.includes('already reserved')) {
+          announceError('❌ Este horario ya está reservado. Por favor, selecciona otro horario disponible.');
+        } else if (errorMessage.includes('not available')) {
+          announceError('❌ El horario seleccionado ya no está disponible. Actualiza la búsqueda.');
+        } else {
+          announceError(`❌ Error al crear la reserva: ${errorMessage}`);
+        }
+
+        // No continuar con el reset del formulario
+        return;
+      }
+
+      // ✅ Reserva creada exitosamente
+      announceSuccess('✅ Reserva creada exitosamente');
+
       // 🔄 IMPORTANTE: Refrescar horarios después de crear reserva exitosamente
       if (selectedProduct && selectedDate) {
         const dateStr = selectedDate.toISOString().split('T')[0];
         console.log('🔄 Refreshing schedules after successful reservation creation...');
         await fetchAvailableSchedules(selectedProduct.id, dateStr);
       }
-      
+
       // Reset del formulario
       setSelectedProduct(null);
       setSelectedDate(new Date());
@@ -523,12 +552,13 @@ const Reservations = () => {
         start_time: '',
         duration: 1
       });
-      
+
       // Cambiar a la tab de lista para ver la reserva creada
       setActiveTab('list');
     } catch (error) {
       console.error('Error creating reservation:', error);
-      alert('Error al crear la reserva. Por favor intenta de nuevo.');
+      const errorMsg = error?.message || error?.toString() || 'Error desconocido';
+      announceError(`❌ Error al crear la reserva: ${errorMsg}. Por favor intenta de nuevo.`);
     }
   };
 
@@ -580,16 +610,46 @@ const Reservations = () => {
 
   const handleCancelReservation = async (reservation) => {
     if (window.confirm(t('reservations.confirm_cancel', '¿Cancelar esta reserva?'))) {
-      // Usar reserve_id como campo primario, fallback a id
-      const reserveId = reservation.reserve_id || reservation.id;
-      console.log('🔍 Cancelando reserva con ID:', reserveId, 'reservation object:', reservation);
-      await cancelReservation(reserveId);
+      try {
+        // Usar reserve_id como campo primario, fallback a id
+        const reserveId = reservation.reserve_id || reservation.id;
+        console.log('🔍 Cancelando reserva con ID:', reserveId, 'reservation object:', reservation);
+        const result = await cancelReservation(reserveId);
+
+        // Verificar si la operación fue exitosa
+        if (!result || result.success === false) {
+          const errorMessage = result?.error || 'Error desconocido al cancelar la reserva';
+          announceError(`❌ Error al cancelar la reserva: ${errorMessage}`);
+          return;
+        }
+
+        announceSuccess('✅ Reserva cancelada exitosamente');
+      } catch (error) {
+        console.error('Error cancelling reservation:', error);
+        const errorMsg = error?.message || error?.toString() || 'Error desconocido';
+        announceError(`❌ Error al cancelar la reserva: ${errorMsg}`);
+      }
     }
   };
 
   const handleConfirmReservation = async (reservation) => {
     if (window.confirm(t('reservations.confirm_confirm', '¿Confirmar esta reserva?'))) {
-      await confirmReservation(reservation.reserve_id || reservation.id);
+      try {
+        const result = await confirmReservation(reservation.reserve_id || reservation.id);
+
+        // Verificar si la operación fue exitosa
+        if (!result || result.success === false) {
+          const errorMessage = result?.error || 'Error desconocido al confirmar la reserva';
+          announceError(`❌ Error al confirmar la reserva: ${errorMessage}`);
+          return;
+        }
+
+        announceSuccess('✅ Reserva confirmada exitosamente');
+      } catch (error) {
+        console.error('Error confirming reservation:', error);
+        const errorMsg = error?.message || error?.toString() || 'Error desconocido';
+        announceError(`❌ Error al confirmar la reserva: ${errorMsg}`);
+      }
     }
   };
 

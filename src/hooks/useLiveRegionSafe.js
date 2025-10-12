@@ -71,17 +71,11 @@ export const useLiveRegionSafe = (options = {}) => {
         });
       } catch (error) {
         // Silently handle telemetry errors in StrictMode
-        console.warn('Telemetry tracking failed:', error);
       }
     }
 
     // Debug logging
     if (debugMode) {
-      console.log('[useLiveRegionSafe] Announcing:', {
-        message: announcement.message,
-        priority,
-        queueLength: messageQueue.length
-      });
     }
 
     // Agregar a la cola de mensajes
@@ -189,7 +183,6 @@ export const useLiveRegionSafe = (options = {}) => {
           debugMode
         });
       } catch (error) {
-        console.warn('Telemetry mount tracking failed:', error);
       }
     }
 
@@ -200,7 +193,6 @@ export const useLiveRegionSafe = (options = {}) => {
             announcements_made: messageQueue.length
           });
         } catch (error) {
-          console.warn('Telemetry unmount tracking failed:', error);
         }
       }
     };

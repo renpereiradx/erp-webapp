@@ -13,7 +13,9 @@ const CurrencySelector = ({
   disabled = false,
   showSearch = false,
   excludeBase = false,
-  className = ""
+  className = "",
+  currencies: externalCurrencies = null, // Currencies pasadas desde el padre
+  loading: externalLoading = false
 }) => {
   const [currencies, setCurrencies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,10 +23,21 @@ const CurrencySelector = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
-  // Load currencies on component mount
+  // Si se pasan currencies desde el padre, usarlas
   useEffect(() => {
-    loadCurrencies();
-  }, [excludeBase]);
+    if (externalCurrencies && externalCurrencies.length > 0) {
+      setCurrencies(externalCurrencies);
+      setIsLoading(false);
+      return;
+    }
+  }, [externalCurrencies]);
+
+  // Load currencies on component mount (solo si no se pasan desde el padre o si está vacío)
+  useEffect(() => {
+    if (!externalCurrencies || externalCurrencies.length === 0) {
+      loadCurrencies();
+    }
+  }, [excludeBase, externalCurrencies]);
 
   const loadCurrencies = async () => {
     try {
@@ -49,13 +62,15 @@ const CurrencySelector = ({
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
     return (
-      currency.name.toLowerCase().includes(searchLower) ||
-      currency.currency_code.toLowerCase().includes(searchLower)
+      currency.name?.toLowerCase().includes(searchLower) ||
+      currency.currency_code?.toLowerCase().includes(searchLower)
     );
   });
 
-  // Find selected currency
-  const selectedCurrency = currencies.find(c => c.id === value);
+  // Find selected currency - soporta tanto ID como currency_code
+  const selectedCurrency = currencies.find(c =>
+    c.id === value || c.currency_code === value
+  );
 
   const handleCurrencySelect = (currency) => {
     onChange(currency);
@@ -72,7 +87,10 @@ const CurrencySelector = ({
     }
   };
 
-  if (isLoading) {
+  // Usar loading externo si está disponible
+  const actuallyLoading = externalCurrencies ? externalLoading : isLoading;
+
+  if (actuallyLoading) {
     return (
       <div className={`relative ${className}`}>
         <div className="flex items-center justify-center p-3 border border-gray-300 rounded-md bg-gray-50">

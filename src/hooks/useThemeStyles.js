@@ -59,7 +59,6 @@ export const useThemeStyles = () => {
   // Funciones de estilo optimizadas
   const styles = useMemo(() => {
     if (!styleConfig) {
-      console.warn(`No style config found for theme type: ${themeConfig.type}`);
       return createFallbackStyles();
     }
 

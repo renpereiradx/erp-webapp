@@ -141,6 +141,7 @@ export default function ProductGrid({
             ...style,
             display: 'grid',
             gridTemplateColumns: `repeat(auto-fill, minmax(${itemMinWidth}px, 1fr))`,
+            gridAutoRows: '1fr',
             gap,
             alignContent: 'start',
             paddingTop: '0.25rem',
@@ -159,7 +160,7 @@ export default function ProductGrid({
     return function ItemComponent({ children, ...rest }) {
       const cls = rest.className ? `${rest.className} virtuoso-grid-item` : 'virtuoso-grid-item';
       return (
-        <div {...rest} className={cls} style={{ width: '100%' }}>
+        <div {...rest} className={cls} style={{ width: '100%', height: '100%' }}>
           {children}
         </div>
       );
@@ -181,7 +182,7 @@ export default function ProductGrid({
           aria-label={t('products.item_aria', { nameOrId: products[index]?.name || products[index]?.id || index + 1 })}
           onFocus={() => setFocusedIndex(index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
-          style={{ outline: 'none' }}
+          style={{ outline: 'none', height: '100%' }}
         >
           <ProductCard
             key={products[index].product_id || products[index].id}

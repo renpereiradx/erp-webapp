@@ -22,7 +22,6 @@ const ProductComparisonDebug = () => {
       const api = new BusinessManagementAPI();
       const product = await api.getProductById(testProductId);
       setProductById(product);
-      console.log('Producto por ID:', product);
     } catch (err) {
       setError(`Error al obtener por ID: ${err.message}`);
     } finally {
@@ -38,7 +37,6 @@ const ProductComparisonDebug = () => {
       const products = await api.searchProductsByName(testProductName);
       const product = Array.isArray(products) ? products[0] : products;
       setProductByName(product);
-      console.log('Producto por nombre:', product);
     } catch (err) {
       setError(`Error al obtener por nombre: ${err.message}`);
     } finally {

@@ -30,13 +30,9 @@ const LoginPage = () => {
     e.preventDefault();
     
     try {
-      const result = await login(formData);
-      
-      if (!result?.success) {
-        console.error('Login failed:', result?.message || 'Unknown error');
-      }
+      await login(formData);
     } catch (error) {
-      console.error('Login error:', error);
+      // Error is handled by the AuthContext and displayed to the user.
     }
   };
 

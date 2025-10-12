@@ -10,53 +10,105 @@ const TAX_RATE = 0.16; // IVA 16%
 
 // Plantillas base para justificaciones de cambio de precio
 export const PRICE_CHANGE_REASONS = [
+  // ========== DESCUENTOS ==========
   {
     id: 'bulk_discount',
-    label: 'Descuento por volumen',
+    label: '🔻 Descuento por volumen',
     description: 'Descuento aplicado por compra de grandes cantidades',
-    requiresAuth: false
+    requiresAuth: false,
+    type: 'discount'
   },
   {
     id: 'loyalty_discount',
-    label: 'Descuento por fidelidad',
+    label: '🔻 Descuento por fidelidad',
     description: 'Descuento especial para cliente frecuente',
-    requiresAuth: false
+    requiresAuth: false,
+    type: 'discount'
   },
   {
     id: 'promotional_offer',
-    label: 'Oferta promocional',
+    label: '🔻 Oferta promocional',
     description: 'Descuento por campaña promocional activa',
-    requiresAuth: false
+    requiresAuth: false,
+    type: 'discount'
   },
   {
     id: 'damaged_product',
-    label: 'Producto con daño menor',
+    label: '🔻 Producto con daño menor',
     description: 'Descuento por imperfecciones cosméticas que no afectan funcionalidad',
-    requiresAuth: true
+    requiresAuth: true,
+    type: 'discount'
   },
   {
     id: 'clearance_sale',
-    label: 'Liquidación de inventario',
+    label: '🔻 Liquidación de inventario',
     description: 'Precio reducido para acelerar rotación de stock',
-    requiresAuth: true
+    requiresAuth: true,
+    type: 'discount'
   },
   {
     id: 'price_match',
-    label: 'Igualación de precio',
+    label: '🔻 Igualación de precio',
     description: 'Precio ajustado para igualar oferta de competencia',
-    requiresAuth: true
+    requiresAuth: true,
+    type: 'discount'
   },
   {
     id: 'manager_approval',
-    label: 'Autorización gerencial',
+    label: '🔻 Autorización gerencial',
     description: 'Descuento especial autorizado por gerencia',
-    requiresAuth: true
+    requiresAuth: true,
+    type: 'discount'
   },
   {
     id: 'customer_service',
-    label: 'Compensación al cliente',
+    label: '🔻 Compensación al cliente',
     description: 'Descuento como gesto de buena voluntad por inconvenientes',
-    requiresAuth: true
+    requiresAuth: true,
+    type: 'discount'
+  },
+  // ========== AUMENTOS DE PRECIO ==========
+  {
+    id: 'tournament_price',
+    label: '🔺 Precio de torneo/evento',
+    description: 'Precio especial para torneos y eventos deportivos',
+    requiresAuth: false,
+    type: 'increase'
+  },
+  {
+    id: 'peak_hours',
+    label: '🔺 Tarifa por hora pico',
+    description: 'Precio aumentado durante horarios de alta demanda',
+    requiresAuth: false,
+    type: 'increase'
+  },
+  {
+    id: 'special_event',
+    label: '🔺 Evento especial',
+    description: 'Precio especial para eventos corporativos o especiales',
+    requiresAuth: false,
+    type: 'increase'
+  },
+  {
+    id: 'holiday_surcharge',
+    label: '🔺 Recargo por feriado',
+    description: 'Precio aumentado para días festivos',
+    requiresAuth: false,
+    type: 'increase'
+  },
+  {
+    id: 'premium_service',
+    label: '🔺 Servicio premium',
+    description: 'Precio mayor por servicio o atención premium',
+    requiresAuth: true,
+    type: 'increase'
+  },
+  {
+    id: 'express_service',
+    label: '🔺 Servicio express',
+    description: 'Recargo por atención prioritaria o urgente',
+    requiresAuth: true,
+    type: 'increase'
   }
 ];
 
@@ -239,22 +291,32 @@ export const useSalesLogic = () => {
     );
   }, []);
 
-  // Establecer precio directo (con justificación) según SALE_WITH_DISCOUNT_API.md
+  // Establecer precio directo (con justificación) - Soporta AUMENTOS Y DESCUENTOS
   const setDirectPrice = useCallback((itemId, newPrice, reason, justification, authorizedBy = null) => {
     if (newPrice < 0) return;
 
     setSaleItems(prevItems =>
       prevItems.map(item => {
         if ((item.product_id || item.id) === itemId) {
-          const discountAmount = item.originalPrice - newPrice;
-          const percentage = discountAmount > 0 ? (discountAmount / item.originalPrice) * 100 : 0;
+          const priceChange = item.originalPrice - newPrice;
+          const isPriceIncrease = newPrice > item.originalPrice;
+          const isDiscount = newPrice < item.originalPrice;
+
+          // Calcular el cambio como valor absoluto para el porcentaje
+          const absoluteChange = Math.abs(priceChange);
+          const percentage = absoluteChange > 0 ? (absoluteChange / item.originalPrice) * 100 : 0;
 
           return {
             ...item,
             price: Number(newPrice.toFixed(2)),
-            discountPercentage: Number(percentage.toFixed(2)),
-            discountAmount: Number(discountAmount.toFixed(2)),
-            hasDiscount: Math.abs(newPrice - item.originalPrice) > 0.01,
+            discountPercentage: isDiscount ? Number(percentage.toFixed(2)) : 0,
+            discountAmount: isDiscount ? Number(absoluteChange.toFixed(2)) : 0,
+            // Nuevos campos para aumentos de precio
+            priceIncrease: isPriceIncrease ? Number(absoluteChange.toFixed(2)) : 0,
+            priceIncreasePercentage: isPriceIncrease ? Number(percentage.toFixed(2)) : 0,
+            hasDiscount: isDiscount && Math.abs(priceChange) > 0.01,
+            hasPriceIncrease: isPriceIncrease && Math.abs(priceChange) > 0.01,
+            isPriceModified: Math.abs(newPrice - item.originalPrice) > 0.01,
             priceChangeReason: reason,
             priceChangeJustification: justification,
             priceChangeAuthorizedBy: authorizedBy,
@@ -317,8 +379,18 @@ export const useSalesLogic = () => {
     // Ahora que el backend arregló JSONB, enviamos todos los productos directamente
     const allItems = saleItems;
 
+    // Detectar si hay modificaciones de precio (aumentos o descuentos)
+    const hasAnyPriceModifications = allItems.some(item =>
+      item.isPriceModified ||
+      item.sale_price ||
+      item.hasPriceIncrease ||
+      item.hasDiscount
+    );
+
     const saleData = {
       client_id: clientId,
+      // ⚡ CRÍTICO: Habilitar modificaciones de precio si hay cambios
+      allow_price_modifications: hasAnyPriceModifications,
       product_details: allItems.map(item => {
         const productDetail = {
           product_id: item.product_id || item.id,
@@ -337,7 +409,8 @@ export const useSalesLogic = () => {
         }
 
         // MODIFICACIÓN DE PRECIOS (requiere allow_price_modifications = true)
-        if (item.sale_price && item.sale_price !== item.originalPrice) {
+        // Soporta tanto AUMENTOS como DESCUENTOS
+        if (item.sale_price && Math.abs(item.sale_price - item.originalPrice) > 0.01) {
           productDetail.sale_price = item.sale_price;
         }
         if (item.price_change_reason) {
@@ -350,12 +423,6 @@ export const useSalesLogic = () => {
           productDetail.sale_price = item.price;
           productDetail.price_change_reason = `Precio de reserva confirmada #${item.reservation_id} - Tarifa especial aplicada según reserva`;
 
-          console.log('🔍 Adding price justification for reservation product:', {
-            product_id: productDetail.product_id,
-            sale_price: productDetail.sale_price,
-            price_change_reason: productDetail.price_change_reason,
-            reservation_id: item.reservation_id
-          });
         }
 
         // DESCUENTOS (NUEVO) - Solo incluir si tienen valores
@@ -380,34 +447,6 @@ export const useSalesLogic = () => {
     if (selectedReserve?.id) {
       saleData.reserve_id = selectedReserve.id;
     }
-
-    console.log('🔍 Sale data prepared:', {
-      hasReserve: !!selectedReserve,
-      reserveId: selectedReserve?.id,
-      totalItems: allItems.length,
-      reservationItems: allItems.filter(item => item.fromReservation).length,
-      itemsWithDiscounts: allItems.filter(item =>
-        item.discount_amount > 0 || item.discount_percent > 0
-      ).length
-    });
-
-    // Log detallado de los productos para debugging de stock
-    console.log('📦 Products being sent to backend:');
-    allItems.forEach((item, index) => {
-      console.log(`   [${index}] Product Details:`, {
-        product_id: item.product_id,
-        product_name: item.name || item.product_name,
-        quantity: item.quantity,
-        price: item.price,
-        stock_quantity: item.stock_quantity,
-        originalPrice: item.originalPrice,
-        fromReservation: item.fromReservation || false,
-        discount_amount: item.discount_amount,
-        discount_percent: item.discount_percent,
-        sale_price: item.sale_price
-      });
-      console.log(`   [${index}] Full Item Object:`, item);
-    });
 
     return saleData;
   }, [selectedClient, selectedReserve, saleItems, validations.canProceed]);

@@ -15,6 +15,8 @@ A modern, multi-theme ERP system built with React, Vite, and Tailwind CSS.
 
 ## Quick Start
 
+### Development
+
 ```bash
 # Install dependencies
 pnpm install
@@ -26,7 +28,31 @@ pnpm run dev
 pnpm run build
 ```
 
+### Production Deployment
+
+```bash
+# 1. Validate configuration
+./validate-config.sh
+
+# 2. Automated build and deploy
+./build-and-deploy.sh
+
+# 3. Or manually with Docker Compose
+docker-compose up --build -d
+```
+
+See [Frontend Deploy Guide](./docs/development/FRONTEND_DEPLOY_GUIDE.md) for detailed deployment instructions.
+
 ## Documentation
+
+### 🚀 Deployment & Production
+
+- **[Quick Start Deploy](./QUICKSTART_DEPLOY.md)** - Deploy en 3 comandos
+- **[Deployment Summary](./DEPLOYMENT_SUMMARY.md)** - Estrategia completa de deployment
+- **[Architecture Diagrams](./ARCHITECTURE_DIAGRAMS.md)** - Diagramas visuales de la arquitectura
+- **[Frontend Deploy Guide](./docs/development/FRONTEND_DEPLOY_GUIDE.md)** - Guía detallada de deployment
+
+### 📚 Development & Architecture
 
 - [Architecture](./docs/ARCHITECTURE.md) - System architecture and design patterns
 - [API Integration](./docs/API_INTEGRATION.md) - Backend API documentation
@@ -47,7 +73,7 @@ pnpm run build
 
 ## Project Structure
 
-```
+```text
 src/
 ├── components/     # Reusable UI components
 ├── hooks/         # Custom React hooks
@@ -59,7 +85,7 @@ src/
 └── utils/         # Utility functions
 ```
 
-## Development
+## Development Guidelines
 
 See [development documentation](./docs/development/) for detailed development guidelines.
 

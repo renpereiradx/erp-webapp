@@ -5,7 +5,10 @@
  * @typedef {Object} Currency
  * @property {number} id - Currency ID
  * @property {string} currency_code - Currency code (e.g., "USD", "PYG")
- * @property {string} name - Currency name
+ * @property {string} currency_name - Currency display name
+ * @property {string} [name] - Legacy alias for currency_name
+ * @property {string} [symbol] - Currency symbol (e.g., "$", "₲")
+ * @property {boolean} [is_base_currency] - Whether this is the system base currency
  */
 
 /**
@@ -56,6 +59,18 @@
  */
 
 /**
+ * @typedef {Object} ExchangeRateEnriched
+ * @property {number} id - Exchange rate ID
+ * @property {number} currency_id - Currency ID reference
+ * @property {string} currency_code - Currency code (e.g., "USD")
+ * @property {string} currency_name - Currency name
+ * @property {number} rate_to_base - Rate conversion to base currency
+ * @property {string} date - ISO date string
+ * @property {string} [source] - Optional source of exchange rate
+ * @property {string} created_at - ISO datetime string
+ */
+
+/**
  * @typedef {Object} ExchangeRateResponse
  * @property {ExchangeRate} data - Single exchange rate object
  * @property {boolean} success - Response success status
@@ -67,6 +82,19 @@
  * @property {ExchangeRate[]} data - Array of exchange rates
  * @property {boolean} success - Response success status
  * @property {string} [message] - Optional message
+ */
+
+/**
+ * @typedef {Object} PaginatedResponse
+ * @property {Array} data - Array of results
+ * @property {number} total - Total number of records available
+ * @property {number} page - Current page number (1-based)
+ * @property {number} page_size - Page size requested
+ * @property {number} total_pages - Total number of pages
+ */
+
+/**
+ * @typedef {PaginatedResponse & { data: ExchangeRateEnriched[] }} ExchangeRateEnrichedPaginatedResponse
  */
 
 // Query Types for API requests
@@ -124,4 +152,4 @@
  * @property {string} [warning] - Optional warning message
  */
 
-export {};
+export {}

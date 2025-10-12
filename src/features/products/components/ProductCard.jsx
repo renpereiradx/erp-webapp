@@ -55,7 +55,7 @@ const ProductCard = React.memo(({ product, onView, onEdit, onDelete, onReactivat
   const cardVariant = stockStatus.status === 'in-stock' ? 'success' : undefined;
   
   return (
-    <div className={`erp-hover-card ${styles.card(cardVariant || 'group flex flex-col', cardVariant ? { interactive: true, density: 'compact', extra: 'group flex flex-col' } : '')} ${isInactive ? 'opacity-70 border-dashed border-2' : ''}`}>
+    <div className={`erp-hover-card h-full ${styles.card(cardVariant || 'group flex flex-col', cardVariant ? { interactive: true, density: 'compact', extra: 'group flex flex-col' } : '')} ${isInactive ? 'opacity-70 border-dashed border-2' : ''}`}>
       <div className="flex-1 p-4">
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-start gap-2 flex-1 pr-2 min-w-0">

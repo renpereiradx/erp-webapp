@@ -119,7 +119,6 @@ export function useProductFilters({ products = [], onApiSearch, onClear, persist
       } catch (error) {
         // Ignorar errores de cancelación u otros
         if (error?.name !== 'AbortError') {
-          console.warn('Error en búsqueda automática:', error);
         }
       }
     };
