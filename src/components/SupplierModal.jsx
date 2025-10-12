@@ -5,7 +5,7 @@ import { X, Save, User, Phone, MapPin, ToggleLeft, ToggleRight, Loader, Building
 import useSupplierStore from '@/store/useSupplierStore';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/Input';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import StatusBadge from '@/components/ui/StatusBadge';
 

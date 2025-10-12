@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 
 const ErrorState = ({ title, message, code, hint, onRetry, onSecondary, actions = [], 'data-testid': testId }) => {

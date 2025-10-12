@@ -12,7 +12,7 @@ import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useAnnouncement } from '@/contexts/AnnouncementContext';
 import { Calendar, ShoppingCart, Save, Check, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/lib/i18n';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '../ui/Button';
+import { Button } from '@/components/ui/button';
 import { Input } from '../ui/Input';
 import { useI18n } from '../../lib/i18n';
 

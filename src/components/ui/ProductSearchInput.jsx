@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Package, X } from 'lucide-react';
-import { Button } from './Button';
-import { Input } from './Input';
+import { Button } from './button';
+import { Input } from './input';
 import useProductStore from '@/store/useProductStore';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 

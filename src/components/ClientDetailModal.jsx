@@ -2,7 +2,7 @@ import React from 'react';
 // useTheme removido para MVP - sin hooks problemáticos
 import { X, User, Mail, Phone, Hash, Calendar, Info } from 'lucide-react';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 
 // Se asume que los helpers de estilo están disponibles o se importan
 const getTypographyStyles = (theme, level) => { /* ... */ };

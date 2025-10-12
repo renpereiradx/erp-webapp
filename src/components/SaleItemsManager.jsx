@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { Plus, Minus, X, Package, DollarSign, Hash } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 // Eliminamos dependencias específicas brutalist

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Filter, X, Users } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
+import { Button } from '@/components/ui/button';
+import { Input } from '../components/ui/input';
 import DataState from '../components/ui/DataState';
 import EmptyState from '../components/ui/EmptyState';
 import EnhancedModal, { ConfirmationModal } from '../components/ui/EnhancedModal';

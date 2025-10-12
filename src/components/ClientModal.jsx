@@ -5,7 +5,7 @@ import { X, Save, User, Phone, MapPin, Loader, FileText } from 'lucide-react';
 import useClientStore from '@/store/useClientStore';
 import { useToast } from '@/hooks/useToast';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/Input';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const ClientModal = ({ isOpen, onClose, client, onSuccess }) => {

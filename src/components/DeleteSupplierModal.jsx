@@ -1,7 +1,7 @@
 import React from 'react';
 // useTheme removido para MVP - sin hooks problemáticos
 import { X, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 
 const DeleteSupplierModal = ({ isOpen, onClose, supplier, onConfirm, loading }) => {
   if (!isOpen) return null;

@@ -3,7 +3,7 @@ import { useI18n } from '../lib/i18n';
 import useDashboardStore from '../store/useDashboardStore';
 import { useThemeStyles } from '../hooks/useThemeStyles';
 import DataState from '../components/ui/DataState';
-import { Button } from '../components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { DEMO_CHART_DATA } from '../config/demoData';
 import { DollarSign, Users, Package, ShoppingCart, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';

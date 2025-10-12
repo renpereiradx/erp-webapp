@@ -6,7 +6,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { X, AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react';
-import { Button } from './Button';
+import { Button } from './button';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useI18n } from '@/lib/i18n';
 

@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 // useTheme removido para MVP - sin hooks problemáticos
 import { ChevronLeft, ChevronRight, Clock, User, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { BrutalistBadge } from '@/components/ui/Card.jsx';
 import { Badge } from '@/components/ui/badge';
 import useReservationStore from '@/store/useReservationStore';

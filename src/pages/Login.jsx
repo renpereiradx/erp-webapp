@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useI18n } from '../lib/i18n'
 import { useAuth } from '../contexts/AuthContext'
-import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
+import { Button } from '@/components/ui/button';
+import { Input } from '../components/ui/input'
 import { useTheme } from '../contexts/ThemeContext'
 import { Eye, EyeOff } from 'lucide-react'
 

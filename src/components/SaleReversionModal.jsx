@@ -5,12 +5,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, RefreshCw, XCircle, CheckCircle, Package, CreditCard, DollarSign, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/Input';
+import { Input } from '@/components/ui/input';
 import saleService from '@/services/saleService';
 
 const SaleReversionModal = ({ isOpen, onClose, saleId, onReversionComplete }) => {

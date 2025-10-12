@@ -90,7 +90,7 @@ wsl --set-default-version 2
 ```powershell
 # Abrir PowerShell como administrador y ejecutar:
 # Agregar PostgreSQL al PATH (ajusta la versión según tu instalación)
-$env:Path += ";C:\Program Files\PostgreSQL\15\bin"
+$env:Path += ";C:\Program Files\PostgreSQL\16\bin"
 setx PATH "$env:Path" /M
 
 # Verificar instalación

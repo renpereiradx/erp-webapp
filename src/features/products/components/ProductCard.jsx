@@ -2,7 +2,7 @@ import React from 'react';
 import { Edit, Trash2, Eye, AlertCircle, CheckCircle, DollarSign, Tag, Package, RotateCcw, Barcode, FileText, Hash } from 'lucide-react';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { createProductSummary, getStockStatus } from '@/utils/productUtils';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import EditableField from '@/components/EditableField';
 

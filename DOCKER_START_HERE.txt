@@ -1,0 +1,266 @@
+################################################################################
+#                                                                              #
+#   🚀 DESPLIEGUE DOCKER - SISTEMA ERP                                         #
+#                                                                              #
+################################################################################
+
+✅ ESTADO: Sistema listo para dockerizar
+📅 FECHA: Octubre 2025
+🔧 VERSIÓN: 1.0.0
+
+################################################################################
+# ARCHIVOS PREPARADOS
+################################################################################
+
+✅ docker-compose.yml              → Configuración de servicios completa
+✅ Dockerfile                      → Build multi-stage del frontend
+✅ nginx.conf                      → Proxy reverso configurado
+✅ .env.production                 → Variables de entorno listas
+
+✅ scripts/deploy-full-stack.ps1  → Script de despliegue automatizado
+✅ scripts/build-backend.ps1      → Script para construir backend
+✅ scripts/check-status.ps1       → Script de verificación de estado
+
+✅ DOCKER_README.md                → Documentación completa
+✅ DOCKER_QUICK_START.md           → Guía rápida de uso
+✅ WINDOWS_SETUP_GUIDE.md          → Guía de configuración Windows
+
+################################################################################
+# ⚡ INICIO RÁPIDO - 4 COMANDOS
+################################################################################
+
+1. Verificar que PostgreSQL esté corriendo en Windows:
+
+   Get-Service postgresql-x64-16
+
+2. Si no está corriendo, iniciarlo:
+
+   Start-Service postgresql-x64-16
+
+3. Ejecutar despliegue Docker:
+
+   cd c:\dev\erp-project\frontend
+   docker-compose up -d
+
+4. Acceder a la aplicación:
+
+   http://localhost:8080
+   
+   Email:    admin
+   Password: aDmin404942
+
+################################################################################
+# 🔧 CONFIGURACIÓN DEL BACKEND
+################################################################################
+
+REQUISITO: El backend debe tener un Dockerfile en su directorio.
+
+Estructura esperada del backend:
+C:\dev\erp-project\backend\
+  ├── Dockerfile        ← DEBE EXISTIR
+  ├── .env (opcional)
+  └── ... (código fuente)
+
+Si no tienes un Dockerfile en el backend, créalo siguiendo la estructura
+de tu framework (Go, Node.js, Java, etc.)
+
+################################################################################
+# 📋 PRE-REQUISITOS (VERIFICAR ANTES DE CONTINUAR)
+################################################################################
+
+[✓] Docker Desktop instalado y corriendo
+[✓] PostgreSQL 16 corriendo en Windows (C:\Program Files\PostgreSQL\16\bin)
+[✓] Base de datos 'erp_db' creada en PostgreSQL
+[✓] Usuario 'dev_user' con permisos en la base de datos
+[✓] PostgreSQL escuchando en todas las interfaces (listen_addresses = '*')
+[✓] pg_hba.conf configurado para permitir conexiones desde Docker (172.17.0.0/16)
+[✓] Backend ubicado en C:\dev\erp-project\backend
+[✓] Backend tiene un Dockerfile y imagen construida (erp-backend:latest)
+[✓] Frontend ubicado en C:\dev\erp-project\frontend
+
+NOTA IMPORTANTE: PostgreSQL está instalado NATIVAMENTE en Windows
+Ruta: C:\Program Files\PostgreSQL\16\bin
+Conexión desde Docker: host.docker.internal:5432
+
+Para verificar PostgreSQL:
+  Get-Service postgresql-x64-16
+  Start-Service postgresql-x64-16
+
+################################################################################
+# 🚀 OPCIONES DE DESPLIEGUE
+################################################################################
+
+OPCIÓN 1: Despliegue Rápido (Recomendado)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  cd c:\dev\erp-project\frontend
+  docker-compose up -d
+
+  Esto levanta:
+  - Backend (puerto 5050) → conecta a PostgreSQL en Windows
+  - Frontend (puerto 8080) → sirve React app con Nginx
+
+
+OPCIÓN 2: Despliegue con Rebuild
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  # Si cambiaste código del frontend
+  cd c:\dev\erp-project\frontend
+  docker-compose up -d --build
+
+  # Si cambiaste código del backend
+  cd c:\dev\erp-project\backend
+  docker build -t erp-backend:latest .
+  cd c:\dev\erp-project\frontend
+  docker-compose up -d
+
+
+OPCIÓN 3: Reconstruir todo desde cero
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  # Detener y limpiar
+  cd c:\dev\erp-project\frontend
+  docker-compose down
+  
+  # Reconstruir backend
+  cd c:\dev\erp-project\backend
+  docker build -t erp-backend:latest . --no-cache
+  
+  # Reconstruir y levantar frontend
+  cd c:\dev\erp-project\frontend
+  docker-compose up -d --build --force-recreate
+
+################################################################################
+# 🔍 VERIFICACIÓN POST-DESPLIEGUE
+################################################################################
+
+Ejecuta el script de verificación:
+
+  .\scripts\check-status.ps1
+
+Verifica manualmente:
+
+  1. Estado de contenedores:
+     docker-compose ps
+     
+     Deberías ver:
+     - erp-backend   (healthy)
+     - erp-frontend  (healthy)
+
+  2. Endpoints funcionando:
+     - http://localhost:8080/           → Frontend
+     - http://localhost:5050/health     → Backend directo
+     - http://localhost:8080/api/health → Backend vía proxy
+
+  3. Login funcionando:
+     - Abre http://localhost:8080
+     - Login con admin / aDmin404942
+
+################################################################################
+# 📊 COMANDOS ÚTILES
+################################################################################
+
+Ver logs en tiempo real:
+  docker-compose logs -f
+
+Ver logs de un servicio específico:
+  docker-compose logs -f backend
+  docker-compose logs -f frontend
+
+Ver estado de servicios:
+  docker-compose ps
+
+Reiniciar servicios:
+  docker-compose restart
+
+Detener servicios:
+  docker-compose down
+
+Reconstruir sin cache:
+  docker-compose build --no-cache
+  docker-compose up -d
+
+################################################################################
+# 🐛 SOLUCIÓN DE PROBLEMAS
+################################################################################
+
+Problema: Backend no puede conectar a PostgreSQL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Verificar PostgreSQL está corriendo:
+    Get-Service postgresql-x64-16
+    
+  Si no está corriendo:
+    Start-Service postgresql-x64-16
+
+  Verificar que escucha en todas las interfaces:
+    # Editar C:\Program Files\PostgreSQL\16\data\postgresql.conf
+    # Buscar: listen_addresses = '*'
+    
+  Verificar pg_hba.conf permite Docker:
+    # Editar C:\Program Files\PostgreSQL\16\data\pg_hba.conf
+    # Agregar: host all all 172.17.0.0/16 md5
+    
+  Reiniciar PostgreSQL:
+    Restart-Service postgresql-x64-16
+
+  Ver logs del backend:
+    docker logs erp-backend --tail 50
+
+
+Problema: Puerto ya en uso
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Encontrar proceso:
+    netstat -ano | findstr :8080
+    netstat -ano | findstr :5050
+
+  Matar proceso:
+    taskkill /PID <PID> /F
+
+
+Problema: Imagen del backend no encontrada
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Construir manualmente:
+    cd C:\dev\erp-project\backend
+    docker build -t erp-backend:latest .
+
+################################################################################
+# 📚 DOCUMENTACIÓN COMPLETA
+################################################################################
+
+Para más detalles, consulta:
+
+  DOCKER_WINDOWS_POSTGRES_GUIDE.md  → Guía PostgreSQL en Windows (NUEVO)
+  DOCKER_README.md                  → Documentación completa
+  DOCKER_QUICK_START.md             → Guía rápida
+  WINDOWS_SETUP_GUIDE.md            → Configuración Windows completa
+  DOCKER_WSL_GUIDE.md               → (OBSOLETO - para PostgreSQL en WSL)
+
+################################################################################
+# 🎯 PRÓXIMOS PASOS
+################################################################################
+
+1. Asegúrate de que PostgreSQL esté corriendo
+2. Verifica que el backend tenga un Dockerfile
+3. Ejecuta: .\scripts\deploy-full-stack.ps1
+4. Accede a: http://localhost:8080
+
+################################################################################
+# 🆘 NECESITAS AYUDA?
+################################################################################
+
+1. Revisa la documentación en DOCKER_README.md
+2. Ejecuta el script de verificación: .\scripts\check-status.ps1
+3. Revisa los logs: docker-compose logs -f
+
+################################################################################
+
+✨ ¡El sistema está listo para ser dockerizado!
+
+Ejecuta el script de despliegue para comenzar:
+
+  .\scripts\deploy-full-stack.ps1
+
+################################################################################

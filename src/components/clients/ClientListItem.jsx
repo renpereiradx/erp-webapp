@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '../ui/Button';
+import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Mail, Phone, FileText, MapPin, Building2, Eye, Star } from 'lucide-react';
 import { useThemeStyles } from '../../hooks/useThemeStyles';
 

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useThemeStyles } from '@/hooks/useThemeStyles'
 import { useI18n } from '@/lib/i18n'
 import useProductStore from '@/store/useProductStore'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'

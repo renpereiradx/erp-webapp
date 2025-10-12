@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Clock, User, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { BrutalistBadge } from '@/components/ui/Card';
 import useReservationStore from '@/store/useReservationStore';
 import { cn } from '@/lib/utils';

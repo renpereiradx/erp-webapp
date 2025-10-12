@@ -1,6 +1,6 @@
 import React from 'react';
 import { Package, TrendingUp, TrendingDown, AlertTriangle, CheckCircle } from 'lucide-react';
-import { Button } from './ui/Button';
+import { Button } from '@/components/ui/button';
 
 /**
  * Component that displays a product with financial information

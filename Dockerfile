@@ -14,14 +14,12 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copiar archivos de dependencias primero (para cache de Docker)
-COPY package*.json ./
-COPY pnpm-lock.yaml* ./
+COPY package*.json pnpm-lock.yaml ./
 
 # Instalar pnpm globalmente
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10.14.0
 
 # Instalar dependencias
-# --frozen-lockfile asegura que se usen las versiones exactas del lock
 RUN pnpm install --frozen-lockfile
 
 # Copiar el código fuente completo
@@ -33,7 +31,7 @@ COPY .env.production .env.production
 
 # Build de producción
 # Las variables VITE_* se inyectan en tiempo de build
-RUN pnpm run build
+RUN npx vite build
 
 # Verificar que el build fue exitoso
 RUN ls -la /app/dist

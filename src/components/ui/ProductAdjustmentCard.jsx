@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Package, Barcode, Hash, ChevronDown, ChevronRight, Settings, Edit3, Save, X } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import MetadataTemplateSelector from '@/components/ui/MetadataTemplateSelector';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { REASON_OPTIONS, DEFAULT_METADATA_TEMPLATES } from '@/constants/inventoryDefaults';

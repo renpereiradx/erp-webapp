@@ -43,7 +43,7 @@ import {
   Bitcoin,
   Coins,
 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { ExchangeRateService } from '@/services/exchangeRateService.js'
 
 const currencyIconMap = {

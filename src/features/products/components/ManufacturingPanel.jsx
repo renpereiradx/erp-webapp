@@ -11,7 +11,7 @@ import {
 import { manufacturingService } from '@/services/manufacturingService'
 import { useThemeStyles } from '@/hooks/useThemeStyles'
 import { useToast } from '@/hooks/useToast'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,

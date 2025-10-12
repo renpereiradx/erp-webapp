@@ -37,16 +37,18 @@ services:
       start_period: 40s
 
   # =========================================
-  # BACKEND - API (Go)
+  # BACKEND - API
   # =========================================
   backend:
-    image: erp-backend:latest
+    image: erp-backend:latest  # Imagen pre-construida del backend
     container_name: erp-backend
     ports:
       - "5050:5050"
     environment:
       - PORT=:5050
       - JWT_SECRET=pwdUltraSecreta
+      # Conexión a PostgreSQL en Windows host
+      # host.docker.internal apunta al host de Windows desde el contenedor
       - DATABASE_URL=host=host.docker.internal port=5432 user=dev_user password=aDmin404942 dbname=erp_db sslmode=disable
       - DB_HOST=host.docker.internal
       - DB_PORT=5432
