@@ -151,7 +151,7 @@ export const useCashRegisterStore = create()(
           const { cashRegisters } = get()
           set({
             activeCashRegister: newCashRegister,
-            cashRegisters: [newCashRegister, ...cashRegisters],
+            cashRegisters: [newCashRegister, ...(cashRegisters || [])],
             isOpeningCashRegister: false,
           })
 
@@ -181,7 +181,7 @@ export const useCashRegisterStore = create()(
 
           // Actualizar estado: quitar caja activa y actualizar en lista
           const { cashRegisters } = get()
-          const updatedCashRegisters = cashRegisters.map(cr =>
+          const updatedCashRegisters = (cashRegisters || []).map(cr =>
             cr.id === cashRegisterId ? closedCashRegister : cr
           )
 
@@ -215,7 +215,7 @@ export const useCashRegisterStore = create()(
             filters
           )
           set({
-            cashRegisters,
+            cashRegisters: Array.isArray(cashRegisters) ? cashRegisters : [],
             isCashRegistersLoading: false,
           })
           return cashRegisters
@@ -223,6 +223,7 @@ export const useCashRegisterStore = create()(
           console.warn('Error loading cash registers:', error)
           set({
             cashRegistersError: error,
+            cashRegisters: [], // Mantener array vacío en caso de error
             isCashRegistersLoading: false,
           })
           throw error
@@ -257,7 +258,7 @@ export const useCashRegisterStore = create()(
           // Actualizar lista de movimientos
           const { movements } = get()
           set({
-            movements: [movement, ...movements],
+            movements: [movement, ...(movements || [])],
             isRegisteringMovement: false,
           })
 
@@ -289,7 +290,7 @@ export const useCashRegisterStore = create()(
             filters
           )
           set({
-            movements,
+            movements: Array.isArray(movements) ? movements : [],
             isMovementsLoading: false,
           })
           return movements
@@ -297,6 +298,7 @@ export const useCashRegisterStore = create()(
           console.warn('Error loading movements:', error)
           set({
             movementsError: error,
+            movements: [], // Mantener array vacío en caso de error
             isMovementsLoading: false,
           })
           throw error
