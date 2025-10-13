@@ -1,16 +1,14 @@
-version: "3.8"
-
 services:
   # =========================================
   # FRONTEND - React + Nginx
   # =========================================
-  frontend:
+  erp-system:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         - NODE_ENV=production
-    container_name: erp-frontend
+    container_name: erp-system
     ports:
       - "8080:80"
       - "8443:443" # Si usas HTTPS
