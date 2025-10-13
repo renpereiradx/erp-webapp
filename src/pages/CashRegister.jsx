@@ -1025,7 +1025,7 @@ const CashRegister = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {cashRegisters.length > 0 ? (
+            {cashRegisters && cashRegisters.length > 0 ? (
               <div className='space-y-2'>
                 {cashRegisters.map(cashRegister => (
                   <div
