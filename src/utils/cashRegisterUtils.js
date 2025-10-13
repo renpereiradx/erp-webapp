@@ -40,7 +40,7 @@ export function calculateCashRegisterBalance(cashRegister, movements = []) {
   // Calcular balance basándose en movimientos
   const initialBalance = cashRegister.initial_balance || 0
 
-  const movementsSum = movements.reduce((sum, movement) => {
+  const movementsSum = (movements || []).reduce((sum, movement) => {
     switch (movement.movement_type) {
       case 'INCOME':
         return sum + (movement.amount || 0)

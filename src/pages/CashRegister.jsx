@@ -727,78 +727,79 @@ const CashRegister = () => {
                             </span>
                           </div>
                         ) : (
-                          <form
-                            onSubmit={handleCloseCashRegister}
-                            className='space-y-4'
-                          >
-                            <div>
-                              <Label htmlFor='final_balance'>
-                                Balance Final Físico
-                              </Label>
-                              <Input
-                                id='final_balance'
-                                type='number'
-                                step='0.01'
-                                value={closeCashRegisterForm.final_balance}
-                                onChange={e =>
-                                  setCloseCashRegisterForm(prev => ({
-                                    ...prev,
-                                    final_balance: e.target.value,
-                                  }))
-                                }
-                                placeholder={
-                                  activeCashRegister?.current_balance?.toString() ||
-                                  '0.00'
-                                }
-                                required
-                              />
-                              <p className='text-sm text-muted-foreground mt-1'>
-                                Balance del sistema: $
-                                {activeCashRegister?.current_balance || 0}
-                              </p>
-                            </div>
-                            <div>
-                              <Label htmlFor='close_notes'>
-                                Notas de Cierre
-                              </Label>
-                              <Textarea
-                                id='close_notes'
-                                value={closeCashRegisterForm.notes}
-                                onChange={e =>
-                                  setCloseCashRegisterForm(prev => ({
-                                    ...prev,
-                                    notes: e.target.value,
-                                  }))
-                                }
-                                placeholder='Observaciones del cierre...'
-                                rows={3}
-                              />
-                            </div>
-                          </form>
+                          <>
+                            <form
+                              id='close-cash-register-form'
+                              onSubmit={handleCloseCashRegister}
+                              className='space-y-4'
+                            >
+                              <div>
+                                <Label htmlFor='final_balance'>
+                                  Balance Final Físico
+                                </Label>
+                                <Input
+                                  id='final_balance'
+                                  type='number'
+                                  step='0.01'
+                                  value={closeCashRegisterForm.final_balance}
+                                  onChange={e =>
+                                    setCloseCashRegisterForm(prev => ({
+                                      ...prev,
+                                      final_balance: e.target.value,
+                                    }))
+                                  }
+                                  placeholder={
+                                    activeCashRegister?.current_balance?.toString() ||
+                                    '0.00'
+                                  }
+                                  required
+                                />
+                                <p className='text-sm text-muted-foreground mt-1'>
+                                  Balance del sistema: $
+                                  {activeCashRegister?.current_balance || 0}
+                                </p>
+                              </div>
+                              <div>
+                                <Label htmlFor='close_notes'>
+                                  Notas de Cierre
+                                </Label>
+                                <Textarea
+                                  id='close_notes'
+                                  value={closeCashRegisterForm.notes}
+                                  onChange={e =>
+                                    setCloseCashRegisterForm(prev => ({
+                                      ...prev,
+                                      notes: e.target.value,
+                                    }))
+                                  }
+                                  placeholder='Observaciones del cierre...'
+                                  rows={3}
+                                />
+                              </div>
+                            </form>
+                          </>
                         )}
                       </div>
 
                       {/* Footer */}
-                      <div className='flex gap-3 justify-end p-6 pt-4 border-t bg-white/95 backdrop-blur-sm'>
-                        <Button
-                          type='button'
-                          variant='outline'
-                          onClick={() => setCloseCashRegisterDialog(false)}
-                          disabled={isClosingCashRegister}
-                        >
-                          Cancelar
-                        </Button>
-                        <Button
-                          type='submit'
-                          variant='destructive'
-                          onClick={handleCloseCashRegister}
-                          disabled={isClosingCashRegister}
-                        >
-                          {isClosingCashRegister
-                            ? 'Cerrando...'
-                            : 'Cerrar Caja'}
-                        </Button>
-                      </div>
+                      {!isClosingCashRegister && (
+                        <div className='flex gap-3 justify-end p-6 pt-4 border-t bg-muted/30'>
+                          <Button
+                            type='button'
+                            variant='outline'
+                            onClick={() => setCloseCashRegisterDialog(false)}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            type='submit'
+                            form='close-cash-register-form'
+                            variant='destructive'
+                          >
+                            Cerrar Caja
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
