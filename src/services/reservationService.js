@@ -312,76 +312,22 @@ export const reservationService = {
 
   async checkConsistency() {
     const startTime = Date.now();
-
+    
     try {
       const result = await withRetry(async () => {
         return await apiClient.get(`${API_PREFIX}/consistency/check`);
       });
-
+      
       telemetry.record('reservations.service.check_consistency', {
         duration: Date.now() - startTime
       });
-
+      
       return result;
     } catch (error) {
       telemetry.record('reservations.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
         operation: 'checkConsistency'
-      });
-      throw error;
-    }
-  },
-
-  // GET /reserve/all - Obtener todas las reservas (v3.2)
-  async getAllReservations() {
-    const startTime = Date.now();
-
-    try {
-      const result = await withRetry(async () => {
-        return await apiClient.get(`${API_PREFIX}/all`);
-      });
-
-      telemetry.record('reservations.service.load_all', {
-        duration: Date.now() - startTime,
-        count: Array.isArray(result) ? result.length : 0
-      });
-
-      return result;
-    } catch (error) {
-      telemetry.record('reservations.service.error', {
-        duration: Date.now() - startTime,
-        error: error.message,
-        operation: 'getAllReservations'
-      });
-      throw error;
-    }
-  },
-
-  // GET /reserve/client/name/{name} - Buscar reservas por nombre de cliente (v3.2)
-  async getReservationsByClientName(clientName) {
-    const startTime = Date.now();
-
-    try {
-      if (!clientName || clientName.trim().length === 0) {
-        throw new Error('El nombre del cliente es requerido');
-      }
-
-      const result = await withRetry(async () => {
-        return await apiClient.get(`${API_PREFIX}/client/name/${encodeURIComponent(clientName)}`);
-      });
-
-      telemetry.record('reservations.service.load_by_client_name', {
-        duration: Date.now() - startTime,
-        count: Array.isArray(result) ? result.length : 0
-      });
-
-      return result;
-    } catch (error) {
-      telemetry.record('reservations.service.error', {
-        duration: Date.now() - startTime,
-        error: error.message,
-        operation: 'getReservationsByClientName'
       });
       throw error;
     }

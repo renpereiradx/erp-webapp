@@ -112,10 +112,6 @@ const Reservations = () => {
     generateSchedulesForNextDays,
     generateSchedulesForDateWithCustomRange,
     checkAvailableSchedulesForDate = () => Promise.resolve({ count: 0, schedules: [] }),
-    fetchReservationsByClient,
-    fetchReservationsByProduct,
-    fetchAllReservations,
-    fetchReservationsByClientName,
     clearError,
     clearSchedules
   } = useReservationStore();
@@ -356,6 +352,8 @@ const Reservations = () => {
     setSearchType(detectedType);
 
     try {
+      let result = [];
+
       switch (detectedType) {
         case 'client_id': {
           // Buscar directamente por client_id - validar que el cliente esté activo
@@ -363,63 +361,58 @@ const Reservations = () => {
             // Primero verificar que el cliente existe y está activo
             const client = clients.find(c => c.id === term);
             if (client && client.status !== false && client.state !== false) {
-              // fetchReservationsByClient actualiza el estado automáticamente
-              await fetchReservationsByClient(term);
+              result = await fetchReservationsByClient(term);
             } else if (client && (client.status === false || client.state === false)) {
               console.warn('Cliente inactivo:', term);
-              clearError();
-              announceError('El cliente está inactivo. Solo se pueden buscar clientes activos.');
+              setError('El cliente está inactivo. Solo se pueden buscar clientes activos.');
+              result = [];
             } else {
               // Si no está en la lista local, intentar buscar de todos modos
-              await fetchReservationsByClient(term);
+              result = await fetchReservationsByClient(term);
             }
           } catch (err) {
             console.error('Error buscando por client_id:', err);
-            announceError(`Error al buscar reservas del cliente: ${err.message}`);
+            result = [];
           }
           break;
         }
 
         case 'client_name': {
-          // Usar el nuevo endpoint GET /reserve/client/name/{name} (v3.2)
-          // Busca directamente las reservas por nombre de cliente (más eficiente)
+          // Primero buscar el cliente por nombre, luego sus reservas
           try {
-            await fetchReservationsByClientName(term);
-            // El store ya actualiza el estado automáticamente
-            console.log('✅ Búsqueda por nombre de cliente completada');
-          } catch (err) {
-            console.warn('No se encontraron reservas para el cliente:', term);
-            // Si no hay error específico, puede ser que simplemente no hay reservas
-            if (err.message.includes('requerido')) {
-              announceError('El nombre del cliente es requerido');
+            const clientResult = await apiClient.get(`/client/name/${encodeURIComponent(term)}`);
+            // Validar que el cliente exista Y esté activo
+            if (clientResult && clientResult.id && clientResult.status !== false && clientResult.state !== false) {
+              result = await fetchReservationsByClient(clientResult.id);
+            } else if (clientResult && clientResult.id && (clientResult.status === false || clientResult.state === false)) {
+              // Cliente encontrado pero inactivo
+              console.warn('Cliente encontrado pero está inactivo:', term);
+              setError('El cliente está inactivo. Solo se pueden buscar clientes activos.');
+              result = [];
             } else {
-              // No mostrar error si simplemente no hay resultados
-              console.log('No se encontraron reservas para:', term);
+              result = [];
             }
+          } catch (err) {
+            console.warn('No se encontró cliente con ese nombre:', term);
+            result = [];
           }
           break;
         }
 
         case 'product_id':
-          try {
-            // fetchReservationsByProduct NO actualiza el estado de reservations en el store
-            // Necesitamos manejarlo diferente
-            const result = await fetchReservationsByProduct(term);
-            // El resultado ya está en el formato correcto
-            console.log('Reservas por producto:', result);
-          } catch (err) {
-            console.error('Error buscando por product_id:', err);
-            announceError(`Error al buscar reservas del producto: ${err.message}`);
-          }
+          result = await fetchReservationsByProduct(term);
           break;
 
         default:
-          break;
+          result = [];
       }
+
+      // Actualizar las reservas mostradas
+      setReservations(Array.isArray(result) ? result : []);
 
     } catch (error) {
       console.error('Error en búsqueda inteligente:', error);
-      announceError(`Error buscando por ${detectedType}: ${error.message}`);
+      setError(`Error buscando por ${detectedType}: ${error.message}`);
     } finally {
       setSmartSearchLoading(false);
     }

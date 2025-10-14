@@ -6,14 +6,7 @@ Esta documentación especifica la API del sistema de reservas implementada en el
 
 ## ⚠️ IMPORTANTE - CAMBIOS RECIENTES
 
-**Última actualización:** 14 de Octubre de 2025
-
-### Nuevos Endpoints Agregados (v3.2)
-
-- **✅ GET /reserve/all:** Obtener todas las reservas sin filtros
-- **✅ GET /reserve/client/name/{name}:** Buscar reservas por nombre de cliente (búsqueda parcial)
-
-### Características del Sistema
+**Última verificación completa de sistema:** 15 de Septiembre de 2025
 
 - **✅ Campo `reserve_date` integrado:** Nuevo campo disponible en todas las respuestas de reservas
 - **✅ Sistema completamente verificado:** Todos los endpoints probados en base de datos real
@@ -24,7 +17,6 @@ Esta documentación especifica la API del sistema de reservas implementada en el
 - **✅ Campo `duration`:** Ahora se llama `duration_hours` en DB pero `duration` en API
 - **✅ Validaciones robustas:** Sistema maneja correctamente casos edge y errores
 - **✅ Auditoría mejorada:** Campo `reserve_date` permite mejor tracking de creación
-- **✅ Búsqueda flexible:** Nuevos endpoints para listar y buscar reservas fácilmente
 
 ---
 
@@ -403,121 +395,6 @@ Authorization: Bearer <jwt_token>
 - `401`: "Unauthorized" - Token inválido
 - `500`: "Error getting available schedules: {details}" - Error interno
 
-### 8. Obtener Todas las Reservas 🔒
-```http
-GET /reserve/all
-Authorization: Bearer <jwt_token>
-```
-
-**Descripción:** Obtiene todas las reservas del sistema sin filtros. Útil para cargar el listado completo de reservas.
-
-**Response:** `ReserveRiched[]`
-```json
-[
-  {
-    "id": 1,
-    "product_id": "IigVyceNg",
-    "product_name": "Cancha de Beach Tennis",
-    "product_description": "Cancha profesional con iluminación",
-    "client_id": "4hu5VK6Ng",
-    "client_name": "Juan Pérez",
-    "start_time": "2025-10-11T16:00:00Z",
-    "end_time": "2025-10-11T17:00:00Z",
-    "duration": 1,
-    "total_amount": 60000.00,
-    "status": "COMPLETED",
-    "user_id": "jJkV4F6HR",
-    "user_name": "Admin User",
-    "reserve_date": "2025-10-11T12:50:57.525Z"
-  },
-  {
-    "id": 2,
-    "product_id": "IigVyceNg",
-    "product_name": "Cancha de Beach Tennis",
-    "product_description": "Cancha profesional con iluminación",
-    "client_id": "4hu5VK6Ng",
-    "client_name": "Juan Pérez",
-    "start_time": "2025-10-14T14:00:00Z",
-    "end_time": "2025-10-14T15:00:00Z",
-    "duration": 1,
-    "total_amount": 60000.00,
-    "status": "COMPLETED",
-    "user_id": "jJkV4F6HR",
-    "user_name": "Admin User",
-    "reserve_date": "2025-10-13T21:26:01.208387Z"
-  }
-]
-```
-
-**Errores:**
-- `401`: "Unauthorized" - Token inválido
-- `500`: "Error getting all reserves: {details}" - Error interno
-
-**Notas:**
-- Retorna todas las reservas sin paginación
-- Útil para dashboards y vistas generales
-- Incluye información completa con JOINs de productos, clientes y usuarios
-- Ordenadas por `start_time` descendente (más recientes primero)
-
-### 9. Buscar Reservas por Nombre de Cliente 🔒
-```http
-GET /reserve/client/name/{name}
-Authorization: Bearer <jwt_token>
-```
-
-**Descripción:** Busca reservas por nombre de cliente (búsqueda parcial, case-insensitive).
-
-**Parámetros:**
-
-| Parámetro | Tipo | Ubicación | Descripción |
-|-----------|------|-----------|-------------|
-| `name` | string | path | Nombre del cliente a buscar (búsqueda LIKE parcial) |
-
-**Ejemplos de búsqueda:**
-- `/reserve/client/name/juan` → Encuentra "Juan Pérez", "María Juana", "Juana García"
-- `/reserve/client/name/perez` → Encuentra "Juan Pérez", "María Pérez"
-- `/reserve/client/name/juan%20perez` → Encuentra "Juan Pérez" (nombre completo con espacio URL-encoded)
-
-**Response:** `ReserveRiched[]`
-```json
-[
-  {
-    "id": 2,
-    "product_id": "IigVyceNg",
-    "product_name": "Cancha de Beach Tennis",
-    "product_description": "Cancha profesional con iluminación",
-    "client_id": "4hu5VK6Ng",
-    "client_name": "Juan Pérez",
-    "start_time": "2025-10-14T14:00:00Z",
-    "end_time": "2025-10-14T15:00:00Z",
-    "duration": 1,
-    "total_amount": 60000.00,
-    "status": "COMPLETED",
-    "user_id": "jJkV4F6HR",
-    "user_name": "Admin User",
-    "reserve_date": "2025-10-13T21:26:01.208387Z"
-  }
-]
-```
-
-**Errores:**
-- `400`: "Client name is required" - Nombre vacío
-- `401`: "Unauthorized" - Token inválido
-- `500`: "Error getting reserves by client name: {details}" - Error interno
-
-**Notas:**
-- Búsqueda case-insensitive (no distingue mayúsculas/minúsculas)
-- Búsqueda parcial: encuentra coincidencias en cualquier parte del nombre
-- Busca en nombre completo (nombre + apellido concatenados)
-- Si no hay coincidencias, retorna array vacío `[]`
-- Útil para implementar búsqueda en tiempo real mientras el usuario escribe
-- No requiere nombre exacto, busca coincidencias parciales
-
-**Recomendaciones de implementación:**
-1. ✅ URL-encode el nombre si contiene espacios
-2. ✅ Implementar debounce en búsqueda en tiempo real (ej: 300ms)
-3. ✅ Manejar array vacío para mostrar "Sin resultados"
-
 ---
 
 ## 📋 Códigos de Respuesta
@@ -859,14 +736,6 @@ curl -X POST "http://localhost:5050/reserve/manage" \
 # Obtener horarios disponibles
 curl -X GET "http://localhost:5050/reserve/available-schedules?product_id=CANCHA-01&date=2025-09-15&duration_hours=2" \
   -H "Authorization: Bearer <your_jwt_token>"
-
-# Obtener todas las reservas
-curl -X GET "http://localhost:5050/reserve/all" \
-  -H "Authorization: Bearer <your_jwt_token>"
-
-# Buscar reservas por nombre de cliente
-curl -X GET "http://localhost:5050/reserve/client/name/juan" \
-  -H "Authorization: Bearer <your_jwt_token>"
 ```
 
 ---
@@ -945,11 +814,11 @@ headers: {
 
 ---
 
-**Última actualización**: 14 de Octubre de 2025
-**Versión**: 3.2
-**Basado en**: Verificación completa del sistema en base de datos real + integración campo `reserve_date` + nuevos endpoints de búsqueda
-**Estado**: ✅ Sistema completamente funcional y verificado en producción
-**Cambios críticos**: Nuevos endpoints GET /reserve/all y GET /reserve/client/name/{name}, campo `reserve_date` integrado, todas las funciones corregidas, rutas optimizadas, manejo robusto de errores
+**Última actualización**: 15 de Septiembre de 2025  
+**Versión**: 3.1  
+**Basado en**: Verificación completa del sistema en base de datos real + integración campo `reserve_date`  
+**Estado**: ✅ Sistema completamente funcional y verificado en producción  
+**Cambios críticos**: Campo `reserve_date` integrado, todas las funciones corregidas, rutas optimizadas, manejo robusto de errores
 
 ---
 
@@ -1119,78 +988,6 @@ curl -X GET "http://localhost:5050/reserve/consistency/check" \
     "reserve_id": null,
     "sales_count": 2,
     "details": "Horarios marcados como ocupados sin reserva activa correspondiente"
-  }
-]
-```
-
-#### **✅ GET /reserve/all**
-```bash
-curl -X GET "http://localhost:5050/reserve/all" \
-  -H "Authorization: Bearer $(cat test_token.txt)"
-```
-
-**Response Exitosa:**
-```json
-[
-  {
-    "id": 4,
-    "product_id": "IigVyceNg",
-    "product_name": "Cancha de Beach Tennis",
-    "product_description": "",
-    "client_id": "4hu5VK6Ng",
-    "client_name": "Juan Pérez",
-    "start_time": "2025-10-14T18:00:00Z",
-    "end_time": "2025-10-14T19:00:00Z",
-    "duration": 1,
-    "total_amount": 60000,
-    "status": "RESERVED",
-    "user_id": "jJkV4F6HR",
-    "user_name": "Admin User",
-    "reserve_date": "2025-10-14T14:15:34.563257Z"
-  },
-  {
-    "id": 3,
-    "product_id": "IigVyceNg",
-    "product_name": "Cancha de Beach Tennis",
-    "product_description": "",
-    "client_id": "4hu5VK6Ng",
-    "client_name": "Juan Pérez",
-    "start_time": "2025-10-14T21:00:00Z",
-    "end_time": "2025-10-14T22:00:00Z",
-    "duration": 1,
-    "total_amount": 60000,
-    "status": "RESERVED",
-    "user_id": "jJkV4F6HR",
-    "user_name": "Admin User",
-    "reserve_date": "2025-10-13T21:30:42.623191Z"
-  }
-]
-```
-
-#### **✅ GET /reserve/client/name/{name}**
-```bash
-curl -X GET "http://localhost:5050/reserve/client/name/juan" \
-  -H "Authorization: Bearer $(cat test_token.txt)"
-```
-
-**Response Exitosa:**
-```json
-[
-  {
-    "id": 2,
-    "product_id": "IigVyceNg",
-    "product_name": "Cancha de Beach Tennis",
-    "product_description": "",
-    "client_id": "4hu5VK6Ng",
-    "client_name": "Juan Pérez",
-    "start_time": "2025-10-14T14:00:00Z",
-    "end_time": "2025-10-14T15:00:00Z",
-    "duration": 1,
-    "total_amount": 60000,
-    "status": "COMPLETED",
-    "user_id": "jJkV4F6HR",
-    "user_name": "Admin User",
-    "reserve_date": "2025-10-13T21:26:01.208387Z"
   }
 ]
 ```

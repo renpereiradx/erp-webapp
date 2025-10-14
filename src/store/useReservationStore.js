@@ -5,47 +5,6 @@ import { reservationService } from '@/services/reservationService';
 import { scheduleService } from '@/services/scheduleService';
 import { telemetry } from '@/utils/telemetry';
 
-/**
- * Normaliza los datos de /reserve/all (ReserveRiched) al formato ReservationReport
- * para mantener compatibilidad con el código existente
- */
-const normalizeReservation = (reserve) => {
-  if (!reserve) return reserve;
-
-  // Calcular días hasta la reserva
-  const calculateDaysUntil = (startTime) => {
-    const now = new Date();
-    const start = new Date(startTime);
-    const diffTime = start - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  return {
-    // Mapeo de campos diferentes entre /reserve/all y /reserve/report
-    reserve_id: reserve.id || reserve.reserve_id, // 'id' en /all, 'reserve_id' en /report
-    product_name: reserve.product_name,
-    client_name: reserve.client_name,
-    start_time: reserve.start_time,
-    end_time: reserve.end_time,
-    duration_hours: reserve.duration || reserve.duration_hours, // 'duration' en /all, 'duration_hours' en /report
-    total_amount: reserve.total_amount,
-    status: reserve.status,
-    created_by: reserve.user_name || reserve.created_by, // 'user_name' en /all, 'created_by' en /report
-    days_until_reservation: reserve.days_until_reservation || calculateDaysUntil(reserve.start_time),
-
-    // Campos adicionales disponibles en /reserve/all
-    product_id: reserve.product_id,
-    client_id: reserve.client_id,
-    user_id: reserve.user_id,
-    reserve_date: reserve.reserve_date,
-    product_description: reserve.product_description,
-
-    // Preservar cualquier otro campo
-    ...reserve
-  };
-};
-
 const useReservationStore = create(
   devtools(
     (set, get) => ({
@@ -57,36 +16,20 @@ const useReservationStore = create(
 
       // Acciones básicas
       clearError: () => set({ error: null }),
-
+      
       clearReservations: () => set({ reservations: [], error: null }),
-
+      
       clearSchedules: () => set({ schedules: [], error: null }),
 
-      // Cargar TODAS las reservas usando /reserve/report con rango de fechas amplio
+      // Cargar reservas (usando endpoint /reserve/report según API spec)
       fetchReservations: async (params = {}) => {
-        console.log('🔄 Store: Fetching ALL reservations with wide date range...');
+        console.log('🔄 Store: Starting fetchReservations to verify data persistence...');
         set({ loading: true, error: null });
         const startTime = Date.now();
-
+        
         try {
-          // Usar /reserve/report con rango de fechas amplio para obtener todas las reservas
-          // Establecer rango desde 1 año atrás hasta 1 año adelante
-          const now = new Date();
-          const oneYearAgo = new Date(now);
-          oneYearAgo.setFullYear(now.getFullYear() - 1);
-          const oneYearAhead = new Date(now);
-          oneYearAhead.setFullYear(now.getFullYear() + 1);
-
-          const searchParams = {
-            start_date: oneYearAgo.toISOString().split('T')[0], // YYYY-MM-DD
-            end_date: oneYearAhead.toISOString().split('T')[0],  // YYYY-MM-DD
-            ...params // Permitir sobrescribir con parámetros personalizados
-          };
-
-          console.log('📅 Date range:', searchParams);
-
-          const result = await reservationService.getReservationReport(searchParams);
-
+          const result = await reservationService.getReservationReport(params);
+          
           // Manejar respuesta según API spec - ReservationReport[]
           let data = [];
           if (result && result.data) {
@@ -94,28 +37,28 @@ const useReservationStore = create(
           } else if (Array.isArray(result)) {
             data = result;
           }
-
+          
           console.log('📊 Store: fetchReservations result:', {
             resultType: typeof result,
             hasResultData: !!(result && result.data),
             isResultArray: Array.isArray(result),
-            dataLength: data.length,
-            sampleData: data[0]
+            processedDataLength: data.length,
+            processedData: data
           });
-
+          
           set({ reservations: data, loading: false });
-
+          
           console.log('✅ Store: Updated reservations state with', data.length, 'items');
-
-          telemetry.record('feature.reservations.load', {
+          
+          telemetry.record('feature.reservations.load', { 
             duration: Date.now() - startTime,
-            count: data.length
+            count: data.length 
           });
-
+          
         } catch (error) {
           set({ error: error.message || 'Error al cargar reservas', loading: false });
-          telemetry.record('feature.reservations.error', {
-            error: error.message
+          telemetry.record('feature.reservations.error', { 
+            error: error.message 
           });
         }
       },
@@ -546,31 +489,19 @@ const useReservationStore = create(
       fetchReservationsByProduct: async (productId) => {
         set({ loading: true, error: null });
         const startTime = Date.now();
-
+        
         try {
           const result = await reservationService.getReservationsByProduct(productId);
-
-          // Manejar respuesta según API spec
-          let data = [];
-          if (result && result.data) {
-            data = Array.isArray(result.data) ? result.data : [];
-          } else if (Array.isArray(result)) {
-            data = result;
-          }
-
-          // IMPORTANTE: Actualizar el estado con las reservas del producto
-          set({ reservations: data, loading: false });
-
-          telemetry.record('feature.reservations.load_by_product', {
-            duration: Date.now() - startTime,
-            count: data.length
+          
+          telemetry.record('feature.reservations.load_by_product', { 
+            duration: Date.now() - startTime 
           });
-
-          return { data };
+          
+          return result;
         } catch (error) {
           set({ error: error.message || 'Error al cargar reservas del producto', loading: false });
-          telemetry.record('feature.reservations.error', {
-            error: error.message
+          telemetry.record('feature.reservations.error', { 
+            error: error.message 
           });
           throw error;
         }
@@ -614,87 +545,19 @@ const useReservationStore = create(
       fetchReservationReport: async (params = {}) => {
         set({ loading: true, error: null });
         const startTime = Date.now();
-
+        
         try {
           const result = await reservationService.getReservationReport(params);
-
-          telemetry.record('feature.reservations.report', {
-            duration: Date.now() - startTime
+          
+          telemetry.record('feature.reservations.report', { 
+            duration: Date.now() - startTime 
           });
-
+          
           return result;
         } catch (error) {
           set({ error: error.message || 'Error al generar reporte', loading: false });
-          telemetry.record('feature.reservations.error', {
-            error: error.message
-          });
-          throw error;
-        }
-      },
-
-      // Obtener todas las reservas (nuevo endpoint v3.2)
-      fetchAllReservations: async () => {
-        set({ loading: true, error: null });
-        const startTime = Date.now();
-
-        try {
-          const result = await reservationService.getAllReservations();
-
-          // Manejar respuesta según API spec
-          let data = [];
-          if (result && result.data) {
-            data = Array.isArray(result.data) ? result.data : [];
-          } else if (Array.isArray(result)) {
-            data = result;
-          }
-
-          // Actualizar estado con todas las reservas
-          set({ reservations: data, loading: false });
-
-          telemetry.record('feature.reservations.load_all', {
-            duration: Date.now() - startTime,
-            count: data.length
-          });
-
-          return { data };
-        } catch (error) {
-          set({ error: error.message || 'Error al cargar todas las reservas', loading: false });
-          telemetry.record('feature.reservations.error', {
-            error: error.message
-          });
-          throw error;
-        }
-      },
-
-      // Buscar reservas por nombre de cliente (nuevo endpoint v3.2)
-      fetchReservationsByClientName: async (clientName) => {
-        set({ loading: true, error: null });
-        const startTime = Date.now();
-
-        try {
-          const result = await reservationService.getReservationsByClientName(clientName);
-
-          // Manejar respuesta según API spec
-          let data = [];
-          if (result && result.data) {
-            data = Array.isArray(result.data) ? result.data : [];
-          } else if (Array.isArray(result)) {
-            data = result;
-          }
-
-          // Actualizar estado con las reservas encontradas
-          set({ reservations: data, loading: false });
-
-          telemetry.record('feature.reservations.load_by_client_name', {
-            duration: Date.now() - startTime,
-            count: data.length
-          });
-
-          return { data };
-        } catch (error) {
-          set({ error: error.message || 'Error al buscar reservas por nombre', loading: false });
-          telemetry.record('feature.reservations.error', {
-            error: error.message
+          telemetry.record('feature.reservations.error', { 
+            error: error.message 
           });
           throw error;
         }

@@ -50,31 +50,26 @@ export const formatTimeInParaguayTimezone = (timeString, options = {}) => {
 };
 
 /**
- * Formatea una fecha para mostrar en formato dd/mm/yyyy
- * Maneja timestamps que vienen de la DB sin zona horaria (interpretados como hora local de Paraguay)
- * @param {string|Date} dateTime - Fecha/hora desde la DB (ej: "2025-10-14 14:00:00" o "2025-10-14T14:00:00Z")
- * @param {Object} options - Opciones de formato (opcional)
- * @returns {string} - Fecha formateada en formato dd/mm/yyyy
+ * Formatea una fecha UTC para mostrar en zona horaria de Paraguay (UTC-3)
+ * @param {string|Date} utcTime - Tiempo en UTC
+ * @param {Object} options - Opciones de formato
+ * @returns {string} - Fecha formateada en hora local
  */
-export const formatDateInParaguayTimezone = (dateTime, options = {}) => {
-  if (!dateTime) return '';
+export const formatDateInParaguayTimezone = (utcTime, options = {}) => {
+  const date = new Date(utcTime);
+  
+  // Paraguay está en UTC-3, restar 3 horas del tiempo UTC
+  const paraguayTime = new Date(date.getTime() - (3 * 60 * 60 * 1000));
+  
+  const defaultOptions = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  };
 
-  // Manejar tanto strings como objetos Date
-  let dateString = typeof dateTime === 'string' ? dateTime : dateTime.toISOString();
-
-  // Si la fecha viene sin 'Z' o timezone, asumimos que es hora de Paraguay
-  // Extraer solo la parte de fecha (YYYY-MM-DD) para evitar problemas de timezone
-  const dateMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})/);
-
-  if (!dateMatch) {
-    console.warn('Invalid date format passed to formatDateInParaguayTimezone:', dateTime);
-    return '';
-  }
-
-  const [, year, month, day] = dateMatch;
-
-  // Retornar en formato dd/mm/yyyy
-  return `${day}/${month}/${year}`;
+  const formatOptions = { ...defaultOptions, ...options };
+  
+  return paraguayTime.toLocaleDateString('es-ES', formatOptions);
 };
 
 /**
