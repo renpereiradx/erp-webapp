@@ -1,8 +1,15 @@
 # 🐳 Dockerización Completa - Sistema ERP
 
-## ✅ Sistema Listo para Dockerizar
+## ✅ Sistema Completamente Dockerizado
 
-Este repositorio ahora incluye toda la configuración necesaria para dockerizar el sistema ERP completo (Backend + Frontend).
+Este repositorio incluye toda la configuración necesaria para dockerizar el sistema ERP completo (Backend + Frontend).
+
+### Nombres de Imágenes y Contenedores
+
+- **Imagen del Frontend**: `erp-frontend:latest`
+- **Contenedor del Frontend**: `erp-system`
+- **Imagen del Backend**: `erp-backend:latest`
+- **Contenedor del Backend**: `erp-backend`
 
 ---
 
@@ -15,11 +22,18 @@ Este repositorio ahora incluye toda la configuración necesaria para dockerizar 
 - ✅ **`nginx.conf`** - Proxy reverso al backend
 - ✅ **`.env.production`** - Variables de entorno para producción
 
-### Scripts de Automatización
+### Scripts de Automatización PowerShell
 
-- ✅ **`scripts/build-backend.ps1`** - Construye la imagen Docker del backend
-- ✅ **`scripts/deploy-full-stack.ps1`** - Despliega todo el stack automáticamente
-- ✅ **`scripts/check-status.ps1`** - Verifica el estado del sistema
+#### Scripts Individuales
+- ✅ **`docker-build.ps1`** - Construye la imagen del frontend (erp-frontend:latest)
+- ✅ **`docker-run.ps1`** - Ejecuta el contenedor (erp-system)
+- ✅ **`docker-stop.ps1`** - Detiene el contenedor
+- ✅ **`docker-logs.ps1`** - Ver logs del contenedor
+- ✅ **`docker-clean.ps1`** - Limpiar recursos Docker
+
+#### Scripts Docker Compose
+- ✅ **`docker-compose-up.ps1`** - Inicia el stack completo
+- ✅ **`docker-compose-down.ps1`** - Detiene el stack completo
 
 ### Documentación
 
@@ -28,48 +42,43 @@ Este repositorio ahora incluye toda la configuración necesaria para dockerizar 
 
 ---
 
-## 🚀 Despliegue Rápido (3 Pasos)
+## 🚀 Despliegue Rápido
 
-### Opción A: Script Automatizado (Recomendado)
+### Opción A: Solo Frontend (Scripts PowerShell)
 
 ```powershell
-# 1. Asegúrate de que PostgreSQL esté corriendo
-# 2. Navega al directorio del frontend
-cd C:\dev\erp-project\frontend
+# 1. Construir la imagen
+.\docker-build.ps1
 
-# 3. Ejecuta el script de despliegue
-.\scripts\deploy-full-stack.ps1
+# 2. Ejecutar el contenedor
+.\docker-run.ps1
+
+# 3. Verificar logs
+.\docker-logs.ps1
 ```
 
-**¡Eso es todo!** El script:
-- ✅ Verifica todos los requisitos
-- ✅ Construye la imagen del backend
-- ✅ Construye la imagen del frontend
-- ✅ Levanta ambos servicios con Docker Compose
-- ✅ Verifica que todo esté funcionando
-
----
-
-### Opción B: Paso a Paso Manual
-
-#### 1. Construir Backend
+### Opción B: Stack Completo con Docker Compose
 
 ```powershell
-cd C:\dev\erp-project\backend
-docker build -t erp-backend:latest .
+# 1. Asegúrate de que PostgreSQL esté corriendo y que la imagen del backend exista
+# 2. Inicia el stack completo
+.\docker-compose-up.ps1
+
+# 3. Verifica el estado
+docker-compose ps
 ```
 
-#### 2. Construir y Levantar todo con Docker Compose
+### Opción C: Comandos Docker Manuales
 
 ```powershell
-cd C:\dev\erp-project\frontend
-docker-compose up -d --build
-```
+# 1. Construir la imagen del frontend
+docker build -t erp-frontend:latest .
 
-#### 3. Verificar Estado
+# 2. Ejecutar el contenedor
+docker run -d --name erp-system -p 8080:80 -p 8443:443 --add-host host.docker.internal:host-gateway erp-frontend:latest
 
-```powershell
-.\scripts\check-status.ps1
+# 3. Ver logs
+docker logs erp-system
 ```
 
 ---
@@ -101,7 +110,8 @@ Password: aDmin404942
                   │
                   ▼
 ┌─────────────────────────────────────────┐
-│     Docker Container: erp-frontend       │
+│   Docker Container: erp-system           │
+│   Imagen: erp-frontend:latest            │
 │     ┌─────────────────────────────┐    │
 │     │   Nginx (Puerto 80)          │    │
 │     │   ├── Archivos estáticos     │    │
@@ -111,7 +121,8 @@ Password: aDmin404942
                   │ (Red Docker: erp-network)
                   ▼
 ┌─────────────────────────────────────────┐
-│     Docker Container: erp-backend        │
+│   Docker Container: erp-backend          │
+│   Imagen: erp-backend:latest             │
 │     ┌─────────────────────────────┐    │
 │     │   API Backend (Puerto 5050)  │    │
 │     │   ├── Autenticación          │    │
@@ -135,47 +146,73 @@ Password: aDmin404942
 ### Verificar Estado
 
 ```powershell
-# Estado completo del sistema
-.\scripts\check-status.ps1
+# Estado del contenedor frontend
+docker ps -f name=erp-system
 
-# Estado de contenedores
+# Estado del stack completo
 docker-compose ps
 
+# Health check del frontend
+docker inspect erp-system --format='{{.State.Health.Status}}'
+
 # Uso de recursos
-docker stats
+docker stats erp-system
 ```
 
 ### Ver Logs
 
 ```powershell
-# Todos los servicios
+# Solo frontend (Script)
+.\docker-logs.ps1
+.\docker-logs.ps1 -Follow  # Seguir en tiempo real
+
+# Solo frontend (Docker)
+docker logs erp-system
+docker logs -f erp-system  # Seguir en tiempo real
+
+# Todos los servicios (Docker Compose)
 docker-compose logs -f
 
 # Solo backend
 docker-compose logs -f backend
 
 # Solo frontend
-docker-compose logs -f frontend
+docker-compose logs -f erp-system
 
 # Últimas 50 líneas
-docker-compose logs --tail=50
+docker logs --tail=50 erp-system
 ```
 
 ### Gestión de Servicios
 
 ```powershell
-# Reiniciar servicios
-docker-compose restart
+# Gestión del Frontend (Scripts)
+.\docker-stop.ps1           # Detener
+.\docker-run.ps1            # Iniciar
+.\docker-clean.ps1          # Limpiar recursos
 
-# Detener servicios
-docker-compose down
+# Gestión del Frontend (Docker)
+docker stop erp-system      # Detener
+docker start erp-system     # Iniciar
+docker restart erp-system   # Reiniciar
+docker rm erp-system        # Eliminar contenedor
+docker rmi erp-frontend:latest  # Eliminar imagen
+
+# Gestión del Stack Completo (Docker Compose)
+docker-compose restart      # Reiniciar servicios
+docker-compose down         # Detener servicios
+.\docker-compose-down.ps1   # Script para detener
 
 # Reconstruir sin cache
+docker build --no-cache -t erp-frontend:latest .
+.\docker-run.ps1
+
+# Reconstruir con Docker Compose
 docker-compose build --no-cache
 docker-compose up -d
 
 # Actualizar solo frontend
-docker-compose up -d --build frontend
+docker-compose up -d --build erp-system
 
 # Actualizar solo backend
 cd ..\backend
@@ -218,10 +255,7 @@ taskkill /PID <PID> /F
 # Construir imagen manualmente
 cd C:\dev\erp-project\backend
 docker build -t erp-backend:latest .
-
-# O usar el script
 cd C:\dev\erp-project\frontend
-.\scripts\build-backend.ps1
 ```
 
 ### Frontend muestra error 502/503
@@ -354,11 +388,17 @@ notepad logs.txt
 ### Acceder a Contenedores
 
 ```powershell
+# Frontend
+docker exec -it erp-system sh
+
+# Ver archivos del build
+docker exec -it erp-system ls -la /usr/share/nginx/html
+
+# Ver configuración de Nginx
+docker exec -it erp-system cat /etc/nginx/conf.d/default.conf
+
 # Backend
 docker exec -it erp-backend /bin/sh
-
-# Frontend
-docker exec -it erp-frontend /bin/sh
 ```
 
 ---
@@ -368,28 +408,39 @@ docker exec -it erp-frontend /bin/sh
 Antes de considerar el despliegue exitoso:
 
 - [ ] Docker Desktop está corriendo
-- [ ] PostgreSQL está corriendo en puerto 5432
-- [ ] Base de datos `erp_db` existe
-- [ ] Usuario `dev_user` tiene permisos
-- [ ] Imagen `erp-backend:latest` está construida
-- [ ] `docker-compose ps` muestra ambos servicios "healthy"
+- [ ] PostgreSQL está corriendo en puerto 5432 (para Docker Compose)
+- [ ] Base de datos `erp_db` existe (para Docker Compose)
+- [ ] Usuario `dev_user` tiene permisos (para Docker Compose)
+- [ ] Imagen `erp-frontend:latest` está construida
+- [ ] Imagen `erp-backend:latest` está construida (para Docker Compose)
+- [ ] Contenedor `erp-system` está corriendo
+- [ ] `docker ps -f name=erp-system` muestra el contenedor "healthy"
 - [ ] http://localhost:8080 carga la interfaz
-- [ ] http://localhost:5050/health responde OK
-- [ ] http://localhost:8080/api/health responde OK
+- [ ] http://localhost:5050/health responde OK (si usas Docker Compose)
+- [ ] http://localhost:8080/api/health responde OK (si usas Docker Compose)
 - [ ] Login con admin funciona
-- [ ] No hay errores en logs
+- [ ] No hay errores en `.\docker-logs.ps1`
 
 ---
 
 ## 🎉 Estado Actual
 
-**✅ Sistema completamente configurado y listo para dockerizar**
+**✅ Sistema completamente dockerizado y listo para usar**
 
-Ejecuta el script de despliegue para comenzar:
+### Inicio Rápido
 
 ```powershell
-.\scripts\deploy-full-stack.ps1
+# Solo Frontend
+.\docker-build.ps1
+.\docker-run.ps1
+
+# Stack Completo
+.\docker-compose-up.ps1
 ```
+
+### Documentación Completa
+
+Ver **[DOCKER_GUIA_RAPIDA.md](./DOCKER_GUIA_RAPIDA.md)** para documentación detallada en español.
 
 ---
 
