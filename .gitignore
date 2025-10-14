@@ -8,6 +8,10 @@ yarn-error.log*
 pnpm-debug.log*
 # all logs files
 *.log*
+logs/**/*.log*
+logs/**/*.log
+# Keep directory structure
+!logs/**/.gitkeep
 # Build output
 dist/
 build/
