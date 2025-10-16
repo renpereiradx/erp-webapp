@@ -14,6 +14,12 @@ const useReservationStore = create(
       loading: false,
       error: null,
 
+      // Filtros de fecha para el nuevo endpoint
+      dateFilter: {
+        startDate: null, // Se establecerá al cargar
+        endDate: null    // Se establecerá al cargar
+      },
+
       // Acciones básicas
       clearError: () => set({ error: null }),
       
@@ -21,44 +27,75 @@ const useReservationStore = create(
       
       clearSchedules: () => set({ schedules: [], error: null }),
 
-      // Cargar reservas (usando endpoint /reserve/report según API spec)
+      // Actualizar filtros de fecha
+      setDateFilter: (startDate, endDate) => {
+        set({
+          dateFilter: { startDate, endDate }
+        });
+      },
+
+      // Cargar reservas por rango de fechas (NUEVO método predeterminado)
       fetchReservations: async (params = {}) => {
-        console.log('🔄 Store: Starting fetchReservations to verify data persistence...');
+        console.log('🔄 Store: Starting fetchReservations with date range filter...');
         set({ loading: true, error: null });
         const startTime = Date.now();
-        
+
         try {
-          const result = await reservationService.getReservationReport(params);
-          
-          // Manejar respuesta según API spec - ReservationReport[]
           let data = [];
-          if (result && result.data) {
-            data = Array.isArray(result.data) ? result.data : [];
-          } else if (Array.isArray(result)) {
-            data = result;
-          }
-          
+
+          // Si se proporcionan fechas específicas en params, usar esas
+          // Si no, usar las fechas del store o por defecto el último día
+          const { startDate, endDate } = params;
+          const filterStartDate = startDate || get().dateFilter.startDate;
+          const filterEndDate = endDate || get().dateFilter.endDate;
+
+          // Si no hay fechas configuradas, usar el último día por defecto
+          const today = new Date();
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+
+          const finalStartDate = filterStartDate || yesterday.toISOString().split('T')[0];
+          const finalEndDate = filterEndDate || today.toISOString().split('T')[0];
+
+          console.log('📅 Using date range:', { finalStartDate, finalEndDate });
+
+          // Usar el nuevo endpoint de rango de fechas
+          const result = await reservationService.getReservationsByDateRange(
+            finalStartDate,
+            finalEndDate
+          );
+
+          // Manejar respuesta - ya viene procesada desde el servicio
+          data = Array.isArray(result) ? result : [];
+
           console.log('📊 Store: fetchReservations result:', {
-            resultType: typeof result,
-            hasResultData: !!(result && result.data),
-            isResultArray: Array.isArray(result),
             processedDataLength: data.length,
-            processedData: data
+            dateRange: `${finalStartDate} to ${finalEndDate}`
           });
-          
-          set({ reservations: data, loading: false });
-          
+
+          // Actualizar estado con las fechas usadas
+          set({
+            reservations: data,
+            loading: false,
+            dateFilter: {
+              startDate: finalStartDate,
+              endDate: finalEndDate
+            }
+          });
+
           console.log('✅ Store: Updated reservations state with', data.length, 'items');
-          
-          telemetry.record('feature.reservations.load', { 
+
+          telemetry.record('feature.reservations.load', {
             duration: Date.now() - startTime,
-            count: data.length 
+            count: data.length,
+            method: 'date_range'
           });
-          
+
         } catch (error) {
+          console.error('❌ Store: Error loading reservations:', error);
           set({ error: error.message || 'Error al cargar reservas', loading: false });
-          telemetry.record('feature.reservations.error', { 
-            error: error.message 
+          telemetry.record('feature.reservations.error', {
+            error: error.message
           });
         }
       },
@@ -256,31 +293,77 @@ const useReservationStore = create(
       fetchAvailableSchedules: async (productId, date) => {
         set({ loading: true, error: null });
         const startTime = Date.now();
-        
+
         try {
           const result = await scheduleService.getAvailableSchedules(productId, date);
-          
+
           // Manejar diferentes formatos de respuesta
           let data = [];
           if (result.success !== false) {
             const raw = result.data || result;
-            data = Array.isArray(raw) ? raw : 
+            data = Array.isArray(raw) ? raw :
                    Array.isArray(raw?.data) ? raw.data :
                    Array.isArray(raw?.results) ? raw.results : [];
           }
-          
+
           set({ schedules: data, loading: false });
-          
-          telemetry.record('feature.schedules.load', { 
+
+          telemetry.record('feature.schedules.load', {
             duration: Date.now() - startTime,
-            count: data.length 
+            count: data.length
           });
-          
+
           return data;
         } catch (error) {
           set({ error: error.message || 'Error al cargar horarios', loading: false });
-          telemetry.record('feature.schedules.error', { 
-            error: error.message 
+          telemetry.record('feature.schedules.error', {
+            error: error.message
+          });
+          return [];
+        }
+      },
+
+      // 🆕 Cargar TODOS los horarios (disponibles y ocupados) con info de reservas
+      fetchAllSchedulesByProductAndDate: async (productId, date) => {
+        set({ loading: true, error: null });
+        const startTime = Date.now();
+
+        try {
+          const result = await scheduleService.getAllSchedulesByProductAndDate(productId, date);
+
+          // Manejar diferentes formatos de respuesta
+          let data = [];
+          if (result.success !== false) {
+            const raw = result.data || result;
+            data = Array.isArray(raw) ? raw :
+                   Array.isArray(raw?.data) ? raw.data :
+                   Array.isArray(raw?.results) ? raw.results : [];
+          }
+
+          // Separar en disponibles y ocupados para estadísticas
+          const available = data.filter(s => s.is_available);
+          const unavailable = data.filter(s => !s.is_available);
+
+          set({ schedules: data, loading: false });
+
+          telemetry.record('feature.schedules.load_all', {
+            duration: Date.now() - startTime,
+            total_count: data.length,
+            available_count: available.length,
+            unavailable_count: unavailable.length
+          });
+
+          console.log('✅ Store: Horarios actualizados (todos):', {
+            total: data.length,
+            disponibles: available.length,
+            ocupados: unavailable.length
+          });
+
+          return data;
+        } catch (error) {
+          set({ error: error.message || 'Error al cargar todos los horarios', loading: false });
+          telemetry.record('feature.schedules.error', {
+            error: error.message
           });
           return [];
         }

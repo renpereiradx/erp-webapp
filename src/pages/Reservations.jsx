@@ -100,8 +100,11 @@ const Reservations = () => {
     schedules,
     loading,
     error,
+    dateFilter,
     fetchReservations,
+    setDateFilter,
     fetchAvailableSchedules,
+    fetchAllSchedulesByProductAndDate, // 🆕 Nuevo método para obtener TODOS los horarios
     createReservation,
     updateReservation,
     cancelReservation,
@@ -139,6 +142,10 @@ const Reservations = () => {
   const [smartSearchTerm, setSmartSearchTerm] = useState('');
   const [searchType, setSearchType] = useState(null); // 'client_id', 'client_name', 'product_id'
   const [smartSearchLoading, setSmartSearchLoading] = useState(false);
+
+  // Estados para filtro de fechas
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingReservation, setEditingReservation] = useState(null);
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -202,7 +209,6 @@ const Reservations = () => {
       const services = await fetchServiceCourts();
       setAvailableServices(Array.isArray(services) ? services : []);
     } catch (error) {
-      console.error('Error loading service courts:', error);
       setAvailableServices([]);
     }
   };
@@ -218,7 +224,6 @@ const Reservations = () => {
       ]);
       setDataLoaded(true);
     } catch (error) {
-      console.error('Error loading data:', error);
     } finally {
       setLoadingData(false);
     }
@@ -236,7 +241,6 @@ const Reservations = () => {
         fetchClients()
       ]);
     } catch (error) {
-      console.error('Error refreshing data:', error);
     } finally {
       setLoadingData(false);
     }
@@ -246,21 +250,18 @@ const Reservations = () => {
   const handleLoadSchedules = async () => {
     if (selectedDate && selectedProduct) {
       const dateStr = selectedDate.toISOString().split('T')[0];
-      console.log('🕐 Loading schedules for:', { product: selectedProduct.name, date: dateStr });
+      console.log('🕐 Loading ALL schedules (available + unavailable) for:', { product: selectedProduct.name, date: dateStr });
       setSchedulesSearched(false); // Reset search state
-      await fetchAvailableSchedules(selectedProduct.id, dateStr);
+
+      // 🆕 Usar el nuevo endpoint que devuelve TODOS los horarios
+      await fetchAllSchedulesByProductAndDate(selectedProduct.id, dateStr);
       setSchedulesSearched(true); // Mark as searched
-      
-      // Debug: verificar conversiones de zona horaria
+
+      // Debug: verificar disponibilidad
       if (schedules.length > 0) {
-        console.log('🌍 Schedule timezone conversion check:');
-        schedules.slice(0, 3).forEach(schedule => {
-          // Now showing raw database times without conversion
-          console.log(`📅 ${schedule.product_name}:`);
-          console.log(`   Raw start_time: ${schedule.start_time}`);
-          console.log(`   Raw end_time: ${schedule.end_time}`);
-          console.log(`   ---`);
-        });
+        const available = schedules.filter(s => s.is_available).length;
+        const unavailable = schedules.filter(s => !s.is_available).length;
+        console.log(`📊 Total: ${schedules.length} | Disponibles: ${available} | Ocupados: ${unavailable}`);
       }
     }
   };
@@ -272,19 +273,15 @@ const Reservations = () => {
     setGeneratingSchedules(true);
     try {
       const dateStr = selectedDate.toISOString().split('T')[0];
-      console.log('🔄 Generando horarios para fecha:', dateStr);
       
       // Usar la nueva API flexible con auto-descubrimiento
       const result = await generateSchedulesForDate(dateStr);
-      
-      console.log('✅ Generación de horarios completada:', result);
       
       // Refrescar horarios después de generación
       if (selectedProduct) {
         await handleLoadSchedules();
       }
     } catch (error) {
-      console.error('❌ Error generando horarios:', error);
       setError('Error al generar horarios. Por favor intenta nuevamente.');
     } finally {
       setGeneratingSchedules(false);
@@ -300,14 +297,6 @@ const Reservations = () => {
       reservation.product_name?.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .map(reservation => {
-      // Debug temporal - verificar conversión de horarios
-      if (reservation.start_time) {
-        console.log('🕐 Debug horario:', {
-          reservation_id: reservation.reserve_id || reservation.id,
-          start_time_raw: reservation.start_time,
-          start_time_no_conversion: new Date(reservation.start_time).toISOString().substr(11, 5)
-        });
-      }
       return formatReserveForDisplay(reservation);
     }); // Agregar información de auditoría formateada
 
@@ -363,7 +352,6 @@ const Reservations = () => {
             if (client && client.status !== false && client.state !== false) {
               result = await fetchReservationsByClient(term);
             } else if (client && (client.status === false || client.state === false)) {
-              console.warn('Cliente inactivo:', term);
               setError('El cliente está inactivo. Solo se pueden buscar clientes activos.');
               result = [];
             } else {
@@ -371,7 +359,6 @@ const Reservations = () => {
               result = await fetchReservationsByClient(term);
             }
           } catch (err) {
-            console.error('Error buscando por client_id:', err);
             result = [];
           }
           break;
@@ -386,14 +373,12 @@ const Reservations = () => {
               result = await fetchReservationsByClient(clientResult.id);
             } else if (clientResult && clientResult.id && (clientResult.status === false || clientResult.state === false)) {
               // Cliente encontrado pero inactivo
-              console.warn('Cliente encontrado pero está inactivo:', term);
               setError('El cliente está inactivo. Solo se pueden buscar clientes activos.');
               result = [];
             } else {
               result = [];
             }
           } catch (err) {
-            console.warn('No se encontró cliente con ese nombre:', term);
             result = [];
           }
           break;
@@ -411,7 +396,6 @@ const Reservations = () => {
       setReservations(Array.isArray(result) ? result : []);
 
     } catch (error) {
-      console.error('Error en búsqueda inteligente:', error);
       setError(`Error buscando por ${detectedType}: ${error.message}`);
     } finally {
       setSmartSearchLoading(false);
@@ -432,13 +416,11 @@ const Reservations = () => {
     // Si date es undefined, significa que el usuario está deseleccionando
     // En ese caso, no hacemos nada (mantenemos la fecha actual)
     if (date === undefined) {
-      console.log('Date deselection attempted, keeping current date');
       return;
     }
     
     // Validate date before setting
     if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-      console.warn('Invalid date received:', date);
       return;
     }
     
@@ -452,7 +434,6 @@ const Reservations = () => {
   };
 
   const handleSelectTime = (displayTime, isoTime, endTime) => {
-    console.log('🕐 Selecting time:', { displayTime, isoTime, endTime, selectedDuration });
     setSelectedTime(displayTime);
     // isoTime ya viene en UTC desde la API, no necesita conversión adicional
     setFormData(prev => ({ 
@@ -464,7 +445,6 @@ const Reservations = () => {
   };
 
   const handleSelectClient = (client) => {
-    console.log('👤 Selecting client:', client);
     setSelectedClient(client);
     // Auto-avance inmediato al paso final
     setTimeout(() => {
@@ -473,15 +453,7 @@ const Reservations = () => {
   };
 
   const handleCreateReservation = async () => {
-    console.log('🔍 Validation check:', {
-      selectedProduct: !!selectedProduct,
-      startTime: !!formData.start_time,
-      selectedClient: !!selectedClient,
-      formData
-    });
-    
     if (!selectedProduct || !formData.start_time || !selectedClient) {
-      console.error('❌ Validation failed - missing required fields');
       alert('Por favor completa todos los campos obligatorios (producto, horario y cliente)');
       return;
     }
@@ -501,9 +473,7 @@ const Reservations = () => {
     };
 
     try {
-      console.log('🔄 Creating reservation with data:', reservationData);
       const result = await createReservation(reservationData);
-      console.log('✅ Reservation creation result:', result);
 
       // ⚠️ VERIFICAR SI LA OPERACIÓN FUE EXITOSA
       if (!result || result.success === false) {
@@ -535,7 +505,6 @@ const Reservations = () => {
       // 🔄 IMPORTANTE: Refrescar horarios después de crear reserva exitosamente
       if (selectedProduct && selectedDate) {
         const dateStr = selectedDate.toISOString().split('T')[0];
-        console.log('🔄 Refreshing schedules after successful reservation creation...');
         await fetchAvailableSchedules(selectedProduct.id, dateStr);
       }
 
@@ -556,7 +525,6 @@ const Reservations = () => {
       // Cambiar a la tab de lista para ver la reserva creada
       setActiveTab('list');
     } catch (error) {
-      console.error('Error creating reservation:', error);
       const errorMsg = error?.message || error?.toString() || 'Error desconocido';
       announceError(`❌ Error al crear la reserva: ${errorMsg}. Por favor intenta de nuevo.`);
     }
@@ -590,7 +558,6 @@ const Reservations = () => {
     try {
       if (editingReservation) {
         // await updateReservation(editingReservation.id, formData);
-        console.log('Update functionality pending');
       } else {
         await createReservation(formData);
       }
@@ -604,7 +571,6 @@ const Reservations = () => {
         duration: 1
       });
     } catch (error) {
-      console.error('Error saving reservation:', error);
     }
   };
 
@@ -613,7 +579,6 @@ const Reservations = () => {
       try {
         // Usar reserve_id como campo primario, fallback a id
         const reserveId = reservation.reserve_id || reservation.id;
-        console.log('🔍 Cancelando reserva con ID:', reserveId, 'reservation object:', reservation);
         const result = await cancelReservation(reserveId);
 
         // Verificar si la operación fue exitosa
@@ -625,7 +590,6 @@ const Reservations = () => {
 
         announceSuccess('✅ Reserva cancelada exitosamente');
       } catch (error) {
-        console.error('Error cancelling reservation:', error);
         const errorMsg = error?.message || error?.toString() || 'Error desconocido';
         announceError(`❌ Error al cancelar la reserva: ${errorMsg}`);
       }
@@ -646,7 +610,6 @@ const Reservations = () => {
 
         announceSuccess('✅ Reserva confirmada exitosamente');
       } catch (error) {
-        console.error('Error confirming reservation:', error);
         const errorMsg = error?.message || error?.toString() || 'Error desconocido';
         announceError(`❌ Error al confirmar la reserva: ${errorMsg}`);
       }
@@ -671,7 +634,6 @@ const Reservations = () => {
         results: result
       }));
     } catch (error) {
-      console.error('Error checking schedules:', error);
       setGeneralQuery(prev => ({
         ...prev,
         isQuerying: false,
@@ -758,14 +720,6 @@ const Reservations = () => {
       }
       
       if (result && result.success) {
-        console.log('✅ Resultado de generación:', {
-          tipo: type,
-          autoDiscovery: result.auto_discovery,
-          productosEncontrados: result.validation?.products_requested,
-          horariosCreados: result.results?.schedules_created,
-          horariosOmitidos: result.results?.schedules_skipped
-        });
-        
         // Recargar horarios disponibles
         if (selectedDate && selectedProduct) {
           const dateStr = selectedDate.toISOString().split('T')[0];
@@ -773,7 +727,6 @@ const Reservations = () => {
         }
       }
     } catch (error) {
-      console.error('Error generando horarios:', error);
       // Mostrar mensaje de error más específico
       setError(error.message || 'Error al generar horarios. Por favor intenta nuevamente.');
     } finally {
@@ -781,17 +734,21 @@ const Reservations = () => {
     }
   };
 
-  // Calcular horarios disponibles considerando la duración seleccionada
-  const availableTimeSlots = useMemo(() => {
-    if (!schedules || schedules.length === 0 || !selectedProduct) return [];
+  // 🆕 Procesar horarios separando disponibles de ocupados
+  const processedSchedules = useMemo(() => {
+    if (!schedules || schedules.length === 0 || !selectedProduct) {
+      return { availableSlots: [], unavailableSlots: [] };
+    }
+
+    // Filtrar por producto
+    const productSchedules = schedules.filter(s => s.product_id === selectedProduct.id);
+
+    // Separar disponibles de ocupados ANTES de procesar
+    const available = productSchedules.filter(s => s.is_available);
+    const unavailable = productSchedules.filter(s => !s.is_available);
 
     const availableSlots = [];
-    const sortedSchedules = schedules
-      .filter(schedule =>
-        schedule.is_available &&
-        schedule.product_id === selectedProduct.id
-      )
-      .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+    const sortedSchedules = available.sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
     
     // Crear slots consecutivos basados en la duración seleccionada
     for (let i = 0; i < sortedSchedules.length; i++) {
@@ -841,36 +798,103 @@ const Reservations = () => {
         });
       }
     }
-    
-    return availableSlots;
+
+    // 🆕 Procesar horarios NO disponibles para mostrarlos
+    const unavailableSlots = unavailable
+      .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
+      .map(schedule => {
+        const startDate = new Date(schedule.start_time);
+        const endDate = new Date(schedule.end_time);
+        const displayTime = startDate.toISOString().substr(11, 5);
+        const displayEndTime = endDate.toISOString().substr(11, 5);
+
+        return {
+          id: `${schedule.id}-unavailable`,
+          start_time: schedule.start_time,
+          end_time: schedule.end_time,
+          displayTime,
+          displayEndTime,
+          timeRange: `${displayTime} - ${displayEndTime}`,
+          product_name: schedule.product_name,
+          product_id: schedule.product_id,
+          is_available: false,
+          reserved_by: schedule.reserved_by || 'Ocupado',
+          reserve_id: schedule.reserve_id,
+          reserve_status: schedule.reserve_status
+        };
+      });
+
+    return { availableSlots, unavailableSlots };
   }, [schedules, selectedDuration, selectedProduct]);
+
+  // Destructurar para mantener compatibilidad con código existente
+  const availableTimeSlots = processedSchedules.availableSlots;
+  const unavailableTimeSlots = processedSchedules.unavailableSlots;
 
   // NO cargar datos automáticamente - solo cuando el usuario lo solicite explícitamente
 
   // Cargar servicios al inicializar el componente
   useEffect(() => {
     handleLoadServices();
-    
-    // Test de conversión de zona horaria al inicializar
-    console.log('🧪 Testing timezone conversion with your API data:');
-    const testTimes = [
-      "2025-09-09T14:00:00Z", // Debe mostrar 11:00
-      "2025-09-09T15:00:00Z", // Debe mostrar 12:00
-      "2025-09-09T21:00:00Z"  // Debe mostrar 18:00
-    ];
-    
-    testTimes.forEach(utcTime => {
-      // Now showing raw database times without conversion
-      console.log(`Raw UTC time: ${utcTime} -> Display time: ${new Date(utcTime).toISOString().substr(11, 5)}`);
-    });
-    
+
     // Establecer modo básico como estado inicial
     const initTimer = setTimeout(() => {
       setDataLoaded(true);
     }, 100);
-    
+
     return () => clearTimeout(initTimer);
   }, []);
+
+  // Inicializar fechas del filtro desde el store o usar valores por defecto (último día)
+  useEffect(() => {
+    if (dateFilter.startDate && dateFilter.endDate) {
+      // Usar fechas del store si existen
+      setFilterStartDate(dateFilter.startDate);
+      setFilterEndDate(dateFilter.endDate);
+    } else {
+      // Inicializar con último día (ayer a hoy)
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const startDate = yesterday.toISOString().split('T')[0];
+      const endDate = today.toISOString().split('T')[0];
+
+      setFilterStartDate(startDate);
+      setFilterEndDate(endDate);
+    }
+  }, [dateFilter]);
+
+  // 🆕 Auto-cargar horarios cuando se selecciona fecha y producto
+  useEffect(() => {
+    if (selectedDate && selectedProduct && currentStep === 2) {
+      handleLoadSchedules();
+    }
+  }, [selectedDate, selectedProduct, currentStep]);
+
+  // Función para aplicar filtro de fechas
+  const handleApplyDateFilter = async () => {
+    if (!filterStartDate || !filterEndDate) {
+      announceError('Por favor seleccione ambas fechas');
+      return;
+    }
+
+    // Validar que start_date <= end_date
+    if (new Date(filterStartDate) > new Date(filterEndDate)) {
+      announceError('La fecha de inicio debe ser anterior o igual a la fecha de fin');
+      return;
+    }
+
+    try {
+      await fetchReservations({
+        startDate: filterStartDate,
+        endDate: filterEndDate
+      });
+      announceSuccess(`Reservas cargadas: ${filterStartDate} a ${filterEndDate}`);
+    } catch (error) {
+      announceError('Error al cargar reservas con el filtro de fechas');
+    }
+  };
 
   // Estado inicial: mostrar skeleton mientras carga automáticamente
   if (!dataLoaded && (loading || loadingData)) {
@@ -1424,36 +1448,27 @@ const Reservations = () => {
                         </div>
                       </div>
 
-                    {/* Horarios disponibles */}
+                    {/* Horarios disponibles - Auto-carga al seleccionar fecha */}
                     <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold flex items-center gap-2">
-                          <Clock className="w-5 h-5" />
-                          Horarios Disponibles
-                        </h3>
-                        <Button
-                          onClick={handleLoadSchedules}
-                          disabled={loading}
-                          size="sm"
-                          variant="outline"
-                        >
-                          {loading ? (
-                            <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                          ) : (
-                            <Search className="w-4 h-4 mr-2" />
-                          )}
-                          Buscar
-                        </Button>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Clock className="w-4 h-4 text-gray-600" />
+                        <h3 className="text-sm font-semibold text-gray-700">Horarios Disponibles</h3>
+                        {loading && (
+                          <div className="ml-auto flex items-center gap-2 text-xs text-blue-600">
+                            <div className="animate-spin w-3 h-3 border-2 border-current border-t-transparent rounded-full" />
+                            Cargando...
+                          </div>
+                        )}
                       </div>
 
                       {schedules.length === 0 ? (
-                        <div className={`p-6 text-center rounded-lg border-2 border-dashed ${styles.card('secondary')}`}>
-                          <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                        <div className={`p-4 text-center rounded-lg border-2 border-dashed ${styles.card('secondary')}`}>
+                          <Clock className="w-10 h-10 mx-auto mb-2 opacity-50" />
                           {!schedulesSearched ? (
                             <>
-                              <p className="font-medium mb-2">Haz clic en "Buscar" para cargar horarios</p>
-                              <p className="text-sm text-muted-foreground">
-                                Fecha: {selectedDate?.toLocaleDateString('es-ES') || 'Selecciona una fecha'}
+                              <p className="text-sm font-medium mb-1">Selecciona una fecha en el calendario</p>
+                              <p className="text-xs text-muted-foreground">
+                                Los horarios se cargarán automáticamente
                               </p>
                             </>
                           ) : (
@@ -1519,40 +1534,41 @@ const Reservations = () => {
                             </p>
                           </div>
                           
-                          <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
+                          {/* ✨ Diseño compacto en grid de 3 columnas */}
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-96 overflow-y-auto p-1">
                             {availableTimeSlots.map(slot => (
-                              <Button
+                              <button
                                 key={slot.id}
                                 onClick={() => handleSelectTime(slot.displayTime, slot.start_time, slot.end_time)}
-                                className={`p-4 h-auto transition-all border-2 ${
+                                className={`px-3 py-2.5 transition-all border rounded-md text-left ${
                                   selectedTime === slot.displayTime
-                                    ? 'bg-green-500 text-white border-green-600 shadow-lg transform scale-[1.02]'
-                                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-600 hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                                } rounded-lg text-left`}
+                                    ? 'bg-green-500 text-white border-green-600 shadow-md ring-2 ring-green-300'
+                                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-600 hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 hover:shadow-sm'
+                                }`}
                               >
-                                <div className="flex items-center justify-between w-full">
-                                  <div>
-                                    <div className="font-bold text-lg">{slot.timeRange}</div>
-                                    <div className="text-sm opacity-75">
-                                      {slot.durationText}
-                                    </div>
+                                <div className="flex items-center justify-between gap-1.5">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-semibold text-sm truncate">{slot.timeRange}</div>
+                                    <div className="text-xs opacity-75 truncate">{slot.durationText}</div>
                                   </div>
-                                  <div className="text-right">
-                                    <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                                      <Clock className="w-4 h-4 text-green-600 dark:text-green-400" />
-                                    </div>
-                                    {slot.consecutiveAvailable > selectedDuration && (
-                                      <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                                        +{slot.consecutiveAvailable - selectedDuration}h extra
-                                      </div>
-                                    )}
+                                  <div className="flex-shrink-0">
+                                    <Clock className={`w-3.5 h-3.5 ${
+                                      selectedTime === slot.displayTime
+                                        ? 'text-white'
+                                        : 'text-green-600 dark:text-green-400'
+                                    }`} />
                                   </div>
                                 </div>
-                              </Button>
+                                {slot.consecutiveAvailable > selectedDuration && (
+                                  <div className="text-[10px] mt-0.5 opacity-75 truncate">
+                                    +{slot.consecutiveAvailable - selectedDuration}h disponible
+                                  </div>
+                                )}
+                              </button>
                             ))}
                             
-                            {availableTimeSlots.length === 0 && (
-                              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                            {availableTimeSlots.length === 0 && unavailableTimeSlots.length === 0 && (
+                              <div className="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
                                 <Clock className="w-12 h-12 mx-auto mb-2 opacity-50" />
                                 <p className="font-medium">No hay horarios disponibles</p>
                                 <p className="text-sm">para reservas de {selectedDuration} hora{selectedDuration > 1 ? 's' : ''}</p>
@@ -1561,6 +1577,35 @@ const Reservations = () => {
                                 </p>
                               </div>
                             )}
+
+                            {/* 🆕 Mostrar horarios OCUPADOS con diseño diferenciado */}
+                            {unavailableTimeSlots.map(slot => (
+                              <button
+                                key={slot.id}
+                                disabled
+                                className="px-3 py-2.5 transition-all border rounded-md text-left bg-gray-100 dark:bg-gray-900 border-gray-300 dark:border-gray-700 opacity-60 cursor-not-allowed"
+                                title={`Reservado por: ${slot.reserved_by}`}
+                              >
+                                <div className="flex items-center justify-between gap-1.5">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-semibold text-sm truncate line-through text-gray-600 dark:text-gray-400">
+                                      {slot.timeRange}
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-500 truncate">
+                                      Ocupado
+                                    </div>
+                                  </div>
+                                  <div className="flex-shrink-0">
+                                    <XCircle className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
+                                  </div>
+                                </div>
+                                {slot.reserved_by && slot.reserved_by !== 'Ocupado' && (
+                                  <div className="text-[10px] mt-0.5 text-gray-500 dark:text-gray-600 truncate">
+                                    {slot.reserved_by}
+                                  </div>
+                                )}
+                              </button>
+                            ))}
                           </div>
                         </div>
                       )}
@@ -1898,6 +1943,80 @@ const Reservations = () => {
             </div>
           </Card>
 
+          {/* Filtro de Rango de Fechas */}
+          <Card className={styles.card()}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Calendar className="w-5 h-5" />
+                Filtrar por Rango de Fechas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Fecha Inicio
+                  </label>
+                  <Input
+                    type="date"
+                    value={filterStartDate}
+                    onChange={(e) => setFilterStartDate(e.target.value)}
+                    className={styles.input()}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Fecha Fin
+                  </label>
+                  <Input
+                    type="date"
+                    value={filterEndDate}
+                    onChange={(e) => setFilterEndDate(e.target.value)}
+                    className={styles.input()}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleApplyDateFilter}
+                    variant="primary"
+                    className="flex-1"
+                    disabled={!filterStartDate || !filterEndDate}
+                  >
+                    <Search className="w-4 h-4 mr-2" />
+                    Buscar
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      // Reset a último día (ayer a hoy)
+                      const today = new Date();
+                      const yesterday = new Date(today);
+                      yesterday.setDate(yesterday.getDate() - 1);
+                      const startDate = yesterday.toISOString().split('T')[0];
+                      const endDate = today.toISOString().split('T')[0];
+                      setFilterStartDate(startDate);
+                      setFilterEndDate(endDate);
+                      // Aplicar el filtro directamente
+                      await fetchReservations({
+                        startDate,
+                        endDate
+                      });
+                      announceSuccess('Filtro restablecido al último día');
+                    }}
+                    variant="outline"
+                    title="Restablecer a último día"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              {dateFilter.startDate && dateFilter.endDate && (
+                <div className="mt-3 text-sm text-muted-foreground">
+                  Mostrando reservas desde <strong>{dateFilter.startDate}</strong> hasta <strong>{dateFilter.endDate}</strong>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Filtros Locales */}
           <div className="flex justify-between items-center">
             <div className="relative group max-w-md">
@@ -2059,468 +2178,212 @@ const Reservations = () => {
           )}
         </TabsContent>
 
-        {/* Tab Gestión de Horarios */}
-        <TabsContent value="schedules" className="space-y-6" data-testid="schedules-management-tab">
-          {/* 🎨 Sección mejorada de verificación de horarios disponibles */}
+        {/* Tab Gestión de Horarios - COMPACTO */}
+        <TabsContent value="schedules" className="space-y-4" data-testid="schedules-management-tab">
+          {/* Consultar Disponibilidad - Compacto */}
           <Card className={styles.card('primary')}>
-            <CardHeader>
-              <CardTitle className={styles.header('h3')}>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${styles.card('secondary')}`}>
-                    <Search className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <span className="text-lg font-semibold">Consultar Disponibilidad</span>
-                    <p className="text-sm font-normal mt-0.5 text-muted-foreground">
-                      Verifica los horarios disponibles para cualquier fecha
-                    </p>
-                  </div>
-                </div>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <Search className="w-4 h-4" />
+                Consultar Disponibilidad
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* 🎨 Input mejorado con iconos y diseño moderno */}
-                <div className={`rounded-xl p-4 shadow-sm ${styles.card()}`}>
-                  <div className="flex gap-4">
-                    <div className="flex-1 relative">
-                      <label className={`block text-sm font-medium mb-2 ${styles.label()}`}>
-                        📅 Fecha a consultar
-                      </label>
-                      <div className="relative">
-                        <Input
-                          type="date"
-                          value={generalQuery.date}
-                          onChange={(e) => setGeneralQuery(prev => ({ ...prev, date: e.target.value, hasChecked: false, results: null }))}
-                          className={`w-full pl-4 pr-12 py-3 rounded-lg ${styles.input()}`}
-                        />
-                        <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 pointer-events-none text-muted-foreground" />
-                      </div>
-                      {generalQuery.date && (
-                        <p className="text-xs mt-1 flex items-center gap-1 text-muted-foreground">
-                          <Clock className="w-3 h-3" />
-                          {generalQuery.date === new Date().toISOString().split('T')[0] ? 'Consultando horarios de hoy' : `Consultando fecha futura`}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-end">
-                      <Button
-                        onClick={handleCheckAvailableSchedules}
-                        disabled={generalQuery.isQuerying || !generalQuery.date}
-                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {generalQuery.isQuerying ? (
-                          <>
-                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                            <span>Consultando...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Search className="w-4 h-4" />
-                            <span>Consultar</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
+            <CardContent className="pt-0">
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Input
+                    type="date"
+                    value={generalQuery.date}
+                    onChange={(e) => setGeneralQuery(prev => ({ ...prev, date: e.target.value, hasChecked: false, results: null }))}
+                    className="w-full text-sm"
+                  />
                 </div>
-
-                {/* 🎨 Resultados mejorados con diseño moderno */}
-                {generalQuery.hasChecked && (
-                  <div className="bg-white dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-                    {generalQuery.results?.count > 0 ? (
-                      <div className="space-y-0">
-                        {/* 🎯 Header con estadísticas */}
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-4 text-white">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 bg-white/20 rounded-full">
-                                <CheckCircle className="w-6 h-6" />
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-semibold">
-                                  ✅ {generalQuery.results.count} horarios encontrados
-                                </h3>
-                                <p className="text-green-100 text-sm">
-                                  {generalQuery.date === new Date().toISOString().split('T')[0] 
-                                    ? 'Programados para hoy' 
-                                    : `Disponibles para ${new Date(generalQuery.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
-                                </p>
-                              </div>
-                            </div>
-                            <Button
-                              onClick={handleOpenSchedulesModal}
-                              className="bg-white/20 hover:bg-white/30 text-white border-white/30 hover:border-white/50 backdrop-blur-sm"
-                              size="sm"
-                            >
-                              <Eye className="w-4 h-4 mr-2" />
-                              Ver todos
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        {/* 🏢 Servicios disponibles con diseño de tarjetas mejorado */}
-                        <div className="p-4">
-                          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                            🏪 Servicios disponibles
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {(() => {
-                              // Agrupar horarios por servicio
-                              const serviceGroups = {};
-                              generalQuery.results.schedules?.slice(0, 6).forEach(schedule => {
-                                const serviceName = schedule.product_name;
-                                if (!serviceGroups[serviceName]) {
-                                  serviceGroups[serviceName] = {
-                                    name: serviceName,
-                                    total: 0,
-                                    available: 0,
-                                    schedules: []
-                                  };
-                                }
-                                serviceGroups[serviceName].total += 1;
-                                if (schedule.is_available) serviceGroups[serviceName].available += 1;
-                                serviceGroups[serviceName].schedules.push(schedule);
-                              });
-                              
-                              return Object.values(serviceGroups).map((service, index) => {
-                                const availabilityPercent = Math.round((service.available / service.total) * 100);
-                                const isHighAvailability = availabilityPercent >= 70;
-                                const isMediumAvailability = availabilityPercent >= 30 && availabilityPercent < 70;
-                                
-                                return (
-                                  <Card key={service.name || `service-${index}`} className={`${styles.card()} hover:shadow-md transition-all duration-200 border-l-4 ${
-                                    isHighAvailability ? 'border-l-green-500 bg-green-50/30 dark:bg-green-950/10' :
-                                    isMediumAvailability ? 'border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-950/10' :
-                                    'border-l-red-500 bg-red-50/30 dark:bg-red-950/10'
-                                  }`}>
-                                    <CardContent className="p-4">
-                                      <div className="space-y-3">
-                                        <div className="flex items-start justify-between">
-                                          <div className="flex-1">
-                                            <h4 className="font-semibold text-sm mb-2 text-gray-800 dark:text-gray-200">
-                                              {service.name}
-                                            </h4>
-                                            <div className="space-y-2">
-                                              {/* Progress bar */}
-                                              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                                <div 
-                                                  className={`h-2 rounded-full transition-all duration-500 ${
-                                                    isHighAvailability ? 'bg-green-500' :
-                                                    isMediumAvailability ? 'bg-yellow-500' : 'bg-red-500'
-                                                  }`}
-                                                  style={{ width: `${availabilityPercent}%` }}
-                                                ></div>
-                                              </div>
-                                              <div className="flex items-center justify-between text-xs">
-                                                <span className="text-muted-foreground flex items-center gap-1">
-                                                  <Clock className="w-3 h-3" />
-                                                  {service.total} slots
-                                                </span>
-                                                <span className={`font-semibold ${
-                                                  isHighAvailability ? 'text-green-600 dark:text-green-400' :
-                                                  isMediumAvailability ? 'text-yellow-600 dark:text-yellow-400' :
-                                                  'text-red-600 dark:text-red-400'
-                                                }`}>
-                                                  {service.available} disponibles ({availabilityPercent}%)
-                                                </span>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                        
-                                        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
-                                          <Badge 
-                                            variant={service.available > 0 ? 'default' : 'secondary'}
-                                            className={`text-xs px-3 py-1 ${
-                                              isHighAvailability ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                              isMediumAvailability ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                              'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                            }`}
-                                          >
-                                            {isHighAvailability ? '🟢 Alta disponibilidad' :
-                                             isMediumAvailability ? '🟡 Disponibilidad media' :
-                                             '🔴 Baja disponibilidad'}
-                                          </Badge>
-                                          
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="text-xs hover:shadow-sm transition-all duration-200"
-                                            onClick={() => handleOpenSchedulesModal(service.schedules, `Horarios de ${service.name}`)}
-                                          >
-                                            <Eye className="w-3 h-3 mr-1" />
-                                            Ver detalles
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                );
-                              });
-                            })()}
-                          </div>
-                        </div>
-                        
-                        {/* 📊 Resumen estadístico */}
-                        {generalQuery.results.schedules?.length > 6 && (
-                          <div className="bg-gray-50 dark:bg-gray-800/50 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-                            <div className="text-center">
-                              <span className="text-sm text-muted-foreground">
-                                {(() => {
-                                  const serviceGroups = {};
-                                  let totalAvailable = 0;
-                                  generalQuery.results.schedules?.forEach(schedule => {
-                                    const serviceName = schedule.product_name;
-                                    if (!serviceGroups[serviceName]) serviceGroups[serviceName] = true;
-                                    if (schedule.is_available) totalAvailable++;
-                                  });
-                                  const totalServices = Object.keys(serviceGroups).length;
-                                  return `📈 ${totalServices} servicios • ${generalQuery.results.schedules?.length} horarios totales • ${totalAvailable} disponibles`;
-                                })()}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/10 dark:to-orange-950/10 p-6 text-center border border-amber-200 dark:border-amber-800">
-                        <div className="flex flex-col items-center gap-3">
-                          <div className="p-3 bg-amber-100 dark:bg-amber-900/50 rounded-full">
-                            <AlertCircle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-amber-800 dark:text-amber-200 text-lg">
-                              📅 Sin horarios para {new Date(generalQuery.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
-                            </h3>
-                            <p className="text-amber-600 dark:text-amber-400 text-sm mt-2">
-                              💡 Utiliza las herramientas de generación de abajo para crear horarios para esta fecha
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <Button
+                  onClick={handleCheckAvailableSchedules}
+                  disabled={generalQuery.isQuerying || !generalQuery.date}
+                  size="sm"
+                  className="px-4"
+                >
+                  {generalQuery.isQuerying ? (
+                    <div className="animate-spin w-3 h-3 border-2 border-current border-t-transparent rounded-full" />
+                  ) : (
+                    <>
+                      <Search className="w-3 h-3 mr-1.5" />
+                      Consultar
+                    </>
+                  )}
+                </Button>
               </div>
+
+              {/* Resultados - Compacto */}
+              {generalQuery.hasChecked && (
+                <div className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  {generalQuery.results?.count > 0 ? (
+                    <div>
+                      {/* Header compacto */}
+                      <div className="bg-green-50 dark:bg-green-950/20 px-3 py-2 flex items-center justify-between border-b">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                            {generalQuery.results.count} horarios encontrados
+                          </span>
+                        </div>
+                        <Button
+                          onClick={handleOpenSchedulesModal}
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          Ver todos
+                        </Button>
+                      </div>
+                        
+                      {/* Lista de servicios - Compacto */}
+                      <div className="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border-b">
+                        <span className="font-medium">Servicios disponibles</span>
+                      </div>
+                      <div className="px-3 py-2 max-h-48 overflow-y-auto">
+                        <div className="space-y-1.5">
+                        {(() => {
+                          // Agrupar horarios por servicio
+                          const serviceGroups = {};
+                          generalQuery.results.schedules?.forEach(schedule => {
+                            const name = schedule.product_name;
+                            if (!serviceGroups[name]) serviceGroups[name] = { name, available: 0, total: 0 };
+                            serviceGroups[name].total++;
+                            if (schedule.is_available) serviceGroups[name].available++;
+                          });
+
+                          return Object.values(serviceGroups).map((svc, i) => (
+                            <div key={i} className="flex items-center justify-between py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded px-2">
+                              <span className="text-sm font-medium truncate flex-1">{svc.name}</span>
+                              <div className="flex items-center gap-2 text-xs">
+                                <span className="text-green-600 dark:text-green-400">{svc.available}</span>
+                                <span className="text-gray-400">/</span>
+                                <span className="text-gray-600 dark:text-gray-400">{svc.total}</span>
+                              </div>
+                            </div>
+                          ));
+                        })()}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="px-3 py-4 text-center bg-amber-50 dark:bg-amber-950/20">
+                      <AlertCircle className="w-8 h-8 mx-auto mb-2 text-amber-600 dark:text-amber-400" />
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        Sin horarios para esta fecha
+                      </p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        Usa las herramientas de generación abajo
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
           
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* 🎨 Panel mejorado de Generación de Horarios */}
-            <Card className={`${styles.card()} bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20 border-violet-200 dark:border-violet-800 xl:col-span-2`}>
-              <CardHeader>
-                <CardTitle className={`${styles.header('h3')} text-violet-900 dark:text-violet-100`}>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-violet-100 dark:bg-violet-900/50 rounded-lg">
-                      <RefreshCw className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                    </div>
-                    <div>
-                      <span className="text-lg font-semibold">{t('schedules.generate.title', 'Herramientas de Generación')}</span>
-                      <p className="text-sm text-violet-600 dark:text-violet-400 font-normal mt-0.5">
-                        Crea horarios automáticamente según tus necesidades
-                      </p>
-                    </div>
-                  </div>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            {/* Generación de Horarios - Compacto */}
+            <Card className={styles.card()}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4" />
+                  Generar Horarios
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* ⚡ Generación rápida */}
-                  <div className="bg-white dark:bg-gray-900/50 p-4 rounded-xl border border-violet-200 dark:border-violet-700 shadow-sm">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="p-1 bg-emerald-100 dark:bg-emerald-900/50 rounded">
-                        <RefreshCw className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      </div>
-                      <h4 className="font-semibold text-sm">⚡ Generación Rápida</h4>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Horarios para hoy con configuración predeterminada
-                    </p>
-                    <Button
-                      onClick={() => handleGenerateSchedules('daily')}
-                      disabled={scheduleManagement.generatingSchedules}
-                      className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
-                      size="sm"
-                    >
-                      {scheduleManagement.generatingSchedules ? (
-                        <>
-                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                          Generando...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="w-4 h-4 mr-2" />
-                          Generar Hoy
-                        </>
-                      )}
-                    </Button>
-                  </div>
+              <CardContent className="space-y-3">
+                {/* Generación rápida */}
+                <div>
+                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">
+                    Rápido (Hoy)
+                  </label>
+                  <Button
+                    onClick={() => handleGenerateSchedules('daily')}
+                    disabled={scheduleManagement.generatingSchedules}
+                    className="w-full"
+                    size="sm"
+                  >
+                    {scheduleManagement.generatingSchedules ? (
+                      <>
+                        <div className="animate-spin w-3 h-3 border-2 border-current border-t-transparent rounded-full mr-2" />
+                        Generando...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-3 h-3 mr-1.5" />
+                        Generar Hoy
+                      </>
+                    )}
+                  </Button>
+                </div>
 
-                  {/* 📅 Fecha específica */}
-                  <div className="bg-white dark:bg-gray-900/50 p-4 rounded-xl border border-violet-200 dark:border-violet-700 shadow-sm">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="p-1 bg-blue-100 dark:bg-blue-900/50 rounded">
-                        <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <h4 className="font-semibold text-sm">📅 Fecha Específica</h4>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Elige una fecha particular para generar
-                    </p>
-                    <div className="space-y-2">
-                      <Input
-                        type="date"
-                        value={scheduleManagement.selectedScheduleDate.toISOString().split('T')[0]}
-                        onChange={(e) => setScheduleManagement(prev => ({
-                          ...prev,
-                          selectedScheduleDate: new Date(e.target.value)
+                {/* Fecha específica - Compacto */}
+                <div>
+                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">
+                    Fecha Específica
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="date"
+                      value={scheduleManagement.selectedScheduleDate.toISOString().split('T')[0]}
+                      onChange={(e) => setScheduleManagement(prev => ({
+                        ...prev,
+                        selectedScheduleDate: new Date(e.target.value)
                         }))}
                         className={`text-sm ${styles.input()}`}
                         min={new Date().toISOString().split('T')[0]}
                       />
-                      <Button
-                        onClick={() => handleGenerateSchedules('date', {
-                          date: scheduleManagement.selectedScheduleDate.toISOString().split('T')[0]
-                        })}
-                        disabled={scheduleManagement.generatingSchedules}
-                        className={`w-full font-medium shadow-md hover:shadow-lg transition-all duration-200 ${styles.button('primary')}`}
-                        size="sm"
-                      >
-                        <Calendar className="w-4 h-4 mr-2" />
-                        Generar
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* 📊 Generación masiva */}
-                  <div className="bg-white dark:bg-gray-900/50 p-4 rounded-xl border border-violet-200 dark:border-violet-700 shadow-sm">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="p-1 bg-purple-100 dark:bg-purple-900/50 rounded">
-                        <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                      </div>
-                      <h4 className="font-semibold text-sm">📊 Generación Masiva</h4>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Horarios para los próximos días en lote
-                    </p>
-                    <div className="space-y-2">
-                      <select
-                        value={scheduleManagement.daysToGenerate}
-                        onChange={(e) => setScheduleManagement(prev => ({
-                          ...prev,
-                          daysToGenerate: parseInt(e.target.value)
-                        }))}
-                        className="w-full p-2 border border-purple-200 dark:border-purple-700 rounded text-sm focus:border-purple-500 focus:ring-purple-500 bg-white dark:bg-gray-800"
-                      >
-                        <option value={7}>📅 Próximos 7 días</option>
-                        <option value={14}>📅 Próximos 14 días</option>
-                        <option value={30}>📅 Próximo mes (30 días)</option>
-                        <option value={60}>📅 Próximos 2 meses (60 días)</option>
-                      </select>
-                      <Button
-                        onClick={() => handleGenerateSchedules('nextDays', {
-                          days: scheduleManagement.daysToGenerate
-                        })}
-                        disabled={scheduleManagement.generatingSchedules}
-                        className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
-                        size="sm"
-                      >
-                        <Clock className="w-4 h-4 mr-2" />
-                        Generar Lote
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* 🎯 NUEVO: Rango personalizado */}
-                  <div className="bg-gradient-to-br from-indigo-50 to-cyan-50 dark:from-indigo-950/30 dark:to-cyan-950/30 p-4 rounded-xl border border-indigo-200 dark:border-indigo-700 shadow-sm">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="p-1 bg-indigo-100 dark:bg-indigo-900/50 rounded">
-                        <Settings className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                      </div>
-                      <h4 className="font-semibold text-sm">🎯 Rango Personalizado</h4>
-                      <Badge variant="secondary" className="text-xs bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-                        ¡Nuevo!
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Define horas específicas y productos opcionales
-                    </p>
-                    <div className="space-y-3">
-                      {/* Fecha */}
-                      <Input
-                        type="date"
-                        value={scheduleManagement.customRange?.targetDate || ''}
-                        onChange={(e) => setScheduleManagement(prev => ({
-                          ...prev,
-                          customRange: {
-                            ...prev.customRange,
-                            targetDate: e.target.value
-                          }
-                        }))}
-                        className="text-xs border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-500"
-                        min={new Date().toISOString().split('T')[0]}
-                        placeholder="Fecha"
-                      />
-                      
-                      {/* Rango de horas */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-xs text-muted-foreground block mb-1">Inicio</label>
-                          <select
-                            value={scheduleManagement.customRange?.startHour || 6}
-                            onChange={(e) => setScheduleManagement(prev => ({
-                              ...prev,
-                              customRange: {
-                                ...prev.customRange,
-                                startHour: parseInt(e.target.value)
-                              }
-                            }))}
-                            className="w-full p-1.5 border border-indigo-200 dark:border-indigo-700 rounded text-xs focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-800"
-                          >
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <option key={i} value={i}>{String(i).padStart(2, '0')}:00</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-xs text-muted-foreground block mb-1">Fin</label>
-                          <select
-                            value={scheduleManagement.customRange?.endHour || 23}
-                            onChange={(e) => setScheduleManagement(prev => ({
-                              ...prev,
-                              customRange: {
-                                ...prev.customRange,
-                                endHour: parseInt(e.target.value)
-                              }
-                            }))}
-                            className="w-full p-1.5 border border-indigo-200 dark:border-indigo-700 rounded text-xs focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-800"
-                          >
-                            {Array.from({ length: 24 }, (_, i) => (
-                              <option key={i} value={i}>{String(i).padStart(2, '0')}:00</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      
-                      <Button
-                        onClick={() => handleGenerateSchedules('customRange', {
-                          targetDate: scheduleManagement.customRange?.targetDate,
-                          startHour: scheduleManagement.customRange?.startHour || 6,
-                          endHour: scheduleManagement.customRange?.endHour || 23
-                        })}
-                        disabled={scheduleManagement.generatingSchedules || !scheduleManagement.customRange?.targetDate}
-                        className="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
-                        size="sm"
-                      >
-                        <Settings className="w-4 h-4 mr-2" />
-                        {scheduleManagement.generatingSchedules ? 'Generando...' : 'Generar Personalizado'}
-                      </Button>
-                    </div>
+                    <Button
+                      onClick={() => handleGenerateSchedules('date', {
+                        date: scheduleManagement.selectedScheduleDate.toISOString().split('T')[0]
+                      })}
+                      disabled={scheduleManagement.generatingSchedules}
+                      size="sm"
+                      className="px-3"
+                    >
+                      <Calendar className="w-3 h-3 mr-1" />
+                      Generar
+                    </Button>
                   </div>
                 </div>
 
-                {/* 📋 Estado de generación */}
+                {/* Generación masiva - Compacto */}
+                <div>
+                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 block">
+                    Generación Masiva (Próximos N días)
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={scheduleManagement.daysToGenerate}
+                      onChange={(e) => setScheduleManagement(prev => ({
+                        ...prev,
+                        daysToGenerate: parseInt(e.target.value)
+                      }))}
+                      className="flex-1 text-sm px-2 py-1.5 border rounded"
+                    >
+                      <option value={7}>7 días</option>
+                      <option value={14}>14 días</option>
+                      <option value={30}>30 días</option>
+                      <option value={60}>60 días</option>
+                    </select>
+                    <Button
+                      onClick={() => handleGenerateSchedules('nextDays', {
+                        days: scheduleManagement.daysToGenerate
+                      })}
+                      disabled={scheduleManagement.generatingSchedules}
+                      size="sm"
+                      className="px-3"
+                    >
+                      <Clock className="w-3 h-3 mr-1" />
+                      Generar
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Estado de generación */}
                 {scheduleManagement.generatingSchedules && (
                   <div className={`rounded-xl p-4 text-center ${styles.card('primary')}`}>
                     <div className="flex items-center justify-center gap-3">

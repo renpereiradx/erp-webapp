@@ -403,12 +403,15 @@ const Sales = () => {
     // Extraer fecha del start_time (viene como timestamp ISO completo)
     const reservationDate = reservation.start_time ? reservation.start_time.split('T')[0] : null;
 
+    // Obtener el ID correcto de la reserva (puede venir como reserve_id o id)
+    const reserveId = reservation.reserve_id || reservation.id;
+
     // Crear un producto virtual basado en la reserva
     const reservationProduct = {
-      product_id: reservation.product_id || `reservation_${reservation.id}`,
-      id: reservation.product_id || `reservation_${reservation.id}`,
-      product_name: reservation.product_name || reservation.service_name || `Servicio Reserva #${reservation.id}`,
-      name: reservation.product_name || reservation.service_name || `Servicio Reserva #${reservation.id}`,
+      product_id: reservation.product_id || `reservation_${reserveId}`,
+      id: reservation.product_id || `reservation_${reserveId}`,
+      product_name: reservation.product_name || reservation.service_name || `Servicio Reserva #${reserveId}`,
+      name: reservation.product_name || reservation.service_name || `Servicio Reserva #${reserveId}`,
       price: price,
       originalPrice: price, // Para reservas, el precio original es el precio de la reserva
       category: 'Servicio Reservado',
@@ -417,7 +420,7 @@ const Sales = () => {
       state: true,
       // Marcar como proveniente de reserva
       fromReservation: true,
-      reservation_id: reservation.id,
+      reservation_id: reserveId, // ✅ FIX: Usar el ID correcto (reserve_id o id)
       reservation_date: reservationDate,
       start_time: reservation.start_time,
       end_time: reservation.end_time,
@@ -436,10 +439,12 @@ const Sales = () => {
   };
 
   const handleRemoveReservationFromCart = (reservation) => {
-    // Buscar y remover el item del carrito
+    // Obtener el ID correcto de la reserva
+    const reserveId = reservation.reserve_id || reservation.id;
+
+    // Buscar y remover el item del carrito usando SOLO el reservation_id
     const itemToRemove = saleItems.find(item =>
-      item.reservation_id === reservation.id ||
-      (item.product_id === reservation.product_id && item.fromReservation)
+      item.reservation_id === reserveId
     );
 
     if (itemToRemove) {
@@ -447,7 +452,7 @@ const Sales = () => {
 
       // Si no hay más items de reserva, limpiar la reserva seleccionada
       const hasOtherReservationItems = saleItems.some(item =>
-        item.fromReservation && item.reservation_id !== reservation.id
+        item.fromReservation && item.reservation_id !== reserveId
       );
 
       if (!hasOtherReservationItems) {
@@ -1554,9 +1559,10 @@ const Sales = () => {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {availableReservations.map(reservation => {
+                        // ✅ FIX: Usar reserve_id correcto para identificar cada reserva de manera única
+                        const reserveId = reservation.reserve_id || reservation.id;
                         const isInCart = saleItems.some(item =>
-                          item.reservation_id === reservation.id ||
-                          (item.product_id === reservation.product_id && item.fromReservation)
+                          item.reservation_id === reserveId
                         );
 
                         // Formatear fecha desde start_time (timestamp ISO completo)

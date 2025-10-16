@@ -91,12 +91,12 @@ export const scheduleService = {
   // Generar horarios para fecha específica con parámetros flexibles (API v2 según documentación)
   async generateForDate(targetDate, options = {}) {
     const startTime = Date.now();
-    
+
     try {
       const requestBody = {
         target_date: targetDate
       };
-      
+
       // Agregar parámetros opcionales si se especifican
       if (options.startHour !== undefined && options.startHour !== null) {
         requestBody.start_hour = parseInt(options.startHour);
@@ -107,11 +107,11 @@ export const scheduleService = {
       if (options.productIds && Array.isArray(options.productIds) && options.productIds.length > 0) {
         requestBody.product_ids = options.productIds;
       }
-      
+
       const result = await withRetry(async () => {
         return await apiService.post(`${API_PREFIX}/generate/date`, requestBody);
       });
-      
+
       telemetry.record('schedules.service.generate_for_date_flexible', {
         duration: Date.now() - startTime,
         target_date: targetDate,
@@ -119,7 +119,7 @@ export const scheduleService = {
         has_product_filter: !!(options.productIds && options.productIds.length > 0),
         auto_discovery: !options.productIds || options.productIds.length === 0
       });
-      
+
       console.log('✅ Horarios generados para fecha:', targetDate, {
         autoDiscovery: result.auto_discovery,
         productsProcessed: result.validation?.products_requested,
@@ -202,32 +202,21 @@ export const scheduleService = {
         return await apiService.get(`${API_PREFIX}/product/${productId}/date/${date}/available`);
       });
       
-      // Si no hay horarios disponibles, intentar generarlos automáticamente
-      if ((!result.data || result.data.length === 0) && productId && date) {
-        console.log('🔄 No schedules found, attempting to generate schedules for', { productId, date });
+      // Si no hay horarios, intentar generarlos automáticamente para la fecha
+      if (schedules.length === 0) {
+        await generateSchedulesForDate(date, { productIds: [productId], autoDiscovery: true });
         
-        try {
-          // Usar siempre generateForDate para cualquier fecha (endpoint correcto)
-          console.log('🔄 Intentando generar horarios para fecha:', date);
-          
-          const generationResult = await this.generateForDate(date);
-          
-          console.log('✅ Resultado de generación de horarios:', generationResult);
-          
-          // Reintentar la consulta después de la generación
-          const retryResult = await apiService.get(`${API_PREFIX}/product/${productId}/date/${date}/available`);
-          telemetry.record('schedules.service.load_available_after_generation', {
-            duration: Date.now() - startTime,
-            generated: true,
-            count: retryResult.data?.length || 0
-          });
-          
-          return retryResult;
-        } catch (generationError) {
-          console.warn('⚠️ Could not generate schedules:', generationError.message);
-          // Continuar con resultado vacío original
-        }
+        // Volver a cargar después de generar
+        const schedulesAfterGeneration = await apiClient.get(`/schedules/product/${productId}/date/${date}/available`);
+        telemetry.record('schedules.service.load_available_after_generation', {
+          duration: telemetry.endTimer(t2),
+          generated: true,
+          count: schedulesAfterGeneration?.length || 0
+        });
+        return schedulesAfterGeneration;
       }
+      
+      return schedules;
       
       telemetry.record('schedules.service.load_available', {
         duration: Date.now() - startTime,
@@ -246,21 +235,58 @@ export const scheduleService = {
   },
 
   // 🆕 Nuevos endpoints basados en SCHEDULE_API.md v2.1
-  
+
+  // 🆕 Obtener TODOS los horarios (disponibles y no disponibles) con info de reservas
+  async getAllSchedulesByProductAndDate(productId, date) {
+    const startTime = Date.now();
+
+    try {
+      const result = await withRetry(async () => {
+        return await apiService.get(`${API_PREFIX}/product/${productId}/date/${date}/all`);
+      });
+
+      telemetry.record('schedules.service.load_all_by_product_and_date', {
+        duration: Date.now() - startTime,
+        count: result.data?.length || 0,
+        available_count: result.data?.filter(s => s.is_available).length || 0,
+        unavailable_count: result.data?.filter(s => !s.is_available).length || 0
+      });
+
+      console.log('📅 Horarios cargados (todos):', {
+        total: result.count || result.data?.length || 0,
+        disponibles: result.data?.filter(s => s.is_available).length || 0,
+        ocupados: result.data?.filter(s => !s.is_available).length || 0,
+        productId,
+        date
+      });
+
+      return result;
+    } catch (error) {
+      telemetry.record('schedules.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getAllSchedulesByProductAndDate'
+      });
+
+      console.error('❌ Error cargando todos los horarios:', error);
+      throw error;
+    }
+  },
+
   // Obtener horarios de servicios para HOY
   async getTodaySchedules() {
     const startTime = Date.now();
-    
+
     try {
       const result = await withRetry(async () => {
         return await apiService.get(`${API_PREFIX}/today`);
       });
-      
+
       telemetry.record('schedules.service.load_today', {
         duration: Date.now() - startTime,
         result_count: result.count || 0
       });
-      
+
       return result;
     } catch (error) {
       telemetry.record('schedules.service.error', {
