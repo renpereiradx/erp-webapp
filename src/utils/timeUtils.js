@@ -172,44 +172,59 @@ export const debugTimeConversion = (utcTime) => {
 export const formatReserveDate = (reserveDate) => {
   if (!reserveDate) return null;
 
-  const date = new Date(reserveDate);
+  // Backend devuelve: "2025-10-15 13:23:41.063374" o "2025-10-15T13:23:41.063374Z"
+  // Este timestamp YA está en hora local de Paraguay, NO necesita conversión
+
+  // Extraer partes del string directamente sin usar new Date()
+  const dateTimeParts = reserveDate.split(/[T ]/); // Separar por T o espacio
+  const datePart = dateTimeParts[0]; // "2025-10-15"
+  const timePart = dateTimeParts[1] ? dateTimeParts[1].split('.')[0] : '00:00:00'; // "13:23:41"
+
+  // Parsear fecha: "2025-10-15" -> [2025, 10, 15]
+  const [year, month, day] = datePart.split('-');
+
+  // Parsear hora: "13:23:41" -> [13, 23, 41]
+  const [hour, minute, second] = timePart.split(':');
+
+  // Formatear fecha dd/mm/yyyy
+  const shortDate = `${day}/${month}/${year}`;
+
+  // Formatear fecha completa en español
+  const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  const fullDate = `${parseInt(day)} de ${monthNames[parseInt(month) - 1]} de ${year}`;
+
+  // Formatear hora HH:MM
+  const shortTime = `${hour}:${minute}`;
+
+  // Formatear hora con segundos HH:MM:SS
+  const fullTime = `${hour}:${minute}:${second}`;
+
+  // Calcular tiempo relativo
+  // Para esto SÍ necesitamos Date, pero parseando manualmente para evitar conversión de timezone
+  const reserveDateTime = new Date(
+    parseInt(year),
+    parseInt(month) - 1, // Los meses en JS son 0-indexed
+    parseInt(day),
+    parseInt(hour),
+    parseInt(minute),
+    parseInt(second || 0)
+  );
+
   const now = new Date();
-  const diffMs = now - date;
+  const diffMs = now - reserveDateTime;
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
 
   return {
-    // Formato de fecha completa
-    fullDate: date.toLocaleDateString('es-PY', {
-      timeZone: PARAGUAY_TIMEZONE,
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }),
+    // Formatos de fecha
+    fullDate,           // "15 de octubre de 2025"
+    shortDate,          // "15/10/2025"
 
-    // Fecha corta
-    shortDate: date.toLocaleDateString('es-PY', {
-      timeZone: PARAGUAY_TIMEZONE,
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit'
-    }),
-
-    // Hora completa
-    fullTime: date.toLocaleTimeString('es-PY', {
-      timeZone: PARAGUAY_TIMEZONE,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    }),
-
-    // Hora sin segundos
-    shortTime: date.toLocaleTimeString('es-PY', {
-      timeZone: PARAGUAY_TIMEZONE,
-      hour: '2-digit',
-      minute: '2-digit'
-    }),
+    // Formatos de hora
+    fullTime,           // "13:23:41"
+    shortTime,          // "13:23"
 
     // Formato para mostrar "hace X tiempo"
     relativeTime: getRelativeTimeText(diffDays, diffHours, diffMinutes),
@@ -220,7 +235,7 @@ export const formatReserveDate = (reserveDate) => {
     minutesAgo: diffMinutes,
 
     // Fecha raw para comparaciones
-    dateObject: date
+    dateObject: reserveDateTime
   };
 };
 

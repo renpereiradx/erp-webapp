@@ -16,11 +16,6 @@ class BusinessManagementAPI {
 
     // Log de inicialización solo en desarrollo
     if (API_CONFIG.isDevelopment()) {
-      console.log('📡 API Client initialized:', {
-        baseUrl: this.baseUrl,
-        timeout: this.timeout,
-        environment: API_CONFIG.environment,
-      })
     }
   }
 
@@ -35,7 +30,6 @@ class BusinessManagementAPI {
     const token = localStorage.getItem('authToken')
 
     if (!token) {
-      console.warn('⚠️ No auth token found in localStorage')
       return {}
     }
 
@@ -72,17 +66,6 @@ class BusinessManagementAPI {
       ...fetchOptions,
     }
 
-    // Log detallado para debugging de autenticación
-    console.log('📡 Making API request:', {
-      url,
-      method: options.method || 'GET',
-      skipAuth: !!options.skipAuth,
-      hasAuthToken: !!config.headers.Authorization,
-      authHeaderPreview: config.headers.Authorization?.substring(0, 60) + '...',
-      allHeaders: Object.keys(config.headers),
-      actualHeaders: config.headers, // Ver headers REALES que se envían
-    })
-
     let response
     try {
       response = await fetch(url, config)
@@ -107,16 +90,6 @@ class BusinessManagementAPI {
       }
 
       if (response.status === 401) {
-        // Log detallado del error 401
-        console.error('❌ Error 401 Unauthorized:', {
-          endpoint,
-          responseStatus: response.status,
-          responseStatusText: response.statusText,
-          rawErrorBody: rawErrorBody,
-          tokenUsed: authHeaders.Authorization?.substring(0, 60) + '...',
-          timestamp: new Date().toISOString(),
-        })
-
         // Token inválido o expirado - limpiar y redirigir al login
         this.handleUnauthorized()
         throw new ApiError(
@@ -260,12 +233,6 @@ class BusinessManagementAPI {
   }
 
   async login(email, password) {
-    console.log('🔐 LOGIN REQUEST DEBUG:', {
-      email: email,
-      password: password ? '[HIDDEN]' : undefined,
-      payload: { email, password: password ? '[HIDDEN]' : undefined },
-    })
-
     // 🔧 skipAuth: true para evitar enviar Authorization header en login
     const response = await this.makeRequest('/login', {
       method: 'POST',

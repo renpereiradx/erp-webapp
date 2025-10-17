@@ -252,32 +252,84 @@ export const reservationService = {
 
   async getReservationReport(params = {}) {
     const startTime = Date.now();
-    
+
     try {
       // Use the apiService method which has built-in fallback
       const result = await withRetry(async () => {
         return await apiClient.getReservationReport(params);
       });
-      
+
       telemetry.record('reservations.service.report', {
         duration: Date.now() - startTime,
         count: Array.isArray(result) ? result.length : 0,
         hasMockData: result && result.length > 0 && result[0]?.created_by === 'Sistema Demo'
       });
-      
+
       return result;
     } catch (error) {
       console.log('🔍 Reserve report error details:', error);
-      
+
       telemetry.record('reservations.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
         operation: 'getReservationReport'
       });
-      
+
       // Final fallback - return empty array
       console.warn('📝 Returning empty array as final fallback');
       return [];
+    }
+  },
+
+  /**
+   * Obtener reservas por rango de fechas
+   * @param {string} startDate - Fecha inicio formato YYYY-MM-DD
+   * @param {string} endDate - Fecha fin formato YYYY-MM-DD
+   * @returns {Promise<Array>} Array de ReserveRiched con información completa
+   */
+  async getReservationsByDateRange(startDate, endDate) {
+    const startTime = Date.now();
+
+    try {
+      // Validar formato de fechas
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+        throw new Error('Formato de fecha inválido. Use YYYY-MM-DD');
+      }
+
+      const queryParams = new URLSearchParams({
+        start_date: startDate,
+        end_date: endDate
+      });
+
+      const result = await withRetry(async () => {
+        return await apiClient.get(`${API_PREFIX}/date-range?${queryParams.toString()}`);
+      });
+
+      // Manejar respuesta - puede venir como array directo o envuelto en data
+      let data = [];
+      if (Array.isArray(result)) {
+        data = result;
+      } else if (result && result.data && Array.isArray(result.data)) {
+        data = result.data;
+      }
+
+      telemetry.record('reservations.service.load_by_date_range', {
+        duration: Date.now() - startTime,
+        count: data.length,
+        startDate,
+        endDate
+      });
+
+      return data;
+    } catch (error) {
+      telemetry.record('reservations.service.error', {
+        duration: Date.now() - startTime,
+        error: error.message,
+        operation: 'getReservationsByDateRange'
+      });
+      console.error('❌ Error getting reservations by date range:', error);
+      throw error;
     }
   },
 

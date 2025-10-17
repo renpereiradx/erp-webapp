@@ -432,15 +432,16 @@ export const salePaymentService = {
    */
   validateCashRegisterPaymentData(data) {
     const errors = [];
-    
+
     if (!data.sales_order_id || typeof data.sales_order_id !== 'string') {
       errors.push('ID de venta es requerido');
     }
-    
-    if (typeof data.amount_received !== 'number' || data.amount_received <= 0) {
-      errors.push('Monto recibido debe ser mayor a 0');
+
+    // Permitir monto 0 para ventas con descuento del 100%
+    if (typeof data.amount_received !== 'number' || data.amount_received < 0) {
+      errors.push('Monto recibido debe ser mayor o igual a 0');
     }
-    
+
     return errors;
   },
 

@@ -6,8 +6,6 @@ const isDev = typeof process !== 'undefined' && process.env.NODE_ENV !== 'produc
 
 function log(event, data, level = 'debug') {
   if (!isDev) return;
-  const fn = console[level] || console.log;
-  fn(`[telemetry] ${event}`, data || {});
 }
 
 export const telemetry = {
