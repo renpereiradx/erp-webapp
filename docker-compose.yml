@@ -1,8 +1,11 @@
+name: erp
+
 services:
   # =========================================
   # FRONTEND - React + Nginx
   # =========================================
   erp-system:
+    image: erp-frontend:latest
     build:
       context: .
       dockerfile: Dockerfile

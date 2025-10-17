@@ -954,8 +954,8 @@ export const DEMO_CONFIG_PRODUCTS = {
 // === RESERVATIONS DEMO CONFIGURATION ===
 export const DEMO_CONFIG_RESERVATIONS = {
   enabled: true, // Enable/disable demo mode
-  useRealAPI: false, // Toggle real API calls
-  simulateDelay: true, // Simulate network delay
+  useRealAPI: true, // CHANGED: Use real API instead of mock data
+  simulateDelay: false, // DISABLED: No delay for real API
   delayMs: 600, // Delay in milliseconds
   pageSize: 10 // Items per page
 };

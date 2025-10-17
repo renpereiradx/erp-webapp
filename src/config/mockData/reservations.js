@@ -92,8 +92,8 @@ const getServiceDescription = (serviceId) => {
 // Configuration
 export const RESERVATIONS_CONFIG = {
   enabled: true,
-  useRealAPI: false,
-  simulateDelay: true,
+  useRealAPI: true, // CHANGED: Use real API instead of mock data
+  simulateDelay: false, // DISABLED: No delay for real API
   delayMs: 600,
   pageSize: 20,
   statuses: ['RESERVED', 'confirmed', 'cancelled'],
