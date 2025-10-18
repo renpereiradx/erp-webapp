@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Servicio para la gestión de ventas en el sistema ERP
  * Contiene todas las funciones relacionadas con la API de ventas
  * Implementa manejo de sesiones, pagos y POS según SALE_API.md
@@ -679,26 +679,6 @@ export const saleService = {
           }
         }
 
-        // Log específico para reservas y descuentos
-        if (requestData.reserve_id) {
-          console.log('📋 Creating sale with reservation:', {
-            reserve_id: requestData.reserve_id,
-            client_id: requestData.client_id,
-          })
-        }
-
-        const hasDiscounts = requestData.product_details.some(
-          item =>
-            item.discount_amount || item.discount_percent || item.sale_price
-        )
-        if (hasDiscounts) {
-          console.log('💰 Creating sale with price modifications/discounts')
-        }
-
-        // Log completo del payload enviado al backend
-        console.log('📤 Complete payload being sent to backend:')
-        console.log(JSON.stringify(requestData, null, 2))
-
         const api = new BusinessManagementAPI()
         // ACTUALIZADO: Usar /sale/ según SALE_GET_BY_RANGE_API.md
         // 🔧 FIX: NO pasar headers explícitos - defaultHeaders ya incluye Content-Type
@@ -721,8 +701,6 @@ export const saleService = {
       })
     } catch (error) {
       console.error('❌ Error creating sale:', error)
-
-      // Re-lanzar el error para que el frontend lo maneje apropiadamente
       throw error
     } finally {
       const endTime = performance.now()

@@ -90,9 +90,6 @@ export const apiService = {
   // Métodos de reservas con fallback robusto
   getReservationReport: async (params = {}) => {
     try {
-      // Ensure authentication first
-      await apiClient.ensureAuthentication();
-      
       // Build query parameters as specified in RESERVES_API.md
       const queryParams = new URLSearchParams();
       if (params.start_date) queryParams.append('start_date', params.start_date);

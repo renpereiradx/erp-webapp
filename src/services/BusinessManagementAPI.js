@@ -13,10 +13,6 @@ class BusinessManagementAPI {
       ...API_CONFIG.defaultHeaders,
       ...config.defaultHeaders,
     }
-
-    // Log de inicialización solo en desarrollo
-    if (API_CONFIG.isDevelopment()) {
-    }
   }
 
   // ============================================================================
