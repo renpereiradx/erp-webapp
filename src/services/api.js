@@ -15,10 +15,6 @@ const businessAPI = new BusinessManagementAPI({
 
 // Business Management API client initialized
 if (API_CONFIG.isDevelopment()) {
-  console.log('✅ API Service initialized with config:', {
-    baseUrl: API_CONFIG.baseUrl,
-    environment: API_CONFIG.environment
-  });
 }
 
 export const apiClient = businessAPI;
@@ -102,18 +98,14 @@ export const apiService = {
       if (params.status) queryParams.append('status', params.status);
       
       const endpoint = `/reserve/report${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-      console.log('📊 Fetching reservation report from:', endpoint);
       
       // Try the primary endpoint
       return await apiClient.makeRequest(endpoint, { method: 'GET' });
     } catch (error) {
       // Log more specific error information
       if (error.status === 400) {
-        console.warn('⚠️ Reserve report failed - Bad Request (400). Posiblemente faltan parámetros requeridos.');
       } else if (error.status === 401) {
-        console.warn('⚠️ Reserve report failed - Unauthorized (401). Autenticación fallida o token expirado.');
       } else {
-        console.warn('⚠️ Reserve report failed:', error.message);
       }
       
       // Return mock data structure matching ReservationReport interface

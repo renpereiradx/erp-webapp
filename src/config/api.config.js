@@ -46,11 +46,6 @@ const API_CONFIG = {
 
 // Log de configuración (solo en desarrollo)
 if (API_CONFIG.isDevelopment()) {
-  console.log('🔧 API Configuration:', {
-    baseUrl: API_CONFIG.baseUrl,
-    timeout: API_CONFIG.timeout,
-    environment: API_CONFIG.environment,
-  });
 }
 
 export default API_CONFIG;

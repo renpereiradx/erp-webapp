@@ -29,7 +29,6 @@ export const reservationService = {
   // Método unificado para todas las operaciones de reserva
   async manageReservation(action, data) {
     const startTime = Date.now();
-    console.log('🛠️ Service: manageReservation called with:', { action, data });
     
     try {
       // Construir el payload según la action
@@ -82,19 +81,8 @@ export const reservationService = {
         }
       }
 
-      console.log(`🌐 Managing reservation (${action}):`, reservationData);
-      console.log(`📤 Sending POST to ${API_PREFIX}/manage`);
-      
       const result = await withRetry(async () => {
         return await apiClient.post(`${API_PREFIX}/manage`, reservationData);
-      });
-      
-      console.log('📥 API Response:', result);
-      console.log('📊 API Response details:', {
-        status: result?.status,
-        data: result?.data,
-        dataKeys: result?.data ? Object.keys(result.data) : [],
-        fullResponse: JSON.stringify(result, null, 2)
       });
       
       telemetry.record(`reservations.service.${action}`, {
@@ -149,12 +137,10 @@ export const reservationService = {
              product.category_name?.toLowerCase().includes('alquiler'))
           );
           
-          console.log('🏟️ Fallback: filtered service courts from all products:', serviceCourts.length);
           return serviceCourts;
         }
         return [];
       } catch (fallbackError) {
-        console.warn('❌ Could not get service courts from fallback either');
         throw error;
       }
     }
@@ -267,8 +253,6 @@ export const reservationService = {
 
       return result;
     } catch (error) {
-      console.log('🔍 Reserve report error details:', error);
-
       telemetry.record('reservations.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -276,7 +260,6 @@ export const reservationService = {
       });
 
       // Final fallback - return empty array
-      console.warn('📝 Returning empty array as final fallback');
       return [];
     }
   },
@@ -328,7 +311,6 @@ export const reservationService = {
         error: error.message,
         operation: 'getReservationsByDateRange'
       });
-      console.error('❌ Error getting reservations by date range:', error);
       throw error;
     }
   },

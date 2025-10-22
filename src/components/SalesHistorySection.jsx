@@ -93,8 +93,6 @@ const SalesHistorySection = forwardRef((props, ref) => {
         startDate = `${startYear}-${startMonth}-${startDay}`;
       }
 
-      console.log(`📅 [SalesHistory] Loading sales from ${startDate} to ${endDate}, page=${page}`);
-
       const response = await salePaymentService.getSalesByDateRangeWithPaymentStatus({
         start_date: startDate,
         end_date: endDate,
@@ -102,24 +100,16 @@ const SalesHistorySection = forwardRef((props, ref) => {
         page_size: pageSize
       });
 
-      console.log('✅ [SalesHistory] Response:', {
-        count: response?.data?.length,
-        total: response?.pagination?.total_records
-      });
-
       if (response?.data) {
         const salesData = response.data;
-        console.log(`📦 [SalesHistory] Setting ${salesData.length} sales to state`);
         setSales(salesData);
         if (response.pagination) {
           setPagination(response.pagination);
         }
       } else {
-        console.warn('⚠️ [SalesHistory] No data in response');
         setSales([]);
       }
     } catch (err) {
-      console.error('Error loading sales:', err);
       setError('Error al cargar el historial de ventas');
     } finally {
       setLoading(false);
@@ -139,8 +129,6 @@ const SalesHistorySection = forwardRef((props, ref) => {
       const day = String(now.getDate()).padStart(2, '0');
       const today = `${year}-${month}-${day}`;
 
-      console.log(`📅 [SalesHistory] Loading today's sales: ${today}`);
-
       const response = await salePaymentService.getSalesByDateRangeWithPaymentStatus({
         start_date: today,
         end_date: today,
@@ -148,26 +136,18 @@ const SalesHistorySection = forwardRef((props, ref) => {
         page_size: 50
       });
 
-      console.log('✅ [SalesHistory] Today response:', {
-        count: response?.data?.length,
-        total: response?.pagination?.total_records
-      });
-
       if (response?.data) {
         const salesData = response.data;
-        console.log(`📦 [SalesHistory] Setting ${salesData.length} today's sales`);
         setSales(salesData);
         if (response.pagination) {
           setPagination(response.pagination);
         }
         announceSuccess('Filtro', `${salesData.length} venta${salesData.length !== 1 ? 's' : ''} de hoy`);
       } else {
-        console.warn('⚠️ [SalesHistory] No today sales found');
         setSales([]);
         announceSuccess('Filtro', 'No hay ventas de hoy');
       }
     } catch (err) {
-      console.error('Error loading today sales:', err);
       setError('Error al cargar las ventas de hoy');
     } finally {
       setLoading(false);
@@ -181,33 +161,23 @@ const SalesHistorySection = forwardRef((props, ref) => {
     setError(null);
 
     try {
-      console.log(`📅 [SalesHistory] Searching sales for client: "${clientName}"`);
-
       const response = await salePaymentService.getSalesByClientNameWithPaymentStatus(clientName, {
         page: page,
         page_size: pageSize
       });
 
-      console.log('✅ [SalesHistory] Client search response:', {
-        count: response?.data?.length,
-        total: response?.pagination?.total_records
-      });
-
       if (response?.data) {
         const salesData = response.data;
-        console.log(`📦 [SalesHistory] Setting ${salesData.length} sales for client`);
         setSales(salesData);
         if (response.pagination) {
           setPagination(response.pagination);
         }
         announceSuccess('Búsqueda', `${response.pagination?.total_records || 0} venta${response.pagination?.total_records !== 1 ? 's' : ''} encontrada${response.pagination?.total_records !== 1 ? 's' : ''} para "${clientName}"`);
       } else {
-        console.warn(`⚠️ [SalesHistory] No sales found for client "${clientName}"`);
         setSales([]);
         announceSuccess('Búsqueda', `No se encontraron ventas para "${clientName}"`);
       }
     } catch (err) {
-      console.error('Error loading sales by client name:', err);
       setError('Error al buscar ventas por nombre de cliente');
     } finally {
       setLoading(false);

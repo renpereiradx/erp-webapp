@@ -120,11 +120,6 @@ export const scheduleService = {
         auto_discovery: !options.productIds || options.productIds.length === 0
       });
 
-      console.log('✅ Horarios generados para fecha:', targetDate, {
-        autoDiscovery: result.auto_discovery,
-        productsProcessed: result.validation?.products_requested,
-        schedulesCreated: result.results?.schedules_created
-      });
       return result;
     } catch (error) {
       telemetry.record('schedules.service.error', {
@@ -133,14 +128,12 @@ export const scheduleService = {
         operation: 'generateForDate',
         target_date: targetDate
       });
-      console.error('❌ Error generando horarios para fecha:', targetDate, error);
       throw error;
     }
   },
 
   // Método deprecado - usar generateForDate con options
   async generateWithCustomRange(targetDate, startHour, endHour, productIds = []) {
-    console.warn('⚠️ generateWithCustomRange está deprecado. Use generateForDate(targetDate, { startHour, endHour, productIds })');
     return this.generateForDate(targetDate, {
       startHour,
       endHour,
@@ -161,7 +154,6 @@ export const scheduleService = {
 
   // Método deprecado - usar generateForDate con options
   async generateForDateWithCustomRange(targetDate, startHour, endHour, productIds = null) {
-    console.warn('⚠️ generateForDateWithCustomRange está deprecado. Use generateForDate(targetDate, { startHour, endHour, productIds })');
     return this.generateForDate(targetDate, {
       startHour,
       endHour,
@@ -198,25 +190,22 @@ export const scheduleService = {
     const startTime = Date.now();
     
     try {
-      const result = await withRetry(async () => {
+      let result = await withRetry(async () => {
         return await apiService.get(`${API_PREFIX}/product/${productId}/date/${date}/available`);
       });
       
       // Si no hay horarios, intentar generarlos automáticamente para la fecha
-      if (schedules.length === 0) {
-        await generateSchedulesForDate(date, { productIds: [productId], autoDiscovery: true });
+      if (result.data.length === 0) {
+        await this.generateForDate(date, { productIds: [productId] });
         
         // Volver a cargar después de generar
-        const schedulesAfterGeneration = await apiClient.get(`/schedules/product/${productId}/date/${date}/available`);
+        result = await apiService.get(`${API_PREFIX}/product/${productId}/date/${date}/available`);
         telemetry.record('schedules.service.load_available_after_generation', {
-          duration: telemetry.endTimer(t2),
+          duration: Date.now() - startTime,
           generated: true,
-          count: schedulesAfterGeneration?.length || 0
+          count: result.data?.length || 0
         });
-        return schedulesAfterGeneration;
       }
-      
-      return schedules;
       
       telemetry.record('schedules.service.load_available', {
         duration: Date.now() - startTime,
@@ -252,14 +241,6 @@ export const scheduleService = {
         unavailable_count: result.data?.filter(s => !s.is_available).length || 0
       });
 
-      console.log('📅 Horarios cargados (todos):', {
-        total: result.count || result.data?.length || 0,
-        disponibles: result.data?.filter(s => s.is_available).length || 0,
-        ocupados: result.data?.filter(s => !s.is_available).length || 0,
-        productId,
-        date
-      });
-
       return result;
     } catch (error) {
       telemetry.record('schedules.service.error', {
@@ -268,7 +249,6 @@ export const scheduleService = {
         operation: 'getAllSchedulesByProductAndDate'
       });
 
-      console.error('❌ Error cargando todos los horarios:', error);
       throw error;
     }
   },

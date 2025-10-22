@@ -256,10 +256,4 @@ export const getDemoTaxRates = async () => {
 
 // Development logging
 if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
-  console.log('🛒 Mock Purchase Data loaded:', {
-    orders: DEMO_PURCHASE_ORDERS_DATA.length,
-    suppliers: DEMO_SUPPLIERS.length,
-    taxRates: DEMO_TAX_RATES_DATA.length,
-    products: DEMO_PURCHASE_PRODUCTS.length
-  });
 }

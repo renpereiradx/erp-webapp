@@ -116,6 +116,73 @@ const demoService = {
 
     return { success: true, data: newSale, sale_id: newSale.id }
   },
+
+  getPendingSalesByClient: async clientId => {
+    if (!clientId) {
+      return { success: true, data: [] }
+    }
+
+    const response = await MockDataService.getSales({
+      client_id: clientId,
+    })
+
+    const pendingSales = response.data
+      .filter(sale => (sale.status || '').toUpperCase() === 'PENDING')
+      .map(sale => ({
+        sale_id:
+          sale.id ||
+          sale.sale_id ||
+          `PENDING-${Math.random().toString(36).substr(2, 9)}`,
+        client_id: sale.client_id,
+        client_name: sale.client_name || 'Cliente Demo',
+        sale_date: sale.sale_date || new Date().toISOString(),
+        total_amount: sale.total_amount || 0,
+        status: sale.status || 'PENDING',
+        user_id: sale.user_id || 'demo-user',
+        user_name: sale.user_name || 'Usuario Demo',
+        payment_method_id: sale.payment_method_id || 1,
+        payment_method: sale.payment_method || 'Efectivo',
+        currency_id: sale.currency_id || 1,
+        currency: sale.currency || 'PYG',
+        details: sale.items || [],
+        items: sale.items?.length || 0,
+        subtotal_amount: sale.subtotal_amount || sale.total_amount || 0,
+        tax_amount: sale.tax_amount || 0,
+        discount_amount: sale.discount_amount || 0,
+        has_discounts:
+          Array.isArray(sale.items) &&
+          sale.items.some(item =>
+            Boolean(item.discount_amount || item.discount_percent)
+          ),
+        has_price_changes: false,
+      }))
+
+    return { success: true, data: pendingSales }
+  },
+
+  addProductsToSale: async (saleId, payload = {}) => {
+    const productsCount = payload.product_details?.length || 0
+
+    return {
+      success: true,
+      sale_id: saleId,
+      products_added: productsCount,
+      previous_total: 0,
+      added_amount:
+        payload.product_details?.reduce(
+          (sum, item) => sum + (item.sale_price || 0),
+          0
+        ) || 0,
+      new_total: 0,
+      sale_status: 'PENDING',
+      price_modifications_enabled: Boolean(payload.allow_price_modifications),
+      has_price_changes: Boolean(payload.allow_price_modifications),
+      has_discounts: payload.product_details?.some(
+        item => item.discount_amount || item.discount_percent
+      ),
+      message: `Se agregaron ${productsCount} productos en modo demo`,
+    }
+  },
 }
 
 export const saleService = {
@@ -727,6 +794,107 @@ export const saleService = {
     } finally {
       const endTime = performance.now()
       telemetryService.recordMetric('create_sale_duration', endTime - startTime)
+    }
+  },
+
+  // Obtener ventas pendientes por cliente según PENDING_SALE_BY_CLIENT.md
+  getPendingSalesByClient: async clientId => {
+    const startTime = performance.now()
+
+    try {
+      if (!clientId) {
+        return { success: true, data: [] }
+      }
+
+      return await withRetry(async () => {
+        const api = new BusinessManagementAPI()
+        const encodedClient = encodeURIComponent(clientId)
+        const response = await api.makeRequest(
+          `/sale/client_id/${encodedClient}/pending`,
+          {
+            method: 'GET',
+          }
+        )
+
+        const data = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data)
+          ? response.data
+          : []
+
+        telemetryService.recordMetric('pending_sales_fetched', data.length, {
+          client_id: clientId,
+        })
+
+        return { success: true, data }
+      })
+    } catch (error) {
+      console.warn(
+        `🔄 Pending sales API unavailable for client ${clientId}, using mock data...`
+      )
+      telemetryService.recordMetric('pending_sales_mock_fallback', 1, {
+        client_id: clientId,
+      })
+      return await demoService.getPendingSalesByClient(clientId)
+    } finally {
+      const endTime = performance.now()
+      telemetryService.recordMetric(
+        'get_pending_sales_duration',
+        endTime - startTime
+      )
+    }
+  },
+
+  // Agregar productos a una venta existente según ADD_PRODUCT_TO_SALE.md
+  addProductsToSale: async (saleId, payload = {}) => {
+    const startTime = performance.now()
+
+    try {
+      if (!saleId) {
+        throw new Error('saleId es requerido para agregar productos')
+      }
+
+      if (!payload.product_details || payload.product_details.length === 0) {
+        throw new Error('Se debe proporcionar al menos un producto')
+      }
+
+      return await withRetry(async () => {
+        const api = new BusinessManagementAPI()
+        const encodedSaleId = encodeURIComponent(saleId)
+
+        const requestBody = {
+          product_details: payload.product_details,
+          allow_price_modifications: Boolean(payload.allow_price_modifications),
+        }
+
+        const response = await api.makeRequest(
+          `/sale/${encodedSaleId}/products`,
+          {
+            method: 'POST',
+            body: JSON.stringify(requestBody),
+          }
+        )
+
+        telemetryService.recordMetric(
+          'sale_products_added',
+          payload.product_details.length,
+          {
+            sale_id: saleId,
+            allow_price_modifications: requestBody.allow_price_modifications,
+          }
+        )
+
+        return response
+      })
+    } catch (error) {
+      console.error(`Error adding products to sale ${saleId}:`, error)
+      throw error
+    } finally {
+      const endTime = performance.now()
+      telemetryService.recordMetric(
+        'add_products_to_sale_duration',
+        endTime - startTime
+      )
     }
   },
 

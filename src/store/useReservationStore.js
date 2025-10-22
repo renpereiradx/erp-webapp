@@ -36,7 +36,6 @@ const useReservationStore = create(
 
       // Cargar reservas por rango de fechas (NUEVO método predeterminado)
       fetchReservations: async (params = {}) => {
-        console.log('🔄 Store: Starting fetchReservations with date range filter...');
         set({ loading: true, error: null });
         const startTime = Date.now();
 
@@ -57,8 +56,6 @@ const useReservationStore = create(
           const finalStartDate = filterStartDate || yesterday.toISOString().split('T')[0];
           const finalEndDate = filterEndDate || today.toISOString().split('T')[0];
 
-          console.log('📅 Using date range:', { finalStartDate, finalEndDate });
-
           // Usar el nuevo endpoint de rango de fechas
           const result = await reservationService.getReservationsByDateRange(
             finalStartDate,
@@ -67,11 +64,6 @@ const useReservationStore = create(
 
           // Manejar respuesta - ya viene procesada desde el servicio
           data = Array.isArray(result) ? result : [];
-
-          console.log('📊 Store: fetchReservations result:', {
-            processedDataLength: data.length,
-            dateRange: `${finalStartDate} to ${finalEndDate}`
-          });
 
           // Actualizar estado con las fechas usadas
           set({
@@ -83,8 +75,6 @@ const useReservationStore = create(
             }
           });
 
-          console.log('✅ Store: Updated reservations state with', data.length, 'items');
-
           telemetry.record('feature.reservations.load', {
             duration: Date.now() - startTime,
             count: data.length,
@@ -92,7 +82,6 @@ const useReservationStore = create(
           });
 
         } catch (error) {
-          console.error('❌ Store: Error loading reservations:', error);
           set({ error: error.message || 'Error al cargar reservas', loading: false });
           telemetry.record('feature.reservations.error', {
             error: error.message
@@ -124,12 +113,10 @@ const useReservationStore = create(
 
       // Crear reserva usando /reserve/manage con action: "create"
       createReservation: async (data) => {
-        console.log('🏪 Store: Starting createReservation with data:', data);
         set({ loading: true, error: null });
         try {
           // Validar campos obligatorios según API spec
           if (!data.product_id || !data.client_id || !data.start_time || !data.duration) {
-            console.error('❌ Store: Missing required fields:', { data });
             throw new Error('Faltan campos obligatorios: product_id, client_id, start_time, duration');
           }
           
@@ -142,18 +129,9 @@ const useReservationStore = create(
             duration: parseInt(data.duration) // Asegurar que sea entero
           };
           
-          console.log('🌐 Store: Calling reservationService.createReservation with:', reserveRequest);
           const result = await reservationService.createReservation(reserveRequest);
-          console.log('📥 Store: Service response:', result);
-          console.log('🔍 Store: Checking response success condition:', {
-            hasResult: !!result,
-            hasData: !!(result && result.data),
-            resultData: result?.data,
-            resultSuccess: result?.success
-          });
           
           if (result && result.data && result.data.success !== false) {
-            console.log('✅ Store: Response indicates success, reloading reservations...');
             // Recargar lista después de crear
             get().fetchReservations();
             // 🔄 IMPORTANTE: Limpiar schedules para forzar recarga de disponibilidad
@@ -164,7 +142,6 @@ const useReservationStore = create(
           } else {
             // API devolvió error
             const errorMsg = result?.data?.error || 'Error desconocido en la API';
-            console.error('❌ Store: API returned error:', errorMsg);
             set({ loading: false, error: errorMsg });
             return { success: false, error: errorMsg };
           }
@@ -215,11 +192,9 @@ const useReservationStore = create(
 
       // Cancelar reserva usando /reserve/manage con action: "cancel"
       cancelReservation: async (id) => {
-        console.log('🚨 Store cancelReservation called with ID:', id, 'type:', typeof id);
         set({ loading: true, error: null });
         try {
           if (!id) {
-            console.error('❌ ID is missing or falsy:', id);
             throw new Error('ID de reserva es obligatorio para cancelar');
           }
 
@@ -351,12 +326,6 @@ const useReservationStore = create(
             total_count: data.length,
             available_count: available.length,
             unavailable_count: unavailable.length
-          });
-
-          console.log('✅ Store: Horarios actualizados (todos):', {
-            total: data.length,
-            disponibles: available.length,
-            ocupados: unavailable.length
           });
 
           return data;
@@ -536,7 +505,6 @@ const useReservationStore = create(
 
       // Método deprecado - usar generateSchedulesForDate con options
       generateSchedulesForDateWithCustomRange: async (targetDate, startHour, endHour, productIds = null) => {
-        console.warn('⚠️ generateSchedulesForDateWithCustomRange está deprecado. Use generateSchedulesForDate(targetDate, { startHour, endHour, productIds })');
         return get().generateSchedulesForDate(targetDate, {
           startHour,
           endHour,

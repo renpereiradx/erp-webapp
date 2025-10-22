@@ -110,7 +110,7 @@ const SalePayment = () => {
     cancelSale,
   } = useSalePaymentStore()
 
-  const { clients, fetchClients } = useClientStore()
+  const { fetchClients } = useClientStore()
 
   // Estado local para las ventas (similar a SalesHistorySection)
   const [sales, setSales] = useState([])
@@ -153,10 +153,17 @@ const SalePayment = () => {
     client_id: '',
   })
 
-  // Cargar ventas y cajas automáticamente al montar el componente
+  // Estado para búsqueda de cliente por nombre (filtro local)
+  const [clientNameSearch, setClientNameSearch] = useState('')
+
+  // Estado para todas las ventas sin filtrar (para filtro local)
+  const [allSales, setAllSales] = useState([])
+
+  // Cargar ventas, cajas y clientes automáticamente al montar el componente
   useEffect(() => {
     handleLoadSales()
     handleLoadCashRegisters()
+    handleLoadClients()
   }, []) // Solo al montar
 
   const handleLoadCashRegisters = async () => {
@@ -164,14 +171,12 @@ const SalePayment = () => {
     try {
       // Cargar todas las cajas disponibles (sin filtro de status para ver todas)
       const allCashRegisters = await cashRegisterService.getCashRegisters()
-      console.log('📦 All cash registers:', allCashRegisters)
 
       // Filtrar solo las que están abiertas (status === 'OPEN')
       const openCashRegisters =
         allCashRegisters?.filter(
           cr => cr.status === 'OPEN' || cr.state === 'OPEN'
         ) || []
-      console.log('📦 Open cash registers:', openCashRegisters)
 
       // 🔧 WORKAROUND: Calcular balance para cada caja si el backend no lo envía
       const cashRegistersWithBalance = await Promise.all(
@@ -191,19 +196,11 @@ const SalePayment = () => {
             )
             return calculateCashRegisterBalance(cashRegister, movements)
           } catch (error) {
-            console.warn(
-              `⚠️ No se pudieron cargar movimientos para caja ${cashRegister.id}:`,
-              error
-            )
             return cashRegister // Retornar sin modificar si falla
           }
         })
       )
 
-      console.log(
-        '💰 Cash registers with calculated balance:',
-        cashRegistersWithBalance
-      )
       setCashRegisters(cashRegistersWithBalance)
 
       if (openCashRegisters.length > 0) {
@@ -211,7 +208,6 @@ const SalePayment = () => {
         try {
           const activeCashRegister =
             await cashRegisterService.getActiveCashRegister()
-          console.log('📦 Active cash register:', activeCashRegister)
 
           if (activeCashRegister) {
             setSelectedCashRegister(activeCashRegister.id)
@@ -221,12 +217,10 @@ const SalePayment = () => {
           }
         } catch (error) {
           // Si falla al obtener la activa, usar la primera abierta
-          console.log('No active cash register found, using first open one')
           setSelectedCashRegister(openCashRegisters[0].id)
         }
       }
     } catch (error) {
-      console.error('Error loading cash registers:', error)
       // Si hay un error real (no solo cajas vacías), limpiar estado
       setCashRegisters([])
     } finally {
@@ -239,16 +233,27 @@ const SalePayment = () => {
     setSalesError(null)
 
     try {
+      // Construir filtros sin valores undefined
+      const requestFilters = {
+        start_date: dateFilters.start_date,
+        end_date: dateFilters.end_date,
+        page: dateFilters.page,
+        page_size: dateFilters.page_size,
+      }
+
+      // Solo agregar status si tiene valor
+      if (filters.status) {
+        requestFilters.status = filters.status
+      }
+
+      // Solo agregar client_id si tiene valor
+      if (filters.client_id) {
+        requestFilters.client_id = filters.client_id
+      }
+
       // Usar el nuevo endpoint con payment status
       const response =
-        await salePaymentService.getSalesByDateRangeWithPaymentStatus({
-          start_date: dateFilters.start_date,
-          end_date: dateFilters.end_date,
-          page: dateFilters.page,
-          page_size: dateFilters.page_size,
-          status: filters.status || undefined,
-          client_id: filters.client_id || undefined,
-        })
+        await salePaymentService.getSalesByDateRangeWithPaymentStatus(requestFilters)
 
       // El servicio retorna { data, pagination }
       if (response && response.data) {
@@ -259,8 +264,11 @@ const SalePayment = () => {
             id: item.id || item.sale_id,
           }
         })
+        // Guardar todas las ventas sin filtrar para el filtro local
+        setAllSales(salesData)
         setSales(salesData)
       } else {
+        setAllSales([])
         setSales([])
       }
     } catch (error) {
@@ -274,7 +282,7 @@ const SalePayment = () => {
 
   const handleLoadClients = async () => {
     try {
-      await fetchClients()
+      await fetchClients(1000) // Cargar hasta 1000 clientes para búsqueda local
     } catch (error) {
       console.error('Error loading clients:', error)
     }
@@ -289,7 +297,6 @@ const SalePayment = () => {
 
     // Validación: Si el modo es caja y no hay cajas disponibles, cambiar a modo estándar
     if (paymentMode === 'cash_register' && cashRegisters.length === 0) {
-      console.warn('⚠️ No hay cajas abiertas, cambiando a modo pago estándar')
       setPaymentMode('payment')
     }
 
@@ -331,17 +338,9 @@ const SalePayment = () => {
       }
 
       // Mostrar información detallada del pago procesado
-      console.log('✅ Pago procesado exitosamente:', result)
 
       // Si hay cash_summary, mostrar detalles
       if (result?.cash_summary) {
-        console.log('💰 Cash Summary:', {
-          recibido: formatGuaranies(result.cash_summary.cash_received),
-          aplicado: formatGuaranies(result.cash_summary.amount_applied),
-          vuelto: formatGuaranies(result.cash_summary.change_given),
-          impactoNeto: formatGuaranies(result.cash_summary.net_cash_impact),
-        })
-
         // ⚠️ IMPORTANTE: Alertar si hay vuelto a entregar
         if (result.requires_change && result.cash_summary.change_given > 0) {
           alert(
@@ -384,7 +383,6 @@ const SalePayment = () => {
         await handleLoadCashRegisters()
       }
     } catch (error) {
-      console.error('Error processing payment:', error)
     }
   }
 
@@ -404,7 +402,6 @@ const SalePayment = () => {
         user_id: '1',
       })
     } catch (error) {
-      console.error('Error cancelling sale:', error)
     }
   }
 
@@ -425,7 +422,6 @@ const SalePayment = () => {
         await getPaymentDetails(saleId)
         setSaleDetailDialog(true)
       } catch (error) {
-        console.error('Error loading sale details:', error)
       }
     }
   }
@@ -437,15 +433,26 @@ const SalePayment = () => {
     setSalesError(null)
 
     try {
+      // Construir filtros sin valores undefined
+      const requestFilters = {
+        start_date: dateFilters.start_date,
+        end_date: dateFilters.end_date,
+        page: dateFilters.page,
+        page_size: dateFilters.page_size,
+      }
+
+      // Solo agregar status si tiene valor
+      if (status) {
+        requestFilters.status = status
+      }
+
+      // Solo agregar client_id si tiene valor
+      if (filters.client_id) {
+        requestFilters.client_id = filters.client_id
+      }
+
       const response =
-        await salePaymentService.getSalesByDateRangeWithPaymentStatus({
-          start_date: dateFilters.start_date,
-          end_date: dateFilters.end_date,
-          page: dateFilters.page,
-          page_size: dateFilters.page_size,
-          status: status || undefined,
-          client_id: filters.client_id || undefined,
-        })
+        await salePaymentService.getSalesByDateRangeWithPaymentStatus(requestFilters)
 
       if (response && response.data) {
         const salesData = response.data.map(item => {
@@ -454,8 +461,13 @@ const SalePayment = () => {
             id: item.id || item.sale_id,
           }
         })
+        // Actualizar todas las ventas sin filtrar
+        setAllSales(salesData)
         setSales(salesData)
+        // Limpiar el filtro de búsqueda por nombre
+        setClientNameSearch('')
       } else {
+        setAllSales([])
         setSales([])
       }
     } catch (error) {
@@ -467,9 +479,89 @@ const SalePayment = () => {
     }
   }
 
-  const handleFilterByClient = clientId => {
+  const handleFilterByClient = async clientId => {
     const actualClientId = clientId === 'all' ? '' : clientId
     setFilters(prev => ({ ...prev, client_id: actualClientId }))
+
+    // Recargar ventas inmediatamente con el nuevo filtro
+    setIsSalesLoading(true)
+    setSalesError(null)
+
+    try {
+      // Construir filtros sin valores undefined
+      const requestFilters = {
+        start_date: dateFilters.start_date,
+        end_date: dateFilters.end_date,
+        page: dateFilters.page,
+        page_size: dateFilters.page_size,
+      }
+
+      // Solo agregar status si tiene valor
+      if (filters.status) {
+        requestFilters.status = filters.status
+      }
+
+      // Solo agregar client_id si tiene valor
+      if (actualClientId) {
+        requestFilters.client_id = actualClientId
+      }
+
+      const response =
+        await salePaymentService.getSalesByDateRangeWithPaymentStatus(requestFilters)
+
+      if (response && response.data) {
+        const salesData = response.data.map(item => {
+          return {
+            ...item,
+            id: item.id || item.sale_id,
+          }
+        })
+        // Actualizar todas las ventas sin filtrar
+        setAllSales(salesData)
+        setSales(salesData)
+        // Limpiar el filtro de búsqueda por nombre
+        setClientNameSearch('')
+      } else {
+        setAllSales([])
+        setSales([])
+      }
+    } catch (error) {
+      console.error('Error loading sales:', error)
+      setSalesError(error.message || 'Error al cargar las ventas')
+      setSales([])
+    } finally {
+      setIsSalesLoading(false)
+    }
+  }
+
+  // Función para filtrar ventas localmente por nombre de cliente
+  const handleSearchClientByName = () => {
+    if (!clientNameSearch.trim()) {
+      // Si el campo está vacío, mostrar todas las ventas
+      setSales(allSales)
+      return
+    }
+
+    // Filtrar ventas localmente por nombre de cliente
+    const searchTerm = clientNameSearch.toLowerCase().trim()
+
+    const filteredSales = allSales.filter(sale => {
+      const clientName = (sale.client_name || '').toLowerCase()
+      return clientName.includes(searchTerm)
+    })
+
+    setSales(filteredSales)
+
+    if (filteredSales.length === 0) {
+    }
+
+  }
+
+  // Función para manejar Enter en el input de búsqueda
+  const handleClientSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearchClientByName()
+    }
   }
 
   const getStatusBadge = status => {
@@ -758,33 +850,28 @@ const SalePayment = () => {
               </Button>
             </div>
 
-            {/* Cliente Selector - Inline */}
+            {/* Búsqueda de Cliente - Inline con Input y Botón */}
             <div className='w-full sm:w-auto sm:min-w-[300px]'>
-              <Label className='text-sm font-medium block sm:hidden mb-2'>
+              <Label className='text-sm font-medium block mb-2'>
                 Filtrar por Cliente
               </Label>
-              <Select
-                value={filters.client_id || 'all'}
-                onValueChange={handleFilterByClient}
-              >
-                <SelectTrigger className={styles.input()}>
-                  <Users className='w-4 h-4 mr-2' />
-                  <SelectValue placeholder='Todos los clientes' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all'>
-                    <div className='flex items-center gap-2'>
-                      <Users className='w-4 h-4' />
-                      Todos los clientes
-                    </div>
-                  </SelectItem>
-                  {clients.map(client => (
-                    <SelectItem key={client.id} value={client.id.toString()}>
-                      {client.name} {client.last_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className='flex gap-2'>
+                <Input
+                  value={clientNameSearch}
+                  onChange={(e) => setClientNameSearch(e.target.value)}
+                  onKeyPress={handleClientSearchKeyPress}
+                  placeholder='Buscar por nombre...'
+                  className={`flex-1 ${styles.input()}`}
+                />
+                <Button
+                  onClick={handleSearchClientByName}
+                  disabled={isSalesLoading}
+                  className={styles.button('primary')}
+                  size='sm'
+                >
+                  <Users className='w-4 h-4' />
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>

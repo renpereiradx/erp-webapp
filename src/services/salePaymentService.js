@@ -67,7 +67,6 @@ export const salePaymentService = {
     const startTime = Date.now();
     
     try {
-      console.log('🌐 SalePayment: Loading sales by date range...');
       const params = new URLSearchParams(filters);
       const url = `${API_ENDPOINTS.salesByDateRange}?${params}`;
       
@@ -81,7 +80,6 @@ export const salePaymentService = {
         totalCount: result?.total_count || 0
       });
       
-      console.log('✅ SalePayment: Sales loaded by date range');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
@@ -102,7 +100,6 @@ export const salePaymentService = {
     const startTime = Date.now();
     
     try {
-      console.log(`🌐 SalePayment: Loading sale ${saleId}...`);
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(API_ENDPOINTS.saleById(saleId));
       });
@@ -112,7 +109,6 @@ export const salePaymentService = {
         saleId
       });
       
-      console.log('✅ SalePayment: Sale loaded');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
@@ -135,7 +131,6 @@ export const salePaymentService = {
     const startTime = Date.now();
     
     try {
-      console.log(`🌐 SalePayment: Processing payment for sale ${paymentData.sales_order_id}...`);
       const result = await _fetchWithRetry(async () => {
         return await apiClient.post(API_ENDPOINTS.processPayment, paymentData);
       });
@@ -148,7 +143,6 @@ export const salePaymentService = {
         changeAmount: result.payment_details?.change_amount || 0
       });
       
-      console.log('✅ SalePayment: Payment processed successfully');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
@@ -169,8 +163,6 @@ export const salePaymentService = {
     const startTime = Date.now();
 
     try {
-      console.log(`🌐 SalePayment: Processing sale payment with cash register for ${paymentData.sales_order_id}...`);
-
       // Construir payload según API v3.0
       const payload = {
         sales_order_id: paymentData.sales_order_id,
@@ -198,7 +190,6 @@ export const salePaymentService = {
         netCashImpact: result.cash_summary?.net_cash_impact || 0
       });
 
-      console.log('✅ SalePayment: Sale payment with cash register processed successfully');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
@@ -219,7 +210,6 @@ export const salePaymentService = {
     const startTime = Date.now();
     
     try {
-      console.log(`🌐 SalePayment: Loading payment details for sale ${saleId}...`);
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(API_ENDPOINTS.paymentDetails(saleId));
       });
@@ -229,7 +219,6 @@ export const salePaymentService = {
         saleId
       });
       
-      console.log('✅ SalePayment: Payment details loaded');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
@@ -250,7 +239,6 @@ export const salePaymentService = {
     const startTime = Date.now();
     
     try {
-      console.log('🌐 SalePayment: Loading change statistics...');
       const params = new URLSearchParams(filters);
       const url = `${API_ENDPOINTS.paymentStatistics}?${params}`;
       
@@ -262,7 +250,6 @@ export const salePaymentService = {
         duration: Date.now() - startTime
       });
       
-      console.log('✅ SalePayment: Change statistics loaded');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
@@ -285,7 +272,6 @@ export const salePaymentService = {
     const startTime = Date.now();
     
     try {
-      console.log(`🌐 SalePayment: Getting cancellation preview for sale ${saleId}...`);
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(API_ENDPOINTS.cancellationPreview(saleId));
       });
@@ -295,7 +281,6 @@ export const salePaymentService = {
         saleId
       });
       
-      console.log('✅ SalePayment: Cancellation preview loaded');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
@@ -317,7 +302,6 @@ export const salePaymentService = {
     const startTime = Date.now();
     
     try {
-      console.log(`🌐 SalePayment: Cancelling sale ${saleId}...`);
       const result = await _fetchWithRetry(async () => {
         return await apiClient.put(API_ENDPOINTS.cancelSale(saleId), cancellationData);
       });
@@ -328,7 +312,6 @@ export const salePaymentService = {
         reason: cancellationData.reason || 'not_specified'
       });
       
-      console.log('✅ SalePayment: Sale cancelled successfully');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
@@ -349,7 +332,6 @@ export const salePaymentService = {
     const startTime = Date.now();
     
     try {
-      console.log('🌐 SalePayment: Loading price change report...');
       const params = new URLSearchParams(filters);
       const url = `${API_ENDPOINTS.priceChangeReport}?${params}`;
       
@@ -361,7 +343,6 @@ export const salePaymentService = {
         duration: Date.now() - startTime
       });
       
-      console.log('✅ SalePayment: Price change report loaded');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
@@ -383,7 +364,6 @@ export const salePaymentService = {
     const startTime = Date.now();
     
     try {
-      console.log('🌐 SalePayment: Verifying integration...');
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(API_ENDPOINTS.verifyIntegration);
       });
@@ -392,7 +372,6 @@ export const salePaymentService = {
         duration: Date.now() - startTime
       });
       
-      console.log('✅ SalePayment: Integration verified');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
@@ -471,7 +450,6 @@ export const salePaymentService = {
     const startTime = Date.now();
 
     try {
-      console.log(`🌐 SalePayment: Loading payment status for sale ${saleId}...`);
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(API_ENDPOINTS.salePaymentStatus(saleId));
       });
@@ -483,7 +461,6 @@ export const salePaymentService = {
         paymentProgress: result.payment_progress
       });
 
-      console.log('✅ SalePayment: Payment status loaded');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
@@ -507,34 +484,11 @@ export const salePaymentService = {
       const params = new URLSearchParams(filters);
       const url = `${API_ENDPOINTS.salesByDateRangeWithPaymentStatus}?${params}`;
 
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🔵 REQUEST TO BACKEND - getSalesByDateRangeWithPaymentStatus');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📍 Endpoint:', 'GET', url);
-      console.log('📋 Filters:', JSON.stringify(filters, null, 2));
-      console.log('🔗 Full URL:', `http://localhost:5050${url}`);
-      console.log('⏰ Timestamp:', new Date().toISOString());
-
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(url);
       });
 
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🟢 RESPONSE FROM BACKEND - getSalesByDateRangeWithPaymentStatus');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📊 Response Structure:', {
-        hasData: !!result?.data,
-        dataType: Array.isArray(result?.data) ? 'array' : typeof result?.data,
-        dataLength: result?.data?.length,
-        hasPagination: !!result?.pagination,
-        paginationKeys: result?.pagination ? Object.keys(result.pagination) : []
-      });
-      console.log('📦 Full Response:', JSON.stringify(result, null, 2));
-      console.log('⏱️ Duration:', Date.now() - startTime, 'ms');
-
       if (result?.data?.length > 0) {
-        console.log('🔍 First Sale Sample:', JSON.stringify(result.data[0], null, 2));
-        console.log('🔑 First Sale Keys:', Object.keys(result.data[0]));
       }
 
       telemetry.record('sale_payment.service.list_with_payment_status', {
@@ -543,19 +497,8 @@ export const salePaymentService = {
         totalRecords: result?.pagination?.total_records || 0
       });
 
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
       return result;
     } catch (error) {
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🔴 ERROR FROM BACKEND - getSalesByDateRangeWithPaymentStatus');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('❌ Error Message:', error.message);
-      console.log('📍 Endpoint:', `GET /sale/date_range/payment-status?${new URLSearchParams(filters)}`);
-      console.log('📋 Filters:', JSON.stringify(filters, null, 2));
-      console.log('🔍 Error Details:', error);
-      console.log('⏱️ Duration:', Date.now() - startTime, 'ms');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
       telemetry.record('sale_payment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -575,7 +518,6 @@ export const salePaymentService = {
     const startTime = Date.now();
 
     try {
-      console.log(`🌐 SalePayment: Loading sales for client "${clientName}" with payment status...`);
       const params = new URLSearchParams(filters);
       const url = `${API_ENDPOINTS.salesByClientNameWithPaymentStatus(clientName)}?${params}`;
 
@@ -589,7 +531,6 @@ export const salePaymentService = {
         count: result?.data?.length || 0
       });
 
-      console.log('✅ SalePayment: Sales for client with payment status loaded');
       return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
