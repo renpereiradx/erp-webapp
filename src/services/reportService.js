@@ -176,9 +176,25 @@ const fetchWithFallback = async (endpoint, range, type, fallbackFactory) => {
   const queryString = buildQueryString(safeRange)
   const startedAt = performance?.now?.() ?? Date.now()
 
+  // DEBUG LOG: Request para reportes
+  console.group('🔍 [DEBUG] Reports API Request')
+  console.log('Endpoint:', endpoint)
+  console.log('Full URL:', `${endpoint}?${queryString}`)
+  console.log('Range:', JSON.stringify(safeRange, null, 2))
+  console.log('Type:', type)
+  console.log('Timestamp:', new Date().toISOString())
+  console.groupEnd()
+
   try {
     const response = await apiClient.get(`${endpoint}?${queryString}`)
     const duration = (performance?.now?.() ?? Date.now()) - startedAt
+
+    // DEBUG LOG: Respuesta exitosa
+    console.group('✅ [DEBUG] Reports API Response - Success')
+    console.log('Response:', JSON.stringify(response, null, 2))
+    console.log('Duration:', duration.toFixed(2), 'ms')
+    console.log('Type:', type)
+    console.groupEnd()
 
     telemetryService.recordMetric('report_totals_fetch_ms', duration, {
       endpoint,
@@ -190,6 +206,22 @@ const fetchWithFallback = async (endpoint, range, type, fallbackFactory) => {
     return normalized
   } catch (error) {
     const duration = (performance?.now?.() ?? Date.now()) - startedAt
+
+    // DEBUG LOG: Error detallado
+    console.group('❌ [DEBUG] Reports API Response - Error')
+    console.log('Endpoint:', endpoint)
+    console.log('Full URL:', `${endpoint}?${queryString}`)
+    console.log('Error Message:', error?.message)
+    console.log('Error Type:', error?.constructor?.name)
+    console.log('Error Status:', error?.status || 'N/A')
+    console.log('Error Code:', error?.code || 'N/A')
+    console.log('Error Response:', JSON.stringify(error?.response || error?.data || {}, null, 2))
+    console.log('Request Range:', JSON.stringify(safeRange, null, 2))
+    console.log('Duration:', duration.toFixed(2), 'ms')
+    console.log('Full Error Object:', error)
+    console.log('Will use fallback?', isDevelopment)
+    console.groupEnd()
+
     telemetryService.recordMetric('report_totals_fetch_ms', duration, {
       endpoint,
       type,

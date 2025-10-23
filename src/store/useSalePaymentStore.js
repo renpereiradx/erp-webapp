@@ -129,38 +129,49 @@ export const useSalePaymentStore = create()(
        * Procesa un pago para una venta existente
        */
       processPayment: async (paymentData) => {
+        // DEBUG LOG: Store action iniciada
+        console.group('🏪 [DEBUG] Store: processPayment');
+        console.log('Input paymentData:', JSON.stringify(paymentData, null, 2));
+        console.groupEnd();
+
         // Validar datos de pago
         const validationErrors = salePaymentService.validatePaymentData(paymentData);
         if (validationErrors.length > 0) {
+          console.error('❌ [DEBUG] Validation errors:', validationErrors);
           const error = new Error(`Datos inválidos: ${validationErrors.join(', ')}`);
           set({ processPaymentError: error });
           throw error;
         }
 
         set({ isProcessingPayment: true, processPaymentError: null });
-        
+
         try {
           const result = await salePaymentService.processPayment(paymentData);
-          
+
           // Actualizar venta en lista si está presente
           const { sales } = get();
-          const updatedSales = sales.map(sale => 
+          const updatedSales = sales.map(sale =>
             sale.sales_order_id === paymentData.sales_order_id ? { ...sale, status: 'COMPLETED' } : sale
           );
           set({ sales: updatedSales });
-          
+
           // Actualizar venta actual si es la misma
           if (get().currentSale?.sales_order_id === paymentData.sales_order_id) {
             set({ currentSale: { ...get().currentSale, status: 'COMPLETED' } });
           }
-          
+
           set({ isProcessingPayment: false });
           return result;
         } catch (error) {
+          console.group('❌ [DEBUG] Store: processPayment - Error Caught');
+          console.log('Error in store layer:', error.message);
+          console.log('Error object:', error);
+          console.groupEnd();
+
           console.warn('Error processing payment:', error);
-          set({ 
-            processPaymentError: error, 
-            isProcessingPayment: false 
+          set({
+            processPaymentError: error,
+            isProcessingPayment: false
           });
           throw error;
         }
@@ -170,33 +181,44 @@ export const useSalePaymentStore = create()(
        * Procesa pago con integración de caja registradora
        */
       processSalePaymentWithCashRegister: async (paymentData) => {
+        // DEBUG LOG: Store action iniciada
+        console.group('🏪 [DEBUG] Store: processSalePaymentWithCashRegister');
+        console.log('Input paymentData:', JSON.stringify(paymentData, null, 2));
+        console.groupEnd();
+
         // Validar datos de pago con caja registradora
         const validationErrors = salePaymentService.validateCashRegisterPaymentData(paymentData);
         if (validationErrors.length > 0) {
+          console.error('❌ [DEBUG] Validation errors:', validationErrors);
           const error = new Error(`Datos inválidos: ${validationErrors.join(', ')}`);
           set({ processPaymentError: error });
           throw error;
         }
 
         set({ isProcessingPayment: true, processPaymentError: null });
-        
+
         try {
           const result = await salePaymentService.processSalePaymentWithCashRegister(paymentData);
-          
+
           // Actualizar venta en lista si está presente
           const { sales } = get();
-          const updatedSales = sales.map(sale => 
+          const updatedSales = sales.map(sale =>
             sale.sales_order_id === paymentData.sales_order_id ? { ...sale, status: 'COMPLETED' } : sale
           );
           set({ sales: updatedSales });
-          
+
           set({ isProcessingPayment: false });
           return result;
         } catch (error) {
+          console.group('❌ [DEBUG] Store: processSalePaymentWithCashRegister - Error Caught');
+          console.log('Error in store layer:', error.message);
+          console.log('Error object:', error);
+          console.groupEnd();
+
           console.warn('Error processing payment with cash register:', error);
-          set({ 
-            processPaymentError: error, 
-            isProcessingPayment: false 
+          set({
+            processPaymentError: error,
+            isProcessingPayment: false
           });
           throw error;
         }

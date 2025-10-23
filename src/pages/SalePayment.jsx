@@ -316,9 +316,23 @@ const SalePayment = () => {
     }
 
     try {
+      // Obtener el monto recibido
+      let amountReceived = parseFloat(paymentForm.amount_received)
+
+      // Si hay balance_due y el monto recibido lo excede, ajustarlo al balance exacto
+      if (selectedSaleData?.balance_due !== undefined) {
+        const balanceDue = selectedSaleData.balance_due
+        if (amountReceived > balanceDue) {
+          console.warn(
+            `⚠️ Amount received (${amountReceived}) exceeds balance due (${balanceDue}). Adjusting to exact balance.`
+          )
+          amountReceived = balanceDue
+        }
+      }
+
       const paymentData = {
         sales_order_id: selectedSaleId,
-        amount_received: parseFloat(paymentForm.amount_received),
+        amount_received: amountReceived,
         payment_reference: paymentForm.payment_reference,
         payment_notes: paymentForm.payment_notes,
       }
@@ -915,10 +929,10 @@ const SalePayment = () => {
           ) : sales && sales.length > 0 ? (
             <div className='grid grid-cols-2 gap-4'>
               {sales.map(sale => {
-                // Extraer información de payment status
-                const totalAmount = sale.total_amount || 0
-                const totalPaid = sale.total_paid || 0
-                const balanceDue = sale.balance_due || 0
+                // Extraer información de payment status y redondear valores
+                const totalAmount = Math.round(sale.total_amount || 0)
+                const totalPaid = Math.round(sale.total_paid || 0)
+                const balanceDue = Math.round(sale.balance_due || 0)
                 const paymentProgress = sale.payment_progress || 0
                 const paymentCount = sale.payment_count || 0
                 const isFullyPaid = sale.is_fully_paid || false
@@ -1131,7 +1145,7 @@ const SalePayment = () => {
                           </span>
                           <p className='text-2xl font-bold text-gray-900 mb-2'>
                             {formatGuaranies(
-                              selectedSaleData.total_amount || 0
+                              Math.round(selectedSaleData.total_amount || 0)
                             )}
                           </p>
                           <div className='border-t border-gray-300 pt-2 mt-2'>
@@ -1141,7 +1155,7 @@ const SalePayment = () => {
                               </span>
                               <span className='font-semibold text-green-600 text-sm'>
                                 {formatGuaranies(
-                                  selectedSaleData.total_paid || 0
+                                  Math.round(selectedSaleData.total_paid || 0)
                                 )}
                               </span>
                             </div>
@@ -1160,7 +1174,7 @@ const SalePayment = () => {
                             Pendiente a Pagar:
                           </span>
                           <p className='text-2xl font-bold text-orange-600'>
-                            {formatGuaranies(selectedSaleData.balance_due || 0)}
+                            {formatGuaranies(Math.round(selectedSaleData.balance_due || 0))}
                           </p>
                         </div>
                       </div>
@@ -1171,7 +1185,7 @@ const SalePayment = () => {
                         Total a Pagar:
                       </span>
                       <p className='text-2xl font-bold text-primary'>
-                        {formatGuaranies(selectedSaleData.total_amount || 0)}
+                        {formatGuaranies(Math.round(selectedSaleData.total_amount || 0))}
                       </p>
                     </div>
                   )}
@@ -1324,25 +1338,53 @@ const SalePayment = () => {
                 parseFloat(paymentForm.amount_received) > 0 ? (
                   <div className='h-14 flex items-center'>
                     {(() => {
-                      const amountReceived = parseFloat(
+                      // Redondear a enteros porque Guaraníes no tiene decimales
+                      const amountReceived = Math.round(parseFloat(
                         paymentForm.amount_received
-                      )
+                      ))
+
                       // Usar balance_due si existe, sino usar total_amount
-                      const amountDue = selectedSaleData.hasOwnProperty(
+                      const rawAmountDue = selectedSaleData.hasOwnProperty(
                         'balance_due'
                       )
                         ? selectedSaleData.balance_due || 0
                         : selectedSaleData.total_amount || 0
 
+                      // Redondear amount_due también
+                      const amountDue = Math.round(rawAmountDue)
+
+                      // DEBUG LOG: Cálculo de vuelto/pendiente
+                      console.group('🔍 [DEBUG] Payment Change Calculation')
+                      console.log('Amount Received (input):', paymentForm.amount_received)
+                      console.log('Amount Received (rounded):', amountReceived)
+                      console.log('Amount Due (raw):', rawAmountDue)
+                      console.log('Amount Due (rounded):', amountDue)
+                      console.log('Difference:', amountReceived - amountDue)
+                      console.log('Has balance_due?', selectedSaleData.hasOwnProperty('balance_due'))
+                      console.log('Selected Sale Data:', selectedSaleData)
+                      console.groupEnd()
+
+                      // Verificar si el monto excede ligeramente debido a decimales
+                      const inputAmount = parseFloat(paymentForm.amount_received)
+                      const exceedsBalance = inputAmount > rawAmountDue
+                      const smallExcess = exceedsBalance && (inputAmount - rawAmountDue) < 1
+
                       if (amountReceived >= amountDue) {
                         return (
-                          <div className='w-full flex items-center justify-between border-amber-200 bg-amber-50 rounded-lg px-3 py-3 border-2'>
-                            <span className='font-semibold text-sm text-amber-900'>
-                              Vuelto a entregar:
-                            </span>
-                            <span className='text-xl font-bold text-amber-700'>
-                              {formatGuaranies(amountReceived - amountDue)}
-                            </span>
+                          <div className='space-y-2'>
+                            <div className='w-full flex items-center justify-between border-amber-200 bg-amber-50 rounded-lg px-3 py-3 border-2'>
+                              <span className='font-semibold text-sm text-amber-900'>
+                                Vuelto a entregar:
+                              </span>
+                              <span className='text-xl font-bold text-amber-700'>
+                                {formatGuaranies(amountReceived - amountDue)}
+                              </span>
+                            </div>
+                            {smallExcess && (
+                              <div className='text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded border border-amber-200'>
+                                ℹ️ Monto ajustado a balance exacto: {formatGuaranies(rawAmountDue)}
+                              </div>
+                            )}
                           </div>
                         )
                       } else {
@@ -1587,7 +1629,7 @@ const SalePayment = () => {
                                 Total:
                               </strong>
                               <span className='text-muted-foreground font-semibold text-base'>
-                                {formatGuaranies(sale.total_amount || 0)}
+                                {formatGuaranies(Math.round(sale.total_amount || 0))}
                               </span>
                             </p>
 
@@ -1600,7 +1642,7 @@ const SalePayment = () => {
                                       Total Pagado:
                                     </strong>
                                     <span className='text-green-600 font-semibold'>
-                                      {formatGuaranies(sale.total_paid || 0)}
+                                      {formatGuaranies(Math.round(sale.total_paid || 0))}
                                     </span>
                                   </p>
                                   <p className='text-sm leading-relaxed'>
@@ -1608,7 +1650,7 @@ const SalePayment = () => {
                                       Balance Pendiente:
                                     </strong>
                                     <span className='text-orange-600 font-semibold'>
-                                      {formatGuaranies(sale.balance_due || 0)}
+                                      {formatGuaranies(Math.round(sale.balance_due || 0))}
                                     </span>
                                   </p>
                                   <p className='text-sm leading-relaxed'>
@@ -1766,7 +1808,7 @@ const SalePayment = () => {
                                   <div className='flex justify-between items-center text-xl font-bold'>
                                     <span>Total:</span>
                                     <span className='tabular-nums'>
-                                      {formatGuaranies(sale.total_amount || 0)}
+                                      {formatGuaranies(Math.round(sale.total_amount || 0))}
                                     </span>
                                   </div>
                                 </div>
