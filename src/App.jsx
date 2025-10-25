@@ -29,7 +29,8 @@ import PurchasePayment from '@/pages/PurchasePayment'
 import SalePayment from '@/pages/SalePayment'
 import PaymentDocumentation from '@/pages/PaymentDocumentation'
 import PaymentManagement from '@/pages/PaymentManagement'
-import Login from '@/pages/Login'
+// import Login from '@/pages/Login'
+import Login from '@/pages/LoginMigrated' // Versión migrada a Fluent UI + Sass
 import Settings from '@/pages/Settings'
 // import ProductDetailTest from '@/components/ProductDetailTest';
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';

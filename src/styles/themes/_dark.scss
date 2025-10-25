@@ -1,0 +1,53 @@
+/**
+ * Fluent 2 - Dark Theme
+ */
+
+@import './tokens';
+
+[data-theme='dark'] {
+  // Background colors
+  --color-bg-primary: #{$color-neutral-90};
+  --color-bg-secondary: #{$color-neutral-80};
+  --color-bg-tertiary: #{$color-neutral-70};
+  --color-bg-hover: #{$color-neutral-60};
+  --color-bg-pressed: #{$color-neutral-50};
+  --color-bg-disabled: #{$color-neutral-80};
+  --color-bg-brand: #{$color-brand-80};
+  --color-bg-brand-hover: #{$color-brand-90};
+  --color-bg-brand-pressed: #{$color-brand-70};
+
+  // Text colors
+  --color-text-primary: #{$color-neutral-0};
+  --color-text-secondary: #{$color-neutral-20};
+  --color-text-tertiary: #{$color-neutral-30};
+  --color-text-disabled: #{$color-neutral-50};
+  --color-text-on-brand: #{$color-neutral-0};
+  --color-text-brand: #{$color-brand-110};
+  --color-text-link: #{$color-brand-110};
+  --color-text-link-hover: #{$color-brand-120};
+
+  // Border colors
+  --color-border-primary: #{$color-neutral-60};
+  --color-border-secondary: #{$color-neutral-70};
+  --color-border-focus: #{$color-brand-110};
+  --color-border-disabled: #{$color-neutral-70};
+
+  // Semantic colors
+  --color-success: #54b054;
+  --color-success-bg: #0e3b0e;
+  --color-warning: #fce100;
+  --color-warning-bg: #4d3800;
+  --color-error: #f7630c;
+  --color-error-bg: #5c0f0f;
+  --color-info: #{$color-brand-110};
+  --color-info-bg: #{$color-brand-20};
+
+  // Shadows (más sutiles en modo oscuro)
+  --shadow-card: 0 0 4px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-dialog: 0 0 8px rgba(0, 0, 0, 0.3), 0 14px 32px rgba(0, 0, 0, 0.5);
+  --shadow-tooltip: 0 0 4px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.4);
+  --shadow-dropdown: 0 0 4px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.4);
+
+  // Surface
+  --color-surface-overlay: rgba(0, 0, 0, 0.6);
+}

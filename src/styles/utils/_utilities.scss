@@ -1,0 +1,143 @@
+/**
+ * Utility classes siguiendo convenciones similares a Tailwind
+ * Pero usando CSS custom properties de Fluent
+ */
+
+// ============================================================================
+// Display
+// ============================================================================
+
+.u-hidden {
+  display: none !important;
+}
+
+.u-flex {
+  display: flex !important;
+}
+
+.u-inline-flex {
+  display: inline-flex !important;
+}
+
+.u-grid {
+  display: grid !important;
+}
+
+.u-block {
+  display: block !important;
+}
+
+// ============================================================================
+// Flexbox
+// ============================================================================
+
+.u-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.u-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.u-flex-column {
+  flex-direction: column;
+}
+
+.u-flex-wrap {
+  flex-wrap: wrap;
+}
+
+.u-flex-1 {
+  flex: 1;
+}
+
+// ============================================================================
+// Spacing (usando tokens de Fluent)
+// ============================================================================
+
+.u-gap-xs { gap: $spacing-xs; }
+.u-gap-s { gap: $spacing-s; }
+.u-gap-m { gap: $spacing-m; }
+.u-gap-l { gap: $spacing-l; }
+.u-gap-xl { gap: $spacing-xl; }
+.u-gap-xxl { gap: $spacing-xxl; }
+
+// Margin
+.u-m-auto { margin: auto; }
+.u-mt-s { margin-top: $spacing-s; }
+.u-mt-m { margin-top: $spacing-m; }
+.u-mt-l { margin-top: $spacing-l; }
+.u-mb-s { margin-bottom: $spacing-s; }
+.u-mb-m { margin-bottom: $spacing-m; }
+.u-mb-l { margin-bottom: $spacing-l; }
+
+// Padding
+.u-p-s { padding: $spacing-s; }
+.u-p-m { padding: $spacing-m; }
+.u-p-l { padding: $spacing-l; }
+.u-p-xl { padding: $spacing-xl; }
+.u-p-xxl { padding: $spacing-xxl; }
+
+// ============================================================================
+// Text Alignment
+// ============================================================================
+
+.u-text-left { text-align: left; }
+.u-text-center { text-align: center; }
+.u-text-right { text-align: right; }
+
+// ============================================================================
+// Width & Height
+// ============================================================================
+
+.u-w-full { width: 100%; }
+.u-h-full { height: 100%; }
+.u-w-screen { width: 100vw; }
+.u-h-screen { height: 100vh; }
+
+// ============================================================================
+// Position
+// ============================================================================
+
+.u-relative { position: relative; }
+.u-absolute { position: absolute; }
+.u-fixed { position: fixed; }
+.u-sticky { position: sticky; }
+
+// ============================================================================
+// Overflow
+// ============================================================================
+
+.u-overflow-hidden { overflow: hidden; }
+.u-overflow-auto { overflow: auto; }
+.u-overflow-scroll { overflow: scroll; }
+
+// ============================================================================
+// Cursor
+// ============================================================================
+
+.u-cursor-pointer { cursor: pointer; }
+.u-cursor-not-allowed { cursor: not-allowed; }
+
+// ============================================================================
+// Opacity
+// ============================================================================
+
+.u-opacity-0 { opacity: 0; }
+.u-opacity-50 { opacity: 0.5; }
+.u-opacity-100 { opacity: 1; }
+
+// ============================================================================
+// Border Radius
+// ============================================================================
+
+.u-rounded-none { border-radius: $border-radius-none; }
+.u-rounded-sm { border-radius: $border-radius-small; }
+.u-rounded-md { border-radius: $border-radius-medium; }
+.u-rounded-lg { border-radius: $border-radius-large; }
+.u-rounded-xl { border-radius: $border-radius-xlarge; }
+.u-rounded-full { border-radius: $border-radius-circular; }

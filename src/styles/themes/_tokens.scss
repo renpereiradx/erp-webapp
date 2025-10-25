@@ -1,0 +1,157 @@
+/**
+ * Fluent Design System Tokens
+ * Basado en Fluent UI 2 Design Tokens
+ * https://react.fluentui.dev/?path=/docs/theme-design-tokens--page
+ */
+
+// ============================================================================
+// Color Palette - Fluent 2
+// ============================================================================
+
+// Neutral colors
+$color-neutral-0: #ffffff;
+$color-neutral-4: #f5f5f5;
+$color-neutral-8: #f0f0f0;
+$color-neutral-10: #e6e6e6;
+$color-neutral-14: #d1d1d1;
+$color-neutral-16: #c7c7c7;
+$color-neutral-20: #b3b3b3;
+$color-neutral-24: #a6a6a6;
+$color-neutral-30: #8a8a8a;
+$color-neutral-36: #737373;
+$color-neutral-40: #666666;
+$color-neutral-50: #4d4d4d;
+$color-neutral-60: #3d3d3d;
+$color-neutral-70: #292929;
+$color-neutral-80: #1f1f1f;
+$color-neutral-90: #141414;
+$color-neutral-100: #0a0a0a;
+
+// Brand colors (Fluent Blue)
+$color-brand-10: #061724;
+$color-brand-20: #082338;
+$color-brand-30: #0a2e4a;
+$color-brand-40: #0c3b5e;
+$color-brand-50: #0e4775;
+$color-brand-60: #115ea3;
+$color-brand-70: #0f6cbd;
+$color-brand-80: #2886de;
+$color-brand-90: #479ef5;
+$color-brand-100: #62abf5;
+$color-brand-110: #77b7f7;
+$color-brand-120: #96c6fa;
+$color-brand-130: #b4d6fa;
+$color-brand-140: #cfe4fa;
+$color-brand-150: #ebf3fc;
+$color-brand-160: #f5faff;
+
+// Semantic colors
+$color-success: #0e700e;
+$color-success-bg: #dff6dd;
+$color-warning: #8a5100;
+$color-warning-bg: #fef0d9;
+$color-error: #c50f1f;
+$color-error-bg: #fde7e9;
+$color-info: #0078d4;
+$color-info-bg: #d0e7f8;
+
+// ============================================================================
+// Typography - Fluent 2
+// ============================================================================
+
+// Font families
+$font-family-base: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+$font-family-monospace: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+
+// Font sizes (Fluent type ramp)
+$font-size-100: 10px;
+$font-size-200: 12px;
+$font-size-300: 14px;
+$font-size-400: 16px;
+$font-size-500: 18px;
+$font-size-600: 20px;
+$font-size-700: 24px;
+$font-size-800: 28px;
+$font-size-900: 32px;
+$font-size-1000: 40px;
+
+// Font weights
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Line heights
+$line-height-100: 14px;
+$line-height-200: 16px;
+$line-height-300: 20px;
+$line-height-400: 22px;
+$line-height-500: 24px;
+$line-height-600: 28px;
+$line-height-700: 32px;
+$line-height-800: 36px;
+$line-height-900: 40px;
+$line-height-1000: 52px;
+
+// ============================================================================
+// Spacing - Fluent 2
+// ============================================================================
+
+$spacing-none: 0;
+$spacing-xxs: 2px;
+$spacing-xs: 4px;
+$spacing-s: 8px;
+$spacing-m: 12px;
+$spacing-l: 16px;
+$spacing-xl: 20px;
+$spacing-xxl: 24px;
+$spacing-xxxl: 32px;
+$spacing-huge: 40px;
+
+// ============================================================================
+// Border Radius - Fluent 2
+// ============================================================================
+
+$border-radius-none: 0;
+$border-radius-small: 2px;
+$border-radius-medium: 4px;
+$border-radius-large: 6px;
+$border-radius-xlarge: 8px;
+$border-radius-circular: 50%;
+
+// ============================================================================
+// Shadows - Fluent 2
+// ============================================================================
+
+$shadow-2: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+$shadow-4: 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+$shadow-8: 0 0 2px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.14);
+$shadow-16: 0 0 2px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.14);
+$shadow-28: 0 0 8px rgba(0, 0, 0, 0.12), 0 14px 28px rgba(0, 0, 0, 0.14);
+$shadow-64: 0 0 8px rgba(0, 0, 0, 0.12), 0 32px 64px rgba(0, 0, 0, 0.14);
+
+// ============================================================================
+// Duration - Fluent 2
+// ============================================================================
+
+$duration-ultra-fast: 50ms;
+$duration-faster: 100ms;
+$duration-fast: 150ms;
+$duration-normal: 200ms;
+$duration-gentle: 250ms;
+$duration-slow: 300ms;
+$duration-slower: 400ms;
+$duration-ultra-slow: 500ms;
+
+// ============================================================================
+// Z-index layers
+// ============================================================================
+
+$z-index-base: 0;
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-overlay: 1030;
+$z-index-modal: 1040;
+$z-index-popover: 1050;
+$z-index-tooltip: 1060;
+$z-index-notification: 1070;

@@ -7,6 +7,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './App.css'
+// Sistema de temas Sass + Fluent UI 2 (coexistiendo con Tailwind durante migración)
+import './styles/main.scss'
 import App from './App.jsx'
 
 // Simple error boundary para hooks

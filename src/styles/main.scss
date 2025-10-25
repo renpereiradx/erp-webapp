@@ -1,0 +1,45 @@
+/**
+ * Main Sass Entry Point
+ * Sistema de temas basado en Fluent UI 2
+ */
+
+// 1. Base & Reset
+@import './base/reset';
+
+// 2. Tokens & Themes
+@import './themes/tokens';
+@import './themes/light';
+@import './themes/dark';
+
+// 3. Utils
+@import './utils/mixins';
+@import './utils/utilities';
+
+// 4. Base styles
+html {
+  font-family: $font-family-base;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color $duration-normal ease-out, color $duration-normal ease-out;
+}
+
+// 5. Aplicar tema por defecto
+:root {
+  @extend [data-theme='light'];
+}
+
+// 6. Scrollbar global
+* {
+  @include custom-scrollbar;
+}
+
+// 7. Pages (migración gradual)
+@import './pages/login';
+
+// Nota: Los componentes individuales se importarán según se vayan migrando
+// Por ahora, este archivo coexistirá con Tailwind CSS durante la migración gradual

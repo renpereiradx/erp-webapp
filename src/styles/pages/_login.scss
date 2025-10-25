@@ -1,0 +1,202 @@
+/**
+ * Login Page - Fluent UI 2 Design
+ * Siguiendo metodología BEM
+ */
+
+@import '../utils/mixins';
+@import '../themes/tokens';
+
+// ============================================================================
+// Login Container
+// ============================================================================
+
+.login {
+  min-height: 100vh;
+  @include flex-center;
+  background-color: var(--color-bg-secondary);
+  padding: $spacing-l;
+
+  &__card {
+    @include card;
+    width: 100%;
+    max-width: 420px;
+    padding: $spacing-xxxl;
+
+    @include mobile {
+      padding: $spacing-xl;
+    }
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: $spacing-xxxl;
+  }
+
+  &__title {
+    @include text-title-1;
+    color: var(--color-text-primary);
+    margin-bottom: $spacing-s;
+  }
+
+  &__subtitle {
+    @include text-body-1;
+    color: var(--color-text-secondary);
+  }
+
+  // ============================================================================
+  // Form
+  // ============================================================================
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xl;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__label {
+    @include text-body-2;
+    font-weight: $font-weight-semibold;
+    color: var(--color-text-primary);
+  }
+
+  &__input-wrapper {
+    position: relative;
+  }
+
+  &__input {
+    @include input-base;
+    width: 100%;
+
+    &--with-icon {
+      padding-right: 40px;
+    }
+  }
+
+  &__toggle-password {
+    position: absolute;
+    right: $spacing-m;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: $spacing-xs;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $border-radius-small;
+    transition: all $duration-fast ease-out;
+
+    &:hover {
+      color: var(--color-text-primary);
+      background-color: var(--color-bg-hover);
+    }
+
+    &:focus-visible {
+      @include focus-visible;
+    }
+  }
+
+  // ============================================================================
+  // Error Message
+  // ============================================================================
+
+  &__error {
+    @include text-body-2;
+    background-color: var(--color-error-bg);
+    color: var(--color-error);
+    padding: $spacing-m;
+    border-radius: $border-radius-medium;
+    border-left: 3px solid var(--color-error);
+    font-weight: $font-weight-medium;
+    animation: slideIn $duration-normal ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  // ============================================================================
+  // Submit Button
+  // ============================================================================
+
+  &__submit {
+    @include button-primary;
+    width: 100%;
+    padding: $spacing-m $spacing-l;
+    font-size: $font-size-400;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &--loading {
+      position: relative;
+      color: transparent;
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--color-text-on-brand);
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin $duration-ultra-slow linear infinite;
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+  }
+
+  // ============================================================================
+  // Footer
+  // ============================================================================
+
+  &__footer {
+    text-align: center;
+    margin-top: $spacing-xl;
+  }
+
+  &__footer-text {
+    @include text-body-2;
+    color: var(--color-text-secondary);
+  }
+
+  &__forgot-link {
+    color: var(--color-text-link);
+    cursor: pointer;
+    transition: color $duration-fast ease-out;
+
+    &:hover {
+      color: var(--color-text-link-hover);
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      @include focus-visible;
+    }
+  }
+}
