@@ -2,9 +2,9 @@
  * Fluent 2 - Light Theme
  */
 
-@import './tokens';
+@use './tokens' as *;
 
-[data-theme='light'] {
+@mixin light-theme {
   // Background colors
   --color-bg-primary: #{$color-neutral-0};
   --color-bg-secondary: #{$color-neutral-4};
@@ -50,4 +50,8 @@
 
   // Surface
   --color-surface-overlay: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='light'] {
+  @include light-theme;
 }

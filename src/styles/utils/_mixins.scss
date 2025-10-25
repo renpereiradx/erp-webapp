@@ -2,7 +2,7 @@
  * Mixins y utilidades reutilizables
  */
 
-@import '../themes/tokens';
+@use '../themes/tokens' as *;
 
 // ============================================================================
 // Typography Mixins

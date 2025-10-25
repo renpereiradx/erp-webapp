@@ -3,8 +3,8 @@
  * Siguiendo metodología BEM
  */
 
-@import '../utils/mixins';
-@import '../themes/tokens';
+@use '../utils/mixins' as *;
+@use '../themes/tokens' as *;
 
 // ============================================================================
 // Login Container

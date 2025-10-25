@@ -3,19 +3,31 @@
  * Sistema de temas basado en Fluent UI 2
  */
 
+// ============================================================================
+// IMPORTANTE: Todos los @use deben ir al principio del archivo
+// ============================================================================
+
 // 1. Base & Reset
-@import './base/reset';
+@use './base/reset';
 
-// 2. Tokens & Themes
-@import './themes/tokens';
-@import './themes/light';
-@import './themes/dark';
+// 2. Tokens (disponible para todos los archivos)
+@use './themes/tokens' as *;
 
-// 3. Utils
-@import './utils/mixins';
-@import './utils/utilities';
+// 3. Themes
+@use './themes/light';
+@use './themes/dark';
 
-// 4. Base styles
+// 4. Utils
+@use './utils/mixins' as *;
+@use './utils/utilities';
+
+// 5. Pages (migración gradual)
+@use './pages/login';
+
+// ============================================================================
+// Estilos base (DESPUÉS de todos los @use)
+// ============================================================================
+
 html {
   font-family: $font-family-base;
   -webkit-font-smoothing: antialiased;
@@ -28,18 +40,15 @@ body {
   transition: background-color $duration-normal ease-out, color $duration-normal ease-out;
 }
 
-// 5. Aplicar tema por defecto
+// Aplicar tema claro por defecto
 :root {
-  @extend [data-theme='light'];
+  @include light.light-theme;
 }
 
-// 6. Scrollbar global
+// Scrollbar global
 * {
   @include custom-scrollbar;
 }
-
-// 7. Pages (migración gradual)
-@import './pages/login';
 
 // Nota: Los componentes individuales se importarán según se vayan migrando
 // Por ahora, este archivo coexistirá con Tailwind CSS durante la migración gradual
