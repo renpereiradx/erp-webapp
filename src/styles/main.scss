@@ -7,48 +7,35 @@
 // IMPORTANTE: Todos los @use deben ir al principio del archivo
 // ============================================================================
 
-// 1. Base & Reset
-@use './base/reset';
-
-// 2. Tokens (disponible para todos los archivos)
+// 1. Tokens (disponible para todos los archivos)
 @use './themes/tokens' as *;
 
-// 3. Themes
+// 2. Themes (solo CSS custom properties, no afecta elementos)
 @use './themes/light';
 @use './themes/dark';
 
-// 4. Utils
+// 3. Utils
 @use './utils/mixins' as *;
-@use './utils/utilities';
 
-// 5. Pages (migración gradual)
+// 4. Pages (migración gradual - estilos con scope específico)
 @use './pages/login';
 
 // ============================================================================
-// Estilos base (DESPUÉS de todos los @use)
+// Configuración de temas (solo CSS custom properties)
 // ============================================================================
 
-html {
-  font-family: $font-family-base;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-body {
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  transition: background-color $duration-normal ease-out, color $duration-normal ease-out;
-}
-
-// Aplicar tema claro por defecto
+// Aplicar tema claro por defecto (solo variables CSS, no estilos globales)
 :root {
   @include light.light-theme;
 }
 
-// Scrollbar global
-* {
-  @include custom-scrollbar;
-}
+// ============================================================================
+// NOTA IMPORTANTE: Durante la migración gradual
+// ============================================================================
+// - NO aplicamos reset CSS global (conflicta con Tailwind)
+// - NO aplicamos estilos globales a html/body (conflicta con Tailwind)
+// - Solo aplicamos estilos con clases específicas (BEM)
+// - Tailwind sigue controlando los estilos base hasta completar la migración
 
 // Nota: Los componentes individuales se importarán según se vayan migrando
 // Por ahora, este archivo coexistirá con Tailwind CSS durante la migración gradual
