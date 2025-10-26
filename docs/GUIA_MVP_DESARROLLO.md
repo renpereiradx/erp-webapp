@@ -28,60 +28,131 @@ Responsable: Equipo Frontend
 **📋 Stack Tecnológico Definido:**
 - **Estado Global**: Zustand con devtools middleware
 - **API Client**: BusinessManagementAPI (instancia `apiClient`)
-- **UI Components**: Radix UI + Tailwind + shadcn/ui existentes
-- **Routing**: React Router DOM 
+- **UI Components**: Fluent UI React v9 + componentes migrados (en transición)
+- **Estilos**: Sass (SCSS) + BEM metodología (migrando desde Tailwind)
+- **Routing**: React Router DOM
 - **Testing**: Vitest + Testing Library
 - **Telemetría**: `@/utils/telemetry` (sistema simple existente)
 - **i18n**: `@/lib/i18n` (sistema custom existente)
-- **Temas**: React Context enterprise-grade (`ThemeContext.jsx` + `useThemeStyles.js`)
+- **Temas**: Sass + CSS Custom Properties (Light/Dark mode)
 - **Demo Data**: Sistema offline-first para desarrollo (`/config/demoData.js`)
 
-### 🎨 Sistema de Temas (Patrón Oficial - Actualizado)
-El sistema de temas se maneja a través de React Context para simplicidad y compatibilidad con React 19.
+**⚠️ IMPORTANTE - Migración en Progreso:**
+- Sistema en **transición gradual** de Tailwind a Sass + Fluent UI
+- Nuevas páginas deben usar **Sass + Fluent UI React v9**
+- Páginas existentes (no migradas) siguen usando Tailwind temporalmente
+- Ver [MIGRATION_PROGRESS.md](./MIGRATION_PROGRESS.md) para estado actual
 
-**Componentes Clave:**
-- **`ThemeContext.jsx`**: Context de React que es la única fuente de verdad para el tema. Maneja el estado, la persistencia en `localStorage` y la aplicación automática de clases CSS al DOM.
-- **`/config/themes.js`**: Configuración centralizada de todos los temas disponibles con validación robusta.
-- **`useThemeStyles.js`**: Hook optimizado para acceder a estilos específicos del tema actual.
+### 🎨 Sistema de Temas (Sass + Fluent UI - Migración en Progreso)
 
-**Uso en Componentes:**
-1.  **Para leer o cambiar el tema**: Importar y usar el hook `useTheme`.
-    ```jsx
-    import { useTheme } from '@/contexts/ThemeContext';
-    
-    const ThemeSwitcher = () => {
-      const { theme, setTheme, availableThemes } = useTheme();
+**NUEVO:** Sistema basado en **Sass + Fluent UI React v9** con metodología BEM.
 
-      return (
-        <select value={theme} onChange={(e) => setTheme(e.target.value)}>
-          {availableThemes.map(t => (
-            <option key={t.id} value={t.id}>{t.name}</option>
-          ))}
-        </select>
-      );
-    }
-    ```
-2.  **Para estilos específicos**: El hook `useThemeStyles` proporciona funciones optimizadas.
-    ```jsx
-    import { useThemeStyles } from '@/hooks/useThemeStyles';
-    
-    const MyComponent = () => {
-      const { styles, isNeoBrutalism, isDark } = useThemeStyles();
-      
-      return (
-        <div className={styles.card()}>
-          <h2 className={styles.header('h2')}>Título</h2>
-          <button className={styles.button('primary')}>Acción</button>
-        </div>
-      );
-    }
-    ```
+#### Arquitectura Actual (Dual)
 
-**Importante**: 
-- **Inicialización automática**: El tema se aplica automáticamente al cargar la aplicación
-- **Validación robusta**: Los temas inválidos se detectan y se aplica un fallback seguro  
-- **Performance optimizada**: Los estilos se memorizan para evitar recálculos innecesarios
-- **TypeScript ready**: Soporte completo de tipos para mejor DX
+**Para Páginas NO Migradas (Tailwind):**
+- `ThemeContext.jsx`: Context para temas Neo-Brutalism/Material/Fluent
+- `useThemeStyles.js`: Hook con estilos condicionales de Tailwind
+- CSS Variables en `App.css` para tematización
+
+**Para Páginas NUEVAS/Migradas (Sass + Fluent UI):**
+- Sass con `@use`/`@forward` moderno (no `@import`)
+- CSS Custom Properties para temas (`:root`)
+- Componentes Fluent UI React v9
+- Metodología BEM para clases
+- Solo estilos con scope específico (NO globales durante migración)
+
+#### Uso en Nuevas Páginas (Patrón Recomendado)
+
+**1. Estructura de Archivos:**
+
+```scss
+// src/styles/pages/_myfeature.scss
+@use '../utils/mixins' as *;
+@use '../themes/tokens' as *;
+
+.myfeature {
+  @include flex-column;
+  gap: $spacing-l;
+
+  &__card {
+    @include card;
+    padding: $spacing-xl;
+  }
+
+  &__button {
+    @include button-primary;
+  }
+}
+```
+
+**2. Componente React:**
+
+```jsx
+import { Button, Field, Input } from '@fluentui/react-components';
+import { Add24Regular } from '@fluentui/react-icons';
+
+const MyFeature = () => {
+  return (
+    <div className="myfeature">
+      <div className="myfeature__card">
+        <Field label="Nombre">
+          <Input appearance="outline" />
+        </Field>
+        <Button appearance="primary" icon={<Add24Regular />}>
+          Crear
+        </Button>
+      </div>
+    </div>
+  );
+};
+```
+
+**3. Importar Estilos en `main.scss`:**
+
+```scss
+// src/styles/main.scss
+@use './pages/myfeature';
+```
+
+#### Mixins Disponibles
+
+Ver `src/styles/utils/_mixins.scss` para lista completa:
+
+- **Tipografía**: `text-display`, `text-title-1/2/3`, `text-body-1/2`, `text-caption`
+- **Layout**: `flex-center`, `flex-column`, `flex-between`, `grid-auto-fill`
+- **Componentes**: `card`, `surface`, `input-base`, `button-primary/secondary/subtle`
+- **Estados**: `hover-lift`, `focus-visible`, `interactive-scale`
+- **Responsive**: `mobile`, `tablet`, `desktop`
+
+#### Variables CSS Disponibles
+
+Definidas en `src/styles/themes/_light.scss` y `_dark.scss`:
+
+```scss
+// Colores de fondo
+var(--color-bg-primary)
+var(--color-bg-secondary)
+var(--color-bg-brand)
+
+// Colores de texto
+var(--color-text-primary)
+var(--color-text-secondary)
+var(--color-text-brand)
+
+// Bordes
+var(--color-border-primary)
+var(--color-border-focus)
+
+// Sombras
+var(--shadow-card)
+var(--shadow-dialog)
+```
+
+#### Referencias
+
+- [Guía de Migración Completa](./SASS_THEME_MIGRATION_GUIDE.md)
+- [Progreso de Migración](./MIGRATION_PROGRESS.md)
+- [Fluent UI React v9](https://react.fluentui.dev/)
 
 **⚠️ IMPORTANTE: Products usa patrón HARDENED, NO es MVP**
 
@@ -807,15 +878,35 @@ describe('<Feature>Page', () => {
 
 ## 📚 Recursos Rápidos
 
-1. **Stores MVP Existentes**: `src/store/useClientStore.js`, `src/store/useSupplierStore.js`, `src/store/useDashboardStore.js`
-2. **API Client**: `src/services/api.js` (BusinessManagementAPI)
-3. **UI Components**: `src/components/ui/` (shadcn/ui + customs)
-4. **DataState**: `src/components/ui/DataState.jsx`
-5. **i18n System**: `src/lib/i18n.js`
-6. **Telemetría**: `src/utils/telemetry.js`
-7. **Theme System**: `src/contexts/ThemeContext.jsx` + `src/hooks/useThemeStyles.js`
-8. **Demo Data**: `src/config/demoData.js` (offline-first development)
-9. **Theme Config**: `src/config/themes.js` (centralized theme definitions)
+### Arquitectura Actual (Dual System)
+
+**Zustand Stores:**
+1. `src/store/useClientStore.js`, `src/store/useSupplierStore.js` - Ejemplos MVP
+
+**API & Services:**
+2. `src/services/api.js` - BusinessManagementAPI client
+3. `src/config/demoData.js` - Sistema offline-first
+
+**UI Components (Migrando):**
+4. **NUEVO**: `@fluentui/react-components` - Fluent UI v9 (para páginas nuevas)
+5. **LEGACY**: `src/components/ui/` - shadcn/ui + Tailwind (páginas existentes)
+6. `src/components/ui/DataState.jsx` - Estados loading/error/empty
+
+**Estilos (Dual):**
+7. **NUEVO**: `src/styles/` - Sistema Sass + BEM (páginas migradas)
+   - `src/styles/utils/_mixins.scss` - Mixins reutilizables
+   - `src/styles/themes/_tokens.scss` - Design tokens Fluent UI 2
+8. **LEGACY**: `src/contexts/ThemeContext.jsx` + `useThemeStyles.js` (Tailwind)
+
+**Otros:**
+9. `src/lib/i18n.js` - Sistema i18n
+10. `src/utils/telemetry.js` - Telemetría simple
+
+### Referencias de Migración
+
+- [MIGRATION_PROGRESS.md](./MIGRATION_PROGRESS.md) - Estado actual de migración
+- [SASS_THEME_MIGRATION_GUIDE.md](./SASS_THEME_MIGRATION_GUIDE.md) - Guía completa
+- [Fluent UI React v9 Docs](https://react.fluentui.dev/) - Documentación oficial
 
 ## 🎯 Criterios de Éxito MVP
 
