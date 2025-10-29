@@ -1,6 +1,6 @@
 # 🚀 Guía MVP - Desarrollo Rápido de Features
 
-Fecha: 2025-08-23
+Fecha: 2025-10-29 (Actualizado para Sass + Fluent UI 2)
 Responsable: Equipo Frontend
 **Objetivo**: Entregar funcionalidad navegable en **1-3 días** con ruta incremental clara
 
@@ -28,60 +28,86 @@ Responsable: Equipo Frontend
 **📋 Stack Tecnológico Definido:**
 - **Estado Global**: Zustand con devtools middleware
 - **API Client**: BusinessManagementAPI (instancia `apiClient`)
-- **UI Components**: Radix UI + Tailwind + shadcn/ui existentes
-- **Routing**: React Router DOM 
+- **Estilos**: Sass/SCSS + Fluent Design System 2 (BEM methodology)
+- **UI Components**: Radix UI + Custom Sass Components
+- **Routing**: React Router DOM
 - **Testing**: Vitest + Testing Library
 - **Telemetría**: `@/utils/telemetry` (sistema simple existente)
 - **i18n**: `@/lib/i18n` (sistema custom existente)
-- **Temas**: React Context enterprise-grade (`ThemeContext.jsx` + `useThemeStyles.js`)
+- **Temas**: React Context simplificado (Light/Dark únicamente)
 - **Demo Data**: Sistema offline-first para desarrollo (`/config/demoData.js`)
 
-### 🎨 Sistema de Temas (Patrón Oficial - Actualizado)
-El sistema de temas se maneja a través de React Context para simplicidad y compatibilidad con React 19.
+### 🎨 Sistema de Temas Fluent UI 2 (Patrón Oficial)
 
-**Componentes Clave:**
-- **`ThemeContext.jsx`**: Context de React que es la única fuente de verdad para el tema. Maneja el estado, la persistencia en `localStorage` y la aplicación automática de clases CSS al DOM.
-- **`/config/themes.js`**: Configuración centralizada de todos los temas disponibles con validación robusta.
-- **`useThemeStyles.js`**: Hook optimizado para acceder a estilos específicos del tema actual.
+**Sistema Simplificado: Light/Dark únicamente**
+
+El sistema usa **React Context + Sass** con **Microsoft Fluent Design System 2**. Solo soporta dos modos: **Light** y **Dark**.
+
+**Arquitectura:**
+- **Sass/SCSS**: Todos los estilos definidos en `src/styles/scss/`
+- **ThemeContext**: Maneja solo `mode: 'light' | 'dark'`
+- **BEM Methodology**: Nomenclatura `.block__element--modifier`
+- **Design Tokens**: Variables Sass basadas en Fluent UI 2
+- **CSS Classes**: `.theme--light` y `.theme--dark` en `<body>`
 
 **Uso en Componentes:**
-1.  **Para leer o cambiar el tema**: Importar y usar el hook `useTheme`.
-    ```jsx
-    import { useTheme } from '@/contexts/ThemeContext';
-    
-    const ThemeSwitcher = () => {
-      const { theme, setTheme, availableThemes } = useTheme();
 
-      return (
-        <select value={theme} onChange={(e) => setTheme(e.target.value)}>
-          {availableThemes.map(t => (
-            <option key={t.id} value={t.id}>{t.name}</option>
-          ))}
-        </select>
-      );
-    }
-    ```
-2.  **Para estilos específicos**: El hook `useThemeStyles` proporciona funciones optimizadas.
-    ```jsx
-    import { useThemeStyles } from '@/hooks/useThemeStyles';
-    
-    const MyComponent = () => {
-      const { styles, isNeoBrutalism, isDark } = useThemeStyles();
-      
-      return (
-        <div className={styles.card()}>
-          <h2 className={styles.header('h2')}>Título</h2>
-          <button className={styles.button('primary')}>Acción</button>
-        </div>
-      );
-    }
-    ```
+1. **Para cambiar el tema** (solo en Settings):
+   ```jsx
+   import { useTheme } from '@/contexts/ThemeContext';
 
-**Importante**: 
-- **Inicialización automática**: El tema se aplica automáticamente al cargar la aplicación
-- **Validación robusta**: Los temas inválidos se detectan y se aplica un fallback seguro  
-- **Performance optimizada**: Los estilos se memorizan para evitar recálculos innecesarios
-- **TypeScript ready**: Soporte completo de tipos para mejor DX
+   const ThemeSwitcher = () => {
+     const { mode, toggleTheme } = useTheme();
+
+     return (
+       <button onClick={toggleTheme}>
+         Modo: {mode === 'light' ? 'Claro' : 'Oscuro'}
+       </button>
+     );
+   }
+   ```
+
+2. **Para estilos en componentes** (usar BEM, NO lógica condicional):
+   ```jsx
+   const MyComponent = () => {
+     return (
+       <div className="card card--elevated">
+         <h2 className="card__header">Título</h2>
+         <button className="btn btn--primary">Acción</button>
+       </div>
+     );
+   }
+   ```
+
+3. **IMPORTANTE: NO usar lógica condicional de estilos**
+   ```jsx
+   // ❌ INCORRECTO - No hacer esto en nuevos componentes
+   const { theme } = useTheme();
+   const classes = theme === 'light' ? 'bg-white' : 'bg-black';
+
+   // ✅ CORRECTO - Usar clases BEM que se adaptan automáticamente
+   <div className="card">Contenido</div>
+   ```
+
+**Implementación Sass:**
+Los estilos se adaptan automáticamente según la clase en `<body>`:
+```scss
+// src/styles/scss/components/_card.scss
+.card {
+  padding: $spacing-l;
+  border-radius: $border-radius-card;
+
+  @include themify($themes) {
+    background-color: themed('bg-secondary');
+    color: themed('text-primary');
+    border: 1px solid themed('border-default');
+  }
+}
+```
+
+**Documentación Completa:**
+- Ver `docs/FLUENT_DESIGN_SYSTEM.md` para todos los tokens y componentes
+- Ver `docs/FLUENT_IMPLEMENTATION_PROGRESS.md` para guía de migración
 
 **⚠️ IMPORTANTE: Products usa patrón HARDENED, NO es MVP**
 
@@ -435,21 +461,19 @@ export const <feature>Service = {
 };
 ```
 
-### 📄 Componente de Página MVP (Patrón Oficial - Con Temas)
+### 📄 Componente de Página MVP (Patrón Oficial - Sass + BEM)
 ```jsx
 // src/pages/<Feature>.jsx
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import DataState from '@/components/ui/DataState';
 import { useI18n } from '@/lib/i18n';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
 import use<Feature>Store from '@/store/use<Feature>Store';
 
 const <Feature>Page = () => {
   const { t } = useI18n();
-  const { styles } = useThemeStyles();
   const {
     <feature>s,
     loading,
@@ -549,120 +573,120 @@ const <Feature>Page = () => {
   }
   
   return (
-    <div className="space-y-6">
+    <div className="page">
       {/* Header con acción primaria */}
-      <div className="flex justify-between items-center">
-        <h1 className={styles.header('h1')}>
+      <div className="page__header">
+        <h1 className="page__title">
           {t('<feature>.title', '<Feature>s')}
         </h1>
-        <Button onClick={handleCreate} className={styles.button('primary')}>
-          <Plus className="w-4 h-4 mr-2" />
+        <Button
+          onClick={handleCreate}
+          className="btn btn--primary"
+        >
+          <Plus className="btn__icon" />
           {t('<feature>.action.create', 'Nuevo')}
         </Button>
       </div>
-      
+
       {/* Búsqueda local */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <div className="search-box">
+        <Search className="search-box__icon" />
         <Input
           placeholder={t('<feature>.search.placeholder', 'Buscar...')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className={`pl-10 ${styles.input()}`}
+          className="search-box__input"
         />
       </div>
-      
+
       {/* Listado */}
-      <div className="grid gap-4">
+      <div className="feature-list">
         {filteredItems.map(item => (
-          <div 
-            key={item.id} 
-            className={styles.card('p-4')}
+          <div
+            key={item.id}
+            className="card"
           >
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <h3 className="font-black text-lg">{item.name}</h3>
+            <div className="card__content">
+              <div className="card__info">
+                <h3 className="card__title">{item.name}</h3>
                 {/* Mostrar otros campos según feature */}
-                <div className="space-y-1 text-sm">
+                <div className="card__details">
                   {/* Campos específicos del feature */}
                 </div>
               </div>
-              
-              <div className="flex gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon"
+
+              <div className="card__actions">
+                <button
+                  className="btn btn--icon btn--secondary"
                   onClick={() => handleEdit(item)}
-                  className="border-2 border-black"
                   title={t('action.edit', 'Editar')}
+                  aria-label={t('action.edit', 'Editar')}
                 >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
+                  <Edit className="btn__icon" />
+                </button>
+                <button
+                  className="btn btn--icon btn--danger"
                   onClick={() => handleDelete(item)}
-                  className="border-2 border-black hover:bg-red-100"
                   title={t('action.delete', 'Eliminar')}
+                  aria-label={t('action.delete', 'Eliminar')}
                 >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                  <Trash2 className="btn__icon" />
+                </button>
               </div>
             </div>
           </div>
         ))}
       </div>
-      
+
       {/* Modal Simple (inline para MVP) */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className={styles.container('max-w-md w-full mx-4')}>
-            <h2 className={styles.header('h2')}>
-              {editingItem ? 
-                t('<feature>.modal.edit', 'EDITAR') : 
+        <div className="dialog-overlay">
+          <div className="dialog">
+            <h2 className="dialog__header">
+              {editingItem ?
+                t('<feature>.modal.edit', 'EDITAR') :
                 t('<feature>.modal.create', 'CREAR')
               }
             </h2>
-            
-            <form onSubmit={handleSave} className="space-y-4">
-              <div>
-                <label className={styles.label()}>
+
+            <form onSubmit={handleSave} className="dialog__form">
+              <div className="form-field">
+                <label className="form-field__label">
                   {t('field.name', 'NOMBRE')}
                 </label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className={styles.input()}
+                  className="form-field__input"
                   required
                 />
               </div>
-              
+
               {/* Otros campos según feature */}
-              
-              <div className="flex gap-4 pt-4">
-                <Button 
-                  type="submit" 
+
+              <div className="dialog__footer">
+                <Button
+                  type="submit"
                   disabled={loading}
-                  className={`flex-1 ${styles.button('primary')}`}
+                  className="btn btn--primary"
                 >
-                  {loading ? 
-                    t('action.saving', 'Guardando...') : 
+                  {loading ?
+                    t('action.saving', 'Guardando...') :
                     (editingItem ? t('action.update', 'Actualizar') : t('action.create', 'Crear'))
                   }
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
                   onClick={() => setShowModal(false)}
-                  className={`flex-1 ${styles.button('secondary')}`}
+                  className="btn btn--secondary"
                 >
                   {t('action.cancel', 'Cancelar')}
                 </Button>
               </div>
             </form>
-            
+
             {error && (
-              <p className="text-red-600 text-sm mt-2 font-bold">
+              <p className="dialog__error">
                 {error}
               </p>
             )}
@@ -790,32 +814,44 @@ describe('<Feature>Page', () => {
 - ✅ Zustand stores directos en `/src/store/`
 - ✅ Arrays simples para datos
 - ✅ BusinessManagementAPI client
-- ✅ Componentes UI existentes (shadcn/ui)
+- ✅ Componentes con clases BEM simples
+- ✅ Estilos en Sass (NO Tailwind en nuevos componentes)
 - ✅ Estados básicos: loading, error, empty
 - ✅ Telemetría simple
 - ✅ i18n básico
 
 ### 📋 Checklist Final Antes de PR
-- [ ] Build pasa (`npm run build`)
-- [ ] Tests pasan (`npm test`)
-- [ ] Linter pasa (`npm run lint`)
+- [ ] Build pasa (`pnpm build`)
+- [ ] Tests pasan (`pnpm test`)
+- [ ] Linter pasa (`pnpm lint`)
 - [ ] Store sigue patrón MVP (NO hardened)
-- [ ] Servicios usan `apiClient` correctamente  
+- [ ] Servicios usan `apiClient` correctamente
+- [ ] Clases BEM usadas (NO lógica condicional de estilos)
 - [ ] i18n strings agregadas a `src/lib/i18n.js`
 - [ ] Telemetría básica implementada
 - [ ] DataState usado para loading/error/empty
+- [ ] Componente funciona en light y dark mode
 
 ## 📚 Recursos Rápidos
 
+### Código y Patrones
 1. **Stores MVP Existentes**: `src/store/useClientStore.js`, `src/store/useSupplierStore.js`, `src/store/useDashboardStore.js`
 2. **API Client**: `src/services/api.js` (BusinessManagementAPI)
-3. **UI Components**: `src/components/ui/` (shadcn/ui + customs)
+3. **UI Components**: `src/components/ui/` (Radix UI + Sass components)
 4. **DataState**: `src/components/ui/DataState.jsx`
 5. **i18n System**: `src/lib/i18n.js`
 6. **Telemetría**: `src/utils/telemetry.js`
-7. **Theme System**: `src/contexts/ThemeContext.jsx` + `src/hooks/useThemeStyles.js`
-8. **Demo Data**: `src/config/demoData.js` (offline-first development)
-9. **Theme Config**: `src/config/themes.js` (centralized theme definitions)
+7. **Demo Data**: `src/config/demoData.js` (offline-first development)
+
+### Sistema de Diseño
+8. **Sass Styles**: `src/styles/scss/` (estructura de carpetas)
+9. **Design Tokens**: `src/styles/scss/abstracts/_variables.scss`
+10. **Theme Context**: `src/contexts/ThemeContext.jsx` (light/dark simple)
+
+### Documentación
+11. **Fluent Design System**: `docs/FLUENT_DESIGN_SYSTEM.md` (referencia completa)
+12. **Plan de Migración**: `docs/FLUENT_IMPLEMENTATION_PROGRESS.md` (roadmap Sass)
+13. **Guía MVP**: `docs/GUIA_MVP_DESARROLLO.md` (este documento)
 
 ## 🎯 Criterios de Éxito MVP
 
