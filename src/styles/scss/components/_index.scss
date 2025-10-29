@@ -2,10 +2,17 @@
 // COMPONENTS - INDEX
 // =============================================================================
 // This file imports all component-specific styles
-// Components are reusable UI elements (buttons, cards, inputs, etc.)
+// Components are reusable UI elements
 // =============================================================================
 
-// @use 'button';
-// @use 'card';
-// @use 'input';
-// ... (will be added in Phase 3)
+@use 'button';
+@use 'card';
+@use 'input';
+@use 'badge';
+@use 'modal';
+@use 'select';
+@use 'checkbox';
+@use 'tooltip';
+@use 'alert';
+@use 'spinner';
+@use 'divider';

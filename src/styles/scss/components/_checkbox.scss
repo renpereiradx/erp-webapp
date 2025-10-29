@@ -1,0 +1,311 @@
+// =============================================================================
+// CHECKBOX & RADIO COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// CHECKBOX
+// -----------------------------------------------------------------------------
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-8;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+
+  input[type='checkbox'] {
+    @include visually-hidden;
+  }
+}
+
+.checkbox__box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: $border-radius-small;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    border: 1px solid themed('border-default');
+    background-color: themed('surface-input');
+  }
+
+  // Checkmark icon (hidden by default)
+  &::after {
+    content: '';
+    display: none;
+    width: 12px;
+    height: 12px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M10.3 2.3a1 1 0 010 1.4l-5 5a1 1 0 01-1.4 0l-2-2a1 1 0 111.4-1.4L4.6 6.6l4.3-4.3a1 1 0 011.4 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  // Hover state
+  .checkbox:hover &:not(.checkbox__box--disabled) {
+    @include themify {
+      border-color: themed('border-strong');
+    }
+  }
+
+  // Checked state
+  input:checked ~ & {
+    @include themify {
+      background-color: themed('action-primary');
+      border-color: themed('action-primary');
+    }
+
+    &::after {
+      display: block;
+    }
+  }
+
+  // Indeterminate state
+  input:indeterminate ~ & {
+    @include themify {
+      background-color: themed('action-primary');
+      border-color: themed('action-primary');
+    }
+
+    &::after {
+      display: block;
+      width: 8px;
+      height: 2px;
+      background-color: white;
+      background-image: none;
+    }
+  }
+
+  // Disabled state
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  // Focus state
+  input:focus-visible ~ & {
+    @include themify {
+      outline: 2px solid themed('action-primary');
+      outline-offset: 2px;
+    }
+  }
+}
+
+.checkbox__label {
+  @include body-small;
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  .checkbox--disabled & {
+    opacity: 0.5;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// RADIO
+// -----------------------------------------------------------------------------
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-8;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+
+  input[type='radio'] {
+    @include visually-hidden;
+  }
+}
+
+.radio__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: $border-radius-circular;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    border: 1px solid themed('border-default');
+    background-color: themed('surface-input');
+  }
+
+  // Inner circle (hidden by default)
+  &::after {
+    content: '';
+    display: none;
+    width: 10px;
+    height: 10px;
+    border-radius: $border-radius-circular;
+    @include themify {
+      background-color: themed('text-inverted');
+    }
+  }
+
+  // Hover state
+  .radio:hover &:not(.radio__button--disabled) {
+    @include themify {
+      border-color: themed('border-strong');
+    }
+  }
+
+  // Checked state
+  input:checked ~ & {
+    @include themify {
+      background-color: themed('action-primary');
+      border-color: themed('action-primary');
+    }
+
+    &::after {
+      display: block;
+    }
+  }
+
+  // Disabled state
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  // Focus state
+  input:focus-visible ~ & {
+    @include themify {
+      outline: 2px solid themed('action-primary');
+      outline-offset: 2px;
+    }
+  }
+}
+
+.radio__label {
+  @include body-small;
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  .radio--disabled & {
+    opacity: 0.5;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SWITCH (Toggle)
+// -----------------------------------------------------------------------------
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-8;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+
+  input[type='checkbox'] {
+    @include visually-hidden;
+  }
+}
+
+.switch__track {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  border-radius: 100px;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    background-color: themed('bg-tertiary');
+    border: 1px solid themed('border-default');
+  }
+
+  // Hover state
+  .switch:hover &:not(.switch__track--disabled) {
+    @include themify {
+      border-color: themed('border-strong');
+    }
+  }
+
+  // Checked state
+  input:checked ~ & {
+    @include themify {
+      background-color: themed('action-primary');
+      border-color: themed('action-primary');
+    }
+  }
+
+  // Disabled state
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: $border-radius-circular;
+  @include transition(transform, $duration-fast);
+
+  @include themify {
+    background-color: themed('text-inverted');
+  }
+
+  // Checked state
+  input:checked ~ .switch__track & {
+    transform: translateX(20px);
+  }
+}
+
+.switch__label {
+  @include body-small;
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  .switch--disabled & {
+    opacity: 0.5;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FIELD GROUP (Checkbox/Radio groups)
+// -----------------------------------------------------------------------------
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+
+  &--horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: $spacing-16;
+  }
+}
+
+.field-group__label {
+  @include body-small;
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-4;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+

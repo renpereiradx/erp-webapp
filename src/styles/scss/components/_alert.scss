@@ -1,0 +1,343 @@
+// =============================================================================
+// ALERT COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE ALERT
+// -----------------------------------------------------------------------------
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-12;
+  padding: $spacing-16;
+  border-radius: $border-radius-medium;
+  border: 1px solid;
+  @include elevation(2);
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    border-color: themed('border-default');
+    color: themed('text-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ALERT VARIANTS
+// -----------------------------------------------------------------------------
+
+.alert--info {
+  @include themify {
+    background-color: alpha-color(themed('state-info'), 0.1);
+    border-color: themed('state-info');
+    color: themed('text-primary');
+  }
+
+  .alert__icon {
+    @include themify {
+      color: themed('state-info');
+    }
+  }
+}
+
+.alert--success {
+  @include themify {
+    background-color: alpha-color(themed('state-success'), 0.1);
+    border-color: themed('state-success');
+    color: themed('text-primary');
+  }
+
+  .alert__icon {
+    @include themify {
+      color: themed('state-success');
+    }
+  }
+}
+
+.alert--warning {
+  @include themify {
+    background-color: alpha-color(themed('state-warning'), 0.1);
+    border-color: themed('state-warning');
+    color: themed('text-primary');
+  }
+
+  .alert__icon {
+    @include themify {
+      color: themed('state-warning');
+    }
+  }
+}
+
+.alert--error {
+  @include themify {
+    background-color: alpha-color(themed('state-error'), 0.1);
+    border-color: themed('state-error');
+    color: themed('text-primary');
+  }
+
+  .alert__icon {
+    @include themify {
+      color: themed('state-error');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ALERT SECTIONS
+// -----------------------------------------------------------------------------
+
+.alert__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.alert__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.alert__title {
+  @include body;
+  font-weight: $font-weight-semibold;
+  margin: 0 0 $spacing-4 0;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.alert__message {
+  @include body-small;
+  margin: 0;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.alert__actions {
+  display: flex;
+  gap: $spacing-8;
+  margin-top: $spacing-12;
+}
+
+.alert__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: $border-radius-small;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+  }
+
+  &:active {
+    @include themify {
+      background-color: themed('surface-pressed');
+    }
+  }
+
+  @include focus-visible;
+}
+
+// -----------------------------------------------------------------------------
+// ALERT SIZES
+// -----------------------------------------------------------------------------
+
+.alert--compact {
+  padding: $spacing-12;
+  gap: $spacing-8;
+
+  .alert__icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .alert__close {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.alert--comfortable {
+  padding: $spacing-20;
+  gap: $spacing-16;
+
+  .alert__icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .alert__close {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TOAST NOTIFICATION (floating alert)
+// -----------------------------------------------------------------------------
+
+.toast {
+  // Base alert styles
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-12;
+  padding: $spacing-16;
+  border-radius: $border-radius-medium;
+  border: 1px solid;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    border-color: themed('border-default');
+    color: themed('text-primary');
+  }
+
+  // Toast-specific styles
+  position: fixed;
+  z-index: z-index(tooltip);
+  min-width: 320px;
+  max-width: 480px;
+  @include elevation(16);
+
+  // Animation
+  animation: toast-in $duration-normal $ease-decelerate;
+
+  &--closing {
+    animation: toast-out $duration-fast $ease-accelerate;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+
+// Toast positions
+.toast--top-right {
+  top: $spacing-16;
+  right: $spacing-16;
+}
+
+.toast--top-center {
+  top: $spacing-16;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.toast--top-left {
+  top: $spacing-16;
+  left: $spacing-16;
+}
+
+.toast--bottom-right {
+  bottom: $spacing-16;
+  right: $spacing-16;
+}
+
+.toast--bottom-center {
+  bottom: $spacing-16;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.toast--bottom-left {
+  bottom: $spacing-16;
+  left: $spacing-16;
+}
+
+// Toast container (for stacking)
+.toast-container {
+  position: fixed;
+  z-index: z-index(tooltip);
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+  pointer-events: none;
+
+  &--top-right {
+    top: $spacing-16;
+    right: $spacing-16;
+  }
+
+  &--top-center {
+    top: $spacing-16;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  &--top-left {
+    top: $spacing-16;
+    left: $spacing-16;
+  }
+
+  &--bottom-right {
+    bottom: $spacing-16;
+    right: $spacing-16;
+  }
+
+  &--bottom-center {
+    bottom: $spacing-16;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  &--bottom-left {
+    bottom: $spacing-16;
+    left: $spacing-16;
+  }
+
+  .toast {
+    pointer-events: auto;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+

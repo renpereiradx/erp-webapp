@@ -1,0 +1,369 @@
+// =============================================================================
+// BUTTON COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE BUTTON
+// -----------------------------------------------------------------------------
+
+.btn {
+  // Base structure
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-8;
+
+  // Typography
+  font-family: $font-family-base;
+  font-size: $font-size-300;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-300;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+
+  // Sizing
+  min-height: 32px;
+  padding: $spacing-8 $spacing-16;
+
+  // Visual
+  border: 1px solid transparent;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  user-select: none;
+
+  // Transitions
+  @include transition(all, $duration-fast);
+
+  // Focus states
+  @include focus-visible;
+
+  // Disabled state
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  // Loading state
+  &--loading {
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 50%;
+      left: 50%;
+      margin-left: -8px;
+      margin-top: -8px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: btn-spin $duration-slow linear infinite;
+    }
+  }
+}
+
+// Loading animation
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BUTTON VARIANTS
+// -----------------------------------------------------------------------------
+
+// Primary Button (Filled)
+.btn--primary {
+  @include themify {
+    background-color: themed('action-primary');
+    color: themed('text-inverted');
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      background-color: themed('action-primary-hover');
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: themed('action-primary-pressed');
+    }
+  }
+}
+
+// Secondary Button (Outlined)
+.btn--secondary {
+  @include themify {
+    background-color: transparent;
+    border-color: themed('border-default');
+    color: themed('text-primary');
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      background-color: themed('surface-hover');
+      border-color: themed('border-strong');
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: themed('surface-pressed');
+    }
+  }
+}
+
+// Ghost Button (Transparent)
+.btn--ghost {
+  @include themify {
+    background-color: transparent;
+    color: themed('text-primary');
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: themed('surface-pressed');
+    }
+  }
+}
+
+// Subtle Button (Soft background)
+.btn--subtle {
+  @include themify {
+    background-color: themed('bg-secondary');
+    color: themed('text-primary');
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: themed('surface-pressed');
+    }
+  }
+}
+
+// Destructive Button (Error/Delete actions)
+.btn--destructive {
+  @include themify {
+    background-color: themed('state-error');
+    color: themed('text-inverted');
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      background-color: darken-color(themed('state-error'), 10%);
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: darken-color(themed('state-error'), 20%);
+    }
+  }
+}
+
+// Success Button
+.btn--success {
+  @include themify {
+    background-color: themed('state-success');
+    color: themed('text-inverted');
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      background-color: darken-color(themed('state-success'), 10%);
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: darken-color(themed('state-success'), 20%);
+    }
+  }
+}
+
+// Warning Button
+.btn--warning {
+  @include themify {
+    background-color: themed('state-warning');
+    color: themed('text-inverted');
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      background-color: darken-color(themed('state-warning'), 10%);
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: darken-color(themed('state-warning'), 20%);
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BUTTON SIZES
+// -----------------------------------------------------------------------------
+
+.btn--small {
+  min-height: 24px;
+  padding: $spacing-4 $spacing-12;
+  font-size: $font-size-200;
+  gap: $spacing-4;
+}
+
+.btn--medium {
+  // Default size (already defined in base)
+}
+
+.btn--large {
+  min-height: 40px;
+  padding: $spacing-12 $spacing-20;
+  font-size: $font-size-400;
+  gap: $spacing-12;
+}
+
+// -----------------------------------------------------------------------------
+// BUTTON SHAPES
+// -----------------------------------------------------------------------------
+
+.btn--square {
+  padding: $spacing-8;
+  aspect-ratio: 1;
+
+  &.btn--small {
+    padding: $spacing-4;
+  }
+
+  &.btn--large {
+    padding: $spacing-12;
+  }
+}
+
+.btn--circular {
+  border-radius: $border-radius-circular;
+}
+
+.btn--pill {
+  border-radius: 100px;
+}
+
+// -----------------------------------------------------------------------------
+// BUTTON STATES
+// -----------------------------------------------------------------------------
+
+.btn--block {
+  display: flex;
+  width: 100%;
+}
+
+.btn--icon-only {
+  padding: $spacing-8;
+  min-width: 32px;
+
+  &.btn--small {
+    padding: $spacing-4;
+    min-width: 24px;
+  }
+
+  &.btn--large {
+    padding: $spacing-12;
+    min-width: 40px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BUTTON GROUP
+// -----------------------------------------------------------------------------
+
+.btn-group {
+  display: inline-flex;
+  gap: $spacing-8;
+
+  // Connected buttons (no gap)
+  &--connected {
+    gap: 0;
+
+    .btn {
+      border-radius: 0;
+
+      &:first-child {
+        border-top-left-radius: $border-radius-medium;
+        border-bottom-left-radius: $border-radius-medium;
+      }
+
+      &:last-child {
+        border-top-right-radius: $border-radius-medium;
+        border-bottom-right-radius: $border-radius-medium;
+      }
+
+      &:not(:last-child) {
+        border-right: none;
+      }
+    }
+  }
+
+  // Vertical layout
+  &--vertical {
+    flex-direction: column;
+
+    &.btn-group--connected {
+      .btn {
+        border-radius: 0;
+
+        &:first-child {
+          border-top-left-radius: $border-radius-medium;
+          border-top-right-radius: $border-radius-medium;
+        }
+
+        &:last-child {
+          border-bottom-left-radius: $border-radius-medium;
+          border-bottom-right-radius: $border-radius-medium;
+        }
+
+        &:not(:last-child) {
+          border-right: 1px solid;
+          border-bottom: none;
+        }
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .btn {
+    border-width: 2px;
+  }
+}

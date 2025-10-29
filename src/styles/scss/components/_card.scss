@@ -1,0 +1,366 @@
+// =============================================================================
+// CARD COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE CARD
+// -----------------------------------------------------------------------------
+
+.card {
+  // Structure
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  // Sizing
+  width: 100%;
+  padding: $spacing-16;
+
+  // Visual
+  border-radius: $border-radius-large;
+  @include elevation(2);
+  @include transition(box-shadow, $duration-normal);
+
+  // Theme colors
+  @include themify {
+    background-color: themed('surface-card');
+    color: themed('text-primary');
+    border: 1px solid themed('border-subtle');
+  }
+
+  // Interactive hover effect
+  &--interactive {
+    cursor: pointer;
+
+    &:hover {
+      @include elevation(8);
+    }
+
+    &:active {
+      @include elevation(4);
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CARD VARIANTS
+// -----------------------------------------------------------------------------
+
+// Elevated card (higher shadow, no border)
+.card--elevated {
+  border: none;
+  @include elevation(8);
+
+  &.card--interactive:hover {
+    @include elevation(16);
+  }
+}
+
+// Filled card (secondary background)
+.card--filled {
+  @include themify {
+    background-color: themed('bg-secondary');
+    border: none;
+  }
+}
+
+// Outlined card (stronger border)
+.card--outlined {
+  @include elevation(0);
+  @include themify {
+    border: 1px solid themed('border-default');
+  }
+}
+
+// Ghost card (transparent, minimal)
+.card--ghost {
+  @include elevation(0);
+  border: none;
+  @include themify {
+    background-color: transparent;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SEMANTIC VARIANTS
+// -----------------------------------------------------------------------------
+
+.card--success {
+  @include themify {
+    border-left: 4px solid themed('state-success');
+  }
+}
+
+.card--warning {
+  @include themify {
+    border-left: 4px solid themed('state-warning');
+  }
+}
+
+.card--error {
+  @include themify {
+    border-left: 4px solid themed('state-error');
+  }
+}
+
+.card--info {
+  @include themify {
+    border-left: 4px solid themed('state-info');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CARD SECTIONS
+// -----------------------------------------------------------------------------
+
+.card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-12;
+  margin-bottom: $spacing-16;
+  padding-bottom: $spacing-12;
+
+  @include themify {
+    border-bottom: 1px solid themed('border-subtle');
+  }
+
+  // Headerless variant (no border)
+  .card--headerless & {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.card__title {
+  @include heading-5;
+  margin: 0;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.card__subtitle {
+  @include body-small;
+  margin: $spacing-4 0 0;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.card__body {
+  flex: 1;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-12;
+  margin-top: $spacing-16;
+  padding-top: $spacing-12;
+
+  @include themify {
+    border-top: 1px solid themed('border-subtle');
+  }
+
+  // Footerless variant (no border)
+  .card--footerless & {
+    border-top: none;
+    padding-top: 0;
+  }
+}
+
+.card__actions {
+  display: flex;
+  gap: $spacing-8;
+  align-items: center;
+}
+
+// -----------------------------------------------------------------------------
+// CARD SIZES
+// -----------------------------------------------------------------------------
+
+.card--compact {
+  padding: $spacing-12;
+
+  .card__header {
+    margin-bottom: $spacing-12;
+    padding-bottom: $spacing-8;
+  }
+
+  .card__footer {
+    margin-top: $spacing-12;
+    padding-top: $spacing-8;
+  }
+}
+
+.card--comfortable {
+  padding: $spacing-20;
+
+  .card__header {
+    margin-bottom: $spacing-20;
+    padding-bottom: $spacing-16;
+  }
+
+  .card__footer {
+    margin-top: $spacing-20;
+    padding-top: $spacing-16;
+  }
+}
+
+.card--spacious {
+  padding: $spacing-24;
+
+  .card__header {
+    margin-bottom: $spacing-24;
+    padding-bottom: $spacing-20;
+  }
+
+  .card__footer {
+    margin-top: $spacing-24;
+    padding-top: $spacing-20;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CARD MEDIA
+// -----------------------------------------------------------------------------
+
+.card__media {
+  width: calc(100% + #{$spacing-16 * 2});
+  margin: (-$spacing-16) (-$spacing-16) $spacing-16;
+  border-top-left-radius: $border-radius-large;
+  border-top-right-radius: $border-radius-large;
+  overflow: hidden;
+
+  img,
+  video {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  // Adjust for different padding sizes
+  .card--compact & {
+    width: calc(100% + #{$spacing-12 * 2});
+    margin: (-$spacing-12) (-$spacing-12) $spacing-12;
+  }
+
+  .card--comfortable & {
+    width: calc(100% + #{$spacing-20 * 2});
+    margin: (-$spacing-20) (-$spacing-20) $spacing-20;
+  }
+
+  .card--spacious & {
+    width: calc(100% + #{$spacing-24 * 2});
+    margin: (-$spacing-24) (-$spacing-24) $spacing-24;
+  }
+}
+
+// Media on bottom
+.card__media--bottom {
+  margin: $spacing-16 (-$spacing-16) (-$spacing-16);
+  border-radius: 0;
+  border-bottom-left-radius: $border-radius-large;
+  border-bottom-right-radius: $border-radius-large;
+
+  .card--compact & {
+    margin: $spacing-12 (-$spacing-12) (-$spacing-12);
+  }
+
+  .card--comfortable & {
+    margin: $spacing-20 (-$spacing-20) (-$spacing-20);
+  }
+
+  .card--spacious & {
+    margin: $spacing-24 (-$spacing-24) (-$spacing-24);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CARD DIVIDER
+// -----------------------------------------------------------------------------
+
+.card__divider {
+  margin: $spacing-16 0;
+  border: 0;
+  @include themify {
+    border-top: 1px solid themed('border-subtle');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CARD GRID
+// -----------------------------------------------------------------------------
+
+.card-grid {
+  display: grid;
+  gap: $spacing-16;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+
+  &--2-col {
+    grid-template-columns: repeat(2, 1fr);
+
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &--3-col {
+    grid-template-columns: repeat(3, 1fr);
+
+    @include tablet {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &--4-col {
+    grid-template-columns: repeat(4, 1fr);
+
+    @include desktop {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @include tablet {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+
+
+// Focus state for interactive cards
+.card--interactive {
+  @include focus-visible;
+
+  &:focus-visible {
+    @include elevation(8);
+  }
+}
