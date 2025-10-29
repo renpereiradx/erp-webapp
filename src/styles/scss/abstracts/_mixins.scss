@@ -1,0 +1,338 @@
+// =============================================================================
+// FLUENT DESIGN SYSTEM - MIXINS
+// =============================================================================
+// Based on Microsoft Fluent UI 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use 'sass:map';
+@use 'variables' as *;
+
+// -----------------------------------------------------------------------------
+// 1. THEMIFY MIXIN
+// -----------------------------------------------------------------------------
+// Automatically applies theme-specific styles based on the parent .theme--{name} class
+// Usage:
+//   .button {
+//     @include themify {
+//       background-color: themed('action-primary');
+//       color: themed('text-inverted');
+//     }
+//   }
+
+$theme-map: null !default;
+
+@mixin themify($themes: $themes) {
+  @each $theme, $map in $themes {
+    .theme--#{$theme} & {
+      $theme-map: () !global;
+      @each $key, $submap in $map {
+        $value: map.get(map.get($themes, $theme), '#{$key}');
+        $theme-map: map.merge($theme-map, ($key: $value)) !global;
+      }
+      @content;
+      $theme-map: null !global;
+    }
+  }
+}
+
+@function themed($key) {
+  @return map.get($theme-map, $key);
+}
+
+// -----------------------------------------------------------------------------
+// 2. RESPONSIVE MIXINS
+// -----------------------------------------------------------------------------
+
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == xs {
+    @media (min-width: $breakpoint-xs) {
+      @content;
+    }
+  } @else if $breakpoint == sm {
+    @media (min-width: $breakpoint-sm) {
+      @content;
+    }
+  } @else if $breakpoint == md {
+    @media (min-width: $breakpoint-md) {
+      @content;
+    }
+  } @else if $breakpoint == lg {
+    @media (min-width: $breakpoint-lg) {
+      @content;
+    }
+  } @else if $breakpoint == xl {
+    @media (min-width: $breakpoint-xl) {
+      @content;
+    }
+  } @else if $breakpoint == xxl {
+    @media (min-width: $breakpoint-xxl) {
+      @content;
+    }
+  }
+}
+
+// Mobile-first approach
+@mixin mobile {
+  @media (max-width: ($breakpoint-md - 1px)) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: $breakpoint-md) and (max-width: ($breakpoint-lg - 1px)) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 3. FOCUS STATES
+// -----------------------------------------------------------------------------
+
+@mixin focus-visible {
+  &:focus-visible {
+    outline: 2px solid;
+    @include themify {
+      outline-color: themed('action-primary');
+    }
+    outline-offset: 2px;
+  }
+}
+
+@mixin focus-ring {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid;
+    @include themify {
+      border-color: themed('action-primary');
+    }
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity $duration-fast $ease-ease-in-out;
+  }
+
+  &:focus-visible::after {
+    opacity: 1;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 4. ELEVATION (SHADOWS)
+// -----------------------------------------------------------------------------
+
+@mixin elevation($level: 2) {
+  @if $level == 2 {
+    box-shadow: $shadow-2;
+  } @else if $level == 4 {
+    box-shadow: $shadow-4;
+  } @else if $level == 8 {
+    box-shadow: $shadow-8;
+  } @else if $level == 16 {
+    box-shadow: $shadow-16;
+  } @else if $level == 28 {
+    box-shadow: $shadow-28;
+  } @else if $level == 64 {
+    box-shadow: $shadow-64;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 5. TYPOGRAPHY MIXINS
+// -----------------------------------------------------------------------------
+
+@mixin text-style($size, $weight: $font-weight-regular, $line-height: $line-height-400) {
+  font-size: $size;
+  font-weight: $weight;
+  line-height: $line-height;
+}
+
+@mixin heading-1 {
+  @include text-style($font-size-1100, $font-weight-semibold, $line-height-200);
+}
+
+@mixin heading-2 {
+  @include text-style($font-size-1000, $font-weight-semibold, $line-height-200);
+}
+
+@mixin heading-3 {
+  @include text-style($font-size-900, $font-weight-semibold, $line-height-200);
+}
+
+@mixin heading-4 {
+  @include text-style($font-size-800, $font-weight-semibold, $line-height-300);
+}
+
+@mixin heading-5 {
+  @include text-style($font-size-700, $font-weight-semibold, $line-height-300);
+}
+
+@mixin heading-6 {
+  @include text-style($font-size-600, $font-weight-semibold, $line-height-300);
+}
+
+@mixin body-large {
+  @include text-style($font-size-500, $font-weight-regular, $line-height-400);
+}
+
+@mixin body {
+  @include text-style($font-size-400, $font-weight-regular, $line-height-400);
+}
+
+@mixin body-small {
+  @include text-style($font-size-300, $font-weight-regular, $line-height-300);
+}
+
+@mixin caption {
+  @include text-style($font-size-200, $font-weight-regular, $line-height-300);
+}
+
+// -----------------------------------------------------------------------------
+// 6. TRUNCATION
+// -----------------------------------------------------------------------------
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// -----------------------------------------------------------------------------
+// 7. FLEXBOX UTILITIES
+// -----------------------------------------------------------------------------
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// -----------------------------------------------------------------------------
+// 8. TRANSITIONS
+// -----------------------------------------------------------------------------
+
+@mixin transition($property: all, $duration: $duration-normal, $easing: $ease-ease-in-out) {
+  transition: $property $duration $easing;
+}
+
+@mixin hover-lift {
+  @include transition(transform, $duration-fast);
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 9. BUTTON STATES
+// -----------------------------------------------------------------------------
+
+@mixin button-states {
+  @include transition(background-color, $duration-fast);
+
+  &:hover:not(:disabled) {
+    cursor: pointer;
+    @include themify {
+      background-color: themed('action-primary-hover');
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: themed('action-primary-pressed');
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 10. ACCESSIBILITY
+// -----------------------------------------------------------------------------
+
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 11. SCROLLBAR STYLING
+// -----------------------------------------------------------------------------
+
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    @include themify {
+      background-color: themed('bg-secondary');
+    }
+  }
+
+  &::-webkit-scrollbar-thumb {
+    @include themify {
+      background-color: themed('border-default');
+    }
+    border-radius: $border-radius-medium;
+
+    &:hover {
+      @include themify {
+        background-color: themed('border-strong');
+      }
+    }
+  }
+}

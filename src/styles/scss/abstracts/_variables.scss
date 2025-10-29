@@ -1,0 +1,339 @@
+// =============================================================================
+// FLUENT DESIGN SYSTEM - DESIGN TOKENS
+// =============================================================================
+// Based on Microsoft Fluent UI 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// 1. COLOR TOKENS
+// -----------------------------------------------------------------------------
+
+// Neutral Colors - Light Theme
+$neutral-white: #ffffff;
+$neutral-gray-4: #faf9f8;
+$neutral-gray-8: #f3f2f1;
+$neutral-gray-12: #edebe9;
+$neutral-gray-14: #e1dfdd;
+$neutral-gray-16: #d2d0ce;
+$neutral-gray-20: #c8c6c4;
+$neutral-gray-24: #a19f9d;
+$neutral-gray-38: #605e5c;
+$neutral-gray-46: #484644;
+$neutral-gray-54: #323130;
+$neutral-gray-62: #201f1e;
+$neutral-black: #000000;
+
+// Neutral Colors - Dark Theme
+$neutral-gray-2: #0f0f0f;
+$neutral-gray-6: #1a1a1a;
+$neutral-gray-10: #242424;
+$neutral-gray-18: #2e2e2e;
+$neutral-gray-22: #383838;
+$neutral-gray-26: #424242;
+$neutral-gray-34: #5c5c5c;
+$neutral-gray-42: #757575;
+$neutral-gray-50: #8f8f8f;
+$neutral-gray-60: #d6d6d6;
+$neutral-gray-68: #e0e0e0;
+
+// Brand Colors (Primary) - 16-value ramp
+$brand-10: #061724;
+$brand-20: #082338;
+$brand-30: #0a2e4a;
+$brand-40: #0c3b5e;
+$brand-50: #0e4775;
+$brand-60: #0078d4; // Primary Light
+$brand-70: #1890f1;
+$brand-80: #3aa0f3;
+$brand-90: #5caef5;
+$brand-100: #7dbef7;
+$brand-110: #9dcef9;
+$brand-120: #bdddfb;
+$brand-130: #dceefb;
+$brand-140: #ecf6fd;
+$brand-150: #f6fbfe;
+$brand-160: #fafcfe;
+
+// Semantic Colors - Success
+$success-10: #0c3b2e;
+$success-20: #0f4c3a;
+$success-30: #115d44;
+$success-40: #13714f;
+$success-50: #16845a;
+$success-60: #107c10; // Success Light
+$success-70: #13a10e;
+$success-80: #15b310;
+$success-90: #18c513;
+$success-100: #1ad615;
+$success-110: #1de717;
+$success-120: #1ff81a;
+$success-130: #8afa8a;
+$success-140: #b4fcb4;
+$success-150: #d9fdd9;
+$success-160: #f0fef0;
+
+// Semantic Colors - Warning
+$warning-10: #4a2a0f;
+$warning-20: #5e3713;
+$warning-30: #724416;
+$warning-40: #86521a;
+$warning-50: #9a5f1d;
+$warning-60: #ff8c00; // Warning Light
+$warning-70: #ffa010;
+$warning-80: #ffb020;
+$warning-90: #ffc030;
+$warning-100: #ffd040;
+$warning-110: #ffe050;
+$warning-120: #fff060;
+$warning-130: #fff5a0;
+$warning-140: #fff9c0;
+$warning-150: #fffce0;
+$warning-160: #fffef0;
+
+// Semantic Colors - Error
+$error-10: #3b0b0b;
+$error-20: #4c0e0e;
+$error-30: #5d1010;
+$error-40: #711313;
+$error-50: #841616;
+$error-60: #d13438; // Error Light
+$error-70: #e64346;
+$error-80: #f05254;
+$error-90: #fa6162;
+$error-100: #fb7071;
+$error-110: #fc7f7f;
+$error-120: #fd8e8e;
+$error-130: #fdb8b8;
+$error-140: #fed1d1;
+$error-150: #feebeb;
+$error-160: #fff5f5;
+
+// Semantic Colors - Info
+$info-10: #0d1b2a;
+$info-20: #102636;
+$info-30: #133142;
+$info-40: #173c4f;
+$info-50: #1a475b;
+$info-60: #0078d4; // Info Light (same as brand)
+$info-70: #1890f1;
+$info-80: #3aa0f3;
+$info-90: #5caef5;
+$info-100: #7dbef7;
+$info-110: #9dcef9;
+$info-120: #bdddfb;
+$info-130: #dceefb;
+$info-140: #ecf6fd;
+$info-150: #f6fbfe;
+$info-160: #fafcfe;
+
+// -----------------------------------------------------------------------------
+// 2. THEME MAPS
+// -----------------------------------------------------------------------------
+
+$light-theme: (
+  // Backgrounds
+  'bg-primary': $neutral-white,
+  'bg-secondary': $neutral-gray-4,
+  'bg-tertiary': $neutral-gray-8,
+  'bg-elevated': $neutral-white,
+  'bg-overlay': rgba(0, 0, 0, 0.4),
+
+  // Text
+  'text-primary': $neutral-gray-54,
+  'text-secondary': $neutral-gray-38,
+  'text-tertiary': $neutral-gray-24,
+  'text-disabled': $neutral-gray-16,
+  'text-inverted': $neutral-white,
+
+  // Actions (Buttons, Links)
+  'action-primary': $brand-60,
+  'action-primary-hover': $brand-50,
+  'action-primary-pressed': $brand-40,
+  'action-secondary': $neutral-gray-16,
+  'action-secondary-hover': $neutral-gray-14,
+  'action-disabled': $neutral-gray-8,
+
+  // Borders
+  'border-default': $neutral-gray-16,
+  'border-subtle': $neutral-gray-12,
+  'border-strong': $neutral-gray-24,
+
+  // States
+  'state-success': $success-60,
+  'state-warning': $warning-60,
+  'state-error': $error-60,
+  'state-info': $info-60,
+
+  // Surfaces
+  'surface-card': $neutral-white,
+  'surface-input': $neutral-white,
+  'surface-hover': $neutral-gray-4,
+  'surface-pressed': $neutral-gray-8,
+);
+
+$dark-theme: (
+  // Backgrounds
+  'bg-primary': $neutral-gray-6,
+  'bg-secondary': $neutral-gray-10,
+  'bg-tertiary': $neutral-gray-18,
+  'bg-elevated': $neutral-gray-10,
+  'bg-overlay': rgba(0, 0, 0, 0.6),
+
+  // Text
+  'text-primary': $neutral-gray-60,
+  'text-secondary': $neutral-gray-50,
+  'text-tertiary': $neutral-gray-42,
+  'text-disabled': $neutral-gray-34,
+  'text-inverted': $neutral-gray-10,
+
+  // Actions (Buttons, Links)
+  'action-primary': $brand-90,
+  'action-primary-hover': $brand-100,
+  'action-primary-pressed': $brand-110,
+  'action-secondary': $neutral-gray-26,
+  'action-secondary-hover': $neutral-gray-34,
+  'action-disabled': $neutral-gray-22,
+
+  // Borders
+  'border-default': $neutral-gray-26,
+  'border-subtle': $neutral-gray-22,
+  'border-strong': $neutral-gray-34,
+
+  // States
+  'state-success': $success-90,
+  'state-warning': $warning-90,
+  'state-error': $error-90,
+  'state-info': $info-90,
+
+  // Surfaces
+  'surface-card': $neutral-gray-10,
+  'surface-input': $neutral-gray-18,
+  'surface-hover': $neutral-gray-18,
+  'surface-pressed': $neutral-gray-22,
+);
+
+$themes: (
+  light: $light-theme,
+  dark: $dark-theme,
+);
+
+// -----------------------------------------------------------------------------
+// 3. TYPOGRAPHY
+// -----------------------------------------------------------------------------
+
+// Font Families
+$font-family-base: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+$font-family-monospace: 'Consolas', 'Monaco', 'Courier New', monospace;
+
+// Font Weights
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Type Ramp (Font Sizes)
+$font-size-100: 0.625rem;   // 10px
+$font-size-200: 0.75rem;    // 12px
+$font-size-300: 0.875rem;   // 14px
+$font-size-400: 1rem;       // 16px
+$font-size-500: 1.125rem;   // 18px
+$font-size-600: 1.25rem;    // 20px
+$font-size-700: 1.5rem;     // 24px
+$font-size-800: 1.75rem;    // 28px
+$font-size-900: 2rem;       // 32px
+$font-size-1000: 2.5rem;    // 40px
+$font-size-1100: 3rem;      // 48px
+
+// Line Heights
+$line-height-100: 1.2;
+$line-height-200: 1.333;
+$line-height-300: 1.428;
+$line-height-400: 1.5;
+$line-height-500: 1.555;
+
+// -----------------------------------------------------------------------------
+// 4. SPACING
+// -----------------------------------------------------------------------------
+
+// Base-4 Spacing System
+$spacing-0: 0;
+$spacing-2: 0.125rem;   // 2px
+$spacing-4: 0.25rem;    // 4px
+$spacing-8: 0.5rem;     // 8px
+$spacing-12: 0.75rem;   // 12px
+$spacing-16: 1rem;      // 16px
+$spacing-20: 1.25rem;   // 20px
+$spacing-24: 1.5rem;    // 24px
+$spacing-28: 1.75rem;   // 28px
+$spacing-32: 2rem;      // 32px
+$spacing-36: 2.25rem;   // 36px
+$spacing-40: 2.5rem;    // 40px
+$spacing-48: 3rem;      // 48px
+$spacing-56: 3.5rem;    // 56px
+$spacing-64: 4rem;      // 64px
+
+// -----------------------------------------------------------------------------
+// 5. BORDER RADIUS
+// -----------------------------------------------------------------------------
+
+$border-radius-none: 0;
+$border-radius-small: 0.125rem;  // 2px
+$border-radius-medium: 0.25rem;  // 4px
+$border-radius-large: 0.375rem;  // 6px
+$border-radius-xlarge: 0.5rem;   // 8px
+$border-radius-circular: 50%;
+
+// -----------------------------------------------------------------------------
+// 6. SHADOWS (Elevation)
+// -----------------------------------------------------------------------------
+
+$shadow-2: 0 1px 2px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+$shadow-4: 0 1.6px 3.6px rgba(0, 0, 0, 0.13), 0 0.3px 0.9px rgba(0, 0, 0, 0.11);
+$shadow-8: 0 3.2px 7.2px rgba(0, 0, 0, 0.13), 0 0.6px 1.8px rgba(0, 0, 0, 0.11);
+$shadow-16: 0 6.4px 14.4px rgba(0, 0, 0, 0.13), 0 1.2px 3.6px rgba(0, 0, 0, 0.11);
+$shadow-28: 0 12.8px 28.8px rgba(0, 0, 0, 0.13), 0 2.4px 7.2px rgba(0, 0, 0, 0.11);
+$shadow-64: 0 25.6px 57.6px rgba(0, 0, 0, 0.22), 0 4.8px 14.4px rgba(0, 0, 0, 0.18);
+
+// -----------------------------------------------------------------------------
+// 7. ANIMATIONS
+// -----------------------------------------------------------------------------
+
+// Durations
+$duration-ultra-fast: 50ms;
+$duration-faster: 100ms;
+$duration-fast: 150ms;
+$duration-normal: 200ms;
+$duration-gentle: 300ms;
+$duration-slow: 400ms;
+$duration-slower: 500ms;
+
+// Easing Functions
+$ease-accelerate: cubic-bezier(0.7, 0, 1, 0.5);
+$ease-decelerate: cubic-bezier(0, 0.5, 0.3, 1);
+$ease-max-ease-in-out: cubic-bezier(0.8, 0, 0.1, 1);
+$ease-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+// -----------------------------------------------------------------------------
+// 8. Z-INDEX
+// -----------------------------------------------------------------------------
+
+$z-index-base: 0;
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-fixed: 1030;
+$z-index-modal-backdrop: 1040;
+$z-index-modal: 1050;
+$z-index-popover: 1060;
+$z-index-tooltip: 1070;
+
+// -----------------------------------------------------------------------------
+// 9. BREAKPOINTS
+// -----------------------------------------------------------------------------
+
+$breakpoint-xs: 0;
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-xxl: 1536px;

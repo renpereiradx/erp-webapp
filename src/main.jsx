@@ -7,6 +7,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import './App.css'
+import './styles/scss/main.scss'
 import App from './App.jsx'
 
 // Simple error boundary para hooks

@@ -1,0 +1,10 @@
+// =============================================================================
+// ABSTRACTS - INDEX
+// =============================================================================
+// This file forwards all abstract modules (variables, mixins, functions)
+// Use: @use 'abstracts' as *; in other SCSS files
+// =============================================================================
+
+@forward 'variables';
+@forward 'mixins';
+@forward 'functions';

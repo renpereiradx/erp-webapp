@@ -1,0 +1,258 @@
+// =============================================================================
+// FLUENT DESIGN SYSTEM - FUNCTIONS
+// =============================================================================
+// Based on Microsoft Fluent UI 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use 'sass:math';
+@use 'sass:map';
+@use 'sass:color';
+@use 'variables' as *;
+
+// -----------------------------------------------------------------------------
+// 1. SPACING FUNCTIONS
+// -----------------------------------------------------------------------------
+
+/// Convert px to rem
+/// @param {Number} $pixels - Pixel value
+/// @param {Number} $base [16px] - Base font size
+/// @return {Number} - Value in rem
+@function px-to-rem($pixels, $base: 16px) {
+  @if math.is-unitless($pixels) {
+    $pixels: $pixels * 1px;
+  }
+  @return math.div($pixels, $base) * 1rem;
+}
+
+/// Convert rem to px
+/// @param {Number} $rem - Rem value
+/// @param {Number} $base [16px] - Base font size
+/// @return {Number} - Value in px
+@function rem-to-px($rem, $base: 16px) {
+  @if math.unit($rem) == 'rem' {
+    @return math.div($rem, 1rem) * $base;
+  }
+  @return $rem;
+}
+
+/// Get spacing value from base-4 system
+/// @param {Number} $multiplier - Multiplier (1-16)
+/// @return {Number} - Spacing value in rem
+@function spacing($multiplier) {
+  @return $multiplier * 0.25rem; // 4px base
+}
+
+// -----------------------------------------------------------------------------
+// 2. COLOR FUNCTIONS
+// -----------------------------------------------------------------------------
+
+/// Get theme color value
+/// @param {String} $key - Theme key (e.g., 'action-primary')
+/// @param {String} $theme [light] - Theme name
+/// @return {Color} - Color value
+@function theme-color($key, $theme: light) {
+  $theme-map: map.get($themes, $theme);
+  @if $theme-map {
+    @return map.get($theme-map, $key);
+  }
+  @warn "Theme '#{$theme}' not found in $themes map";
+  @return null;
+}
+
+/// Lighten a color by mixing with white
+/// @param {Color} $color - Base color
+/// @param {Number} $percentage - Amount to lighten (0-100)
+/// @return {Color} - Lightened color
+@function lighten-color($color, $percentage) {
+  @return color.mix(white, $color, $percentage);
+}
+
+/// Darken a color by mixing with black
+/// @param {Color} $color - Base color
+/// @param {Number} $percentage - Amount to darken (0-100)
+/// @return {Color} - Darkened color
+@function darken-color($color, $percentage) {
+  @return color.mix(black, $color, $percentage);
+}
+
+/// Create transparent version of color
+/// @param {Color} $color - Base color
+/// @param {Number} $opacity - Opacity (0-1)
+/// @return {Color} - Color with opacity
+@function alpha-color($color, $opacity) {
+  @return rgba($color, $opacity);
+}
+
+// -----------------------------------------------------------------------------
+// 3. TYPOGRAPHY FUNCTIONS
+// -----------------------------------------------------------------------------
+
+/// Calculate line height from font size
+/// @param {Number} $font-size - Font size in rem
+/// @param {Number} $ratio [1.5] - Line height ratio
+/// @return {Number} - Line height unitless value
+@function line-height($font-size, $ratio: 1.5) {
+  @return $ratio;
+}
+
+/// Get type ramp value
+/// @param {Number} $scale - Scale value (100-1100)
+/// @return {Number} - Font size in rem
+@function type-ramp($scale) {
+  @if $scale == 100 { @return $font-size-100; }
+  @else if $scale == 200 { @return $font-size-200; }
+  @else if $scale == 300 { @return $font-size-300; }
+  @else if $scale == 400 { @return $font-size-400; }
+  @else if $scale == 500 { @return $font-size-500; }
+  @else if $scale == 600 { @return $font-size-600; }
+  @else if $scale == 700 { @return $font-size-700; }
+  @else if $scale == 800 { @return $font-size-800; }
+  @else if $scale == 900 { @return $font-size-900; }
+  @else if $scale == 1000 { @return $font-size-1000; }
+  @else if $scale == 1100 { @return $font-size-1100; }
+  @else {
+    @warn "Invalid type ramp scale: #{$scale}. Use values 100-1100.";
+    @return $font-size-400;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 4. LAYOUT FUNCTIONS
+// -----------------------------------------------------------------------------
+
+/// Calculate fluid width based on container
+/// @param {Number} $target-width - Target width in px
+/// @param {Number} $container-width [1440px] - Container width
+/// @return {Number} - Percentage width
+@function fluid-width($target-width, $container-width: 1440px) {
+  @return math.percentage(math.div($target-width, $container-width));
+}
+
+/// Calculate aspect ratio padding
+/// @param {Number} $width - Width value
+/// @param {Number} $height - Height value
+/// @return {Number} - Padding percentage
+@function aspect-ratio($width, $height) {
+  @return math.percentage(math.div($height, $width));
+}
+
+// -----------------------------------------------------------------------------
+// 5. SHADOW FUNCTIONS
+// -----------------------------------------------------------------------------
+
+/// Get elevation shadow
+/// @param {Number} $level - Elevation level (2, 4, 8, 16, 28, 64)
+/// @return {List} - Box shadow value
+@function elevation($level) {
+  @if $level == 2 { @return $shadow-2; }
+  @else if $level == 4 { @return $shadow-4; }
+  @else if $level == 8 { @return $shadow-8; }
+  @else if $level == 16 { @return $shadow-16; }
+  @else if $level == 28 { @return $shadow-28; }
+  @else if $level == 64 { @return $shadow-64; }
+  @else {
+    @warn "Invalid elevation level: #{$level}. Use 2, 4, 8, 16, 28, or 64.";
+    @return $shadow-2;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 6. ANIMATION FUNCTIONS
+// -----------------------------------------------------------------------------
+
+/// Get duration value
+/// @param {String} $speed - Speed name (ultra-fast, faster, fast, normal, gentle, slow, slower)
+/// @return {Number} - Duration in ms
+@function duration($speed) {
+  @if $speed == ultra-fast { @return $duration-ultra-fast; }
+  @else if $speed == faster { @return $duration-faster; }
+  @else if $speed == fast { @return $duration-fast; }
+  @else if $speed == normal { @return $duration-normal; }
+  @else if $speed == gentle { @return $duration-gentle; }
+  @else if $speed == slow { @return $duration-slow; }
+  @else if $speed == slower { @return $duration-slower; }
+  @else {
+    @warn "Invalid duration speed: #{$speed}. Use ultra-fast, faster, fast, normal, gentle, slow, or slower.";
+    @return $duration-normal;
+  }
+}
+
+/// Get easing function
+/// @param {String} $type - Easing type (accelerate, decelerate, max, ease)
+/// @return {List} - Cubic bezier values
+@function easing($type) {
+  @if $type == accelerate { @return $ease-accelerate; }
+  @else if $type == decelerate { @return $ease-decelerate; }
+  @else if $type == max { @return $ease-max-ease-in-out; }
+  @else if $type == ease { @return $ease-ease-in-out; }
+  @else {
+    @warn "Invalid easing type: #{$type}. Use accelerate, decelerate, max, or ease.";
+    @return $ease-ease-in-out;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 7. Z-INDEX FUNCTIONS
+// -----------------------------------------------------------------------------
+
+/// Get z-index value
+/// @param {String} $layer - Layer name
+/// @return {Number} - Z-index value
+@function z-index($layer) {
+  @if $layer == base { @return $z-index-base; }
+  @else if $layer == dropdown { @return $z-index-dropdown; }
+  @else if $layer == sticky { @return $z-index-sticky; }
+  @else if $layer == fixed { @return $z-index-fixed; }
+  @else if $layer == modal-backdrop { @return $z-index-modal-backdrop; }
+  @else if $layer == modal { @return $z-index-modal; }
+  @else if $layer == popover { @return $z-index-popover; }
+  @else if $layer == tooltip { @return $z-index-tooltip; }
+  @else {
+    @warn "Invalid z-index layer: #{$layer}.";
+    @return $z-index-base;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 8. BORDER RADIUS FUNCTIONS
+// -----------------------------------------------------------------------------
+
+/// Get border radius value
+/// @param {String} $size - Size name (none, small, medium, large, xlarge, circular)
+/// @return {Number} - Border radius value
+@function border-radius($size) {
+  @if $size == none { @return $border-radius-none; }
+  @else if $size == small { @return $border-radius-small; }
+  @else if $size == medium { @return $border-radius-medium; }
+  @else if $size == large { @return $border-radius-large; }
+  @else if $size == xlarge { @return $border-radius-xlarge; }
+  @else if $size == circular { @return $border-radius-circular; }
+  @else {
+    @warn "Invalid border radius size: #{$size}. Use none, small, medium, large, xlarge, or circular.";
+    @return $border-radius-medium;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 9. UTILITY FUNCTIONS
+// -----------------------------------------------------------------------------
+
+/// Strip units from a value
+/// @param {Number} $value - Value with unit
+/// @return {Number} - Unitless value
+@function strip-unit($value) {
+  @if math.is-unitless($value) {
+    @return $value;
+  }
+  @return math.div($value, $value * 0 + 1);
+}
+
+/// Clamp value between min and max
+/// @param {Number} $value - Value to clamp
+/// @param {Number} $min - Minimum value
+/// @param {Number} $max - Maximum value
+/// @return {Number} - Clamped value
+@function clamp-value($value, $min, $max) {
+  @return math.max($min, math.min($value, $max));
+}
