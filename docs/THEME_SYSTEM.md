@@ -578,8 +578,9 @@ $breakpoint-desktop: 1024px;
 | Fase 2: Design Tokens | ⏳ Pendiente | Implementar variables y mixins |
 | Fase 3: Componentes Base | ⏳ Pendiente | Migrar 11 componentes core |
 | Fase 4: Componentes de Layout | ⏳ Pendiente | Migrar navigation, sidebar |
-| Fase 5: Migración de Páginas | ⏳ Pendiente | Migrar todas las páginas |
-| Fase 6: Deprecación Tailwind | ⏳ Pendiente | Eliminar completamente Tailwind |
+| Fase 5: Deprecación Tailwind | ⏳ Pendiente | Eliminar completamente Tailwind |
+
+**Nota:** La migración de páginas específicas se realizará gradualmente según decisión del equipo.
 
 ### Componentes por Migrar
 
@@ -603,15 +604,7 @@ $breakpoint-desktop: 1024px;
 - [ ] Header
 - [ ] Footer
 
-**Páginas:**
-- [ ] Login
-- [ ] Dashboard
-- [ ] Products
-- [ ] Clients
-- [ ] Suppliers
-- [ ] Sales
-- [ ] Reservations
-- [ ] Settings
+**Nota:** La migración de páginas específicas será decidida gradualmente por el equipo, fuera del scope de esta guía de migración del sistema base.
 
 ### Patrón de Migración
 

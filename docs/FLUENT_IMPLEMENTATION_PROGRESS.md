@@ -14,10 +14,9 @@
 4. [Fase 2: Design Tokens y Theming](#fase-2-design-tokens-y-theming)
 5. [Fase 3: Componentes Base](#fase-3-componentes-base)
 6. [Fase 4: Componentes de Layout](#fase-4-componentes-de-layout)
-7. [Fase 5: Migración de Páginas](#fase-5-migración-de-páginas)
-8. [Fase 6: Deprecación de Tailwind](#fase-6-deprecación-de-tailwind)
-9. [Checklist de Progreso](#checklist-de-progreso)
-10. [Decisiones Técnicas](#decisiones-técnicas)
+7. [Fase 5: Deprecación de Tailwind](#fase-5-deprecación-de-tailwind)
+8. [Checklist de Progreso](#checklist-de-progreso)
+9. [Decisiones Técnicas](#decisiones-técnicas)
 
 ---
 
@@ -45,7 +44,7 @@ Migrar completamente el sistema de temas actual (múltiples temas con Tailwind C
 
 ## Fases de Implementación
 
-La implementación se divide en **6 fases** secuenciales para minimizar el riesgo y mantener la aplicación funcional en todo momento.
+La implementación se divide en **5 fases** secuenciales para minimizar el riesgo y mantener la aplicación funcional en todo momento.
 
 ```
 Fase 1: Configuración Base (1-2 días)
@@ -56,12 +55,12 @@ Fase 3: Componentes Base (5-7 días)
    ↓
 Fase 4: Componentes de Layout (3-4 días)
    ↓
-Fase 5: Migración de Páginas (7-10 días)
-   ↓
-Fase 6: Deprecación de Tailwind (2-3 días)
+Fase 5: Deprecación de Tailwind (2-3 días)
 ```
 
-**Duración estimada total:** 20-29 días de desarrollo
+**Duración estimada total:** 13-19 días de desarrollo
+
+**Nota:** La migración de páginas específicas se realizará gradualmente según decisión del equipo, fuera del scope de estas fases de implementación del sistema base.
 
 ---
 
@@ -503,91 +502,14 @@ Migrar componentes de estructura y navegación.
 
 ---
 
-## Fase 5: Migración de Páginas
-
-### Objetivo
-Migrar todas las páginas de la aplicación al nuevo sistema de diseño.
-
-### Estrategia
-
-Las páginas se migrarán en orden de **menor a mayor complejidad** para ganar experiencia con el sistema.
-
-### Lista de Páginas (actualizar según aplicación real)
-
-#### 5.1. Páginas Simples
-
-- [ ] **Login** (`src/pages/Login.jsx`)
-  - [ ] Crear `pages/_login.scss` si tiene estilos específicos
-  - [ ] Refactorizar JSX para usar componentes migrados
-  - [ ] Testing completo
-
-- [ ] **404 / Not Found** (si existe)
-  - [ ] Refactorizar con componentes migrados
-
-#### 5.2. Páginas de Listado
-
-- [ ] **Products** (Listado de productos)
-  - [ ] Crear `pages/_products.scss` si es necesario
-  - [ ] Usar Card components
-  - [ ] Usar Button components
-  - [ ] Testing completo
-
-- [ ] **Clients** (Listado de clientes)
-- [ ] **Suppliers** (Listado de proveedores)
-- [ ] **Sales** (Listado de ventas)
-- [ ] **Reservations** (Listado de reservaciones)
-
-#### 5.3. Páginas de Detalle/Formularios
-
-- [ ] **Product Detail / Edit**
-- [ ] **Client Detail / Edit**
-- [ ] **Supplier Detail / Edit**
-- [ ] **Sale Detail**
-- [ ] **Reservation Detail / Edit**
-
-#### 5.4. Dashboard
-
-- [ ] **Dashboard / Home**
-  - Probablemente la página más compleja
-  - Cards con estadísticas
-  - Gráficos (si aplica)
-  - Testing exhaustivo
-
-#### 5.5. Páginas de Settings/Configuración
-
-- [ ] **Settings**
-- [ ] **Profile**
-- [ ] Otras páginas de configuración
-
-### Patrón de Migración por Página
-
-Para cada página:
-
-1. [ ] Identificar todos los componentes usados en la página
-2. [ ] Verificar que esos componentes ya están migrados (deben estar en Fase 3)
-3. [ ] Eliminar clases de Tailwind del JSX de la página
-4. [ ] Reemplazar con clases BEM y componentes migrados
-5. [ ] Crear archivo SCSS específico de la página solo si es necesario
-6. [ ] Testing visual en light y dark mode
-7. [ ] Verificar responsive behavior
-8. [ ] Verificar navegación y flujos de usuario
-
-### Criterio de Aceptación Fase 5
-✅ Todas las páginas migradas
-✅ No quedan clases de Tailwind en páginas
-✅ Todas las páginas funcionales en light y dark mode
-✅ Testing de integración completo
-
----
-
-## Fase 6: Deprecación de Tailwind
+## Fase 5: Deprecación de Tailwind
 
 ### Objetivo
 Eliminar completamente Tailwind CSS del proyecto.
 
 ### Tareas
 
-#### 6.1. Auditoría Final
+#### 5.1. Auditoría Final
 
 - [ ] Buscar todas las clases de Tailwind restantes en el código
   ```bash
@@ -595,9 +517,9 @@ Eliminar completamente Tailwind CSS del proyecto.
   grep -r "className=.*\(bg-\|text-\|p-\|m-\|flex\|grid\)" src/
   ```
 - [ ] Crear lista de archivos con clases de Tailwind pendientes
-- [ ] Migrar componentes/páginas faltantes
+- [ ] Migrar componentes/páginas faltantes (según decisión del equipo)
 
-#### 6.2. Limpieza de Código
+#### 5.2. Limpieza de Código
 
 - [ ] Eliminar imports de estilos de Tailwind en `src/main.jsx` o `src/index.css`
 - [ ] Eliminar archivos de configuración:
@@ -606,7 +528,7 @@ Eliminar completamente Tailwind CSS del proyecto.
 - [ ] Eliminar referencias en `vite.config.js` si existen
 - [ ] Limpiar `src/App.css` y `src/index.css` de imports de Tailwind
 
-#### 6.3. Desinstalar Dependencias
+#### 5.3. Desinstalar Dependencias
 
 - [ ] Desinstalar Tailwind CSS:
   ```bash
@@ -614,20 +536,20 @@ Eliminar completamente Tailwind CSS del proyecto.
   ```
 - [ ] Verificar que no se rompió nada
 
-#### 6.4. Limpieza del Sistema de Temas Antiguo
+#### 5.4. Limpieza del Sistema de Temas Antiguo
 
 - [ ] Eliminar definiciones de múltiples temas en `src/App.css`
 - [ ] Eliminar `src/themes/` si existe
 - [ ] Eliminar `src/utils/themeUtils.js` si ya no se usa
 - [ ] Limpiar `ThemeContext` de toda lógica legacy
 
-#### 6.5. Actualizar Documentación
+#### 5.5. Actualizar Documentación
 
 - [ ] Actualizar `README.md` con nueva arquitectura de estilos
 - [ ] Actualizar `CLAUDE.md` con información de Sass
 - [ ] Archivar documentos antiguos (moverlos a `docs/archived/`)
 
-#### 6.6. Testing Final
+#### 5.6. Testing Final
 
 - [ ] Testing completo de toda la aplicación
 - [ ] Verificar performance (comparar bundle size antes/después)
@@ -636,14 +558,14 @@ Eliminar completamente Tailwind CSS del proyecto.
 - [ ] Testing responsive en diferentes dispositivos
 - [ ] Testing de accesibilidad con herramientas (axe, WAVE)
 
-#### 6.7. Build de Producción
+#### 5.7. Build de Producción
 
 - [ ] Ejecutar `pnpm build`
 - [ ] Verificar que no hay errores ni warnings
 - [ ] Analizar bundle size
 - [ ] Verificar que la app funciona correctamente en preview: `pnpm preview`
 
-### Criterio de Aceptación Fase 6
+### Criterio de Aceptación Fase 5
 ✅ Tailwind CSS completamente eliminado
 ✅ No quedan dependencias de Tailwind
 ✅ Aplicación funcional al 100%
@@ -687,21 +609,14 @@ Eliminar completamente Tailwind CSS del proyecto.
 - [ ] 4.3. Grid System
 - [ ] 4.4. Header / Footer
 
-### ☐ Fase 5: Migración de Páginas
-- [ ] 5.1. Páginas Simples (Login, 404)
-- [ ] 5.2. Páginas de Listado (Products, Clients, etc.)
-- [ ] 5.3. Páginas de Detalle/Formularios
-- [ ] 5.4. Dashboard
-- [ ] 5.5. Páginas de Settings
-
-### ☐ Fase 6: Deprecación de Tailwind
-- [ ] 6.1. Auditoría Final
-- [ ] 6.2. Limpieza de Código
-- [ ] 6.3. Desinstalar Dependencias
-- [ ] 6.4. Limpieza del Sistema de Temas Antiguo
-- [ ] 6.5. Actualizar Documentación
-- [ ] 6.6. Testing Final
-- [ ] 6.7. Build de Producción
+### ☐ Fase 5: Deprecación de Tailwind
+- [ ] 5.1. Auditoría Final
+- [ ] 5.2. Limpieza de Código
+- [ ] 5.3. Desinstalar Dependencias
+- [ ] 5.4. Limpieza del Sistema de Temas Antiguo
+- [ ] 5.5. Actualizar Documentación
+- [ ] 5.6. Testing Final
+- [ ] 5.7. Build de Producción
 
 ---
 
