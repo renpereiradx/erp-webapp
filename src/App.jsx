@@ -16,6 +16,7 @@ import Products from '@/pages/Products'
 import Clients from '@/pages/Clients'
 import Suppliers from '@/pages/Suppliers'
 import Sales from '@/pages/Sales'
+import SalesNew from '@/pages/SalesNew'
 import Reservations from '@/pages/Reservations'
 import Schedules from '@/pages/Schedules'
 import Inventory from '@/pages/Inventory'
@@ -113,6 +114,7 @@ function AppContent() {
                       <Route path='/clientes' element={<Clients />} />
                       <Route path='/proveedores' element={<Suppliers />} />
                       <Route path='/ventas' element={<Sales />} />
+                      <Route path='/ventas-nueva' element={<SalesNew />} />
                       <Route path='/reportes' element={<Reports />} />
                       <Route path='/reservas' element={<Reservations />} />
                       <Route path='/horarios' element={<Schedules />} />

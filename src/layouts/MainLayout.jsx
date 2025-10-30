@@ -129,6 +129,7 @@ const MainLayout = ({ children }) => {
       { name: 'Ajuste de inventario', href: '/inventario', icon: Package },
       { name: 'Ajustes de Precios', href: '/ajustes-precios', icon: Edit },
       { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
+      { name: 'Ventas (Nueva)', href: '/ventas-nueva', icon: ShoppingCart },
       { name: 'Reservas', href: '/reservas', icon: Calendar },
       { name: 'Compras', href: '/compras', icon: ShoppingBag },
       {
