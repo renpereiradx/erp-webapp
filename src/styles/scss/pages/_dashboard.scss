@@ -1,0 +1,457 @@
+// =============================================================================
+// DASHBOARD PAGE STYLES
+// =============================================================================
+// Panel principal del sistema ERP
+// Diseñado con Fluent Design System
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// DASHBOARD LAYOUT
+// -----------------------------------------------------------------------------
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+}
+
+.dashboard__title {
+  font-size: $font-size-700;
+  font-weight: $font-weight-semibold;
+  margin: 0;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  @include mobile {
+    font-size: $font-size-600;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACTIONS BAR
+// -----------------------------------------------------------------------------
+
+.dashboard__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-16;
+  flex-wrap: wrap;
+}
+
+.dashboard__search {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+
+  @include mobile {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+.dashboard__search-icon {
+  position: absolute;
+  left: $spacing-12;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+.dashboard__search-input {
+  width: 100%;
+  padding: $spacing-8 $spacing-12 $spacing-8 $spacing-40;
+  font-size: $font-size-300;
+  border-radius: $border-radius-medium;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  @include themify {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+    color: themed('text-primary');
+
+    &::placeholder {
+      color: themed('text-tertiary');
+    }
+
+    &:hover {
+      border-color: themed('border-hover');
+    }
+
+    &:focus {
+      outline: none;
+      border-color: themed('accent-primary');
+      box-shadow: 0 0 0 2px themed('accent-light');
+    }
+  }
+}
+
+.dashboard__filters {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+}
+
+.dashboard__select {
+  padding: $spacing-8 $spacing-12;
+  font-size: $font-size-300;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+
+  @include themify {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+    color: themed('text-primary');
+
+    &:hover {
+      border-color: themed('border-hover');
+    }
+
+    &:focus {
+      outline: none;
+      border-color: themed('accent-primary');
+    }
+  }
+}
+
+.dashboard__refresh-btn {
+  padding: $spacing-8 $spacing-16;
+  font-size: $font-size-300;
+  font-weight: $font-weight-medium;
+  border: none;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    color: themed('text-primary');
+    border: 1px solid themed('border-default');
+
+    &:hover {
+      background-color: themed('surface-hover');
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// METRICS GRID
+// -----------------------------------------------------------------------------
+
+.dashboard__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: $spacing-16;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// METRIC CARD
+// -----------------------------------------------------------------------------
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-12;
+  padding: $spacing-20;
+  border-radius: $border-radius-large;
+  transition: all 0.2s ease;
+
+  @include themify {
+    background-color: themed('surface-primary');
+    border: 1px solid themed('border-subtle');
+    box-shadow: themed('shadow-sm');
+
+    &:hover {
+      box-shadow: themed('shadow-card');
+    }
+  }
+}
+
+.metric-card__content {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-16;
+}
+
+.metric-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: $border-radius-medium;
+  flex-shrink: 0;
+
+  &--sales {
+    @include themify {
+      background-color: rgba(16, 124, 16, 0.1);
+      color: #107c10;
+    }
+  }
+
+  &--clients {
+    @include themify {
+      background-color: rgba(0, 120, 212, 0.1);
+      color: #0078d4;
+    }
+  }
+
+  &--products {
+    @include themify {
+      background-color: rgba(247, 99, 12, 0.1);
+      color: #f7630c;
+    }
+  }
+
+  &--orders {
+    @include themify {
+      background-color: rgba(135, 100, 184, 0.1);
+      color: #8764b8;
+    }
+  }
+}
+
+.metric-card__icon-svg {
+  width: 24px;
+  height: 24px;
+}
+
+.metric-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.metric-card__label {
+  font-size: $font-size-200;
+  margin: 0 0 $spacing-4 0;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.metric-card__value {
+  font-size: $font-size-600;
+  font-weight: $font-weight-semibold;
+  margin: 0;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  @include mobile {
+    font-size: $font-size-500;
+  }
+}
+
+.metric-card__trend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-8;
+}
+
+.metric-card__delta {
+  font-size: $font-size-200;
+  font-weight: $font-weight-semibold;
+
+  &--positive {
+    color: #107c10;
+  }
+
+  &--negative {
+    color: #d13438;
+  }
+}
+
+.metric-card__delta-label {
+  font-size: $font-size-100;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+.metric-card__footer {
+  padding-top: $spacing-12;
+
+  @include themify {
+    border-top: 1px solid themed('border-subtle');
+  }
+}
+
+.metric-card__date {
+  font-size: $font-size-100;
+  font-family: monospace;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CHARTS GRID
+// -----------------------------------------------------------------------------
+
+.dashboard__charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: $spacing-16;
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CHART CARD
+// -----------------------------------------------------------------------------
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-24;
+  border-radius: $border-radius-large;
+
+  @include themify {
+    background-color: themed('surface-primary');
+    border: 1px solid themed('border-subtle');
+    box-shadow: themed('shadow-sm');
+  }
+}
+
+.chart-card__title {
+  font-size: $font-size-500;
+  font-weight: $font-weight-semibold;
+  margin: 0 0 $spacing-16 0;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.chart-card__content {
+  height: 320px;
+}
+
+// -----------------------------------------------------------------------------
+// LOADING STATE
+// -----------------------------------------------------------------------------
+
+.dashboard__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: $spacing-16;
+}
+
+.dashboard__loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid;
+  border-radius: $border-radius-circular;
+  animation: spin 1s linear infinite;
+
+  @include themify {
+    border-color: themed('border-subtle');
+    border-top-color: themed('accent-primary');
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dashboard__loading-text {
+  font-size: $font-size-300;
+  margin: 0;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ERROR STATE
+// -----------------------------------------------------------------------------
+
+.dashboard__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: $spacing-16;
+  text-align: center;
+  padding: $spacing-32;
+}
+
+.dashboard__error-title {
+  font-size: $font-size-500;
+  font-weight: $font-weight-semibold;
+  margin: 0;
+
+  @include themify {
+    color: themed('error-text');
+  }
+}
+
+.dashboard__error-message {
+  font-size: $font-size-300;
+  margin: 0;
+  max-width: 600px;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.dashboard__error-retry {
+  padding: $spacing-12 $spacing-24;
+  font-size: $font-size-300;
+  font-weight: $font-weight-medium;
+  border: none;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  @include themify {
+    background-color: themed('accent-primary');
+    color: themed('accent-text');
+
+    &:hover {
+      background-color: themed('accent-hover');
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+}
