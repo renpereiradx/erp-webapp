@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 import { fileURLToPath, URL } from 'node:url'
 
@@ -12,14 +11,13 @@ export default defineConfig({
   },
   plugins: [
     react({
-      // Enable React 19 features  
+      // Enable React 19 features
       jsxRuntime: 'automatic',
       // DISABLE fast refresh to prevent hook issues
       fastRefresh: false,
       // Include JSX files
       include: /\.(jsx|tsx)$/
-    }),
-    tailwindcss()
+    })
   ],
   optimizeDeps: {
     include: [
