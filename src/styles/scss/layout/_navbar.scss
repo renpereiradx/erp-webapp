@@ -1,0 +1,444 @@
+// =============================================================================
+// NAVBAR/HEADER COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE NAVBAR
+// -----------------------------------------------------------------------------
+
+.navbar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: z-index(sticky);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-16;
+  min-height: 56px;
+  padding: $spacing-12 $spacing-24;
+  @include elevation(4);
+
+  @include themify {
+    background-color: themed('bg-elevated');
+    border-bottom: 1px solid themed('border-subtle');
+  }
+
+  @include mobile {
+    padding: $spacing-8 $spacing-16;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// NAVBAR SECTIONS
+// -----------------------------------------------------------------------------
+
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+  text-decoration: none;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &:hover {
+    @include themify {
+      color: themed('action-primary');
+    }
+  }
+}
+
+.navbar__logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.navbar__title {
+  @include heading-6;
+  margin: 0;
+  white-space: nowrap;
+
+  @include mobile {
+    display: none;
+  }
+}
+
+.navbar__menu {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  flex: 1;
+  justify-content: flex-start;
+  margin-left: $spacing-24;
+
+  @include mobile {
+    display: none;
+
+    &--open {
+      display: flex;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      padding: $spacing-16;
+      @include themify {
+        background-color: themed('bg-elevated');
+        border-bottom: 1px solid themed('border-subtle');
+      }
+      @include elevation(8);
+    }
+  }
+}
+
+.navbar__menu-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  padding: $spacing-8 $spacing-16;
+  border-radius: $border-radius-medium;
+  text-decoration: none;
+  font-size: $font-size-300;
+  font-weight: $font-weight-medium;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+  }
+
+  &--active {
+    @include themify {
+      background-color: themed('surface-hover');
+      color: themed('action-primary');
+    }
+  }
+
+  @include mobile {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  margin-left: auto;
+}
+
+.navbar__toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  @include mobile {
+    display: flex;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// NAVBAR VARIANTS
+// -----------------------------------------------------------------------------
+
+.navbar--transparent {
+  background-color: transparent;
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.navbar--bordered {
+  @include themify {
+    border-bottom: 2px solid themed('border-default');
+  }
+  box-shadow: none;
+}
+
+.navbar--compact {
+  min-height: 48px;
+  padding: $spacing-8 $spacing-16;
+}
+
+.navbar--spacious {
+  min-height: 64px;
+  padding: $spacing-16 $spacing-32;
+}
+
+// -----------------------------------------------------------------------------
+// NAVBAR SEARCH
+// -----------------------------------------------------------------------------
+
+.navbar__search {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+
+  @include mobile {
+    max-width: 100%;
+  }
+}
+
+.navbar__search-input {
+  width: 100%;
+  padding: $spacing-8 $spacing-36 $spacing-8 $spacing-12;
+  border-radius: $border-radius-medium;
+  font-size: $font-size-300;
+
+  @include themify {
+    background-color: themed('surface-input');
+    border: 1px solid themed('border-subtle');
+    color: themed('text-primary');
+  }
+
+  &:focus {
+    outline: none;
+    @include themify {
+      border-color: themed('action-primary');
+    }
+  }
+
+  &::placeholder {
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+}
+
+.navbar__search-icon {
+  position: absolute;
+  right: $spacing-12;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// NAVBAR USER
+// -----------------------------------------------------------------------------
+
+.navbar__user {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+  padding: $spacing-8 $spacing-12;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  @include transition(background-color, $duration-fast);
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+}
+
+.navbar__user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: $border-radius-circular;
+  @include themify {
+    background-color: themed('action-primary');
+    color: themed('text-inverted');
+  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-200;
+  font-weight: $font-weight-semibold;
+}
+
+.navbar__user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  @include mobile {
+    display: none;
+  }
+}
+
+.navbar__user-name {
+  font-size: $font-size-300;
+  font-weight: $font-weight-semibold;
+  line-height: 1.2;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.navbar__user-role {
+  font-size: $font-size-200;
+  line-height: 1.2;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// NAVBAR NOTIFICATIONS
+// -----------------------------------------------------------------------------
+
+.navbar__notification-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &--has-notifications::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: $border-radius-circular;
+    @include themify {
+      background-color: themed('state-error');
+      border: 2px solid themed('bg-elevated');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// NAVBAR DROPDOWN (for mobile menu)
+// -----------------------------------------------------------------------------
+
+.navbar__dropdown {
+  position: relative;
+}
+
+.navbar__dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-8 $spacing-12;
+  border: none;
+  background: transparent;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  font-size: $font-size-300;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+}
+
+.navbar__dropdown-menu {
+  position: absolute;
+  top: calc(100% + #{$spacing-8});
+  right: 0;
+  min-width: 200px;
+  padding: $spacing-8;
+  border-radius: $border-radius-medium;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
+  @include transition(all, $duration-fast);
+  @include elevation(16);
+
+  @include themify {
+    background-color: themed('bg-elevated');
+    border: 1px solid themed('border-subtle');
+  }
+
+  .navbar__dropdown--open & {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
+.navbar__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+  padding: $spacing-8 $spacing-12;
+  border-radius: $border-radius-small;
+  text-decoration: none;
+  font-size: $font-size-300;
+  cursor: pointer;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+}
+
+.navbar__dropdown-divider {
+  height: 1px;
+  margin: $spacing-4 0;
+
+  @include themify {
+    background-color: themed('border-subtle');
+  }
+}

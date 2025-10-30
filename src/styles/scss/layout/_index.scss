@@ -5,8 +5,8 @@
 // Layout includes containers, grids, navigation, sidebars, etc.
 // =============================================================================
 
-// @use 'container';
-// @use 'grid';
-// @use 'navbar';
-// @use 'sidebar';
-// ... (will be added in Phase 4)
+@use 'navbar';
+@use 'sidebar';
+@use 'container';
+@use 'breadcrumbs';
+@use 'tabs';
