@@ -12,7 +12,6 @@
     "preview": "vite preview",
     "test": "vitest --run",
     "test:ui": "vitest",
-    "test:e2e": "playwright test",
     "clean": "rm -rf node_modules/.vite && rm -rf node_modules/.cache && rm -rf dist",
     "reset": "rm -rf node_modules && rm -rf pnpm-lock.yaml && pnpm install"
   },
@@ -70,9 +69,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.10.2",
     "@eslint/js": "^9.25.0",
-    "@playwright/test": "^1.54.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.6.1",

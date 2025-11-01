@@ -28,10 +28,25 @@ import {
 } from 'lucide-react'
 
 // UI Components
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import DataState from '@/components/ui/DataState'
 import EmptyState from '@/components/ui/EmptyState'
@@ -96,6 +111,22 @@ const PurchasesPage = () => {
     } catch (error) {
       return value
     }
+  }
+
+  const calculateSalePriceFromMargin = (unitPrice, profitPct) => {
+    const cost = Number(unitPrice)
+    const margin = Number(profitPct)
+    if (!Number.isFinite(cost) || !Number.isFinite(margin)) return 0
+    return cost * (1 + margin / 100)
+  }
+
+  const calculateMarginFromSalePrice = (unitPrice, salePrice) => {
+    const cost = Number(unitPrice)
+    const sale = Number(salePrice)
+    if (!Number.isFinite(cost) || cost === 0 || !Number.isFinite(sale)) {
+      return null
+    }
+    return ((sale - cost) / cost) * 100
   }
 
   // Local states
@@ -163,6 +194,15 @@ const PurchasesPage = () => {
   const [showProductModal, setShowProductModal] = useState(false)
   const [showTaxModal, setShowTaxModal] = useState(false)
   const [showOrderDetails, setShowOrderDetails] = useState(null)
+  const [pricingModalState, setPricingModalState] = useState({
+    open: false,
+    product: null,
+  })
+  const [pricingMode, setPricingMode] = useState('percentage')
+  const [pricingValues, setPricingValues] = useState({
+    percentage: '',
+    salePrice: '',
+  })
 
   const orderDetailsMetrics = useMemo(() => {
     if (!showOrderDetails?.data) return null
@@ -288,6 +328,77 @@ const PurchasesPage = () => {
       taxRate: taxRateNumber,
     }
   }, [selectedProducts, selectedTaxRate, taxRatesMap])
+
+  const pricingProduct = pricingModalState.product
+  const pricingUnitPrice = pricingProduct
+    ? Number(pricingProduct.unit_price) || 0
+    : 0
+  const currentPricingMargin = pricingProduct
+    ? Number(
+        pricingProduct.profit_pct ?? orderData.default_profit_margin ?? 0
+      ) || 0
+    : 0
+  const currentPricingSalePrice = calculateSalePriceFromMargin(
+    pricingUnitPrice,
+    Number.isFinite(currentPricingMargin) ? currentPricingMargin : 0
+  )
+  const parsedPricingPercentage = parseFloat(pricingValues.percentage)
+  const safePricingPercentage = Number.isNaN(parsedPricingPercentage)
+    ? null
+    : parsedPricingPercentage
+  const parsedPricingSalePrice = parseFloat(pricingValues.salePrice)
+  const safePricingSalePrice = Number.isNaN(parsedPricingSalePrice)
+    ? null
+    : parsedPricingSalePrice
+  const previewPricingProfit =
+    pricingMode === 'percentage'
+      ? safePricingPercentage
+      : safePricingSalePrice !== null
+        ? calculateMarginFromSalePrice(
+            pricingUnitPrice,
+            safePricingSalePrice
+          )
+        : null
+  const previewPricingSalePrice =
+    pricingMode === 'percentage'
+      ? safePricingPercentage !== null
+        ? calculateSalePriceFromMargin(
+            pricingUnitPrice,
+            safePricingPercentage
+          )
+        : 0
+      : safePricingSalePrice ?? 0
+
+  useEffect(() => {
+    if (!pricingModalState.open || !pricingModalState.product) {
+      return
+    }
+
+    const unitPrice = Number(pricingModalState.product.unit_price) || 0
+    const initialMargin = Number(
+      pricingModalState.product.profit_pct ?? orderData.default_profit_margin
+    )
+    const initialSalePrice = calculateSalePriceFromMargin(
+      unitPrice,
+      initialMargin
+    )
+
+    setPricingMode('percentage')
+    setPricingValues({
+      percentage:
+        Number.isFinite(initialMargin) && !Number.isNaN(initialMargin)
+          ? initialMargin.toFixed(2)
+          : '',
+      salePrice:
+        Number.isFinite(initialSalePrice) && initialSalePrice > 0
+          ? initialSalePrice.toFixed(2)
+          : '',
+    })
+  }, [
+    pricingModalState.open,
+    pricingModalState.product,
+    orderData.default_profit_margin,
+  ])
 
   // Load tax rates on component mount
   useEffect(() => {
@@ -646,6 +757,72 @@ const PurchasesPage = () => {
         }
       })
     )
+  }
+
+  const handleOpenPricingModal = product => {
+    setPricingModalState({ open: true, product })
+  }
+
+  const handleClosePricingModal = () => {
+    setPricingModalState({ open: false, product: null })
+  }
+
+  const handleApplyPricingChanges = () => {
+    const targetProduct = pricingModalState.product
+
+    if (!targetProduct) {
+      handleClosePricingModal()
+      return
+    }
+
+    const unitPrice = Number(targetProduct.unit_price) || 0
+
+    if (pricingMode === 'salePrice' && unitPrice <= 0) {
+      alert(
+        'No se puede calcular el margen porque el costo del producto es 0. Ajusta el precio unitario primero.'
+      )
+      return
+    }
+
+    let computedProfit = null
+
+    if (pricingMode === 'percentage') {
+      const parsed = parseFloat(pricingValues.percentage)
+      if (Number.isNaN(parsed)) {
+        alert('Ingresa un porcentaje válido.')
+        return
+      }
+      computedProfit = parsed
+    } else {
+      const salePriceValue = parseFloat(pricingValues.salePrice)
+      if (Number.isNaN(salePriceValue)) {
+        alert('Ingresa un precio de venta válido.')
+        return
+      }
+
+      if (salePriceValue < 0) {
+        alert('El precio de venta no puede ser negativo.')
+        return
+      }
+
+      const margin = calculateMarginFromSalePrice(unitPrice, salePriceValue)
+
+      if (margin === null || Number.isNaN(margin)) {
+        alert('No se pudo calcular el porcentaje de ganancia. Verifica los valores ingresados.')
+        return
+      }
+
+      computedProfit = margin
+    }
+
+    if (!Number.isFinite(computedProfit)) {
+      alert('El porcentaje de ganancia calculado no es válido.')
+      return
+    }
+
+    const normalizedProfit = Number.parseFloat(computedProfit.toFixed(4))
+    handleUpdateProduct(targetProduct.product_id, 'profit_pct', normalizedProfit)
+    handleClosePricingModal()
   }
 
   const handleRemoveProduct = productId => {
@@ -1031,36 +1208,366 @@ const PurchasesPage = () => {
 
         {/* Create Purchase Order Tab */}
         <TabsContent value='create' className='space-y-4'>
-          {/* Configuration Section - Compact */}
-          <div className='border-0 bg-transparent'>
-            <div className='py-2 px-1'>
-              <div className='flex items-center gap-2 text-lg mb-3'>
-                <Settings className='w-4 h-4' />
-                Configuración de Orden
-              </div>
+          {/* Two Column Layout */}
+          <div className='grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4'>
+            {/* Main Content - Left Side */}
+            <div className='space-y-4'>
+              {/* Products Management Card */}
+              <Card className={styles.card()}>
+                <CardHeader>
+                  <CardTitle className='flex items-center gap-2'>
+                    <Package className='w-5 h-5' />
+                    Gestión de Productos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  {/* Add Product Button */}
+                  <Button
+                    onClick={() => setShowProductModal(true)}
+                    variant='outline'
+                    className='w-full justify-start'
+                    size='default'
+                  >
+                    <Plus className='w-4 h-4 mr-2' />
+                    Agregar Productos
+                  </Button>
+                  
+                  {selectedProducts.length > 0 && (
+                    <div className='text-xs text-muted-foreground'>
+                      {selectedProducts.length} producto(s) seleccionado(s)
+                    </div>
+                  )}
+
+                  {/* Products Table */}
+                  {selectedProducts.length > 0 && (
+                    <div className='space-y-3'>
+                      <div className='flex items-center justify-between'>
+                        <h3 className='text-sm font-medium'>Lista de Productos</h3>
+                        <div className='text-right'>
+                          <div className='text-xs text-muted-foreground'>Total:</div>
+                          <div className='text-lg font-bold'>
+                            {formatGuaranies(orderTotals.total)}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className='overflow-x-auto'>
+                        <table className='w-full'>
+                          <thead className='bg-gray-50'>
+                            <tr>
+                              <th className='text-left p-3 font-medium'>Producto</th>
+                              <th className='text-center p-3 font-medium'>Cantidad</th>
+                              <th className='text-center p-3 font-medium'>
+                                Precio Unit.
+                                <br />
+                                <span className='text-xs text-muted-foreground'>(inc. IVA)</span>
+                              </th>
+                              <th className='text-center p-3 font-medium'>Unidad</th>
+                              <th className='text-center p-3 font-medium'>Margen / Venta</th>
+                              <th className='text-center p-3 font-medium'>
+                                IVA
+                                <br />
+                                <span className='text-xs text-muted-foreground'>(referencial)</span>
+                              </th>
+                              <th className='text-center p-3 font-medium'>Total</th>
+                              <th className='text-center p-3 font-medium'>Acciones</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedProducts.map(product => {
+                              const unitPriceNumber = Number(product.unit_price) || 0
+                              const effectiveMarginRaw =
+                                product.profit_pct ??
+                                orderData.default_profit_margin ??
+                                0
+                              const marginNumber = Number(effectiveMarginRaw)
+                              const hasValidMargin = Number.isFinite(marginNumber)
+                              const formattedMargin = hasValidMargin
+                                ? marginNumber.toFixed(2)
+                                : null
+                              const salePricePreview = calculateSalePriceFromMargin(
+                                unitPriceNumber,
+                                hasValidMargin ? marginNumber : 0
+                              )
+
+                              return (
+                                <tr key={product.product_id} className='border-t'>
+                                  <td className='p-3'>
+                                    <div>
+                                      <div className='font-medium'>{product.name}</div>
+                                      <div className='text-sm text-muted-foreground'>
+                                        {product.product_id}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className='p-3 text-center'>
+                                    <Input
+                                      type='number'
+                                      min='1'
+                                      value={product.quantity}
+                                      onChange={e =>
+                                        handleUpdateProduct(
+                                          product.product_id,
+                                          'quantity',
+                                          e.target.value
+                                        )
+                                      }
+                                      className='w-20 text-center'
+                                    />
+                                  </td>
+                                  <td className='p-3 text-center'>
+                                    <Input
+                                      type='number'
+                                      min='0'
+                                      step='0.01'
+                                      value={product.unit_price}
+                                      onChange={e =>
+                                        handleUpdateProduct(
+                                          product.product_id,
+                                          'unit_price',
+                                          e.target.value
+                                        )
+                                      }
+                                              className='w-24 text-center'
+                                    />
+                                  </td>
+                                  <td className='p-3 text-center'>
+                                    <select
+                                      value={product.unit}
+                                      onChange={e =>
+                                        handleUpdateProduct(
+                                          product.product_id,
+                                          'unit',
+                                          e.target.value
+                                        )
+                                      }
+                                      className='border rounded px-2 py-1 text-sm bg-white hover:bg-gray-50'
+                                    >
+                                      <optgroup label='📦 Básicas'>
+                                        <option value='unit'>unidad</option>
+                                        <option value='pair'>par</option>
+                                        <option value='set'>set</option>
+                                      </optgroup>
+                                      <optgroup label='⚖️ Peso'>
+                                        <option value='kg'>kilogramo</option>
+                                        <option value='g'>gramo</option>
+                                        <option value='lb'>libra</option>
+                                        <option value='oz'>onza</option>
+                                        <option value='ton'>tonelada</option>
+                                      </optgroup>
+                                      <optgroup label='💧 Volumen'>
+                                        <option value='l'>litro</option>
+                                        <option value='ml'>mililitro</option>
+                                        <option value='gal'>galón</option>
+                                      </optgroup>
+                                      <optgroup label='📏 Longitud/Área'>
+                                        <option value='meter'>metro</option>
+                                        <option value='cm'>centímetro</option>
+                                        <option value='sqm'>metro cuadrado</option>
+                                        <option value='roll'>rollo</option>
+                                      </optgroup>
+                                      <optgroup label='📦 Empaque'>
+                                        <option value='box'>caja</option>
+                                        <option value='pack'>paquete</option>
+                                        <option value='bag'>bolsa</option>
+                                        <option value='case'>estuche</option>
+                                        <option value='dozen'>docena</option>
+                                        <option value='bundle'>bulto</option>
+                                      </optgroup>
+                                      <optgroup label='🍽️ Supermercado'>
+                                        <option value='tray'>bandeja</option>
+                                        <option value='bottle'>botella</option>
+                                        <option value='can'>lata</option>
+                                        <option value='jar'>frasco</option>
+                                        <option value='carton'>cartón</option>
+                                        <option value='stick'>barra</option>
+                                        <option value='slice'>tajada</option>
+                                        <option value='portion'>porción</option>
+                                      </optgroup>
+                                      <optgroup label='⏱️ Tiempo'>
+                                        <option value='hour'>hora</option>
+                                        <option value='day'>día</option>
+                                        <option value='month'>mes</option>
+                                      </optgroup>
+                                    </select>
+                                  </td>
+                                  <td className='p-3 text-center'>
+                                    <div className='flex flex-col items-center gap-1'>
+                                      <div className='flex items-center gap-2'>
+                                        <span className='text-sm font-semibold'>
+                                          {formattedMargin !== null
+                                            ? `${formattedMargin}%`
+                                            : '--'}
+                                        </span>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              size='icon'
+                                              variant='ghost'
+                                              onClick={() => handleOpenPricingModal(product)}
+                                              className='h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                                            >
+                                              <Calculator className='h-4 w-4' />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            Ajustar porcentaje o ingresar precio de venta
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </div>
+                                      <span className='text-xs text-muted-foreground'>
+                                        {salePricePreview > 0
+                                          ? formatGuaranies(salePricePreview)
+                                          : '—'}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className='p-3 text-center'>
+                                    <select
+                                      value={product.tax_rate_id || ''}
+                                      onChange={e =>
+                                        handleUpdateProduct(
+                                          product.product_id,
+                                          'tax_rate_id',
+                                          e.target.value
+                                            ? parseInt(e.target.value)
+                                            : null
+                                        )
+                                      }
+                                      className='border rounded px-2 py-1 text-sm w-32'
+                                    >
+                                      <option value=''>Sin IVA (0%)</option>
+                                      {taxRates.map(taxRate => (
+                                        <option key={taxRate.id} value={taxRate.id}>
+                                          {taxRate.tax_name || taxRate.name || 'IVA'} -{' '}
+                                          {taxRate.rate}%
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td className='p-3 text-center font-medium'>
+                                    {formatGuaranies(
+                                      product.quantity * product.unit_price
+                                    )}
+                                  </td>
+                                  <td className='p-3 text-center'>
+                                    <Button
+                                      size='sm'
+                                      variant='ghost'
+                                      onClick={() =>
+                                        handleRemoveProduct(product.product_id)
+                                      }
+                                      className='text-red-600 hover:text-red-800'
+                                    >
+                                      <Trash2 className='w-4 h-4' />
+                                    </Button>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Purchase Summary Card */}
+              {selectedProducts.length > 0 && (
+                <Card className={styles.card()}>
+                  <CardHeader>
+                    <CardTitle className='flex items-center gap-2'>
+                      <DollarSign className='w-5 h-5' />
+                      Resumen de Compra
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='space-y-4'>
+                      <div className='p-4 bg-gray-50 rounded-lg'>
+                        <div className='mb-3 text-center'>
+                          <div className='inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm'>
+                            <span>ℹ️</span>
+                            <span>Los precios del proveedor ya incluyen IVA</span>
+                          </div>
+                        </div>
+                        <div className='grid grid-cols-3 gap-4 text-center'>
+                          <div>
+                            <div className='text-sm text-muted-foreground'>
+                              Base (sin IVA)
+                            </div>
+                            <div className='font-medium text-muted-foreground'>
+                              {formatGuaranies(orderTotals.subtotal)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className='text-sm text-muted-foreground'>
+                              IVA incluido ({orderTotals.taxRate.toFixed(1)}%)
+                            </div>
+                            <div className='font-medium text-muted-foreground'>
+                              {formatGuaranies(orderTotals.tax)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className='text-sm text-muted-foreground'>
+                              Total a Pagar
+                            </div>
+                            <div className='text-lg font-bold'>
+                              {formatGuaranies(orderTotals.total)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className='grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg text-center'>
+                        <div>
+                          <div className='text-sm text-muted-foreground'>Productos</div>
+                          <div className='font-medium'>{selectedProducts.length}</div>
+                        </div>
+                        <div>
+                          <div className='text-sm text-muted-foreground'>Unidades</div>
+                          <div className='font-medium'>
+                            {selectedProducts.reduce(
+                              (sum, p) => sum + (p.quantity || 0),
+                              0
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <div className='text-sm text-muted-foreground'>IVA Total</div>
+                          <div className='font-medium'>
+                            {formatGuaranies(orderTotals.tax)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className='text-sm text-muted-foreground'>Total</div>
+                          <div className='font-bold text-lg'>
+                            {formatGuaranies(orderTotals.total)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
-            <div className='px-1'>
-              <style>{`
-                .purchase-config-grid {
-                  display: grid !important;
-                  grid-template-columns: 1fr;
-                  gap: 1rem;
-                }
-                @media (min-width: 768px) {
-                  .purchase-config-grid {
-                    grid-template-columns: 1fr 1fr !important;
-                  }
-                }
-              `}</style>
-              <div className='purchase-config-grid'>
-                {/* Left Column - Supplier Selection */}
-                <div className='space-y-2'>
-                  <label className='text-sm font-medium'>Proveedor</label>
+
+            {/* Aside - Purchase Details (Right Side) */}
+            <aside className='space-y-4'>
+              {/* Supplier Details Card */}
+              <Card className={styles.card()}>
+                <CardHeader>
+                  <CardTitle className='flex items-center gap-2 text-base'>
+                    <User className='w-4 h-4' />
+                    Proveedor
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-3'>
                   <Button
                     onClick={() => setShowSupplierModal(true)}
                     variant='outline'
-                    className='w-full justify-start h-9'
-                    size='sm'
+                    className='w-full justify-start'
+                    size='default'
                   >
                     <User className='w-4 h-4 mr-2' />
                     {selectedSupplier
@@ -1068,63 +1575,80 @@ const PurchasesPage = () => {
                       : 'Seleccionar Proveedor'}
                   </Button>
                   {selectedSupplier && (
-                    <div className='text-xs text-muted-foreground'>
-                      ID: {selectedSupplier.id} •{' '}
-                      {selectedSupplier.email || 'Sin email'}
+                    <div className='p-3 bg-gray-50 rounded-lg space-y-2 text-sm'>
+                      <div className='flex items-center justify-between'>
+                        <span className='text-muted-foreground'>ID:</span>
+                        <span className='font-medium'>{selectedSupplier.id}</span>
+                      </div>
+                      {selectedSupplier.email && (
+                        <div className='flex items-center justify-between'>
+                          <span className='text-muted-foreground'>Email:</span>
+                          <span className='font-medium'>{selectedSupplier.email}</span>
+                        </div>
+                      )}
+                      {selectedSupplier.phone && (
+                        <div className='flex items-center justify-between'>
+                          <span className='text-muted-foreground'>Teléfono:</span>
+                          <span className='font-medium'>{selectedSupplier.phone}</span>
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
+                </CardContent>
+              </Card>
 
-                {/* Right Column - Product Selection */}
-                <div className='space-y-2'>
-                  <label className='text-sm font-medium'>Productos</label>
-                  <Button
-                    onClick={() => setShowProductModal(true)}
-                    variant='outline'
-                    className='w-full justify-start h-9'
-                    size='sm'
-                  >
-                    <Package className='w-4 h-4 mr-2' />
-                    Agregar Productos
-                  </Button>
-                  {selectedProducts.length > 0 && (
-                    <div className='text-xs text-muted-foreground'>
-                      {selectedProducts.length} producto(s) seleccionado(s)
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Configuration Section - Compact */}
-              <div className='mt-4'>
-                <h4 className='font-medium mb-2 text-sm'>
-                  Configuración Avanzada
-                </h4>
-
-                <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>
+              {/* Payment Details Card */}
+              <Card className={styles.card()}>
+                <CardHeader>
+                  <CardTitle className='flex items-center gap-2 text-base'>
+                    <DollarSign className='w-4 h-4' />
+                    Detalles de Pago
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  {/* Payment Method */}
                   <div className='space-y-2'>
-                    <div className='flex items-center gap-2'>
-                      <input
-                        type='checkbox'
-                        id='autoPricing'
-                        checked={orderData.auto_update_prices}
-                        onChange={e =>
-                          setOrderData(prev => ({
-                            ...prev,
-                            auto_update_prices: e.target.checked,
-                          }))
-                        }
-                        className='w-4 h-4'
-                      />
-                      <label htmlFor='autoPricing' className='text-sm'>
-                        Auto-actualizar precios
-                      </label>
-                    </div>
+                    <label className='text-sm font-medium'>Método de Pago</label>
+                    <PaymentMethodSelector
+                      value={orderData.payment_method_id}
+                      onChange={method => {
+                        console.log('🔍 PaymentMethod Selected:', method)
+                        setOrderData(prev => ({
+                          ...prev,
+                          payment_method_id: method?.id || null,
+                        }))
+                      }}
+                      placeholder='Seleccionar método de pago...'
+                      showSearch={true}
+                      size='sm'
+                    />
+                  </div>
 
-                    <div className='flex items-center gap-2'>
+                  {/* Currency */}
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium'>Moneda</label>
+                    <CurrencySelector
+                      value={orderData.currency_id}
+                      onChange={currency => {
+                        console.log('🔍 Currency Selected:', currency)
+                        setOrderData(prev => ({
+                          ...prev,
+                          currency_id: currency?.id || null,
+                        }))
+                      }}
+                      placeholder='Seleccionar moneda...'
+                      showSearch={true}
+                      size='sm'
+                    />
+                  </div>
+
+                  {/* Payment Status */}
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium'>Estado de Pago</label>
+                    <div className='flex items-center gap-2 p-3 bg-gray-50 rounded-lg'>
                       <input
                         type='checkbox'
-                        id='isPaid'
+                        id='isPaid-aside'
                         checked={orderData.isPaid}
                         onChange={e =>
                           setOrderData(prev => ({
@@ -1135,7 +1659,7 @@ const PurchasesPage = () => {
                         className='w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500'
                       />
                       <label
-                        htmlFor='isPaid'
+                        htmlFor='isPaid-aside'
                         className='text-sm flex items-center gap-1'
                       >
                         <span
@@ -1151,8 +1675,20 @@ const PurchasesPage = () => {
                       </label>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
-                  <div>
+              {/* Configuration Card */}
+              <Card className={styles.card()}>
+                <CardHeader>
+                  <CardTitle className='flex items-center gap-2 text-base'>
+                    <Settings className='w-4 h-4' />
+                    Configuración
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-4'>
+                  {/* Default Profit Margin */}
+                  <div className='space-y-2'>
                     <label className='text-sm font-medium'>
                       Margen de ganancia por defecto (%)
                     </label>
@@ -1169,387 +1705,222 @@ const PurchasesPage = () => {
                             parseFloat(e.target.value) || 30,
                         }))
                       }
-                      className='mt-1 h-8'
+                      className='h-9'
                       size='sm'
                     />
                   </div>
 
+                  {/* Auto Update Prices */}
                   <div className='space-y-2'>
-                    {/* Payment Method Selector */}
-                    <div>
-                      <label className='text-sm font-medium'>
-                        Método de Pago
+                    <div className='flex items-center gap-2 p-3 bg-gray-50 rounded-lg'>
+                      <input
+                        type='checkbox'
+                        id='autoPricing-aside'
+                        checked={orderData.auto_update_prices}
+                        onChange={e =>
+                          setOrderData(prev => ({
+                            ...prev,
+                            auto_update_prices: e.target.checked,
+                          }))
+                        }
+                        className='w-4 h-4'
+                      />
+                      <label htmlFor='autoPricing-aside' className='text-sm'>
+                        Auto-actualizar precios
                       </label>
-                      <div className='mt-1'>
-                        <PaymentMethodSelector
-                          value={orderData.payment_method_id}
-                          onChange={method => {
-                            console.log('🔍 PaymentMethod Selected:', method)
-                            setOrderData(prev => ({
-                              ...prev,
-                              payment_method_id: method?.id || null,
-                            }))
-                          }}
-                          placeholder='Seleccionar método de pago...'
-                          showSearch={true}
-                          size='sm'
-                        />
-                      </div>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-                    {/* Currency Selector */}
-                    <div>
-                      <label className='text-sm font-medium'>Moneda</label>
-                      <div className='mt-1'>
-                        <CurrencySelector
-                          value={orderData.currency_id}
-                          onChange={currency => {
-                            console.log('🔍 Currency Selected:', currency)
-                            setOrderData(prev => ({
-                              ...prev,
-                              currency_id: currency?.id || null,
-                            }))
-                          }}
-                          placeholder='Seleccionar moneda...'
-                          showSearch={true}
-                          size='sm'
-                        />
+              {/* Create Order Button */}
+              <Button
+                onClick={handleCreatePurchaseOrder}
+                disabled={
+                  !selectedSupplier ||
+                  selectedProducts.length === 0 ||
+                  loading
+                }
+                className='w-full flex items-center justify-center gap-2'
+                size='lg'
+              >
+                {loading ? (
+                  <>
+                    <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
+                    Creando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className='w-5 h-5' />
+                    Crear Orden de Compra
+                  </>
+                )}
+              </Button>
+            </aside>
+          </div>
+
+          {/* Modal Components */}
+          <Dialog
+            open={pricingModalState.open}
+            onOpenChange={isOpen => {
+              if (!isOpen) {
+                handleClosePricingModal()
+              }
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Ajustar precio de venta</DialogTitle>
+                <DialogDescription>
+                  {pricingProduct?.name
+                    ? `Producto seleccionado: ${pricingProduct.name}`
+                    : 'Selecciona un producto para configurar el precio.'}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className='space-y-4'>
+                <div className='rounded-md border border-blue-200 bg-blue-50 p-3 text-sm'>
+                  <div className='flex items-center justify-between text-sm'>
+                    <span>Precio de compra</span>
+                    <span className='font-semibold'>
+                      {formatGuaranies(pricingUnitPrice)}
+                    </span>
+                  </div>
+                  <div className='mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground'>
+                    <div className='flex flex-col gap-1'>
+                      <span>Margen actual</span>
+                      <span className='font-medium text-gray-700'>
+                        {Number.isFinite(currentPricingMargin)
+                          ? `${currentPricingMargin.toFixed(2)}%`
+                          : '—'}
+                      </span>
+                    </div>
+                    <div className='flex flex-col gap-1'>
+                      <span>Venta calculada</span>
+                      <span className='font-medium text-gray-700'>
+                        {currentPricingSalePrice > 0
+                          ? formatGuaranies(currentPricingSalePrice)
+                          : '—'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className='space-y-3'>
+                  <Label className='text-xs uppercase text-muted-foreground'>
+                    ¿Qué deseas ajustar?
+                  </Label>
+                  <RadioGroup
+                    value={pricingMode}
+                    onValueChange={value => setPricingMode(value)}
+                    className='grid gap-2'
+                  >
+                    <div className='flex items-start gap-3 rounded-md border p-3'>
+                      <RadioGroupItem
+                        value='percentage'
+                        id='pricing-mode-percentage'
+                        className='mt-1'
+                      />
+                      <div>
+                        <Label htmlFor='pricing-mode-percentage' className='font-medium'>
+                          Porcentaje de ganancia
+                        </Label>
+                        <p className='text-xs text-muted-foreground'>
+                          Ingresá el margen que deberá usar el sistema para calcular el precio.
+                        </p>
                       </div>
                     </div>
+                    <div className='flex items-start gap-3 rounded-md border p-3'>
+                      <RadioGroupItem
+                        value='salePrice'
+                        id='pricing-mode-sale-price'
+                        className='mt-1'
+                      />
+                      <div>
+                        <Label htmlFor='pricing-mode-sale-price' className='font-medium'>
+                          Precio de venta directo
+                        </Label>
+                        <p className='text-xs text-muted-foreground'>
+                          Indicá el precio final que querés vender y calcularemos el porcentaje equivalente.
+                        </p>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {pricingMode === 'percentage' ? (
+                  <div className='space-y-2'>
+                    <Label htmlFor='pricing-percentage'>Margen (%)</Label>
+                    <Input
+                      id='pricing-percentage'
+                      type='number'
+                      min='0'
+                      max='1000'
+                      step='0.1'
+                      value={pricingValues.percentage}
+                      onChange={e =>
+                        setPricingValues(prev => ({
+                          ...prev,
+                          percentage: e.target.value,
+                        }))
+                      }
+                    />
+                    <p className='text-xs text-muted-foreground'>
+                      El precio de venta se calculará automáticamente con este margen.
+                    </p>
+                  </div>
+                ) : (
+                  <div className='space-y-2'>
+                    <Label htmlFor='pricing-sale-price'>Precio de venta</Label>
+                    <Input
+                      id='pricing-sale-price'
+                      type='number'
+                      min='0'
+                      step='0.01'
+                      value={pricingValues.salePrice}
+                      onChange={e =>
+                        setPricingValues(prev => ({
+                          ...prev,
+                          salePrice: e.target.value,
+                        }))
+                      }
+                    />
+                    <p className='text-xs text-muted-foreground'>
+                      Calcularemos el margen de ganancia a partir de este precio final.
+                    </p>
+                  </div>
+                )}
+
+                <div className='rounded-md border border-dashed p-3 text-sm'>
+                  <div className='flex items-center justify-between'>
+                    <span>Margen calculado</span>
+                    <span className='font-semibold'>
+                      {previewPricingProfit !== null &&
+                      Number.isFinite(previewPricingProfit)
+                        ? `${previewPricingProfit.toFixed(2)}%`
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className='mt-2 flex items-center justify-between text-xs text-muted-foreground'>
+                    <span>Precio de venta estimado</span>
+                    <span>
+                      {previewPricingSalePrice > 0
+                        ? formatGuaranies(previewPricingSalePrice)
+                        : '—'}
+                    </span>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Selected Products Table */}
-          {selectedProducts.length > 0 && (
-            <Card className={styles.card()}>
-              <CardHeader>
-                <CardTitle className='flex items-center justify-between'>
-                  <span className='flex items-center gap-2'>
-                    <ShoppingCart className='w-5 h-5' />
-                    Productos Seleccionados ({selectedProducts.length})
-                  </span>
-                  <div className='text-right'>
-                    <div className='text-sm text-muted-foreground'>Total:</div>
-                    <div className='text-lg font-bold'>
-                      {formatGuaranies(orderTotals.total)}
-                    </div>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='overflow-x-auto'>
-                  <table className='w-full'>
-                    <thead className='bg-gray-50'>
-                      <tr>
-                        <th className='text-left p-3 font-medium'>Producto</th>
-                        <th className='text-center p-3 font-medium'>
-                          Cantidad
-                        </th>
-                        <th className='text-center p-3 font-medium'>
-                          Precio Unit.
-                          <br />
-                          <span className='text-xs text-muted-foreground'>
-                            (inc. IVA)
-                          </span>
-                        </th>
-                        <th className='text-center p-3 font-medium'>Unidad</th>
-                        <th className='text-center p-3 font-medium'>
-                          Margen %
-                        </th>
-                        <th className='text-center p-3 font-medium'>
-                          IVA
-                          <br />
-                          <span className='text-xs text-muted-foreground'>
-                            (referencial)
-                          </span>
-                        </th>
-                        <th className='text-center p-3 font-medium'>Total</th>
-                        <th className='text-center p-3 font-medium'>
-                          Acciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedProducts.map(product => (
-                        <tr key={product.product_id} className='border-t'>
-                          <td className='p-3'>
-                            <div>
-                              <div className='font-medium'>{product.name}</div>
-                              <div className='text-sm text-muted-foreground'>
-                                {product.product_id}
-                              </div>
-                            </div>
-                          </td>
-                          <td className='p-3 text-center'>
-                            <Input
-                              type='number'
-                              min='1'
-                              value={product.quantity}
-                              onChange={e =>
-                                handleUpdateProduct(
-                                  product.product_id,
-                                  'quantity',
-                                  e.target.value
-                                )
-                              }
-                              className='w-20 text-center'
-                            />
-                          </td>
-                          <td className='p-3 text-center'>
-                            <Input
-                              type='number'
-                              min='0'
-                              step='0.01'
-                              value={product.unit_price}
-                              onChange={e =>
-                                handleUpdateProduct(
-                                  product.product_id,
-                                  'unit_price',
-                                  e.target.value
-                                )
-                              }
-                              className='w-24 text-center'
-                            />
-                          </td>
-                          <td className='p-3 text-center'>
-                            <select
-                              value={product.unit}
-                              onChange={e =>
-                                handleUpdateProduct(
-                                  product.product_id,
-                                  'unit',
-                                  e.target.value
-                                )
-                              }
-                              className='border rounded px-2 py-1 text-sm bg-white hover:bg-gray-50'
-                            >
-                              <optgroup label='📦 Básicas'>
-                                <option value='unit'>unidad</option>
-                                <option value='pair'>par</option>
-                                <option value='set'>set</option>
-                              </optgroup>
-                              <optgroup label='⚖️ Peso'>
-                                <option value='kg'>kilogramo</option>
-                                <option value='g'>gramo</option>
-                                <option value='lb'>libra</option>
-                                <option value='oz'>onza</option>
-                                <option value='ton'>tonelada</option>
-                              </optgroup>
-                              <optgroup label='💧 Volumen'>
-                                <option value='l'>litro</option>
-                                <option value='ml'>mililitro</option>
-                                <option value='gal'>galón</option>
-                              </optgroup>
-                              <optgroup label='📏 Longitud/Área'>
-                                <option value='meter'>metro</option>
-                                <option value='cm'>centímetro</option>
-                                <option value='sqm'>metro cuadrado</option>
-                                <option value='roll'>rollo</option>
-                              </optgroup>
-                              <optgroup label='📦 Empaque'>
-                                <option value='box'>caja</option>
-                                <option value='pack'>paquete</option>
-                                <option value='bag'>bolsa</option>
-                                <option value='case'>estuche</option>
-                                <option value='dozen'>docena</option>
-                                <option value='bundle'>bulto</option>
-                              </optgroup>
-                              <optgroup label='🍽️ Supermercado'>
-                                <option value='tray'>bandeja</option>
-                                <option value='bottle'>botella</option>
-                                <option value='can'>lata</option>
-                                <option value='jar'>frasco</option>
-                                <option value='carton'>cartón</option>
-                                <option value='stick'>barra</option>
-                                <option value='slice'>tajada</option>
-                                <option value='portion'>porción</option>
-                              </optgroup>
-                              <optgroup label='⏱️ Tiempo'>
-                                <option value='hour'>hora</option>
-                                <option value='day'>día</option>
-                                <option value='month'>mes</option>
-                              </optgroup>
-                            </select>
-                          </td>
-                          <td className='p-3 text-center'>
-                            <Input
-                              type='number'
-                              min='0'
-                              max='1000'
-                              step='0.1'
-                              value={product.profit_pct}
-                              onChange={e =>
-                                handleUpdateProduct(
-                                  product.product_id,
-                                  'profit_pct',
-                                  e.target.value
-                                )
-                              }
-                              className='w-20 text-center'
-                            />
-                          </td>
-                          <td className='p-3 text-center'>
-                            <select
-                              value={product.tax_rate_id || ''}
-                              onChange={e =>
-                                handleUpdateProduct(
-                                  product.product_id,
-                                  'tax_rate_id',
-                                  e.target.value
-                                    ? parseInt(e.target.value)
-                                    : null
-                                )
-                              }
-                              className='border rounded px-2 py-1 text-sm w-32'
-                            >
-                              <option value=''>Sin IVA (0%)</option>
-                              {taxRates.map(taxRate => (
-                                <option key={taxRate.id} value={taxRate.id}>
-                                  {taxRate.tax_name || taxRate.name || 'IVA'} -{' '}
-                                  {taxRate.rate}%
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className='p-3 text-center font-medium'>
-                            {formatGuaranies(
-                              product.quantity * product.unit_price
-                            )}
-                          </td>
-                          <td className='p-3 text-center'>
-                            <Button
-                              size='sm'
-                              variant='ghost'
-                              onClick={() =>
-                                handleRemoveProduct(product.product_id)
-                              }
-                              className='text-red-600 hover:text-red-800'
-                            >
-                              <Trash2 className='w-4 h-4' />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <DialogFooter>
+                <Button variant='outline' onClick={handleClosePricingModal}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleApplyPricingChanges}>Aplicar</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-                {/* Order Summary */}
-                <div className='mt-6 p-4 bg-gray-50 rounded-lg'>
-                  <div className='mb-3 text-center'>
-                    <div className='inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm'>
-                      <span>ℹ️</span>
-                      <span>Los precios del proveedor ya incluyen IVA</span>
-                    </div>
-                  </div>
-                  <div className='grid grid-cols-3 gap-4 text-center'>
-                    <div>
-                      <div className='text-sm text-muted-foreground'>
-                        Base (sin IVA)
-                      </div>
-                      <div className='font-medium text-muted-foreground'>
-                        {formatGuaranies(orderTotals.subtotal)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className='text-sm text-muted-foreground'>
-                        IVA incluido ({orderTotals.taxRate.toFixed(1)}%)
-                      </div>
-                      <div className='font-medium text-muted-foreground'>
-                        {formatGuaranies(orderTotals.tax)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className='text-sm text-muted-foreground'>
-                        Total a Pagar
-                      </div>
-                      <div className='text-lg font-bold'>
-                        {formatGuaranies(orderTotals.total)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Order Summary Section - Below Products */}
-          {selectedProducts.length > 0 && (
-            <Card className={styles.card()}>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2'>
-                  <ShoppingCart className='w-5 h-5' />
-                  Resumen de Compra
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg text-center mb-6'>
-                  <div>
-                    <div className='text-sm text-muted-foreground'>
-                      Productos
-                    </div>
-                    <div className='font-medium'>{selectedProducts.length}</div>
-                  </div>
-                  <div>
-                    <div className='text-sm text-muted-foreground'>
-                      Base (sin IVA)
-                    </div>
-                    <div className='font-medium text-muted-foreground'>
-                      {formatGuaranies(orderTotals.subtotal)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className='text-sm text-muted-foreground'>
-                      IVA incluido ({orderTotals.taxRate.toFixed(1)}%)
-                    </div>
-                    <div className='font-medium text-muted-foreground'>
-                      {formatGuaranies(orderTotals.tax)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className='text-sm text-muted-foreground'>
-                      Total a Pagar
-                    </div>
-                    <div className='text-lg font-bold'>
-                      {formatGuaranies(orderTotals.total)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Create Order Button */}
-                <div className='flex justify-end'>
-                  <Button
-                    onClick={handleCreatePurchaseOrder}
-                    disabled={
-                      !selectedSupplier ||
-                      selectedProducts.length === 0 ||
-                      loading
-                    }
-                    className={`${styles.button(
-                      'primary'
-                    )} flex items-center gap-2`}
-                  >
-                    {loading ? (
-                      <>
-                        <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
-                        Creando...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className='w-5 h-5' />
-                        Crear Orden de Compra
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Modal Components */}
           <SupplierSelectionModal
             isOpen={showSupplierModal}
             onClose={() => setShowSupplierModal(false)}
