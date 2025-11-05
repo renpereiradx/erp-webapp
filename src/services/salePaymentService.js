@@ -531,14 +531,14 @@ export const salePaymentService = {
 
     try {
       const params = new URLSearchParams(filters);
+      // Agregar timestamp para evitar caché (suficiente para bypass sin headers custom)
+      params.append('_t', Date.now().toString());
+      
       const url = `${API_ENDPOINTS.salesByDateRangeWithPaymentStatus}?${params}`;
 
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(url);
       });
-
-      if (result?.data?.length > 0) {
-      }
 
       telemetry.record('sale_payment.service.list_with_payment_status', {
         duration: Date.now() - startTime,

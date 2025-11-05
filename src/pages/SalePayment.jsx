@@ -549,26 +549,45 @@ const SalePayment = () => {
   }
 
   // Función para filtrar ventas localmente por nombre de cliente
-  const handleSearchClientByName = () => {
+  const handleSearchClientByName = async () => {
     if (!clientNameSearch.trim()) {
       // Si el campo está vacío, mostrar todas las ventas
       setSales(allSales)
       return
     }
 
-    // Filtrar ventas localmente por nombre de cliente
-    const searchTerm = clientNameSearch.toLowerCase().trim()
+    setIsSalesLoading(true)
+    setSalesError(null)
 
-    const filteredSales = allSales.filter(sale => {
-      const clientName = (sale.client_name || '').toLowerCase()
-      return clientName.includes(searchTerm)
-    })
+    try {
+      // Usar el endpoint dedicado para búsqueda por nombre de cliente
+      const response = await salePaymentService.getSalesByClientNameWithPaymentStatus(
+        clientNameSearch.trim(),
+        {
+          page: 1,
+          page_size: dateFilters.page_size || 50
+        }
+      )
 
-    setSales(filteredSales)
-
-    if (filteredSales.length === 0) {
+      if (response?.data) {
+        // Los datos ya vienen en formato plano con payment status
+        const salesData = response.data.map(item => {
+          return {
+            ...item,
+            id: item.id || item.sale_id,
+          }
+        })
+        setSales(salesData)
+      } else {
+        setSales([])
+      }
+    } catch (error) {
+      console.error('Error searching sales by client name:', error)
+      setSalesError(error.message || 'Error al buscar ventas por nombre de cliente')
+      setSales([])
+    } finally {
+      setIsSalesLoading(false)
     }
-
   }
 
   // Función para manejar Enter en el input de búsqueda
