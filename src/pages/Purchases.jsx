@@ -330,12 +330,18 @@ const PurchasesPage = () => {
   }, [selectedProducts, selectedTaxRate, taxRatesMap])
 
   const pricingProduct = pricingModalState.product
-  const pricingUnitPrice = pricingProduct
-    ? Number(pricingProduct.unit_price) || 0
+  
+  // Buscar el producto actual en selectedProducts para tener datos actualizados
+  const currentPricingProduct = pricingProduct
+    ? selectedProducts.find(p => p.product_id === pricingProduct.product_id)
+    : null
+    
+  const pricingUnitPrice = currentPricingProduct
+    ? Number(currentPricingProduct.unit_price) || 0
     : 0
-  const currentPricingMargin = pricingProduct
+  const currentPricingMargin = currentPricingProduct
     ? Number(
-        pricingProduct.profit_pct ?? orderData.default_profit_margin ?? 0
+        currentPricingProduct.profit_pct ?? orderData.default_profit_margin ?? 0
       ) || 0
     : 0
   const currentPricingSalePrice = calculateSalePriceFromMargin(
@@ -650,6 +656,18 @@ const PurchasesPage = () => {
         return prev
       }
 
+      // Extraer el precio de compra desde unit_costs_summary si está disponible
+      let costFromSummary = 0
+      if (product.unit_costs_summary && typeof product.unit_costs_summary === 'object') {
+        // unit_costs_summary puede tener la estructura: { average_cost: 60, last_cost: 60, etc. }
+        costFromSummary = parseFloat(
+          product.unit_costs_summary.last_cost ??
+          product.unit_costs_summary.average_cost ??
+          product.unit_costs_summary.cost ??
+          0
+        ) || 0
+      }
+
       const resolvedUnitPrice =
         parseFloat(
           product.purchase_price ??
@@ -657,6 +675,7 @@ const PurchasesPage = () => {
             product.unit_price ??
             product.price ??
             product.last_purchase_price ??
+            costFromSummary ??
             product.selling_price ??
             0
         ) || 0
@@ -768,9 +787,20 @@ const PurchasesPage = () => {
   }
 
   const handleApplyPricingChanges = () => {
-    const targetProduct = pricingModalState.product
+    const modalProduct = pricingModalState.product
+
+    if (!modalProduct) {
+      handleClosePricingModal()
+      return
+    }
+
+    // Get the current product from selectedProducts to ensure we have the latest data
+    const targetProduct = selectedProducts.find(
+      p => p.product_id === modalProduct.product_id
+    )
 
     if (!targetProduct) {
+      alert('Producto no encontrado en la lista.')
       handleClosePricingModal()
       return
     }
