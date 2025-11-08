@@ -1,0 +1,75 @@
+// =============================================================================
+// CLIENT DETAILS MODAL COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Modal for displaying client information in read-only format
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// CLIENT DETAILS LAYOUT
+// -----------------------------------------------------------------------------
+
+.client-details,
+.supplier-details {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+  padding: $spacing-8 0;
+}
+
+.client-details__row,
+.supplier-details__row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-24;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: $spacing-16;
+  }
+}
+
+.client-details__field,
+.supplier-details__field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+}
+
+.client-details__label,
+.supplier-details__label {
+  @include body-small;
+  font-weight: $font-weight-semibold;
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.client-details__value,
+.supplier-details__value {
+  @include body;
+  font-weight: $font-weight-regular;
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  // Handle badge inside value
+  .badge {
+    display: inline-flex;
+  }
+}
+
+.client-details__field--full,
+.supplier-details__field--full {
+  grid-column: 1 / -1;
+}
+
+// -----------------------------------------------------------------------------
+// DIALOG FOOTER VARIANT
+// -----------------------------------------------------------------------------
+
+.dialog__footer--single {
+  justify-content: flex-end;
+}

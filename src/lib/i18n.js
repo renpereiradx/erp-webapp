@@ -48,6 +48,104 @@ const DICTIONARY = {
     'badge.low_stock': 'Bajo stock',
     'badge.low_stock.upper': 'BAJO STOCK',
 
+    // Products Page - MVP strings
+    'products.page.title': 'Gestión de Productos',
+    'products.page.subtitle':
+      'Administra, filtra y visualiza todos los productos del sistema.',
+    'products.breadcrumb.home': 'Inicio',
+    'products.breadcrumb.products': 'Productos',
+    'products.search.by_name_sku': 'Buscar productos por nombre o SKU',
+    'products.action.filter': 'Filtrar',
+    'products.action.export': 'Exportar',
+    'products.action.new_product': 'Nuevo Producto',
+    'products.table.product_name': 'Nombre del Producto',
+    'products.table.category': 'Categoría',
+    'products.table.stock': 'Stock',
+    'products.table.state': 'Estado',
+    'products.table.financial_health': 'Salud Financiera',
+    'products.table.actions': 'Acciones',
+    'products.state.active': 'Activo',
+    'products.state.inactive': 'Inactivo',
+    'products.health.healthy': 'Saludable',
+    'products.health.at_risk': 'En Riesgo',
+    'products.health.poor': 'Pobre',
+    'products.stock.low': '{quantity} (Bajo)',
+    'products.pagination.showing':
+      'Mostrando {start} a {end} de {total} resultados',
+    'products.pagination.page_of': '{current} / {total}',
+    'products.empty.title': 'Sin productos',
+    'products.empty.message': 'No hay productos registrados en el sistema',
+    'products.error.title': 'Error al cargar productos',
+    'products.modal.create.title': 'Crear Nuevo Producto',
+    'products.modal.create.subtitle':
+      'Completa los detalles para agregar un nuevo producto.',
+    'products.modal.edit.title': 'Editar Producto',
+    'products.modal.edit.subtitle': 'Actualiza la información del producto.',
+    'products.modal.section.product_info': 'Información del Producto',
+    'products.modal.section.additional_details':
+      'Detalles Adicionales (Opcional)',
+    'products.modal.field.product_name': 'Nombre del Producto',
+    'products.modal.field.category': 'Categoría',
+    'products.modal.field.purchase_price': 'Precio de Compra',
+    'products.modal.field.product_type': 'Tipo de Producto',
+    'products.modal.field.description': 'Descripción',
+    'products.modal.field.barcode': 'Código de Barras',
+    'products.modal.field.brand': 'Marca',
+    'products.modal.field.origin': 'Origen',
+    'products.modal.placeholder.product_name':
+      'ej., Mouse Inalámbrico Ergonómico',
+    'products.modal.placeholder.category': 'Selecciona una categoría',
+    'products.modal.placeholder.price': 'ej., 49.99',
+    'products.modal.placeholder.description':
+      'Ingresa una descripción detallada del producto...',
+    'products.modal.placeholder.barcode': 'Ingresa código de barras',
+    'products.modal.placeholder.brand': 'Ingresa nombre de marca',
+    'products.modal.placeholder.origin': 'Selecciona origen',
+    'products.modal.helper.barcode': 'Máximo 50 caracteres',
+    'products.modal.helper.brand': 'Máximo 100 caracteres',
+    'products.modal.action.cancel': 'Cancelar',
+    'products.modal.action.save': 'Guardar',
+    'products.modal.action.saving': 'Guardando...',
+    'products.modal.action.close': 'Cerrar',
+    'products.modal.error.name_required': 'El nombre del producto es requerido',
+    'products.modal.error.category_required': 'La categoría es requerida',
+    'products.modal.error.price_required': 'El precio de compra es requerido',
+    'products.modal.error.price_invalid': 'El precio debe ser mayor a 0',
+    'products.modal.error.barcode_too_long':
+      'El código de barras no puede exceder 50 caracteres',
+    'products.modal.error.brand_too_long':
+      'La marca no puede exceder 100 caracteres',
+    'products.category.electronics': 'Electrónica',
+    'products.category.office': 'Suministros de Oficina',
+    'products.category.furniture': 'Muebles',
+    'products.type.physical': 'Físico',
+    'products.type.service': 'Servicio',
+    'products.origin.national': 'Nacional',
+    'products.origin.imported': 'Importado',
+    'products.details.product_id': 'ID de Producto',
+    'products.details.section.general_info': 'Información General',
+    'products.details.section.unit_prices': 'Precios por Unidad',
+    'products.details.section.cost_summary': 'Resumen de Costos',
+    'products.details.section.inventory': 'Inventario',
+    'products.details.section.margin_analysis': 'Análisis de Margen',
+    'products.details.section.financial_health': 'Salud Financiera',
+    'products.details.table.unit': 'Unidad',
+    'products.details.table.price': 'Precio',
+    'products.details.table.currency': 'Moneda',
+    'products.details.label.state': 'Estado',
+    'products.details.label.last_cost': 'Último Costo',
+    'products.details.label.avg_cost': 'Costo Promedio (6m)',
+    'products.details.label.stock_quantity': 'Cantidad en Stock',
+    'products.details.label.best_margin': 'Mejor Margen',
+    'products.details.label.best_unit': 'Mejor Unidad',
+    'products.details.health.has_prices': 'Tiene Precios',
+    'products.details.health.has_costs': 'Tiene Costos',
+    'products.details.health.low_stock': 'Stock Bajo',
+    'products.details.unit.single': 'Unidad',
+    'products.details.units': 'Unidades',
+    'products.details.no_prices': 'No hay precios registrados',
+    'products.details.action.edit': 'Editar',
+
     // Price Adjustments - MVP strings
     'priceAdjustment.title': 'Ajustes de Precios',
     'priceAdjustment.action.create': 'Crear Ajuste',
@@ -80,6 +178,7 @@ const DICTIONARY = {
 
     // Clients - MVP strings
     'clients.title': 'Clientes',
+    'clients.loading': 'Cargando clientes...',
     'clients.action.primary': 'Nuevo Cliente',
     'clients.error.generic':
       'Error al procesar la solicitud. Por favor, intente nuevamente.',
@@ -116,7 +215,6 @@ const DICTIONARY = {
     'products.saving': 'Guardando...',
     'products.categories_first': 'Cargar categorías primero',
     'products.save': 'Guardar',
-    'products.name_placeholder': 'Ingrese el nombre del producto',
 
     'products.delete_title': 'Eliminar Producto',
     'products.delete_subtitle': 'Esta acción no se puede deshacer',
@@ -136,7 +234,6 @@ const DICTIONARY = {
     'products.error.save_price': 'Error al guardar precio',
     'products.stock_updated': 'Stock actualizado exitosamente',
     'products.error.save_stock': 'Error al guardar stock',
-    'products.id_label': 'ID',
     'products.tabs.info': 'Información',
     'products.tabs.description': 'Descripción',
     'products.tabs.price': 'Precios',
@@ -270,7 +367,6 @@ const DICTIONARY = {
     'products.saving': 'Saving...',
     'products.categories_first': 'Load categories first',
     'products.save': 'Save',
-    'products.name_placeholder': 'Enter product name',
 
     'products.delete_title': 'Delete Product',
     'products.delete_subtitle': 'This action cannot be undone',
@@ -290,7 +386,6 @@ const DICTIONARY = {
     'products.error.save_price': 'Error saving price',
     'products.stock_updated': 'Stock updated successfully',
     'products.error.save_stock': 'Error saving stock',
-    'products.id_label': 'ID',
     'products.tabs.info': 'Information',
     'products.tabs.description': 'Description',
     'products.tabs.price': 'Prices',
@@ -734,8 +829,47 @@ Object.assign(DICTIONARY.es, {
   'clients.pagination.next': 'Siguiente',
   'clients.pagination.last': 'Última',
   'clients.pagination.page_of': 'Página {page} de {totalPages}',
+
+  // Clients Page - Nueva página con diseño Fluent
+  'clients.subtitle':
+    'Administra, filtra y visualiza todos los clientes del sistema.',
+  'clients.action.create': 'Nuevo Cliente',
+  'clients.search.label': 'Buscar clientes',
+  'clients.table.name': 'NOMBRE DEL CLIENTE',
+  'clients.table.document': 'DOCUMENTO',
+  'clients.table.contact': 'CONTACTO',
+  'clients.table.status': 'ESTADO',
+  'clients.status.active': 'Activo',
+  'clients.status.inactive': 'Inactivo',
+  'clients.confirm_delete': '¿Está seguro de eliminar este cliente?',
+  'clients.empty.title': 'Buscar Clientes',
+  'clients.empty.message':
+    'Usa la barra de búsqueda para encontrar clientes por nombre o documento',
+  'clients.error.title': 'Error al cargar clientes',
+  'clients.search.no_results': 'Sin resultados',
+  'clients.search.no_results_message':
+    'No se encontraron clientes con ese criterio de búsqueda',
+
+  // Client Form Modal
+  'clients.modal.title.create': 'Nuevo Cliente',
+  'clients.modal.title.edit': 'Editar Cliente',
+  'clients.modal.field.name': 'Nombre',
+  'clients.modal.field.last_name': 'Apellido',
+  'clients.modal.field.document': 'Documento de Identidad',
+  'clients.modal.field.contact': 'Contacto',
+  'clients.modal.placeholder.name': 'Ingrese el nombre',
+  'clients.modal.placeholder.last_name': 'Ingrese el apellido',
+  'clients.modal.placeholder.document': 'CI, RUC, etc.',
+  'clients.modal.placeholder.contact': 'Teléfono, email, etc.',
+  'clients.modal.hint.contact':
+    'Opcional. Puede incluir teléfono, email o cualquier información de contacto.',
+  'clients.modal.error.name_required': 'El nombre es requerido',
+  'clients.modal.error.last_name_required': 'El apellido es requerido',
+  'clients.modal.error.document_required': 'El documento es requerido',
+  'clients.modal.error.generic': 'Error al guardar el cliente',
 })
 Object.assign(DICTIONARY.en, {
+  'clients.loading': 'Loading clients...',
   'clients.search.db': 'Search in Database',
   'clients.search.placeholder': 'Search by name, document or ID...',
   'clients.search': 'Search',
@@ -752,6 +886,43 @@ Object.assign(DICTIONARY.en, {
   'clients.pagination.next': 'Next',
   'clients.pagination.last': 'Last',
   'clients.pagination.page_of': 'Page {page} of {totalPages}',
+
+  // Clients Page - New page with Fluent design
+  'clients.subtitle': 'Manage, filter and view all clients in the system.',
+  'clients.action.create': 'New Client',
+  'clients.search.label': 'Search clients',
+  'clients.table.name': 'CLIENT NAME',
+  'clients.table.document': 'DOCUMENT',
+  'clients.table.contact': 'CONTACT',
+  'clients.table.status': 'STATUS',
+  'clients.status.active': 'Active',
+  'clients.status.inactive': 'Inactive',
+  'clients.confirm_delete': 'Are you sure you want to delete this client?',
+  'clients.empty.title': 'Search Clients',
+  'clients.empty.message':
+    'Use the search bar to find clients by name or document',
+  'clients.error.title': 'Error loading clients',
+  'clients.search.no_results': 'No results',
+  'clients.search.no_results_message':
+    'No clients found with that search criteria',
+
+  // Client Form Modal
+  'clients.modal.title.create': 'New Client',
+  'clients.modal.title.edit': 'Edit Client',
+  'clients.modal.field.name': 'First Name',
+  'clients.modal.field.last_name': 'Last Name',
+  'clients.modal.field.document': 'ID Document',
+  'clients.modal.field.contact': 'Contact',
+  'clients.modal.placeholder.name': 'Enter first name',
+  'clients.modal.placeholder.last_name': 'Enter last name',
+  'clients.modal.placeholder.document': 'ID, Tax ID, etc.',
+  'clients.modal.placeholder.contact': 'Phone, email, etc.',
+  'clients.modal.hint.contact':
+    'Optional. Can include phone, email or any contact information.',
+  'clients.modal.error.name_required': 'First name is required',
+  'clients.modal.error.last_name_required': 'Last name is required',
+  'clients.modal.error.document_required': 'Document is required',
+  'clients.modal.error.generic': 'Error saving client',
 })
 
 // Sales - MVP strings
@@ -1102,6 +1273,13 @@ Object.assign(DICTIONARY.es, {
   'action.delete': 'Eliminar',
   'action.refresh': 'Actualizar',
   'action.refreshing': 'Actualizando...',
+  'action.filter': 'Filtrar',
+  'action.export': 'Exportar',
+  'action.select_all': 'Seleccionar todos',
+  'action.select_item': 'Seleccionar elemento',
+  'action.open_menu': 'Abrir menú de acciones',
+  'action.save_changes': 'Guardar cambios',
+  'action.close': 'Cerrar',
 })
 
 Object.assign(DICTIONARY.en, {
@@ -1115,6 +1293,13 @@ Object.assign(DICTIONARY.en, {
   'action.delete': 'Delete',
   'action.refresh': 'Refresh',
   'action.refreshing': 'Refreshing...',
+  'action.filter': 'Filter',
+  'action.export': 'Export',
+  'action.select_all': 'Select all',
+  'action.select_item': 'Select item',
+  'action.open_menu': 'Open actions menu',
+  'action.save_changes': 'Save changes',
+  'action.close': 'Close',
 })
 
 // Suppliers - MVP strings
@@ -1127,6 +1312,70 @@ Object.assign(DICTIONARY.es, {
   'suppliers.modal.create': 'CREAR PROVEEDOR',
   'suppliers.modal.edit': 'EDITAR PROVEEDOR',
   'suppliers.search.placeholder': 'Buscar proveedor...',
+  'supplier.subtitle':
+    'Crea, administra y consulta proveedores clave del negocio.',
+  'supplier.search.label': 'Buscar proveedores',
+  'supplier.search.placeholder': 'Buscar por nombre o ID...',
+  'supplier.search.error': 'No se pudo completar la búsqueda',
+  'supplier.search.no_results':
+    'No se encontraron proveedores con ese criterio',
+  'supplier.loading': 'Buscando proveedores...',
+  'supplier.empty.prompt': 'Utiliza la barra de búsqueda para comenzar',
+  'supplier.action.create': 'Nuevo proveedor',
+  'supplier.action.view': 'Ver detalle',
+  'supplier.action.edit': 'Editar',
+  'supplier.action.copy_id': 'Copiar ID',
+  'supplier.action.copied': 'ID de proveedor copiado',
+  'supplier.action.copy_error': 'No se pudo copiar el ID',
+  'supplier.action.deactivate': 'Marcar inactivo',
+  'supplier.action.reactivate': 'Reactivar',
+  'supplier.action.error': 'No se pudo completar la acción',
+  'supplier.delete.success': 'Proveedor desactivado',
+  'supplier.reactivate.success': 'Proveedor reactivado',
+  'supplier.delete.message':
+    'Esta acción marcará como inactivo al proveedor "{name}".',
+  'supplier.reactivate.message':
+    'Esta acción reactivará al proveedor "{name}".',
+  'supplier.delete.title': 'Desactivar proveedor',
+  'supplier.reactivate.title': 'Reactivar proveedor',
+  'supplier.delete.confirm': 'Desactivar proveedor',
+  'supplier.reactivate.confirm': 'Reactivar proveedor',
+  'supplier.table.name': 'Proveedor',
+  'supplier.table.contact': 'Contacto',
+  'supplier.table.tax': 'RFC / Tax ID',
+  'supplier.table.created': 'Creado',
+  'supplier.table.status': 'Estado',
+  'supplier.status.active': 'Activo',
+  'supplier.status.inactive': 'Inactivo',
+  'supplier.form.title.create': 'Nuevo proveedor',
+  'supplier.form.title.edit': 'Editar proveedor',
+  'supplier.form.field.name': 'Nombre del proveedor',
+  'supplier.form.field.taxId': 'RFC / Tax ID',
+  'supplier.form.field.email': 'Correo de contacto',
+  'supplier.form.field.phone': 'Teléfono de contacto',
+  'supplier.form.field.address': 'Dirección',
+  'supplier.form.placeholder.name': 'Ej. Distribuciones del Pacífico',
+  'supplier.form.placeholder.taxId': 'Ej. ABC123456789',
+  'supplier.form.placeholder.email': 'correo@empresa.com',
+  'supplier.form.placeholder.phone': '+52 55 1234 5678',
+  'supplier.form.placeholder.address': 'Calle, ciudad, país',
+  'supplier.form.error.name_required': 'El nombre es obligatorio',
+  'supplier.form.error.tax_required': 'El RFC/Tax ID es obligatorio',
+  'supplier.form.error.email_invalid': 'Correo electrónico inválido',
+  'supplier.form.error.generic': 'No se pudo guardar el proveedor',
+  'supplier.form.success.create': 'Proveedor creado con éxito',
+  'supplier.form.success.update': 'Proveedor actualizado con éxito',
+  'supplier.details.title': 'Detalle del proveedor',
+  'supplier.details.status': 'Estado',
+  'supplier.details.name': 'Nombre',
+  'supplier.details.taxId': 'RFC / Tax ID',
+  'supplier.details.email': 'Correo',
+  'supplier.details.phone': 'Teléfono',
+  'supplier.details.address': 'Dirección',
+  'supplier.details.createdBy': 'Creado por',
+  'supplier.details.createdAt': 'Creado',
+  'supplier.details.updatedAt': 'Actualizado',
+  'supplier.details.metadata': 'Notas',
 })
 Object.assign(DICTIONARY.en, {
   'suppliers.title': 'Suppliers',
@@ -1137,6 +1386,68 @@ Object.assign(DICTIONARY.en, {
   'suppliers.modal.create': 'CREATE SUPPLIER',
   'suppliers.modal.edit': 'EDIT SUPPLIER',
   'suppliers.search.placeholder': 'Search supplier...',
+  'supplier.subtitle': 'Create, manage, and look up key business suppliers.',
+  'supplier.search.label': 'Search suppliers',
+  'supplier.search.placeholder': 'Search by name or ID...',
+  'supplier.search.error': 'Could not complete the search',
+  'supplier.search.no_results': 'No suppliers matched that criteria',
+  'supplier.loading': 'Searching suppliers...',
+  'supplier.empty.prompt': 'Use the search bar to get started',
+  'supplier.action.create': 'New supplier',
+  'supplier.action.view': 'View details',
+  'supplier.action.edit': 'Edit',
+  'supplier.action.copy_id': 'Copy ID',
+  'supplier.action.copied': 'Supplier ID copied',
+  'supplier.action.copy_error': 'Could not copy the ID',
+  'supplier.action.deactivate': 'Mark inactive',
+  'supplier.action.reactivate': 'Reactivate',
+  'supplier.action.error': 'Could not complete the action',
+  'supplier.delete.success': 'Supplier deactivated',
+  'supplier.reactivate.success': 'Supplier reactivated',
+  'supplier.delete.message':
+    'This action will mark supplier "{name}" as inactive.',
+  'supplier.reactivate.message':
+    'This action will reactivate supplier "{name}".',
+  'supplier.delete.title': 'Deactivate supplier',
+  'supplier.reactivate.title': 'Reactivate supplier',
+  'supplier.delete.confirm': 'Deactivate supplier',
+  'supplier.reactivate.confirm': 'Reactivate supplier',
+  'supplier.table.name': 'Supplier',
+  'supplier.table.contact': 'Contact',
+  'supplier.table.tax': 'Tax ID',
+  'supplier.table.created': 'Created',
+  'supplier.table.status': 'Status',
+  'supplier.status.active': 'Active',
+  'supplier.status.inactive': 'Inactive',
+  'supplier.form.title.create': 'New supplier',
+  'supplier.form.title.edit': 'Edit supplier',
+  'supplier.form.field.name': 'Supplier name',
+  'supplier.form.field.taxId': 'Tax ID',
+  'supplier.form.field.email': 'Contact email',
+  'supplier.form.field.phone': 'Contact phone',
+  'supplier.form.field.address': 'Address',
+  'supplier.form.placeholder.name': 'e.g., Pacific Distributors',
+  'supplier.form.placeholder.taxId': 'e.g., ABC123456789',
+  'supplier.form.placeholder.email': 'email@company.com',
+  'supplier.form.placeholder.phone': '+1 555 123 4567',
+  'supplier.form.placeholder.address': 'Street, city, country',
+  'supplier.form.error.name_required': 'Name is required',
+  'supplier.form.error.tax_required': 'Tax ID is required',
+  'supplier.form.error.email_invalid': 'Invalid email address',
+  'supplier.form.error.generic': 'Could not save the supplier',
+  'supplier.form.success.create': 'Supplier created successfully',
+  'supplier.form.success.update': 'Supplier updated successfully',
+  'supplier.details.title': 'Supplier details',
+  'supplier.details.status': 'Status',
+  'supplier.details.name': 'Name',
+  'supplier.details.taxId': 'Tax ID',
+  'supplier.details.email': 'Email',
+  'supplier.details.phone': 'Phone',
+  'supplier.details.address': 'Address',
+  'supplier.details.createdBy': 'Created by',
+  'supplier.details.createdAt': 'Created',
+  'supplier.details.updatedAt': 'Updated',
+  'supplier.details.metadata': 'Notes',
 })
 
 let currentLang = 'es'
@@ -1149,6 +1460,7 @@ export const tRaw = key =>
 export function useI18n() {
   try {
     const [lang, setLangState] = useState(currentLang)
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const setLang = useCallback(l => {
       if (DICTIONARY[l]) {
         currentLang = l
@@ -1156,6 +1468,7 @@ export function useI18n() {
       }
     }, [])
     // soporta interpolación simple: t('key', { a: 1 }) -> reemplaza {a}
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const t = useCallback(
       (key, vars) => {
         const template = (DICTIONARY[lang] && DICTIONARY[lang][key]) || key
@@ -1169,7 +1482,7 @@ export function useI18n() {
       [lang]
     )
     return { t, lang, setLang }
-  } catch (error) {
+  } catch {
     // Fallback for React 19 hooks compatibility
     const lang = currentLang
     const setLang = l => {

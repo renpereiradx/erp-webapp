@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VentaPro - Historial de Ventas</title>
+<link as="style" href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+    :root {
+      --fluent-primary: #0078D4;
+      --fluent-background-light: #FFFFFF;
+      --fluent-background-dark: #202020;
+      --fluent-surface-light: #F3F3F3;
+      --fluent-surface-dark: #2D2D2D;
+      --fluent-foreground-light: #000000;
+      --fluent-foreground-dark: #FFFFFF;
+      --fluent-foreground-muted-light: #605E5C;
+      --fluent-foreground-muted-dark: #C8C6C4;
+      --fluent-border-light: #E1DFDD;
+      --fluent-border-dark: #403E3D;
+      --fluent-border-focus: #0078D4;
+    }
+    </style>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "var(--fluent-primary)",
+                        "background-light": "var(--fluent-background-light)",
+                        "background-dark": "var(--fluent-background-dark)",
+                        "surface-light": "var(--fluent-surface-light)",
+                        "surface-dark": "var(--fluent-surface-dark)",
+                        "foreground-light": "var(--fluent-foreground-light)",
+                        "foreground-dark": "var(--fluent-foreground-dark)",
+                        "muted-light": "var(--fluent-foreground-muted-light)",
+                        "muted-dark": "var(--fluent-foreground-muted-dark)",
+                        "border-light": "var(--fluent-border-light)",
+                        "border-dark": "var(--fluent-border-dark)",
+                        "border-focus": "var(--fluent-border-focus)",
+                    },
+                    fontFamily: {
+                        "display": ["Segoe UI", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                    },
+                    boxShadow: {
+                        'fluent': '0 2px 4px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.06)'
+                    },
+                    transitionProperty: {
+                        'height': 'height',
+                        'spacing': 'margin, padding',
+                        'colors': 'color, background-color, border-color, text-decoration-color, fill, stroke',
+                    },
+                },
+            },
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+</head>
+<body class="font-display bg-surface-light dark:bg-background-dark text-foreground-light dark:text-foreground-dark antialiased">
+<div class="flex flex-col min-h-screen">
+<header class="sticky top-0 z-10 flex items-center justify-between px-10 py-3 bg-background-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark shadow-sm">
+<div class="flex items-center gap-4">
+<div class="text-primary">
+<svg fill="currentColor" height="24" viewBox="0 0 48 48" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z"></path>
+</svg>
+</div>
+<h1 class="text-lg font-semibold">VentaPro</h1>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-sm font-medium text-muted-light dark:text-muted-dark hover:text-primary dark:hover:text-primary transition-colors" href="#">Inicio</a>
+<a class="text-sm font-semibold text-primary" href="#">Ventas</a>
+<a class="text-sm font-medium text-muted-light dark:text-muted-dark hover:text-primary dark:hover:text-primary transition-colors" href="#">Clientes</a>
+<a class="text-sm font-medium text-muted-light dark:text-muted-dark hover:text-primary dark:hover:text-primary transition-colors" href="#">Productos</a>
+<a class="text-sm font-medium text-muted-light dark:text-muted-dark hover:text-primary dark:hover:text-primary transition-colors" href="#">Reportes</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-muted-light dark:text-muted-dark transition-colors">
+<span class="material-symbols-outlined text-xl">
+notifications
+</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDWAJQnWUKYY3vJILU3_aPTghPLkPePKrUz73jlFV-OFbGqknNmUaXM202vrtaQBMtjwiJlMbCr5RakKvlP4RBkFqFP4fWl5OJ0N-a8wWl0cMjEitOAhHRRJKEZy4kLmD8ypVlNVer33-43hEaO6ZdQU8nsmCF1WTvNLrxujFBdoNg3GKIlG0JQDjXn7TP2WzIYhQ-IryLUcskzdCDU530X4UGsToobZDvO8p1Z00Am8T4H3AjmidIZawraM_kooyYLIUDiMmxtU9-_");'></div>
+</div>
+</header>
+<main class="flex-1 w-full max-w-screen-xl mx-auto p-6 lg:p-10" x-data="{ activeTab: 'historial-ventas' }">
+<div class="flex border-b border-border-light dark:border-border-dark mb-6">
+<button :class="{ 'border-primary text-primary font-semibold': activeTab === 'nueva-venta', 'border-transparent text-muted-light dark:text-muted-dark hover:text-foreground-light dark:hover:text-foreground-dark': activeTab !== 'nueva-venta' }" @click="activeTab = 'nueva-venta'" class="px-4 pb-2 text-sm border-b-2 -mb-px transition-all duration-200 ease-in-out">
+                    Nueva Venta
+                </button>
+<button :class="{ 'border-primary text-primary font-semibold': activeTab === 'historial-ventas', 'border-transparent text-muted-light dark:text-muted-dark hover:text-foreground-light dark:hover:text-foreground-dark': activeTab !== 'historial-ventas' }" @click="activeTab = 'historial-ventas'" class="px-4 pb-2 text-sm border-b-2 -mb-px transition-all duration-200 ease-in-out">
+                    Historial de Ventas
+                </button>
+</div>
+<div x-cloak="" x-show="activeTab === 'nueva-venta'">
+<div class="text-center p-10 bg-background-light dark:bg-surface-dark rounded-lg">
+<h2 class="text-2xl font-semibold mb-2">Nueva Venta</h2>
+<p class="text-muted-light dark:text-muted-dark">Esta sección no forma parte de la solicitud de edición actual.</p>
+</div>
+</div>
+<div x-cloak="" x-show="activeTab === 'historial-ventas'">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-2xl font-semibold tracking-tight">Historial de Ventas</h2>
+<button class="flex items-center justify-center gap-2 h-9 px-4 rounded bg-primary text-white text-sm font-semibold hover:bg-blue-800 dark:hover:bg-blue-500 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-base">
+download
+</span>
+<span>Exportar</span>
+</button>
+</div>
+<div class="bg-background-light dark:bg-surface-dark p-4 sm:p-6 rounded-lg border border-border-light dark:border-border-dark shadow-fluent">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+<div class="relative">
+<span class="material-symbols-outlined absolute inset-y-0 left-0 flex items-center pl-3 text-muted-light dark:text-muted-dark pointer-events-none text-xl">
+search
+</span>
+<input class="w-full h-9 pl-10 pr-4 rounded bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark focus:ring-1 focus:ring-border-focus focus:border-border-focus transition-all text-sm placeholder:text-muted-light dark:placeholder:text-muted-dark" placeholder="Buscar por cliente o ID..." type="search"/>
+</div>
+<input class="w-full h-9 px-3 rounded bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark focus:ring-1 focus:ring-border-focus focus:border-border-focus transition-all text-sm text-muted-light dark:text-muted-dark" type="date"/>
+<input class="w-full h-9 px-3 rounded bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark focus:ring-1 focus:ring-border-focus focus:border-border-focus transition-all text-sm text-muted-light dark:text-muted-dark" type="date"/>
+<button class="w-full h-9 px-4 rounded bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-foreground-light dark:text-foreground-dark text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-base">
+filter_list
+</span>
+<span>Filtrar</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left">
+<thead class="text-xs font-semibold uppercase text-muted-light dark:text-muted-dark bg-surface-light dark:bg-background-dark">
+<tr>
+<th class="px-4 py-3" scope="col">ID Venta</th>
+<th class="px-4 py-3" scope="col">Fecha</th>
+<th class="px-4 py-3" scope="col">Cliente</th>
+<th class="px-4 py-3 text-right" scope="col">Total</th>
+<th class="px-4 py-3" scope="col">Vendedor</th>
+<th class="px-4 py-3 text-center" scope="col">Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-border-light dark:border-border-dark hover:bg-surface-light dark:hover:bg-surface-dark transition-colors">
+<td class="px-4 py-3 font-medium whitespace-nowrap text-primary">#12345</td>
+<td class="px-4 py-3">26/10/2023</td>
+<td class="px-4 py-3">Cliente C</td>
+<td class="px-4 py-3 text-right">$350.00</td>
+<td class="px-4 py-3">Vendedor 1</td>
+<td class="px-4 py-3 text-center">
+<span class="px-2 py-1 text-xs font-medium rounded-sm bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">Completada</span>
+</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark hover:bg-surface-light dark:hover:bg-surface-dark transition-colors">
+<td class="px-4 py-3 font-medium whitespace-nowrap text-primary">#12344</td>
+<td class="px-4 py-3">25/10/2023</td>
+<td class="px-4 py-3">Cliente D</td>
+<td class="px-4 py-3 text-right">$120.50</td>
+<td class="px-4 py-3">Vendedor 2</td>
+<td class="px-4 py-3 text-center">
+<span class="px-2 py-1 text-xs font-medium rounded-sm bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300">Completada</span>
+</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark hover:bg-surface-light dark:hover:bg-surface-dark transition-colors">
+<td class="px-4 py-3 font-medium whitespace-nowrap text-primary">#12343</td>
+<td class="px-4 py-3">24/10/2023</td>
+<td class="px-4 py-3">Cliente E</td>
+<td class="px-4 py-3 text-right">$800.00</td>
+<td class="px-4 py-3">Vendedor 1</td>
+<td class="px-4 py-3 text-center">
+<span class="px-2 py-1 text-xs font-medium rounded-sm bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">Cancelada</span>
+</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark hover:bg-surface-light dark:hover:bg-surface-dark transition-colors">
+<td class="px-4 py-3 font-medium whitespace-nowrap text-primary">#12342</td>
+<td class="px-4 py-3">23/10/2023</td>
+<td class="px-4 py-3">Cliente F</td>
+<td class="px-4 py-3 text-right">$50.25</td>
+<td class="px-4 py-3">Vendedor 2</td>
+<td class="px-4 py-3 text-center">
+<span class="px-2 py-1 text-xs font-medium rounded-sm bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300">Pendiente</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script defer="" src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>
+        [x-cloak] {
+            display: none !important;
+        }
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 20
+        }
+    </style>
+</body></html>

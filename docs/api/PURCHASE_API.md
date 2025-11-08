@@ -432,46 +432,6 @@ interface Recommendation {
 }
 ```
 
-### 💰 Costos y Precios
-
-```typescript
-interface UnitCost {
-  id: number;
-  product_id: string;
-  unit: string;
-  cost_per_unit: number;
-  supplier_id: number;
-  purchase_order_id: number;
-  purchase_date: string;
-  quantity_purchased: number;
-  created_by: string;
-  metadata: {
-    source: string;
-    tax_rate?: number;
-    tax_rate_id?: number;
-    suggested_profit_pct: number;
-    total_cost_with_tax: number;
-  };
-}
-
-interface UnitPrice {
-  id: number;
-  id_product: string;
-  unit: string;
-  price_per_unit: number;
-  effective_date: string;
-  metadata?: {
-    source?: string;
-    po_id?: number;
-    cost_entry_id?: number;
-    base_cost?: number;
-    applied_margin_pct?: number;
-    auto_generated?: boolean;
-    price_protected?: boolean;
-  };
-}
-```
-
 ---
 
 ## 🔗 Endpoints de la API
@@ -1056,17 +1016,6 @@ export const PurchaseOrderForm: React.FC = () => {
 ---
 
 ## 📝 Notas Técnicas
-
-### 🔄 Diferencias con Sistema Anterior
-
-| Aspecto | Sistema Anterior | Sistema Mejorado |
-|---------|-----------------|------------------|
-| **Costos** | `products.prices.purchase_price` | `products.unit_costs` (por transacción) |
-| **Precios** | Mismo campo mezclado | `products.unit_prices` (separado) |
-| **Unidades** | Limitado | Múltiples unidades por producto |
-| **Trazabilidad** | Básica | Completa con metadatos |
-| **Auto-pricing** | No disponible | Inteligente con protección |
-| **Validación** | Manual | Automática con reportes |
 
 ### ⚡ Optimizaciones de Performance
 

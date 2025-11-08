@@ -1,0 +1,548 @@
+// ============================================================================
+// Product Details Modal - View Product Information
+// ============================================================================
+// Modal for viewing comprehensive product details following Fluent Design System 2
+// Uses BEM methodology with automatic theme support via @themify
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ============================================================================
+// Modal Backdrop
+// ============================================================================
+
+.product-details-modal {
+  &__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-16;
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease-out;
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  }
+
+  // ============================================================================
+  // Modal Container
+  // ============================================================================
+
+  &__container {
+    width: 100%;
+    max-width: 64rem; // 1024px - Extra large modal
+    max-height: 90vh;
+    border-radius: $border-radius-large;
+    box-shadow: $shadow-64;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+
+  // ============================================================================
+  // Modal Header
+  // ============================================================================
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: $spacing-16;
+    padding: $spacing-24;
+    border-bottom: 1px solid;
+
+    @include themify($themes) {
+      border-color: themed('border-default');
+    }
+  }
+
+  &__header-content {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__title {
+    font-size: $font-size-500; // 18px
+    font-weight: $font-weight-bold;
+    line-height: 1.3;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__product-id {
+    font-size: $font-size-200; // 12px
+    line-height: 1.5;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: $border-radius-medium;
+    background-color: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+
+      &:hover {
+        background-color: themed('bg-hover');
+      }
+
+      &:active {
+        background-color: themed('bg-active');
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid;
+      outline-offset: 2px;
+
+      @include themify($themes) {
+        outline-color: themed('accent-primary');
+      }
+    }
+  }
+
+  // ============================================================================
+  // Modal Body
+  // ============================================================================
+
+  &__body {
+    padding: $spacing-24;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  &__content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-32;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+
+  // ============================================================================
+  // Main Content Section
+  // ============================================================================
+
+  &__main-section {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+  }
+
+  &__section-title {
+    font-size: $font-size-300; // 14px
+    font-weight: $font-weight-semibold;
+    line-height: 1.4;
+    margin-bottom: $spacing-12;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-16;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  &__form-field {
+    display: flex;
+    flex-direction: column;
+
+    &--full-width {
+      @media (min-width: 768px) {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+
+  &__label {
+    font-size: $font-size-200; // 12px
+    font-weight: $font-weight-medium;
+    line-height: 1.5;
+    margin-bottom: $spacing-8;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__input,
+  &__select {
+    width: 100%;
+    height: 36px;
+    padding: 0 $spacing-12;
+    border: 1px solid;
+    border-radius: $border-radius-medium;
+    font-size: $font-size-200; // 12px
+    font-family: $font-family-base;
+    line-height: 1.5;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      color: themed('text-primary');
+      border-color: themed('border-default');
+
+      &:hover {
+        border-color: themed('border-hover');
+      }
+
+      &:focus {
+        outline: none;
+        border-color: themed('accent-primary');
+        box-shadow: 0 0 0 1px themed('accent-primary');
+      }
+    }
+  }
+
+  &__select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right $spacing-8 center;
+    background-repeat: no-repeat;
+    background-size: 20px 20px;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  // ============================================================================
+  // Unit Prices Table
+  // ============================================================================
+
+  &__table-wrapper {
+    overflow-x: auto;
+    border-radius: $border-radius-medium;
+    border: 1px solid;
+
+    @include themify($themes) {
+      border-color: themed('border-default');
+    }
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  &__table-head {
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+    }
+  }
+
+  &__table-header {
+    padding: $spacing-8 $spacing-16;
+    text-align: left;
+    font-size: $font-size-100; // 10px
+    font-weight: $font-weight-medium;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__table-body {
+    tr {
+      border-top: 1px solid;
+
+      @include themify($themes) {
+        border-color: themed('border-default');
+      }
+    }
+  }
+
+  &__table-cell {
+    padding: $spacing-8 $spacing-16;
+    font-size: $font-size-200; // 12px
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+
+    &--secondary {
+      @include themify($themes) {
+        color: themed('text-secondary');
+      }
+    }
+  }
+
+  // ============================================================================
+  // Sidebar Section
+  // ============================================================================
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+    border-radius: $border-radius-medium;
+    padding: $spacing-24;
+    align-self: flex-start;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+    }
+  }
+
+  &__sidebar-group {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-12;
+  }
+
+  &__sidebar-title {
+    font-size: $font-size-300; // 14px
+    font-weight: $font-weight-semibold;
+    line-height: 1.4;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__info-label {
+    font-size: $font-size-200; // 12px
+    line-height: 1.5;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__info-value {
+    font-size: $font-size-200; // 12px
+    font-weight: $font-weight-medium;
+    line-height: 1.5;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+
+    &--success {
+      @include themify($themes) {
+        color: themed('success-primary');
+      }
+    }
+
+    &--warning {
+      @include themify($themes) {
+        color: themed('warning-primary');
+      }
+    }
+
+    &--error {
+      @include themify($themes) {
+        color: themed('error-primary');
+      }
+    }
+  }
+
+  // ============================================================================
+  // Status Badge
+  // ============================================================================
+
+  &__status-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: $spacing-4 $spacing-12;
+    border-radius: $border-radius-circular;
+    font-size: $font-size-200; // 12px
+    font-weight: $font-weight-medium;
+
+    &--active {
+      @include themify($themes) {
+        background-color: themed('success-background');
+        color: themed('success-foreground');
+      }
+    }
+
+    &--inactive {
+      @include themify($themes) {
+        background-color: themed('bg-tertiary');
+        color: themed('text-secondary');
+      }
+    }
+  }
+
+  // ============================================================================
+  // Financial Health Indicators
+  // ============================================================================
+
+  &__health-list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+  }
+
+  &__health-item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    font-size: $font-size-200; // 12px
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__health-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+
+    &--success {
+      @include themify($themes) {
+        color: themed('success-primary');
+      }
+    }
+
+    &--warning {
+      @include themify($themes) {
+        color: themed('warning-primary');
+      }
+    }
+
+    &--error {
+      @include themify($themes) {
+        color: themed('error-primary');
+      }
+    }
+  }
+
+  // ============================================================================
+  // Modal Footer
+  // ============================================================================
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: $spacing-12;
+    padding: $spacing-24;
+    border-top: 1px solid;
+    flex-shrink: 0; // Prevent footer from shrinking
+
+    @include themify($themes) {
+      border-color: themed('border-default');
+      background-color: themed('bg-secondary');
+    }
+  }
+
+  &__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-8;
+    height: 36px;
+    padding: 0 $spacing-16;
+    border: none;
+    border-radius: $border-radius-medium;
+    font-size: $font-size-200; // 12px
+    font-weight: $font-weight-medium;
+    font-family: $font-family-base;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    &:focus-visible {
+      outline: 2px solid;
+      outline-offset: 2px;
+
+      @include themify($themes) {
+        outline-color: themed('accent-primary');
+      }
+    }
+  }
+
+  &__button--secondary {
+    border: 1px solid;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      color: themed('text-primary');
+      border-color: themed('border-default');
+
+      &:hover {
+        background-color: themed('bg-hover');
+      }
+
+      &:active {
+        background-color: themed('bg-active');
+      }
+    }
+  }
+
+  &__button--primary {
+    @include themify($themes) {
+      background-color: themed('accent-primary');
+      color: #ffffff;
+
+      &:hover {
+        background-color: themed('accent-secondary');
+      }
+
+      &:active {
+        opacity: 0.9;
+      }
+    }
+  }
+}

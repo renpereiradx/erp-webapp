@@ -140,10 +140,36 @@
 .card__title {
   @include heading-5;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
 
   @include themify {
     color: themed('text-primary');
   }
+}
+
+.card__title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: $border-radius-medium;
+
+  @include themify {
+    background-color: alpha-color(themed('action-primary'), 0.12);
+    color: themed('action-primary');
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.card__title-text {
+  font-weight: $font-weight-semibold;
 }
 
 .card__subtitle {
@@ -354,7 +380,6 @@
 // -----------------------------------------------------------------------------
 // ACCESSIBILITY
 // -----------------------------------------------------------------------------
-
 
 // Focus state for interactive cards
 .card--interactive {

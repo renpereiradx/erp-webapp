@@ -8,7 +8,9 @@
 @use 'login';
 @use 'dashboard';
 @use 'sales-new';
+@use 'products';
+@use 'clients';
+@use 'suppliers';
+@use 'settings';
 
-// @use 'products';
-// @use 'clients';
 // ... (will be added as pages are migrated)

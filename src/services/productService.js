@@ -57,40 +57,9 @@ export const productService = {
   // =================== PRODUCTOS ===================
   
   // Obtener productos paginados
-  /**
-   * @param {number} [page=1]
-   * @param {number} [pageSize=10]
-   * @param {Object} [filters={}]
-   * @returns {Promise<Product[]|any>}
-   */
-  getProducts: async (page = 1, pageSize = 10, filters = {}) => {
-    const startTime = performance.now();
-    
-    try {
-      // Using real API only
-      
-      const result = await retryWithBackoff(async () => {
-        return await apiClient.getProducts(page, pageSize);
-      });
-      
-      telemetryService?.recordMetric('products_fetched_api', result.data?.length || 0);
-      return result;
-      
-    } catch (error) {
-      console.error('❌ Products API unavailable:', error.message);
-      
-      // En lugar de usar mock data, retornar error apropiado
-      throw new ApiError(
-        'No se pudieron cargar los productos. Verifique la conexión a la API.',
-        'API_UNAVAILABLE',
-        503,
-        { originalError: error.message }
-      );
-    } finally {
-      const endTime = performance.now();
-      telemetryService?.recordMetric('get_products_duration', endTime - startTime);
-    }
-  },
+  // MÉTODO ELIMINADO: getProducts()
+  // Este sistema solo permite búsqueda explícita de productos.
+  // Usa searchProducts() o searchProductsFinancial() en su lugar.
 
   // Obtener un producto por ID
   /**
@@ -214,7 +183,7 @@ export const productService = {
   },
 
   // =================== FINANCIAL ENRICHED PRODUCTS ===================
-  
+
   // Obtener producto financieramente enriquecido por ID
   /**
    * @param {string} productId
@@ -223,13 +192,13 @@ export const productService = {
   getProductByIdFinancial: async (productId) => {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.get(`/products/financial/${productId}`);
+        return await apiClient.getProductFinancialById(productId);
       });
     } catch (error) {
       throw toApiError(error, 'Error al obtener producto financieramente enriquecido');
     }
   },
-  
+
   // Obtener producto financieramente enriquecido por código de barras
   /**
    * @param {string} barcode
@@ -238,13 +207,13 @@ export const productService = {
   getProductByBarcodeFinancial: async (barcode) => {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.get(`/products/financial/barcode/${encodeURIComponent(barcode)}`);
+        return await apiClient.getProductFinancialByBarcode(barcode);
       });
     } catch (error) {
       throw toApiError(error, 'Error al buscar producto financiero por código de barras');
     }
   },
-  
+
   // Buscar productos financieramente enriquecidos por nombre
   /**
    * @param {string} name - Término de búsqueda
@@ -252,11 +221,10 @@ export const productService = {
    * @returns {Promise<ProductFinancialEnriched[]|any>}
    */
   searchProductsFinancial: async (name, options = {}) => {
-    const { limit = 10, signal } = options;
+    const { limit = 50, signal } = options;
     try {
       return await retryWithBackoff(async () => {
-        const url = `/products/financial/name/${encodeURIComponent(name)}?limit=${limit}`;
-        return await apiClient.get(url, { signal });
+        return await apiClient.searchProductsFinancialByName(name, { limit, signal });
       });
     } catch (error) {
       // Permitimos que AbortError se propague tal cual

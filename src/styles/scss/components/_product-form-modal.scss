@@ -1,0 +1,396 @@
+// ============================================================================
+// Product Form Modal - Create/Edit Product
+// ============================================================================
+// Modal for creating and editing products following Fluent Design System 2
+// Uses BEM methodology with automatic theme support via @themify
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// ============================================================================
+// Modal Backdrop
+// ============================================================================
+
+.product-form-modal {
+  &__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-16;
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease-out;
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  }
+
+  // ============================================================================
+  // Modal Container
+  // ============================================================================
+
+  &__container {
+    width: 100%;
+    max-width: 48rem; // 768px - More compact modal
+    max-height: 85vh;
+    border-radius: $border-radius-large;
+    box-shadow: $shadow-64;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+
+  // ============================================================================
+  // Modal Header
+  // ============================================================================
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: $spacing-20;
+    border-bottom: 1px solid;
+
+    @include themify($themes) {
+      border-color: themed('border-default');
+    }
+  }
+
+  &__header-content {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__title {
+    font-size: $font-size-700; // 18px
+    font-weight: $font-weight-bold;
+    line-height: 1.3;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__subtitle {
+    font-size: $font-size-300; // 12px
+    line-height: 1.5;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: $border-radius-medium;
+    background-color: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+
+      &:hover {
+        background-color: themed('bg-hover');
+      }
+
+      &:active {
+        background-color: themed('bg-active');
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid;
+      outline-offset: 2px;
+
+      @include themify($themes) {
+        outline-color: themed('accent-primary');
+      }
+    }
+  }
+
+  // ============================================================================
+  // Modal Body
+  // ============================================================================
+
+  &__body {
+    padding: $spacing-20;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  &__section {
+    margin-bottom: $spacing-20;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__section-title {
+    font-size: $font-size-500; // 14px
+    font-weight: $font-weight-semibold;
+    line-height: 1.4;
+    margin-bottom: $spacing-12;
+    padding-bottom: $spacing-4;
+    border-bottom: 1px solid;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+      border-color: themed('border-default');
+    }
+  }
+
+  &__form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-16; // Reduced gap
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  &__form-field {
+    display: flex;
+    flex-direction: column;
+
+    &--full-width {
+      @media (min-width: 768px) {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+
+  // ============================================================================
+  // Form Elements
+  // ============================================================================
+
+  &__label {
+    font-size: $font-size-300; // 12px
+    font-weight: $font-weight-medium;
+    line-height: 1.5;
+    margin-bottom: $spacing-4;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__required {
+    color: #d13438; // Error red for both themes
+    margin-left: 2px;
+  }
+
+  &__input,
+  &__select,
+  &__textarea {
+    width: 100%;
+    padding: $spacing-8 $spacing-12;
+    border: 1px solid;
+    border-radius: $border-radius-medium;
+    font-size: $font-size-500; // 14px
+    font-family: $font-family-base;
+    line-height: 1.5;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      color: themed('text-primary');
+      border-color: themed('border-default');
+
+      &::placeholder {
+        color: themed('text-tertiary');
+      }
+
+      &:hover {
+        border-color: themed('border-hover');
+      }
+
+      &:focus {
+        outline: none;
+        border-color: themed('accent-primary');
+        box-shadow: 0 0 0 1px themed('accent-primary');
+      }
+
+      &:disabled {
+        background-color: themed('bg-secondary');
+        color: themed('text-disabled');
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__input {
+    height: 36px; // Reduced from 48px
+
+    &--with-prefix {
+      padding-left: 32px;
+    }
+  }
+
+  &__input-wrapper {
+    position: relative;
+  }
+
+  &__input-prefix {
+    position: absolute;
+    left: $spacing-12;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: $font-size-200; // 12px
+    pointer-events: none;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__select {
+    height: 36px; // Reduced from 48px
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right $spacing-12 center;
+    background-repeat: no-repeat;
+    background-size: 20px 20px;
+    padding-right: 40px;
+    cursor: pointer;
+  }
+
+  &__textarea {
+    min-height: 80px; // Reduced from 112px
+    resize: vertical;
+  }
+
+  &__helper-text {
+    font-size: $font-size-200; // 10px
+    line-height: 1.5;
+    margin-top: $spacing-4;
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__error-text {
+    font-size: $font-size-200; // 10px
+    line-height: 1.5;
+    margin-top: $spacing-4;
+    color: #d13438; // Error red for both themes
+  }
+
+  // ============================================================================
+  // Modal Footer
+  // ============================================================================
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: $spacing-12;
+    padding: $spacing-16; // Reduced from $spacing-24
+    border-top: 1px solid;
+    flex-shrink: 0; // Prevent footer from shrinking
+
+    @include themify($themes) {
+      border-color: themed('border-default');
+    }
+  }
+
+  &__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-8;
+    height: 36px;
+    padding: 0 $spacing-16;
+    border: none;
+    border-radius: $border-radius-medium;
+    font-size: $font-size-500; // 14px
+    font-weight: $font-weight-semibold;
+    font-family: $font-family-base;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    &:focus-visible {
+      outline: 2px solid;
+      outline-offset: 2px;
+
+      @include themify($themes) {
+        outline-color: themed('accent-primary');
+      }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+
+  &__button--secondary {
+    border: 1px solid;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      color: themed('text-primary');
+      border-color: themed('border-default');
+
+      &:hover:not(:disabled) {
+        background-color: themed('bg-hover');
+      }
+
+      &:active:not(:disabled) {
+        background-color: themed('bg-active');
+      }
+    }
+  }
+
+  &__button--primary {
+    @include themify($themes) {
+      background-color: themed('accent-primary');
+      color: #ffffff;
+
+      &:hover:not(:disabled) {
+        background-color: themed('accent-secondary');
+      }
+
+      &:active:not(:disabled) {
+        opacity: 0.9;
+      }
+    }
+  }
+}

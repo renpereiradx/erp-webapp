@@ -1,716 +1,876 @@
-/**
- * Nueva Página de Ventas - Diseño simplificado y moderno
- * Implementación MVP con tabs para Nueva Venta e Historial
- * Basado en specs/sección_de_ventas/code.html y GUIA_MVP_DESARROLLO.md
- */
-
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react'
 import {
+  CreditCard,
+  DollarSign,
+  Filter,
   Plus,
   Search,
-  Trash2,
-  Filter,
   ShoppingCart,
+  Trash2,
   User,
-  CreditCard,
-  Calendar,
-  FileText,
-  DollarSign,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { useI18n } from '@/lib/i18n';
-import DataState from '@/components/ui/DataState';
-import useSaleStore from '@/store/useSaleStore';
-import useProductStore from '@/store/useProductStore';
-import useClientStore from '@/store/useClientStore';
+  X,
+} from 'lucide-react'
+
+const PRODUCT_CATALOG = [
+  { id: 'product-a', sku: 'SKU-001', name: 'Producto A', price: 120 },
+  { id: 'product-b', sku: 'SKU-002', name: 'Producto B', price: 85 },
+  { id: 'product-c', sku: 'SKU-003', name: 'Producto C', price: 75 },
+  { id: 'product-d', sku: 'SKU-004', name: 'Producto D', price: 140 },
+]
+
+const INITIAL_ITEMS = [
+  {
+    id: 'line-1',
+    productId: 'product-a',
+    name: 'Producto A',
+    quantity: 2,
+    price: 100,
+    discount: 0,
+  },
+  {
+    id: 'line-2',
+    productId: 'product-b',
+    name: 'Producto B',
+    quantity: 1,
+    price: 50,
+    discount: 0,
+  },
+  {
+    id: 'line-3',
+    productId: 'product-c',
+    name: 'Producto C',
+    quantity: 3,
+    price: 75,
+    discount: 0,
+  },
+]
+
+const CLIENTS = [
+  {
+    id: 'client-a',
+    name: 'Juan Pérez',
+    email: 'juan.perez@email.com',
+    phone: '+1 234 567 890',
+  },
+  {
+    id: 'client-b',
+    name: 'Ana Gómez',
+    email: 'ana.gomez@email.com',
+    phone: '+1 987 654 321',
+  },
+  {
+    id: 'client-c',
+    name: 'Carlos Ruiz',
+    email: 'carlos.ruiz@email.com',
+    phone: '+1 555 123 456',
+  },
+]
+
+const PAYMENT_METHODS = [
+  { value: 'cash', label: 'Efectivo' },
+  { value: 'card', label: 'Tarjeta de Crédito/Débito' },
+  { value: 'transfer', label: 'Transferencia Bancaria' },
+  { value: 'other', label: 'Otro' },
+]
+
+const CURRENCIES = [
+  { value: 'USD', label: 'USD - Dólar Estadounidense' },
+  { value: 'EUR', label: 'EUR - Euro' },
+  { value: 'MXN', label: 'MXN - Peso Mexicano' },
+  { value: 'PYG', label: 'PYG - Guaraní Paraguayo' },
+]
+
+const SALE_HISTORY = [
+  {
+    id: '12345',
+    date: '2023-10-26',
+    client: 'Cliente C',
+    total: 350,
+    salesperson: 'Vendedor 1',
+    status: 'completed',
+  },
+  {
+    id: '12344',
+    date: '2023-10-25',
+    client: 'Cliente D',
+    total: 120.5,
+    salesperson: 'Vendedor 2',
+    status: 'completed',
+  },
+  {
+    id: '12343',
+    date: '2023-10-24',
+    client: 'Cliente E',
+    total: 800,
+    salesperson: 'Vendedor 1',
+    status: 'cancelled',
+  },
+]
+
+const STATUS_STYLES = {
+  completed: { label: 'Completada', badge: 'badge--subtle-success' },
+  cancelled: { label: 'Cancelada', badge: 'badge--subtle-error' },
+  pending: { label: 'Pendiente', badge: 'badge--subtle-warning' },
+}
+
+const formatCurrency = (value, currencyCode) =>
+  new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: currencyCode,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
 
 const SalesNew = () => {
-  const { t } = useI18n();
+  const [activeTab, setActiveTab] = useState('new-sale')
+  const [items, setItems] = useState(INITIAL_ITEMS)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [generalDiscount, setGeneralDiscount] = useState(0)
+  const [selectedClientId, setSelectedClientId] = useState(CLIENTS[0].id)
+  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[1].value)
+  const [currency, setCurrency] = useState(CURRENCIES[0].value)
+  const [historySearch, setHistorySearch] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalProductId, setModalProductId] = useState(PRODUCT_CATALOG[0].id)
+  const [modalQuantity, setModalQuantity] = useState(1)
+  const [modalDiscount, setModalDiscount] = useState(0)
 
-  // Estados del store
-  const {
-    sales,
-    loading,
-    error,
-    currentSaleData,
-    fetchSales,
-    createSale,
-    addItemToSale,
-    removeItemFromSale,
-    clearCurrentSale,
-    clearError,
-  } = useSaleStore();
+  const subtotal = useMemo(
+    () => items.reduce((acc, item) => acc + item.price * item.quantity, 0),
+    [items]
+  )
 
-  const {
-    products,
-    fetchProducts,
-  } = useProductStore();
+  const filteredItems = useMemo(
+    () =>
+      items.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [items, searchTerm]
+  )
 
-  const {
-    clients,
-    fetchClients,
-  } = useClientStore();
+  const lineDiscounts = useMemo(
+    () => items.reduce((acc, item) => acc + (item.discount || 0), 0),
+    [items]
+  )
 
-  // Estados locales de UI
-  const [activeTab, setActiveTab] = useState('nueva-venta');
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [lineDiscount, setLineDiscount] = useState(0);
+  const taxes = useMemo(() => {
+    const taxableBase = Math.max(0, subtotal - lineDiscounts - generalDiscount)
+    return taxableBase * 0.16
+  }, [subtotal, lineDiscounts, generalDiscount])
 
-  // Estados para el formulario de venta
-  const [selectedClient, setSelectedClient] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [currency, setCurrency] = useState('PYG');
-  const [saleDate, setSaleDate] = useState(new Date().toISOString().split('T')[0]);
-  const [salesperson, setSalesperson] = useState('');
-  const [notes, setNotes] = useState('');
-  const [generalDiscount, setGeneralDiscount] = useState(0);
+  const total = useMemo(
+    () => Math.max(0, subtotal - lineDiscounts - generalDiscount + taxes),
+    [subtotal, lineDiscounts, generalDiscount, taxes]
+  )
 
-  // Estados para historial
-  const [historySearch, setHistorySearch] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const activeClient = useMemo(
+    () => CLIENTS.find(client => client.id === selectedClientId),
+    [selectedClientId]
+  )
 
-  // Cargar datos al montar
-  useEffect(() => {
-    fetchProducts();
-    fetchClients();
-    fetchSales();
-  }, [fetchProducts, fetchClients, fetchSales]);
+  const filteredHistory = useMemo(
+    () =>
+      SALE_HISTORY.filter(entry => {
+        const matchesTerm =
+          !historySearch ||
+          entry.client.toLowerCase().includes(historySearch.toLowerCase()) ||
+          entry.id.toLowerCase().includes(historySearch.toLowerCase())
+        const matchesFrom = !dateFrom || entry.date >= dateFrom
+        const matchesTo = !dateTo || entry.date <= dateTo
+        return matchesTerm && matchesFrom && matchesTo
+      }),
+    [historySearch, dateFrom, dateTo]
+  )
 
-  // Calcular totales
-  const subtotal = currentSaleData.items.reduce((sum, item) => {
-    return sum + (item.price * item.quantity);
-  }, 0);
+  const modalProduct = useMemo(
+    () => PRODUCT_CATALOG.find(item => item.id === modalProductId),
+    [modalProductId]
+  )
 
-  const discounts = currentSaleData.items.reduce((sum, item) => {
-    return sum + (item.discount || 0);
-  }, 0) + generalDiscount;
+  const modalUnitPrice = modalProduct?.price ?? 0
 
-  const taxRate = 0.16; // 16% IVA
-  const taxes = (subtotal - discounts) * taxRate;
-  const total = subtotal - discounts + taxes;
+  const parsedModalQuantity = useMemo(() => {
+    const quantityValue = Number(modalQuantity)
+    if (!Number.isFinite(quantityValue) || quantityValue <= 0) {
+      return 1
+    }
+    return quantityValue
+  }, [modalQuantity])
 
-  // Handlers
-  const handleAddProduct = () => {
-    if (!selectedProduct) return;
+  const parsedModalDiscount = useMemo(() => {
+    const discountValue = Number(modalDiscount)
+    if (!Number.isFinite(discountValue) || discountValue < 0) {
+      return 0
+    }
+    return discountValue
+  }, [modalDiscount])
 
-    addItemToSale({
-      product_id: selectedProduct.id,
-      product_name: selectedProduct.name,
-      quantity: parseInt(quantity),
-      price: selectedProduct.price,
-      discount: parseFloat(lineDiscount) || 0,
-    });
+  const modalSubtotal = useMemo(
+    () => modalUnitPrice * parsedModalQuantity,
+    [modalUnitPrice, parsedModalQuantity]
+  )
 
-    // Reset modal
-    setShowProductModal(false);
-    setSelectedProduct(null);
-    setQuantity(1);
-    setLineDiscount(0);
-  };
+  const modalDiscountValue = useMemo(
+    () => Math.min(parsedModalDiscount, modalSubtotal),
+    [parsedModalDiscount, modalSubtotal]
+  )
 
-  const handleRemoveProduct = (index) => {
-    removeItemFromSale(index);
-  };
+  const modalLineTotal = useMemo(
+    () => Math.max(0, modalSubtotal - modalDiscountValue),
+    [modalSubtotal, modalDiscountValue]
+  )
 
-  const handleSaveSale = async () => {
-    if (!selectedClient || currentSaleData.items.length === 0) {
-      return;
+  const handleRemoveItem = lineId => {
+    setItems(prev => prev.filter(item => item.id !== lineId))
+  }
+
+  const handleOpenModal = () => {
+    setModalProductId(PRODUCT_CATALOG[0].id)
+    setModalQuantity(1)
+    setModalDiscount(0)
+    setIsModalOpen(true)
+  }
+
+  const handleConfirmAdd = () => {
+    if (!modalProduct) {
+      setIsModalOpen(false)
+      return
     }
 
-    const saleData = {
-      client_id: selectedClient,
-      payment_method: paymentMethod,
-      currency,
-      sale_date: saleDate,
-      salesperson,
-      notes,
-      items: currentSaleData.items,
+    setItems(prev => [
+      ...prev,
+      {
+        id: `${modalProduct.id}-${prev.length + 1}`,
+        productId: modalProduct.id,
+        name: modalProduct.name,
+        quantity: parsedModalQuantity,
+        price: modalProduct.price,
+        discount: modalDiscountValue,
+      },
+    ])
+    setModalQuantity(1)
+    setModalDiscount(0)
+    setIsModalOpen(false)
+  }
+
+  const resetSaleForm = () => {
+    setItems(INITIAL_ITEMS)
+    setGeneralDiscount(0)
+    setSelectedClientId(CLIENTS[0].id)
+    setPaymentMethod(PAYMENT_METHODS[1].value)
+    setCurrency(CURRENCIES[0].value)
+  }
+
+  const handleSaveSale = () => {
+    // Placeholder para flujo de guardado real
+    console.info('Venta guardada (mock)', {
+      items,
       subtotal,
-      discounts,
+      lineDiscounts,
+      generalDiscount,
       taxes,
       total,
-    };
-
-    const result = await createSale(saleData);
-
-    if (result.success) {
-      // Limpiar formulario y cambiar a historial
-      clearCurrentSale();
-      setSelectedClient('');
-      setPaymentMethod('cash');
-      setNotes('');
-      setGeneralDiscount(0);
-      setActiveTab('historial-ventas');
-    }
-  };
-
-  const handleCancel = () => {
-    clearCurrentSale();
-    setSelectedClient('');
-    setNotes('');
-    setGeneralDiscount(0);
-  };
-
-  // Filtrar productos para búsqueda
-  const filteredProducts = products.filter(product =>
-    product.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Filtrar ventas para historial
-  const filteredSales = sales.filter(sale => {
-    const matchesSearch = !historySearch ||
-      sale.client_name?.toLowerCase().includes(historySearch.toLowerCase()) ||
-      sale.sale_id?.toString().includes(historySearch);
-
-    const matchesDateFrom = !dateFrom || sale.sale_date >= dateFrom;
-    const matchesDateTo = !dateTo || sale.sale_date <= dateTo;
-
-    return matchesSearch && matchesDateFrom && matchesDateTo;
-  });
-
-  // Cliente seleccionado
-  const selectedClientData = clients.find(c => c.id === selectedClient);
+      client: activeClient,
+      paymentMethod,
+      currency,
+    })
+  }
 
   return (
-    <div className="page">
-      {/* Tabs */}
-      <div className="tabs">
-        <div className="tabs__list">
+    <div className='sales-new'>
+      <div className='tabs sales-new__tabs' aria-label='Gestión de ventas'>
+        <div className='tabs__list' role='tablist'>
           <button
-            className={`tabs__tab ${activeTab === 'nueva-venta' ? 'tabs__tab--active' : ''}`}
-            onClick={() => setActiveTab('nueva-venta')}
+            type='button'
+            className={`tabs__tab ${
+              activeTab === 'new-sale' ? 'tabs__tab--active' : ''
+            }`}
+            onClick={() => setActiveTab('new-sale')}
+            id='sales-new-tab'
+            role='tab'
+            aria-selected={activeTab === 'new-sale'}
+            aria-controls='sales-new-panel'
           >
-            {t('sales.tabs.new', 'Nueva Venta')}
+            Nueva Venta
           </button>
           <button
-            className={`tabs__tab ${activeTab === 'historial-ventas' ? 'tabs__tab--active' : ''}`}
-            onClick={() => setActiveTab('historial-ventas')}
+            type='button'
+            className={`tabs__tab ${
+              activeTab === 'history' ? 'tabs__tab--active' : ''
+            }`}
+            onClick={() => setActiveTab('history')}
+            id='sales-history-tab'
+            role='tab'
+            aria-selected={activeTab === 'history'}
+            aria-controls='sales-history-panel'
           >
-            {t('sales.tabs.history', 'Historial de Ventas')}
+            Historial de Ventas
           </button>
         </div>
       </div>
 
-      {/* Tab: Nueva Venta */}
-      {activeTab === 'nueva-venta' && (
-        <div className="sales-new">
-          <h2 className="page__title">
-            {t('sales.new.title', 'Nueva Venta')}
-          </h2>
-
-          <div className="sales-new__grid">
-            {/* Columna izquierda: Productos */}
-            <div className="sales-new__main">
-              {/* Card de productos */}
-              <div className="card card--elevated">
-                <div className="card__header">
-                  <h3 className="card__title">
-                    <ShoppingCart className="card__icon" />
-                    {t('sales.new.products.title', 'Productos Seleccionados')}
+      {activeTab === 'new-sale' && (
+        <section
+          id='sales-new-panel'
+          role='tabpanel'
+          aria-label='Gestión de nueva venta'
+          aria-labelledby='sales-new-tab'
+          className='sales-new__section'
+        >
+          <div className='sales-new__grid'>
+            <div className='sales-new__main'>
+              <article className='card card--elevated'>
+                <div className='card__header'>
+                  <h3 className='card__title'>
+                    <span className='card__title-icon'>
+                      <ShoppingCart size={18} />
+                    </span>
+                    <span className='card__title-text'>
+                      Productos Seleccionados
+                    </span>
                   </h3>
                 </div>
-
-                <div className="card__content">
-                  {/* Búsqueda y agregar */}
-                  <div className="sales-new__search-row">
-                    <div className="search-box flex-1">
-                      <Search className="search-box__icon" />
-                      <Input
-                        placeholder={t('sales.new.products.search', 'Buscar productos para agregar...')}
+                <div className='card__content'>
+                  <div className='sales-new__search-row'>
+                    <div className='search-box'>
+                      <Search className='search-box__icon' aria-hidden='true' />
+                      <input
+                        type='search'
+                        className='input search-box__input'
+                        placeholder='Buscar productos para agregar...'
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="search-box__input"
+                        onChange={event => setSearchTerm(event.target.value)}
                       />
                     </div>
-                    <Button
-                      onClick={() => setShowProductModal(true)}
-                      className="btn btn--primary"
+                    <button
+                      type='button'
+                      className='btn btn--primary'
+                      onClick={handleOpenModal}
                     >
-                      <Plus className="btn__icon" />
-                      {t('sales.new.products.add', 'Agregar Producto')}
-                    </Button>
+                      <Plus size={16} aria-hidden='true' />
+                      Agregar Producto
+                    </button>
                   </div>
 
-                  {/* Tabla de productos */}
-                  {currentSaleData.items.length === 0 ? (
-                    <DataState
-                      variant="empty"
-                      title={t('sales.new.products.empty.title', 'Sin productos')}
-                      message={t('sales.new.products.empty.message', 'Agregue productos a la venta')}
-                      actionLabel={t('sales.new.products.add', 'Agregar Producto')}
-                      onAction={() => setShowProductModal(true)}
-                    />
-                  ) : (
-                    <div className="table-container mt-4">
-                      <table className="table">
-                        <thead>
+                  <div className='table-container'>
+                    <table
+                      className='table'
+                      aria-label='Productos seleccionados'
+                    >
+                      <thead>
+                        <tr>
+                          <th scope='col'>Producto</th>
+                          <th scope='col' className='text-right'>
+                            Cantidad
+                          </th>
+                          <th scope='col' className='text-right'>
+                            Precio Unitario
+                          </th>
+                          <th scope='col' className='text-right'>
+                            Descuento
+                          </th>
+                          <th scope='col' className='text-right'>
+                            Total
+                          </th>
+                          <th scope='col' aria-label='Acciones' />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredItems.length === 0 ? (
                           <tr>
-                            <th>{t('sales.new.products.table.product', 'Producto')}</th>
-                            <th className="text-right">{t('sales.new.products.table.quantity', 'Cantidad')}</th>
-                            <th className="text-right">{t('sales.new.products.table.price', 'Precio Unit.')}</th>
-                            <th className="text-right">{t('sales.new.products.table.discount', 'Descuento')}</th>
-                            <th className="text-right">{t('sales.new.products.table.total', 'Total')}</th>
-                            <th></th>
+                            <td colSpan={6} className='text-center text-muted'>
+                              No se encontraron productos que coincidan con la
+                              búsqueda.
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {currentSaleData.items.map((item, index) => (
-                            <tr key={index}>
-                              <td>{item.product_name}</td>
-                              <td className="text-right">{item.quantity}</td>
-                              <td className="text-right">${item.price.toFixed(2)}</td>
-                              <td className="text-right">${(item.discount || 0).toFixed(2)}</td>
-                              <td className="text-right">
-                                ${(item.price * item.quantity - (item.discount || 0)).toFixed(2)}
-                              </td>
-                              <td className="text-right">
-                                <button
-                                  onClick={() => handleRemoveProduct(index)}
-                                  className="btn btn--icon btn--danger btn--small"
-                                  title={t('action.delete', 'Eliminar')}
-                                >
-                                  <Trash2 className="btn__icon" />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                        ) : (
+                          filteredItems.map(item => {
+                            const lineTotal =
+                              item.price * item.quantity - (item.discount || 0)
+                            return (
+                              <tr key={item.id}>
+                                <td>{item.name}</td>
+                                <td className='text-right'>{item.quantity}</td>
+                                <td className='text-right'>
+                                  {formatCurrency(item.price, currency)}
+                                </td>
+                                <td className='text-right'>
+                                  {formatCurrency(item.discount || 0, currency)}
+                                </td>
+                                <td className='text-right'>
+                                  {formatCurrency(lineTotal, currency)}
+                                </td>
+                                <td className='text-right'>
+                                  <button
+                                    type='button'
+                                    className='btn btn--destructive btn--icon-only btn--small'
+                                    onClick={() => handleRemoveItem(item.id)}
+                                    aria-label={`Eliminar ${item.name}`}
+                                  >
+                                    <Trash2 size={16} aria-hidden='true' />
+                                  </button>
+                                </td>
+                              </tr>
+                            )
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              </article>
 
-              {/* Card de resumen */}
-              <div className="card card--elevated mt-6">
-                <div className="card__header">
-                  <h3 className="card__title">
-                    <DollarSign className="card__icon" />
-                    {t('sales.new.summary.title', 'Resumen de la Venta')}
+              <article className='card card--elevated'>
+                <div className='card__header'>
+                  <h3 className='card__title'>
+                    <span className='card__title-icon'>
+                      <DollarSign size={18} />
+                    </span>
+                    <span className='card__title-text'>
+                      Resumen de la Venta
+                    </span>
                   </h3>
                 </div>
-
-                <div className="card__content">
-                  <div className="sales-new__summary">
-                    <div className="sales-new__summary-column">
-                      <div className="sales-new__summary-row">
-                        <span className="text-muted">{t('sales.new.summary.subtotal', 'Subtotal')}</span>
-                        <span>${subtotal.toFixed(2)}</span>
+                <div className='card__content'>
+                  <div className='sales-new__summary'>
+                    <div className='sales-new__summary-column'>
+                      <div className='sales-new__summary-row'>
+                        <span className='text-muted'>Subtotal</span>
+                        <span>{formatCurrency(subtotal, currency)}</span>
                       </div>
-                      <div className="sales-new__summary-row">
-                        <span className="text-muted">{t('sales.new.summary.taxes', 'Impuestos (IVA 16%)')}</span>
-                        <span>${taxes.toFixed(2)}</span>
+                      <div className='sales-new__summary-row'>
+                        <span className='text-muted'>Impuestos (IVA 16%)</span>
+                        <span>{formatCurrency(taxes, currency)}</span>
                       </div>
-                      <div className="sales-new__summary-row">
-                        <span className="text-muted">{t('sales.new.summary.discounts', 'Descuentos')}</span>
-                        <span>${discounts.toFixed(2)}</span>
+                      <div className='sales-new__summary-row'>
+                        <span className='text-muted'>Descuentos</span>
+                        <span>
+                          {formatCurrency(
+                            lineDiscounts + generalDiscount,
+                            currency
+                          )}
+                        </span>
                       </div>
-                      <div className="divider my-3"></div>
-                      <div className="sales-new__summary-row sales-new__summary-total">
-                        <span className="font-semibold">{t('sales.new.summary.total', 'Total')}</span>
-                        <span className="font-semibold text-lg">${total.toFixed(2)}</span>
+                      <hr className='card__divider' />
+                      <div className='sales-new__summary-row sales-new__summary-total'>
+                        <span>Total</span>
+                        <span>{formatCurrency(total, currency)}</span>
                       </div>
                     </div>
-
-                    <div className="sales-new__summary-actions">
-                      <Button
-                        variant="outline"
-                        onClick={() => setGeneralDiscount(prev => prev + 10)}
-                        className="btn btn--secondary w-full"
+                    <div className='sales-new__summary-actions'>
+                      <button
+                        type='button'
+                        className='btn btn--ghost'
+                        onClick={() => setGeneralDiscount(value => value + 10)}
                       >
-                        {t('sales.new.summary.applyDiscount', 'Aplicar Descuento General')}
-                      </Button>
-
-                      <div className="flex gap-3 mt-3">
-                        <Button
-                          variant="outline"
-                          onClick={handleCancel}
-                          className="btn btn--secondary flex-1"
+                        Aplicar Descuento General
+                      </button>
+                      <div className='sales-new__summary-buttons'>
+                        <button
+                          type='button'
+                          className='btn btn--secondary'
+                          onClick={resetSaleForm}
                         >
-                          {t('action.cancel', 'Cancelar')}
-                        </Button>
-                        <Button
+                          Cancelar
+                        </button>
+                        <button
+                          type='button'
+                          className='btn btn--primary'
                           onClick={handleSaveSale}
-                          disabled={!selectedClient || currentSaleData.items.length === 0 || loading}
-                          className="btn btn--primary flex-1"
                         >
-                          {loading ? t('action.saving', 'Guardando...') : t('sales.new.save', 'Guardar Venta')}
-                        </Button>
+                          Guardar Venta
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </article>
             </div>
 
-            {/* Columna derecha: Información */}
-            <div className="sales-new__sidebar">
-              {/* Cliente */}
-              <div className="card card--elevated">
-                <div className="card__header">
-                  <h3 className="card__title">
-                    <User className="card__icon" />
-                    {t('sales.new.client.title', 'Información del Cliente')}
+            <aside
+              className='sales-new__sidebar'
+              aria-label='Detalles de la venta'
+            >
+              <article className='card card--elevated'>
+                <div className='card__header'>
+                  <h3 className='card__title'>
+                    <span className='card__title-icon'>
+                      <User size={18} />
+                    </span>
+                    <span className='card__title-text'>
+                      Información del Cliente
+                    </span>
                   </h3>
                 </div>
+                <div className='card__content'>
+                  <label className='form-field__label' htmlFor='client-select'>
+                    Buscar Cliente
+                  </label>
+                  <select
+                    id='client-select'
+                    className='input'
+                    value={selectedClientId}
+                    onChange={event => setSelectedClientId(event.target.value)}
+                  >
+                    {CLIENTS.map(client => (
+                      <option key={client.id} value={client.id}>
+                        {client.name}
+                      </option>
+                    ))}
+                  </select>
 
-                <div className="card__content space-y-4">
-                  <div className="form-field">
-                    <Label htmlFor="client">
-                      {t('sales.new.client.search', 'Buscar Cliente')}
-                    </Label>
-                    <Select value={selectedClient} onValueChange={setSelectedClient}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('sales.new.client.select', 'Seleccionar cliente')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {clients.map(client => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {selectedClientData && (
-                    <div className="client-info p-3 rounded bg-secondary">
-                      <p className="text-sm">
-                        <strong>{t('field.name', 'Nombre')}:</strong> {selectedClientData.name}
+                  {activeClient && (
+                    <div className='client-info' aria-live='polite'>
+                      <p>
+                        <strong>Nombre:</strong> {activeClient.name}
                       </p>
-                      <p className="text-sm">
-                        <strong>{t('field.email', 'Email')}:</strong> {selectedClientData.email || 'N/A'}
+                      <p>
+                        <strong>Email:</strong> {activeClient.email}
                       </p>
-                      <p className="text-sm">
-                        <strong>{t('field.phone', 'Teléfono')}:</strong> {selectedClientData.phone || 'N/A'}
+                      <p>
+                        <strong>Teléfono:</strong> {activeClient.phone}
                       </p>
                     </div>
                   )}
 
-                  <Button variant="link" className="text-primary w-full">
-                    {t('sales.new.client.create', 'Crear nuevo cliente')}
-                  </Button>
+                  <button type='button' className='btn btn--ghost btn--block'>
+                    Crear nuevo cliente
+                  </button>
                 </div>
-              </div>
+              </article>
 
-              {/* Opciones de Pago */}
-              <div className="card card--elevated mt-6">
-                <div className="card__header">
-                  <h3 className="card__title">
-                    <CreditCard className="card__icon" />
-                    {t('sales.new.payment.title', 'Opciones de Pago')}
+              <article className='card card--elevated'>
+                <div className='card__header'>
+                  <h3 className='card__title'>
+                    <span className='card__title-icon'>
+                      <CreditCard size={18} />
+                    </span>
+                    <span className='card__title-text'>Opciones de Pago</span>
                   </h3>
                 </div>
+                <div className='card__content'>
+                  <label className='form-field__label' htmlFor='payment-method'>
+                    Método de Pago
+                  </label>
+                  <select
+                    id='payment-method'
+                    className='input'
+                    value={paymentMethod}
+                    onChange={event => setPaymentMethod(event.target.value)}
+                  >
+                    {PAYMENT_METHODS.map(method => (
+                      <option key={method.value} value={method.value}>
+                        {method.label}
+                      </option>
+                    ))}
+                  </select>
 
-                <div className="card__content space-y-4">
-                  <div className="form-field">
-                    <Label htmlFor="payment-method">
-                      {t('sales.new.payment.method', 'Método de Pago')}
-                    </Label>
-                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="cash">{t('payment.cash', 'Efectivo')}</SelectItem>
-                        <SelectItem value="card">{t('payment.card', 'Tarjeta')}</SelectItem>
-                        <SelectItem value="transfer">{t('payment.transfer', 'Transferencia')}</SelectItem>
-                        <SelectItem value="other">{t('payment.other', 'Otro')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="form-field">
-                    <Label htmlFor="currency">
-                      {t('sales.new.payment.currency', 'Moneda')}
-                    </Label>
-                    <Select value={currency} onValueChange={setCurrency}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PYG">PYG - Guaraní Paraguayo</SelectItem>
-                        <SelectItem value="USD">USD - Dólar</SelectItem>
-                        <SelectItem value="EUR">EUR - Euro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <label
+                    className='form-field__label'
+                    htmlFor='currency-select'
+                  >
+                    Moneda
+                  </label>
+                  <select
+                    id='currency-select'
+                    className='input'
+                    value={currency}
+                    onChange={event => setCurrency(event.target.value)}
+                  >
+                    {CURRENCIES.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-
-              {/* Detalles */}
-              <div className="card card--elevated mt-6">
-                <div className="card__header">
-                  <h3 className="card__title">
-                    <FileText className="card__icon" />
-                    {t('sales.new.details.title', 'Detalles de la Venta')}
-                  </h3>
-                </div>
-
-                <div className="card__content space-y-4">
-                  <div className="form-field">
-                    <Label htmlFor="sale-date">
-                      {t('sales.new.details.date', 'Fecha de Venta')}
-                    </Label>
-                    <Input
-                      type="date"
-                      value={saleDate}
-                      onChange={(e) => setSaleDate(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-field">
-                    <Label htmlFor="salesperson">
-                      {t('sales.new.details.salesperson', 'Vendedor')}
-                    </Label>
-                    <Input
-                      placeholder={t('sales.new.details.salesperson.placeholder', 'Nombre del vendedor')}
-                      value={salesperson}
-                      onChange={(e) => setSalesperson(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-field">
-                    <Label htmlFor="notes">
-                      {t('sales.new.details.notes', 'Notas')}
-                    </Label>
-                    <textarea
-                      className="input w-full min-h-20"
-                      placeholder={t('sales.new.details.notes.placeholder', 'Añadir notas sobre la venta...')}
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+              </article>
+            </aside>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Tab: Historial de Ventas */}
-      {activeTab === 'historial-ventas' && (
-        <div className="sales-history">
-          <h2 className="page__title">
-            {t('sales.history.title', 'Historial de Ventas')}
-          </h2>
-
-          <div className="card card--elevated">
-            <div className="card__content">
-              {/* Filtros */}
-              <div className="sales-history__filters">
-                <div className="search-box flex-1">
-                  <Search className="search-box__icon" />
-                  <Input
-                    placeholder={t('sales.history.search', 'Buscar por cliente o ID...')}
+      {activeTab === 'history' && (
+        <section
+          id='sales-history-panel'
+          role='tabpanel'
+          aria-label='Historial de ventas'
+          aria-labelledby='sales-history-tab'
+          className='sales-history'
+        >
+          <article className='card card--elevated'>
+            <div className='card__content'>
+              <div className='sales-history__filters'>
+                <div className='search-box'>
+                  <Search className='search-box__icon' aria-hidden='true' />
+                  <input
+                    type='search'
+                    className='input search-box__input'
+                    placeholder='Buscar por cliente o ID...'
                     value={historySearch}
-                    onChange={(e) => setHistorySearch(e.target.value)}
-                    className="search-box__input"
+                    onChange={event => setHistorySearch(event.target.value)}
                   />
                 </div>
-
-                <Input
-                  type="date"
+                <input
+                  type='date'
+                  className='input'
                   value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  className="input"
-                  placeholder={t('sales.history.dateFrom', 'Fecha desde')}
+                  onChange={event => setDateFrom(event.target.value)}
+                  aria-label='Fecha desde'
                 />
-
-                <Input
-                  type="date"
+                <input
+                  type='date'
+                  className='input'
                   value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="input"
-                  placeholder={t('sales.history.dateTo', 'Fecha hasta')}
+                  onChange={event => setDateTo(event.target.value)}
+                  aria-label='Fecha hasta'
                 />
-
-                <Button className="btn btn--primary">
-                  <Filter className="btn__icon" />
-                  {t('action.filter', 'Filtrar')}
-                </Button>
+                <button type='button' className='btn btn--primary'>
+                  <Filter size={16} aria-hidden='true' />
+                  Filtrar
+                </button>
               </div>
 
-              {/* Tabla */}
-              {loading && sales.length === 0 ? (
-                <DataState variant="loading" skeletonVariant="list" />
-              ) : filteredSales.length === 0 ? (
-                <DataState
-                  variant="empty"
-                  title={t('sales.history.empty.title', 'Sin ventas')}
-                  message={t('sales.history.empty.message', 'No hay ventas registradas')}
-                />
-              ) : (
-                <div className="table-container mt-6">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>{t('sales.history.table.id', 'ID Venta')}</th>
-                        <th>{t('sales.history.table.date', 'Fecha')}</th>
-                        <th>{t('sales.history.table.client', 'Cliente')}</th>
-                        <th className="text-right">{t('sales.history.table.total', 'Total')}</th>
-                        <th>{t('sales.history.table.salesperson', 'Vendedor')}</th>
-                        <th className="text-center">{t('sales.history.table.status', 'Estado')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredSales.map(sale => (
-                        <tr key={sale.sale_id || sale.id}>
-                          <td className="font-medium">#{sale.sale_id || sale.id}</td>
-                          <td>{new Date(sale.sale_date).toLocaleDateString()}</td>
-                          <td>{sale.client_name}</td>
-                          <td className="text-right">${sale.total_amount?.toFixed(2) || '0.00'}</td>
-                          <td>{sale.user_name || 'N/A'}</td>
-                          <td className="text-center">
-                            <Badge
-                              className={`badge ${
-                                sale.status === 'PAID' || sale.status === 'completed'
-                                  ? 'badge--success'
-                                  : sale.status === 'CANCELLED' || sale.status === 'cancelled'
-                                  ? 'badge--error'
-                                  : 'badge--warning'
-                              }`}
+              <div className='table-container'>
+                <table className='table' aria-label='Historial de ventas'>
+                  <thead>
+                    <tr>
+                      <th scope='col'>ID Venta</th>
+                      <th scope='col'>Fecha</th>
+                      <th scope='col'>Cliente</th>
+                      <th scope='col' className='text-right'>
+                        Total
+                      </th>
+                      <th scope='col'>Vendedor</th>
+                      <th scope='col' className='text-center'>
+                        Estado
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredHistory.map(entry => {
+                      const status =
+                        STATUS_STYLES[entry.status] || STATUS_STYLES.pending
+                      return (
+                        <tr key={entry.id}>
+                          <td className='font-medium'>#{entry.id}</td>
+                          <td>
+                            {new Date(entry.date).toLocaleDateString('es-ES')}
+                          </td>
+                          <td>{entry.client}</td>
+                          <td className='text-right'>
+                            {formatCurrency(entry.total, currency)}
+                          </td>
+                          <td>{entry.salesperson}</td>
+                          <td className='text-center'>
+                            <span
+                              className={`badge badge--pill badge--small ${status.badge}`}
                             >
-                              {sale.status === 'PAID' || sale.status === 'completed'
-                                ? t('status.completed', 'Completada')
-                                : sale.status === 'CANCELLED' || sale.status === 'cancelled'
-                                ? t('status.cancelled', 'Cancelada')
-                                : t('status.pending', 'Pendiente')}
-                            </Badge>
+                              {status.label}
+                            </span>
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        </div>
+          </article>
+        </section>
       )}
 
-      {/* Modal de Agregar Producto */}
-      <Dialog open={showProductModal} onOpenChange={setShowProductModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('sales.new.products.modal.title', 'Agregar Producto')}</DialogTitle>
-            <DialogDescription>
-              {t('sales.new.products.modal.description', 'Seleccione un producto y la cantidad')}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Búsqueda de productos */}
-            <div className="form-field">
-              <Label>{t('sales.new.products.modal.search', 'Buscar Producto')}</Label>
-              <Select
-                value={selectedProduct?.id}
-                onValueChange={(value) => {
-                  const product = products.find(p => p.id === value);
-                  setSelectedProduct(product);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('sales.new.products.modal.select', 'Seleccionar producto')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredProducts.map(product => (
-                    <SelectItem key={product.id} value={product.id}>
-                      {product.name} - ${product.price?.toFixed(2) || '0.00'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedProduct && (
-              <div className="p-3 rounded bg-secondary">
-                <p className="font-semibold">{selectedProduct.name}</p>
-                <p className="text-sm text-muted">
-                  {t('sales.new.products.modal.currentPrice', 'Precio actual')}:
-                  <span className="font-medium ml-1">${selectedProduct.price?.toFixed(2) || '0.00'}</span>
+      {isModalOpen && (
+        <div
+          className='sales-modal'
+          role='dialog'
+          aria-modal='true'
+          aria-labelledby='sales-modal-title'
+        >
+          <div
+            className='sales-modal__overlay'
+            onClick={() => setIsModalOpen(false)}
+            aria-hidden='true'
+          />
+          <div className='sales-modal__dialog'>
+            <header className='sales-modal__header'>
+              <div className='sales-modal__header-content'>
+                <h3 id='sales-modal-title' className='sales-modal__title'>
+                  Agregar producto a la venta
+                </h3>
+                <p className='sales-modal__subtitle'>
+                  Seleccione un artículo del catálogo, ajuste la cantidad y
+                  configure un descuento antes de añadirlo a la orden.
                 </p>
               </div>
-            )}
+              <button
+                type='button'
+                className='sales-modal__close'
+                onClick={() => setIsModalOpen(false)}
+              >
+                <X size={16} aria-hidden='true' />
+                <span className='sr-only'>Cerrar</span>
+              </button>
+            </header>
+            <div className='sales-modal__body'>
+              <section className='sales-modal__section sales-modal__section--context'>
+                <div className='sales-modal__info-grid'>
+                  <div className='sales-modal__info-item'>
+                    <span className='sales-modal__label'>
+                      Producto seleccionado
+                    </span>
+                    <span className='sales-modal__value'>
+                      {modalProduct?.name || 'Selecciona un producto'}
+                    </span>
+                  </div>
+                  <div className='sales-modal__info-item'>
+                    <span className='sales-modal__label'>SKU</span>
+                    <span className='sales-modal__value'>
+                      {modalProduct?.sku || '—'}
+                    </span>
+                  </div>
+                </div>
+              </section>
 
-            <div className="form-field">
-              <Label htmlFor="quantity">{t('field.quantity', 'Cantidad')}</Label>
-              <Input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-              />
-            </div>
+              <section className='sales-modal__section'>
+                <div className='sales-modal__form-grid'>
+                  <label className='sales-modal__field' htmlFor='modal-product'>
+                    <span className='sales-modal__field-label'>Producto</span>
+                    <select
+                      id='modal-product'
+                      className='input'
+                      value={modalProductId}
+                      onChange={event => setModalProductId(event.target.value)}
+                    >
+                      {PRODUCT_CATALOG.filter(product =>
+                        product.name
+                          .toLowerCase()
+                          .includes(searchTerm.toLowerCase())
+                      ).map(product => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} —{' '}
+                          {formatCurrency(product.price, currency)}
+                        </option>
+                      ))}
+                    </select>
+                    <span className='sales-modal__field-note'>
+                      Precio unitario actual:{' '}
+                      {formatCurrency(modalUnitPrice, currency)}
+                    </span>
+                  </label>
 
-            <div className="form-field">
-              <Label htmlFor="line-discount">
-                {t('sales.new.products.modal.lineDiscount', 'Descuento por línea (%)')}
-              </Label>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                value={lineDiscount}
-                onChange={(e) => setLineDiscount(e.target.value)}
-                placeholder={t('optional', 'Opcional')}
-              />
+                  <label
+                    className='sales-modal__field'
+                    htmlFor='modal-quantity'
+                  >
+                    <span className='sales-modal__field-label'>Cantidad</span>
+                    <input
+                      id='modal-quantity'
+                      type='number'
+                      min='1'
+                      step='1'
+                      className='input'
+                      value={modalQuantity}
+                      onChange={event => setModalQuantity(event.target.value)}
+                    />
+                    <span className='sales-modal__field-note'>
+                      Máximo disponible: sin límite definido
+                    </span>
+                  </label>
+
+                  <label
+                    className='sales-modal__field'
+                    htmlFor='modal-discount'
+                  >
+                    <span className='sales-modal__field-label'>
+                      Descuento por línea
+                    </span>
+                    <div className='sales-modal__input-wrapper'>
+                      <input
+                        id='modal-discount'
+                        type='number'
+                        min='0'
+                        step='0.01'
+                        className='input sales-modal__input'
+                        value={modalDiscount}
+                        onChange={event => setModalDiscount(event.target.value)}
+                        placeholder='0.00'
+                        aria-describedby='modal-discount-help'
+                      />
+                      <span className='sales-modal__input-affix'>
+                        {currency}
+                      </span>
+                    </div>
+                    <span
+                      id='modal-discount-help'
+                      className='sales-modal__field-note'
+                    >
+                      No puede exceder {formatCurrency(modalSubtotal, currency)}
+                    </span>
+                  </label>
+                </div>
+              </section>
+
+              <section className='sales-modal__section'>
+                <div className='sales-modal__totals'>
+                  <div className='sales-modal__totals-grid'>
+                    <div className='sales-modal__info-item'>
+                      <span className='sales-modal__label'>
+                        Precio unitario
+                      </span>
+                      <span className='sales-modal__value'>
+                        {formatCurrency(modalUnitPrice, currency)}
+                      </span>
+                    </div>
+                    <div className='sales-modal__info-item'>
+                      <span className='sales-modal__label'>
+                        Subtotal sin descuento
+                      </span>
+                      <span className='sales-modal__value'>
+                        {formatCurrency(modalSubtotal, currency)}
+                      </span>
+                    </div>
+                    <div className='sales-modal__info-item'>
+                      <span className='sales-modal__label'>
+                        Descuento aplicado
+                      </span>
+                      <span className='sales-modal__value'>
+                        {formatCurrency(modalDiscountValue, currency)}
+                      </span>
+                    </div>
+                    <div className='sales-modal__info-item'>
+                      <span className='sales-modal__label'>Total de línea</span>
+                      <span className='sales-modal__value sales-modal__value--highlight'>
+                        {formatCurrency(modalLineTotal, currency)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </section>
             </div>
+            <footer className='sales-modal__footer'>
+              <button
+                type='button'
+                className='btn btn--secondary'
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type='button'
+                className='btn btn--primary'
+                onClick={handleConfirmAdd}
+              >
+                Confirmar
+              </button>
+            </footer>
           </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowProductModal(false)}
-              className="btn btn--secondary"
-            >
-              {t('action.cancel', 'Cancelar')}
-            </Button>
-            <Button
-              onClick={handleAddProduct}
-              disabled={!selectedProduct}
-              className="btn btn--primary"
-            >
-              {t('action.confirm', 'Confirmar')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Error Toast */}
-      {error && (
-        <div className="alert alert--error">
-          <p>{error}</p>
-          <button onClick={clearError} className="btn btn--icon btn--small">
-            <Trash2 className="btn__icon" />
-          </button>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default SalesNew;
+export default SalesNew

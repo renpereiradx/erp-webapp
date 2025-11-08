@@ -384,6 +384,36 @@
   }
 }
 
+.form-field__required {
+  @include themify {
+    color: themed('state-error');
+  }
+}
+
+.form-field__input {
+  // Alias for .input class
+  @extend .input;
+
+  &--error {
+    @extend .input--error;
+  }
+}
+
+.form-field__error {
+  @include caption;
+  margin-top: -$spacing-4;
+  @include themify {
+    color: themed('state-error');
+  }
+}
+
+.form-field__hint {
+  @include caption;
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
 .form-field__helper {
   @include caption;
   @include themify {
@@ -489,4 +519,40 @@
 .input,
 .textarea {
   @include focus-visible;
+}
+
+// -----------------------------------------------------------------------------
+// FORM FIELD GROUP (Grid Layout)
+// -----------------------------------------------------------------------------
+
+.form-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+  margin-bottom: $spacing-16;
+
+  &--grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-16;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &--grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-16;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // Nested form-field should not have bottom margin
+  .form-field {
+    margin-bottom: 0;
+  }
 }

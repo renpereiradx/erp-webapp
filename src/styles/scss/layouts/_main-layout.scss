@@ -30,18 +30,18 @@
 
   &--with-sidebar {
     @include desktop {
-      margin-left: 288px; // Sidebar width
-      width: calc(100% - 288px);
+      margin-left: 240px; // Sidebar width
+      width: calc(100% - 240px);
     }
   }
 }
 
 .layout__content {
   flex: 1;
-  padding: $spacing-32 $spacing-24;
+  padding: $spacing-20 $spacing-20;
 
   @include mobile {
-    padding: $spacing-24 $spacing-16;
+    padding: $spacing-16 $spacing-12;
   }
 }
 
@@ -52,7 +52,7 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  width: 288px;
+  width: 240px;
   height: 100vh;
   overflow-y: auto;
 

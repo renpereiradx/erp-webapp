@@ -154,6 +154,14 @@ $light-theme: (
   'action-secondary-hover': $neutral-gray-14,
   'action-disabled': $neutral-gray-8,
 
+  // Accent colors (aliases for action colors for consistency)
+  'accent-primary': $brand-60,
+  'accent-secondary': $brand-50,
+  'accent-hover': $brand-50,
+  'accent-pressed': $brand-40,
+  'accent-text': $neutral-white,
+  'accent-light': $brand-150,
+
   // Borders
   'border-default': $neutral-gray-16,
   'border-subtle': $neutral-gray-12,
@@ -170,6 +178,21 @@ $light-theme: (
   'surface-input': $neutral-white,
   'surface-hover': $neutral-gray-4,
   'surface-pressed': $neutral-gray-8,
+
+  // Interactive States
+  'bg-hover': $neutral-gray-4,
+  'bg-active': $neutral-gray-8,
+
+  // Success/Error/Warning badges
+  'success-primary': $success-60,
+  'success-background': $success-150,
+  'success-foreground': $success-40,
+  'warning-primary': $warning-60,
+  'warning-background': $warning-150,
+  'warning-foreground': $warning-40,
+  'error-primary': $error-60,
+  'error-background': $error-150,
+  'error-foreground': $error-40,
 );
 
 $dark-theme: (
@@ -195,6 +218,14 @@ $dark-theme: (
   'action-secondary-hover': $neutral-gray-34,
   'action-disabled': $neutral-gray-22,
 
+  // Accent colors (aliases for action colors for consistency)
+  'accent-primary': $brand-90,
+  'accent-secondary': $brand-100,
+  'accent-hover': $brand-100,
+  'accent-pressed': $brand-110,
+  'accent-text': $neutral-gray-10,
+  'accent-light': rgba($brand-90, 0.15),
+
   // Borders
   'border-default': $neutral-gray-26,
   'border-subtle': $neutral-gray-22,
@@ -211,6 +242,21 @@ $dark-theme: (
   'surface-input': $neutral-gray-18,
   'surface-hover': $neutral-gray-18,
   'surface-pressed': $neutral-gray-22,
+
+  // Interactive States
+  'bg-hover': $neutral-gray-18,
+  'bg-active': $neutral-gray-22,
+
+  // Success/Error/Warning badges
+  'success-primary': $success-90,
+  'success-background': rgba($success-90, 0.15),
+  'success-foreground': $success-120,
+  'warning-primary': $warning-90,
+  'warning-background': rgba($warning-90, 0.15),
+  'warning-foreground': $warning-120,
+  'error-primary': $error-90,
+  'error-background': rgba($error-90, 0.15),
+  'error-foreground': $error-120,
 );
 
 $themes: (
@@ -233,17 +279,17 @@ $font-weight-semibold: 600;
 $font-weight-bold: 700;
 
 // Type Ramp (Font Sizes)
-$font-size-100: 0.625rem;   // 10px
+$font-size-100: 0.6875rem;  // 11px
 $font-size-200: 0.75rem;    // 12px
 $font-size-300: 0.875rem;   // 14px
-$font-size-400: 1rem;       // 16px
-$font-size-500: 1.125rem;   // 18px
-$font-size-600: 1.25rem;    // 20px
-$font-size-700: 1.5rem;     // 24px
-$font-size-800: 1.75rem;    // 28px
-$font-size-900: 2rem;       // 32px
-$font-size-1000: 2.5rem;    // 40px
-$font-size-1100: 3rem;      // 48px
+$font-size-400: 0.9375rem;  // 15px
+$font-size-500: 1rem;       // 16px
+$font-size-600: 1.125rem;   // 18px
+$font-size-700: 1.25rem;    // 20px
+$font-size-800: 1.5rem;     // 24px
+$font-size-900: 1.875rem;   // 30px
+$font-size-1000: 2.125rem;  // 34px
+$font-size-1100: 2.5rem;    // 40px
 
 // Line Heights
 $line-height-100: 1.2;

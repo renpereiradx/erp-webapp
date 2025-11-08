@@ -38,6 +38,7 @@ Archivos clave en la raíz del proyecto:
 ### Sistema
 
 - [API Integration](./API_INTEGRATION.md) - Integración con el backend
+- [Product API Cleanup Summary](./PRODUCT_API_CLEANUP_SUMMARY.md) - Resumen de la limpieza de la API de productos
 - [Cache Implementation](./CACHE_IMPLEMENTATION.md) - Sistema de caché
 - [Observability](./OBSERVABILITY.md) - Telemetría y monitoreo
 - [Telemetry](./TELEMETRY.md) - Sistema de telemetría

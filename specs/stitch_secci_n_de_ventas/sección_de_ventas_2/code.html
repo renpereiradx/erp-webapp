@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html class="" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VentaPro</title>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter:wght@400;600;700&amp;family=Inter:wght@400;500;700;900" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#1193d4", "background-light": "#f6f7f8", "background-dark": "#101c22", "foreground-light": "#323130", "foreground-dark": "#f5f5f5", "card-light": "#ffffff", "card-dark": "#2d2d2d", "muted-light": "#605e5c", "muted-dark": "#a19f9d", "border-light": "#e1dfdd", "border-dark": "#484644"}, fontFamily: {display: "Inter"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}, spacing: {section: "2.5rem"}, boxShadow: {fluent: "0 1px 2px rgba(0,0,0,0.1), 0 2px 6px rgba(0,0,0,0.06)"}}}};</script>
+<style>
+        .fluent-focus-ring:focus-within {
+            outline: 2px solid #0078d4;
+            outline-offset: 2px;
+        }
+        .fluent-button {
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .fluent-button:hover {
+            background-color: #106ebe;
+        }
+        .fluent-button:active {
+            background-color: #005a9e;
+        }
+        .fluent-secondary-button {
+            transition: background-color 0.2s ease-in-out;
+        }
+        .fluent-secondary-button:hover {
+            background-color: #f0f0f0;
+        }
+        .dark .fluent-secondary-button:hover {
+            background-color: #3d3d3d;
+        }
+        .fluent-tertiary-button:hover {
+            background-color: #f5f5f5;
+        }
+        .dark .fluent-tertiary-button:hover {
+            background-color: #383838;
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-foreground-light dark:text-foreground-dark">
+<div class="flex flex-col min-h-screen" x-data="{ activeTab: 'nueva-venta', showModal: false }">
+<header class="sticky top-0 z-20 flex items-center justify-between px-6 py-2 bg-card-light dark:bg-card-dark border-b border-border-light dark:border-border-dark shadow-sm">
+<div class="flex items-center gap-3">
+<div class="size-7 text-primary">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h1 class="text-lg font-semibold">VentaPro</h1>
+</div>
+<nav class="hidden md:flex items-center gap-1">
+<a class="px-3 py-2 rounded text-sm font-medium text-muted-light dark:text-muted-dark hover:bg-black/5 dark:hover:bg-white/5 transition-colors" href="#">Inicio</a>
+<a class="px-3 py-2 rounded text-sm font-semibold text-primary bg-primary/10" href="#">Ventas</a>
+<a class="px-3 py-2 rounded text-sm font-medium text-muted-light dark:text-muted-dark hover:bg-black/5 dark:hover:bg-white/5 transition-colors" href="#">Clientes</a>
+<a class="px-3 py-2 rounded text-sm font-medium text-muted-light dark:text-muted-dark hover:bg-black/5 dark:hover:bg-white/5 transition-colors" href="#">Productos</a>
+<a class="px-3 py-2 rounded text-sm font-medium text-muted-light dark:text-muted-dark hover:bg-black/5 dark:hover:bg-white/5 transition-colors" href="#">Reportes</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 text-muted-light dark:text-muted-dark transition-colors">
+<svg fill="currentColor" height="18px" viewBox="0 0 256 256" width="18px" xmlns="http://www.w3.org/2000/svg">
+<path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"></path>
+</svg>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDWAJQnWUKYY3vJILU3_aPTghPLkPePKrUz73jlFV-OFbGqknNmUaXM202vrtaQBMtjwiJlMbCr5RakKvlP4RBkFqFP4fWl5OJ0N-a8wWl0cMjEitOAhHRRJKEZy4kLmD8ypVlNVer33-43hEaO6ZdQU8nsmCF1WTvNLrxujFBdoNg3GKIlG0JQDjXn7TP2WzIYhQ-IryLUcskzdCDU530X4UGsToobZDvO8p1Z00Am8T4H3AjmidIZawraM_kooyYLIUDiMmxtU9-_");'></div>
+</div>
+</header>
+<main class="flex-1 w-full max-w-screen-xl mx-auto p-6 lg:p-8">
+<div class="flex border-b border-border-light dark:border-border-dark mb-6">
+<button :class="{ 'border-primary text-primary font-semibold': activeTab === 'nueva-venta', 'border-transparent text-muted-light dark:text-muted-dark hover:text-foreground-light dark:hover:text-foreground-dark': activeTab !== 'nueva-venta' }" @click="activeTab = 'nueva-venta'" class="px-4 py-2 text-sm border-b-2 transition-colors duration-200">
+                    Nueva Venta
+                </button>
+<button :class="{ 'border-primary text-primary font-semibold': activeTab === 'historial-ventas', 'border-transparent text-muted-light dark:text-muted-dark hover:text-foreground-light dark:hover:text-foreground-dark': activeTab !== 'historial-ventas' }" @click="activeTab = 'historial-ventas'" class="px-4 py-2 text-sm border-b-2 transition-colors duration-200">
+                    Historial de Ventas
+                </button>
+</div>
+<div x-show="activeTab === 'nueva-venta'">
+<h2 class="text-2xl font-semibold tracking-tight mb-6">Nueva Venta</h2>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 space-y-6">
+<div class="bg-card-light dark:bg-card-dark p-5 rounded-lg border border-border-light dark:border-border-dark shadow-fluent">
+<h3 class="text-lg font-semibold mb-4">Productos Seleccionados</h3>
+<div class="flex flex-col sm:flex-row gap-4 items-center">
+<div class="relative fluent-focus-ring rounded w-full sm:flex-1">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted-light dark:text-muted-dark">
+<svg fill="currentColor" height="18px" viewBox="0 0 256 256" width="18px" xmlns="http://www.w3.org/2000/svg">
+<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
+</svg>
+</div>
+<input class="w-full h-10 pl-10 pr-4 rounded bg-background-light dark:bg-card-dark border border-border-light dark:border-border-dark focus:outline-none focus:ring-0 transition-colors" placeholder="Buscar productos para agregar..." type="search"/>
+</div>
+<button @click="showModal = true" class="w-full sm:w-auto h-10 px-4 rounded fluent-button bg-primary text-white font-semibold text-sm whitespace-nowrap">Agregar Producto</button>
+</div>
+<div class="overflow-x-auto mt-4">
+<table class="w-full text-sm text-left">
+<thead class="text-xs uppercase bg-background-light dark:bg-background-dark/50 text-muted-light dark:text-muted-dark">
+<tr>
+<th class="px-4 py-3 font-semibold" scope="col">Producto</th>
+<th class="px-4 py-3 font-semibold" scope="col">Cantidad</th>
+<th class="px-4 py-3 text-right font-semibold" scope="col">Precio Unitario</th>
+<th class="px-4 py-3 text-right font-semibold" scope="col">Descuento</th>
+<th class="px-4 py-3 text-right font-semibold" scope="col">Total</th>
+<th class="px-4 py-3 text-right font-semibold" scope="col"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-border-light dark:border-border-dark">
+<th class="px-4 py-3 font-normal whitespace-nowrap" scope="row">Producto A</th>
+<td class="px-4 py-3">2</td>
+<td class="px-4 py-3 text-right">$100.00</td>
+<td class="px-4 py-3 text-right">$0.00</td>
+<td class="px-4 py-3 text-right">$200.00</td>
+<td class="px-4 py-3 text-right">
+<button class="text-red-600 dark:text-red-500 hover:underline text-xs">Eliminar</button>
+</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark">
+<th class="px-4 py-3 font-normal whitespace-nowrap" scope="row">Producto B</th>
+<td class="px-4 py-3">1</td>
+<td class="px-4 py-3 text-right">$50.00</td>
+<td class="px-4 py-3 text-right">$0.00</td>
+<td class="px-4 py-3 text-right">$50.00</td>
+<td class="px-4 py-3 text-right">
+<button class="text-red-600 dark:text-red-500 hover:underline text-xs">Eliminar</button>
+</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark">
+<th class="px-4 py-3 font-normal whitespace-nowrap" scope="row">Producto C</th>
+<td class="px-4 py-3">3</td>
+<td class="px-4 py-3 text-right">$75.00</td>
+<td class="px-4 py-3 text-right">$0.00</td>
+<td class="px-4 py-3 text-right">$225.00</td>
+<td class="px-4 py-3 text-right">
+<button class="text-red-600 dark:text-red-500 hover:underline text-xs">Eliminar</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="bg-card-light dark:bg-card-dark p-5 rounded-lg border border-border-light dark:border-border-dark shadow-fluent">
+<h3 class="text-lg font-semibold mb-4">Resumen de la Venta</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+<div class="space-y-2 text-sm flex-1">
+<div class="flex justify-between">
+<span class="text-muted-light dark:text-muted-dark">Subtotal</span>
+<span>$475.00</span>
+</div>
+<div class="flex justify-between">
+<span class="text-muted-light dark:text-muted-dark">Impuestos (IVA 16%)</span>
+<span>$76.00</span>
+</div>
+<div class="flex justify-between">
+<span class="text-muted-light dark:text-muted-dark">Descuentos</span>
+<span>$0.00</span>
+</div>
+<div class="border-t border-border-light dark:border-border-dark my-3"></div>
+<div class="flex justify-between font-semibold text-base">
+<span>Total</span>
+<span>$551.00</span>
+</div>
+</div>
+<div class="flex flex-col gap-3 justify-end">
+<button class="w-full h-9 px-4 rounded fluent-tertiary-button text-primary font-semibold text-sm border border-primary/50 dark:border-primary/70 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors">
+                                        Aplicar Descuento General
+                                    </button>
+<div class="flex gap-3">
+<button class="w-full h-9 px-4 rounded fluent-secondary-button bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark text-foreground-light dark:text-foreground-dark font-semibold text-sm transition-colors">
+                                            Cancelar
+                                        </button>
+<button class="w-full h-9 px-4 rounded fluent-button bg-primary text-white font-semibold text-sm transition-opacity">
+                                            Guardar Venta
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<div class="bg-card-light dark:bg-card-dark p-5 rounded-lg border border-border-light dark:border-border-dark shadow-fluent space-y-4">
+<h3 class="text-lg font-semibold">Información del Cliente</h3>
+<div class="space-y-4">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-muted-light dark:text-muted-dark" for="customer-select">Buscar Cliente</label>
+<select class="w-full h-10 px-3 rounded bg-background-light dark:bg-card-dark border border-border-light dark:border-border-dark focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all fluent-focus-ring" id="customer-select">
+<option>Seleccionar cliente existente</option>
+<option selected="">Cliente A</option>
+<option>Cliente B</option>
+</select>
+</div>
+<div class="text-sm space-y-1.5 text-muted-light dark:text-muted-dark bg-background-light dark:bg-card-dark/50 p-3 rounded">
+<p><strong>Nombre:</strong> Juan Pérez</p>
+<p><strong>Email:</strong> juan.perez@email.com</p>
+<p><strong>Teléfono:</strong> +1 234 567 890</p>
+</div>
+<button class="w-full text-sm text-primary hover:underline font-semibold">Crear nuevo cliente</button>
+</div>
+</div>
+<div class="bg-card-light dark:bg-card-dark p-5 rounded-lg border border-border-light dark:border-border-dark shadow-fluent space-y-4">
+<h3 class="text-lg font-semibold">Opciones de Pago</h3>
+<div class="space-y-4">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-muted-light dark:text-muted-dark" for="payment-method">Método de Pago</label>
+<select class="w-full h-10 px-3 rounded bg-background-light dark:bg-card-dark border border-border-light dark:border-border-dark focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all fluent-focus-ring" id="payment-method">
+<option value="cash">Efectivo</option>
+<option selected="" value="card">Tarjeta de Crédito/Débito</option>
+<option value="transfer">Transferencia Bancaria</option>
+<option value="other">Otro</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-muted-light dark:text-muted-dark" for="currency">Moneda</label>
+<select class="w-full h-10 px-3 rounded bg-background-light dark:bg-card-dark border border-border-light dark:border-border-dark focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all fluent-focus-ring" id="currency">
+<option selected="" value="usd">USD - Dólar Estadounidense</option>
+<option value="eur">EUR - Euro</option>
+<option value="mxn">MXN - Peso Mexicano</option>
+<option value="gbp">GBP - Libra Esterlina</option>
+</select>
+</div>
+</div>
+</div>
+<div class="bg-card-light dark:bg-card-dark p-5 rounded-lg border border-border-light dark:border-border-dark shadow-fluent space-y-4">
+<h3 class="text-lg font-semibold">Detalles de la Venta</h3>
+<div class="space-y-4">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-muted-light dark:text-muted-dark" for="sale-date">Fecha de Venta</label>
+<input class="w-full h-10 px-3 rounded bg-background-light dark:bg-card-dark border border-border-light dark:border-border-dark focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all fluent-focus-ring" id="sale-date" type="date" value="2023-10-27"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-muted-light dark:text-muted-dark" for="salesperson">Vendedor</label>
+<select class="w-full h-10 px-3 rounded bg-background-light dark:bg-card-dark border border-border-light dark:border-border-dark focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all fluent-focus-ring" id="salesperson">
+<option>Vendedor 1</option>
+<option selected="">Vendedor 2</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-muted-light dark:text-muted-dark" for="sale-notes">Notas</label>
+<textarea class="w-full p-3 rounded bg-background-light dark:bg-card-dark border border-border-light dark:border-border-dark focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all fluent-focus-ring" id="sale-notes" placeholder="Añadir notas sobre la venta..." rows="3"></textarea>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div x-cloak="" x-show="activeTab === 'historial-ventas'">
+<h2 class="text-3xl font-bold tracking-tight mb-8">Historial de Ventas</h2>
+<div class="bg-card-light dark:bg-card-dark p-6 rounded-lg border border-border-light dark:border-border-dark space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="relative">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-muted-light dark:text-muted-dark">
+<svg fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
+<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
+</svg>
+</div>
+<input class="w-full h-12 pl-10 pr-4 rounded-lg bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="Buscar por cliente o ID..." type="search"/>
+</div>
+<input class="w-full h-12 px-4 rounded-lg bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark focus:ring-2 focus:ring-primary focus:border-primary transition-all" type="date"/>
+<input class="w-full h-12 px-4 rounded-lg bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark focus:ring-2 focus:ring-primary focus:border-primary transition-all" type="date"/>
+<button class="w-full h-12 px-4 rounded-lg bg-primary text-white font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.293.707l-2 2A1 1 0 019 17v-6.586L4.293 6.707A1 1 0 014 6V3z" fill-rule="evenodd"></path>
+</svg>
+<span>Filtrar</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left">
+<thead class="text-xs uppercase bg-background-light dark:bg-background-dark text-muted-light dark:text-muted-dark">
+<tr>
+<th class="px-6 py-3" scope="col">ID Venta</th>
+<th class="px-6 py-3" scope="col">Fecha</th>
+<th class="px-6 py-3" scope="col">Cliente</th>
+<th class="px-6 py-3 text-right" scope="col">Total</th>
+<th class="px-6 py-3" scope="col">Vendedor</th>
+<th class="px-6 py-3 text-center" scope="col">Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-border-light dark:border-border-dark">
+<th class="px-6 py-4 font-medium whitespace-nowrap" scope="row">#12345</th>
+<td class="px-6 py-4">2023-10-26</td>
+<td class="px-6 py-4">Cliente C</td>
+<td class="px-6 py-4 text-right">$350.00</td>
+<td class="px-6 py-4">Vendedor 1</td>
+<td class="px-6 py-4 text-center">
+<span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Completada</span>
+</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark">
+<th class="px-6 py-4 font-medium whitespace-nowrap" scope="row">#12344</th>
+<td class="px-6 py-4">2023-10-25</td>
+<td class="px-6 py-4">Cliente D</td>
+<td class="px-6 py-4 text-right">$120.50</td>
+<td class="px-6 py-4">Vendedor 2</td>
+<td class="px-6 py-4 text-center">
+<span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Completada</span>
+</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark">
+<th class="px-6 py-4 font-medium whitespace-nowrap" scope="row">#12343</th>
+<td class="px-6 py-4">2023-10-24</td>
+<td class="px-6 py-4">Cliente E</td>
+<td class="px-6 py-4 text-right">$800.00</td>
+<td class="px-6 py-4">Vendedor 1</td>
+<td class="px-6 py-4 text-center">
+<span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">Cancelada</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div></main>
+<div @click.self="showModal = false" class="fixed inset-0 z-30 flex items-center justify-center bg-black bg-opacity-30 dark:bg-opacity-50" x-cloak="" x-show="showModal" x-transition.opacity="">
+<div class="bg-card-light dark:bg-card-dark rounded-lg shadow-fluent w-full max-w-md mx-4" x-show="showModal" x-transition.origin.top.duration.300ms="">
+<div class="p-6">
+<h3 class="text-xl font-semibold mb-4">Agregar Producto</h3>
+<div class="space-y-4">
+<div class="p-4 rounded-lg bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark">
+<p class="font-semibold text-foreground-light dark:text-foreground-dark">Producto D</p>
+<p class="text-sm text-muted-light dark:text-muted-dark">Precio actual: <span class="font-medium text-foreground-light dark:text-foreground-dark">$120.00</span></p>
+</div>
+<div>
+<label class="text-sm font-medium text-muted-light dark:text-muted-dark" for="quantity">Cantidad</label>
+<input class="mt-1 w-full h-10 px-3 rounded bg-background-light dark:bg-card-dark border border-border-light dark:border-border-dark focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all fluent-focus-ring" id="quantity" type="number" value="1"/>
+</div>
+<div>
+<label class="text-sm font-medium text-muted-light dark:text-muted-dark" for="discount">Descuento por línea (%)</label>
+<input class="mt-1 w-full h-10 px-3 rounded bg-background-light dark:bg-card-dark border border-border-light dark:border-border-dark focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all fluent-focus-ring" id="discount" placeholder="Opcional" type="number"/>
+</div>
+</div>
+</div>
+<div class="flex justify-end gap-3 px-6 py-4 bg-background-light dark:bg-card-dark/50 border-t border-border-light dark:border-border-dark rounded-b-lg">
+<button @click="showModal = false" class="h-9 px-4 rounded fluent-secondary-button bg-card-light dark:bg-card-dark border border-border-light dark:border-border-dark text-foreground-light dark:text-foreground-dark font-semibold text-sm">Cancelar</button>
+<button @click="showModal = false" class="h-9 px-4 rounded fluent-button bg-primary text-white font-semibold text-sm">Confirmar</button>
+</div>
+</div>
+</div>
+</div>
+<script defer="" src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+</body></html>
