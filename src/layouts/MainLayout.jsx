@@ -4,10 +4,10 @@
  * Diseñado con Fluent Design System
  */
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useState, useEffect, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   LayoutDashboard,
   Package,
@@ -38,8 +38,8 @@ import {
   IndianRupee,
   Bitcoin,
   Coins,
-} from 'lucide-react';
-import { ExchangeRateService } from '@/services/exchangeRateService.js';
+} from 'lucide-react'
+import { ExchangeRateService } from '@/services/exchangeRateService.js'
 
 // Mapeo de iconos de monedas
 const currencyIconMap = {
@@ -58,31 +58,31 @@ const currencyIconMap = {
   COP: Coins,
   MXN: Coins,
   PYG: Coins,
-};
+}
 
 const getCurrencyIcon = (code = '') => {
-  const normalizedCode = String(code || '').toUpperCase();
-  return currencyIconMap[normalizedCode] || Coins;
-};
+  const normalizedCode = String(code || '').toUpperCase()
+  return currencyIconMap[normalizedCode] || Coins
+}
 
 const MainLayout = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState({});
-  const [isLargeScreen, setIsLargeScreen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [expandedMenus, setExpandedMenus] = useState({})
+  const [isLargeScreen, setIsLargeScreen] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
-  const profileBtnRef = useRef(null);
-  const hasFetchedRatesRef = useRef(false);
+  const profileBtnRef = useRef(null)
+  const hasFetchedRatesRef = useRef(false)
 
-  const [menuPos, setMenuPos] = useState({ top: 0, right: 0, width: 288 });
-  const [navbarRates, setNavbarRates] = useState([]);
-  const [navbarRatesLoading, setNavbarRatesLoading] = useState(false);
-  const [navbarRatesError, setNavbarRatesError] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0, width: 288 })
+  const [navbarRates, setNavbarRates] = useState([])
+  const [navbarRatesLoading, setNavbarRatesLoading] = useState(false)
+  const [navbarRatesError, setNavbarRatesError] = useState(null)
 
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
   // Formateo de números para tipos de cambio
   const rateFormatter = useMemo(
@@ -92,32 +92,32 @@ const MainLayout = ({ children }) => {
         maximumFractionDigits: 4,
       }),
     []
-  );
+  )
 
   // Filtrar rates válidos
   const displayedRates = useMemo(
     () =>
       navbarRates.filter(
-        (rate) => rate && rate.currency_code && Number.isFinite(rate.rate_to_base)
+        rate => rate && rate.currency_code && Number.isFinite(rate.rate_to_base)
       ),
     [navbarRates]
-  );
+  )
 
   // Obtener código de moneda base
   const baseCurrencyCode = useMemo(() => {
-    const fromPayload = navbarRates.find((rate) => {
-      const candidate = rate?.original?.base_currency_code;
-      return candidate && typeof candidate === 'string';
-    });
+    const fromPayload = navbarRates.find(rate => {
+      const candidate = rate?.original?.base_currency_code
+      return candidate && typeof candidate === 'string'
+    })
 
     if (fromPayload?.original?.base_currency_code) {
-      return String(fromPayload.original.base_currency_code).toUpperCase();
+      return String(fromPayload.original.base_currency_code).toUpperCase()
     }
 
-    return 'PYG';
-  }, [navbarRates]);
+    return 'PYG'
+  }, [navbarRates])
 
-  const hasNavbarRates = displayedRates.length > 0;
+  const hasNavbarRates = displayedRates.length > 0
 
   // Configuración de navegación
   const navigation = useMemo(
@@ -137,146 +137,168 @@ const MainLayout = ({ children }) => {
         href: '#',
         icon: DollarSign,
         children: [
-          { name: 'Caja Registradora', href: '/caja-registradora', icon: DollarSign },
+          {
+            name: 'Caja Registradora',
+            href: '/caja-registradora',
+            icon: DollarSign,
+          },
           { name: 'Pagos Compras', href: '/pagos-compras', icon: CreditCard },
+          {
+            name: 'Pagos Compras (MVP)',
+            href: '/pagos/compras-mvp',
+            icon: CreditCard,
+          },
           { name: 'Pagos Ventas', href: '/pagos-ventas', icon: Receipt },
-          { name: 'Documentación de Pagos', href: '/pagos/documentacion', icon: BookOpen },
-          { name: 'Gestión de Pagos', href: '/pagos/gestion', icon: SlidersHorizontal },
+          {
+            name: 'Documentación de Pagos',
+            href: '/pagos/documentacion',
+            icon: BookOpen,
+          },
+          {
+            name: 'Gestión de Pagos',
+            href: '/pagos/gestion',
+            icon: SlidersHorizontal,
+          },
         ],
       },
       { name: 'Reportes', href: '/reportes', icon: BarChart3 },
     ],
     []
-  );
+  )
 
   // Detectar tamaño de pantalla
   useEffect(() => {
-    setIsClient(true);
+    setIsClient(true)
     const checkScreenSize = () => {
-      setIsLargeScreen(window.innerWidth >= 1024);
-    };
+      setIsLargeScreen(window.innerWidth >= 1024)
+    }
 
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
 
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
 
   // Calcular posición del menú de usuario
   useEffect(() => {
     const calcPos = () => {
-      if (!profileBtnRef.current) return;
-      const rect = profileBtnRef.current.getBoundingClientRect();
+      if (!profileBtnRef.current) return
+      const rect = profileBtnRef.current.getBoundingClientRect()
       setMenuPos({
         top: rect.bottom + window.scrollY,
         right: rect.right + window.scrollX,
         width: 288,
-      });
-    };
+      })
+    }
     if (showUserMenu) {
-      calcPos();
-      window.addEventListener('resize', calcPos);
-      window.addEventListener('scroll', calcPos, true);
+      calcPos()
+      window.addEventListener('resize', calcPos)
+      window.addEventListener('scroll', calcPos, true)
     }
     return () => {
-      window.removeEventListener('resize', calcPos);
-      window.removeEventListener('scroll', calcPos, true);
-    };
-  }, [showUserMenu]);
+      window.removeEventListener('resize', calcPos)
+      window.removeEventListener('scroll', calcPos, true)
+    }
+  }, [showUserMenu])
 
   // Obtener tipos de cambio
   useEffect(() => {
-    if (!isClient) return undefined;
+    if (!isClient) return undefined
 
-    let isActive = true;
+    let isActive = true
 
     const fetchRates = async (withLoader = false) => {
-      if (!isActive) return;
+      if (!isActive) return
       if (withLoader) {
-        setNavbarRatesLoading(true);
+        setNavbarRatesLoading(true)
       }
 
       try {
-        const data = await ExchangeRateService.getLatestAll();
-        if (!isActive) return;
-        setNavbarRates(Array.isArray(data) ? data : []);
-        setNavbarRatesError(null);
+        const data = await ExchangeRateService.getLatestAll()
+        if (!isActive) return
+        setNavbarRates(Array.isArray(data) ? data : [])
+        setNavbarRatesError(null)
       } catch (error) {
-        if (!isActive) return;
-        setNavbarRatesError(error?.message || 'Sin datos de tipo de cambio disponibles');
+        if (!isActive) return
+        setNavbarRatesError(
+          error?.message || 'Sin datos de tipo de cambio disponibles'
+        )
       } finally {
-        if (!isActive) return;
-        setNavbarRatesLoading(false);
-        hasFetchedRatesRef.current = true;
+        if (!isActive) return
+        setNavbarRatesLoading(false)
+        hasFetchedRatesRef.current = true
       }
-    };
+    }
 
-    fetchRates(!hasFetchedRatesRef.current);
+    fetchRates(!hasFetchedRatesRef.current)
 
     const intervalId = window.setInterval(() => {
-      fetchRates(false);
-    }, 5 * 60 * 1000);
+      fetchRates(false)
+    }, 5 * 60 * 1000)
 
     return () => {
-      isActive = false;
-      window.clearInterval(intervalId);
-    };
-  }, [isClient]);
+      isActive = false
+      window.clearInterval(intervalId)
+    }
+  }, [isClient])
 
   // Auto-expandir menús con sub-items activos
   useEffect(() => {
-    navigation.forEach((item) => {
-      if (item.children && item.children.some((child) => child.href === location.pathname)) {
-        setExpandedMenus((prev) => {
-          if (prev[item.name]) return prev;
-          return { ...prev, [item.name]: true };
-        });
+    navigation.forEach(item => {
+      if (
+        item.children &&
+        item.children.some(child => child.href === location.pathname)
+      ) {
+        setExpandedMenus(prev => {
+          if (prev[item.name]) return prev
+          return { ...prev, [item.name]: true }
+        })
       }
-    });
-  }, [location.pathname, navigation]);
+    })
+  }, [location.pathname, navigation])
 
-  const isActive = (href) => location.pathname === href;
+  const isActive = href => location.pathname === href
 
-  const isParentActive = (item) => {
-    if (isActive(item.href)) return true;
+  const isParentActive = item => {
+    if (isActive(item.href)) return true
     if (item.children) {
-      return item.children.some((child) => isActive(child.href));
+      return item.children.some(child => isActive(child.href))
     }
-    return false;
-  };
+    return false
+  }
 
-  const toggleMenu = (menuName) => {
-    setExpandedMenus((prev) => ({
+  const toggleMenu = menuName => {
+    setExpandedMenus(prev => ({
       ...prev,
       [menuName]: !prev[menuName],
-    }));
-  };
+    }))
+  }
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+    logout()
+    navigate('/login')
+  }
 
   // Render navigation item
   const renderNavItem = (item, isMobile = false) => {
-    const Icon = item.icon;
-    const hasChildren = item.children && item.children.length > 0;
-    const isExpanded = expandedMenus[item.name];
-    const active = hasChildren ? isParentActive(item) : isActive(item.href);
+    const Icon = item.icon
+    const hasChildren = item.children && item.children.length > 0
+    const isExpanded = expandedMenus[item.name]
+    const active = hasChildren ? isParentActive(item) : isActive(item.href)
 
     return (
-      <div key={item.name} className="nav__item-wrapper">
+      <div key={item.name} className='nav__item-wrapper'>
         {hasChildren ? (
           <button
             onClick={() => toggleMenu(item.name)}
             className={`nav__item ${active ? 'nav__item--active' : ''}`}
           >
-            <Icon className="nav__icon" />
-            <span className="nav__text">{item.name}</span>
+            <Icon className='nav__icon' />
+            <span className='nav__text'>{item.name}</span>
             {isExpanded ? (
-              <ChevronDown className="nav__chevron" />
+              <ChevronDown className='nav__chevron' />
             ) : (
-              <ChevronRight className="nav__chevron" />
+              <ChevronRight className='nav__chevron' />
             )}
           </button>
         ) : (
@@ -285,179 +307,219 @@ const MainLayout = ({ children }) => {
             onClick={() => isMobile && setSidebarOpen(false)}
             className={`nav__item ${active ? 'nav__item--active' : ''}`}
           >
-            <Icon className="nav__icon" />
-            <span className="nav__text">{item.name}</span>
+            <Icon className='nav__icon' />
+            <span className='nav__text'>{item.name}</span>
           </Link>
         )}
 
         {/* Submenu */}
         {hasChildren && isExpanded && (
-          <div className="nav__submenu">
-            {item.children.map((child) => {
-              const ChildIcon = child.icon;
-              const childActive = isActive(child.href);
+          <div className='nav__submenu'>
+            {item.children.map(child => {
+              const ChildIcon = child.icon
+              const childActive = isActive(child.href)
 
               return (
                 <Link
                   key={child.name}
                   to={child.href}
                   onClick={() => isMobile && setSidebarOpen(false)}
-                  className={`nav__subitem ${childActive ? 'nav__subitem--active' : ''}`}
+                  className={`nav__subitem ${
+                    childActive ? 'nav__subitem--active' : ''
+                  }`}
                 >
-                  <ChildIcon className="nav__icon" />
-                  <span className="nav__text">{child.name}</span>
+                  <ChildIcon className='nav__icon' />
+                  <span className='nav__text'>{child.name}</span>
                 </Link>
-              );
+              )
             })}
           </div>
         )}
       </div>
-    );
-  };
+    )
+  }
 
   return (
-    <div className="layout">
+    <div className='layout'>
       {/* Sidebar Desktop */}
       {isClient && isLargeScreen && (
-        <aside className="sidebar sidebar--desktop">
-          <div className="sidebar__header">
-            <div className="sidebar__logo">
-              <div className="sidebar__logo-icon">
-                <LayoutDashboard className="sidebar__logo-icon-svg" />
+        <aside className='sidebar sidebar--desktop'>
+          <div className='sidebar__header'>
+            <div className='sidebar__logo'>
+              <div className='sidebar__logo-icon'>
+                <LayoutDashboard className='sidebar__logo-icon-svg' />
               </div>
-              <h1 className="sidebar__logo-text">ERP System</h1>
+              <h1 className='sidebar__logo-text'>ERP System</h1>
             </div>
           </div>
 
-          <nav className="sidebar__nav">
-            {navigation.map((item) => renderNavItem(item))}
+          <nav className='sidebar__nav'>
+            {navigation.map(item => renderNavItem(item))}
           </nav>
         </aside>
       )}
 
       {/* Sidebar Mobile */}
       {sidebarOpen && (
-        <div className="sidebar-overlay">
-          <div className="sidebar-overlay__backdrop" onClick={() => setSidebarOpen(false)} />
-          <aside className="sidebar sidebar--mobile">
+        <div className='sidebar-overlay'>
+          <div
+            className='sidebar-overlay__backdrop'
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside className='sidebar sidebar--mobile'>
             <button
-              className="sidebar__close"
+              className='sidebar__close'
               onClick={() => setSidebarOpen(false)}
-              aria-label="Cerrar menú"
+              aria-label='Cerrar menú'
             >
-              <X className="sidebar__close-icon" />
+              <X className='sidebar__close-icon' />
             </button>
 
-            <div className="sidebar__header">
-              <div className="sidebar__logo">
-                <div className="sidebar__logo-icon">
-                  <LayoutDashboard className="sidebar__logo-icon-svg" />
+            <div className='sidebar__header'>
+              <div className='sidebar__logo'>
+                <div className='sidebar__logo-icon'>
+                  <LayoutDashboard className='sidebar__logo-icon-svg' />
                 </div>
-                <h1 className="sidebar__logo-text">ERP System</h1>
+                <h1 className='sidebar__logo-text'>ERP System</h1>
               </div>
             </div>
 
-            <nav className="sidebar__nav">
-              {navigation.map((item) => renderNavItem(item, true))}
+            <nav className='sidebar__nav'>
+              {navigation.map(item => renderNavItem(item, true))}
             </nav>
           </aside>
         </div>
       )}
 
       {/* Main Content */}
-      <div className={`layout__main ${isClient && isLargeScreen ? 'layout__main--with-sidebar' : ''}`}>
+      <div
+        className={`layout__main ${
+          isClient && isLargeScreen ? 'layout__main--with-sidebar' : ''
+        }`}
+      >
         {/* Navbar */}
-        <header className="navbar">
+        <header className='navbar'>
           <button
-            className="navbar__menu-btn"
+            className='navbar__menu-btn'
             onClick={() => setSidebarOpen(true)}
-            aria-label="Abrir menú"
+            aria-label='Abrir menú'
             style={{ display: isLargeScreen ? 'none' : 'flex' }}
           >
-            <Menu className="navbar__menu-icon" />
+            <Menu className='navbar__menu-icon' />
           </button>
 
-          <div className="navbar__content">
+          <div className='navbar__content'>
             {/* Exchange Rates */}
-            <div className="navbar__rates">
-              <span className="navbar__rates-label">Tipos de cambio</span>
-              <div className="navbar__rates-list">
+            <div className='navbar__rates'>
+              <span className='navbar__rates-label'>Tipos de cambio</span>
+              <div className='navbar__rates-list'>
                 {navbarRatesLoading ? (
-                  <Loader2 className="navbar__rates-loader" aria-label="Cargando tipos de cambio" />
+                  <Loader2
+                    className='navbar__rates-loader'
+                    aria-label='Cargando tipos de cambio'
+                  />
                 ) : hasNavbarRates ? (
-                  displayedRates.map((rate) => {
-                    const Icon = getCurrencyIcon(rate.currency_code);
-                    const key = `${rate.currency_code}-${rate.id ?? rate.date ?? 'latest'}`;
+                  displayedRates.map(rate => {
+                    const Icon = getCurrencyIcon(rate.currency_code)
+                    const key = `${rate.currency_code}-${
+                      rate.id ?? rate.date ?? 'latest'
+                    }`
                     return (
-                      <div key={key} className="navbar__rate" title={rate.currency_name ? `${rate.currency_name} • ${rateFormatter.format(rate.rate_to_base)} ${baseCurrencyCode}` : undefined}>
-                        <Icon className="navbar__rate-icon" />
-                        <span className="navbar__rate-code">{rate.currency_code}</span>
-                        <span className="navbar__rate-value">{rateFormatter.format(rate.rate_to_base)}</span>
-                        <span className="navbar__rate-base">{baseCurrencyCode}</span>
+                      <div
+                        key={key}
+                        className='navbar__rate'
+                        title={
+                          rate.currency_name
+                            ? `${rate.currency_name} • ${rateFormatter.format(
+                                rate.rate_to_base
+                              )} ${baseCurrencyCode}`
+                            : undefined
+                        }
+                      >
+                        <Icon className='navbar__rate-icon' />
+                        <span className='navbar__rate-code'>
+                          {rate.currency_code}
+                        </span>
+                        <span className='navbar__rate-value'>
+                          {rateFormatter.format(rate.rate_to_base)}
+                        </span>
+                        <span className='navbar__rate-base'>
+                          {baseCurrencyCode}
+                        </span>
                       </div>
-                    );
+                    )
                   })
                 ) : navbarRatesError ? (
-                  <span className="navbar__rates-error" title={navbarRatesError}>
+                  <span
+                    className='navbar__rates-error'
+                    title={navbarRatesError}
+                  >
                     Tipos no disponibles
                   </span>
                 ) : (
-                  <span className="navbar__rates-empty">Sin datos</span>
+                  <span className='navbar__rates-empty'>Sin datos</span>
                 )}
               </div>
             </div>
 
             {/* User Menu */}
-            <div className="navbar__actions">
+            <div className='navbar__actions'>
               <button
                 ref={profileBtnRef}
-                className="navbar__settings-btn"
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
+                className='navbar__settings-btn'
+                onClick={e => {
+                  const rect = e.currentTarget.getBoundingClientRect()
                   setMenuPos({
                     top: rect.bottom + window.scrollY,
                     right: rect.right + window.scrollX,
                     width: 288,
-                  });
-                  setShowUserMenu((prev) => !prev);
+                  })
+                  setShowUserMenu(prev => !prev)
                 }}
-                aria-label="Abrir ajustes"
+                aria-label='Abrir ajustes'
               >
-                <Settings className="navbar__settings-icon" />
-                <span className="navbar__settings-text">Ajustes</span>
+                <Settings className='navbar__settings-icon' />
+                <span className='navbar__settings-text'>Ajustes</span>
               </button>
 
               {showUserMenu &&
                 profileBtnRef.current &&
                 createPortal(
                   <div
-                    className="user-menu"
+                    className='user-menu'
                     style={{
                       top: `${menuPos.top}px`,
                       left: `${menuPos.right - menuPos.width}px`,
                       width: '18rem',
                     }}
                   >
-                    <div className="user-menu__header">
-                      <div className="user-menu__avatar">
-                        <User className="user-menu__avatar-icon" />
+                    <div className='user-menu__header'>
+                      <div className='user-menu__avatar'>
+                        <User className='user-menu__avatar-icon' />
                       </div>
-                      <div className="user-menu__info">
-                        <p className="user-menu__name">{user?.name || 'Usuario Demo'}</p>
-                        <p className="user-menu__email">{user?.email || user?.username || 'demo@erp.com'}</p>
+                      <div className='user-menu__info'>
+                        <p className='user-menu__name'>
+                          {user?.name || 'Usuario Demo'}
+                        </p>
+                        <p className='user-menu__email'>
+                          {user?.email || user?.username || 'demo@erp.com'}
+                        </p>
                       </div>
                     </div>
-                    <div className="user-menu__body">
+                    <div className='user-menu__body'>
                       <Link
-                        to="/configuracion"
-                        className="user-menu__item"
+                        to='/configuracion'
+                        className='user-menu__item'
                         onClick={() => setShowUserMenu(false)}
                       >
-                        <Settings className="user-menu__item-icon" />
+                        <Settings className='user-menu__item-icon' />
                         Configuración
                       </Link>
-                      <button onClick={handleLogout} className="user-menu__item user-menu__item--danger">
-                        <LogOut className="user-menu__item-icon" />
+                      <button
+                        onClick={handleLogout}
+                        className='user-menu__item user-menu__item--danger'
+                      >
+                        <LogOut className='user-menu__item-icon' />
                         Cerrar Sesión
                       </button>
                     </div>
@@ -469,15 +531,18 @@ const MainLayout = ({ children }) => {
 
           {/* Overlay for user menu */}
           {showUserMenu && (
-            <div className="user-menu-overlay" onClick={() => setShowUserMenu(false)} />
+            <div
+              className='user-menu-overlay'
+              onClick={() => setShowUserMenu(false)}
+            />
           )}
         </header>
 
         {/* Page Content */}
-        <main className="layout__content">{children}</main>
+        <main className='layout__content'>{children}</main>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default MainLayout;
+export default MainLayout

@@ -30,6 +30,7 @@ import PurchasePayment from '@/pages/PurchasePayment'
 import SalePayment from '@/pages/SalePayment'
 import PaymentDocumentation from '@/pages/PaymentDocumentation'
 import PaymentManagement from '@/pages/PaymentManagement'
+import PurchasePaymentsMvp from '@/pages/PurchasePaymentsMvp'
 import Login from '@/pages/Login'
 import Settings from '@/pages/Settings'
 // import ProductDetailTest from '@/components/ProductDetailTest';
@@ -135,6 +136,10 @@ function AppContent() {
                       <Route
                         path='/pagos-compras'
                         element={<PurchasePayment />}
+                      />
+                      <Route
+                        path='/pagos/compras-mvp'
+                        element={<PurchasePaymentsMvp />}
                       />
                       <Route path='/pagos-ventas' element={<SalePayment />} />
                       <Route
