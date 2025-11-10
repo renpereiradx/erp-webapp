@@ -38,11 +38,7 @@
 
 .layout__content {
   flex: 1;
-  padding: $spacing-20 $spacing-20;
-
-  @include mobile {
-    padding: $spacing-16 $spacing-12;
-  }
+  padding: 0;
 }
 
 // -----------------------------------------------------------------------------

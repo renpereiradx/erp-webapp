@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sistema de Gestión de Precios</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#2b8cee",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+      }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="w-64 flex-shrink-0 bg-white dark:bg-gray-900/50 border-r border-gray-200 dark:border-gray-800">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-4">
+<div class="flex gap-3 items-center">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Company Logo for Fluent Systems" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCtjCxoCgzQdP83V4XauCemYgo4HqMiqaUyGelfQy9fFfQyQKUQFhlY90p9AN2jmoHNau02bqxc_6D9JxEDxrNhzymh4RBkOgF375YliRpI6PfvabLzfskGH6rZL0t9-4GqICiKcSDCRLiiOfaUyieewfLyBVj4fdAc7Lli15jLK4UfWMHGBmJfcN6t6RqW3sHz_AZzUInEJEfyAOsHqnoLCRgKf_b-JY30lDkQgTgmRq4MjZac5Rjab8sBTAQyuGpU2ppPoNggqCB6");'></div>
+<div class="flex flex-col">
+<h1 class="text-gray-900 dark:text-white text-base font-medium leading-normal">Fluent Systems</h1>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">Management</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2 mt-4">
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<p class="text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<p class="text-sm font-medium leading-normal">Products</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">sell</span>
+<p class="text-sm font-medium leading-normal">Price Adjustments</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-sm font-medium leading-normal">Settings</p>
+</a>
+</nav>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<p class="text-sm font-medium leading-normal">Help</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<p class="text-sm font-medium leading-normal">Logout</p>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-6 lg:p-10">
+<div class="w-full max-w-7xl mx-auto">
+<!-- PageHeading -->
+<header class="mb-8">
+<p class="text-gray-900 dark:text-white text-3xl lg:text-4xl font-black leading-tight tracking-[-0.033em]">Price Adjustment for: UltraWeave Pro Fabric / SKU: UWPF-001</p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left Column -->
+<div class="lg:col-span-1 flex flex-col gap-8">
+<!-- Current Price Card -->
+<div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl shadow-sm">
+<h2 class="text-gray-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">Current Price</h2>
+<p class="text-primary tracking-tight text-5xl font-bold leading-tight mt-3">€19.99</p>
+</div>
+<!-- New Adjustment Form -->
+<div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl shadow-sm">
+<h2 class="text-gray-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em] mb-6">Register New Adjustment</h2>
+<form class="space-y-5">
+<div>
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="new-price">New Price (€)</label>
+<div class="relative">
+<input class="w-full px-3 py-2 bg-background-light dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition duration-150" id="new-price" min="0" name="new-price" placeholder="e.g., 21.50" step="0.01" type="number" value="21.50"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="unit">Unit of Measure</label>
+<select class="w-full px-3 py-2 bg-background-light dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition duration-150" id="unit" name="unit">
+<option>unit</option>
+<option>kg</option>
+<option>meter</option>
+<option>pack</option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="reason">Reason for Adjustment</label>
+<textarea class="w-full px-3 py-2 bg-background-light dark:bg-gray-800 border border-red-500 dark:border-red-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-150" id="reason" name="reason" placeholder="Describe the reason for the price change..." rows="4"></textarea>
+<p class="text-xs text-red-600 dark:text-red-500 mt-1.5">Minimum 10 characters required.</p>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" for="metadata">Additional Metadata (JSON)</label>
+<textarea class="font-mono text-sm w-full px-3 py-2 bg-background-light dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition duration-150" id="metadata" name="metadata" placeholder='{ "campaign_id": "SUMMER2024", "approved_by": "manager" }' rows="4"></textarea>
+</div>
+<button class="w-full bg-primary/50 text-white font-bold py-3 px-4 rounded-lg cursor-not-allowed" disabled="" type="button">
+                                    Register Change
+                                </button>
+</form>
+</div>
+</div>
+<!-- Right Column -->
+<div class="lg:col-span-2">
+<div class="bg-white dark:bg-gray-900/50 p-6 rounded-xl shadow-sm h-full">
+<h2 class="text-gray-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em] mb-6">Adjustment History</h2>
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+<thead class="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-100 dark:bg-gray-800">
+<tr>
+<th class="px-6 py-3 rounded-l-lg" scope="col">Date</th>
+<th class="px-6 py-3" scope="col">Old Price</th>
+<th class="px-6 py-3" scope="col">New Price</th>
+<th class="px-6 py-3" scope="col">Reason</th>
+<th class="px-6 py-3" scope="col">User</th>
+<th class="px-6 py-3 rounded-r-lg" scope="col">Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="bg-white dark:bg-gray-900/50 border-b dark:border-gray-800">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">2024-07-15</td>
+<td class="px-6 py-4">€18.50</td>
+<td class="px-6 py-4 font-bold text-green-600 dark:text-green-500">€19.99</td>
+<td class="px-6 py-4">Supplier cost increase</td>
+<td class="px-6 py-4">A. Manager</td>
+<td class="px-6 py-4">
+<button class="text-primary hover:underline">View</button>
+</td>
+</tr>
+<tr class="bg-white dark:bg-gray-900/50 border-b dark:border-gray-800">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">2024-05-20</td>
+<td class="px-6 py-4">€20.00</td>
+<td class="px-6 py-4 font-bold text-red-600 dark:text-red-500">€18.50</td>
+<td class="px-6 py-4">Promotional campaign</td>
+<td class="px-6 py-4">J. Doe</td>
+<td class="px-6 py-4">
+<button class="text-primary hover:underline">View</button>
+</td>
+</tr>
+<tr class="bg-white dark:bg-gray-900/50 border-b dark:border-gray-800">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">2024-02-01</td>
+<td class="px-6 py-4">€19.00</td>
+<td class="px-6 py-4 font-bold text-green-600 dark:text-green-500">€20.00</td>
+<td class="px-6 py-4">Annual price review</td>
+<td class="px-6 py-4">A. Manager</td>
+<td class="px-6 py-4">
+<button class="text-primary hover:underline">View</button>
+</td>
+</tr>
+<tr class="bg-white dark:bg-gray-900/50">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">2023-11-10</td>
+<td class="px-6 py-4">€22.00</td>
+<td class="px-6 py-4 font-bold text-red-600 dark:text-red-500">€19.00</td>
+<td class="px-6 py-4">Market competition adjustment</td>
+<td class="px-6 py-4">M. Smith</td>
+<td class="px-6 py-4">
+<button class="text-primary hover:underline">View</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

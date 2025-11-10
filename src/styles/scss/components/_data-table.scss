@@ -1,0 +1,84 @@
+// =============================================================================
+// DATA TABLE COMPONENT
+// =============================================================================
+// A responsive, theme-aware table for displaying sets of data.
+// =============================================================================
+
+@use '../abstracts' as *;
+
+.data-table {
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
+  }
+  border-radius: $border-radius-large;
+  overflow: hidden;
+}
+
+.data-table__wrapper {
+  overflow-x: auto;
+  @include custom-scrollbar;
+}
+
+.data-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  thead {
+    @include themify {
+      background-color: themed('bg-secondary');
+      border-bottom: 1px solid themed('border-default');
+    }
+  }
+
+  th {
+    @include text-style($font-size-200, $font-weight-semibold);
+    @include themify {
+      color: themed('text-secondary');
+    }
+    padding: $spacing-12 $spacing-16;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  tbody {
+    @include themify {
+      border-color: themed('border-default');
+    }
+
+    tr {
+      @include transition(background-color);
+      @include themify {
+        border-bottom: 1px solid themed('border-subtle');
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        @include themify {
+          background-color: themed('surface-hover');
+        }
+      }
+    }
+  }
+
+  td {
+    @include text-style($font-size-300);
+    @include themify {
+      color: themed('text-primary');
+    }
+    padding: $spacing-12 $spacing-16;
+    vertical-align: middle;
+  }
+
+  .id-cell {
+    @include text-style($font-size-200, $font-weight-medium);
+    font-family: $font-family-monospace;
+    @include themify {
+      color: themed('action-primary') !important;
+    }
+  }
+}

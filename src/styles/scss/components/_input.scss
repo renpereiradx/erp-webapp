@@ -46,12 +46,15 @@
   }
 
   // Focus state
-  &:focus {
-    outline: none;
+  &:focus,
+  &:focus-visible,
+  &:active {
+    outline: none !important;
     @include themify {
-      border-color: themed('action-primary');
-      box-shadow: 0 0 0 1px themed('action-primary');
+      border: 2px solid themed('action-primary');
     }
+    // Ajustar padding para compensar el borde más grueso
+    padding: calc(#{$spacing-8} - 1px) calc(#{$spacing-12} - 1px);
   }
 
   // Hover state
@@ -139,7 +142,6 @@
   &:focus {
     @include themify {
       border-color: themed('state-error');
-      box-shadow: 0 0 0 1px themed('state-error');
     }
   }
 }
@@ -152,7 +154,6 @@
   &:focus {
     @include themify {
       border-color: themed('state-success');
-      box-shadow: 0 0 0 1px themed('state-success');
     }
   }
 }
@@ -165,7 +166,6 @@
   &:focus {
     @include themify {
       border-color: themed('state-warning');
-      box-shadow: 0 0 0 1px themed('state-warning');
     }
   }
 }
@@ -225,7 +225,6 @@
     outline: none;
     @include themify {
       border-color: themed('action-primary');
-      box-shadow: 0 0 0 1px themed('action-primary');
     }
   }
 
@@ -475,6 +474,12 @@
   .input {
     padding-left: $spacing-36;
     padding-right: $spacing-36;
+
+    &:focus {
+      // Ajustar padding para compensar el borde más grueso en focus
+      padding-left: calc(#{$spacing-36} - 1px);
+      padding-right: calc(#{$spacing-36} - 1px);
+    }
   }
 
   &__icon {
@@ -482,6 +487,7 @@
     left: $spacing-12;
     top: 50%;
     transform: translateY(-50%);
+    pointer-events: none;
     @include themify {
       color: themed('text-tertiary');
     }
@@ -497,6 +503,7 @@
     border: none;
     background: transparent;
     border-radius: $border-radius-small;
+    z-index: 2;
     @include themify {
       color: themed('text-tertiary');
     }
@@ -507,6 +514,20 @@
         color: themed('text-primary');
       }
     }
+
+    &:focus {
+      outline: none;
+      @include themify {
+        background-color: themed('surface-hover');
+        color: themed('text-primary');
+      }
+    }
+  }
+
+  // Prevenir doble borde en el contenedor
+  &:focus,
+  &:focus-within {
+    outline: none;
   }
 }
 
