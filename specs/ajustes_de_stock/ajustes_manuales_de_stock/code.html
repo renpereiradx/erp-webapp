@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ajuste Manual de Stock</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#2b8cee",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+              "component-light": "#ffffff",
+              "component-dark": "#182431",
+              "text-light-primary": "#101922",
+              "text-dark-primary": "#f6f7f8",
+              "text-light-secondary": "#606a74",
+              "text-dark-secondary": "#9aa5b3",
+              "border-light": "#e7edf3",
+              "border-dark": "#2d3a46",
+              "success": "#10b981",
+              "error": "#ef4444"
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-text-light-primary dark:text-text-dark-primary">
+<div class="relative flex h-auto min-h-screen w-full flex-col">
+<!-- TopNavBar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-border-light dark:border-border-dark px-6 md:px-10 py-3 bg-component-light dark:bg-component-dark sticky top-0 z-10">
+<div class="flex items-center gap-4">
+<div class="size-6 text-primary">
+<svg fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4zm0 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2z"></path></svg>
+</div>
+<h2 class="text-lg font-bold tracking-[-0.015em]">Gestión de Inventarios</h2>
+</div>
+<div class="flex flex-1 justify-end items-center gap-4 md:gap-6">
+<div class="hidden md:flex gap-2">
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-background-light dark:bg-background-dark text-text-light-secondary dark:text-text-dark-secondary hover:bg-primary/10 hover:text-primary">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 w-10 bg-background-light dark:bg-background-dark text-text-light-secondary dark:text-text-dark-secondary hover:bg-primary/10 hover:text-primary">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User avatar placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAM0awUAnJFtiDd6zE1VcT48DAq_WNMIMhjgaL5YmQUSpT1flGAk2WxVT0yXDmjX0-L6HVm46Qg7GmL91b5o2IttdAJOqZoxHMJhq6MSANIVsAqHIkzCsaotGu_OHqh8247tpx_OlDQNerUtIhaHQm35YX0-fc9sElJk4BB_P7PdIVnMgk5XzG99TqKgtAq1PytqiYIg0XmPzeQaiV2KSf8SNCE5ZApatI-ZeWGncBQPq6s3nr4ER25W5IvlbSlU9FU1yFECvtaBerW");'></div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 p-4 md:p-6 lg:p-8">
+<div class="max-w-7xl mx-auto">
+<!-- PageHeading -->
+<div class="flex flex-wrap justify-between gap-4 items-center mb-6">
+<h1 class="text-4xl font-black leading-tight tracking-[-0.033em]">Ajuste Manual de Stock</h1>
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-primary text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-4">
+<span class="material-symbols-outlined">search</span>
+<span>Buscar Producto</span>
+</button>
+</div>
+<!-- Main Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Left Panel: Adjustment Form -->
+<div class="lg:col-span-1 flex flex-col gap-6">
+<!-- Selected Product Card -->
+<div class="rounded-xl bg-component-light dark:bg-component-dark p-5 shadow-sm border border-border-light dark:border-border-dark">
+<div class="flex items-start justify-between gap-4">
+<div class="flex flex-col gap-1 flex-1">
+<p class="text-sm font-medium text-text-light-secondary dark:text-text-dark-secondary">Producto Seleccionado</p>
+<p class="text-base font-bold">SKU12345 - Zapatillas Deportivas Runner Pro</p>
+<p class="text-sm font-normal text-text-light-secondary dark:text-text-dark-secondary">Stock Actual: <span class="font-bold text-text-light-primary dark:text-text-dark-primary">150 Unidades</span></p>
+</div>
+<div class="w-20 h-20 bg-center bg-no-repeat bg-contain rounded-lg flex-shrink-0" data-alt="Product image placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB1P42Il2-MBteMC_kz3PUqItObDAcdj-36ejvoAxQueWLYx0pirBHPhCZx4eRzwg8DPnETX69qKu51ljimatKsD5kEv5DUb4AG6ICEkDeKq7yYubJs4TOdtKil-6DPe_c_OY8tWA58y5P4HlR89Rd725EBJQrL6xgRQ0i1vtLbUbbopTyJjdkPyX5txCzoloGT2PhEWk4hxT6Q3pB0vUs3ertOdSlg6-gfFrXuQYFNWu_Tx6hCp4qrPewBMEqKBAkaaoBAGlj5v970");'></div>
+</div>
+</div>
+<!-- Adjustment Form -->
+<div class="rounded-xl bg-component-light dark:bg-component-dark p-5 shadow-sm border border-border-light dark:border-border-dark">
+<h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] mb-5">Nuevo Ajuste</h2>
+<form class="flex flex-col gap-4">
+<!-- Quantity Input -->
+<div>
+<label class="block text-sm font-medium mb-1.5 text-text-light-secondary dark:text-text-dark-secondary" for="quantity">Cantidad a Ajustar</label>
+<div class="relative">
+<input class="form-input w-full rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-primary" id="quantity" name="quantity" placeholder="Ej: -10 o 25" type="number"/>
+</div>
+<p class="text-xs text-error mt-1">La cantidad no puede ser cero.</p>
+</div>
+<!-- Reason Category Dropdown -->
+<div>
+<label class="block text-sm font-medium mb-1.5 text-text-light-secondary dark:text-text-dark-secondary" for="reason_category">Categoría del Motivo</label>
+<select class="form-select w-full rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-primary" id="reason_category" name="reason_category">
+<option>Seleccionar categoría...</option>
+<option>Merma</option>
+<option>Recepción Manual</option>
+<option>Corrección de Inventario</option>
+<option>Mantenimiento</option>
+</select>
+</div>
+<!-- Reason Details Text Area -->
+<div>
+<label class="block text-sm font-medium mb-1.5 text-text-light-secondary dark:text-text-dark-secondary" for="reason_details">Detalles / Justificación</label>
+<textarea class="form-textarea w-full rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-primary" id="reason_details" name="reason_details" placeholder="Añadir un comentario detallado..." rows="3"></textarea>
+</div>
+<!-- Approval Level Dropdown -->
+<div>
+<label class="block text-sm font-medium mb-1.5 text-text-light-secondary dark:text-text-dark-secondary" for="approval_level">Nivel de Aprobación</label>
+<select class="form-select w-full rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-primary" id="approval_level" name="approval_level">
+<option>Nivel 1 - Operador</option>
+<option>Nivel 2 - Supervisor</option>
+<option>Nivel 3 - Gerente</option>
+</select>
+</div>
+<!-- Metadata -->
+<div class="mt-2 p-3 bg-background-light dark:bg-background-dark rounded-lg border border-border-light dark:border-border-dark text-sm space-y-1">
+<p><strong class="text-text-light-secondary dark:text-text-dark-secondary">Fuente:</strong> Manual</p>
+<p><strong class="text-text-light-secondary dark:text-text-dark-secondary">Fecha/Hora:</strong> 18/07/2024 10:30 AM</p>
+<p><strong class="text-text-light-secondary dark:text-text-dark-secondary">Operador:</strong> Juan Pérez</p>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center gap-3 mt-4">
+<button class="w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-primary text-white gap-2 text-sm font-bold tracking-wide" type="submit">Enviar Ajuste</button>
+<button class="w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-background-light dark:bg-component-dark border border-border-light dark:border-border-dark text-text-light-primary dark:text-text-dark-primary gap-2 text-sm font-bold tracking-wide hover:bg-primary/10" type="reset">Limpiar</button>
+</div>
+</form>
+</div>
+</div>
+<!-- Right Panel: Adjustments History -->
+<div class="lg:col-span-2 rounded-xl bg-component-light dark:bg-component-dark p-5 shadow-sm border border-border-light dark:border-border-dark">
+<h2 class="text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">Historial de Ajustes</h2>
+<!-- SearchBar -->
+<div class="mb-4">
+<label class="flex flex-col min-w-40 h-12 w-full">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-text-light-secondary dark:text-text-dark-secondary flex border-none bg-background-light dark:bg-background-dark items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-text-light-primary dark:text-text-dark-primary focus:outline-none focus:ring-2 focus:ring-primary border-none bg-background-light dark:bg-background-dark h-full placeholder:text-text-light-secondary dark:placeholder:text-text-dark-secondary pl-2 text-base font-normal leading-normal" placeholder="Filtrar por operador, motivo..." value=""/>
+</div>
+</label>
+</div>
+<!-- History Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="border-b border-border-light dark:border-border-dark">
+<tr>
+<th class="p-3 text-sm font-semibold text-text-light-secondary dark:text-text-dark-secondary">Fecha</th>
+<th class="p-3 text-sm font-semibold text-text-light-secondary dark:text-text-dark-secondary">Operador</th>
+<th class="p-3 text-sm font-semibold text-text-light-secondary dark:text-text-dark-secondary text-right">Cantidad</th>
+<th class="p-3 text-sm font-semibold text-text-light-secondary dark:text-text-dark-secondary">Motivo</th>
+<th class="p-3 text-sm font-semibold text-text-light-secondary dark:text-text-dark-secondary">Aprobación</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
+<td class="p-3 text-sm whitespace-nowrap">15/07/2024 14:20</td>
+<td class="p-3 text-sm">Ana Gómez</td>
+<td class="p-3 text-sm text-right font-mono text-error">-5</td>
+<td class="p-3 text-sm">Merma - Producto dañado</td>
+<td class="p-3 text-sm">Nivel 1</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
+<td class="p-3 text-sm whitespace-nowrap">12/07/2024 09:00</td>
+<td class="p-3 text-sm">Carlos Ruiz</td>
+<td class="p-3 text-sm text-right font-mono text-success">+50</td>
+<td class="p-3 text-sm">Recepción Manual - Lote #8432</td>
+<td class="p-3 text-sm">Nivel 2</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
+<td class="p-3 text-sm whitespace-nowrap">10/07/2024 11:45</td>
+<td class="p-3 text-sm">Juan Pérez</td>
+<td class="p-3 text-sm text-right font-mono text-error">-2</td>
+<td class="p-3 text-sm">Corrección de Inventario</td>
+<td class="p-3 text-sm">Nivel 1</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
+<td class="p-3 text-sm whitespace-nowrap">05/07/2024 16:10</td>
+<td class="p-3 text-sm">Ana Gómez</td>
+<td class="p-3 text-sm text-right font-mono text-error">-1</td>
+<td class="p-3 text-sm">Merma - Extravío</td>
+<td class="p-3 text-sm">Nivel 1</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Empty State Example
+                        <div class="text-center py-16">
+                            <span class="material-symbols-outlined text-5xl text-text-light-secondary/50 dark:text-text-dark-secondary/50">inventory_2</span>
+                            <p class="mt-4 font-semibold">No hay ajustes registrados</p>
+                            <p class="text-sm text-text-light-secondary dark:text-text-dark-secondary">Cuando se realice un ajuste, aparecerá aquí.</p>
+                        </div>
+                        -->
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

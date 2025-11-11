@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Historial de Movimientos de Stock</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#0078D4",
+            "background-light": "#f6f7f8",
+            "background-dark": "#101922",
+          },
+          fontFamily: {
+            "display": ["Inter", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings:
+        'FILL'0,
+        'wght'400,
+        'GRAD'0,
+        'opsz'24
+    }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#201F1E] dark:text-gray-200">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<div class="px-4 sm:px-8 md:px-12 lg:px-20 xl:px-40 flex flex-1 justify-center py-5">
+<div class="layout-content-container flex flex-col max-w-[1280px] w-full flex-1">
+<!-- PageHeading -->
+<div class="flex flex-wrap justify-between items-center gap-4 p-4">
+<div class="flex flex-col gap-2">
+<h1 class="text-[#201F1E] dark:text-white text-4xl font-black leading-tight tracking-tight">Historial de Movimientos de Stock</h1>
+<p class="text-gray-600 dark:text-gray-400 text-base font-normal leading-normal">Visualiza y registra todas las transacciones de inventario.</p>
+</div>
+</div>
+<!-- ToolBar -->
+<div class="flex flex-wrap justify-between items-center gap-4 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+<span class="material-symbols-outlined">file_upload</span>
+</button>
+<button class="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+<button class="flex items-center justify-center rounded-lg h-10 bg-primary text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] px-4 shadow-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-lg">add_circle</span>
+<span class="truncate">Registrar Nuevo Ajuste</span>
+</button>
+</div>
+<!-- Filter Panel -->
+<div class="bg-white dark:bg-gray-800/50 p-4 rounded-b-lg shadow-sm">
+<!-- SectionHeader -->
+<h3 class="text-[#201F1E] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-2">Filtrar Transacciones</h3>
+<!-- SearchBar -->
+<div class="px-4 py-3">
+<label class="flex flex-col w-full">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-12 shadow-sm">
+<div class="text-gray-500 dark:text-gray-400 flex bg-gray-100 dark:bg-gray-700 items-center justify-center pl-4 rounded-l-lg border-y border-l border-gray-300 dark:border-gray-600">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-[#201F1E] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 h-full placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 text-base font-normal leading-normal" placeholder="Buscar por nombre o SKU de producto" value=""/>
+</div>
+</label>
+</div>
+<!-- Dropdowns & Date Picker -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 items-end gap-4 px-4 py-3">
+<label class="flex flex-col">
+<p class="text-[#201F1E] dark:text-gray-200 text-sm font-medium leading-normal pb-2">Tipo de Transacción</p>
+<div class="relative">
+<select class="form-select w-full appearance-none rounded-lg text-[#201F1E] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 h-12 placeholder:text-gray-500 px-4 text-base font-normal leading-normal">
+<option>Todos</option>
+<option>Compra</option>
+<option>Venta</option>
+<option>Ajuste</option>
+<option>Inventario Inicial</option>
+</select>
+<span class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">expand_more</span>
+</div>
+</label>
+<label class="flex flex-col">
+<p class="text-[#201F1E] dark:text-gray-200 text-sm font-medium leading-normal pb-2">Usuario</p>
+<div class="relative">
+<select class="form-select w-full appearance-none rounded-lg text-[#201F1E] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 h-12 placeholder:text-gray-500 px-4 text-base font-normal leading-normal">
+<option>Todos</option>
+<option>Juan Pérez</option>
+<option>Ana López</option>
+<option>Sistema</option>
+</select>
+<span class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">expand_more</span>
+</div>
+</label>
+<label class="flex flex-col col-span-1 lg:col-span-2">
+<p class="text-[#201F1E] dark:text-gray-200 text-sm font-medium leading-normal pb-2">Rango de Fechas</p>
+<div class="relative">
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#201F1E] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 h-12 placeholder:text-gray-500 pl-10 pr-4 text-base font-normal leading-normal" placeholder="Seleccionar rango de fechas" type="text" value="01/10/2023 - 31/10/2023"/>
+<span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">calendar_today</span>
+</div>
+</label>
+</div>
+<!-- Filter Buttons -->
+<div class="flex justify-end gap-3 px-4 pt-4 pb-2">
+<button class="flex items-center justify-center rounded-lg h-10 border border-gray-300 dark:border-gray-600 bg-transparent text-gray-800 dark:text-gray-200 gap-2 text-sm font-bold px-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                Limpiar
+              </button>
+<button class="flex items-center justify-center rounded-lg h-10 bg-primary text-white gap-2 text-sm font-bold px-4 shadow-sm hover:opacity-90 transition-opacity">
+                Aplicar Filtros
+              </button>
+</div>
+</div>
+<!-- Data Grid -->
+<div class="mt-8">
+<div class="overflow-x-auto bg-white dark:bg-gray-800/50 rounded-lg shadow-sm">
+<table class="w-full text-left text-sm">
+<thead class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 text-xs uppercase text-gray-700 dark:text-gray-400">
+<tr>
+<th class="px-6 py-4 font-medium" scope="col">Fecha y Hora</th>
+<th class="px-6 py-4 font-medium" scope="col">Producto</th>
+<th class="px-6 py-4 font-medium" scope="col">Tipo</th>
+<th class="px-6 py-4 font-medium text-right" scope="col">Cantidad</th>
+<th class="px-6 py-4 font-medium text-right" scope="col">Stock Resultante</th>
+<th class="px-6 py-4 font-medium" scope="col">Usuario</th>
+<th class="px-6 py-4 font-medium" scope="col">Notas</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-900/30">
+<td class="px-6 py-4 whitespace-nowrap">25/10/2023 14:30</td>
+<td class="px-6 py-4">
+<div class="font-medium text-[#201F1E] dark:text-white">Teclado Mecánico RGB</div>
+<div class="text-xs text-gray-500">SKU: TM-RGB-001</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/50 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:text-blue-300">Compra</span>
+</td>
+<td class="px-6 py-4 text-right font-medium text-green-600 dark:text-green-400">+50</td>
+<td class="px-6 py-4 text-right">150</td>
+<td class="px-6 py-4">Juan Pérez</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-400">OC: #PO-2023-123</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-900/30">
+<td class="px-6 py-4 whitespace-nowrap">25/10/2023 10:15</td>
+<td class="px-6 py-4">
+<div class="font-medium text-[#201F1E] dark:text-white">Mouse Inalámbrico Pro</div>
+<div class="text-xs text-gray-500">SKU: MS-WL-PRO-02</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-red-100 dark:bg-red-900/50 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:text-red-300">Venta</span>
+</td>
+<td class="px-6 py-4 text-right font-medium text-red-600 dark:text-red-400">-2</td>
+<td class="px-6 py-4 text-right">78</td>
+<td class="px-6 py-4">Ana López</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-400">Venta Online #INV-5678</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-900/30">
+<td class="px-6 py-4 whitespace-nowrap">24/10/2023 18:00</td>
+<td class="px-6 py-4">
+<div class="font-medium text-[#201F1E] dark:text-white">Monitor 27" 4K</div>
+<div class="text-xs text-gray-500">SKU: MON-4K-27-01</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-yellow-100 dark:bg-yellow-900/50 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:text-yellow-300">Ajuste</span>
+</td>
+<td class="px-6 py-4 text-right font-medium text-red-600 dark:text-red-400">-1</td>
+<td class="px-6 py-4 text-right">19</td>
+<td class="px-6 py-4">Juan Pérez</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-400">Ajuste por merma</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-900/30">
+<td class="px-6 py-4 whitespace-nowrap">23/10/2023 09:00</td>
+<td class="px-6 py-4">
+<div class="font-medium text-[#201F1E] dark:text-white">Webcam HD 1080p</div>
+<div class="text-xs text-gray-500">SKU: WC-HD-1080-05</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:text-gray-300">Inventario</span>
+</td>
+<td class="px-6 py-4 text-right font-medium text-gray-600 dark:text-gray-400">+25</td>
+<td class="px-6 py-4 text-right">25</td>
+<td class="px-6 py-4">Sistema</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-400">Conteo inicial</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Controls -->
+<div class="flex items-center justify-between mt-4 px-2">
+<span class="text-sm text-gray-600 dark:text-gray-400">
+                Mostrando <span class="font-semibold text-[#201F1E] dark:text-white">1</span>-<span class="font-semibold text-[#201F1E] dark:text-white">10</span> de <span class="font-semibold text-[#201F1E] dark:text-white">97</span>
+</span>
+<div class="inline-flex items-center -space-x-px text-sm">
+<button class="flex items-center justify-center px-3 h-8 ml-0 leading-tight text-gray-500 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-l-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-white">Anterior</button>
+<button class="flex items-center justify-center px-3 h-8 leading-tight text-primary bg-primary/20 border border-primary hover:bg-primary/30 dark:bg-primary/30 dark:border-primary dark:text-white">1</button>
+<button class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-white">2</button>
+<button class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-white">3</button>
+<button class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-r-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-white">Siguiente</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>
