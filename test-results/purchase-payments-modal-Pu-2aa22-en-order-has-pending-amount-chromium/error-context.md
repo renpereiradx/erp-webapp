@@ -1,0 +1,259 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - complementary:
+          - generic:
+            - generic:
+              - generic:
+                - img
+              - heading [level=1]: ERP System
+          - navigation:
+            - generic:
+              - link:
+                - /url: /dashboard
+                - img
+                - generic: Dashboard
+            - generic:
+              - link:
+                - /url: /productos
+                - img
+                - generic: Productos
+            - generic:
+              - link:
+                - /url: /clientes
+                - img
+                - generic: Clientes
+            - generic:
+              - link:
+                - /url: /proveedores
+                - img
+                - generic: Proveedores
+            - generic:
+              - link:
+                - /url: /inventario
+                - img
+                - generic: Ajuste de inventario
+            - generic:
+              - link:
+                - /url: /ajustes-precios
+                - img
+                - generic: Ajustes de Precios
+            - generic:
+              - link:
+                - /url: /ajustes-precios-nuevo
+                - img
+                - generic: Ajuste de Precios Nuevo
+            - generic:
+              - link:
+                - /url: /ventas
+                - img
+                - generic: Ventas
+            - generic:
+              - link:
+                - /url: /ventas-nueva
+                - img
+                - generic: Ventas (Nueva)
+            - generic:
+              - link:
+                - /url: /reservas
+                - img
+                - generic: Reservas
+            - generic:
+              - link:
+                - /url: /compras
+                - img
+                - generic: Compras
+            - generic:
+              - button:
+                - img
+                - generic: Pagos
+                - img
+            - generic:
+              - link:
+                - /url: /reportes
+                - img
+                - generic: Reportes
+        - generic:
+          - banner:
+            - generic:
+              - generic:
+                - generic: Tipos de cambio
+                - generic:
+                  - generic:
+                    - img
+                    - generic: ARS
+                    - generic: 4,85
+                    - generic: PYG
+                  - generic:
+                    - img
+                    - generic: BRL
+                    - generic: 1.315,00
+                    - generic: PYG
+                  - generic:
+                    - img
+                    - generic: EUR
+                    - generic: 8.680,00
+                    - generic: PYG
+                  - generic:
+                    - img
+                    - generic: USD
+                    - generic: 7.100,00
+                    - generic: PYG
+              - generic:
+                - button:
+                  - img
+                  - generic: Ajustes
+          - main:
+            - generic:
+              - generic:
+                - generic:
+                  - button:
+                    - img
+                    - generic: Volver a Pagos Compras (MVP)
+                  - generic:
+                    - generic:
+                      - heading [level=1]: Orden de compra PO-2025-0101
+                      - paragraph: Revisá el estado, pagos registrados y productos asociados a la orden.
+                    - button:
+                      - img
+                      - text: Registrar nuevo pago
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: Resumen de la orden
+                          - generic:
+                            - generic: Pendiente
+                            - generic: Pago vencido
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: Progreso del pago
+                            - generic: 0%
+                          - progressbar
+                        - generic:
+                          - generic:
+                            - generic: Monto total
+                            - generic: Gs. 5.820.000
+                          - generic:
+                            - generic: Monto abonado
+                            - generic: Gs. 0
+                          - generic:
+                            - generic: Saldo pendiente
+                            - generic: Gs. 5.820.000
+                          - generic:
+                            - generic: Fecha de emisión
+                            - generic: 24 oct. 2025
+                          - generic:
+                            - generic: Fecha de vencimiento
+                            - generic: 4 nov. 2025
+                          - generic:
+                            - generic: Responsable
+                            - generic: Carlos Ruiz
+                      - generic:
+                        - generic:
+                          - generic: Pagos registrados
+                          - generic: "0"
+                        - generic:
+                          - generic: Último pago
+                          - generic: Sin registros
+                    - generic:
+                      - generic:
+                        - generic: Historial de pagos
+                      - generic:
+                        - generic: No hay pagos registrados todavía.
+                  - complementary:
+                    - generic:
+                      - generic:
+                        - generic: Proveedor
+                      - generic:
+                        - generic:
+                          - generic: Distribuidora Nacional S.A.
+                          - generic: "101"
+                        - generic:
+                          - generic:
+                            - term: Contacto
+                            - definition: +52-555-2100
+                          - generic:
+                            - term: Email
+                            - definition: ventas@disnacional.com.mx
+                          - generic:
+                            - term: Teléfono
+                            - definition: +52-555-2100
+                          - generic:
+                            - term: RUC / Tax ID
+                            - definition: DISN850101ABC
+                          - generic:
+                            - term: Dirección
+                            - definition: Av. Insurgentes Sur 2345, CDMX, México
+                    - generic:
+                      - generic:
+                        - generic: Productos incluidos
+                      - generic:
+                        - list:
+                          - listitem:
+                            - generic:
+                              - generic: Licencia de Software "Quantum"
+                              - generic: "Cantidad: 6"
+                            - generic: Gs. 3.201.000
+                          - listitem:
+                            - generic:
+                              - generic: Soporte Anual Extendido
+                              - generic: "Cantidad: 6"
+                            - generic: Gs. 1.746.000
+                          - listitem:
+                            - generic:
+                              - generic: Servicios de Implementación
+                              - generic: "Cantidad: 6"
+                            - generic: Gs. 873.000
+  - dialog "purchasePaymentsMvp.registerModal.title" [ref=e1]:
+    - generic [ref=e2]:
+      - heading "purchasePaymentsMvp.registerModal.title" [level=2] [ref=e3]
+      - paragraph [ref=e4]: purchasePaymentsMvp.registerModal.orderLabel
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: purchasePaymentsMvp.registerModal.amount.label
+          - generic [ref=e9]:
+            - img [ref=e10]
+            - textbox "purchasePaymentsMvp.registerModal.amount.label" [active] [ref=e13]: "5820000"
+          - paragraph [ref=e14]: purchasePaymentsMvp.registerModal.amount.pending
+        - generic [ref=e15]:
+          - generic [ref=e16]: purchasePaymentsMvp.registerModal.reference.label
+          - textbox "purchasePaymentsMvp.registerModal.reference.label" [ref=e17]
+        - generic [ref=e18]:
+          - paragraph [ref=e19]: purchasePaymentsMvp.registerModal.method.label
+          - radiogroup [ref=e20]:
+            - generic [ref=e21] [cursor=pointer]:
+              - radio "purchasePaymentsMvp.registerModal.method.transfer" [checked]
+              - generic [ref=e23] [cursor=pointer]: purchasePaymentsMvp.registerModal.method.transfer
+            - generic [ref=e24] [cursor=pointer]:
+              - radio "purchasePaymentsMvp.registerModal.method.cash"
+              - generic [ref=e25] [cursor=pointer]: purchasePaymentsMvp.registerModal.method.cash
+        - generic [ref=e26]:
+          - generic [ref=e27]: purchasePaymentsMvp.registerModal.currency.label
+          - combobox "purchasePaymentsMvp.registerModal.currency.label" [ref=e28] [cursor=pointer]:
+            - generic: PYG
+            - img [ref=e29] [cursor=pointer]
+          - combobox [ref=e31]
+        - generic [ref=e32]:
+          - generic [ref=e33]: purchasePaymentsMvp.registerModal.cashRegister.label
+          - combobox "purchasePaymentsMvp.registerModal.cashRegister.label" [ref=e34] [cursor=pointer]:
+            - generic: purchasePaymentsMvp.registerModal.cashRegister.placeholder
+            - img [ref=e35] [cursor=pointer]
+          - combobox [ref=e37]
+        - generic [ref=e38]:
+          - generic [ref=e39]: purchasePaymentsMvp.registerModal.notes.label
+          - textbox "purchasePaymentsMvp.registerModal.notes.label" [ref=e40]
+      - generic [ref=e41]:
+        - button "purchasePaymentsMvp.registerModal.cancel" [ref=e42] [cursor=pointer]
+        - button "purchasePaymentsMvp.registerModal.confirm" [ref=e43] [cursor=pointer]: purchasePaymentsMvp.registerModal.confirm
+    - button "Close" [ref=e46] [cursor=pointer]:
+      - img [ref=e47] [cursor=pointer]
+      - generic [ref=e50] [cursor=pointer]: Close
+```
