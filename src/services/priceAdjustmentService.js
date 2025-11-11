@@ -8,8 +8,8 @@ import { telemetry } from '@/utils/telemetry';
 
 // Demo data configuration (seguiremos patrón cuando se implemente)
 const DEMO_CONFIG_PRICE_ADJUSTMENT = {
-  enabled: true,
-  useRealAPI: true, // Usar API real primero, fallback a demo si falla
+  enabled: false,
+  useRealAPI: true, // Usar API real siempre
 };
 
 // Helper function to transform API data to frontend format
@@ -166,8 +166,6 @@ export const priceAdjustmentService = {
         throw new Error('Reason is required');
       }
 
-      console.log('🌐 PriceAdjustment: Creating price adjustment via API...');
-      
       const result = await _fetchWithRetry(async () => {
         return await apiClient.post('/manual_adjustment/price', {
           product_id: adjustmentData.product_id,
@@ -181,46 +179,14 @@ export const priceAdjustmentService = {
           }
         });
       });
-      
+
       telemetry.record('priceAdjustment.service.create', {
         duration: Date.now() - startTime,
         productId: adjustmentData.product_id
       });
-      
-      console.log('✅ PriceAdjustment: Price adjustment created successfully');
+
       return result;
     } catch (error) {
-      console.error('❌ PriceAdjustment API error:', error.message);
-      
-      // Si demo está habilitado como fallback
-      if (DEMO_CONFIG_PRICE_ADJUSTMENT.enabled) {
-        console.log('🔄 PriceAdjustment: Using demo mode for create...');
-        
-        // Simular creación exitosa con demo data
-        const demoResult = {
-          id: Date.now(), // ID único temporal
-          product_id: adjustmentData.product_id,
-          user_id: "demo_user",
-          old_price: 15.00, // Simular precio anterior
-          new_price: adjustmentData.new_price,
-          price_change: adjustmentData.new_price - 15.00,
-          price_change_percent: ((adjustmentData.new_price - 15.00) / 15.00) * 100,
-          unit: adjustmentData.unit || 'UNIT',
-          reason: adjustmentData.reason,
-          effective_date: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          unit_price_id: Date.now() + 100,
-          metadata: {
-            ...adjustmentData.metadata,
-            source: "demo_mode"
-          },
-          message: "Manual price adjustment successful (demo mode)"
-        };
-        
-        console.log('✅ PriceAdjustment: Demo price adjustment created');
-        return demoResult;
-      }
-      
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -244,38 +210,18 @@ export const priceAdjustmentService = {
         throw new Error('Product ID is required');
       }
 
-      // Si demo está habilitado y no usar API real
-      if (DEMO_CONFIG_PRICE_ADJUSTMENT.enabled && !DEMO_CONFIG_PRICE_ADJUSTMENT.useRealAPI) {
-        console.log('🔄 PriceAdjustment: Loading demo history...');
-        const result = await getDemoProductHistory(productId);
-        console.log('✅ PriceAdjustment: Demo history loaded');
-        return result;
-      }
-      
-      console.log('🌐 PriceAdjustment: Loading history from API...');
       const result = await _fetchWithRetry(async () => {
         const url = `/manual_adjustment/product/${productId}/history?limit=${limit}&offset=${offset}`;
         return await apiClient.get(url);
       });
-      
+
       telemetry.record('priceAdjustment.service.getHistory', {
         duration: Date.now() - startTime,
         productId
       });
-      
-      console.log('✅ PriceAdjustment: History loaded from API');
+
       return result;
     } catch (error) {
-      console.error('❌ PriceAdjustment history error:', error.message);
-      
-      // Si falla API y demo está habilitado como fallback
-      if (DEMO_CONFIG_PRICE_ADJUSTMENT.enabled) {
-        console.log('🔄 PriceAdjustment: Falling back to demo history...');
-        const result = await getDemoProductHistory(productId);
-        console.log('✅ PriceAdjustment: Demo history fallback loaded');
-        return result;
-      }
-      
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -294,15 +240,6 @@ export const priceAdjustmentService = {
     const startTime = Date.now();
     
     try {
-      // Si demo está habilitado y no usar API real
-      if (DEMO_CONFIG_PRICE_ADJUSTMENT.enabled && !DEMO_CONFIG_PRICE_ADJUSTMENT.useRealAPI) {
-        console.log('🔄 PriceAdjustment: Loading recent adjustments (demo mode)...');
-        const result = await getDemoPriceAdjustments();
-        console.log('✅ PriceAdjustment: Recent adjustments loaded (demo)');
-        return { data: result.slice(0, limit) };
-      }
-      
-      console.log('🌐 PriceAdjustment: Loading recent adjustments from API...');
       const result = await _fetchWithRetry(async () => {
         // Use new recent adjustments endpoint
         const days = 7; // Get adjustments from last 7 days
@@ -310,26 +247,15 @@ export const priceAdjustmentService = {
         const url = `/manual_adjustment/price/recent?days=${days}&limit=${apiLimit}`;
         return await apiClient.get(url);
       });
-      
+
       telemetry.record('priceAdjustment.service.getRecent', {
         duration: Date.now() - startTime,
         count: result?.adjustments?.length || 0
       });
-      
-      console.log('✅ PriceAdjustment: Recent adjustments loaded from API');
+
       // Transform the data to match expected frontend structure
       return { data: transformAdjustmentData(result?.adjustments) };
     } catch (error) {
-      console.error('❌ PriceAdjustment recent adjustments error:', error.message);
-      
-      // Si falla API y demo está habilitado como fallback
-      if (DEMO_CONFIG_PRICE_ADJUSTMENT.enabled) {
-        console.log('🔄 PriceAdjustment: Falling back to demo recent adjustments...');
-        const result = await getDemoPriceAdjustments();
-        console.log('✅ PriceAdjustment: Demo recent adjustments fallback loaded');
-        return { data: result.slice(0, limit) };
-      }
-      
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -346,53 +272,17 @@ export const priceAdjustmentService = {
     const startTime = Date.now();
     
     try {
-      console.log('🌐 PriceAdjustment: Verifying system integrity...');
-      
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get('/manual_adjustment/integration/verify');
       });
-      
+
       telemetry.record('priceAdjustment.service.verifyIntegrity', {
         duration: Date.now() - startTime,
         integrationStatus: result?.integration_status || false
       });
-      
-      console.log('✅ PriceAdjustment: System integrity verified');
+
       return result;
     } catch (error) {
-      console.error('❌ PriceAdjustment integrity error:', error.message);
-      
-      // Fallback demo data para verificación
-      if (DEMO_CONFIG_PRICE_ADJUSTMENT.enabled) {
-        console.log('🔄 PriceAdjustment: Demo integrity check...');
-        
-        const demoResult = {
-          integration_status: true,
-          summary: {
-            total_stock_transactions: 5,
-            total_manual_adjustments: 4,
-            total_price_adjustments: 6,
-            orphaned_stock_transactions: 0,
-            price_mismatches: 0
-          },
-          details: {
-            stock_integration: {
-              status: "OK",
-              orphaned_transactions: 0
-            },
-            price_integration: {
-              status: "OK",
-              mismatched_prices: 0
-            }
-          },
-          timestamp: new Date().toISOString(),
-          source: "demo_mode"
-        };
-        
-        console.log('✅ PriceAdjustment: Demo integrity check completed');
-        return demoResult;
-      }
-      
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,
@@ -449,15 +339,6 @@ export const priceAdjustmentService = {
     const startTime = Date.now();
     
     try {
-      // Si demo está habilitado y no usar API real
-      if (DEMO_CONFIG_PRICE_ADJUSTMENT.enabled && !DEMO_CONFIG_PRICE_ADJUSTMENT.useRealAPI) {
-        console.log('🔄 PriceAdjustment: Loading date range adjustments (demo mode)...');
-        const result = await getDemoPriceAdjustments();
-        console.log('✅ PriceAdjustment: Date range adjustments loaded (demo)');
-        return { data: result.slice(0, limit) };
-      }
-      
-      console.log('🌐 PriceAdjustment: Loading adjustments by date range from API...');
       const result = await _fetchWithRetry(async () => {
         const params = new URLSearchParams();
         if (startDate) params.append('start_date', startDate);
@@ -465,30 +346,19 @@ export const priceAdjustmentService = {
         if (productId) params.append('product_id', productId);
         params.append('limit', limit.toString());
         params.append('offset', offset.toString());
-        
+
         const url = `/manual_adjustment/price/date-range?${params.toString()}`;
         return await apiClient.get(url);
       });
-      
+
       telemetry.record('priceAdjustment.service.getByDateRange', {
         duration: Date.now() - startTime,
         count: result?.adjustments?.length || 0
       });
-      
-      console.log('✅ PriceAdjustment: Date range adjustments loaded from API');
+
       // Transform the data to match expected frontend structure
       return { data: transformAdjustmentData(result?.adjustments) };
     } catch (error) {
-      console.error('❌ PriceAdjustment date range error:', error.message);
-      
-      // Si falla API y demo está habilitado como fallback
-      if (DEMO_CONFIG_PRICE_ADJUSTMENT.enabled) {
-        console.log('🔄 PriceAdjustment: Falling back to demo date range adjustments...');
-        const result = await getDemoPriceAdjustments();
-        console.log('✅ PriceAdjustment: Demo date range adjustments fallback loaded');
-        return { data: result.slice(0, limit) };
-      }
-      
       telemetry.record('priceAdjustment.service.error', {
         duration: Date.now() - startTime,
         error: error.message,

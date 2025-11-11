@@ -21,16 +21,20 @@ import Reservations from '@/pages/Reservations'
 import Schedules from '@/pages/Schedules'
 import Inventory from '@/pages/Inventory'
 import PriceAdjustments from '@/pages/PriceAdjustments'
+import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
+import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
+import PriceAdjustmentHistoryDetail from '@/pages/PriceAdjustmentHistoryDetail'
 import Reports from '@/pages/Reports'
 // ISOLATED IMPORTS - Pages temporarily disabled for refactoring
 // import BookingSales from '@/pages/BookingSales';
 import Purchases from '@/pages/Purchases'
+import PurchasePaymentsMvp from '@/pages/PurchasePaymentsMvp'
+import PurchasePaymentsMvpDetail from '@/pages/PurchasePaymentsMvpDetail'
 import CashRegister from '@/pages/CashRegister'
 import PurchasePayment from '@/pages/PurchasePayment'
 import SalePayment from '@/pages/SalePayment'
 import PaymentDocumentation from '@/pages/PaymentDocumentation'
 import PaymentManagement from '@/pages/PaymentManagement'
-import PurchasePaymentsMvp from '@/pages/PurchasePaymentsMvp'
 import Login from '@/pages/Login'
 import Settings from '@/pages/Settings'
 // import ProductDetailTest from '@/components/ProductDetailTest';
@@ -38,16 +42,14 @@ import Settings from '@/pages/Settings'
 import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext'
-import { AnnouncementProvider } from '@/contexts/AnnouncementContext'
-import { apiClient } from '@/services/api'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import './App.css'
 
 // Componente de protección de rutas
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading, authLoading } = useAuth()
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
         <div className='text-lg'>Cargando...</div>
@@ -65,7 +67,6 @@ const ProtectedRoute = ({ children }) => {
 // Componente interno que usa los hooks
 function AppContent() {
   const { isAuthenticated, loading, initializeAuth } = useAuth()
-  const { isInitialized } = useTheme() // El tema se inicializa automáticamente
 
   // Inicializar autenticación al cargar la aplicación
   useEffect(() => {
@@ -124,6 +125,18 @@ function AppContent() {
                         path='/ajustes-precios'
                         element={<PriceAdjustments />}
                       />
+                      <Route
+                        path='/ajustes-precios-nuevo'
+                        element={<PriceAdjustmentNew />}
+                      />
+                      <Route
+                        path='/ajustes-precios-nuevo/detalle'
+                        element={<PriceAdjustmentDetail />}
+                      />
+                      <Route
+                        path='/ajustes-precios-nuevo/historial/:adjustmentId'
+                        element={<PriceAdjustmentHistoryDetail />}
+                      />
 
                       {/* --- RUTAS AISLADAS TEMPORALMENTE PARA REFACTORING --- */}
                       <Route path='/compras' element={<Purchases />} />
@@ -140,6 +153,10 @@ function AppContent() {
                       <Route
                         path='/pagos/compras-mvp'
                         element={<PurchasePaymentsMvp />}
+                      />
+                      <Route
+                        path='/pagos/compras-mvp/:orderId'
+                        element={<PurchasePaymentsMvpDetail />}
                       />
                       <Route path='/pagos-ventas' element={<SalePayment />} />
                       <Route
