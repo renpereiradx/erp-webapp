@@ -1678,7 +1678,7 @@ export const DEMO_PURCHASE_PAYMENTS_MVP_ORDERS = [
     due_date: '2025-11-05',
     currency: 'PYG',
     total_amount: 5820000,
-    pending_amount: 5820000,
+    pendingAmount: 5820000,
     items_count: 18,
     last_payment: null,
     priority: 'high',
@@ -1695,7 +1695,7 @@ export const DEMO_PURCHASE_PAYMENTS_MVP_ORDERS = [
     due_date: '2025-10-30',
     currency: 'USD',
     total_amount: 14500,
-    pending_amount: 4200,
+    pendingAmount: 4200,
     items_count: 9,
     last_payment: {
       date: '2025-10-24',
@@ -1715,7 +1715,7 @@ export const DEMO_PURCHASE_PAYMENTS_MVP_ORDERS = [
     due_date: '2025-10-15',
     currency: 'PYG',
     total_amount: 11800000,
-    pending_amount: 2800000,
+    pendingAmount: 2800000,
     items_count: 6,
     last_payment: {
       date: '2025-10-10',
@@ -1735,7 +1735,7 @@ export const DEMO_PURCHASE_PAYMENTS_MVP_ORDERS = [
     due_date: '2025-10-05',
     currency: 'USD',
     total_amount: 9800,
-    pending_amount: 0,
+    pendingAmount: 0,
     items_count: 4,
     last_payment: {
       date: '2025-10-03',
@@ -1755,7 +1755,7 @@ export const DEMO_PURCHASE_PAYMENTS_MVP_ORDERS = [
     due_date: '2025-10-01',
     currency: 'PYG',
     total_amount: 3645000,
-    pending_amount: 945000,
+    pendingAmount: 945000,
     items_count: 3,
     last_payment: {
       date: '2025-09-27',
@@ -1829,7 +1829,7 @@ export const getDemoPurchasePaymentsMvpOrders = async (params = {}) => {
 
   if (pendingOnly) {
     filteredOrders = filteredOrders.filter(
-      order => Number(order.pending_amount) > 0
+      order => Number(order.pendingAmount) > 0
     )
   }
 
@@ -1879,6 +1879,245 @@ export const getDemoPurchasePaymentsMvpOrders = async (params = {}) => {
       statuses: statusOptions,
     },
     source: 'demo',
+  }
+}
+
+const addDays = (date, days) => {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
+export const getDemoPurchasePaymentOrderDetail = async orderId => {
+  await simulateDelay(450)
+
+  const order = DEMO_PURCHASE_PAYMENTS_MVP_ORDERS.find(
+    item => item.id === orderId
+  )
+
+  if (!order) {
+    throw new Error('Orden de compra no encontrada')
+  }
+
+  const totalAmount = Number(order.total_amount) || 0
+  const pendingAmount = Number(order.pendingAmount) || 0
+  const paidAmount = Math.max(totalAmount - pendingAmount, 0)
+  const progress =
+    totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0
+  const currency = order.currency || 'PYG'
+  const factor = currency === 'PYG' ? 1 : 100
+
+  const supplierDetail = DEMO_SUPPLIER_DATA.find(
+    supplier => String(supplier.id) === String(order?.supplier?.id)
+  )
+
+  const sampleProducts = [
+    'Licencia de Software "Quantum"',
+    'Soporte Anual Extendido',
+    'Servicios de Implementación',
+    'Capacitación Especializada',
+  ]
+
+  const maxItems = Math.max(1, Math.min(3, order.items_count || 3))
+  const weights = [0.55, 0.3, 0.15].slice(0, maxItems)
+  const products = []
+  let remainingTotal = totalAmount
+  let remainingQty = Math.max(order.items_count || maxItems, maxItems)
+
+  for (let index = 0; index < maxItems; index += 1) {
+    const isLast = index === maxItems - 1
+    const rawAmount = isLast
+      ? remainingTotal
+      : Math.round(totalAmount * weights[index] * factor) / factor
+    remainingTotal = Math.max(0, remainingTotal - rawAmount)
+
+    const divisor = Math.max(1, maxItems - index)
+    const quantity = Math.max(1, Math.round(remainingQty / divisor))
+    remainingQty = Math.max(0, remainingQty - quantity)
+
+    const unitPrice =
+      quantity > 0
+        ? Math.round((rawAmount / quantity) * factor) / factor
+        : rawAmount
+
+    products.push({
+      id: `${order.id}-ITEM-${index + 1}`,
+      name: sampleProducts[index % sampleProducts.length],
+      quantity,
+      unitPrice,
+      total: rawAmount,
+    })
+  }
+
+  const sampleUsers = [
+    'Ana Torres',
+    'Carlos Ruiz',
+    'María López',
+    'Jorge Benítez',
+  ]
+  const baseDate = order.issue_date ? new Date(order.issue_date) : new Date()
+  const formatDate = value => value.toISOString().slice(0, 10)
+
+  const payments = []
+
+  if (paidAmount > 0) {
+    if (
+      order.status === 'paid' &&
+      order.last_payment &&
+      Number(order.last_payment.amount) >= totalAmount
+    ) {
+      payments.push({
+        id: `${order.id}-PAY-1`,
+        date: order.last_payment.date,
+        amount: Number(order.last_payment.amount),
+        status: 'approved',
+        user: sampleUsers[0],
+      })
+    } else if (order.status === 'paid') {
+      const firstAmount = Math.round(totalAmount * 0.55 * factor) / factor
+      const secondAmount =
+        Math.round((totalAmount - firstAmount) * factor) / factor
+
+      payments.push({
+        id: `${order.id}-PAY-1`,
+        date: formatDate(addDays(baseDate, 5)),
+        amount: firstAmount,
+        status: 'approved',
+        user: sampleUsers[0],
+      })
+
+      payments.push({
+        id: `${order.id}-PAY-2`,
+        date: order.last_payment?.date || formatDate(addDays(baseDate, 12)),
+        amount: order.last_payment?.amount
+          ? Number(order.last_payment.amount)
+          : secondAmount,
+        status: 'approved',
+        user: sampleUsers[1],
+      })
+    } else {
+      payments.push({
+        id: `${order.id}-PAY-1`,
+        date: order.last_payment?.date || formatDate(addDays(baseDate, 4)),
+        amount: order.last_payment?.amount
+          ? Number(order.last_payment.amount)
+          : paidAmount,
+        status: order.status === 'overdue' ? 'delayed' : 'approved',
+        user: sampleUsers[0],
+      })
+    }
+  }
+
+  const dueDateObj = order.due_date ? new Date(order.due_date) : null
+  const isOverdue =
+    pendingAmount > 0 &&
+    dueDateObj !== null &&
+    dueDateObj.getTime() < Date.now()
+
+  const supplier = supplierDetail
+    ? {
+        id: supplierDetail.id,
+        name: supplierDetail.name,
+        contact:
+          supplierDetail.contact?.phone ||
+          supplierDetail.contact?.email ||
+          order.supplier?.contact ||
+          null,
+        email: supplierDetail.contact?.email || null,
+        phone: supplierDetail.contact?.phone || null,
+        taxId: supplierDetail.tax_id || null,
+        address: supplierDetail.address
+          ? `${supplierDetail.address.street}, ${supplierDetail.address.city}, ${supplierDetail.address.country}`
+          : null,
+      }
+    : {
+        id: order.supplier?.id,
+        name: order.supplier?.name,
+        contact: order.supplier?.contact || null,
+        email: null,
+        phone: null,
+        taxId: null,
+        address: null,
+      }
+
+  return {
+    id: order.id,
+    status: order.status,
+    priority: order.priority,
+    currency,
+    issueDate: order.issue_date,
+    dueDate: order.due_date,
+    totals: {
+      totalAmount,
+      paidAmount,
+      pendingAmount,
+      progress,
+      isOverdue,
+    },
+    supplier,
+    paymentHistory: payments,
+    products,
+    meta: {
+      paymentsCount: payments.length,
+      lastPaymentDate:
+        order.last_payment?.date || payments[payments.length - 1]?.date || null,
+      owner: sampleUsers[(order?.supplier?.id || 0) % sampleUsers.length],
+    },
+  }
+}
+
+export const registerDemoPurchasePayment = async (orderId, payload = {}) => {
+  await simulateDelay(320)
+
+  const order = DEMO_PURCHASE_PAYMENTS_MVP_ORDERS.find(
+    item => item.id === orderId
+  )
+
+  if (!order) {
+    throw new Error('Orden de compra no encontrada')
+  }
+
+  const rawAmount = Number(payload?.amount)
+  if (!Number.isFinite(rawAmount) || rawAmount <= 0) {
+    throw new Error('Monto de pago inválido')
+  }
+
+  const paymentCurrency = payload?.currency || order.currency || 'PYG'
+  const factor = paymentCurrency === 'PYG' ? 1 : 100
+  const normalizedAmount = Math.round(rawAmount * factor) / factor
+
+  const currentPending = Number(order.pendingAmount) || 0
+  if (normalizedAmount > currentPending + 0.0001) {
+    throw new Error('Monto supera el saldo pendiente')
+  }
+
+  const nextPending = Math.max(0, currentPending - normalizedAmount)
+  order.pendingAmount = Math.round(nextPending * factor) / factor
+  order.currency = paymentCurrency
+
+  const totalAmount = Number(order.total_amount) || 0
+  const paidAmount = Math.max(totalAmount - order.pendingAmount, 0)
+
+  order.status = order.pendingAmount <= 0 ? 'paid' : 'partial'
+  order.last_payment = {
+    date: new Date().toISOString().slice(0, 10),
+    amount: normalizedAmount,
+    reference: payload?.reference || null,
+    method: payload?.paymentMethod || null,
+  }
+
+  order.paymentProgress = totalAmount
+    ? Math.round(((totalAmount - order.pendingAmount) / totalAmount) * 100)
+    : 0
+
+  return {
+    success: true,
+    order: { ...order },
+    totals: {
+      totalAmount,
+      paidAmount,
+      pendingAmount: order.pendingAmount,
+    },
   }
 }
 

@@ -176,6 +176,117 @@ const DICTIONARY = {
     'priceAdjustment.field.reason.placeholder':
       'Explique la razón del ajuste de precio...',
 
+    // Price Adjustment New - MVP strings
+    'priceAdjustmentNew.title': 'Búsqueda y Selección de Productos',
+    'priceAdjustmentNew.search.placeholder':
+      'Buscar por nombre o ID de producto...',
+    'priceAdjustmentNew.table.name': 'Nombre del Producto',
+    'priceAdjustmentNew.table.id': 'ID del Producto',
+    'priceAdjustmentNew.table.price': 'Precio Actual',
+    'priceAdjustmentNew.table.actions': 'Acción',
+    'priceAdjustmentNew.action.select': 'Seleccionar',
+    'priceAdjustmentNew.pagination.showing': 'Mostrando',
+    'priceAdjustmentNew.pagination.to': 'a',
+    'priceAdjustmentNew.pagination.of': 'de',
+    'priceAdjustmentNew.pagination.results': 'resultados',
+    'priceAdjustmentNew.pagination.previous': 'Anterior',
+    'priceAdjustmentNew.pagination.next': 'Siguiente',
+    'priceAdjustmentNew.empty.title': 'Sin resultados',
+    'priceAdjustmentNew.empty.message': 'No se encontraron productos',
+    'priceAdjustmentNew.error.title': 'Error al cargar productos',
+
+    // Price Adjustment Detail - MVP strings
+    'priceAdjustmentDetail.title': 'Ajuste de Precio para',
+    'priceAdjustmentDetail.currentPrice': 'Precio Actual',
+    'priceAdjustmentDetail.formTitle': 'Registrar Nuevo Ajuste',
+    'priceAdjustmentDetail.field.newPrice': 'Nuevo Precio ($)',
+    'priceAdjustmentDetail.field.newPrice.placeholder': 'ej., 21.50',
+    'priceAdjustmentDetail.field.unit': 'Unidad de Medida',
+    'priceAdjustmentDetail.field.reasonTemplate': 'Plantilla de Razón',
+    'priceAdjustmentDetail.field.reason': 'Razón del Ajuste',
+    'priceAdjustmentDetail.field.reason.placeholder':
+      'Escriba la razón personalizada del ajuste de precio...',
+    'priceAdjustmentDetail.field.reason.hintCustom': '(Personalizada)',
+    'priceAdjustmentDetail.field.reason.hintAuto': '(Generada automáticamente)',
+    'priceAdjustmentDetail.field.reason.characters': 'caracteres',
+    'priceAdjustmentDetail.field.reason.selectTemplate':
+      'Seleccione una plantilla arriba para generar la razón automáticamente',
+    'priceAdjustmentDetail.field.metadata': 'Metadata Adicional (JSON)',
+    'priceAdjustmentDetail.unit.unit': 'unidad',
+    'priceAdjustmentDetail.unit.kg': 'kg',
+    'priceAdjustmentDetail.unit.meter': 'metro',
+    'priceAdjustmentDetail.unit.pack': 'paquete',
+    'priceAdjustmentDetail.action.submit': 'Registrar Cambio',
+    'priceAdjustmentDetail.action.saving': 'Guardando...',
+    'priceAdjustmentDetail.error.price': 'Precio inválido',
+    'priceAdjustmentDetail.error.reason': 'Mínimo 10 caracteres requeridos',
+    'priceAdjustmentDetail.error.metadata': 'JSON inválido',
+    'priceAdjustmentDetail.historyTitle': 'Historial de Ajustes',
+    'priceAdjustmentDetail.table.date': 'Fecha',
+    'priceAdjustmentDetail.table.oldPrice': 'Precio Anterior',
+    'priceAdjustmentDetail.table.newPrice': 'Nuevo Precio',
+    'priceAdjustmentDetail.table.reason': 'Razón',
+    'priceAdjustmentDetail.table.user': 'Usuario',
+    'priceAdjustmentDetail.history.empty':
+      'No hay historial de ajustes disponible',
+    // Plantillas de razón
+    'priceAdjustmentDetail.reasonTemplate.select': 'Seleccionar plantilla...',
+    'priceAdjustmentDetail.reasonTemplate.market':
+      'Ajuste por condiciones del mercado',
+    'priceAdjustmentDetail.reasonTemplate.costIncrease':
+      'Aumento de costos de proveedor',
+    'priceAdjustmentDetail.reasonTemplate.costDecrease':
+      'Reducción de costos de proveedor',
+    'priceAdjustmentDetail.reasonTemplate.promotional':
+      'Precio promocional temporal',
+    'priceAdjustmentDetail.reasonTemplate.competitive':
+      'Ajuste por competencia',
+    'priceAdjustmentDetail.reasonTemplate.clearance':
+      'Liquidación de inventario',
+    'priceAdjustmentDetail.reasonTemplate.quality':
+      'Ajuste por calidad del producto',
+    'priceAdjustmentDetail.reasonTemplate.seasonal': 'Ajuste estacional',
+    'priceAdjustmentDetail.reasonTemplate.bulk': 'Descuento por volumen',
+    'priceAdjustmentDetail.reasonTemplate.error': 'Corrección de error previo',
+    'priceAdjustmentDetail.reasonTemplate.management': 'Decisión gerencial',
+    'priceAdjustmentDetail.reasonTemplate.supplier':
+      'Renegociación con proveedor',
+    'priceAdjustmentDetail.reasonTemplate.currency': 'Fluctuación cambiaria',
+    'priceAdjustmentDetail.reasonTemplate.initial':
+      'Carga inicial de inventario',
+    'priceAdjustmentDetail.reasonTemplate.custom': 'Razón personalizada...',
+    // Textos de razón auto-generados
+    'priceAdjustmentDetail.reasonText.market':
+      'Ajuste de precio por condiciones actuales del mercado',
+    'priceAdjustmentDetail.reasonText.costIncrease':
+      'Aumento de precio debido al incremento en costos de proveedor',
+    'priceAdjustmentDetail.reasonText.costDecrease':
+      'Reducción de precio por disminución en costos de proveedor',
+    'priceAdjustmentDetail.reasonText.promotional':
+      'Precio promocional temporal para impulsar ventas',
+    'priceAdjustmentDetail.reasonText.competitive':
+      'Ajuste de precio para mantener competitividad en el mercado',
+    'priceAdjustmentDetail.reasonText.clearance':
+      'Precio reducido para liquidación de inventario',
+    'priceAdjustmentDetail.reasonText.quality':
+      'Ajuste de precio por cambios en la calidad del producto',
+    'priceAdjustmentDetail.reasonText.seasonal':
+      'Ajuste estacional por demanda del período',
+    'priceAdjustmentDetail.reasonText.bulk':
+      'Descuento aplicado por compra en volumen',
+    'priceAdjustmentDetail.reasonText.error':
+      'Corrección de error en precio anterior',
+    'priceAdjustmentDetail.reasonText.management':
+      'Ajuste autorizado por decisión gerencial',
+    'priceAdjustmentDetail.reasonText.supplier':
+      'Nuevo precio por renegociación con proveedor',
+    'priceAdjustmentDetail.reasonText.currency':
+      'Ajuste por fluctuaciones en tipo de cambio',
+    'priceAdjustmentDetail.reasonText.initial':
+      'Declaración de precio inicial para carga de inventario',
+    'action.back': 'Volver',
+    'action.close': 'Cerrar',
+
     // Clients - MVP strings
     'clients.title': 'Clientes',
     'clients.loading': 'Cargando clientes...',
@@ -649,6 +760,49 @@ Object.assign(DICTIONARY.es, {
   'purchasePaymentsMvp.selection.all': 'Seleccionar todas las órdenes',
   'purchasePaymentsMvp.selection.row': 'Seleccionar orden {id}',
   'purchasePaymentsMvp.selection.count': '{count} órdenes seleccionadas',
+  'purchasePaymentsMvp.table.emptyMessage':
+    'No se encontraron compras para los filtros aplicados.',
+  'purchasePaymentsMvp.detail.back': 'Volver a Pagos Compras (MVP)',
+  'purchasePaymentsMvp.detail.heading': 'Orden de compra {orderId}',
+  'purchasePaymentsMvp.detail.description':
+    'Revisá el estado, pagos registrados y productos asociados a la orden.',
+  'purchasePaymentsMvp.detail.registerPayment': 'Registrar nuevo pago',
+  'purchasePaymentsMvp.detail.summary.title': 'Resumen de la orden',
+  'purchasePaymentsMvp.detail.summary.progress': 'Progreso del pago',
+  'purchasePaymentsMvp.detail.summary.total': 'Monto total',
+  'purchasePaymentsMvp.detail.summary.paid': 'Monto abonado',
+  'purchasePaymentsMvp.detail.summary.pending': 'Saldo pendiente',
+  'purchasePaymentsMvp.detail.summary.issueDate': 'Fecha de emisión',
+  'purchasePaymentsMvp.detail.summary.dueDate': 'Fecha de vencimiento',
+  'purchasePaymentsMvp.detail.summary.owner': 'Responsable',
+  'purchasePaymentsMvp.detail.summary.overdueLabel': 'Pago vencido',
+  'purchasePaymentsMvp.detail.summary.onTimeLabel': 'Al día',
+  'purchasePaymentsMvp.detail.history.title': 'Historial de pagos',
+  'purchasePaymentsMvp.detail.history.empty':
+    'No hay pagos registrados todavía.',
+  'purchasePaymentsMvp.detail.history.columns.date': 'Fecha',
+  'purchasePaymentsMvp.detail.history.columns.user': 'Usuario',
+  'purchasePaymentsMvp.detail.history.columns.amount': 'Monto',
+  'purchasePaymentsMvp.detail.history.columns.status': 'Estado',
+  'purchasePaymentsMvp.detail.supplier.title': 'Proveedor',
+  'purchasePaymentsMvp.detail.supplier.contact': 'Contacto',
+  'purchasePaymentsMvp.detail.supplier.email': 'Email',
+  'purchasePaymentsMvp.detail.supplier.phone': 'Teléfono',
+  'purchasePaymentsMvp.detail.supplier.taxId': 'RUC / Tax ID',
+  'purchasePaymentsMvp.detail.supplier.address': 'Dirección',
+  'purchasePaymentsMvp.detail.products.title': 'Productos incluidos',
+  'purchasePaymentsMvp.detail.products.empty':
+    'No hay productos asociados a esta orden.',
+  'purchasePaymentsMvp.detail.products.headers.product': 'Producto',
+  'purchasePaymentsMvp.detail.products.headers.quantity': 'Cantidad',
+  'purchasePaymentsMvp.detail.products.headers.total': 'Total',
+  'purchasePaymentsMvp.detail.statusBadge.overdue': 'Pago vencido',
+  'purchasePaymentsMvp.detail.statusBadge.onTrack': 'Sin retrasos',
+  'purchasePaymentsMvp.detail.meta.paymentsRecorded': 'Pagos registrados',
+  'purchasePaymentsMvp.detail.meta.lastPayment': 'Último pago',
+  'purchasePaymentsMvp.detail.meta.none': 'Sin registros',
+  'purchasePaymentsMvp.detail.history.status.approved': 'Aprobado',
+  'purchasePaymentsMvp.detail.history.status.delayed': 'Con retraso',
 })
 Object.assign(DICTIONARY.en, {
   // Purchase Payments MVP
@@ -722,6 +876,48 @@ Object.assign(DICTIONARY.en, {
   'purchasePaymentsMvp.selection.all': 'Select all purchase orders',
   'purchasePaymentsMvp.selection.row': 'Select order {id}',
   'purchasePaymentsMvp.selection.count': '{count} orders selected',
+  'purchasePaymentsMvp.table.emptyMessage':
+    'No purchase orders found for the applied filters.',
+  'purchasePaymentsMvp.detail.back': 'Back to Purchase Payments (MVP)',
+  'purchasePaymentsMvp.detail.heading': 'Purchase order {orderId}',
+  'purchasePaymentsMvp.detail.description':
+    'Review payment status, history and associated products.',
+  'purchasePaymentsMvp.detail.registerPayment': 'Register new payment',
+  'purchasePaymentsMvp.detail.summary.title': 'Order summary',
+  'purchasePaymentsMvp.detail.summary.progress': 'Payment progress',
+  'purchasePaymentsMvp.detail.summary.total': 'Total amount',
+  'purchasePaymentsMvp.detail.summary.paid': 'Amount paid',
+  'purchasePaymentsMvp.detail.summary.pending': 'Pending balance',
+  'purchasePaymentsMvp.detail.summary.issueDate': 'Issue date',
+  'purchasePaymentsMvp.detail.summary.dueDate': 'Due date',
+  'purchasePaymentsMvp.detail.summary.owner': 'Owner',
+  'purchasePaymentsMvp.detail.summary.overdueLabel': 'Overdue',
+  'purchasePaymentsMvp.detail.summary.onTimeLabel': 'On track',
+  'purchasePaymentsMvp.detail.history.title': 'Payment history',
+  'purchasePaymentsMvp.detail.history.empty': 'No payments recorded yet.',
+  'purchasePaymentsMvp.detail.history.columns.date': 'Date',
+  'purchasePaymentsMvp.detail.history.columns.user': 'User',
+  'purchasePaymentsMvp.detail.history.columns.amount': 'Amount',
+  'purchasePaymentsMvp.detail.history.columns.status': 'Status',
+  'purchasePaymentsMvp.detail.supplier.title': 'Supplier',
+  'purchasePaymentsMvp.detail.supplier.contact': 'Contact',
+  'purchasePaymentsMvp.detail.supplier.email': 'Email',
+  'purchasePaymentsMvp.detail.supplier.phone': 'Phone',
+  'purchasePaymentsMvp.detail.supplier.taxId': 'Tax ID',
+  'purchasePaymentsMvp.detail.supplier.address': 'Address',
+  'purchasePaymentsMvp.detail.products.title': 'Included products',
+  'purchasePaymentsMvp.detail.products.empty':
+    'No products linked to this order.',
+  'purchasePaymentsMvp.detail.products.headers.product': 'Product',
+  'purchasePaymentsMvp.detail.products.headers.quantity': 'Quantity',
+  'purchasePaymentsMvp.detail.products.headers.total': 'Total',
+  'purchasePaymentsMvp.detail.statusBadge.overdue': 'Payment overdue',
+  'purchasePaymentsMvp.detail.statusBadge.onTrack': 'On schedule',
+  'purchasePaymentsMvp.detail.meta.paymentsRecorded': 'Payments recorded',
+  'purchasePaymentsMvp.detail.meta.lastPayment': 'Last payment',
+  'purchasePaymentsMvp.detail.meta.none': 'No records',
+  'purchasePaymentsMvp.detail.history.status.approved': 'Approved',
+  'purchasePaymentsMvp.detail.history.status.delayed': 'Delayed',
 })
 Object.assign(DICTIONARY.es, {
   'products.offline_banner': 'You are offline. Data may be stale.',

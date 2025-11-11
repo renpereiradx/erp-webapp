@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Search,
   RefreshCw,
@@ -9,6 +10,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
+import RegisterPaymentModal from '@/components/purchase-payments/RegisterPaymentModal'
 import DataState from '@/components/ui/DataState'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,6 +38,8 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import usePurchasePaymentsMvpStore from '@/store/usePurchasePaymentsMvpStore'
+import { useToast } from '@/hooks/useToast'
+import { purchasePaymentsMvpService } from '@/services/purchasePaymentsMvpService'
 import '@/styles/scss/pages/_purchase-payments-mvp.scss'
 
 const priorityLabelMap = {
@@ -58,14 +62,6 @@ const dateFormatterFactory = lang =>
     dateStyle: 'medium',
   })
 
-const buildSupplierOptions = (raw = []) => [
-  { value: 'all', label: 'purchasePaymentsMvp.filters.supplier.all' },
-  ...raw.map(option => ({
-    value: option.value,
-    label: option.label,
-  })),
-]
-
 const buildStatusOptions = (raw = []) => [
   { value: 'all', label: 'purchasePaymentsMvp.filters.status.all' },
   ...raw.map(option => ({
@@ -74,16 +70,37 @@ const buildStatusOptions = (raw = []) => [
   })),
 ]
 
+const normalizeOrderForModal = order => {
+  if (!order) return null
+
+  const rawPending = order.pendingAmount ?? null
+  const pendingValue =
+    rawPending === null || rawPending === undefined
+      ? null
+      : Number.parseFloat(rawPending)
+  const pendingAmount = Number.isNaN(pendingValue) ? null : pendingValue
+
+  return {
+    id: order.id,
+    pendingAmount,
+    currency: order.currency || 'PYG',
+    supplierName: order.supplier?.name || '',
+  }
+}
+
 const PurchasePaymentsMvpPage = () => {
   const { t, lang } = useI18n()
+  const navigate = useNavigate()
+  const { info: showInfo, success: showSuccess, error: showError } = useToast()
 
   const [selectedOrders, setSelectedOrders] = useState(() => new Set())
+  const [isRegisterModalOpen, setRegisterModalOpen] = useState(false)
+  const [modalOrder, setModalOrder] = useState(null)
 
   const {
     orders,
     filters,
     meta,
-    suppliers,
     statuses,
     loading,
     error,
@@ -127,10 +144,6 @@ const PurchasePaymentsMvpPage = () => {
     [t, lang]
   )
 
-  const supplierOptions = useMemo(
-    () => buildSupplierOptions(suppliers),
-    [suppliers]
-  )
   const statusOptions = useMemo(() => buildStatusOptions(statuses), [statuses])
 
   const handleInputChange = event => {
@@ -239,6 +252,82 @@ const PurchasePaymentsMvpPage = () => {
     ? 'indeterminate'
     : false
 
+  const handleViewOrder = useCallback(
+    orderId => {
+      if (!orderId) return
+      navigate(`/pagos/compras-mvp/${encodeURIComponent(orderId)}`)
+    },
+    [navigate]
+  )
+
+  const handleRowDoubleClick = useCallback(
+    (event, orderId) => {
+      if (!orderId) return
+      const target = event.target
+      if (target instanceof Element) {
+        const interactiveTarget = target.closest('[data-stop-row-nav="true"]')
+        if (interactiveTarget) return
+      }
+      handleViewOrder(orderId)
+    },
+    [handleViewOrder]
+  )
+
+  const handleRowClick = useCallback((event, orderId) => {
+    if (!orderId) return
+    const target = event.target
+    if (target instanceof Element) {
+      const interactiveTarget = target.closest('[data-stop-row-nav="true"]')
+      if (interactiveTarget) return
+    }
+
+    setSelectedOrders(prev => {
+      const next = new Set(prev)
+      const isOnlySelected = next.size === 1 && next.has(orderId)
+
+      if (isOnlySelected) {
+        next.delete(orderId)
+        return next
+      }
+
+      next.clear()
+      next.add(orderId)
+      return next
+    })
+  }, [])
+
+  const handleRegisterPaymentSubmit = useCallback(
+    async payload => {
+      try {
+        await purchasePaymentsMvpService.registerPayment(
+          payload.orderId,
+          payload
+        )
+        showSuccess(
+          t('purchasePaymentsMvp.registerModal.feedback.success', {
+            orderId: payload.orderId,
+          })
+        )
+        await refresh()
+        setSelectedOrders(new Set())
+      } catch (error) {
+        showError(
+          error?.message ||
+            t('purchasePaymentsMvp.registerModal.feedback.error')
+        )
+        throw error
+      }
+    },
+    [refresh, showError, showSuccess, t]
+  )
+
+  const handleModalOpenChange = useCallback(nextOpen => {
+    setRegisterModalOpen(nextOpen)
+    if (!nextOpen) {
+      setModalOrder(null)
+    }
+  }, [])
+
   const renderTable = () => {
     if (loading) {
       return (
@@ -264,22 +353,12 @@ const PurchasePaymentsMvpPage = () => {
         </div>
       )
     }
-
-    if (!orders || orders.length === 0) {
-      return (
-        <div className='purchase-payments-mvp__state'>
-          <DataState
-            variant='empty'
-            title={t('purchasePaymentsMvp.data.empty.title')}
-            description={t('purchasePaymentsMvp.data.empty.description')}
-          />
-        </div>
-      )
-    }
+    const hasOrders = Boolean(orders && orders.length > 0)
+    const columnCount = 7
 
     return (
       <div role='region' aria-live='polite'>
-        {selectedOrders.size > 0 && (
+        {hasOrders && selectedOrders.size > 0 && (
           <div className='purchase-payments-mvp__selection-banner'>
             {translate(
               'purchasePaymentsMvp.selection.count',
@@ -307,7 +386,8 @@ const PurchasePaymentsMvpPage = () => {
                     )}
                     checked={headerCheckboxState}
                     onCheckedChange={handleSelectAll}
-                    disabled={loading || !orders.length}
+                    disabled={loading || !hasOrders}
+                    data-stop-row-nav='true'
                   />
                 </TableHead>
                 <TableHead className='purchase-payments-mvp__column'>
@@ -331,94 +411,118 @@ const PurchasePaymentsMvpPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody className='purchase-payments-mvp__table-body'>
-              {orders.map(order => {
-                const issued = dateFormatter.format(new Date(order.issue_date))
-                const pendingAmount = Number(order.pending_amount)
-                const isPending = pendingAmount > 0
-                const isSelected = selectedOrders.has(order.id)
-                const priorityClass = order.priority
-                  ? `purchase-payments-mvp__table-row--priority-${order.priority}`
-                  : ''
-                const rowClassName = [
-                  'purchase-payments-mvp__table-row',
-                  'purchase-payments-mvp__table-row--interactive',
-                  priorityClass,
-                  isSelected
-                    ? 'purchase-payments-mvp__table-row--selected'
-                    : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')
+              {hasOrders ? (
+                orders.map(order => {
+                  const issued = dateFormatter.format(
+                    new Date(order.issue_date)
+                  )
+                  const pendingAmount = Number(order.pendingAmount)
+                  const isPending = pendingAmount > 0
+                  const isSelected = selectedOrders.has(order.id)
+                  const priorityClass = order.priority
+                    ? `purchase-payments-mvp__table-row--priority-${order.priority}`
+                    : ''
+                  const rowClassName = [
+                    'purchase-payments-mvp__table-row',
+                    'purchase-payments-mvp__table-row--interactive',
+                    priorityClass,
+                    isSelected
+                      ? 'purchase-payments-mvp__table-row--selected'
+                      : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')
 
-                return (
-                  <TableRow
-                    key={order.id}
-                    className={rowClassName}
-                    aria-selected={isSelected}
-                  >
-                    <TableCell className='purchase-payments-mvp__cell purchase-payments-mvp__cell--checkbox'>
-                      <Checkbox
-                        aria-label={translate(
-                          'purchasePaymentsMvp.selection.row',
-                          { id: order.id },
-                          ({ id }) =>
-                            lang === 'en'
-                              ? `Select order ${id}`
-                              : `Seleccionar orden ${id}`
-                        )}
-                        checked={isSelected}
-                        onCheckedChange={value =>
-                          handleSelectOrder(order.id, value === true)
-                        }
-                      />
-                    </TableCell>
-                    <TableCell className='purchase-payments-mvp__cell'>
-                      <div className='purchase-payments-mvp__order-cell'>
-                        <span className='purchase-payments-mvp__order-link'>
-                          {order.id}
-                        </span>
-                        {renderPriorityTag(order.priority)}
-                      </div>
-                    </TableCell>
-                    <TableCell className='purchase-payments-mvp__cell'>
-                      <div className='purchase-payments-mvp__supplier'>
-                        <span className='purchase-payments-mvp__supplier-name'>
-                          {order.supplier?.name}
-                        </span>
-                        {order.supplier?.contact && (
-                          <span className='purchase-payments-mvp__supplier-contact'>
-                            {order.supplier.contact}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className='purchase-payments-mvp__cell'>
-                      <span className='purchase-payments-mvp__date'>
-                        {issued}
-                      </span>
-                    </TableCell>
-                    <TableCell className='purchase-payments-mvp__cell purchase-payments-mvp__cell--amount'>
-                      <span className='purchase-payments-mvp__amount-value'>
-                        {formatAmount(order.total_amount, order.currency)}
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className={`purchase-payments-mvp__cell purchase-payments-mvp__cell--amount ${
-                        isPending
-                          ? 'purchase-payments-mvp__cell--pending'
-                          : 'purchase-payments-mvp__cell--settled'
-                      }`}
+                  return (
+                    <TableRow
+                      key={order.id}
+                      className={rowClassName}
+                      aria-selected={isSelected}
+                      onClick={event => handleRowClick(event, order.id)}
+                      onDoubleClick={event =>
+                        handleRowDoubleClick(event, order.id)
+                      }
+                      data-order-id={order.id}
                     >
-                      <span className='purchase-payments-mvp__amount-value'>
-                        {formatAmount(order.pending_amount, order.currency)}
-                      </span>
-                    </TableCell>
-                    <TableCell className='purchase-payments-mvp__cell'>
-                      {renderStatusBadge(order.status)}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
+                      <TableCell className='purchase-payments-mvp__cell purchase-payments-mvp__cell--checkbox'>
+                        <Checkbox
+                          aria-label={translate(
+                            'purchasePaymentsMvp.selection.row',
+                            { id: order.id },
+                            ({ id }) =>
+                              lang === 'en'
+                                ? `Select order ${id}`
+                                : `Seleccionar orden ${id}`
+                          )}
+                          checked={isSelected}
+                          onCheckedChange={value =>
+                            handleSelectOrder(order.id, value === true)
+                          }
+                          data-stop-row-nav='true'
+                        />
+                      </TableCell>
+                      <TableCell className='purchase-payments-mvp__cell'>
+                        <div className='purchase-payments-mvp__order-cell'>
+                          <button
+                            type='button'
+                            className='purchase-payments-mvp__order-link'
+                            onClick={() => handleViewOrder(order.id)}
+                            data-stop-row-nav='true'
+                          >
+                            {order.id}
+                          </button>
+                          {renderPriorityTag(order.priority)}
+                        </div>
+                      </TableCell>
+                      <TableCell className='purchase-payments-mvp__cell'>
+                        <div className='purchase-payments-mvp__supplier'>
+                          <span className='purchase-payments-mvp__supplier-name'>
+                            {order.supplier?.name}
+                          </span>
+                          {order.supplier?.contact && (
+                            <span className='purchase-payments-mvp__supplier-contact'>
+                              {order.supplier.contact}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className='purchase-payments-mvp__cell'>
+                        <span className='purchase-payments-mvp__date'>
+                          {issued}
+                        </span>
+                      </TableCell>
+                      <TableCell className='purchase-payments-mvp__cell purchase-payments-mvp__cell--amount'>
+                        <span className='purchase-payments-mvp__amount-value'>
+                          {formatAmount(order.total_amount, order.currency)}
+                        </span>
+                      </TableCell>
+                      <TableCell
+                        className={`purchase-payments-mvp__cell purchase-payments-mvp__cell--amount ${
+                          isPending
+                            ? 'purchase-payments-mvp__cell--pending'
+                            : 'purchase-payments-mvp__cell--settled'
+                        }`}
+                      >
+                        <span className='purchase-payments-mvp__amount-value'>
+                          {formatAmount(order.pendingAmount, order.currency)}
+                        </span>
+                      </TableCell>
+                      <TableCell className='purchase-payments-mvp__cell'>
+                        {renderStatusBadge(order.status)}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              ) : (
+                <TableRow className='purchase-payments-mvp__table-row purchase-payments-mvp__table-row--empty'>
+                  <TableCell
+                    colSpan={columnCount}
+                    className='purchase-payments-mvp__cell purchase-payments-mvp__cell--empty'
+                  >
+                    {t('purchasePaymentsMvp.table.emptyMessage')}
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
@@ -477,7 +581,46 @@ const PurchasePaymentsMvpPage = () => {
 
   const handleExport = useCallback(() => {}, [])
 
-  const handleCreatePayment = useCallback(() => {}, [])
+  const handleCreatePayment = useCallback(() => {
+    if (!orders || orders.length === 0) {
+      showInfo(t('purchasePaymentsMvp.registerModal.feedback.selectOrder'))
+      return
+    }
+
+    if (selectedOrders.size === 0) {
+      showInfo(t('purchasePaymentsMvp.registerModal.feedback.selectOrder'))
+      return
+    }
+
+    if (selectedOrders.size > 1) {
+      showInfo(t('purchasePaymentsMvp.registerModal.feedback.singleOrder'))
+      return
+    }
+
+    const [orderId] = Array.from(selectedOrders)
+    const order = orders.find(item => item.id === orderId)
+
+    if (!order) {
+      showError(t('purchasePaymentsMvp.registerModal.feedback.missingOrder'))
+      return
+    }
+
+    const normalized = normalizeOrderForModal(order)
+
+    if (
+      !normalized ||
+      normalized.pendingAmount === null ||
+      normalized.pendingAmount <= 0
+    ) {
+      showInfo(
+        t('purchasePaymentsMvp.registerModal.feedback.noPending', { orderId })
+      )
+      return
+    }
+
+    setModalOrder(normalized)
+    setRegisterModalOpen(true)
+  }, [orders, selectedOrders, showError, showInfo, t])
 
   return (
     <div className='purchase-payments-mvp'>
@@ -567,7 +710,11 @@ const PurchasePaymentsMvpPage = () => {
                     className='purchase-payments-mvp__field-label'
                     htmlFor='purchase-payments-search'
                   >
-                    {t('purchasePaymentsMvp.filters.search.label')}
+                    {translate(
+                      'purchasePaymentsMvp.filters.search.label',
+                      undefined,
+                      () => (lang === 'en' ? 'Supplier' : 'Proveedor')
+                    )}
                   </label>
                   <div className='purchase-payments-mvp__input-wrapper'>
                     <Search
@@ -578,47 +725,17 @@ const PurchasePaymentsMvpPage = () => {
                       id='purchase-payments-search'
                       name='search'
                       type='search'
-                      placeholder={t(
-                        'purchasePaymentsMvp.filters.search.placeholder'
+                      className='purchase-payments-mvp__input purchase-payments-mvp__input--with-icon'
+                      placeholder={translate(
+                        'purchasePaymentsMvp.filters.search.placeholder',
+                        undefined,
+                        () =>
+                          lang === 'en' ? 'Search supplier' : 'Buscar proveedor'
                       )}
                       value={filters.search}
                       onChange={handleInputChange}
                     />
                   </div>
-                </div>
-
-                <div className='purchase-payments-mvp__field'>
-                  <label
-                    className='purchase-payments-mvp__field-label'
-                    htmlFor='purchase-payments-supplier'
-                  >
-                    {t('purchasePaymentsMvp.filters.supplier.label')}
-                  </label>
-                  <Select
-                    value={filters.supplierId}
-                    onValueChange={value =>
-                      updateFilters({ supplierId: value })
-                    }
-                  >
-                    <SelectTrigger
-                      id='purchase-payments-supplier'
-                      data-testid='purchase-payments-filter-supplier'
-                      className='purchase-payments-mvp__select-trigger'
-                    >
-                      <SelectValue
-                        placeholder={t(
-                          'purchasePaymentsMvp.filters.supplier.placeholder'
-                        )}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supplierOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {t(option.label, { value: option.value })}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <div className='purchase-payments-mvp__field'>
@@ -634,16 +751,21 @@ const PurchasePaymentsMvpPage = () => {
                       id='purchase-payments-date-from'
                       name='dateFrom'
                       type='date'
+                      className='purchase-payments-mvp__input purchase-payments-mvp__input--date'
                       aria-label={t(
                         'purchasePaymentsMvp.filters.dateFrom.label'
                       )}
                       value={filters.dateFrom}
                       onChange={handleInputChange}
                     />
+                    <span className='purchase-payments-mvp__date-separator'>
+                      &ndash;
+                    </span>
                     <Input
                       id='purchase-payments-date-to'
                       name='dateTo'
                       type='date'
+                      className='purchase-payments-mvp__input purchase-payments-mvp__input--date'
                       aria-label={t('purchasePaymentsMvp.filters.dateTo.label')}
                       value={filters.dateTo}
                       onChange={handleInputChange}
@@ -656,7 +778,11 @@ const PurchasePaymentsMvpPage = () => {
                     className='purchase-payments-mvp__field-label'
                     htmlFor='purchase-payments-status'
                   >
-                    {t('purchasePaymentsMvp.filters.status.label')}
+                    {translate(
+                      'purchasePaymentsMvp.filters.status.label',
+                      undefined,
+                      () => (lang === 'en' ? 'Status' : 'Estado')
+                    )}
                   </label>
                   <Select
                     value={filters.status}
@@ -668,34 +794,26 @@ const PurchasePaymentsMvpPage = () => {
                       className='purchase-payments-mvp__select-trigger'
                     >
                       <SelectValue
-                        placeholder={t(
-                          'purchasePaymentsMvp.filters.status.placeholder'
+                        placeholder={translate(
+                          'purchasePaymentsMvp.filters.status.placeholder',
+                          undefined,
+                          () => (lang === 'en' ? 'All statuses' : 'Todos')
                         )}
                       />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className='purchase-payments-mvp__select-content'>
                       {statusOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
+                        <SelectItem
+                          key={option.value}
+                          value={option.value}
+                          className='purchase-payments-mvp__select-item'
+                        >
                           {t(option.label, { value: option.value })}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-
-                <label
-                  className='purchase-payments-mvp__checkbox'
-                  htmlFor='purchase-payments-pending-only'
-                >
-                  <input
-                    id='purchase-payments-pending-only'
-                    name='pendingOnly'
-                    type='checkbox'
-                    checked={Boolean(filters.pendingOnly)}
-                    onChange={handleInputChange}
-                  />
-                  <span>{t('purchasePaymentsMvp.filters.pendingOnly')}</span>
-                </label>
               </div>
             </CardContent>
             <CardFooter className='purchase-payments-mvp__filters-footer'>
@@ -704,7 +822,7 @@ const PurchasePaymentsMvpPage = () => {
                   type='button'
                   onClick={handleApplyFilters}
                   disabled={loading}
-                  className='purchase-payments-mvp__filters-button'
+                  className='purchase-payments-mvp__filters-button purchase-payments-mvp__filters-button--primary'
                 >
                   {t('purchasePaymentsMvp.filters.apply')}
                 </Button>
@@ -713,7 +831,7 @@ const PurchasePaymentsMvpPage = () => {
                   variant='outline'
                   onClick={handleReset}
                   disabled={loading}
-                  className='purchase-payments-mvp__filters-button'
+                  className='purchase-payments-mvp__filters-button purchase-payments-mvp__filters-button--secondary'
                 >
                   {t('purchasePaymentsMvp.filters.reset')}
                 </Button>
@@ -830,6 +948,12 @@ const PurchasePaymentsMvpPage = () => {
           </Card>
         </div>
       </div>
+      <RegisterPaymentModal
+        open={isRegisterModalOpen}
+        onOpenChange={handleModalOpenChange}
+        order={modalOrder}
+        onSubmit={handleRegisterPaymentSubmit}
+      />
     </div>
   )
 }
