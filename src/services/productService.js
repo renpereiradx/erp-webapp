@@ -68,20 +68,17 @@ export const productService = {
    */
   getProductById: async (productId) => {
     const startTime = performance.now();
-    
+
     try {
-      // Using real API only
-      
+      // Using financial endpoint which includes price data
       const result = await retryWithBackoff(async () => {
-        return await apiClient.getProductById(productId);
+        return await apiClient.getProductFinancialById(productId);
       });
-      
+
       telemetryService?.recordMetric('product_fetched_by_id_api', 1);
       return result;
-      
+
     } catch (error) {
-      console.error(`❌ Product API unavailable for ID ${productId}:`, error.message);
-      
       // En lugar de usar mock data, retornar error apropiado
       throw new ApiError(
         `No se pudo cargar el producto con ID ${productId}. Verifique la conexión a la API.`,
@@ -102,23 +99,23 @@ export const productService = {
    */
   getProductByIdEnriched: async (productId) => {
     try {
-      // El endpoint /products/{id} ya devuelve datos enriquecidos según el ejemplo de Postman
-      const product = await apiClient.getProductById(productId);
-      
+      // Use financial endpoint which includes enriched data
+      const product = await apiClient.getProductFinancialById(productId);
+
       // Si el producto no está marcado como enriquecido pero tiene datos enriquecidos, usar getProductWithDetails
       if (product && !product._enriched) {
-        const hasEnrichedData = product.has_unit_pricing !== undefined || 
+        const hasEnrichedData = product.has_unit_pricing !== undefined ||
                                product.stock_status !== undefined ||
                                product.price_formatted !== undefined ||
                                product.has_valid_price !== undefined ||
                                product.unit_prices !== undefined;
-        
+
         if (!hasEnrichedData) {
           // Solo usar getProductWithDetails si no hay datos enriquecidos
           return await apiClient.getProductWithDetails(productId);
         }
       }
-      
+
       return product;
     } catch (error) {
       const norm = toApiError(error, 'Error al obtener producto enriquecido');

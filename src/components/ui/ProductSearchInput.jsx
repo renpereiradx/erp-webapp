@@ -55,20 +55,12 @@ const ProductSearchInput = ({
     
     try {
       const results = await searchProducts(trimmed);
-      const productsArray = Array.isArray(results?.data) ? results.data : 
-                           Array.isArray(results) ? results : 
+      const productsArray = Array.isArray(results?.data) ? results.data :
+                           Array.isArray(results) ? results :
                            results ? [results] : [];
-      
-      // Debug: Log para ver qué datos llegan al ProductSearchInput
-      console.log('ProductSearchInput received data:', productsArray);
-      if (productsArray.length > 0) {
-        console.log('First product structure:', productsArray[0]);
-        console.log('Price check:', productsArray[0].unit_prices?.[0]?.price_per_unit);
-      }
-      
+
       setSearchResults(productsArray);
     } catch (error) {
-      console.error('Error searching products:', error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
