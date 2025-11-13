@@ -26,11 +26,18 @@
   flex: 1;
   min-height: 100vh;
   width: 100%;
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.3s ease, width 0.3s ease;
 
   &--with-sidebar {
     @include desktop {
-      margin-left: 240px; // Sidebar width
+      margin-left: 88px;
+      width: calc(100% - 88px);
+    }
+  }
+
+  &--sidebar-expanded {
+    @include desktop {
+      margin-left: 240px;
       width: calc(100% - 240px);
     }
   }
@@ -38,7 +45,11 @@
 
 .layout__content {
   flex: 1;
-  padding: 0;
+  padding: $spacing-20 $spacing-20;
+
+  @include mobile {
+    padding: $spacing-16 $spacing-12;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -51,6 +62,9 @@
   width: 240px;
   height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.3s ease;
+  will-change: width;
 
   @include themify {
     background-color: themed('surface-primary');
@@ -76,6 +90,70 @@
   &--mobile {
     position: relative;
     z-index: 50;
+  }
+
+  &--collapsed {
+    width: 88px;
+
+    .sidebar__header {
+      padding: $spacing-24 $spacing-12;
+    }
+
+    .sidebar__logo {
+      justify-content: center;
+    }
+
+    .sidebar__logo-text {
+      opacity: 0;
+      transform: translateX(-12px);
+      pointer-events: none;
+    }
+
+    .sidebar__nav {
+      padding: $spacing-16 $spacing-12;
+    }
+
+    .nav__item {
+      justify-content: center;
+      padding: $spacing-12;
+      gap: 0;
+    }
+
+    .nav__icon {
+      margin-right: 0;
+    }
+
+    .nav__text,
+    .nav__chevron {
+      opacity: 0;
+      max-width: 0;
+      margin: 0;
+      pointer-events: none;
+    }
+
+    .nav__chevron {
+      width: 0;
+      margin-left: 0;
+    }
+
+    .nav__submenu {
+      display: none;
+    }
+  }
+
+  &--expanded {
+    width: 240px;
+
+    .sidebar__logo-text,
+    .nav__text,
+    .nav__chevron {
+      opacity: 1;
+      max-width: 100%;
+    }
+
+    .nav__chevron {
+      width: 16px;
+    }
   }
 }
 
@@ -117,6 +195,8 @@
   font-size: $font-size-400;
   font-weight: $font-weight-semibold;
   margin: 0;
+  white-space: nowrap;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 
   @include themify {
     color: themed('text-primary');
@@ -157,6 +237,7 @@
   flex: 1;
   padding: $spacing-16;
   overflow-y: auto;
+  transition: padding 0.3s ease;
 }
 
 // -----------------------------------------------------------------------------
@@ -200,6 +281,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
+  justify-content: flex-start;
+  gap: $spacing-12;
 
   @include themify {
     background-color: transparent;
@@ -220,12 +303,16 @@
 .nav__icon {
   width: 16px;
   height: 16px;
-  margin-right: $spacing-12;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
 .nav__text {
   flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 100%;
+  transition: opacity 0.2s ease, max-width 0.2s ease;
 }
 
 .nav__chevron {
@@ -233,6 +320,7 @@
   height: 16px;
   margin-left: auto;
   flex-shrink: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .nav__submenu {
@@ -241,6 +329,7 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-4;
+  transition: opacity 0.2s ease;
 }
 
 .nav__subitem {

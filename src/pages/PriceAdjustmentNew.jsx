@@ -105,13 +105,6 @@ const PriceAdjustmentNew = () => {
 
   return (
     <div className="price-adjustment-new">
-      {/* Header */}
-      <div className="price-adjustment-new__header">
-        <h1 className="price-adjustment-new__title">
-          {t('priceAdjustmentNew.title', 'Búsqueda y Selección de Productos')}
-        </h1>
-      </div>
-
       {/* Barra de búsqueda */}
       <div className="price-adjustment-new__search">
         <form onSubmit={handleSearch} className="search-form">

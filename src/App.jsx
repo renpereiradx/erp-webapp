@@ -11,6 +11,7 @@ import {
   Navigate,
 } from 'react-router-dom'
 import MainLayout from '@/layouts/MainLayout'
+import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
 import Dashboard from '@/pages/Dashboard'
 import Products from '@/pages/Products'
 import Clients from '@/pages/Clients'
@@ -23,7 +24,9 @@ import Inventory from '@/pages/Inventory'
 import PriceAdjustments from '@/pages/PriceAdjustments'
 import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
 import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
+import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
 import PriceAdjustmentHistoryDetail from '@/pages/PriceAdjustmentHistoryDetail'
+import ProductAdjustments from '@/pages/ProductAdjustments'
 import Reports from '@/pages/Reports'
 // ISOLATED IMPORTS - Pages temporarily disabled for refactoring
 // import BookingSales from '@/pages/BookingSales';
@@ -41,7 +44,7 @@ import Settings from '@/pages/Settings'
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
-import { ThemeProvider, useTheme } from '@/contexts/ThemeContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import './App.css'
 
@@ -125,10 +128,18 @@ function AppContent() {
                         path='/ajustes-precios'
                         element={<PriceAdjustments />}
                       />
+                      {/* Rutas con layout de tabs */}
                       <Route
                         path='/ajustes-precios-nuevo'
-                        element={<PriceAdjustmentNew />}
-                      />
+                        element={<PriceAdjustmentLayout />}
+                      >
+                        <Route index element={<PriceAdjustmentNew />} />
+                        <Route
+                          path='historial'
+                          element={<PriceAdjustmentHistory />}
+                        />
+                      </Route>
+                      {/* Rutas independientes sin tabs */}
                       <Route
                         path='/ajustes-precios-nuevo/detalle'
                         element={<PriceAdjustmentDetail />}
@@ -136,6 +147,10 @@ function AppContent() {
                       <Route
                         path='/ajustes-precios-nuevo/historial/:adjustmentId'
                         element={<PriceAdjustmentHistoryDetail />}
+                      />
+                      <Route
+                        path='/ajustes-producto'
+                        element={<ProductAdjustments />}
                       />
 
                       {/* --- RUTAS AISLADAS TEMPORALMENTE PARA REFACTORING --- */}

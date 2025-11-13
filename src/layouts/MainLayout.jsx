@@ -71,8 +71,10 @@ const MainLayout = ({ children }) => {
   const [expandedMenus, setExpandedMenus] = useState({})
   const [isLargeScreen, setIsLargeScreen] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false)
 
   const profileBtnRef = useRef(null)
+  const sidebarRef = useRef(null)
   const hasFetchedRatesRef = useRef(false)
 
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0, width: 288 })
@@ -128,11 +130,21 @@ const MainLayout = ({ children }) => {
       { name: 'Proveedores', href: '/proveedores', icon: Truck },
       { name: 'Ajuste de inventario', href: '/inventario', icon: Package },
       { name: 'Ajustes de Precios', href: '/ajustes-precios', icon: Edit },
-      { name: 'Ajuste de Precios Nuevo', href: '/ajustes-precios-nuevo', icon: Edit },
+      {
+        name: 'Ajuste de Precios Nuevo',
+        href: '/ajustes-precios-nuevo',
+        icon: Edit,
+      },
+      {
+        name: 'Ajustes de Producto',
+        href: '/ajustes-producto',
+        icon: SlidersHorizontal,
+      },
       { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
       { name: 'Ventas (Nueva)', href: '/ventas-nueva', icon: ShoppingCart },
       { name: 'Reservas', href: '/reservas', icon: Calendar },
       { name: 'Compras', href: '/compras', icon: ShoppingBag },
+      { name: 'Compras (Nueva)', href: '/compras-nueva', icon: ShoppingBag },
       {
         name: 'Pagos',
         href: '#',
@@ -145,9 +157,9 @@ const MainLayout = ({ children }) => {
           },
           { name: 'Pagos Compras', href: '/pagos-compras', icon: CreditCard },
           {
-            name: 'Pagos Compras (MVP)',
+            name: 'Pagos Compras MVP',
             href: '/pagos/compras-mvp',
-            icon: CreditCard,
+            icon: CircleDollarSign,
           },
           { name: 'Pagos Ventas', href: '/pagos-ventas', icon: Receipt },
           {
@@ -209,25 +221,30 @@ const MainLayout = ({ children }) => {
     let isActive = true
 
     const fetchRates = async (withLoader = false) => {
-      if (!isActive) return
+      if (!isActive) {
+        return
+      }
       if (withLoader) {
         setNavbarRatesLoading(true)
       }
 
       try {
         const data = await ExchangeRateService.getLatestAll()
-        if (!isActive) return
-        setNavbarRates(Array.isArray(data) ? data : [])
-        setNavbarRatesError(null)
+        if (isActive) {
+          setNavbarRates(Array.isArray(data) ? data : [])
+          setNavbarRatesError(null)
+        }
       } catch (error) {
-        if (!isActive) return
-        setNavbarRatesError(
-          error?.message || 'Sin datos de tipo de cambio disponibles'
-        )
+        if (isActive) {
+          setNavbarRatesError(
+            error?.message || 'Sin datos de tipo de cambio disponibles'
+          )
+        }
       } finally {
-        if (!isActive) return
-        setNavbarRatesLoading(false)
-        hasFetchedRatesRef.current = true
+        if (isActive) {
+          setNavbarRatesLoading(false)
+          hasFetchedRatesRef.current = true
+        }
       }
     }
 
@@ -275,6 +292,43 @@ const MainLayout = ({ children }) => {
     }))
   }
 
+  const closeSidebarIfPossible = () => {
+    if (!isLargeScreen) return
+    const activeElement = document.activeElement
+    if (sidebarRef.current && sidebarRef.current.contains(activeElement)) {
+      return
+    }
+    setIsSidebarExpanded(false)
+  }
+
+  const handleSidebarMouseEnter = () => {
+    if (!isLargeScreen) return
+    setIsSidebarExpanded(true)
+  }
+
+  const handleSidebarMouseLeave = () => {
+    if (!isLargeScreen) return
+    closeSidebarIfPossible()
+  }
+
+  const handleSidebarFocus = () => {
+    if (!isLargeScreen) return
+    setIsSidebarExpanded(true)
+  }
+
+  const handleSidebarBlur = () => {
+    if (!isLargeScreen) return
+    window.requestAnimationFrame(() => {
+      closeSidebarIfPossible()
+    })
+  }
+
+  useEffect(() => {
+    if (!isLargeScreen) {
+      setIsSidebarExpanded(false)
+    }
+  }, [isLargeScreen])
+
   const handleLogout = () => {
     logout()
     navigate('/login')
@@ -286,6 +340,8 @@ const MainLayout = ({ children }) => {
     const hasChildren = item.children && item.children.length > 0
     const isExpanded = expandedMenus[item.name]
     const active = hasChildren ? isParentActive(item) : isActive(item.href)
+    const labelVisible = !isLargeScreen || isSidebarExpanded || isMobile
+    const itemAriaLabel = labelVisible ? undefined : item.name
 
     return (
       <div key={item.name} className='nav__item-wrapper'>
@@ -293,13 +349,24 @@ const MainLayout = ({ children }) => {
           <button
             onClick={() => toggleMenu(item.name)}
             className={`nav__item ${active ? 'nav__item--active' : ''}`}
+            aria-expanded={isExpanded}
+            aria-label={itemAriaLabel}
+            title={item.name}
           >
             <Icon className='nav__icon' />
-            <span className='nav__text'>{item.name}</span>
+            <span className='nav__text' aria-hidden={!labelVisible}>
+              {item.name}
+            </span>
             {isExpanded ? (
-              <ChevronDown className='nav__chevron' />
+              <ChevronDown
+                className='nav__chevron'
+                aria-hidden={!labelVisible}
+              />
             ) : (
-              <ChevronRight className='nav__chevron' />
+              <ChevronRight
+                className='nav__chevron'
+                aria-hidden={!labelVisible}
+              />
             )}
           </button>
         ) : (
@@ -307,9 +374,13 @@ const MainLayout = ({ children }) => {
             to={item.href}
             onClick={() => isMobile && setSidebarOpen(false)}
             className={`nav__item ${active ? 'nav__item--active' : ''}`}
+            aria-label={itemAriaLabel}
+            title={item.name}
           >
             <Icon className='nav__icon' />
-            <span className='nav__text'>{item.name}</span>
+            <span className='nav__text' aria-hidden={!labelVisible}>
+              {item.name}
+            </span>
           </Link>
         )}
 
@@ -319,6 +390,9 @@ const MainLayout = ({ children }) => {
             {item.children.map(child => {
               const ChildIcon = child.icon
               const childActive = isActive(child.href)
+              const childLabelVisible =
+                !isLargeScreen || isSidebarExpanded || isMobile
+              const childAriaLabel = childLabelVisible ? undefined : child.name
 
               return (
                 <Link
@@ -328,9 +402,13 @@ const MainLayout = ({ children }) => {
                   className={`nav__subitem ${
                     childActive ? 'nav__subitem--active' : ''
                   }`}
+                  aria-label={childAriaLabel}
+                  title={child.name}
                 >
                   <ChildIcon className='nav__icon' />
-                  <span className='nav__text'>{child.name}</span>
+                  <span className='nav__text' aria-hidden={!childLabelVisible}>
+                    {child.name}
+                  </span>
                 </Link>
               )
             })}
@@ -344,7 +422,16 @@ const MainLayout = ({ children }) => {
     <div className='layout'>
       {/* Sidebar Desktop */}
       {isClient && isLargeScreen && (
-        <aside className='sidebar sidebar--desktop'>
+        <aside
+          ref={sidebarRef}
+          className={`sidebar sidebar--desktop ${
+            isSidebarExpanded ? 'sidebar--expanded' : 'sidebar--collapsed'
+          }`}
+          onMouseEnter={handleSidebarMouseEnter}
+          onMouseLeave={handleSidebarMouseLeave}
+          onFocusCapture={handleSidebarFocus}
+          onBlurCapture={handleSidebarBlur}
+        >
           <div className='sidebar__header'>
             <div className='sidebar__logo'>
               <div className='sidebar__logo-icon'>
@@ -396,6 +483,10 @@ const MainLayout = ({ children }) => {
       <div
         className={`layout__main ${
           isClient && isLargeScreen ? 'layout__main--with-sidebar' : ''
+        } ${
+          isClient && isLargeScreen && isSidebarExpanded
+            ? 'layout__main--sidebar-expanded'
+            : ''
         }`}
       >
         {/* Navbar */}

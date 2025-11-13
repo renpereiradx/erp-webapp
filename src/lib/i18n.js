@@ -176,6 +176,13 @@ const DICTIONARY = {
     'priceAdjustment.field.reason.placeholder':
       'Explique la razón del ajuste de precio...',
 
+    // Price Adjustment Layout - Tabs
+    'priceAdjustment.layout.title': 'Gestión de Ajustes de Precios',
+    'priceAdjustment.layout.description':
+      'Administra los precios de tus productos y consulta el historial de cambios',
+    'priceAdjustment.tabs.newAdjustment': 'Nuevo Ajuste',
+    'priceAdjustment.tabs.history': 'Historial Global',
+
     // Price Adjustment New - MVP strings
     'priceAdjustmentNew.title': 'Búsqueda y Selección de Productos',
     'priceAdjustmentNew.search.placeholder':
@@ -225,8 +232,11 @@ const DICTIONARY = {
     'priceAdjustmentDetail.table.date': 'Fecha',
     'priceAdjustmentDetail.table.oldPrice': 'Precio Anterior',
     'priceAdjustmentDetail.table.newPrice': 'Nuevo Precio',
+    'priceAdjustmentDetail.table.change': 'Cambio',
     'priceAdjustmentDetail.table.reason': 'Razón',
     'priceAdjustmentDetail.table.user': 'Usuario',
+    'priceAdjustmentDetail.table.actions': 'Acciones',
+    'priceAdjustmentDetail.action.viewDetails': 'Ver Detalles',
     'priceAdjustmentDetail.history.empty':
       'No hay historial de ajustes disponible',
     // Plantillas de razón
@@ -286,6 +296,54 @@ const DICTIONARY = {
       'Declaración de precio inicial para carga de inventario',
     'action.back': 'Volver',
     'action.close': 'Cerrar',
+
+    // Price Adjustment History - Global history page
+    'priceAdjustmentHistory.title': 'Historial de Ajustes Manuales',
+    'priceAdjustmentHistory.description':
+      'Consulta todos los ajustes de precios recientes aplicados a los productos.',
+    'priceAdjustmentHistory.actions.refresh': 'Actualizar',
+    'priceAdjustmentHistory.actions.export': 'Exportar',
+    'priceAdjustmentHistory.filters.title': 'Filtros de Búsqueda',
+    'priceAdjustmentHistory.filters.product': 'Producto',
+    'priceAdjustmentHistory.filters.productPlaceholder':
+      'Buscar por nombre o SKU',
+    'priceAdjustmentHistory.filters.user': 'Usuario',
+    'priceAdjustmentHistory.filters.userPlaceholder': 'Buscar por nombre o ID',
+    'priceAdjustmentHistory.filters.unit': 'Unidad',
+    'priceAdjustmentHistory.filters.unitPlaceholder': 'Seleccionar unidad',
+    'priceAdjustmentHistory.filters.adjustmentType': 'Tipo de Ajuste',
+    'priceAdjustmentHistory.filters.adjustmentTypePlaceholder':
+      'Seleccionar tipo',
+    'priceAdjustmentHistory.filters.dateRange': 'Rango de Fechas',
+    'priceAdjustmentHistory.filters.dateFromPlaceholder': 'Fecha de inicio',
+    'priceAdjustmentHistory.filters.dateToPlaceholder': 'Fecha de fin',
+    'priceAdjustmentHistory.filters.clear': 'Limpiar Filtros',
+    'priceAdjustmentHistory.filters.apply': 'Aplicar Filtros',
+    'priceAdjustmentHistory.results.showing': 'Mostrando',
+    'priceAdjustmentHistory.results.to': 'a',
+    'priceAdjustmentHistory.results.of': 'de',
+    'priceAdjustmentHistory.results.results': 'resultados',
+    'priceAdjustmentHistory.table.adjustmentId': 'ID Ajuste',
+    'priceAdjustmentHistory.table.product': 'Producto',
+    'priceAdjustmentHistory.table.oldPrice': 'Precio Anterior',
+    'priceAdjustmentHistory.table.newPrice': 'Precio Nuevo',
+    'priceAdjustmentHistory.table.user': 'Usuario',
+    'priceAdjustmentHistory.table.dateTime': 'Fecha/Hora',
+    'priceAdjustmentHistory.table.unit': 'Unidad',
+    'priceAdjustmentHistory.table.type': 'Tipo',
+    'priceAdjustmentHistory.type.decrease': 'Descuento',
+    'priceAdjustmentHistory.type.increase': 'Aumento',
+    'priceAdjustmentHistory.type.correction': 'Corrección',
+    'priceAdjustmentHistory.pagination.page': 'Página',
+    'priceAdjustmentHistory.pagination.of': 'de',
+    'priceAdjustmentHistory.pagination.previous': 'Anterior',
+    'priceAdjustmentHistory.pagination.next': 'Siguiente',
+    'priceAdjustmentHistory.empty.title': 'No se encontraron resultados',
+    'priceAdjustmentHistory.empty.description':
+      'Prueba a cambiar o eliminar algunos filtros para encontrar lo que buscas.',
+    'priceAdjustmentHistory.error.title': 'Error al cargar historial',
+    'priceAdjustmentHistory.error.loading':
+      'No se pudo cargar el historial de ajustes',
 
     // Clients - MVP strings
     'clients.title': 'Clientes',
