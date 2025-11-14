@@ -6,6 +6,14 @@
 import { common } from './common.js'
 import { products } from './products.js'
 import { purchases } from './purchases.js'
+import { priceAdjustments } from './priceAdjustments.js'
+import { clients } from './clients.js'
+import { suppliers } from './suppliers.js'
+import { sales } from './sales.js'
+import { inventory } from './inventory.js'
+import { reservations } from './reservations.js'
+import { booking } from './booking.js'
+import { other } from './other.js'
 
 /**
  * Diccionario completo de traducciones en español
@@ -15,10 +23,12 @@ export const es = {
   ...common,
   ...products,
   ...purchases,
-  // TODO: Agregar más módulos aquí según sea necesario:
-  // ...clients,
-  // ...suppliers,
-  // ...sales,
-  // ...inventory,
-  // ...reports,
+  ...priceAdjustments,
+  ...clients,
+  ...suppliers,
+  ...sales,
+  ...inventory,
+  ...reservations,
+  ...booking,
+  ...other,
 }
