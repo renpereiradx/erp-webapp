@@ -1182,6 +1182,7 @@ const Purchases = () => {
                             }}
                             aria-label={t('purchases.modal.product_placeholder', 'Buscar producto...')}
                             aria-describedby="product-search-helper"
+                            autoFocus
                           />
                           {modalProductSearch && (
                             <button

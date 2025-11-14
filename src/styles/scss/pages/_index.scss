@@ -12,6 +12,7 @@
 @use 'clients';
 @use 'suppliers';
 @use 'settings';
-@use 'purchases-new';
+@use 'purchases';
+@use 'purchase-payments-mvp';
 
 // ... (will be added as pages are migrated)

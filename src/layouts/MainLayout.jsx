@@ -144,7 +144,6 @@ const MainLayout = ({ children }) => {
       { name: 'Ventas (Nueva)', href: '/ventas-nueva', icon: ShoppingCart },
       { name: 'Reservas', href: '/reservas', icon: Calendar },
       { name: 'Compras', href: '/compras', icon: ShoppingBag },
-      { name: 'Compras (Nueva)', href: '/compras-nueva', icon: ShoppingBag },
       {
         name: 'Pagos',
         href: '#',
