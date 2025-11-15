@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Download, X, User, Calendar } from 'lucide-react';
+import { Search, Download, X, User, Calendar, MoreVertical, Eye, Ban } from 'lucide-react';
 import DataState from '@/components/ui/DataState';
 import SegmentedControl from '@/components/ui/SegmentedControl';
 import { useI18n } from '@/lib/i18n';
@@ -60,6 +60,10 @@ const Purchases = () => {
   const [pricingMode, setPricingMode] = useState('margin'); // 'margin' o 'sale_price'
   const [purchaseItems, setPurchaseItems] = useState([]);
   const modalProductSearchRef = useRef(null);
+
+  // Estados para el menú de acciones de la tabla
+  const [openActionMenu, setOpenActionMenu] = useState(null);
+  const actionMenuRef = useRef(null);
 
   // Cargar datos al montar y configurar fechas por defecto
   useEffect(() => {
@@ -210,6 +214,9 @@ const Purchases = () => {
       }
       if (modalProductSearchRef.current && !modalProductSearchRef.current.contains(event.target)) {
         setShowProductDropdown(false);
+      }
+      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
+        setOpenActionMenu(null);
       }
     };
 
@@ -607,6 +614,54 @@ const Purchases = () => {
       default:
         return status || '-';
     }
+  };
+
+  // Manejar acción de Ver
+  const handleViewPurchase = (order) => {
+    console.log('Ver orden:', order);
+    // TODO: Implementar navegación a página de detalle o modal
+    alert(`Ver orden de compra #${order.id}\n\nProveedor: ${order.supplier_name}\nTotal: ${formatCurrency(order.total_amount)}`);
+  };
+
+  // Manejar acción de Cancelar
+  const handleCancelPurchase = async (order) => {
+    if (order.status?.toUpperCase() === 'CANCELLED') {
+      alert('Esta orden ya está cancelada');
+      return;
+    }
+
+    if (window.confirm(`¿Está seguro de cancelar la orden de compra #${order.id}?\n\nEsta acción no se puede deshacer.`)) {
+      try {
+        // TODO: Implementar llamada a la API para cancelar
+        console.log('Cancelar orden:', order);
+
+        // Simulación temporal - actualizar el estado localmente
+        setPurchaseOrders(prevOrders =>
+          prevOrders.map(o => {
+            const currentOrder = o.purchase || o;
+            if (currentOrder.id === order.id) {
+              return {
+                ...o,
+                purchase: currentOrder,
+                status: 'CANCELLED'
+              };
+            }
+            return o;
+          })
+        );
+
+        alert(`Orden #${order.id} cancelada exitosamente`);
+      } catch (err) {
+        console.error('Error cancelando orden:', err);
+        alert('Error al cancelar la orden. Por favor, intente nuevamente.');
+      }
+    }
+    setOpenActionMenu(null);
+  };
+
+  // Toggle menú de acciones
+  const toggleActionMenu = (orderId) => {
+    setOpenActionMenu(openActionMenu === orderId ? null : orderId);
   };
 
   // Estados de UI
@@ -1064,6 +1119,7 @@ const Purchases = () => {
                     <th>{t('purchases.table.supplier', 'Proveedor')}</th>
                     <th className="text-right">{t('purchases.table.total', 'Total')}</th>
                     <th className="text-center">{t('purchases.table.status', 'Estado')}</th>
+                    <th className="text-center">{t('purchases.table.actions', 'Acciones')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1079,6 +1135,37 @@ const Purchases = () => {
                           <span className={getStatusBadgeClass(order.status)}>
                             {getStatusText(order.status)}
                           </span>
+                        </td>
+                        <td className="text-center">
+                          <div className="action-menu" ref={actionMenuRef}>
+                            <button
+                              className="action-menu__trigger"
+                              onClick={() => toggleActionMenu(order.id)}
+                              aria-label={t('purchases.table.actions_aria', 'Abrir menú de acciones')}
+                              aria-expanded={openActionMenu === order.id}
+                            >
+                              <MoreVertical size={18} />
+                            </button>
+                            {openActionMenu === order.id && (
+                              <div className="action-menu__dropdown">
+                                <button
+                                  className="action-menu__item"
+                                  onClick={() => handleViewPurchase(order)}
+                                >
+                                  <Eye size={16} />
+                                  <span>{t('action.view', 'Ver')}</span>
+                                </button>
+                                <button
+                                  className="action-menu__item action-menu__item--danger"
+                                  onClick={() => handleCancelPurchase(order)}
+                                  disabled={order.status?.toUpperCase() === 'CANCELLED'}
+                                >
+                                  <Ban size={16} />
+                                  <span>{t('action.cancel', 'Cancelar')}</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

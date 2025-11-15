@@ -82,3 +82,107 @@
     }
   }
 }
+
+// =============================================================================
+// ACTION MENU (DROPDOWN)
+// =============================================================================
+// Menu desplegable de acciones para filas de tabla
+
+.action-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.action-menu__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  @include transition(all);
+
+  @include themify {
+    color: themed('text-secondary');
+    background-color: transparent;
+
+    &:hover {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+
+    &:active {
+      background-color: themed('surface-pressed');
+    }
+
+    &[aria-expanded='true'] {
+      background-color: themed('surface-selected');
+      color: themed('action-primary');
+    }
+  }
+}
+
+.action-menu__dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 1000;
+  min-width: 160px;
+  padding: $spacing-4;
+  border-radius: $border-radius-medium;
+  box-shadow: $shadow-8;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-default');
+  }
+}
+
+.action-menu__item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  width: 100%;
+  padding: $spacing-8 $spacing-12;
+  border: none;
+  border-radius: $border-radius-small;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  @include text-style($font-size-300, $font-weight-regular);
+  @include transition(all);
+
+  @include themify {
+    color: themed('text-primary');
+
+    &:hover:not(:disabled) {
+      background-color: themed('surface-hover');
+    }
+
+    &:active:not(:disabled) {
+      background-color: themed('surface-pressed');
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &--danger {
+    @include themify {
+      color: themed('status-danger');
+
+      &:hover:not(:disabled) {
+        background-color: themed('surface-hover');
+      }
+    }
+  }
+}

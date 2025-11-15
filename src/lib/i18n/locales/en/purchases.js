@@ -32,6 +32,8 @@ export const purchases = {
   'purchases.table.status': 'Status',
   'purchases.table.product_id': 'Product ID',
   'purchases.table.margin': 'Margin (%)',
+  'purchases.table.actions': 'Actions',
+  'purchases.table.actions_aria': 'Open actions menu',
 
   // Order statuses
   'purchases.status.completed': 'Completed',
