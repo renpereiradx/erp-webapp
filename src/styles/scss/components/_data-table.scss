@@ -128,12 +128,20 @@
 .action-menu__dropdown {
   position: absolute;
   right: 0;
-  top: calc(100% + 4px);
   z-index: 1000;
   min-width: 160px;
   padding: $spacing-4;
   border-radius: $border-radius-medium;
   box-shadow: $shadow-8;
+
+  // Por defecto se abre hacia abajo
+  top: calc(100% + 4px);
+
+  // Si está cerca del final de la tabla, se abre hacia arriba
+  .action-menu--bottom & {
+    bottom: calc(100% + 4px);
+    top: auto;
+  }
 
   @include themify {
     background-color: themed('surface-card');

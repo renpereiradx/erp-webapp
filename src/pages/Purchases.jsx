@@ -631,29 +631,47 @@ const Purchases = () => {
     }
 
     if (window.confirm(`¿Está seguro de cancelar la orden de compra #${order.id}?\n\nEsta acción no se puede deshacer.`)) {
+      setLoading(true);
       try {
-        // TODO: Implementar llamada a la API para cancelar
         console.log('Cancelar orden:', order);
 
-        // Simulación temporal - actualizar el estado localmente
-        setPurchaseOrders(prevOrders =>
-          prevOrders.map(o => {
-            const currentOrder = o.purchase || o;
-            if (currentOrder.id === order.id) {
-              return {
-                ...o,
-                purchase: currentOrder,
-                status: 'CANCELLED'
-              };
-            }
-            return o;
-          })
-        );
+        // Llamar al servicio de cancelación con detalles
+        const cancellationRequest = {
+          purchase_order_id: order.id,
+          reason: 'CANCELLED_BY_USER',
+          notes: `Orden cancelada desde la interfaz de usuario por ${order.supplier_name || 'usuario'}`
+        };
 
-        alert(`Orden #${order.id} cancelada exitosamente`);
+        const result = await purchaseService.cancelPurchaseOrderWithDetails(cancellationRequest);
+
+        if (result.success) {
+          // Actualizar el estado local después de la cancelación exitosa
+          setPurchaseOrders(prevOrders =>
+            prevOrders.map(o => {
+              const currentOrder = o.purchase || o;
+              if (currentOrder.id === order.id) {
+                return {
+                  ...o,
+                  purchase: {
+                    ...currentOrder,
+                    status: 'CANCELLED'
+                  },
+                  status: 'CANCELLED'
+                };
+              }
+              return o;
+            })
+          );
+
+          alert(`Orden #${order.id} cancelada exitosamente`);
+        } else {
+          throw new Error(result.error || 'Error al cancelar la orden');
+        }
       } catch (err) {
         console.error('Error cancelando orden:', err);
-        alert('Error al cancelar la orden. Por favor, intente nuevamente.');
+        alert(`Error al cancelar la orden: ${err.message || 'Por favor, intente nuevamente.'}`);
+      } finally {
+        setLoading(false);
       }
     }
     setOpenActionMenu(null);
@@ -1123,8 +1141,10 @@ const Purchases = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOrders.map((orderData) => {
+                  {filteredOrders.map((orderData, index) => {
                     const order = orderData.purchase || orderData;
+                    // Detectar si es una de las últimas 2 filas para abrir el menú hacia arriba
+                    const isNearBottom = index >= filteredOrders.length - 2;
                     return (
                       <tr key={order.id}>
                         <td className="id-cell">#{order.id}</td>
@@ -1137,7 +1157,7 @@ const Purchases = () => {
                           </span>
                         </td>
                         <td className="text-center">
-                          <div className="action-menu" ref={actionMenuRef}>
+                          <div className={`action-menu ${isNearBottom ? 'action-menu--bottom' : ''}`} ref={actionMenuRef}>
                             <button
                               className="action-menu__trigger"
                               onClick={() => toggleActionMenu(order.id)}
