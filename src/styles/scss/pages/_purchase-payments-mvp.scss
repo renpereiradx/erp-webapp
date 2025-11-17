@@ -2031,4 +2031,396 @@
   &__button-icon--spin {
     animation: spin 0.8s linear infinite;
   }
+
+  // ---------------------------------------------------------------------------
+  // Register Payment Modal
+  // ---------------------------------------------------------------------------
+
+  &__register-modal {
+    --dialog-max-width: 76.8rem;
+    --dialog-max-height: calc(100vh - #{$spacing-24});
+    --dialog-padding: $spacing-32;
+    --dialog-padding-mobile: $spacing-20;
+  }
+
+  &__register-form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+
+    @include mobile {
+      gap: $spacing-20;
+    }
+  }
+
+  &__register-header {
+    padding-bottom: $spacing-16;
+    border-bottom: 1px solid transparent;
+
+    @include themify($themes) {
+      border-color: themed('border-subtle');
+    }
+  }
+
+  &__register-title {
+    font-size: clamp($font-size-700, 2vw, $font-size-900);
+    line-height: $line-height-100;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__register-description {
+    font-size: $font-size-300;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__register-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: $spacing-20;
+    padding-top: $spacing-8;
+  }
+
+  &__register-field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+
+    & > .purchase-payments-mvp-register__register-control,
+    &
+      > .purchase-payments-mvp-register__register-input-wrapper
+      > .purchase-payments-mvp-register__register-control {
+      width: 100%;
+    }
+  }
+
+  &__register-label {
+    font-size: $font-size-400;
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__register-input-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  &__register-input-icon {
+    position: absolute;
+    top: 50%;
+    left: $spacing-16;
+    transform: translateY(-50%);
+    width: $spacing-16;
+    height: $spacing-16;
+    pointer-events: none;
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__register-control {
+    width: 100%;
+    min-height: 2.75rem;
+    border-radius: $border-radius-large;
+    border: 1px solid transparent;
+    padding: 0 $spacing-16;
+    font-size: $font-size-400;
+    font-weight: $font-weight-medium;
+    transition: border-color $duration-fast $ease-ease-in-out,
+      box-shadow $duration-fast $ease-ease-in-out,
+      background-color $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      background-color: themed('surface-input');
+      border-color: themed('border-subtle');
+      color: themed('text-primary');
+      box-shadow: inset 0 1px 0 rgba(themed('border-subtle'), 0.4);
+
+      &::placeholder {
+        color: themed('text-tertiary');
+      }
+    }
+
+    &:focus-visible {
+      outline: none;
+
+      @include themify($themes) {
+        border-color: themed('accent-primary');
+        box-shadow: 0 0 0 3px rgba(themed('accent-primary'), 0.18);
+      }
+    }
+  }
+
+  &__register-control--has-icon {
+    padding-left: $spacing-48;
+  }
+
+  &__register-control--select {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-8;
+  }
+
+  &__register-control--textarea {
+    min-height: 4.5rem;
+    padding: $spacing-8 $spacing-16;
+    resize: vertical;
+  }
+
+  &__register-select-content {
+    border-radius: $border-radius-large;
+    border: 1px solid transparent;
+    padding: $spacing-4 0;
+    box-shadow: $shadow-16;
+
+    @include themify($themes) {
+      background-color: themed('surface-card');
+      border-color: themed('border-subtle');
+    }
+  }
+
+  &__register-select-item {
+    font-size: $font-size-300;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+
+      &[data-state='checked'] {
+        color: themed('accent-primary');
+      }
+    }
+  }
+
+  &__register-hint {
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__register-error {
+    font-size: $font-size-200;
+    font-weight: $font-weight-medium;
+
+    @include themify($themes) {
+      color: themed('error-primary');
+    }
+  }
+
+  &__register-radio-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: $spacing-12;
+  }
+
+  &__register-method-option {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-12;
+    padding: $spacing-12 $spacing-16;
+    border-radius: $border-radius-large;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: border-color $duration-fast $ease-ease-in-out,
+      box-shadow $duration-fast $ease-ease-in-out,
+      background-color $duration-fast $ease-ease-in-out,
+      color $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      background-color: themed('surface-input');
+      border-color: themed('border-subtle');
+      color: themed('text-secondary');
+
+      &:hover {
+        border-color: themed('accent-primary');
+      }
+    }
+
+    &.is-selected {
+      @include themify($themes) {
+        color: themed('text-primary');
+        border-color: themed('accent-primary');
+        background-color: rgba(themed('accent-primary'), 0.08);
+        box-shadow: 0 0 0 3px rgba(themed('accent-primary'), 0.15);
+      }
+    }
+
+    &.is-disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__register-method-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__register-method-icon {
+    width: $spacing-20;
+    height: $spacing-20;
+
+    @include themify($themes) {
+      color: themed('accent-primary');
+    }
+  }
+
+  &__register-method-label {
+    font-size: $font-size-300;
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: inherit;
+    }
+  }
+
+  &__register-field--full {
+    grid-column: 1 / -1;
+  }
+
+  &__register-warning {
+    display: flex;
+    gap: $spacing-12;
+    align-items: flex-start;
+    padding: $spacing-12 $spacing-16;
+    border-radius: $border-radius-large;
+    border: 1px solid transparent;
+
+    grid-column: 1 / -1;
+
+    @include themify($themes) {
+      background-color: themed('warning-background');
+      border-color: rgba(themed('warning-primary'), 0.4);
+      color: themed('warning-foreground');
+    }
+  }
+
+  &__register-warning-icon {
+    width: $spacing-20;
+    height: $spacing-20;
+
+    @include themify($themes) {
+      color: themed('warning-primary');
+    }
+  }
+
+  &__register-warning-title {
+    font-size: $font-size-300;
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('warning-primary');
+    }
+  }
+
+  &__register-warning-text {
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      color: themed('warning-foreground');
+    }
+  }
+
+  &__register-alert {
+    display: flex;
+    gap: $spacing-12;
+    align-items: center;
+    padding: $spacing-12 $spacing-16;
+    border-radius: $border-radius-large;
+    grid-column: 1 / -1;
+
+    @include themify($themes) {
+      background-color: themed('error-background');
+      color: themed('error-primary');
+    }
+  }
+
+  &__register-alert-icon {
+    width: $spacing-20;
+    height: $spacing-20;
+  }
+
+  &__register-footer {
+    margin-top: $spacing-8;
+    padding-top: $spacing-16;
+    border-top: 1px solid transparent;
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-12;
+    flex-wrap: wrap;
+
+    @include themify($themes) {
+      border-color: themed('border-subtle');
+    }
+
+    @include mobile {
+      flex-direction: column-reverse;
+      align-items: stretch;
+    }
+  }
+
+  &__register-button {
+    min-height: 2.25rem;
+    min-width: 10rem;
+    padding: $spacing-4 $spacing-20;
+    border-radius: $border-radius-large;
+    font-size: $font-size-400;
+    font-weight: $font-weight-semibold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-8;
+
+    @include mobile {
+      width: 100%;
+    }
+  }
+
+  &__register-button--ghost {
+    @include themify($themes) {
+      background-color: themed('surface-secondary');
+      color: themed('text-primary');
+      border: 1px solid themed('border-subtle');
+
+      &:hover {
+        background-color: themed('surface-hover');
+      }
+    }
+  }
+
+  &__register-button--primary {
+    @include themify($themes) {
+      background-color: themed('accent-primary');
+      color: themed('accent-text');
+      box-shadow: $shadow-8;
+
+      &:hover {
+        background-color: themed('accent-hover');
+      }
+    }
+  }
+
+  &__register-button-icon,
+  &__register-button-spinner {
+    width: $spacing-16;
+    height: $spacing-16;
+  }
+
+  &__register-button-spinner {
+    animation: spin 0.9s linear infinite;
+  }
 }
