@@ -187,6 +187,31 @@
   }
 }
 
+// Danger Button (Critical/Destructive actions)
+.btn--danger {
+  @include themify {
+    background-color: themed('status-danger');
+    color: #FFFFFF;
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      background-color: themed('status-danger-hover');
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: themed('status-danger-pressed');
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 // Success Button
 .btn--success {
   @include themify {

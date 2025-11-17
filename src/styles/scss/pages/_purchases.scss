@@ -693,3 +693,803 @@
     color: themed('text-secondary');
   }
 }
+
+// =============================================================================
+// CANCEL PREVIEW MODAL
+// =============================================================================
+
+.cancel-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-16;
+
+  @include themify {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+.cancel-preview-container {
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: $border-radius-large;
+  box-shadow: $shadow-16;
+
+  @include themify {
+    background-color: themed('surface-card');
+  }
+}
+
+.cancel-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-20;
+  border-bottom: 1px solid;
+  flex-shrink: 0;
+
+  @include themify {
+    border-bottom-color: themed('border-default');
+    background-color: themed('surface-card');
+  }
+}
+
+.cancel-preview__title {
+  @include text-style($font-size-600, $font-weight-semibold);
+  margin: 0;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.cancel-preview__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  @include transition(all);
+
+  @include themify {
+    color: themed('text-secondary');
+    background-color: transparent;
+
+    &:hover {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+  }
+}
+
+.cancel-preview__body {
+  padding: $spacing-20;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(90vh - 160px);
+}
+
+.cancel-preview__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-12;
+  padding: $spacing-16 $spacing-20;
+  border-top: 1px solid;
+  min-height: 70px;
+  flex-shrink: 0;
+
+  @include themify {
+    border-top-color: themed('border-default');
+    background-color: themed('surface-card');
+  }
+}
+
+.cancel-preview__order-info {
+  padding: $spacing-16;
+  border-radius: $border-radius-medium;
+  margin-bottom: $spacing-16;
+
+  @include themify {
+    background-color: themed('surface-tertiary');
+    border: 1px solid themed('border-default');
+  }
+}
+
+.cancel-preview__section-title {
+  @include text-style($font-size-500, $font-weight-semibold);
+  margin-bottom: $spacing-12;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &--warning {
+    @include themify {
+      color: themed('status-warning');
+    }
+  }
+}
+
+.cancel-preview__subsection-title {
+  @include text-style($font-size-400, $font-weight-medium);
+  margin-bottom: $spacing-8;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.cancel-preview__info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-12;
+}
+
+.cancel-preview__info-item {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.cancel-preview__label {
+  @include text-style($font-size-200, $font-weight-regular);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.cancel-preview__value {
+  @include text-style($font-size-400, $font-weight-medium);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &--warning {
+    @include themify {
+      color: themed('status-warning');
+    }
+  }
+
+  &--info {
+    @include themify {
+      color: themed('action-primary');
+    }
+  }
+}
+
+.cancel-preview__impact {
+  padding: $spacing-16;
+  border-radius: $border-radius-medium;
+  margin-bottom: $spacing-16;
+
+  @include themify {
+    background-color: themed('surface-secondary');
+    border: 1px solid themed('border-default');
+  }
+}
+
+.cancel-preview__impact-section {
+  margin-bottom: $spacing-16;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &--warning {
+    padding: $spacing-12;
+    border-radius: $border-radius-small;
+
+    @include themify {
+      background-color: themed('status-warning-background');
+      border: 1px solid themed('status-warning');
+    }
+  }
+}
+
+.cancel-preview__products-list {
+  margin-top: $spacing-8;
+}
+
+.cancel-preview__products {
+  list-style: none;
+  padding: 0;
+  margin: $spacing-8 0;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+}
+
+.cancel-preview__product-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-8 $spacing-12;
+  border-radius: $border-radius-small;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
+  }
+}
+
+.cancel-preview__product-name {
+  @include text-style($font-size-300, $font-weight-regular);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.cancel-preview__product-qty {
+  @include text-style($font-size-300, $font-weight-medium);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.cancel-preview__text {
+  @include text-style($font-size-300, $font-weight-regular);
+  line-height: 1.5;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &--info {
+    margin-top: $spacing-8;
+    padding: $spacing-8 $spacing-12;
+    border-radius: $border-radius-small;
+
+    @include themify {
+      background-color: themed('surface-tertiary');
+      color: themed('text-secondary');
+    }
+  }
+
+  &--warning {
+    @include themify {
+      color: themed('status-warning');
+    }
+  }
+}
+
+.cancel-preview__payment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-12;
+  margin-top: $spacing-8;
+}
+
+.cancel-preview__payment-item {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+  padding: $spacing-12;
+  border-radius: $border-radius-small;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
+  }
+}
+
+.cancel-preview__risks-list {
+  list-style: none;
+  padding: 0;
+  margin: $spacing-8 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+}
+
+.cancel-preview__risk-item {
+  @include text-style($font-size-300, $font-weight-regular);
+  padding-left: $spacing-16;
+  position: relative;
+
+  &::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+  }
+
+  @include themify {
+    color: themed('status-warning');
+  }
+}
+
+.cancel-preview__recommendations {
+  padding: $spacing-12;
+  border-radius: $border-radius-small;
+  margin-bottom: $spacing-16;
+
+  @include themify {
+    background-color: themed('surface-tertiary');
+    border-left: 3px solid themed('action-primary');
+  }
+}
+
+.cancel-preview__warning-final {
+  padding: $spacing-16;
+  border-radius: $border-radius-medium;
+
+  @include themify {
+    background-color: themed('status-danger-background');
+    border: 2px solid themed('status-danger');
+  }
+}
+
+// Nuevas clases para el modal de preview actualizado
+.cancel-preview__impact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: $spacing-12;
+  margin-top: $spacing-12;
+}
+
+.cancel-preview__impact-stat {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+  padding: $spacing-12;
+  border-radius: $border-radius-small;
+
+  @include themify {
+    background-color: themed('surface-tertiary');
+    border: 1px solid themed('border-subtle');
+  }
+}
+
+.cancel-preview__product-info {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+  flex: 1;
+}
+
+.cancel-preview__product-detail {
+  @include text-style($font-size-200, $font-weight-regular);
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+.cancel-preview__payments-list {
+  list-style: none;
+  padding: 0;
+  margin: $spacing-8 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-12;
+}
+
+.cancel-preview__payment-item-full {
+  padding: $spacing-12;
+  border-radius: $border-radius-small;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
+  }
+}
+
+.cancel-preview__payment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-8;
+}
+
+.cancel-preview__payment-method {
+  @include text-style($font-size-400, $font-weight-medium);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.cancel-preview__payment-amount {
+  @include text-style($font-size-400, $font-weight-semibold);
+
+  @include themify {
+    color: themed('action-primary');
+  }
+}
+
+.cancel-preview__payment-details {
+  display: flex;
+  gap: $spacing-16;
+  @include text-style($font-size-200, $font-weight-regular);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.cancel-preview__impact-section--danger {
+  padding: $spacing-12;
+  border-radius: $border-radius-small;
+
+  @include themify {
+    background-color: themed('status-danger-background');
+    border: 1px solid themed('status-danger');
+  }
+}
+
+.cancel-preview__risk-item--danger {
+  @include themify {
+    color: themed('status-danger');
+  }
+}
+
+.cancel-preview__recommendations-list {
+  list-style: none;
+  padding: 0;
+  margin: $spacing-8 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+}
+
+.cancel-preview__recommendation-item {
+  @include text-style($font-size-300, $font-weight-regular);
+  padding-left: $spacing-16;
+  position: relative;
+
+  &::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+  }
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.cancel-preview__general-recommendations {
+  padding: $spacing-12;
+  border-radius: $border-radius-small;
+  margin-bottom: $spacing-16;
+
+  @include themify {
+    background-color: themed('surface-tertiary');
+    border-left: 3px solid themed('action-primary');
+  }
+}
+
+.cancel-preview__general-rec-grid {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+}
+
+.cancel-preview__general-rec-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+}
+
+.cancel-preview__badge {
+  padding: $spacing-4 $spacing-8;
+  border-radius: $border-radius-small;
+  @include text-style($font-size-200, $font-weight-medium);
+  text-transform: uppercase;
+
+  @include themify {
+    color: themed('text-on-fill-primary');
+  }
+
+  &--low {
+    @include themify {
+      background-color: themed('status-success');
+    }
+  }
+
+  &--medium {
+    @include themify {
+      background-color: themed('status-warning');
+    }
+  }
+
+  &--high {
+    @include themify {
+      background-color: themed('status-danger');
+    }
+  }
+}
+
+// Nota: .btn--danger ahora está definido en src/styles/scss/components/_button.scss
+
+// =============================================================================
+// VIEW MODAL (Detalles de Orden)
+// =============================================================================
+
+.view-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-16;
+
+  @include themify {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+.view-modal-container {
+  width: 100%;
+  max-width: 900px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: $border-radius-large;
+  box-shadow: $shadow-16;
+
+  @include themify {
+    background-color: themed('surface-card');
+  }
+}
+
+.view-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-20;
+  border-bottom: 1px solid;
+  flex-shrink: 0;
+
+  @include themify {
+    border-bottom-color: themed('border-default');
+  }
+}
+
+.view-modal__title {
+  @include text-style($font-size-600, $font-weight-semibold);
+  margin: 0;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.view-modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  @include transition(all);
+
+  @include themify {
+    color: themed('text-secondary');
+    background-color: transparent;
+
+    &:hover {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+  }
+}
+
+.view-modal__body {
+  padding: $spacing-20;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.view-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-12;
+  padding: $spacing-16 $spacing-20;
+  border-top: 1px solid;
+  flex-shrink: 0;
+
+  @include themify {
+    border-top-color: themed('border-default');
+    background-color: themed('surface-card');
+  }
+}
+
+.view-modal__section {
+  margin-bottom: $spacing-24;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.view-modal__section-title {
+  @include text-style($font-size-500, $font-weight-semibold);
+  margin-bottom: $spacing-16;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.view-modal__info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-16;
+  padding: $spacing-16;
+  border-radius: $border-radius-medium;
+
+  @include themify {
+    background-color: themed('surface-tertiary');
+    border: 1px solid themed('border-default');
+  }
+}
+
+.view-modal__info-item {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.view-modal__label {
+  @include text-style($font-size-200, $font-weight-regular);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.view-modal__value {
+  @include text-style($font-size-400, $font-weight-medium);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &--highlight {
+    @include text-style($font-size-500, $font-weight-semibold);
+
+    @include themify {
+      color: themed('action-primary');
+    }
+  }
+}
+
+.view-modal__table-wrapper {
+  overflow-x: auto;
+  border-radius: $border-radius-medium;
+
+  @include themify {
+    border: 1px solid themed('border-default');
+  }
+}
+
+.view-modal__table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    @include themify {
+      background-color: themed('surface-secondary');
+    }
+
+    th {
+      @include text-style($font-size-300, $font-weight-semibold);
+      padding: $spacing-12 $spacing-16;
+      text-align: left;
+      white-space: nowrap;
+
+      @include themify {
+        color: themed('text-primary');
+        border-bottom: 2px solid themed('border-default');
+      }
+
+      &.text-right {
+        text-align: right;
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      @include transition(background-color);
+
+      @include themify {
+        &:hover {
+          background-color: themed('surface-hover');
+        }
+      }
+
+      &:not(:last-child) td {
+        @include themify {
+          border-bottom: 1px solid themed('border-subtle');
+        }
+      }
+    }
+
+    td {
+      @include text-style($font-size-300, $font-weight-regular);
+      padding: $spacing-12 $spacing-16;
+
+      @include themify {
+        color: themed('text-primary');
+      }
+
+      &.text-right {
+        text-align: right;
+      }
+    }
+  }
+
+  tfoot {
+    @include themify {
+      background-color: themed('surface-tertiary');
+      border-top: 2px solid themed('border-default');
+    }
+
+    td {
+      @include text-style($font-size-400, $font-weight-semibold);
+      padding: $spacing-16;
+
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+  }
+}
+
+.view-modal__product-info {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.view-modal__product-name {
+  @include text-style($font-size-300, $font-weight-medium);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.view-modal__product-unit {
+  @include text-style($font-size-200, $font-weight-regular);
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+.view-modal__total {
+  @include text-style($font-size-500, $font-weight-bold);
+
+  @include themify {
+    color: themed('action-primary');
+  }
+}

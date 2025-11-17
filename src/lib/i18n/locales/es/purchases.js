@@ -32,6 +32,7 @@ export const purchases = {
   'purchases.table.status': 'Estado',
   'purchases.table.product_id': 'ID Producto',
   'purchases.table.margin': 'Margen (%)',
+  'purchases.table.tax_rate': 'Impuesto',
   'purchases.table.actions': 'Acciones',
   'purchases.table.actions_aria': 'Abrir menú de acciones',
 
@@ -48,6 +49,7 @@ export const purchases = {
   'purchases.empty.title': 'Sin órdenes de compra',
   'purchases.empty.message': 'No hay órdenes de compra registradas',
   'purchases.filter.empty': 'No se encontraron resultados para tu búsqueda',
+  'purchases.filter.empty_date': 'No se encontraron compras en el rango de fechas seleccionado',
 
   // Errores
   'purchases.error.title': 'Error al cargar compras',
@@ -146,6 +148,11 @@ export const purchases = {
   'purchases.modal.sale_price_note': 'El margen se calculará automáticamente',
   'purchases.modal.calculated_margin': 'Margen calculado',
   'purchases.modal.calculated_sale_price': 'Precio de venta calculado',
+
+  // Tasa de impuesto en modal
+  'purchases.modal.tax_rate': 'Tasa de Impuesto',
+  'purchases.modal.no_tax': 'Sin impuesto',
+  'purchases.modal.tax_rate_note': 'Selecciona la tasa de impuesto aplicable al producto',
 
   // === CONFIGURACIÓN DE COMPRA ===
 

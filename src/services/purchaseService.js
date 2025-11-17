@@ -47,7 +47,8 @@ class PurchaseService {
           unit_price: parseFloat(item.unit_price),
           unit: String(item.unit || 'unit'),
           profit_pct: item.profit_pct !== null && item.profit_pct !== undefined ? parseFloat(item.profit_pct) : null,
-          tax_rate_id: item.tax_rate_id !== null && item.tax_rate_id !== undefined && item.tax_rate_id !== '' ? parseInt(item.tax_rate_id) : null
+          tax_rate_id: item.tax_rate_id !== null && item.tax_rate_id !== undefined && item.tax_rate_id !== '' ? parseInt(item.tax_rate_id) : null,
+          supplier_id: item.supplier_id ? parseInt(item.supplier_id) : parseInt(orderData.supplier_id) // Workaround: incluir supplier_id en cada detalle
         })),
         auto_update_prices: Boolean(orderData.auto_update_prices !== false),
         default_profit_margin: parseFloat(orderData.default_profit_margin || 30.0),
@@ -149,16 +150,11 @@ class PurchaseService {
   // Obtener compras por proveedor ID (con datos enriquecidos y metadata parsing)
   async getPurchasesBySupplier(supplierId, options = {}) {
     try {
-      console.log(`🔍 Fetching purchases for supplier ID: ${supplierId}`);
       const response = await apiClient.makeRequest(`/purchase/supplier_id/${supplierId}`);
       const data = Array.isArray(response) ? response : (response.data || []);
 
-      console.log(`📊 Raw API response (${data.length} items):`, data.slice(0, 1)); // Log first item for debugging
-
       // Process enhanced metadata for each purchase order with filter options
       const enrichedData = this.processEnhancedPurchaseData(data, options);
-
-      console.log(`✅ Processed enhanced data (${enrichedData.length} items):`, enrichedData.slice(0, 1)); // Log first processed item
 
       // Apply supplier status filter if specified
       let filteredData = enrichedData;
@@ -213,16 +209,11 @@ class PurchaseService {
   // Obtener compras por nombre de proveedor (con datos enriquecidos y metadata parsing)
   async getPurchasesBySupplierName(supplierName, options = {}) {
     try {
-      console.log(`🔍 Fetching purchases for supplier name: ${supplierName}`);
       const response = await apiClient.makeRequest(`/purchase/supplier_name/${encodeURIComponent(supplierName)}`);
       const data = Array.isArray(response) ? response : (response.data || []);
 
-      console.log(`📊 Raw API response (${data.length} items):`, data.slice(0, 1)); // Log first item for debugging
-
       // Process enhanced metadata for each purchase order with filter options
       const enrichedData = this.processEnhancedPurchaseData(data, options);
-
-      console.log(`✅ Processed enhanced data (${enrichedData.length} items):`, enrichedData.slice(0, 1)); // Log first processed item
 
       return {
         success: true,
@@ -479,9 +470,12 @@ class PurchaseService {
   // Cancelar orden de compra definitivamente
   async cancelPurchaseOrderWithDetails(cancellationRequest) {
     try {
-      const response = await apiClient.makeRequest('/purchase/cancel', {
-        method: 'POST',
-        body: JSON.stringify(cancellationRequest)
+      const { purchase_order_id, reason, notes } = cancellationRequest;
+
+      // El endpoint correcto es PUT /purchase/cancel/{id}
+      const response = await apiClient.makeRequest(`/purchase/cancel/${purchase_order_id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ reason, notes })
       });
       return {
         success: true,

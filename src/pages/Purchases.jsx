@@ -58,12 +58,24 @@ const Purchases = () => {
   const [modalProfitPct, setModalProfitPct] = useState(30);
   const [modalSalePrice, setModalSalePrice] = useState(0); // Precio de venta final
   const [pricingMode, setPricingMode] = useState('margin'); // 'margin' o 'sale_price'
+  const [modalTaxRateId, setModalTaxRateId] = useState(null); // Tax rate seleccionado
+  const [taxRates, setTaxRates] = useState([]); // Lista de tasas disponibles
+  const [loadingTaxRates, setLoadingTaxRates] = useState(false);
   const [purchaseItems, setPurchaseItems] = useState([]);
   const modalProductSearchRef = useRef(null);
 
   // Estados para el menú de acciones de la tabla
   const [openActionMenu, setOpenActionMenu] = useState(null);
-  const actionMenuRef = useRef(null);
+
+  // Estados para el modal de preview de cancelación
+  const [showCancelPreview, setShowCancelPreview] = useState(false);
+  const [cancelPreviewData, setCancelPreviewData] = useState(null);
+  const [orderToCancel, setOrderToCancel] = useState(null);
+
+  // Estados para el modal de vista de detalles
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewOrderData, setViewOrderData] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   // Cargar datos al montar y configurar fechas por defecto
   useEffect(() => {
@@ -145,6 +157,26 @@ const Purchases = () => {
     loadCurrencies();
   }, []);
 
+  // Cargar tasas de impuesto desde la API
+  useEffect(() => {
+    const loadTaxRates = async () => {
+      setLoadingTaxRates(true);
+      try {
+        const response = await purchaseService.getTaxRates(1, 100);
+        if (response.success && response.data) {
+          setTaxRates(response.data);
+        }
+      } catch (err) {
+        console.error('Error loading tax rates:', err);
+        setTaxRates([]);
+      } finally {
+        setLoadingTaxRates(false);
+      }
+    };
+
+    loadTaxRates();
+  }, []);
+
   // Filtrar órdenes localmente (solo para filtrado adicional por estado)
   const filteredOrders = purchaseOrders.filter(orderData => {
     // Los datos vienen en formato { purchase: {...}, details: [...] }
@@ -215,7 +247,9 @@ const Purchases = () => {
       if (modalProductSearchRef.current && !modalProductSearchRef.current.contains(event.target)) {
         setShowProductDropdown(false);
       }
-      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
+      // Para el menú de acciones, verificar si se hizo clic fuera de cualquier action-menu
+      const clickedInsideActionMenu = event.target.closest('.action-menu');
+      if (!clickedInsideActionMenu) {
         setOpenActionMenu(null);
       }
     };
@@ -333,6 +367,11 @@ const Purchases = () => {
     // Calcular precio de venta inicial con margen del 30%
     const initialSalePrice = costPrice * (1 + 30 / 100);
     setModalSalePrice(initialSalePrice);
+
+    // Pre-llenar tax_rate_id del producto si está disponible
+    if (product.tax_rate_id) {
+      setModalTaxRateId(product.tax_rate_id);
+    }
   };
 
   const handleClearProductSelection = () => {
@@ -351,11 +390,13 @@ const Purchases = () => {
       name: item.name,
       sku: item.sku,
       unit: item.unit,
+      tax_rate_id: item.tax_rate_id,
     });
     setModalProductSearch(item.name);
     setModalQuantity(item.quantity);
     setModalUnitPrice(item.unit_price);
     setModalProfitPct(item.profit_pct);
+    setModalTaxRateId(item.tax_rate_id || null);
 
     // Calcular precio de venta desde el margen
     const salePrice = item.unit_price * (1 + item.profit_pct / 100);
@@ -390,6 +431,7 @@ const Purchases = () => {
       unit_price: Number(modalUnitPrice) || 0,
       profit_pct: Number(modalProfitPct) || 30,
       unit: modalSelectedProduct.unit || 'unit',
+      tax_rate_id: modalTaxRateId || null, // Usar el tax_rate_id seleccionado por el usuario
     };
 
     if (editingItemId) {
@@ -413,6 +455,7 @@ const Purchases = () => {
     setModalProfitPct(30);
     setModalSalePrice(0);
     setPricingMode('margin');
+    setModalTaxRateId(null);
     setModalSelectedProduct(null);
     setModalProductSearch('');
     setModalProductResults([]);
@@ -445,7 +488,8 @@ const Purchases = () => {
         unit_price: item.unit_price,
         unit: item.unit || 'unit',
         profit_pct: item.profit_pct || 30,
-        tax_rate_id: null, // TODO: Agregar selector de tasa de impuesto si es necesario
+        tax_rate_id: item.tax_rate_id || null, // Usar tax_rate_id del producto
+        supplier_id: selectedSupplier.id, // Incluir supplier_id en cada detalle (workaround para backend)
       })),
       auto_update_prices: true,
       default_profit_margin: 30.0,
@@ -511,10 +555,13 @@ const Purchases = () => {
         response = await purchaseService.getPurchasesByDateRange(startDateStr, endDateVal, 1, 50);
       }
 
-      if (response.success && response.data) {
-        setPurchaseOrders(response.data);
+      if (response.success) {
+        // Si la respuesta es exitosa pero no hay datos, solo establecer array vacío
+        setPurchaseOrders(response.data || []);
       } else {
-        setError(response.error || 'Error al cargar compras');
+        // Solo establecer error si hubo un problema real con la API
+        setPurchaseOrders([]);
+        console.error('Error al cargar compras:', response.error);
       }
     } catch (err) {
       console.error('Error applying filters:', err);
@@ -574,14 +621,14 @@ const Purchases = () => {
 
   const orderTotals = calculateOrderTotals();
 
-  // Formatear fecha
+  // Formatear fecha en formato dd/mm/yyyy
   const formatDate = (dateString) => {
     if (!dateString) return '-';
-    return new Intl.DateTimeFormat('es-PY', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }).format(new Date(dateString));
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   // Obtener clase de estado
@@ -617,10 +664,40 @@ const Purchases = () => {
   };
 
   // Manejar acción de Ver
-  const handleViewPurchase = (order) => {
-    console.log('Ver orden:', order);
-    // TODO: Implementar navegación a página de detalle o modal
-    alert(`Ver orden de compra #${order.id}\n\nProveedor: ${order.supplier_name}\nTotal: ${formatCurrency(order.total_amount)}`);
+  const handleViewPurchase = async (order) => {
+    setLoadingDetails(true);
+    setOpenActionMenu(null);
+
+    try {
+      // Obtener detalles completos de la orden usando el supplier_id
+      const response = await purchaseService.getPurchasesBySupplier(order.supplier_id);
+
+      if (response.success && response.data) {
+        // Buscar la orden específica en los resultados
+        const orderDetails = response.data.find(p => {
+          const purchaseId = p.purchase?.id || p.id;
+          return purchaseId === order.id;
+        });
+
+        if (orderDetails) {
+          // Agregar order_date del objeto original ya que la API no lo devuelve
+          setViewOrderData({
+            ...orderDetails,
+            order_date: order.order_date
+          });
+          setShowViewModal(true);
+        } else {
+          alert('No se pudieron cargar los detalles de la orden');
+        }
+      } else {
+        alert('Error al cargar los detalles de la orden');
+      }
+    } catch (error) {
+      console.error('Error cargando detalles:', error);
+      alert('Error al cargar los detalles de la orden');
+    } finally {
+      setLoadingDetails(false);
+    }
   };
 
   // Manejar acción de Cancelar
@@ -630,51 +707,82 @@ const Purchases = () => {
       return;
     }
 
-    if (window.confirm(`¿Está seguro de cancelar la orden de compra #${order.id}?\n\nEsta acción no se puede deshacer.`)) {
-      setLoading(true);
-      try {
-        console.log('Cancelar orden:', order);
-
-        // Llamar al servicio de cancelación con detalles
-        const cancellationRequest = {
-          purchase_order_id: order.id,
-          reason: 'CANCELLED_BY_USER',
-          notes: `Orden cancelada desde la interfaz de usuario por ${order.supplier_name || 'usuario'}`
-        };
-
-        const result = await purchaseService.cancelPurchaseOrderWithDetails(cancellationRequest);
-
-        if (result.success) {
-          // Actualizar el estado local después de la cancelación exitosa
-          setPurchaseOrders(prevOrders =>
-            prevOrders.map(o => {
-              const currentOrder = o.purchase || o;
-              if (currentOrder.id === order.id) {
-                return {
-                  ...o,
-                  purchase: {
-                    ...currentOrder,
-                    status: 'CANCELLED'
-                  },
-                  status: 'CANCELLED'
-                };
-              }
-              return o;
-            })
-          );
-
-          alert(`Orden #${order.id} cancelada exitosamente`);
-        } else {
-          throw new Error(result.error || 'Error al cancelar la orden');
-        }
-      } catch (err) {
-        console.error('Error cancelando orden:', err);
-        alert(`Error al cancelar la orden: ${err.message || 'Por favor, intente nuevamente.'}`);
-      } finally {
-        setLoading(false);
-      }
-    }
+    setLoading(true);
     setOpenActionMenu(null);
+
+    try {
+      // Primero obtener el preview de la cancelación
+      const previewResult = await purchaseService.previewPurchaseOrderCancellation(order.id);
+
+      if (previewResult.success && previewResult.data) {
+        const preview = previewResult.data;
+
+        // Mostrar modal con preview
+        setOrderToCancel(order);
+        setCancelPreviewData(preview);
+        setShowCancelPreview(true);
+        setLoading(false);
+      } else {
+        // Si no hay preview disponible, mostrar alerta
+        setLoading(false);
+        alert('No se pudo obtener la información del impacto de la cancelación. Por favor, intente nuevamente.');
+      }
+    } catch (err) {
+      console.error('Error cancelando orden:', err);
+      setLoading(false);
+      alert(`Error al procesar la cancelación: ${err.message || 'Por favor, intente nuevamente.'}`);
+    }
+  };
+
+  // Confirmar cancelación desde el modal
+  const handleConfirmCancellation = async () => {
+    if (!orderToCancel) return;
+
+    setLoading(true);
+    setShowCancelPreview(false);
+
+    try {
+      const cancellationRequest = {
+        purchase_order_id: orderToCancel.id,
+        reason: 'CANCELLED_BY_USER',
+        notes: `Orden cancelada desde la interfaz de usuario`
+      };
+
+      const result = await purchaseService.cancelPurchaseOrderWithDetails(cancellationRequest);
+
+      if (result.success) {
+        // Actualizar el estado local después de la cancelación exitosa
+        setPurchaseOrders(prevOrders =>
+          prevOrders.map(o => {
+            const currentOrder = o.purchase || o;
+            if (currentOrder.id === orderToCancel.id) {
+              return {
+                ...o,
+                purchase: {
+                  ...currentOrder,
+                  status: 'CANCELLED'
+                },
+                status: 'CANCELLED'
+              };
+            }
+            return o;
+          })
+        );
+
+        alert(`Orden #${orderToCancel.id} cancelada exitosamente`);
+        setOrderToCancel(null);
+        setCancelPreviewData(null);
+      } else {
+        throw new Error(result.error || 'Error al cancelar la orden');
+      }
+    } catch (err) {
+      console.error('Error cancelando orden:', err);
+      alert(`Error al cancelar la orden: ${err.message || 'Por favor, intente nuevamente.'}`);
+      // Volver a mostrar el modal
+      setShowCancelPreview(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Toggle menú de acciones
@@ -682,32 +790,12 @@ const Purchases = () => {
     setOpenActionMenu(openActionMenu === orderId ? null : orderId);
   };
 
-  // Estados de UI
-  if (loading && purchaseOrders.length === 0) {
+  // Estados de UI - Solo mostrar pantallas completas en carga inicial
+  // Una vez que el usuario está interactuando, mantener la UI y mostrar mensajes en la tabla
+  const isInitialLoad = activeTab === 'historial' && purchaseOrders.length === 0 && !error;
+
+  if (loading && isInitialLoad) {
     return <DataState variant="loading" skeletonVariant="list" />;
-  }
-
-  if (error) {
-    return (
-      <DataState
-        variant="error"
-        title={t('purchases.error.title', 'Error al cargar compras')}
-        message={error}
-        onRetry={handleRetry}
-      />
-    );
-  }
-
-  if (!loading && purchaseOrders.length === 0) {
-    return (
-      <DataState
-        variant="empty"
-        title={t('purchases.empty.title', 'Sin órdenes de compra')}
-        message={t('purchases.empty.message', 'No hay órdenes de compra registradas')}
-        actionLabel={t('purchases.action.create', 'Crear nueva orden')}
-        onAction={() => setActiveTab('nueva-compra')}
-      />
-    );
   }
 
   return (
@@ -768,6 +856,7 @@ const Purchases = () => {
                         <th>{t('purchases.form.quantity', 'Cantidad')}</th>
                         <th className="text-right">{t('purchases.form.unit_price', 'Precio Unitario')}</th>
                         <th className="text-right">{t('purchases.table.margin', 'Margen (%)')}</th>
+                        <th className="text-center">{t('purchases.table.tax_rate', 'Impuesto')}</th>
                         <th className="text-right">{t('purchases.form.total', 'Total')}</th>
                         <th className="text-right"></th>
                       </tr>
@@ -775,7 +864,7 @@ const Purchases = () => {
                     <tbody>
                       {purchaseItems.length === 0 ? (
                         <tr className="purchases__empty-row">
-                          <td colSpan="7">
+                          <td colSpan="8">
                             {t('purchases.form.no_products', 'No hay productos agregados')}
                           </td>
                         </tr>
@@ -805,6 +894,18 @@ const Purchases = () => {
                                 <span style={{ color: 'var(--state-success)' }}>
                                   {item.profit_pct.toFixed(2)}%
                                 </span>
+                              </td>
+                              <td className="text-center">
+                                {item.tax_rate_id ? (
+                                  <span style={{ fontSize: '0.875rem' }}>
+                                    {(() => {
+                                      const taxRate = taxRates.find(tr => tr.id === item.tax_rate_id);
+                                      return taxRate ? `${taxRate.rate}%` : '-';
+                                    })()}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>-</span>
+                                )}
                               </td>
                               <td className="text-right">{formatCurrency(itemTotal)}</td>
                               <td className="text-right">
@@ -1157,7 +1258,7 @@ const Purchases = () => {
                           </span>
                         </td>
                         <td className="text-center">
-                          <div className={`action-menu ${isNearBottom ? 'action-menu--bottom' : ''}`} ref={actionMenuRef}>
+                          <div className={`action-menu ${isNearBottom ? 'action-menu--bottom' : ''}`}>
                             <button
                               className="action-menu__trigger"
                               onClick={() => toggleActionMenu(order.id)}
@@ -1195,9 +1296,16 @@ const Purchases = () => {
             </div>
 
             {/* Empty state */}
-            {filteredOrders.length === 0 && searchTerm && (
+            {filteredOrders.length === 0 && !loading && (
               <div className="purchases__empty">
-                <p>{t('purchases.filter.empty', 'No se encontraron resultados para tu búsqueda')}</p>
+                <p>
+                  {searchType === 'supplier' && searchTerm
+                    ? t('purchases.filter.empty', 'No se encontraron resultados para tu búsqueda')
+                    : searchType === 'date' && startDate && endDate
+                    ? t('purchases.filter.empty_date', 'No se encontraron compras en el rango de fechas seleccionado')
+                    : t('purchases.filter.empty', 'No se encontraron resultados para tu búsqueda')
+                  }
+                </p>
               </div>
             )}
           </div>
@@ -1412,6 +1520,31 @@ const Purchases = () => {
                     </select>
                   </div>
 
+                  {/* Selector de tasa de impuesto */}
+                  <div className="sales-modal__field">
+                    <span className="sales-modal__field-label">
+                      {t('purchases.modal.tax_rate', 'Tasa de Impuesto')}
+                    </span>
+                    <select
+                      className="input"
+                      value={modalTaxRateId || ''}
+                      onChange={(e) => setModalTaxRateId(e.target.value ? Number(e.target.value) : null)}
+                      disabled={loadingTaxRates}
+                    >
+                      <option value="">
+                        {loadingTaxRates ? 'Cargando...' : t('purchases.modal.no_tax', 'Sin impuesto')}
+                      </option>
+                      {taxRates.map((taxRate) => (
+                        <option key={taxRate.id} value={taxRate.id}>
+                          {taxRate.tax_name} - {taxRate.rate}% {taxRate.country ? `(${taxRate.country})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="sales-modal__field-note">
+                      {t('purchases.modal.tax_rate_note', 'Selecciona la tasa de impuesto aplicable al producto')}
+                    </span>
+                  </div>
+
                   {/* Campo condicional según modo de pricing */}
                   {pricingMode === 'margin' ? (
                     <label className="sales-modal__field" htmlFor="modal-profit">
@@ -1519,6 +1652,339 @@ const Purchases = () => {
                 onClick={handleConfirmAddProduct}
               >
                 {t('action.confirm', 'Confirmar')}
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Vista de Detalles */}
+      {showViewModal && viewOrderData && (
+        <div className="view-modal-overlay" onClick={() => setShowViewModal(false)}>
+          <div className="view-modal-container" onClick={(e) => e.stopPropagation()}>
+            <header className="view-modal__header">
+              <h2 className="view-modal__title">
+                Detalles de Orden de Compra #{viewOrderData.purchase?.id || viewOrderData.id}
+              </h2>
+              <button
+                className="view-modal__close"
+                onClick={() => setShowViewModal(false)}
+                aria-label="Cerrar modal"
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div className="view-modal__body">
+              {/* Información General */}
+              <div className="view-modal__section">
+                <h3 className="view-modal__section-title">Información General</h3>
+                <div className="view-modal__info-grid">
+                  <div className="view-modal__info-item">
+                    <span className="view-modal__label">Proveedor:</span>
+                    <span className="view-modal__value">{viewOrderData.purchase?.supplier_name || '-'}</span>
+                  </div>
+                  <div className="view-modal__info-item">
+                    <span className="view-modal__label">Estado:</span>
+                    <span className={`badge ${getStatusBadgeClass(viewOrderData.purchase?.status || viewOrderData.status)}`}>
+                      {getStatusText(viewOrderData.purchase?.status || viewOrderData.status)}
+                    </span>
+                  </div>
+                  <div className="view-modal__info-item">
+                    <span className="view-modal__label">Fecha:</span>
+                    <span className="view-modal__value">
+                      {viewOrderData.order_date ? formatDate(viewOrderData.order_date) : '-'}
+                    </span>
+                  </div>
+                  <div className="view-modal__info-item">
+                    <span className="view-modal__label">Total:</span>
+                    <span className="view-modal__value view-modal__value--highlight">
+                      {formatCurrency(viewOrderData.purchase?.total_amount || viewOrderData.total_amount)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detalles de Productos */}
+              {viewOrderData.details && viewOrderData.details.length > 0 && (
+                <div className="view-modal__section">
+                  <h3 className="view-modal__section-title">Productos ({viewOrderData.details.length})</h3>
+                  <div className="view-modal__table-wrapper">
+                    <table className="view-modal__table">
+                      <thead>
+                        <tr>
+                          <th>Producto</th>
+                          <th className="text-right">Cantidad</th>
+                          <th className="text-right">Precio Unit.</th>
+                          <th className="text-right">Margen %</th>
+                          <th className="text-right">Precio Venta</th>
+                          <th className="text-right">Subtotal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {viewOrderData.details.map((detail, index) => (
+                          <tr key={index}>
+                            <td>
+                              <div className="view-modal__product-info">
+                                <span className="view-modal__product-name">{detail.product_name}</span>
+                                {detail.unit && (
+                                  <span className="view-modal__product-unit">Unidad: {detail.unit}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="text-right">{detail.quantity} {detail.unit || ''}</td>
+                            <td className="text-right">{formatCurrency(detail.unit_price)}</td>
+                            <td className="text-right">{detail.profit_pct || detail.metadata?.profit_pct || 0}%</td>
+                            <td className="text-right">{formatCurrency(detail.sale_price || 0)}</td>
+                            <td className="text-right">
+                              <strong>{formatCurrency(detail.line_total || (detail.quantity * detail.unit_price))}</strong>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colSpan="5" className="text-right"><strong>Total:</strong></td>
+                          <td className="text-right">
+                            <strong className="view-modal__total">
+                              {formatCurrency(viewOrderData.purchase?.total_amount || viewOrderData.total_amount)}
+                            </strong>
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <footer className="view-modal__footer">
+              <button
+                type="button"
+                className="btn btn--secondary"
+                onClick={() => setShowViewModal(false)}
+              >
+                Cerrar
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Preview de Cancelación */}
+      {showCancelPreview && cancelPreviewData && orderToCancel && (
+        <div className="cancel-preview-overlay" onClick={() => setShowCancelPreview(false)}>
+          <div className="cancel-preview-container" onClick={(e) => e.stopPropagation()}>
+            <header className="cancel-preview__header">
+              <h2 className="cancel-preview__title">
+                Confirmar Cancelación de Orden #{orderToCancel.id}
+              </h2>
+              <button
+                className="cancel-preview__close"
+                onClick={() => setShowCancelPreview(false)}
+                aria-label="Cerrar modal"
+              >
+                <X size={20} />
+              </button>
+            </header>
+
+            <div className="cancel-preview__body">
+              {/* Información de la orden */}
+              <div className="cancel-preview__order-info">
+                <h3 className="cancel-preview__section-title">Información de la Orden</h3>
+                <div className="cancel-preview__info-grid">
+                  <div className="cancel-preview__info-item">
+                    <span className="cancel-preview__label">Proveedor:</span>
+                    <span className="cancel-preview__value">{orderToCancel.supplier_name}</span>
+                  </div>
+                  <div className="cancel-preview__info-item">
+                    <span className="cancel-preview__label">Total:</span>
+                    <span className="cancel-preview__value">{formatCurrency(orderToCancel.total_amount)}</span>
+                  </div>
+                  <div className="cancel-preview__info-item">
+                    <span className="cancel-preview__label">Fecha:</span>
+                    <span className="cancel-preview__value">{formatDate(orderToCancel.created_at || orderToCancel.order_date)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Análisis de Impacto */}
+              {cancelPreviewData.impact_analysis && (
+                <div className="cancel-preview__impact">
+                  <h3 className="cancel-preview__section-title">
+                    Análisis de Impacto
+                  </h3>
+                  <div className="cancel-preview__impact-grid">
+                    <div className="cancel-preview__impact-stat">
+                      <span className="cancel-preview__label">Total de items:</span>
+                      <span className="cancel-preview__value">{cancelPreviewData.impact_analysis.total_items || 0}</span>
+                    </div>
+                    <div className="cancel-preview__impact-stat">
+                      <span className="cancel-preview__label">Total pagado:</span>
+                      <span className="cancel-preview__value">{formatCurrency(cancelPreviewData.impact_analysis.total_paid_amount || 0)}</span>
+                    </div>
+                    <div className="cancel-preview__impact-stat">
+                      <span className="cancel-preview__label">Pagos a cancelar:</span>
+                      <span className="cancel-preview__value">{cancelPreviewData.impact_analysis.payments_to_cancel || 0}</span>
+                    </div>
+                    {cancelPreviewData.impact_analysis.requires_stock_adjustment && (
+                      <div className="cancel-preview__impact-stat">
+                        <span className="cancel-preview__label">Ajuste de stock:</span>
+                        <span className="cancel-preview__value cancel-preview__value--warning">Requerido</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Impacto en Stock */}
+              {cancelPreviewData.stock_impact && cancelPreviewData.stock_impact.length > 0 && (
+                <div className="cancel-preview__impact">
+                  <h3 className="cancel-preview__section-title cancel-preview__section-title--warning">
+                    Impacto en Stock
+                  </h3>
+                  <div className="cancel-preview__impact-section">
+                    <p className="cancel-preview__text">
+                      <strong>Productos afectados:</strong> {cancelPreviewData.stock_impact.length}
+                    </p>
+                    <ul className="cancel-preview__products">
+                      {cancelPreviewData.stock_impact.map((product, index) => (
+                        <li key={index} className="cancel-preview__product-item">
+                          <div className="cancel-preview__product-info">
+                            <span className="cancel-preview__product-name">{product.product_name}</span>
+                            <span className="cancel-preview__product-detail">
+                              Stock actual: {product.current_stock} → Después: {product.stock_after_cancellation}
+                            </span>
+                          </div>
+                          <span className="cancel-preview__product-qty">
+                            Revertir: {product.quantity_to_revert} unidades
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    {cancelPreviewData.impact_analysis?.products_with_insufficient_stock > 0 && (
+                      <p className="cancel-preview__text cancel-preview__text--warning">
+                        ⚠️ {cancelPreviewData.impact_analysis.products_with_insufficient_stock} producto(s) con stock insuficiente
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Impacto en Pagos */}
+              {cancelPreviewData.payment_impact && cancelPreviewData.payment_impact.length > 0 && (
+                <div className="cancel-preview__impact">
+                  <h3 className="cancel-preview__section-title">
+                    Impacto en Pagos
+                  </h3>
+                  <div className="cancel-preview__impact-section">
+                    <ul className="cancel-preview__payments-list">
+                      {cancelPreviewData.payment_impact.map((payment, index) => (
+                        <li key={index} className="cancel-preview__payment-item-full">
+                          <div className="cancel-preview__payment-header">
+                            <span className="cancel-preview__payment-method">{payment.payment_method}</span>
+                            <span className="cancel-preview__payment-amount">{formatCurrency(payment.amount)}</span>
+                          </div>
+                          <div className="cancel-preview__payment-details">
+                            <span>Fecha: {formatDate(payment.payment_date)}</span>
+                            <span>Estado actual: {payment.current_status}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Advertencias */}
+              {cancelPreviewData.warnings && cancelPreviewData.warnings.length > 0 && (
+                <div className="cancel-preview__impact-section cancel-preview__impact-section--warning">
+                  <h4 className="cancel-preview__subsection-title">⚠️ Advertencias</h4>
+                  <ul className="cancel-preview__risks-list">
+                    {cancelPreviewData.warnings.map((warning, index) => (
+                      <li key={index} className="cancel-preview__risk-item">{warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Problemas de Cancelación */}
+              {cancelPreviewData.cancellation_issues && cancelPreviewData.cancellation_issues.length > 0 && (
+                <div className="cancel-preview__impact-section cancel-preview__impact-section--danger">
+                  <h4 className="cancel-preview__subsection-title">🚫 Problemas Detectados</h4>
+                  <ul className="cancel-preview__risks-list">
+                    {cancelPreviewData.cancellation_issues.map((issue, index) => (
+                      <li key={index} className="cancel-preview__risk-item cancel-preview__risk-item--danger">{issue}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Recomendaciones */}
+              {cancelPreviewData.recommendations && cancelPreviewData.recommendations.length > 0 && (
+                <div className="cancel-preview__recommendations">
+                  <h4 className="cancel-preview__subsection-title">💡 Recomendaciones</h4>
+                  <ul className="cancel-preview__recommendations-list">
+                    {cancelPreviewData.recommendations.map((recommendation, index) => (
+                      <li key={index} className="cancel-preview__recommendation-item">{recommendation}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Recomendaciones Generales */}
+              {cancelPreviewData.general_recommendations && (
+                <div className="cancel-preview__general-recommendations">
+                  <div className="cancel-preview__general-rec-grid">
+                    <div className="cancel-preview__general-rec-item">
+                      <span className="cancel-preview__label">Complejidad estimada:</span>
+                      <span className={`cancel-preview__badge cancel-preview__badge--${cancelPreviewData.general_recommendations.estimated_complexity?.toLowerCase()}`}>
+                        {cancelPreviewData.general_recommendations.estimated_complexity}
+                      </span>
+                    </div>
+                    {cancelPreviewData.general_recommendations.notify_supplier && (
+                      <div className="cancel-preview__general-rec-item">
+                        <span className="cancel-preview__value cancel-preview__value--info">
+                          📧 Se recomienda notificar al proveedor
+                        </span>
+                      </div>
+                    )}
+                    {cancelPreviewData.general_recommendations.requires_approval && (
+                      <div className="cancel-preview__general-rec-item">
+                        <span className="cancel-preview__value cancel-preview__value--warning">
+                          ✋ Requiere aprobación de supervisor
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Advertencia final */}
+              <div className="cancel-preview__warning-final">
+                <p className="cancel-preview__text cancel-preview__text--warning">
+                  ⚠️ <strong>Esta acción no se puede deshacer.</strong> Una vez cancelada, la orden no podrá ser revertida.
+                </p>
+              </div>
+            </div>
+
+            <footer className="cancel-preview__footer" style={{ display: 'flex', gap: '12px', padding: '16px 20px', borderTop: '1px solid #e0e0e0', minHeight: '70px' }}>
+              <button
+                type="button"
+                className="btn btn--secondary"
+                onClick={() => setShowCancelPreview(false)}
+                style={{ flex: '0 0 auto' }}
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                className="btn btn--danger"
+                onClick={handleConfirmCancellation}
+                disabled={loading}
+                style={{ flex: '0 0 auto', backgroundColor: '#dc3545', color: 'white', padding: '8px 16px' }}
+              >
+                {loading ? 'Cancelando...' : 'Confirmar Cancelación'}
               </button>
             </footer>
           </div>
