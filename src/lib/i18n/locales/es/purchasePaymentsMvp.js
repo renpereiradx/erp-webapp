@@ -6,7 +6,8 @@
 export const purchasePaymentsMvp = {
   // Títulos y subtítulos
   'purchasePaymentsMvp.title': 'Pagos Compras (MVP)',
-  'purchasePaymentsMvp.subtitle': 'Supervisa saldos pendientes, pagos parciales y vencidos de tus órdenes de compra.',
+  'purchasePaymentsMvp.subtitle':
+    'Supervisa saldos pendientes, pagos parciales y vencidos de tus órdenes de compra.',
 
   // Acciones principales
   'purchasePaymentsMvp.actions.refresh': 'Actualizar',
@@ -15,10 +16,12 @@ export const purchasePaymentsMvp = {
 
   // Filtros
   'purchasePaymentsMvp.filters.refresh': 'Refrescar',
-  'purchasePaymentsMvp.filters.sectionLabel': 'Opciones de filtrado para pagos de compras',
+  'purchasePaymentsMvp.filters.sectionLabel':
+    'Opciones de filtrado para pagos de compras',
   'purchasePaymentsMvp.filters.title': 'Filtros',
   'purchasePaymentsMvp.filters.search.label': 'Buscar órdenes',
-  'purchasePaymentsMvp.filters.search.placeholder': 'Buscar por ID de orden o proveedor...',
+  'purchasePaymentsMvp.filters.search.placeholder':
+    'Buscar por ID de orden o proveedor...',
   'purchasePaymentsMvp.filters.supplier.label': 'Proveedor',
   'purchasePaymentsMvp.filters.supplier.placeholder': 'Selecciona un proveedor',
   'purchasePaymentsMvp.filters.supplier.all': 'Todos los proveedores',
@@ -56,9 +59,11 @@ export const purchasePaymentsMvp = {
 
   // Errores y estados vacíos
   'purchasePaymentsMvp.data.error.title': 'Error al cargar pagos',
-  'purchasePaymentsMvp.data.error.description': 'No pudimos obtener las órdenes seleccionadas. Intenta nuevamente.',
+  'purchasePaymentsMvp.data.error.description':
+    'No pudimos obtener las órdenes seleccionadas. Intenta nuevamente.',
   'purchasePaymentsMvp.data.empty.title': 'Sin resultados',
-  'purchasePaymentsMvp.data.empty.description': 'No hay órdenes de compra que coincidan con los filtros.',
+  'purchasePaymentsMvp.data.empty.description':
+    'No hay órdenes de compra que coincidan con los filtros.',
 
   // Tabla
   'purchasePaymentsMvp.table.order': 'Orden de compra',
@@ -70,23 +75,28 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.table.pending': 'Saldo pendiente',
   'purchasePaymentsMvp.table.lastPayment': 'Último pago',
   'purchasePaymentsMvp.table.lastPayment.none': 'Sin pagos registrados',
-  'purchasePaymentsMvp.table.emptyMessage': 'No se encontraron compras para los filtros aplicados.',
+  'purchasePaymentsMvp.table.emptyMessage':
+    'No se encontraron compras para los filtros aplicados.',
 
   // Resumen
   'purchasePaymentsMvp.summary.sectionLabel': 'Resumen de pagos de compras',
   'purchasePaymentsMvp.metrics.pendingOrders': 'Órdenes con saldo pendiente',
   'purchasePaymentsMvp.metrics.pendingAmount': 'Saldo pendiente total',
   'purchasePaymentsMvp.metrics.totalResults': 'Resultados totales',
-  'purchasePaymentsMvp.summary.pendingDetail': '{{count}} órdenes necesitan atención para mantenerse al día.',
+  'purchasePaymentsMvp.summary.pendingDetail':
+    '{{count}} órdenes necesitan atención para mantenerse al día.',
   'purchasePaymentsMvp.summary.currency': 'Moneda base: {{currency}}',
-  'purchasePaymentsMvp.summary.resultsHelper': '{{total}} registros cargados en esta vista.',
+  'purchasePaymentsMvp.summary.resultsHelper':
+    '{{total}} registros cargados en esta vista.',
 
   // Resultados
   'purchasePaymentsMvp.results.sectionLabel': 'Resultados de pagos de compras',
 
   // Paginación
-  'purchasePaymentsMvp.pagination.range': 'Mostrando {from}-{to} de {total} órdenes',
-  'purchasePaymentsMvp.pagination.results': 'Mostrando {count} de {total} resultados',
+  'purchasePaymentsMvp.pagination.range':
+    'Mostrando {from}-{to} de {total} órdenes',
+  'purchasePaymentsMvp.pagination.results':
+    'Mostrando {count} de {total} resultados',
   'purchasePaymentsMvp.pagination.empty': 'No hay órdenes para paginar',
   'purchasePaymentsMvp.pagination.previous': 'Anterior',
   'purchasePaymentsMvp.pagination.pageOf': 'Página {page} de {totalPages}',
@@ -100,7 +110,8 @@ export const purchasePaymentsMvp = {
   // Detalle de orden
   'purchasePaymentsMvp.detail.back': 'Volver a Pagos Compras (MVP)',
   'purchasePaymentsMvp.detail.heading': 'Orden de compra {orderId}',
-  'purchasePaymentsMvp.detail.description': 'Revisá el estado, pagos registrados y productos asociados a la orden.',
+  'purchasePaymentsMvp.detail.description':
+    'Revisá el estado, pagos registrados y productos asociados a la orden.',
   'purchasePaymentsMvp.detail.registerPayment': 'Registrar nuevo pago',
 
   // Resumen de orden
@@ -117,13 +128,60 @@ export const purchasePaymentsMvp = {
 
   // Historial de pagos
   'purchasePaymentsMvp.detail.history.title': 'Historial de pagos',
-  'purchasePaymentsMvp.detail.history.empty': 'No hay pagos registrados todavía.',
+  'purchasePaymentsMvp.detail.history.empty':
+    'No hay pagos registrados todavía.',
   'purchasePaymentsMvp.detail.history.columns.date': 'Fecha',
   'purchasePaymentsMvp.detail.history.columns.user': 'Usuario',
   'purchasePaymentsMvp.detail.history.columns.amount': 'Monto',
   'purchasePaymentsMvp.detail.history.columns.status': 'Estado',
   'purchasePaymentsMvp.detail.history.status.approved': 'Aprobado',
   'purchasePaymentsMvp.detail.history.status.delayed': 'Con retraso',
+
+  // Modal de registro de pagos
+  'purchasePaymentsMvp.registerModal.title': 'Registrar nuevo pago',
+  'purchasePaymentsMvp.registerModal.orderLabel':
+    'Pago para la orden {orderId}',
+  'purchasePaymentsMvp.registerModal.orderFallback':
+    'Seleccioná una orden con saldo pendiente para registrar el pago.',
+  'purchasePaymentsMvp.registerModal.amount.label': 'Monto a registrar',
+  'purchasePaymentsMvp.registerModal.amount.pending':
+    'Saldo pendiente: {amount}',
+  'purchasePaymentsMvp.registerModal.amount.errorRequired':
+    'Ingresá un monto válido.',
+  'purchasePaymentsMvp.registerModal.amount.errorExceeded':
+    'El monto no puede superar el saldo pendiente.',
+  'purchasePaymentsMvp.registerModal.method.label': 'Método de pago',
+  'purchasePaymentsMvp.registerModal.method.transfer': 'Transferencia bancaria',
+  'purchasePaymentsMvp.registerModal.method.cash': 'Efectivo',
+  'purchasePaymentsMvp.registerModal.currency.label': 'Moneda',
+  'purchasePaymentsMvp.registerModal.reference.label': 'Referencia',
+  'purchasePaymentsMvp.registerModal.reference.placeholder':
+    'Ej. número de transacción o comprobante',
+  'purchasePaymentsMvp.registerModal.cashRegister.label': 'Caja',
+  'purchasePaymentsMvp.registerModal.cashRegister.placeholder':
+    'Seleccioná una caja',
+  'purchasePaymentsMvp.registerModal.cashRegister.main': 'Caja principal',
+  'purchasePaymentsMvp.registerModal.cashRegister.secondary': 'Caja secundaria',
+  'purchasePaymentsMvp.registerModal.notes.label': 'Notas',
+  'purchasePaymentsMvp.registerModal.notes.placeholder':
+    'Observaciones adicionales (opcional)',
+  'purchasePaymentsMvp.registerModal.cancel': 'Cancelar',
+  'purchasePaymentsMvp.registerModal.confirm': 'Registrar pago',
+  'purchasePaymentsMvp.registerModal.loading': 'Registrando pago...',
+  'purchasePaymentsMvp.registerModal.submitError':
+    'No se pudo registrar el pago. Intentá nuevamente.',
+  'purchasePaymentsMvp.registerModal.feedback.success':
+    'Pago registrado correctamente para la orden {orderId}.',
+  'purchasePaymentsMvp.registerModal.feedback.error':
+    'Ocurrió un error al registrar el pago.',
+  'purchasePaymentsMvp.registerModal.feedback.selectOrder':
+    'Seleccioná una orden con saldo pendiente para registrar el pago.',
+  'purchasePaymentsMvp.registerModal.feedback.singleOrder':
+    'Seleccioná solo una orden para registrar un pago.',
+  'purchasePaymentsMvp.registerModal.feedback.missingOrder':
+    'No encontramos la orden seleccionada. Actualizá la lista.',
+  'purchasePaymentsMvp.registerModal.feedback.noPending':
+    'La orden {orderId} no tiene saldo pendiente.',
 
   // Proveedor
   'purchasePaymentsMvp.detail.supplier.title': 'Proveedor',
@@ -135,7 +193,8 @@ export const purchasePaymentsMvp = {
 
   // Productos
   'purchasePaymentsMvp.detail.products.title': 'Productos incluidos',
-  'purchasePaymentsMvp.detail.products.empty': 'No hay productos asociados a esta orden.',
+  'purchasePaymentsMvp.detail.products.empty':
+    'No hay productos asociados a esta orden.',
   'purchasePaymentsMvp.detail.products.headers.product': 'Producto',
   'purchasePaymentsMvp.detail.products.headers.quantity': 'Cantidad',
   'purchasePaymentsMvp.detail.products.headers.total': 'Total',

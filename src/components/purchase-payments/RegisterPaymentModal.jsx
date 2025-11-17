@@ -1,7 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { AlertCircle } from 'lucide-react'
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  CreditCard,
+  DollarSign,
+  Loader2,
+  Wallet,
+} from 'lucide-react'
 
 import { useI18n } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import {
   Dialog,
   DialogContent,
@@ -25,8 +34,13 @@ const METHOD_OPTIONS = [
   {
     value: 'transfer',
     labelKey: 'purchasePaymentsMvp.registerModal.method.transfer',
+    Icon: CreditCard,
   },
-  { value: 'cash', labelKey: 'purchasePaymentsMvp.registerModal.method.cash' },
+  {
+    value: 'cash',
+    labelKey: 'purchasePaymentsMvp.registerModal.method.cash',
+    Icon: Wallet,
+  },
 ]
 
 const CURRENCY_OPTIONS = ['PYG', 'USD']
@@ -104,7 +118,24 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
     return formatter.format(Number(order.pendingAmount || 0))
   }, [formatter, order])
 
+  const exceededPendingAmount = useMemo(() => {
+    if (
+      !order ||
+      order.pendingAmount === null ||
+      order.pendingAmount === undefined
+    ) {
+      return false
+    }
+    const numericAmount = Number.parseFloat(amount)
+    const pending = Number(order.pendingAmount)
+    if (!Number.isFinite(numericAmount) || !Number.isFinite(pending)) {
+      return false
+    }
+    return numericAmount - pending > 0.009
+  }, [amount, order])
+
   const disableForm = !order
+  const isFormDisabled = disableForm || isSubmitting
 
   const handleSubmit = async event => {
     event.preventDefault()
@@ -160,16 +191,16 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className='purchase-payments-mvp__register-modal'>
+      <DialogContent className='purchase-payments-mvp-register purchase-payments-mvp-register__register-modal'>
         <form
-          className='purchase-payments-mvp__register-form'
+          className='purchase-payments-mvp-register__register-form'
           onSubmit={handleSubmit}
         >
-          <DialogHeader className='purchase-payments-mvp__register-header'>
-            <DialogTitle className='purchase-payments-mvp__register-title'>
+          <DialogHeader className='purchase-payments-mvp-register__register-header'>
+            <DialogTitle className='purchase-payments-mvp-register__register-title'>
               {t('purchasePaymentsMvp.registerModal.title')}
             </DialogTitle>
-            <DialogDescription className='purchase-payments-mvp__register-description'>
+            <DialogDescription className='purchase-payments-mvp-register__register-description'>
               {order
                 ? t('purchasePaymentsMvp.registerModal.orderLabel', {
                     orderId: order.id,
@@ -178,95 +209,48 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className='purchase-payments-mvp__register-body'>
-            <div className='purchase-payments-mvp__register-field'>
+          <div className='purchase-payments-mvp-register__register-body'>
+            <div className='purchase-payments-mvp-register__register-field'>
               <label
                 htmlFor='purchase-payments-amount'
-                className='purchase-payments-mvp__register-label'
+                className='purchase-payments-mvp-register__register-label'
               >
                 {t('purchasePaymentsMvp.registerModal.amount.label')}
               </label>
-              <Input
-                id='purchase-payments-amount'
-                type='number'
-                min='0'
-                step='0.01'
-                autoComplete='off'
-                inputMode='decimal'
-                value={amount}
-                onChange={event => setAmount(event.target.value)}
-                disabled={disableForm || isSubmitting}
-                aria-invalid={Boolean(amountError)}
-              />
+              <div className='purchase-payments-mvp-register__register-input-wrapper purchase-payments-mvp-register__register-input-wrapper--amount'>
+                <DollarSign className='purchase-payments-mvp-register__register-input-icon' />
+                <Input
+                  id='purchase-payments-amount'
+                  type='number'
+                  min='0'
+                  step='0.01'
+                  autoComplete='off'
+                  inputMode='decimal'
+                  value={amount}
+                  onChange={event => setAmount(event.target.value)}
+                  disabled={isFormDisabled}
+                  aria-invalid={Boolean(amountError)}
+                  className='purchase-payments-mvp-register__register-control purchase-payments-mvp-register__register-control--has-icon'
+                  placeholder='0.00'
+                />
+              </div>
               {pendingLabel && (
-                <p className='purchase-payments-mvp__register-hint'>
+                <p className='purchase-payments-mvp-register__register-hint'>
                   {t('purchasePaymentsMvp.registerModal.amount.pending', {
                     amount: pendingLabel,
                   })}
                 </p>
               )}
               {amountError && (
-                <p className='purchase-payments-mvp__register-error'>
+                <p className='purchase-payments-mvp-register__register-error'>
                   {amountError}
                 </p>
               )}
             </div>
 
-            <div className='purchase-payments-mvp__register-grid'>
-              <div className='purchase-payments-mvp__register-field'>
-                <label
-                  className='purchase-payments-mvp__register-label'
-                  htmlFor='purchase-payments-method'
-                >
-                  {t('purchasePaymentsMvp.registerModal.method.label')}
-                </label>
-                <Select
-                  value={method}
-                  onValueChange={setMethod}
-                  disabled={disableForm || isSubmitting}
-                >
-                  <SelectTrigger id='purchase-payments-method'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {METHOD_OPTIONS.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {t(option.labelKey)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className='purchase-payments-mvp__register-field'>
-                <label
-                  className='purchase-payments-mvp__register-label'
-                  htmlFor='purchase-payments-currency'
-                >
-                  {t('purchasePaymentsMvp.registerModal.currency.label')}
-                </label>
-                <Select
-                  value={currency}
-                  onValueChange={setCurrency}
-                  disabled={disableForm || isSubmitting}
-                >
-                  <SelectTrigger id='purchase-payments-currency'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CURRENCY_OPTIONS.map(option => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className='purchase-payments-mvp__register-field'>
+            <div className='purchase-payments-mvp-register__register-field'>
               <label
-                className='purchase-payments-mvp__register-label'
+                className='purchase-payments-mvp-register__register-label'
                 htmlFor='purchase-payments-reference'
               >
                 {t('purchasePaymentsMvp.registerModal.reference.label')}
@@ -276,32 +260,115 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
                 type='text'
                 value={reference}
                 onChange={event => setReference(event.target.value)}
-                disabled={disableForm || isSubmitting}
+                disabled={isFormDisabled}
                 placeholder={t(
                   'purchasePaymentsMvp.registerModal.reference.placeholder'
                 )}
+                className='purchase-payments-mvp-register__register-control'
               />
             </div>
 
-            <div className='purchase-payments-mvp__register-field'>
-              <label className='purchase-payments-mvp__register-label'>
+            <div className='purchase-payments-mvp-register__register-field purchase-payments-mvp-register__register-field--method'>
+              <span className='purchase-payments-mvp-register__register-label'>
+                {t('purchasePaymentsMvp.registerModal.method.label')}
+              </span>
+              <div
+                className='purchase-payments-mvp-register__register-radio-group'
+                role='radiogroup'
+                aria-label={t('purchasePaymentsMvp.registerModal.method.label')}
+              >
+                {METHOD_OPTIONS.map(option => {
+                  const optionId = `purchase-payments-method-${option.value}`
+                  const isSelected = method === option.value
+                  const Icon = option.Icon
+
+                  return (
+                    <label
+                      key={option.value}
+                      htmlFor={optionId}
+                      className={cn(
+                        'purchase-payments-mvp-register__register-method-option',
+                        {
+                          'is-selected': isSelected,
+                          'is-disabled': isFormDisabled,
+                        }
+                      )}
+                    >
+                      <input
+                        id={optionId}
+                        type='radio'
+                        name='purchase-payments-method'
+                        value={option.value}
+                        checked={isSelected}
+                        disabled={isFormDisabled}
+                        onChange={() => setMethod(option.value)}
+                        className='purchase-payments-mvp-register__register-method-input'
+                      />
+                      <Icon className='purchase-payments-mvp-register__register-method-icon' />
+                      <span className='purchase-payments-mvp-register__register-method-label'>
+                        {t(option.labelKey)}
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className='purchase-payments-mvp-register__register-field'>
+              <label
+                className='purchase-payments-mvp-register__register-label'
+                htmlFor='purchase-payments-currency'
+              >
+                {t('purchasePaymentsMvp.registerModal.currency.label')}
+              </label>
+              <Select
+                value={currency}
+                onValueChange={setCurrency}
+                disabled={isFormDisabled}
+              >
+                <SelectTrigger
+                  id='purchase-payments-currency'
+                  className='purchase-payments-mvp-register__register-control purchase-payments-mvp-register__register-control--select'
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className='purchase-payments-mvp-register__register-select-content'>
+                  {CURRENCY_OPTIONS.map(option => (
+                    <SelectItem
+                      key={option}
+                      value={option}
+                      className='purchase-payments-mvp-register__register-select-item'
+                    >
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className='purchase-payments-mvp-register__register-field'>
+              <label className='purchase-payments-mvp-register__register-label'>
                 {t('purchasePaymentsMvp.registerModal.cashRegister.label')}
               </label>
               <Select
                 value={cashRegister}
                 onValueChange={setCashRegister}
-                disabled={disableForm || isSubmitting}
+                disabled={isFormDisabled}
               >
-                <SelectTrigger>
+                <SelectTrigger className='purchase-payments-mvp-register__register-control purchase-payments-mvp-register__register-control--select'>
                   <SelectValue
                     placeholder={t(
                       'purchasePaymentsMvp.registerModal.cashRegister.placeholder'
                     )}
                   />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className='purchase-payments-mvp-register__register-select-content'>
                   {CASH_REGISTER_OPTIONS.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem
+                      key={option.value}
+                      value={option.value}
+                      className='purchase-payments-mvp-register__register-select-item'
+                    >
                       {t(option.labelKey)}
                     </SelectItem>
                   ))}
@@ -309,9 +376,9 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
               </Select>
             </div>
 
-            <div className='purchase-payments-mvp__register-field'>
+            <div className='purchase-payments-mvp-register__register-field purchase-payments-mvp-register__register-field--full'>
               <label
-                className='purchase-payments-mvp__register-label'
+                className='purchase-payments-mvp-register__register-label'
                 htmlFor='purchase-payments-notes'
               >
                 {t('purchasePaymentsMvp.registerModal.notes.label')}
@@ -320,35 +387,69 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
                 id='purchase-payments-notes'
                 value={notes}
                 onChange={event => setNotes(event.target.value)}
-                disabled={disableForm || isSubmitting}
+                disabled={isFormDisabled}
                 placeholder={t(
                   'purchasePaymentsMvp.registerModal.notes.placeholder'
                 )}
                 rows={3}
+                className='purchase-payments-mvp-register__register-control purchase-payments-mvp-register__register-control--textarea'
               />
             </div>
 
+            {exceededPendingAmount && (
+              <div
+                className='purchase-payments-mvp-register__register-warning'
+                role='status'
+                aria-live='polite'
+              >
+                <AlertTriangle className='purchase-payments-mvp-register__register-warning-icon' />
+                <div className='purchase-payments-mvp-register__register-warning-copy'>
+                  <p className='purchase-payments-mvp-register__register-warning-title'>
+                    {t('common.warning')}
+                  </p>
+                  <p className='purchase-payments-mvp-register__register-warning-text'>
+                    {t(
+                      'purchasePaymentsMvp.registerModal.amount.errorExceeded'
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {formError && (
-              <div className='purchase-payments-mvp__register-alert'>
-                <AlertCircle className='purchase-payments-mvp__register-alert-icon' />
+              <div className='purchase-payments-mvp-register__register-alert'>
+                <AlertCircle className='purchase-payments-mvp-register__register-alert-icon' />
                 <span>{formError}</span>
               </div>
             )}
           </div>
 
-          <DialogFooter className='purchase-payments-mvp__register-footer'>
+          <DialogFooter className='purchase-payments-mvp-register__register-footer'>
             <Button
               type='button'
               variant='outline'
               onClick={() => handleDialogChange(false)}
               disabled={isSubmitting}
+              className='purchase-payments-mvp-register__register-button purchase-payments-mvp-register__register-button--ghost'
             >
               {t('purchasePaymentsMvp.registerModal.cancel')}
             </Button>
-            <Button type='submit' disabled={disableForm || isSubmitting}>
-              {isSubmitting
-                ? t('purchasePaymentsMvp.registerModal.loading')
-                : t('purchasePaymentsMvp.registerModal.confirm')}
+            <Button
+              type='submit'
+              disabled={isFormDisabled}
+              className='purchase-payments-mvp-register__register-button purchase-payments-mvp-register__register-button--primary'
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className='purchase-payments-mvp-register__register-button-spinner' />
+                  {t('purchasePaymentsMvp.registerModal.loading')}
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className='purchase-payments-mvp-register__register-button-icon' />
+                  {t('purchasePaymentsMvp.registerModal.confirm')}
+                </>
+              )}
             </Button>
           </DialogFooter>
         </form>

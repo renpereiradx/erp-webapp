@@ -43,6 +43,8 @@ export const other = {
   'dashboard.metrics.orders': 'Pedidos Hoy',
   'dashboard.charts.sales': 'Ventas Mensuales',
   'dashboard.charts.categories': 'Categorías Populares',
+  'dashboard.search.placeholder': 'Buscar en el dashboard...',
+  'dashboard.action.refresh': 'Actualizar',
 
   // Settings Page
   'settings.title': 'Configuración',
