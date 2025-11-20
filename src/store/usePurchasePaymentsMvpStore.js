@@ -5,6 +5,7 @@ import { purchasePaymentsMvpService } from '@/services/purchasePaymentsMvpServic
 
 const buildFilters = (overrides = {}) => ({
   search: '',
+  orderId: '',
   dateFrom: '',
   dateTo: '',
   status: 'all',
@@ -19,6 +20,13 @@ const buildMeta = (overrides = {}) => ({
   ...overrides,
 })
 
+const replaceOrderInCollection = (orders, updatedOrder) => {
+  if (!updatedOrder) return orders
+  return orders.map(order =>
+    order && order.id === updatedOrder.id ? { ...updatedOrder } : order
+  )
+}
+
 const usePurchasePaymentsMvpStore = create(
   devtools(
     (set, get) => ({
@@ -29,6 +37,8 @@ const usePurchasePaymentsMvpStore = create(
       statuses: [],
       loading: false,
       error: null,
+      processingPayment: false,
+      paymentError: null,
 
       updateFilters: updates =>
         set(state => ({
@@ -36,6 +46,15 @@ const usePurchasePaymentsMvpStore = create(
         })),
 
       clearError: () => set({ error: null }),
+
+      clearResults: () =>
+        set(state => ({
+          orders: [],
+          meta: buildMeta({ pageSize: state.meta.pageSize }),
+          statuses: [],
+          loading: false,
+          error: null,
+        })),
 
       fetchOrders: async (options = {}) => {
         const state = get()
@@ -52,6 +71,7 @@ const usePurchasePaymentsMvpStore = create(
             page,
             pageSize,
             search: filters.search,
+            orderId: filters.orderId,
             status: filters.status,
             dateFrom: filters.dateFrom,
             dateTo: filters.dateTo,
@@ -102,6 +122,37 @@ const usePurchasePaymentsMvpStore = create(
       refresh: async () => {
         const { meta } = get()
         return get().fetchOrders({ page: meta.page })
+      },
+
+      registerPayment: async payload => {
+        const orderId = payload?.orderId
+        if (!orderId) {
+          throw new Error('Missing purchase order identifier')
+        }
+
+        set({ processingPayment: true, paymentError: null })
+
+        try {
+          const result = await purchasePaymentsMvpService.registerPayment(
+            orderId,
+            payload
+          )
+
+          set(state => ({
+            orders: replaceOrderInCollection(state.orders, result?.order),
+            processingPayment: false,
+            paymentError: null,
+          }))
+
+          return result
+        } catch (error) {
+          set({
+            processingPayment: false,
+            paymentError:
+              error?.message || 'No se pudo registrar el pago seleccionado',
+          })
+          throw error
+        }
       },
     }),
     { name: 'purchase-payments-mvp-store' }

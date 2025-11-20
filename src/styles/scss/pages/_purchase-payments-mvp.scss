@@ -33,6 +33,18 @@
     flex-wrap: wrap;
   }
 
+  &__header-utilities {
+    margin-left: auto;
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+
+    @include mobile {
+      margin-left: 0;
+      justify-content: flex-start;
+    }
+  }
+
   &__heading {
     display: flex;
     flex-direction: column;
@@ -46,6 +58,49 @@
 
     @include themify($themes) {
       color: themed('text-primary');
+
+      &--datetime {
+        white-space: nowrap;
+      }
+
+      &--progress {
+        width: 11rem;
+      }
+    }
+
+    &__progress {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-4;
+    }
+
+    &__progress-track {
+      width: 100%;
+      height: 0.35rem;
+      border-radius: 999px;
+
+      @include themify($themes) {
+        background-color: rgba(themed('border-subtle'), 0.5);
+      }
+    }
+
+    &__progress-bar {
+      height: 100%;
+      border-radius: inherit;
+      transition: width duration(fast) ease;
+
+      @include themify($themes) {
+        background-color: themed('accent-primary');
+      }
+    }
+
+    &__progress-label {
+      font-size: $font-size-200;
+      font-weight: $font-weight-semibold;
+
+      @include themify($themes) {
+        color: themed('text-secondary');
+      }
     }
   }
 
@@ -261,6 +316,18 @@
     display: flex;
     flex-direction: column;
     gap: $spacing-8;
+  }
+
+  &__filters-hint {
+    font-size: $font-size-200;
+    line-height: $line-height-300;
+    border-radius: $border-radius-medium;
+    padding: $spacing-8 $spacing-12;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      color: themed('text-secondary');
+    }
   }
 
   &__field-label {
@@ -479,6 +546,38 @@
     flex-wrap: wrap;
   }
 
+  &__active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-8;
+    margin-top: $spacing-12;
+    align-items: center;
+  }
+
+  &__filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-4;
+    border-radius: $border-radius-large;
+    padding: $spacing-8 $spacing-12;
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      color: themed('text-secondary');
+      border: 1px solid themed('border-subtle');
+    }
+  }
+
+  &__filters-clear {
+    height: 1.75rem;
+    padding: 0 $spacing-12;
+
+    @include themify($themes) {
+      color: themed('accent-primary');
+    }
+  }
+
   &__table-heading-text {
     display: flex;
     flex-direction: column;
@@ -582,6 +681,11 @@
     &--numeric {
       text-align: right;
     }
+
+    &--datetime {
+      white-space: nowrap;
+      min-width: 9rem;
+    }
   }
 
   &__table-body {
@@ -593,8 +697,9 @@
   }
 
   &__table-row {
+    position: relative;
     transition: background-color duration(fast) ease,
-      box-shadow duration(fast) ease;
+      box-shadow duration(fast) ease, border-color duration(fast) ease;
 
     @include themify($themes) {
       border-bottom: 1px solid themed('border-subtle');
@@ -605,15 +710,17 @@
 
       @include themify($themes) {
         &:hover {
-          background-color: themed('bg-hover');
+          background-color: rgba(themed('bg-hover'), 0.9);
+          box-shadow: inset 0 0 0 1px rgba(themed('accent-primary'), 0.25);
         }
       }
     }
 
     &--selected {
       @include themify($themes) {
-        background-color: themed('bg-hover');
-        box-shadow: inset 0 0 0 1px themed('accent-primary');
+        background-color: rgba(themed('accent-primary'), 0.12);
+        box-shadow: inset 0 0 0 1px rgba(themed('accent-primary'), 0.4),
+          inset $spacing-4 0 0 0 themed('accent-primary');
       }
     }
 
@@ -839,6 +946,20 @@
     }
 
     &--overdue {
+      @include themify($themes) {
+        background-color: themed('error-background');
+        color: themed('error-primary');
+      }
+    }
+
+    &--completed {
+      @include themify($themes) {
+        background-color: themed('success-background');
+        color: themed('success-primary');
+      }
+    }
+
+    &--cancelled {
       @include themify($themes) {
         background-color: themed('error-background');
         color: themed('error-primary');
@@ -1172,6 +1293,27 @@
     gap: $spacing-12;
   }
 
+  &__card-header--summary {
+    align-items: flex-start;
+  }
+
+  &__summary-heading {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+  }
+
+  &__eyebrow {
+    margin: 0;
+    font-size: $font-size-100;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
   &__card-title {
     font-size: $font-size-500;
     letter-spacing: -0.01em;
@@ -1181,23 +1323,65 @@
     }
   }
 
-  &__summary-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: $spacing-24;
-
-    @include mobile {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: $spacing-16;
-    }
-  }
-
   &__summary-status {
     display: flex;
     align-items: center;
     gap: $spacing-8;
+  }
+
+  &__card-content--summary {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+  }
+
+  &__summary-progress-block {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-12;
+  }
+
+  &__summary-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: $spacing-12;
+  }
+
+  &__summary-progress-value {
+    font-size: $font-size-500;
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__progress-track {
+    position: relative;
+    width: 100%;
+    height: 0.85rem;
+    border-radius: 999px;
+    overflow: hidden;
+
+    @include themify($themes) {
+      background-color: rgba(themed('border-subtle'), 0.6);
+    }
+  }
+
+  &__progress-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    transition: width duration(fast) ease;
+
+    @include themify($themes) {
+      background: linear-gradient(
+        90deg,
+        lighten(themed('accent-primary'), 8%),
+        themed('accent-primary')
+      );
+    }
   }
 
   &__status-chip {
@@ -1291,70 +1475,22 @@
     }
   }
 
-  &__progress {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-8;
-    min-width: 16rem;
-
-    @include mobile {
-      width: 100%;
-    }
-  }
-
-  &__progress-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: $font-size-200;
-
-    @include themify($themes) {
-      color: themed('text-secondary');
-    }
-  }
-
-  &__progress-label {
-    font-weight: $font-weight-semibold;
-  }
-
-  &__progress-value {
-    font-weight: $font-weight-semibold;
-
-    @include themify($themes) {
-      color: themed('text-primary');
-    }
-  }
-
-  &__progress-bar {
-    height: 0.875rem;
-    overflow: hidden;
-    border-radius: $border-radius-large;
-
-    [data-slot='progress'] {
-      height: 100%;
-    }
-
-    [data-slot='progress-indicator'] {
-      @include themify($themes) {
-        background-color: themed('accent-primary');
-      }
-    }
-  }
-
   &__summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-    gap: $spacing-20;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: $spacing-16;
+    padding-top: $spacing-8;
   }
 
   &__summary-item {
     display: flex;
     flex-direction: column;
-    gap: $spacing-4;
+    gap: $spacing-2;
   }
 
   &__summary-label {
     font-size: $font-size-200;
+    letter-spacing: 0.01em;
 
     @include themify($themes) {
       color: themed('text-tertiary');
@@ -1374,39 +1510,22 @@
         color: themed('error-primary');
       }
     }
-  }
 
-  &__summary-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: $spacing-20;
+    &--success {
+      @include themify($themes) {
+        color: themed('success-primary');
+      }
+    }
 
-    @include mobile {
-      gap: $spacing-12;
+    &--danger {
+      @include themify($themes) {
+        color: themed('error-primary');
+      }
     }
   }
 
-  &__meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-4;
-    min-width: 12rem;
-
-    @include themify($themes) {
-      color: themed('text-secondary');
-    }
-  }
-
-  &__meta-label {
-    font-size: $font-size-200;
-  }
-
-  &__meta-value {
-    font-weight: $font-weight-semibold;
-
-    @include themify($themes) {
-      color: themed('text-primary');
-    }
+  &__card-content--supplier {
+    padding-top: $spacing-16;
   }
 
   &__table-wrapper {
@@ -1559,11 +1678,136 @@
     }
   }
 
+  &__timeline {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @include themify($themes) {
+      &::before {
+        content: '';
+        position: absolute;
+        left: $spacing-12;
+        top: 0.375rem;
+        bottom: 0;
+        width: 2px;
+        background: themed('border-subtle');
+      }
+    }
+  }
+
+  &__timeline-entry {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+    padding-left: $spacing-32;
+
+    @include themify($themes) {
+      &::before {
+        content: '';
+        position: absolute;
+        left: $spacing-4;
+        top: 0.35rem;
+        width: 0.8rem;
+        height: 0.8rem;
+        border-radius: 999px;
+        border: 2px solid themed('accent-primary');
+        background-color: themed('surface-card');
+        box-shadow: 0 0 0 4px themed('surface-card');
+      }
+    }
+  }
+
+  &__timeline-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: $spacing-8;
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__timeline-date {
+    font-variant-numeric: tabular-nums;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__timeline-action {
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__timeline-body {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__timeline-actor {
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__timeline-notes {
+    margin: 0;
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
   &__supplier {
     display: flex;
     flex-direction: column;
     gap: $spacing-4;
     margin-bottom: $spacing-12;
+  }
+
+  &__supplier-heading {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+  }
+
+  &__supplier-icon {
+    width: $spacing-40;
+    height: $spacing-40;
+    border-radius: $border-radius-large;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      color: themed('accent-primary');
+    }
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
   }
 
   &__supplier-name {
@@ -1575,7 +1819,7 @@
     }
   }
 
-  &__supplier-id {
+  &__supplier-meta {
     font-size: $font-size-200;
 
     @include themify($themes) {
@@ -1583,44 +1827,18 @@
     }
   }
 
-  &__supplier-details {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-12;
-  }
-
+  &__supplier-details,
   &__supplier-detail {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: $spacing-8;
-    font-size: $font-size-200;
-
-    @include mobile {
-      grid-template-columns: 1fr;
-    }
-
-    dt {
-      font-weight: $font-weight-semibold;
-
-      @include themify($themes) {
-        color: themed('text-secondary');
-      }
-    }
-
-    dd {
-      margin: 0;
-      overflow-wrap: anywhere;
-
-      @include themify($themes) {
-        color: themed('text-primary');
-      }
-    }
+    display: none;
   }
 
   &__product-list {
     display: flex;
     flex-direction: column;
     gap: $spacing-12;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
   &__product-row {
@@ -2086,6 +2304,22 @@
     padding-top: $spacing-8;
   }
 
+  &__register-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: $spacing-16;
+    align-items: stretch;
+  }
+
+  &__register-row--primary {
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  }
+
+  &__register-row--secondary {
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  }
+
   &__register-field {
     display: flex;
     flex-direction: column;
@@ -2097,6 +2331,64 @@
       > .purchase-payments-mvp-register__register-control {
       width: 100%;
     }
+  }
+
+  &__register-field--surface {
+    gap: $spacing-12;
+    padding: $spacing-16;
+    border-radius: $border-radius-large;
+    border: 1px solid transparent;
+
+    @include themify($themes) {
+      background-color: themed('surface-card');
+      border-color: rgba(themed('border-subtle'), 0.8);
+      box-shadow: $shadow-4;
+    }
+
+    .purchase-payments-mvp-register__register-label {
+      margin-bottom: $spacing-4;
+    }
+  }
+
+  &__register-field--amount {
+    justify-content: space-between;
+  }
+
+  &__register-field-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $spacing-12;
+
+    .purchase-payments-mvp-register__register-label {
+      margin-bottom: 0;
+    }
+  }
+
+  &__register-field-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-8;
+    flex-shrink: 0;
+  }
+
+  &__register-field-action {
+    padding: 0 $spacing-12;
+    height: 2.25rem;
+  }
+
+  &__register-field-action-icon,
+  &__register-field-spinner {
+    width: $spacing-16;
+    height: $spacing-16;
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__register-field-spinner {
+    animation: spin 0.9s linear infinite;
   }
 
   &__register-label {
@@ -2198,6 +2490,39 @@
       &[data-state='checked'] {
         color: themed('accent-primary');
       }
+    }
+  }
+
+  &__register-cash-register-option {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-4;
+  }
+
+  &__register-cash-register-name {
+    font-size: $font-size-300;
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__register-cash-register-balance {
+    font-size: $font-size-200;
+    font-weight: $font-weight-medium;
+
+    @include themify($themes) {
+      color: themed('accent-primary');
+    }
+  }
+
+  &__register-cash-register-meta {
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
     }
   }
 

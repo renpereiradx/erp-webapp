@@ -39,15 +39,8 @@ import {
 } from '@/components/ui/card'
 import usePurchasePaymentsMvpStore from '@/store/usePurchasePaymentsMvpStore'
 import { useToast } from '@/hooks/useToast'
-import { purchasePaymentsMvpService } from '@/services/purchasePaymentsMvpService'
+import { classifySupplierSearchTerm } from '@/services/purchasePaymentsMvpService'
 import '@/styles/scss/pages/_purchase-payments-mvp.scss'
-
-const priorityLabelMap = {
-  high: 'purchasePaymentsMvp.priority.high',
-  medium: 'purchasePaymentsMvp.priority.medium',
-  low: 'purchasePaymentsMvp.priority.low',
-  critical: 'purchasePaymentsMvp.priority.critical',
-}
 
 const currencyFormatter = (lang, currency) =>
   new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
@@ -85,6 +78,8 @@ const normalizeOrderForModal = order => {
     pendingAmount,
     currency: order.currency || 'PYG',
     supplierName: order.supplier?.name || '',
+    supplierId: order.supplier?.id ?? null,
+    priority: order.priority ?? null,
   }
 }
 
@@ -104,24 +99,20 @@ const PurchasePaymentsMvpPage = () => {
     statuses,
     loading,
     error,
+    appliedFilters,
     updateFilters,
     resetFilters,
     fetchOrders,
     applyFilters,
     changePage,
     refresh,
+    registerPayment,
+    processingPayment,
+    clearResults,
     clearError,
   } = usePurchasePaymentsMvpStore()
 
-  useEffect(() => {
-    if (!orders || orders.length === 0) {
-      fetchOrders({ page: 1 })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const dateFormatter = useMemo(() => dateFormatterFactory(lang), [lang])
-
   const formatAmount = useCallback(
     (amount, currency) =>
       currencyFormatter(lang, currency).format(Number(amount || 0)),
@@ -146,14 +137,59 @@ const PurchasePaymentsMvpPage = () => {
 
   const statusOptions = useMemo(() => buildStatusOptions(statuses), [statuses])
 
+  const hasSearch = Boolean(filters.search?.trim())
+  const hasDateRange = Boolean(filters.dateFrom || filters.dateTo)
+
   const handleInputChange = event => {
     const { name, value, type, checked } = event.target
-    updateFilters({
-      [name]: type === 'checkbox' ? checked : value,
-    })
+    const nextValue = type === 'checkbox' ? checked : value
+    let updates = {
+      [name]: nextValue,
+    }
+
+    if (name === 'search') {
+      const trimmed = nextValue
+      updates = {
+        ...updates,
+        search: trimmed,
+      }
+
+      if (trimmed) {
+        updates.dateFrom = ''
+        updates.dateTo = ''
+      }
+    }
+
+    if ((name === 'dateFrom' || name === 'dateTo') && nextValue) {
+      updates = {
+        ...updates,
+        search: '',
+      }
+    }
+
+    updateFilters(updates)
   }
 
   const handleApplyFilters = async () => {
+    if (!hasDateRange && filters.search?.trim()) {
+      const classification = classifySupplierSearchTerm(filters.search)
+      if (classification.type === 'invalid') {
+        // Usar el mensaje específico de la clasificación si está disponible
+        const errorMessage =
+          classification.message ||
+          translate(
+            'purchasePaymentsMvp.filters.search.invalid',
+            undefined,
+            () =>
+              lang === 'en'
+                ? 'Enter a valid supplier ID (numbers only) or name (letters only). Do not mix both.'
+                : 'Ingresá un ID de proveedor (solo números) o un nombre (solo letras). No mezcles ambos.'
+          )
+        showInfo(errorMessage)
+        return
+      }
+    }
+
     await applyFilters()
   }
 
@@ -162,8 +198,9 @@ const PurchasePaymentsMvpPage = () => {
     setSelectedOrders(new Set())
   }
 
-  const handleRefresh = async () => {
-    await refresh()
+  const handleRefresh = () => {
+    clearResults()
+    setSelectedOrders(new Set())
   }
 
   const handleRetry = async () => {
@@ -222,25 +259,121 @@ const PurchasePaymentsMvpPage = () => {
     })
   }, [orders])
 
-  const renderStatusBadge = status => (
-    <span
-      className={`purchase-payments-mvp__status-badge purchase-payments-mvp__status-badge--${status}`}
-    >
-      {t(`purchasePaymentsMvp.status.${status}`, { status })}
-    </span>
-  )
+  const renderStatusBadge = status => {
+    const fallbackLabels = {
+      completed: lang === 'en' ? 'Completed' : 'Completado',
+    }
 
-  const renderPriorityTag = priority => {
-    if (!priority) return null
-    const translationKey = priorityLabelMap[priority] || priority
+    const defaultLabel =
+      fallbackLabels[status] ||
+      (status
+        ? status
+            .toString()
+            .replace(/[_-]/g, ' ')
+            .replace(/\b\w/g, char => char.toUpperCase())
+        : '')
+
+    const label = translate(
+      `purchasePaymentsMvp.status.${status}`,
+      { status },
+      () => defaultLabel || status || ''
+    )
+
     return (
       <span
-        className={`purchase-payments-mvp__priority purchase-payments-mvp__priority--${priority}`}
+        className={`purchase-payments-mvp__status-badge purchase-payments-mvp__status-badge--${status}`}
       >
-        {t(translationKey, { priority })}
+        {label}
       </span>
     )
   }
+
+  const exclusiveFiltersHint = useMemo(() => {
+    if (hasSearch) {
+      return translate(
+        'purchasePaymentsMvp.filters.hints.searchMode',
+        undefined,
+        () =>
+          lang === 'en'
+            ? 'Supplier search is active. Clear it to filter by date range.'
+            : 'La búsqueda por proveedor está activa. Limpiá el campo para usar el rango de fechas.'
+      )
+    }
+
+    if (hasDateRange) {
+      return translate(
+        'purchasePaymentsMvp.filters.hints.dateMode',
+        undefined,
+        () =>
+          lang === 'en'
+            ? 'Date range is active. Clear the dates to search by supplier.'
+            : 'El rango de fechas está activo. Borrá las fechas para buscar por proveedor.'
+      )
+    }
+
+    return translate(
+      'purchasePaymentsMvp.filters.hints.default',
+      undefined,
+      () =>
+        lang === 'en'
+          ? 'Use supplier search or date range (the API does not allow combining both).'
+          : 'Usá la búsqueda por proveedor o el rango de fechas (la API no permite combinarlos).'
+    )
+  }, [hasSearch, hasDateRange, lang, translate])
+
+  const activeFilterDescriptions = useMemo(() => {
+    const descriptions = []
+
+    if (appliedFilters?.search) {
+      descriptions.push(
+        translate(
+          'purchasePaymentsMvp.filters.badge.supplier',
+          { value: appliedFilters.search },
+          ({ value }) =>
+            lang === 'en' ? `Supplier: ${value}` : `Proveedor: ${value}`
+        )
+      )
+    }
+
+    if (appliedFilters?.orderId) {
+      descriptions.push(
+        translate(
+          'purchasePaymentsMvp.filters.badge.orderId',
+          { value: appliedFilters.orderId },
+          ({ value }) =>
+            lang === 'en' ? `Order ID: ${value}` : `ID Orden: ${value}`
+        )
+      )
+    }
+
+    if (appliedFilters?.dateFrom || appliedFilters?.dateTo) {
+      const from = appliedFilters.dateFrom || '—'
+      const to = appliedFilters.dateTo || '—'
+      descriptions.push(
+        translate(
+          'purchasePaymentsMvp.filters.badge.date',
+          { from, to },
+          ({ from: fromLabel, to: toLabel }) =>
+            lang === 'en'
+              ? `Date range: ${fromLabel} → ${toLabel}`
+              : `Rango: ${fromLabel} → ${toLabel}`
+        )
+      )
+    }
+
+    if (appliedFilters?.status && appliedFilters.status !== 'all') {
+      descriptions.push(
+        translate(
+          'purchasePaymentsMvp.filters.badge.status',
+          { value: appliedFilters.status },
+          ({ value }) =>
+            lang === 'en' ? `Status: ${value}` : `Estado: ${value}`
+        )
+      )
+    }
+
+    return descriptions
+  }, [appliedFilters, lang, translate])
 
   const allSelected =
     orders && orders.length > 0 && selectedOrders.size === orders.length
@@ -251,6 +384,8 @@ const PurchasePaymentsMvpPage = () => {
     : someSelected
     ? 'indeterminate'
     : false
+
+  const isRegisterEnabled = selectedOrders.size === 1
 
   const handleViewOrder = useCallback(
     orderId => {
@@ -299,10 +434,7 @@ const PurchasePaymentsMvpPage = () => {
   const handleRegisterPaymentSubmit = useCallback(
     async payload => {
       try {
-        await purchasePaymentsMvpService.registerPayment(
-          payload.orderId,
-          payload
-        )
+        await registerPayment(payload)
         showSuccess(
           t('purchasePaymentsMvp.registerModal.feedback.success', {
             orderId: payload.orderId,
@@ -318,7 +450,7 @@ const PurchasePaymentsMvpPage = () => {
         throw error
       }
     },
-    [refresh, showError, showSuccess, t]
+    [refresh, registerPayment, showError, showSuccess, t]
   )
 
   const handleModalOpenChange = useCallback(nextOpen => {
@@ -358,18 +490,6 @@ const PurchasePaymentsMvpPage = () => {
 
     return (
       <div role='region' aria-live='polite'>
-        {hasOrders && selectedOrders.size > 0 && (
-          <div className='purchase-payments-mvp__selection-banner'>
-            {translate(
-              'purchasePaymentsMvp.selection.count',
-              { count: selectedOrders.size },
-              ({ count }) =>
-                lang === 'en'
-                  ? `${count} orders selected`
-                  : `${count} órdenes seleccionadas`
-            )}
-          </div>
-        )}
         <div className='purchase-payments-mvp__table-wrapper'>
           <Table className='purchase-payments-mvp__table'>
             <TableHeader className='purchase-payments-mvp__table-head'>
@@ -391,7 +511,9 @@ const PurchasePaymentsMvpPage = () => {
                   />
                 </TableHead>
                 <TableHead className='purchase-payments-mvp__column'>
-                  {t('purchasePaymentsMvp.table.order')}
+                  {translate('purchasePaymentsMvp.table.id', undefined, () =>
+                    lang === 'en' ? 'ID' : 'ID'
+                  )}
                 </TableHead>
                 <TableHead className='purchase-payments-mvp__column'>
                   {t('purchasePaymentsMvp.table.supplier')}
@@ -413,9 +535,13 @@ const PurchasePaymentsMvpPage = () => {
             <TableBody className='purchase-payments-mvp__table-body'>
               {hasOrders ? (
                 orders.map(order => {
-                  const issued = dateFormatter.format(
-                    new Date(order.issue_date)
-                  )
+                  const issued = order.issue_date
+                    ? dateFormatter.format(new Date(order.issue_date))
+                    : translate(
+                        'purchasePaymentsMvp.table.noIssueDate',
+                        undefined,
+                        () => (lang === 'en' ? 'No date' : 'Sin fecha')
+                      )
                   const pendingAmount = Number(order.pendingAmount)
                   const isPending = pendingAmount > 0
                   const isSelected = selectedOrders.has(order.id)
@@ -438,6 +564,7 @@ const PurchasePaymentsMvpPage = () => {
                       key={order.id}
                       className={rowClassName}
                       aria-selected={isSelected}
+                      data-selected={isSelected ? 'true' : 'false'}
                       onClick={event => handleRowClick(event, order.id)}
                       onDoubleClick={event =>
                         handleRowDoubleClick(event, order.id)
@@ -471,7 +598,6 @@ const PurchasePaymentsMvpPage = () => {
                           >
                             {order.id}
                           </button>
-                          {renderPriorityTag(order.priority)}
                         </div>
                       </TableCell>
                       <TableCell className='purchase-payments-mvp__cell'>
@@ -634,50 +760,66 @@ const PurchasePaymentsMvpPage = () => {
               {t('purchasePaymentsMvp.subtitle')}
             </p>
           </div>
-          <div className='purchase-payments-mvp__actions'>
-            <div className='purchase-payments-mvp__icon-actions'>
+          <div className='purchase-payments-mvp__header-utilities'>
+            <div className='purchase-payments-mvp__actions'>
+              <div className='purchase-payments-mvp__icon-actions'>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='icon'
+                  onClick={handleRefresh}
+                  className='purchase-payments-mvp__icon-button'
+                  aria-label={translate(
+                    'purchasePaymentsMvp.actions.refresh',
+                    undefined,
+                    () =>
+                      lang === 'en' ? 'Clear results' : 'Limpiar resultados'
+                  )}
+                >
+                  {loading ? (
+                    <Loader2 className='purchase-payments-mvp__icon--spin' />
+                  ) : (
+                    <RefreshCw className='purchase-payments-mvp__icon' />
+                  )}
+                </Button>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='icon'
+                  onClick={handleExport}
+                  className='purchase-payments-mvp__icon-button'
+                  aria-label={translate(
+                    'purchasePaymentsMvp.actions.export',
+                    undefined,
+                    () => (lang === 'en' ? 'Export' : 'Exportar')
+                  )}
+                >
+                  <Download className='purchase-payments-mvp__icon' />
+                </Button>
+              </div>
               <Button
                 type='button'
-                variant='outline'
-                size='icon'
-                onClick={handleRefresh}
-                className='purchase-payments-mvp__icon-button'
-                aria-label={translate(
-                  'purchasePaymentsMvp.actions.refresh',
-                  undefined,
-                  () => (lang === 'en' ? 'Refresh' : 'Actualizar')
-                )}
+                size='lg'
+                onClick={handleCreatePayment}
+                disabled={!isRegisterEnabled || processingPayment}
+                className='purchase-payments-mvp__primary-action'
               >
-                {loading ? (
-                  <Loader2 className='purchase-payments-mvp__icon--spin' />
-                ) : (
-                  <RefreshCw className='purchase-payments-mvp__icon' />
-                )}
+                <PlusCircle className='purchase-payments-mvp__primary-icon' />
+                {t('purchasePaymentsMvp.actions.registerPayment')}
               </Button>
-              <Button
-                type='button'
-                variant='outline'
-                size='icon'
-                onClick={handleExport}
-                className='purchase-payments-mvp__icon-button'
-                aria-label={translate(
-                  'purchasePaymentsMvp.actions.export',
-                  undefined,
-                  () => (lang === 'en' ? 'Export' : 'Exportar')
-                )}
-              >
-                <Download className='purchase-payments-mvp__icon' />
-              </Button>
+              {!isRegisterEnabled && (
+                <p className='purchase-payments-mvp__selection-hint'>
+                  {translate(
+                    'purchasePaymentsMvp.selection.helper',
+                    undefined,
+                    () =>
+                      lang === 'en'
+                        ? 'Seleccioná una orden para habilitar el registro de pago.'
+                        : 'Seleccioná una orden para habilitar el registro de pago.'
+                  )}
+                </p>
+              )}
             </div>
-            <Button
-              type='button'
-              size='lg'
-              onClick={handleCreatePayment}
-              className='purchase-payments-mvp__primary-action'
-            >
-              <PlusCircle className='purchase-payments-mvp__primary-icon' />
-              {t('purchasePaymentsMvp.actions.registerPayment')}
-            </Button>
           </div>
         </header>
 
@@ -730,12 +872,69 @@ const PurchasePaymentsMvpPage = () => {
                         'purchasePaymentsMvp.filters.search.placeholder',
                         undefined,
                         () =>
-                          lang === 'en' ? 'Search supplier' : 'Buscar proveedor'
+                          lang === 'en'
+                            ? 'ID or supplier name'
+                            : 'ID o nombre de proveedor'
                       )}
                       value={filters.search}
                       onChange={handleInputChange}
                     />
                   </div>
+                  <p className='purchase-payments-mvp__filters-hint'>
+                    {translate(
+                      'purchasePaymentsMvp.filters.search.hint',
+                      undefined,
+                      () =>
+                        lang === 'en'
+                          ? 'Enter only numbers (ID) or only letters (name).'
+                          : 'Ingresá solo números (ID) o solo letras (nombre).'
+                    )}
+                  </p>
+                </div>
+
+                <div className='purchase-payments-mvp__field'>
+                  <label
+                    className='purchase-payments-mvp__field-label'
+                    htmlFor='purchase-payments-order-id'
+                  >
+                    {translate(
+                      'purchasePaymentsMvp.filters.orderId.label',
+                      undefined,
+                      () => (lang === 'en' ? 'Order ID' : 'ID de Orden')
+                    )}
+                  </label>
+                  <div className='purchase-payments-mvp__input-wrapper'>
+                    <Search
+                      className='purchase-payments-mvp__input-icon'
+                      aria-hidden='true'
+                    />
+                    <Input
+                      id='purchase-payments-order-id'
+                      name='orderId'
+                      type='search'
+                      className='purchase-payments-mvp__input purchase-payments-mvp__input--with-icon'
+                      placeholder={translate(
+                        'purchasePaymentsMvp.filters.orderId.placeholder',
+                        undefined,
+                        () =>
+                          lang === 'en'
+                            ? 'Filter by order ID'
+                            : 'Filtrar por ID de orden'
+                      )}
+                      value={filters.orderId}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <p className='purchase-payments-mvp__filters-hint'>
+                    {translate(
+                      'purchasePaymentsMvp.filters.orderId.hint',
+                      undefined,
+                      () =>
+                        lang === 'en'
+                          ? 'Local filter for loaded results.'
+                          : 'Filtro local sobre resultados cargados.'
+                    )}
+                  </p>
                 </div>
 
                 <div className='purchase-payments-mvp__field'>
@@ -772,6 +971,12 @@ const PurchasePaymentsMvpPage = () => {
                     />
                   </div>
                 </div>
+
+                {exclusiveFiltersHint && (
+                  <p className='purchase-payments-mvp__filters-hint'>
+                    {exclusiveFiltersHint}
+                  </p>
+                )}
 
                 <div className='purchase-payments-mvp__field'>
                   <label
@@ -867,6 +1072,32 @@ const PurchasePaymentsMvpPage = () => {
                   </div>
                 )}
               </div>
+              {activeFilterDescriptions.length > 0 && (
+                <div className='purchase-payments-mvp__active-filters'>
+                  {activeFilterDescriptions.map(label => (
+                    <span
+                      className='purchase-payments-mvp__filter-pill'
+                      key={label}
+                    >
+                      {label}
+                    </span>
+                  ))}
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='sm'
+                    className='purchase-payments-mvp__filters-clear'
+                    onClick={handleReset}
+                  >
+                    {translate(
+                      'purchasePaymentsMvp.filters.clearAll',
+                      undefined,
+                      () =>
+                        lang === 'en' ? 'Clear filters' : 'Limpiar filtros'
+                    )}
+                  </Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent className='purchase-payments-mvp__table-content'>
               {renderTable()}

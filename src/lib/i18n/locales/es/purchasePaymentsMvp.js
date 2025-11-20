@@ -45,6 +45,7 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.status.pending': 'Pendiente',
   'purchasePaymentsMvp.status.partial': 'Pago parcial',
   'purchasePaymentsMvp.status.paid': 'Pagado',
+  'purchasePaymentsMvp.status.completed': 'Completado',
   'purchasePaymentsMvp.status.overdue': 'Vencido',
   'purchasePaymentsMvp.status.cancelled': 'Cancelado',
   'purchasePaymentsMvp.status.overdueLabel': 'Pago vencido',
@@ -132,10 +133,14 @@ export const purchasePaymentsMvp = {
     'No hay pagos registrados todavía.',
   'purchasePaymentsMvp.detail.history.columns.date': 'Fecha',
   'purchasePaymentsMvp.detail.history.columns.user': 'Usuario',
+  'purchasePaymentsMvp.detail.history.columns.reference': 'Referencia',
   'purchasePaymentsMvp.detail.history.columns.amount': 'Monto',
   'purchasePaymentsMvp.detail.history.columns.status': 'Estado',
+  'purchasePaymentsMvp.detail.history.columns.register': 'Caja',
   'purchasePaymentsMvp.detail.history.status.approved': 'Aprobado',
   'purchasePaymentsMvp.detail.history.status.delayed': 'Con retraso',
+  'purchasePaymentsMvp.detail.history.reference.empty': 'Sin referencia',
+  'purchasePaymentsMvp.detail.history.register.blank': 'Sin caja asociada',
 
   // Modal de registro de pagos
   'purchasePaymentsMvp.registerModal.title': 'Registrar nuevo pago',
@@ -151,17 +156,49 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.registerModal.amount.errorExceeded':
     'El monto no puede superar el saldo pendiente.',
   'purchasePaymentsMvp.registerModal.method.label': 'Método de pago',
+  'purchasePaymentsMvp.registerModal.method.placeholder':
+    'Seleccioná un método de pago',
   'purchasePaymentsMvp.registerModal.method.transfer': 'Transferencia bancaria',
   'purchasePaymentsMvp.registerModal.method.cash': 'Efectivo',
+  'purchasePaymentsMvp.registerModal.method.empty':
+    'No hay métodos de pago disponibles.',
+  'purchasePaymentsMvp.registerModal.method.reload': 'Recargar métodos',
+  'purchasePaymentsMvp.registerModal.method.loadError':
+    'No se pudieron cargar los métodos de pago. Intentá nuevamente.',
+  'purchasePaymentsMvp.registerModal.method.errorRequired':
+    'Seleccioná un método de pago válido.',
   'purchasePaymentsMvp.registerModal.currency.label': 'Moneda',
+  'purchasePaymentsMvp.registerModal.currency.placeholder':
+    'Seleccioná una moneda',
+  'purchasePaymentsMvp.registerModal.currency.empty':
+    'No hay monedas disponibles.',
+  'purchasePaymentsMvp.registerModal.currency.reload': 'Recargar monedas',
+  'purchasePaymentsMvp.registerModal.currency.loadError':
+    'No se pudieron cargar las monedas. Intentá nuevamente.',
+  'purchasePaymentsMvp.registerModal.currency.errorRequired':
+    'Seleccioná una moneda válida.',
   'purchasePaymentsMvp.registerModal.reference.label': 'Referencia',
   'purchasePaymentsMvp.registerModal.reference.placeholder':
     'Ej. número de transacción o comprobante',
   'purchasePaymentsMvp.registerModal.cashRegister.label': 'Caja',
   'purchasePaymentsMvp.registerModal.cashRegister.placeholder':
     'Seleccioná una caja',
+  'purchasePaymentsMvp.registerModal.cashRegister.none': 'Sin caja asignada',
   'purchasePaymentsMvp.registerModal.cashRegister.main': 'Caja principal',
   'purchasePaymentsMvp.registerModal.cashRegister.secondary': 'Caja secundaria',
+  'purchasePaymentsMvp.registerModal.cashRegister.errorRequired':
+    'Seleccioná una caja abierta para registrar el pago.',
+  'purchasePaymentsMvp.registerModal.cashRegister.empty':
+    'No hay cajas abiertas disponibles. Abrí una caja desde el módulo de Caja Registradora.',
+  'purchasePaymentsMvp.registerModal.cashRegister.loading':
+    'Cargando cajas registradoras...',
+  'purchasePaymentsMvp.registerModal.cashRegister.reload': 'Recargar cajas',
+  'purchasePaymentsMvp.registerModal.cashRegister.loadError':
+    'No se pudieron cargar las cajas registradoras.',
+  'purchasePaymentsMvp.registerModal.cashRegister.balance':
+    'Saldo disponible: {amount}',
+  'purchasePaymentsMvp.registerModal.cashRegister.optionalHelper':
+    'Podés dejar este campo vacío si no vas a asignar el pago a una caja.',
   'purchasePaymentsMvp.registerModal.notes.label': 'Notas',
   'purchasePaymentsMvp.registerModal.notes.placeholder':
     'Observaciones adicionales (opcional)',

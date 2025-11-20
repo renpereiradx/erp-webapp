@@ -1,263 +1,611 @@
-import {
-  DEMO_PURCHASE_ORDERS_DATA,
-  DEMO_SUPPLIER_DATA,
-  DEMO_PURCHASE_ITEMS_DATA,
-  simulateDelay,
-} from '@/config/demoData'
+import purchaseService from '@/services/purchaseService'
+import { purchasePaymentService } from '@/services/purchasePaymentService'
 
 const DEFAULT_PAGE_SIZE = 10
+const DEFAULT_FETCH_LIMIT = 200
 const DEFAULT_CURRENCY = 'PYG'
+const PRIORITY_FALLBACK = 'medium'
 
-const roundMoney = value => {
+const CURRENCY_ID_MAP = {
+  1: 'PYG',
+}
+
+const isCurrencyCode = value => /^[A-Z]{3}$/.test(value)
+
+const normalizeCurrencyCode = raw => {
+  if (!raw && raw !== 0) {
+    return DEFAULT_CURRENCY
+  }
+
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    return CURRENCY_ID_MAP[raw] || DEFAULT_CURRENCY
+  }
+
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim()
+    if (!trimmed) {
+      return DEFAULT_CURRENCY
+    }
+
+    if (/^\d+$/.test(trimmed)) {
+      const numeric = Number(trimmed)
+      if (Number.isFinite(numeric)) {
+        return CURRENCY_ID_MAP[numeric] || DEFAULT_CURRENCY
+      }
+    }
+
+    const upper = trimmed.toUpperCase()
+    if (isCurrencyCode(upper)) {
+      return upper
+    }
+
+    return DEFAULT_CURRENCY
+  }
+
+  if (typeof raw === 'object') {
+    const nestedCandidate =
+      raw?.currency ||
+      raw?.currency_code ||
+      raw?.currencyCode ||
+      raw?.code ||
+      raw?.id
+
+    if (nestedCandidate !== undefined) {
+      return normalizeCurrencyCode(nestedCandidate)
+    }
+  }
+
+  return DEFAULT_CURRENCY
+}
+
+const resolveCurrencyValue = source => {
+  if (source == null || typeof source !== 'object') {
+    return source
+  }
+
+  const candidates = [
+    source.currency,
+    source.currency_code,
+    source.currencyCode,
+    source.currency_id,
+    source.currencyId,
+    source.currency_type,
+    source.currency?.code,
+    source.currency?.currency_code,
+    source.currency?.currencyCode,
+    source.currency?.id,
+    source.currency?.currency_id,
+  ]
+
+  for (const candidate of candidates) {
+    if (candidate !== undefined && candidate !== null) {
+      return candidate
+    }
+  }
+
+  return null
+}
+
+const STATUS_MAP = {
+  paid: 'completed',
+  complete: 'completed',
+  completed: 'completed',
+  finished: 'completed',
+  processed: 'completed',
+  partial: 'partial',
+  partial_payment: 'partial',
+  partialpaid: 'partial',
+  pending: 'pending',
+  processing: 'pending',
+  in_progress: 'pending',
+  created: 'pending',
+  cancelled: 'cancelled',
+  canceled: 'cancelled',
+  voided: 'cancelled',
+  overdue: 'overdue',
+}
+
+const toNumber = value => {
   const numeric = Number.parseFloat(value)
-  if (!Number.isFinite(numeric)) {
-    return 0
-  }
-  return Number(numeric.toFixed(2))
+  return Number.isFinite(numeric) ? numeric : 0
 }
 
-const ensureDate = (value, fallback = new Date()) => {
-  if (!value) return new Date(fallback)
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return new Date(fallback)
-  }
-  return date
+const roundCurrency = value => {
+  const numeric = toNumber(value)
+  return Math.round(numeric * 100) / 100
 }
 
-const sumPayments = payments =>
-  (payments || []).reduce(
-    (acc, payment) => acc + Number(payment.amount || 0),
-    0
-  )
-
-const createSupplierInfo = order => {
-  const supplier = DEMO_SUPPLIER_DATA.find(
-    item => item.id === order.supplier_id
-  )
-
-  if (supplier) {
-    return {
-      id: supplier.id,
-      name: supplier.name,
-      contact: supplier.contact?.email ?? supplier.contact?.phone ?? null,
-      email: supplier.contact?.email ?? null,
-      phone: supplier.contact?.phone ?? null,
-      address: supplier.address ?? null,
-      taxId: supplier.tax_id ?? null,
-      priority: supplier.metadata?.priority ?? 'medium',
-    }
-  }
-
-  return {
-    id: order.supplier_id,
-    name: order.supplier_name,
-    contact: null,
-    email: null,
-    phone: null,
-    address: null,
-    taxId: null,
-    priority: 'medium',
-  }
-}
-
-const computeInitialPending = (order, priority) => {
-  if (order.status === 'completed' || order.status === 'cancelled') {
-    return 0
-  }
-
-  const multiplier = priority === 'high' ? 0.65 : 0.45
-  const base = order.total_amount * multiplier
-  return Number(Math.max(0, base).toFixed(2))
-}
-
-const createItemsCollection = orderId =>
-  DEMO_PURCHASE_ITEMS_DATA.filter(
-    item => item.purchase_order_id === orderId
-  ).map(item => ({
-    id: item.id,
-    productId: item.product_id,
-    name: item.product_name,
-    quantity: item.quantity,
-    unitPrice: roundMoney(item.unit_price),
-    total: roundMoney(item.total_price),
-    expDate: item.exp_date ?? null,
-  }))
-
-const generateInitialPayments = (order, targetPaid) => {
-  const normalizedTarget = roundMoney(Math.max(0, targetPaid))
-  if (!normalizedTarget) return []
-
-  const baseDate = ensureDate(order.order_date)
-  const currency = order.currency ?? DEFAULT_CURRENCY
-
-  const shouldSplit = normalizedTarget > order.total_amount * 0.55
-  const segments = shouldSplit
-    ? [roundMoney(normalizedTarget * 0.6), normalizedTarget]
-    : [normalizedTarget]
-
-  let accumulated = 0
-
-  return segments.map((segment, index) => {
-    const isLast = index === segments.length - 1
-    const targetAmount = isLast
-      ? roundMoney(normalizedTarget - accumulated)
-      : segment
-
-    accumulated = roundMoney(accumulated + targetAmount)
-
-    const registered = new Date(baseDate)
-    registered.setDate(baseDate.getDate() + (index + 1) * 2)
-
-    return {
-      id: `seed_${order.id}_${index + 1}`,
-      order_id: order.id,
-      amount: targetAmount,
-      method: index === 0 ? 'transfer' : 'cash',
-      currency,
-      reference: `SIM-${order.id}-${index + 1}`,
-      cash_register_id: index === 0 ? 'main' : 'secondary',
-      notes:
-        index === 0
-          ? 'Pago simulado para datos demo'
-          : 'Segundo pago simulado para datos demo',
-      status: 'approved',
-      recorded_by: index === 0 ? 'demo.user' : 'demo.manager',
-      registered_at: registered.toISOString(),
-    }
-  })
-}
-
-const createInternalOrder = order => {
-  const supplier = createSupplierInfo(order)
-  const basePending = computeInitialPending(order, supplier.priority)
-  const safePending = roundMoney(
-    Math.min(order.total_amount, Math.max(0, basePending))
-  )
-  const targetPaid = roundMoney(order.total_amount - safePending)
-  const payments = generateInitialPayments(order, targetPaid)
-  const totalPaid = roundMoney(sumPayments(payments))
-  const recalculatedPending = roundMoney(
-    Math.max(0, order.total_amount - totalPaid)
-  )
-
-  return {
-    id: order.id,
-    supplier,
-    issue_date: order.order_date,
-    expected_delivery: order.expected_delivery,
-    total_amount: order.total_amount,
-    pendingAmount: recalculatedPending,
-    totalPaid,
-    currency: order.currency ?? DEFAULT_CURRENCY,
-    status: order.status,
-    priority: supplier.priority,
-    notes: order.notes ?? '',
-    payments,
-    items: createItemsCollection(order.id),
-    history: [],
-    lastPaymentAt:
-      payments.length > 0 ? payments[payments.length - 1].registered_at : null,
-    createdAt: order.order_date,
-    updatedAt:
-      payments.length > 0
-        ? payments[payments.length - 1].registered_at
-        : order.order_date,
-  }
-}
-
-let ordersState = DEMO_PURCHASE_ORDERS_DATA.map(createInternalOrder)
-
-const cloneOrder = order => ({
-  ...order,
-  supplier: order.supplier ? { ...order.supplier } : null,
-  payments: order.payments
-    ? order.payments.map(payment => ({ ...payment }))
-    : [],
-  items: order.items ? order.items.map(item => ({ ...item })) : [],
-})
-
-const withDerivedFields = order => {
-  const cloned = cloneOrder(order)
-  const totalAmount = Number(cloned.total_amount ?? 0)
-  const totalPaid = cloned.totalPaid ?? roundMoney(sumPayments(cloned.payments))
-  const pendingAmount =
-    cloned.pendingAmount ?? roundMoney(Math.max(0, totalAmount - totalPaid))
-  const progressRatio =
-    totalAmount > 0 ? Math.min(1, totalPaid / totalAmount) : 0
-  const progressPercent = Math.round(progressRatio * 100)
-
-  const dueDate = cloned.expected_delivery
-    ? new Date(cloned.expected_delivery)
-    : null
-  const isOverdue = Boolean(
-    dueDate && !Number.isNaN(dueDate.getTime()) && pendingAmount > 0
-      ? dueDate.getTime() < Date.now()
-      : false
-  )
-
-  return {
-    ...cloned,
-    totalPaid: roundMoney(totalPaid),
-    pendingAmount: roundMoney(pendingAmount),
-    paymentProgressPercent: progressPercent,
-    paymentProgressRatio: progressRatio,
-    isOverdue,
-  }
-}
-
-const toEndOfDay = value => {
-  if (!value) return null
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    const fallback = new Date(`${value}T00:00:00`)
-    if (Number.isNaN(fallback.getTime())) return null
-    fallback.setHours(23, 59, 59, 999)
-    return fallback
-  }
-  date.setHours(23, 59, 59, 999)
-  return date
-}
-
-const toStartOfDay = value => {
+const ensureDate = value => {
   if (!value) return null
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
     const fallback = new Date(`${value}T00:00:00`)
     return Number.isNaN(fallback.getTime()) ? null : fallback
   }
+  return date
+}
+
+const toStartOfDay = value => {
+  const date = ensureDate(value)
+  if (!date) return null
   date.setHours(0, 0, 0, 0)
   return date
 }
 
-const matchSearch = (order, term) => {
-  if (!term) return true
-  const haystack = [
-    String(order.id),
-    order.supplier?.name ?? '',
-    order.supplier?.contact ?? '',
-    order.notes ?? '',
-  ]
-  return haystack.some(value =>
-    value.toLowerCase().includes(term.toLowerCase())
-  )
+const toEndOfDay = value => {
+  const date = ensureDate(value)
+  if (!date) return null
+  date.setHours(23, 59, 59, 999)
+  return date
 }
 
-const applyFilters = (orders, filters) => {
-  const statusFilter =
-    filters.status && filters.status !== 'all' ? filters.status : null
-  const searchTerm = (filters.search ?? '').trim().toLowerCase()
-  const from = toStartOfDay(filters.dateFrom)
-  const to = toEndOfDay(filters.dateTo)
+const buildSupplierAddress = rawAddress => {
+  if (!rawAddress) return null
+  if (typeof rawAddress === 'string') {
+    return {
+      street: rawAddress,
+      city: null,
+      country: null,
+    }
+  }
 
-  return orders.filter(order => {
-    if (statusFilter && order.status !== statusFilter) return false
-    if (from && new Date(order.issue_date) < from) return false
-    if (to && new Date(order.issue_date) > to) return false
-    if (!matchSearch(order, searchTerm)) return false
-    return true
+  return {
+    street:
+      rawAddress.street ||
+      rawAddress.address ||
+      rawAddress.line1 ||
+      rawAddress.address_line ||
+      null,
+    city: rawAddress.city || rawAddress.municipality || null,
+    country: rawAddress.country || rawAddress.country_name || null,
+  }
+}
+
+const buildSupplier = base => {
+  const contact =
+    base.supplier_contact ??
+    base.supplier?.contact ??
+    base.supplier?.phone ??
+    base.supplier?.email ??
+    null
+
+  return {
+    id: base.supplier_id ?? base.supplier?.id ?? null,
+    name:
+      base.supplier_name ??
+      base.supplier?.company_name ??
+      base.supplier?.name ??
+      '',
+    contact,
+    email: base.supplier_email ?? base.supplier?.email ?? null,
+    phone: base.supplier_phone ?? base.supplier?.phone ?? null,
+    address: buildSupplierAddress(
+      base.supplier_address ?? base.supplier?.address
+    ),
+    taxId:
+      base.supplier_tax_id ??
+      base.supplier?.tax_id ??
+      base.supplier?.ruc ??
+      null,
+    priority: base.supplier_priority ?? base.priority ?? PRIORITY_FALLBACK,
+  }
+}
+
+const normalizeItems = items => {
+  if (!Array.isArray(items)) return []
+
+  return items.map(item => {
+    const quantity = toNumber(item.quantity ?? item.qty)
+    const unitPrice = toNumber(item.unit_price ?? item.unitPrice ?? item.cost)
+    const total =
+      item.total_price ?? item.total ?? roundCurrency(quantity * unitPrice)
+
+    return {
+      id: item.id ?? item.detail_id ?? item.item_id ?? item.product_id,
+      productId: item.product_id ?? item.productId ?? item.id ?? null,
+      name: item.product_name ?? item.name ?? 'Producto',
+      quantity,
+      unitPrice: roundCurrency(unitPrice),
+      total: roundCurrency(total),
+      expDate: item.exp_date ?? item.expiry_date ?? null,
+    }
   })
 }
+
+const normalizePayment = (payment, currency) => {
+  if (!payment) return null
+
+  const amount =
+    payment.amount ??
+    payment.amount_paid ??
+    payment.amountPaid ??
+    payment.payment_amount ??
+    0
+
+  const timestamp =
+    payment.registered_at ??
+    payment.payment_date ??
+    payment.date ??
+    payment.created_at ??
+    payment.createdAt ??
+    payment.timestamp ??
+    null
+
+  const recordedBy =
+    payment.recorded_by ??
+    payment.user ??
+    payment.user_name ??
+    payment.userName ??
+    payment.actor ??
+    payment.cashier ??
+    payment.cashier_name ??
+    payment.created_by ??
+    null
+
+  const reference =
+    payment.reference ??
+    payment.reference_number ??
+    payment.referenceNumber ??
+    payment.check_number ??
+    payment.checkNumber ??
+    payment.payment_reference ??
+    payment.paymentReference ??
+    payment.document ??
+    payment.document_number ??
+    payment.documentNumber ??
+    null
+
+  const cashRegisterId =
+    payment.cash_register_id ??
+    payment.cashRegisterId ??
+    payment.cash_register?.id ??
+    payment.cashRegister?.id ??
+    null
+
+  const cashRegisterName =
+    payment.cash_register_name ??
+    payment.cashRegisterName ??
+    payment.cash_register?.name ??
+    payment.cashRegister?.name ??
+    null
+
+  return {
+    id:
+      payment.id ??
+      payment.payment_id ??
+      payment.paymentId ??
+      payment.detail_id ??
+      null,
+    amount: roundCurrency(amount),
+    currency: normalizeCurrencyCode(
+      resolveCurrencyValue(payment) ?? currency ?? DEFAULT_CURRENCY
+    ),
+    status: formatStatus(
+      payment.status ??
+        payment.payment_status ??
+        payment.state ??
+        payment.result ??
+        'completed'
+    ),
+    registered_at: timestamp,
+    recorded_by: recordedBy,
+    reference,
+    notes: payment.notes ?? payment.description ?? payment.details ?? null,
+    cash_register_id: cashRegisterId,
+    cash_register_name: cashRegisterName,
+    cash_register:
+      cashRegisterId || cashRegisterName
+        ? {
+            id: cashRegisterId,
+            name: cashRegisterName,
+          }
+        : null,
+    raw: payment,
+  }
+}
+
+const normalizePayments = (payments, currency) => {
+  if (!Array.isArray(payments)) return []
+  return payments
+    .map(payment => normalizePayment(payment, currency))
+    .filter(Boolean)
+}
+
+const normalizeHistoryEntry = (entry, index = 0) => {
+  if (!entry) return null
+
+  const timestamp =
+    entry.timestamp ??
+    entry.recorded_at ??
+    entry.created_at ??
+    entry.updated_at ??
+    entry.date ??
+    entry.occurred_at ??
+    entry.event_date ??
+    null
+
+  const action =
+    entry.action ??
+    entry.event ??
+    entry.type ??
+    entry.status ??
+    entry.label ??
+    'update'
+
+  const actor =
+    entry.actor ??
+    entry.user ??
+    entry.user_name ??
+    entry.userName ??
+    entry.performed_by ??
+    entry.author ??
+    null
+
+  const notes =
+    entry.notes ??
+    entry.description ??
+    entry.details ??
+    entry.message ??
+    entry.comment ??
+    ''
+
+  return {
+    id:
+      entry.id ??
+      entry.entry_id ??
+      entry.history_id ??
+      `${action}-${timestamp || index}`,
+    timestamp,
+    action,
+    actor,
+    notes,
+  }
+}
+
+const normalizeHistory = (raw, base, normalizedPayments = []) => {
+  const candidates = [
+    raw?.history,
+    raw?.timeline,
+    raw?.events,
+    raw?.activity,
+    raw?.activity_log,
+    raw?.logs,
+    base?.history,
+    base?.timeline,
+    base?.events,
+    base?.activity,
+    base?.activity_log,
+    base?.status_history,
+  ]
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate) && candidate.length) {
+      return candidate
+        .map((entry, index) => normalizeHistoryEntry(entry, index))
+        .filter(Boolean)
+    }
+  }
+
+  if (normalizedPayments.length) {
+    return normalizedPayments
+      .map((payment, index) =>
+        normalizeHistoryEntry(
+          {
+            id: payment.id ? `payment-${payment.id}` : null,
+            timestamp: payment.registered_at,
+            action: payment.status || 'payment',
+            actor: payment.recorded_by,
+            notes:
+              payment.notes ||
+              payment.reference ||
+              `Pago registrado${
+                payment.recorded_by ? ` por ${payment.recorded_by}` : ''
+              }.`,
+          },
+          index
+        )
+      )
+      .filter(Boolean)
+  }
+
+  return []
+}
+
+const computePaymentProgress = (paid, total) => {
+  const safeTotal = toNumber(total)
+  if (safeTotal <= 0) return 0
+  const safePaid = toNumber(paid)
+  return Math.min(100, Math.max(0, Math.round((safePaid / safeTotal) * 100)))
+}
+
+const formatStatus = status => {
+  if (!status) return 'pending'
+  const normalized = status.toString().trim().toLowerCase()
+  return STATUS_MAP[normalized] || normalized || 'pending'
+}
+
+const normalizeOrder = raw => {
+  if (!raw) return null
+
+  const base = raw.purchase ?? raw
+  const orderId = Number(
+    base.purchase_order_id ?? base.order_id ?? base.id ?? raw.id
+  )
+  if (!Number.isFinite(orderId)) {
+    return null
+  }
+
+  const currency = normalizeCurrencyCode(
+    resolveCurrencyValue(base) ?? DEFAULT_CURRENCY
+  )
+  const totalAmount = roundCurrency(base.total_amount ?? base.total ?? 0)
+
+  // Detect payment summary object (usually in raw.payments or base.payments if not an array)
+  const paymentSummary =
+    (raw.payments && !Array.isArray(raw.payments) ? raw.payments : null) ||
+    (base.payments && !Array.isArray(base.payments) ? base.payments : null)
+
+  let totalPaid
+  let outstanding
+  let rawStatus = base.status ?? base.payment_status ?? 'pending'
+
+  if (paymentSummary) {
+    totalPaid = roundCurrency(
+      paymentSummary.total_paid ?? paymentSummary.totalPaid ?? 0
+    )
+    outstanding = roundCurrency(
+      paymentSummary.outstanding_amount ??
+        paymentSummary.outstandingAmount ??
+        paymentSummary.remaining_amount ??
+        0
+    )
+    if (paymentSummary.payment_status) {
+      rawStatus = paymentSummary.payment_status
+    }
+  } else {
+    totalPaid = roundCurrency(base.amount_paid ?? base.totalPaid ?? 0)
+    outstanding = roundCurrency(
+      base.remaining_amount ??
+        base.pending_amount ??
+        base.pendingAmount ??
+        totalAmount - totalPaid
+    )
+  }
+
+  const supplier = buildSupplier(base)
+  if (!supplier.name) {
+    supplier.name = supplier.id ? `Proveedor ${supplier.id}` : 'Proveedor'
+  }
+
+  const payments = normalizePayments(base.payments, currency)
+  const lastPaymentAt = (() => {
+    if (base.last_payment_at || base.lastPaymentAt) {
+      return base.last_payment_at ?? base.lastPaymentAt
+    }
+
+    if (!payments.length) {
+      return null
+    }
+
+    return payments.reduce((latest, payment) => {
+      if (!payment.registered_at) {
+        return latest
+      }
+      const currentTs = new Date(payment.registered_at).getTime()
+      if (!Number.isFinite(currentTs)) {
+        return latest
+      }
+      if (!latest) {
+        return payment.registered_at
+      }
+      const latestTs = new Date(latest).getTime()
+      if (!Number.isFinite(latestTs) || currentTs > latestTs) {
+        return payment.registered_at
+      }
+      return latest
+    }, null)
+  })()
+
+  const history = normalizeHistory(raw, base, payments)
+
+  return {
+    id: orderId,
+    supplier,
+    issue_date:
+      base.order_date ??
+      base.issue_date ??
+      base.created_at ??
+      base.createdAt ??
+      null,
+    expected_delivery:
+      base.expected_delivery ?? base.expected_delivery_date ?? null,
+    total_amount: totalAmount,
+    totalPaid,
+    pendingAmount: Math.max(0, outstanding),
+    currency,
+    status: formatStatus(rawStatus),
+    priority: supplier.priority || PRIORITY_FALLBACK,
+    notes: base.notes ?? '',
+    payments,
+    items: normalizeItems(raw.details ?? base.details ?? base.products),
+    history,
+    lastPaymentAt,
+    createdAt: base.created_at ?? base.createdAt ?? null,
+    updatedAt: base.updated_at ?? base.updatedAt ?? null,
+    paymentProgressPercent: computePaymentProgress(totalPaid, totalAmount),
+    paymentProgressRatio: Math.min(
+      1,
+      computePaymentProgress(totalPaid, totalAmount) / 100
+    ),
+    isOverdue:
+      outstanding > 0 &&
+      (() => {
+        const dueDate = ensureDate(
+          base.expected_delivery ?? base.expected_delivery_date
+        )
+        if (!dueDate) return false
+        return dueDate.getTime() < Date.now()
+      })(),
+  }
+}
+
+const matchesSearch = (order, term) => {
+  if (!term || !term.trim()) return true
+  const normalized = term.trim().toLowerCase()
+  const haystack = [
+    String(order.id ?? ''),
+    order.supplier?.name ?? '',
+    order.supplier?.contact ?? '',
+    order.supplier?.email ?? '',
+    order.notes ?? '',
+  ]
+  return haystack.some(entry => entry.toLowerCase().includes(normalized))
+}
+
+const matchesOrderId = (order, orderId) => {
+  if (!orderId || !orderId.trim()) return true
+  const normalized = orderId.trim()
+  return String(order.id ?? '').includes(normalized)
+}
+
+const matchesStatus = (order, status) => {
+  if (!status || status === 'all') return true
+  return (order.status ?? '').toLowerCase() === status.toLowerCase()
+}
+
+const matchesDateRange = (order, from, to) => {
+  if (!from && !to) return true
+  const issueDate = ensureDate(order.issue_date)
+  if (!issueDate) return false
+  if (from) {
+    const start = toStartOfDay(from)
+    if (start && issueDate < start) return false
+  }
+  if (to) {
+    const end = toEndOfDay(to)
+    if (end && issueDate > end) return false
+  }
+  return true
+}
+
+const filterOrders = (orders, filters) =>
+  orders.filter(order => {
+    if (!matchesOrderId(order, filters.orderId)) return false
+    if (!matchesStatus(order, filters.status)) return false
+    if (!matchesSearch(order, filters.search)) return false
+    if (!matchesDateRange(order, filters.dateFrom, filters.dateTo)) return false
+    return true
+  })
+
+const sortOrders = orders =>
+  [...orders].sort((a, b) => {
+    const aTime = ensureDate(a.issue_date)?.getTime() ?? 0
+    const bTime = ensureDate(b.issue_date)?.getTime() ?? 0
+    if (aTime === bTime) {
+      return (b.id ?? 0) - (a.id ?? 0)
+    }
+    return bTime - aTime
+  })
 
 const paginate = (items, page, pageSize) => {
   const total = items.length
@@ -279,118 +627,340 @@ const paginate = (items, page, pageSize) => {
   }
 }
 
-const statusOptions = () =>
-  Array.from(new Set(ordersState.map(order => order.status))).map(value => ({
-    value,
-  }))
+const buildStatusOptions = orders => {
+  const unique = Array.from(
+    new Set(
+      orders
+        .map(order => order.status)
+        .filter(status => typeof status === 'string' && status.length)
+    )
+  )
+
+  return unique.map(value => ({ value }))
+}
+
+const SUPPLIER_NAME_PATTERN = /^[\p{L}\s.'-]+$/u
+const SUPPLIER_ID_PATTERN = /^\d+$/
+
+export const classifySupplierSearchTerm = rawTerm => {
+  if (rawTerm === null || rawTerm === undefined) {
+    return { type: 'empty' }
+  }
+
+  const value = String(rawTerm).trim()
+  if (!value) {
+    return { type: 'empty' }
+  }
+
+  const hasLetters = /\p{L}/u.test(value)
+  const hasDigits = /\d/.test(value)
+
+  // No se permite mezclar números y letras
+  if (hasLetters && hasDigits) {
+    return {
+      type: 'invalid',
+      reason: 'mixed-content',
+      message:
+        'No se puede mezclar ID (números) con nombre (letras). Usá solo uno.',
+    }
+  }
+
+  // Solo dígitos = ID de proveedor
+  if (hasDigits && !hasLetters) {
+    if (SUPPLIER_ID_PATTERN.test(value)) {
+      const supplierId = Number.parseInt(value, 10)
+      if (supplierId > 0) {
+        return { type: 'supplier-id', value: String(supplierId) }
+      }
+      return {
+        type: 'invalid',
+        reason: 'invalid-id',
+        message: 'El ID debe ser un número positivo mayor a 0.',
+      }
+    }
+    return {
+      type: 'invalid',
+      reason: 'invalid-id',
+      message: 'El ID solo puede contener números.',
+    }
+  }
+
+  // Solo letras = nombre de proveedor
+  if (hasLetters && !hasDigits) {
+    if (SUPPLIER_NAME_PATTERN.test(value)) {
+      return { type: 'supplier-name', value }
+    }
+    return {
+      type: 'invalid',
+      reason: 'invalid-name',
+      message:
+        'El nombre solo puede contener letras, espacios, puntos, apóstrofes y guiones.',
+    }
+  }
+
+  return {
+    type: 'invalid',
+    reason: 'unsupported',
+    message:
+      'Formato no reconocido. Ingresá un ID (números) o un nombre (letras).',
+  }
+}
+
+export const fetchPurchasesBySupplierTerm = async (term, options = {}) => {
+  const classification = classifySupplierSearchTerm(term)
+
+  if (classification.type === 'supplier-id') {
+    const supplierId = Number.parseInt(classification.value, 10)
+    if (!Number.isFinite(supplierId) || supplierId <= 0) {
+      const error = new Error('ID de proveedor inválido')
+      error.code = 'INVALID_SUPPLIER_ID'
+      throw error
+    }
+
+    return purchaseService.getPurchasesBySupplier(supplierId, options)
+  }
+
+  if (classification.type === 'supplier-name') {
+    return purchaseService.getPurchasesBySupplierName(
+      classification.value,
+      options
+    )
+  }
+
+  const error = new Error(
+    classification.message || 'Término de búsqueda inválido'
+  )
+  error.code = 'INVALID_SUPPLIER_TERM'
+  error.details = classification
+  throw error
+}
+
+const fetchOrdersFromApi = async filters => {
+  const { search, dateFrom, dateTo } = filters
+  const commonOptions = { showInactiveSuppliers: true }
+
+  try {
+    if (dateFrom || dateTo) {
+      const start = dateFrom || dateTo
+      const end = dateTo || dateFrom
+      const response = await purchaseService.getPurchasesByDateRange(
+        start,
+        end,
+        1,
+        DEFAULT_FETCH_LIMIT,
+        commonOptions
+      )
+
+      if (!response?.success) {
+        throw new Error(
+          response?.error || 'Unable to load purchase orders by date'
+        )
+      }
+
+      return response.data || []
+    }
+
+    if (search && search.trim()) {
+      const response = await fetchPurchasesBySupplierTerm(search, commonOptions)
+
+      if (!response?.success) {
+        throw new Error(
+          response?.error || 'Unable to load supplier purchase orders'
+        )
+      }
+
+      return response.data || []
+    }
+
+    const response = await purchaseService.getRecentPurchases(
+      60,
+      1,
+      DEFAULT_FETCH_LIMIT,
+      commonOptions
+    )
+
+    if (!response?.success) {
+      throw new Error(
+        response?.error || 'Unable to load recent purchase orders'
+      )
+    }
+
+    return response.data || []
+  } catch (error) {
+    throw new Error(error?.message || 'Unable to load purchase orders')
+  }
+}
+
+const normalizeOrders = rawOrders =>
+  rawOrders.map(item => normalizeOrder(item)).filter(order => Boolean(order))
 
 export const purchasePaymentsMvpService = {
   async fetchOrders(params = {}) {
     const page = Number(params.page) || 1
     const pageSize = Number(params.pageSize) || DEFAULT_PAGE_SIZE
+    const filters = {
+      search: params.search ?? '',
+      orderId: params.orderId ?? '',
+      status: params.status ?? 'all',
+      dateFrom: params.dateFrom ?? '',
+      dateTo: params.dateTo ?? '',
+    }
 
-    await simulateDelay(420)
+    const rawOrders = await fetchOrdersFromApi(filters)
+    const normalizedOrders = sortOrders(normalizeOrders(rawOrders))
 
-    const filtered = applyFilters(ordersState, params)
-    const { data, meta } = paginate(filtered, page, pageSize)
+    // Verificar si estamos buscando por proveedor (ID o nombre)
+    // En ese caso, el API ya filtró por proveedor, no necesitamos filtrar nuevamente
+    const searchClassification = classifySupplierSearchTerm(filters.search)
+    const apiAlreadyFilteredBySupplier =
+      searchClassification.type === 'supplier-id' ||
+      searchClassification.type === 'supplier-name'
+
+    // Crear filtros para el cliente, excluyendo 'search' si el API ya filtró por proveedor
+    const clientFilters = apiAlreadyFilteredBySupplier
+      ? { ...filters, search: '' } // Remover el filtro de búsqueda si el API ya lo aplicó
+      : filters
+
+    const filteredOrders = filterOrders(normalizedOrders, clientFilters)
+    const { data, meta } = paginate(filteredOrders, page, pageSize)
 
     return {
-      data: data.map(withDerivedFields),
+      data,
       meta,
-      statuses: statusOptions(),
-      appliedFilters: {
-        search: params.search ?? '',
-        status: params.status ?? 'all',
-        dateFrom: params.dateFrom ?? '',
-        dateTo: params.dateTo ?? '',
-      },
+      statuses: buildStatusOptions(normalizedOrders),
+      appliedFilters: filters,
     }
   },
 
   async registerPayment(orderId, payload = {}) {
-    await simulateDelay(380)
-
-    const order = ordersState.find(item => item.id === Number(orderId))
-    if (!order) {
-      throw new Error('Purchase order not found')
-    }
-
-    if (order.pendingAmount === null || order.pendingAmount <= 0) {
-      throw new Error('Order does not have a pending balance')
+    const purchaseOrderId = Number(orderId)
+    if (!Number.isFinite(purchaseOrderId)) {
+      throw new Error('Invalid purchase order identifier')
     }
 
     const rawAmount =
-      payload.amount ?? payload.amountPaid ?? payload.amount_paid
-    const amount = Number.parseFloat(rawAmount)
+      payload.amount ?? payload.amountPaid ?? payload.amount_paid ?? null
+    const amount = roundCurrency(rawAmount)
 
     if (!Number.isFinite(amount) || amount <= 0) {
-      throw new Error('Enter a valid amount greater than zero')
+      throw new Error('Ingresa un monto válido mayor a cero')
     }
 
-    if (amount - order.pendingAmount > 0.009) {
-      throw new Error('Amount exceeds pending balance')
+    const rawPaymentMethodId =
+      payload.paymentMethodId ??
+      payload.payment_method_id ??
+      payload.methodId ??
+      payload.method_id ??
+      null
+    const paymentMethodId = Number(rawPaymentMethodId)
+    if (!Number.isFinite(paymentMethodId) || paymentMethodId <= 0) {
+      throw new Error('Seleccioná un método de pago válido')
     }
 
-    const normalizedAmount = Number(amount.toFixed(2))
+    const rawCurrencyCode =
+      payload.currencyCode ?? payload.currency_code ?? payload.currency ?? null
+    const currencyCode = String(
+      rawCurrencyCode || DEFAULT_CURRENCY
+    ).toUpperCase()
+    if (!currencyCode) {
+      throw new Error('Seleccioná una moneda para registrar el pago')
+    }
 
-    const paymentRecord = {
-      id: `pay_${Date.now()}`,
-      order_id: order.id,
-      amount: normalizedAmount,
-      method: payload.method ?? 'transfer',
-      currency: payload.currency ?? order.currency ?? DEFAULT_CURRENCY,
-      reference: payload.reference ?? null,
-      cash_register_id:
-        payload.cashRegisterId ?? payload.cash_register_id ?? null,
+    const rawCashRegisterId =
+      payload.cashRegisterId ?? payload.cash_register_id ?? null
+    let cashRegisterId = null
+    if (rawCashRegisterId !== null && rawCashRegisterId !== undefined) {
+      const parsedCashRegisterId = Number(rawCashRegisterId)
+      if (!Number.isFinite(parsedCashRegisterId) || parsedCashRegisterId <= 0) {
+        throw new Error(
+          'Seleccioná una caja válida o dejá el campo vacío para continuar'
+        )
+      }
+      cashRegisterId = parsedCashRegisterId
+    }
+
+    const apiPayload = {
+      amount_paid: Math.round(amount),
+      reference_number:
+        payload.reference ??
+        payload.reference_number ??
+        payload.check_number ??
+        null,
+      check_number: payload.check_number ?? null,
       notes: payload.notes ?? null,
-      status: 'approved',
-      recorded_by: payload.recordedBy ?? 'demo.user',
-      registered_at: new Date().toISOString(),
+      payment_method_id: paymentMethodId,
+      currency_code: currencyCode,
     }
 
-    const previousPending = Number(order.pendingAmount ?? 0)
-    order.pendingAmount = roundMoney(
-      Math.max(0, previousPending - normalizedAmount)
-    )
-    if (order.pendingAmount <= 0 && order.status !== 'cancelled') {
-      order.pendingAmount = 0
-      order.status = 'completed'
+    if (cashRegisterId) {
+      apiPayload.cash_register_id = cashRegisterId
     }
-    const previousPaid = Number(
-      order.totalPaid ?? Math.max(order.total_amount - previousPending, 0)
+
+    await purchasePaymentService.processPayment(purchaseOrderId, apiPayload)
+
+    const updatedOrder = await purchasePaymentService.getPurchaseOrderById(
+      purchaseOrderId
     )
-    order.totalPaid = roundMoney(previousPaid + normalizedAmount)
-    order.payments = order.payments
-      ? [...order.payments, paymentRecord]
-      : [paymentRecord]
-    order.payments.sort(
-      (a, b) =>
-        new Date(a.registered_at).getTime() -
-        new Date(b.registered_at).getTime()
-    )
-    order.lastPaymentAt =
-      order.payments.length > 0
-        ? order.payments[order.payments.length - 1].registered_at
-        : paymentRecord.registered_at
-    order.updatedAt = paymentRecord.registered_at
 
     return {
       success: true,
-      order: withDerivedFields(order),
-      payment: { ...paymentRecord },
+      order: normalizeOrder(updatedOrder),
+      payment: apiPayload,
     }
   },
 
   async fetchOrder(orderId) {
-    await simulateDelay(320)
+    const purchaseOrderId = Number(orderId)
+    if (!Number.isFinite(purchaseOrderId)) {
+      throw new Error('Invalid purchase order identifier')
+    }
 
-    const order = ordersState.find(item => item.id === Number(orderId))
-    if (!order) {
-      throw new Error('Purchase order not found')
+    let order = await purchasePaymentService.getPurchaseOrderById(
+      purchaseOrderId
+    )
+
+    // Fallback: If order is missing payment summary (common in /purchase/{id}),
+    // try to fetch enriched data from supplier endpoint if supplier info is available.
+    if (
+      (!order.payments || !order.payments.total_paid) &&
+      (order.supplier_name || order.supplierName)
+    ) {
+      try {
+        const supplierName = order.supplier_name || order.supplierName
+        const enrichedResponse =
+          await purchaseService.getPurchasesBySupplierName(supplierName)
+
+        if (enrichedResponse?.success && Array.isArray(enrichedResponse.data)) {
+          const enrichedOrder = enrichedResponse.data.find(
+            candidate =>
+              String(candidate.purchase?.id ?? candidate.id) ===
+              String(purchaseOrderId)
+          )
+
+          if (enrichedOrder) {
+            // Merge enriched data (payments summary and cost info)
+            order = {
+              ...order,
+              payments: enrichedOrder.payments ?? order.payments,
+              cost_info: enrichedOrder.cost_info ?? order.cost_info,
+              // If the enriched order has a different status, prefer it
+              status:
+                enrichedOrder.purchase?.status ??
+                enrichedOrder.status ??
+                order.status,
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(
+          '[PurchasePaymentsMVP] Failed to fetch enriched fallback data',
+          err
+        )
+      }
     }
 
     return {
-      order: withDerivedFields(order),
+      order: normalizeOrder(order),
     }
   },
 }

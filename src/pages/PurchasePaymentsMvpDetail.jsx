@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Loader2, PlusCircle, RefreshCw } from 'lucide-react'
+import { Building2, Loader2, PlusCircle, RefreshCw } from 'lucide-react'
 
 import RegisterPaymentModal from '@/components/purchase-payments/RegisterPaymentModal'
 import DataState from '@/components/ui/DataState'
@@ -13,18 +13,43 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import { Progress } from '@/components/ui/progress'
 import { useToast } from '@/hooks/useToast'
 import { useI18n } from '@/lib/i18n'
 import { purchasePaymentsMvpService } from '@/services/purchasePaymentsMvpService'
 import usePurchasePaymentsMvpStore from '@/store/usePurchasePaymentsMvpStore'
 import '@/styles/scss/pages/_purchase-payments-mvp.scss'
 
-const priorityLabelMap = {
-  high: 'purchasePaymentsMvp.priority.high',
-  medium: 'purchasePaymentsMvp.priority.medium',
-  low: 'purchasePaymentsMvp.priority.low',
-  critical: 'purchasePaymentsMvp.priority.critical',
+const DEFAULT_CURRENCY_CODE = 'PYG'
+const CURRENCY_ID_MAP = {
+  1: DEFAULT_CURRENCY_CODE,
+}
+
+const isIsoCurrencyCode = value => /^[A-Z]{3}$/.test(value)
+
+const ensureCurrencyCode = raw => {
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    return CURRENCY_ID_MAP[raw] || DEFAULT_CURRENCY_CODE
+  }
+
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim()
+    if (!trimmed) {
+      return DEFAULT_CURRENCY_CODE
+    }
+
+    if (/^\d+$/.test(trimmed)) {
+      const numeric = Number(trimmed)
+      if (Number.isFinite(numeric)) {
+        return CURRENCY_ID_MAP[numeric] || DEFAULT_CURRENCY_CODE
+      }
+      return DEFAULT_CURRENCY_CODE
+    }
+
+    const upper = trimmed.toUpperCase()
+    return isIsoCurrencyCode(upper) ? upper : DEFAULT_CURRENCY_CODE
+  }
+
+  return DEFAULT_CURRENCY_CODE
 }
 
 const resolveStatusKey = status => {
@@ -61,6 +86,7 @@ const PurchasePaymentsMvpDetail = () => {
   const { orderId } = useParams()
   const { t, lang } = useI18n()
   const refreshList = usePurchasePaymentsMvpStore(state => state.refresh)
+  const ordersFromStore = usePurchasePaymentsMvpStore(state => state.orders)
   const { success: showSuccess, error: showError } = useToast()
 
   const [order, setOrder] = useState(null)
@@ -102,6 +128,28 @@ const PurchasePaymentsMvpDetail = () => {
   useEffect(() => {
     loadOrder()
   }, [loadOrder])
+
+  const cachedOrder = useMemo(() => {
+    if (!ordersFromStore || !orderId) return null
+    return (
+      ordersFromStore.find(
+        candidate => String(candidate.id) === String(orderId)
+      ) || null
+    )
+  }, [orderId, ordersFromStore])
+
+  useEffect(() => {
+    if (!cachedOrder) return
+    setOrder(prev => {
+      if (!prev) return cachedOrder
+      const prevHasPayments =
+        Array.isArray(prev.payments) && prev.payments.length > 0
+      if (prev.id === cachedOrder.id && prevHasPayments) {
+        return prev
+      }
+      return cachedOrder
+    })
+  }, [cachedOrder])
 
   const handleRefresh = useCallback(async () => {
     await loadOrder()
@@ -157,16 +205,27 @@ const PurchasePaymentsMvpDetail = () => {
 
   const orderIdentifier = order?.id ?? orderId ?? '—'
 
+  const orderDisplayCode = useMemo(() => {
+    if (!order) return orderIdentifier
+    return (
+      order.reference_code ||
+      order.reference ||
+      order.code ||
+      order.order_number ||
+      orderIdentifier
+    )
+  }, [order, orderIdentifier])
+
   const headerTitle = useMemo(
     () =>
       translateWithFallback(
         t,
         'purchasePaymentsMvp.detail.heading',
-        { orderId: orderIdentifier },
+        { orderId: orderDisplayCode },
         ({ orderId: id }) =>
-          lang === 'en' ? `Purchase order ${id}` : `Orden de compra ${id}`
+          lang === 'en' ? `Purchase order ${id}` : `Orden de compra #${id}`
       ),
-    [lang, orderIdentifier, t]
+    [lang, orderDisplayCode, t]
   )
 
   const headerDescription = useMemo(
@@ -203,38 +262,20 @@ const PurchasePaymentsMvpDetail = () => {
           undefined,
           () => (lang === 'en' ? 'Home' : 'Inicio')
         ),
-        to: '/',
-      },
-      {
-        label: translateWithFallback(
-          t,
-          'purchasePaymentsMvp.detail.breadcrumb.orders',
-          undefined,
-          () => (lang === 'en' ? 'Purchase orders' : 'Ordenes de compra')
-        ),
-        to: '/purchase-payments-mvp',
-      },
-      {
-        label: translateWithFallback(
-          t,
-          'purchasePaymentsMvp.detail.breadcrumb.current',
-          { orderId: orderIdentifier },
-          ({ orderId: id }) => id
-        ),
-        isCurrent: true,
+        to: '/pagos/compras-mvp',
       },
     ],
-    [lang, orderIdentifier, t]
+    [lang, t]
   )
 
   const amountFormatter = useMemo(() => {
-    const currency = order?.currency || 'PYG'
+    const currency = ensureCurrencyCode(order?.currency)
     const locale = lang === 'en' ? 'en-US' : 'es-PY'
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency,
-      minimumFractionDigits: currency === 'PYG' ? 0 : 2,
-      maximumFractionDigits: currency === 'PYG' ? 0 : 2,
+      minimumFractionDigits: currency === DEFAULT_CURRENCY_CODE ? 0 : 2,
+      maximumFractionDigits: currency === DEFAULT_CURRENCY_CODE ? 0 : 2,
     })
   }, [lang, order?.currency])
 
@@ -260,6 +301,55 @@ const PurchasePaymentsMvpDetail = () => {
     [lang]
   )
 
+  const resolvePaymentTimestamp = payment => {
+    if (!payment) return null
+    return (
+      payment.registered_at ??
+      payment.registeredAt ??
+      payment.payment_date ??
+      payment.date ??
+      payment.created_at ??
+      payment.createdAt ??
+      payment.timestamp ??
+      null
+    )
+  }
+
+  const renderPaymentDate = payment => {
+    const timestamp = resolvePaymentTimestamp(payment)
+    if (!timestamp) {
+      return translateWithFallback(
+        t,
+        'purchasePaymentsMvp.detail.timeline.unknownDate',
+        undefined,
+        () => (lang === 'en' ? 'Unknown date' : 'Fecha desconocida')
+      )
+    }
+
+    const parsed = new Date(timestamp)
+    if (Number.isNaN(parsed.getTime())) {
+      return translateWithFallback(
+        t,
+        'purchasePaymentsMvp.detail.timeline.unknownDate',
+        undefined,
+        () => (lang === 'en' ? 'Unknown date' : 'Fecha desconocida')
+      )
+    }
+
+    return dateTimeFormatter.format(parsed)
+  }
+
+  const renderPaymentUser = payment => {
+    if (!payment) return '—'
+    return (
+      payment.recorded_by ||
+      payment.recordedBy ||
+      payment.user_name ||
+      payment.user?.name ||
+      '—'
+    )
+  }
+
   const progressPercent = useMemo(() => {
     if (!order || !order.total_amount) return 0
     if (Number.isFinite(order.paymentProgressPercent)) {
@@ -283,43 +373,6 @@ const PurchasePaymentsMvpDetail = () => {
     return dateFormatter.format(new Date(order.issue_date))
   }, [dateFormatter, order?.issue_date])
 
-  const dueDateLabel = useMemo(() => {
-    if (!order?.expected_delivery) return '—'
-    return dateFormatter.format(new Date(order.expected_delivery))
-  }, [dateFormatter, order?.expected_delivery])
-
-  const lastPaymentLabel = useMemo(() => {
-    if (!order?.lastPaymentAt) {
-      return translateWithFallback(
-        t,
-        'purchasePaymentsMvp.detail.meta.none',
-        undefined,
-        () => (lang === 'en' ? 'No records' : 'Sin registros')
-      )
-    }
-    return dateTimeFormatter.format(new Date(order.lastPaymentAt))
-  }, [dateTimeFormatter, lang, order?.lastPaymentAt, t])
-
-  const supplierAddress = useMemo(() => {
-    const address = order?.supplier?.address
-    if (!address) return null
-    const parts = [address.street, address.city, address.country]
-    const filtered = parts.filter(Boolean)
-    return filtered.length > 0 ? filtered.join(', ') : null
-  }, [order?.supplier?.address])
-
-  const supplierPriorityLabel = useMemo(() => {
-    if (!order?.supplier?.priority) return null
-    const key =
-      priorityLabelMap[order.supplier.priority] || order.supplier.priority
-    return translateWithFallback(
-      t,
-      key,
-      undefined,
-      () => order.supplier.priority
-    )
-  }, [order?.supplier?.priority, t])
-
   const disableRegisterPayment = !order || Number(order.pendingAmount || 0) <= 0
 
   const modalOrder = useMemo(() => {
@@ -328,26 +381,10 @@ const PurchasePaymentsMvpDetail = () => {
     return {
       id: order.id,
       pendingAmount: pending,
-      currency: order.currency || 'PYG',
+      currency: ensureCurrencyCode(order.currency),
       supplierName: order.supplier?.name || '',
     }
   }, [order])
-
-  const renderPriorityChip = (priority, labelOverride) => {
-    if (!priority) return null
-    const translationKey = priorityLabelMap[priority] || priority
-    const label =
-      labelOverride ??
-      translateWithFallback(t, translationKey, undefined, () => priority)
-
-    return (
-      <span
-        className={`purchase-payments-mvp-detail__priority-chip purchase-payments-mvp-detail__priority-chip--${priority}`}
-      >
-        {label}
-      </span>
-    )
-  }
 
   const renderStatusChip = status => {
     if (!status) return null
@@ -405,7 +442,51 @@ const PurchasePaymentsMvpDetail = () => {
     )
   }
 
-  if (loading) {
+  const historyEntries = useMemo(() => {
+    if (!Array.isArray(order?.history)) return []
+
+    return order.history
+      .map((entry, index) => {
+        const timestamp =
+          entry.timestamp ||
+          entry.recorded_at ||
+          entry.created_at ||
+          entry.date ||
+          null
+
+        const action =
+          entry.action || entry.event || entry.type || entry.status || 'update'
+
+        const actor =
+          entry.user ||
+          entry.actor ||
+          entry.performed_by ||
+          entry.user_name ||
+          null
+
+        const notes =
+          entry.notes ||
+          entry.description ||
+          entry.details ||
+          entry.comment ||
+          ''
+
+        return {
+          id: entry.id || `${action}-${timestamp || index}`,
+          timestamp,
+          action,
+          actor,
+          notes,
+        }
+      })
+      .sort((a, b) => {
+        const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0
+        const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0
+        return bTime - aTime
+      })
+  }, [order?.history])
+
+  if (loading && !order) {
     return (
       <div className='purchase-payments-mvp-detail'>
         <div className='purchase-payments-mvp-detail__container'>
@@ -554,42 +635,59 @@ const PurchasePaymentsMvpDetail = () => {
         <div className='purchase-payments-mvp-detail__grid'>
           <main className='purchase-payments-mvp-detail__main'>
             <section className='purchase-payments-mvp-detail__card purchase-payments-mvp-detail__card--summary'>
-              <header className='purchase-payments-mvp-detail__card-header'>
-                <h2 className='purchase-payments-mvp-detail__card-title'>
-                  {translateWithFallback(
-                    t,
-                    'purchasePaymentsMvp.detail.summary.title',
-                    undefined,
-                    () =>
-                      lang === 'en' ? 'Order summary' : 'Resumen de la orden'
-                  )}
-                </h2>
+              <header className='purchase-payments-mvp-detail__card-header purchase-payments-mvp-detail__card-header--summary'>
+                <div className='purchase-payments-mvp-detail__summary-heading'>
+                  <p className='purchase-payments-mvp-detail__eyebrow'>
+                    {translateWithFallback(
+                      t,
+                      'purchasePaymentsMvp.detail.summary.eyebrow',
+                      undefined,
+                      () =>
+                        lang === 'en' ? 'Order overview' : 'Estado general'
+                    )}
+                  </p>
+                  <h2 className='purchase-payments-mvp-detail__card-title'>
+                    {translateWithFallback(
+                      t,
+                      'purchasePaymentsMvp.detail.summary.title',
+                      undefined,
+                      () =>
+                        lang === 'en' ? 'Payment progress' : 'Progreso del pago'
+                    )}
+                  </h2>
+                </div>
+                <div className='purchase-payments-mvp-detail__summary-status'>
+                  {renderStatusChip(order.status)}
+                </div>
               </header>
-              <div className='purchase-payments-mvp-detail__card-content'>
-                <div className='purchase-payments-mvp-detail__summary-header'>
-                  <div className='purchase-payments-mvp-detail__summary-status'>
-                    {renderStatusChip(order.status)}
+              <div className='purchase-payments-mvp-detail__card-content purchase-payments-mvp-detail__card-content--summary'>
+                <div className='purchase-payments-mvp-detail__summary-progress-block'>
+                  <div className='purchase-payments-mvp-detail__summary-progress-header'>
+                    <span className='purchase-payments-mvp-detail__summary-label'>
+                      {translateWithFallback(
+                        t,
+                        'purchasePaymentsMvp.detail.summary.progress',
+                        undefined,
+                        () =>
+                          lang === 'en'
+                            ? 'Payment progress'
+                            : 'Progreso del pago'
+                      )}
+                    </span>
+                    <span className='purchase-payments-mvp-detail__summary-progress-value'>
+                      {progressPercent}%
+                    </span>
                   </div>
-                  <div className='purchase-payments-mvp-detail__progress'>
-                    <div className='purchase-payments-mvp-detail__progress-header'>
-                      <span className='purchase-payments-mvp-detail__progress-label'>
-                        {translateWithFallback(
-                          t,
-                          'purchasePaymentsMvp.detail.summary.progress',
-                          undefined,
-                          () =>
-                            lang === 'en'
-                              ? 'Payment progress'
-                              : 'Progreso del pago'
-                        )}
-                      </span>
-                      <span className='purchase-payments-mvp-detail__progress-value'>
-                        {progressPercent}%
-                      </span>
-                    </div>
-                    <Progress
-                      value={progressPercent}
-                      className='purchase-payments-mvp-detail__progress-bar'
+                  <div
+                    className='purchase-payments-mvp-detail__progress-track'
+                    role='progressbar'
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={progressPercent}
+                  >
+                    <span
+                      className='purchase-payments-mvp-detail__progress-fill'
+                      style={{ width: `${progressPercent}%` }}
                     />
                   </div>
                 </div>
@@ -617,7 +715,7 @@ const PurchasePaymentsMvpDetail = () => {
                         () => (lang === 'en' ? 'Paid amount' : 'Monto abonado')
                       )}
                     </span>
-                    <span className='purchase-payments-mvp-detail__summary-value'>
+                    <span className='purchase-payments-mvp-detail__summary-value purchase-payments-mvp-detail__summary-value--success'>
                       {formatAmount(paidAmount)}
                     </span>
                   </div>
@@ -632,7 +730,7 @@ const PurchasePaymentsMvpDetail = () => {
                       )}
                     </span>
                     <span
-                      className={`purchase-payments-mvp-detail__summary-value${
+                      className={`purchase-payments-mvp-detail__summary-value purchase-payments-mvp-detail__summary-value--danger${
                         order.isOverdue
                           ? ' purchase-payments-mvp-detail__summary-value--overdue'
                           : ''
@@ -653,58 +751,6 @@ const PurchasePaymentsMvpDetail = () => {
                     </span>
                     <span className='purchase-payments-mvp-detail__summary-value'>
                       {issueDateLabel}
-                    </span>
-                  </div>
-                  <div className='purchase-payments-mvp-detail__summary-item'>
-                    <span className='purchase-payments-mvp-detail__summary-label'>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.summary.dueDate',
-                        undefined,
-                        () =>
-                          lang === 'en' ? 'Due date' : 'Fecha de vencimiento'
-                      )}
-                    </span>
-                    <span
-                      className={`purchase-payments-mvp-detail__summary-value${
-                        order.isOverdue
-                          ? ' purchase-payments-mvp-detail__summary-value--overdue'
-                          : ''
-                      }`}
-                    >
-                      {dueDateLabel}
-                    </span>
-                  </div>
-                </div>
-
-                <div className='purchase-payments-mvp-detail__summary-meta'>
-                  <div className='purchase-payments-mvp-detail__meta-item'>
-                    <span className='purchase-payments-mvp-detail__meta-label'>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.meta.paymentsRecorded',
-                        undefined,
-                        () =>
-                          lang === 'en'
-                            ? 'Payments recorded'
-                            : 'Pagos registrados'
-                      )}
-                    </span>
-                    <span className='purchase-payments-mvp-detail__meta-value'>
-                      {order.payments?.length || 0}
-                    </span>
-                  </div>
-                  <div className='purchase-payments-mvp-detail__meta-item'>
-                    <span className='purchase-payments-mvp-detail__meta-label'>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.meta.lastPayment',
-                        undefined,
-                        () => (lang === 'en' ? 'Last payment' : 'Ultimo pago')
-                      )}
-                    </span>
-                    <span className='purchase-payments-mvp-detail__meta-value'>
-                      {lastPaymentLabel}
                     </span>
                   </div>
                 </div>
@@ -766,14 +812,15 @@ const PurchasePaymentsMvpDetail = () => {
                       <tbody>
                         {order.payments.map(payment => (
                           <tr key={payment.id}>
-                            <td>
-                              {dateTimeFormatter.format(
-                                new Date(payment.registered_at)
-                              )}
-                            </td>
-                            <td>{payment.recorded_by || '—'}</td>
+                            <td>{renderPaymentDate(payment)}</td>
+                            <td>{renderPaymentUser(payment)}</td>
                             <td className='purchase-payments-mvp-detail__cell--numeric'>
-                              {formatAmount(payment.amount)}
+                              {formatAmount(
+                                payment.amount ??
+                                  payment.amount_paid ??
+                                  payment.amountPaid ??
+                                  0
+                              )}
                             </td>
                             <td className='purchase-payments-mvp-detail__cell--status'>
                               {renderPaymentChip(payment.status)}
@@ -798,6 +845,81 @@ const PurchasePaymentsMvpDetail = () => {
                 )}
               </div>
             </section>
+
+            <section className='purchase-payments-mvp-detail__card'>
+              <header className='purchase-payments-mvp-detail__card-header'>
+                <h2 className='purchase-payments-mvp-detail__card-title'>
+                  {translateWithFallback(
+                    t,
+                    'purchasePaymentsMvp.detail.timeline.title',
+                    undefined,
+                    () =>
+                      lang === 'en' ? 'Recent activity' : 'Actividad reciente'
+                  )}
+                </h2>
+              </header>
+              <div className='purchase-payments-mvp-detail__card-content'>
+                {historyEntries.length > 0 ? (
+                  <ol className='purchase-payments-mvp-detail__timeline'>
+                    {historyEntries.map(entry => (
+                      <li
+                        key={entry.id}
+                        className='purchase-payments-mvp-detail__timeline-entry'
+                      >
+                        <div className='purchase-payments-mvp-detail__timeline-meta'>
+                          <span className='purchase-payments-mvp-detail__timeline-date'>
+                            {entry.timestamp
+                              ? dateTimeFormatter.format(
+                                  new Date(entry.timestamp)
+                                )
+                              : translateWithFallback(
+                                  t,
+                                  'purchasePaymentsMvp.detail.timeline.unknownDate',
+                                  undefined,
+                                  () =>
+                                    lang === 'en'
+                                      ? 'Unknown date'
+                                      : 'Fecha desconocida'
+                                )}
+                          </span>
+                          <span className='purchase-payments-mvp-detail__timeline-action'>
+                            {entry.action}
+                          </span>
+                        </div>
+                        <div className='purchase-payments-mvp-detail__timeline-body'>
+                          <span className='purchase-payments-mvp-detail__timeline-actor'>
+                            {entry.actor ||
+                              translateWithFallback(
+                                t,
+                                'purchasePaymentsMvp.detail.timeline.unknownActor',
+                                undefined,
+                                () => (lang === 'en' ? 'System' : 'Sistema')
+                              )}
+                          </span>
+                          {entry.notes ? (
+                            <p className='purchase-payments-mvp-detail__timeline-notes'>
+                              {entry.notes}
+                            </p>
+                          ) : null}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <div className='purchase-payments-mvp-detail__empty purchase-payments-mvp-detail__empty--subtle'>
+                    {translateWithFallback(
+                      t,
+                      'purchasePaymentsMvp.detail.timeline.empty',
+                      undefined,
+                      () =>
+                        lang === 'en'
+                          ? 'There is no recorded activity for this order yet.'
+                          : 'Todavía no hay actividad registrada para esta orden.'
+                    )}
+                  </div>
+                )}
+              </div>
+            </section>
           </main>
 
           <aside className='purchase-payments-mvp-detail__sidebar'>
@@ -812,77 +934,22 @@ const PurchasePaymentsMvpDetail = () => {
                   )}
                 </h2>
               </header>
-              <div className='purchase-payments-mvp-detail__card-content'>
-                <div className='purchase-payments-mvp-detail__supplier'>
-                  <span className='purchase-payments-mvp-detail__supplier-name'>
-                    {order.supplier?.name || '—'}
-                  </span>
-                  <span className='purchase-payments-mvp-detail__supplier-id'>
-                    {order.supplier?.id ? `ID ${order.supplier.id}` : '—'}
-                  </span>
-                  {supplierPriorityLabel &&
-                    renderPriorityChip(
-                      order.supplier?.priority,
-                      supplierPriorityLabel
-                    )}
+              <div className='purchase-payments-mvp-detail__card-content purchase-payments-mvp-detail__card-content--supplier'>
+                <div className='purchase-payments-mvp-detail__supplier-heading'>
+                  <div className='purchase-payments-mvp-detail__supplier-icon'>
+                    <Building2 />
+                  </div>
+                  <div className='purchase-payments-mvp-detail__supplier'>
+                    <span className='purchase-payments-mvp-detail__supplier-name'>
+                      {order.supplier?.name || '—'}
+                    </span>
+                    <span className='purchase-payments-mvp-detail__supplier-meta'>
+                      {order.supplier?.id
+                        ? `ID: ${order.supplier.id}`
+                        : 'ID: —'}
+                    </span>
+                  </div>
                 </div>
-                <dl className='purchase-payments-mvp-detail__supplier-details'>
-                  <div className='purchase-payments-mvp-detail__supplier-detail'>
-                    <dt>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.supplier.email',
-                        undefined,
-                        () => 'Email'
-                      )}
-                    </dt>
-                    <dd>{order.supplier?.email || '—'}</dd>
-                  </div>
-                  <div className='purchase-payments-mvp-detail__supplier-detail'>
-                    <dt>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.supplier.phone',
-                        undefined,
-                        () => (lang === 'en' ? 'Phone' : 'Telefono')
-                      )}
-                    </dt>
-                    <dd>{order.supplier?.phone || '—'}</dd>
-                  </div>
-                  <div className='purchase-payments-mvp-detail__supplier-detail'>
-                    <dt>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.supplier.taxId',
-                        undefined,
-                        () => 'Tax ID'
-                      )}
-                    </dt>
-                    <dd>{order.supplier?.taxId || '—'}</dd>
-                  </div>
-                  <div className='purchase-payments-mvp-detail__supplier-detail'>
-                    <dt>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.supplier.address',
-                        undefined,
-                        () => (lang === 'en' ? 'Address' : 'Direccion')
-                      )}
-                    </dt>
-                    <dd>{supplierAddress || '—'}</dd>
-                  </div>
-                  <div className='purchase-payments-mvp-detail__supplier-detail'>
-                    <dt>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.meta.lastPayment',
-                        undefined,
-                        () => (lang === 'en' ? 'Last payment' : 'Ultimo pago')
-                      )}
-                    </dt>
-                    <dd>{lastPaymentLabel}</dd>
-                  </div>
-                </dl>
               </div>
             </section>
 
@@ -902,9 +969,9 @@ const PurchasePaymentsMvpDetail = () => {
               </header>
               <div className='purchase-payments-mvp-detail__card-content'>
                 {order.items && order.items.length > 0 ? (
-                  <div className='purchase-payments-mvp-detail__product-list'>
+                  <ul className='purchase-payments-mvp-detail__product-list'>
                     {order.items.map(item => (
-                      <div
+                      <li
                         key={item.id}
                         className='purchase-payments-mvp-detail__product-row'
                       >
@@ -912,17 +979,19 @@ const PurchasePaymentsMvpDetail = () => {
                           <span className='purchase-payments-mvp-detail__product-name'>
                             {item.name}
                           </span>
-                          {item.productId && (
-                            <span className='purchase-payments-mvp-detail__product-meta'>
-                              {translateWithFallback(
-                                t,
-                                'purchasePaymentsMvp.detail.products.labels.sku',
-                                { code: item.productId },
-                                ({ code }) =>
-                                  `${lang === 'en' ? 'SKU' : 'Codigo'}: ${code}`
-                              )}
-                            </span>
-                          )}
+                          <span className='purchase-payments-mvp-detail__product-meta'>
+                            {item.productId
+                              ? translateWithFallback(
+                                  t,
+                                  'purchasePaymentsMvp.detail.products.labels.sku',
+                                  { code: item.productId },
+                                  ({ code }) =>
+                                    `${
+                                      lang === 'en' ? 'SKU' : 'Codigo'
+                                    }: ${code}`
+                                )
+                              : '—'}
+                          </span>
                           <span className='purchase-payments-mvp-detail__product-quantity'>
                             {translateWithFallback(
                               t,
@@ -935,12 +1004,12 @@ const PurchasePaymentsMvpDetail = () => {
                             )}
                           </span>
                         </div>
-                        <div className='purchase-payments-mvp-detail__product-total'>
-                          {formatAmount(item.total)}
-                        </div>
-                      </div>
+                        <span className='purchase-payments-mvp-detail__product-total'>
+                          {formatAmount(item.total ?? item.amount ?? 0)}
+                        </span>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 ) : (
                   <div className='purchase-payments-mvp-detail__empty purchase-payments-mvp-detail__empty--subtle'>
                     {translateWithFallback(
