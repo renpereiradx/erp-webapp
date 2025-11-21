@@ -70,6 +70,26 @@ const formatTimeRange = (start, end) => {
   return `${startTime} - ${endTime}`
 }
 
+const formatTime = isoString => {
+  if (!isoString) return '--:--'
+  try {
+    // Handle both ISO strings and simple time strings "HH:mm:ss"
+    if (isoString.includes('T')) {
+      const date = new Date(isoString)
+      return date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'UTC',
+      })
+    } else {
+      return isoString.slice(0, 5)
+    }
+  } catch (e) {
+    return '--:--'
+  }
+}
+
 const SchedulesNew = () => {
   const { t } = useI18n()
   // const { styles } = useThemeStyles();
@@ -105,6 +125,14 @@ const SchedulesNew = () => {
 
   // Tabs State
   const [activeTab, setActiveTab] = useState('schedules')
+
+  // --- Explorer State ---
+  const [explorerFilters, setExplorerFilters] = useState({
+    date: formatDate(new Date()),
+    productId: 'all',
+  })
+  const [explorerSchedules, setExplorerSchedules] = useState([])
+  const [explorerLoading, setExplorerLoading] = useState(false)
 
   // --- Data Loading ---
   const loadSchedules = React.useCallback(async () => {
@@ -158,6 +186,57 @@ const SchedulesNew = () => {
     }
   }, [filters])
 
+  const loadExplorerSchedules = React.useCallback(async () => {
+    setExplorerLoading(true)
+    try {
+      const scheduleService = (await import('@/services/scheduleService'))
+        .scheduleService
+
+      let result
+      let loadedSchedules = []
+
+      if (explorerFilters.productId && explorerFilters.productId !== 'all') {
+        // Usar el endpoint que devuelve TODOS los horarios (disponibles y reservados)
+        // Endpoint: /schedules/product/{productId}/date/{date}/all
+        try {
+          result = await scheduleService.getAllSchedulesByProductAndDate(
+            explorerFilters.productId,
+            explorerFilters.date
+          )
+        } catch (e) {
+          console.warn('Fallback to available schedules only', e)
+          // Fallback si el endpoint /all falla
+          result = await scheduleService.getAvailableSchedules(
+            explorerFilters.productId,
+            explorerFilters.date
+          )
+        }
+      } else {
+        // Si es "Todas las canchas", usamos el de disponibles general
+        result = await scheduleService.getAvailableSchedulesAll({
+          date: explorerFilters.date,
+          limit: 100,
+        })
+      }
+
+      // Manejo robusto de la respuesta (puede ser array directo o { data: [...] })
+      if (Array.isArray(result)) {
+        loadedSchedules = result
+      } else if (result && Array.isArray(result.data)) {
+        loadedSchedules = result.data
+      } else if (result && Array.isArray(result.schedules)) {
+        loadedSchedules = result.schedules
+      }
+
+      setExplorerSchedules(loadedSchedules)
+    } catch (error) {
+      console.error('Error loading explorer schedules:', error)
+      setExplorerSchedules([])
+    } finally {
+      setExplorerLoading(false)
+    }
+  }, [explorerFilters])
+
   // --- Effects ---
   useEffect(() => {
     if (products.length === 0) {
@@ -168,6 +247,12 @@ const SchedulesNew = () => {
   useEffect(() => {
     loadSchedules()
   }, [loadSchedules])
+
+  useEffect(() => {
+    if (activeTab === 'details') {
+      loadExplorerSchedules()
+    }
+  }, [activeTab, loadExplorerSchedules])
 
   // --- Handlers ---
   const handleGenerateToday = async () => {
@@ -459,9 +544,116 @@ const SchedulesNew = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value='details'>
-          <div className='p-8 text-center text-muted-foreground'>
-            <p>Seleccione un horario para ver los detalles.</p>
+        <TabsContent value='details' className='mt-0'>
+          <div className='schedule-explorer'>
+            {/* Header */}
+            <div className='schedule-explorer__header'>
+              <div>
+                <h2 className='schedule-explorer__title'>
+                  Explorador de Horarios
+                </h2>
+                <p className='schedule-explorer__description'>
+                  Visualiza y gestiona la disponibilidad de las canchas en
+                  tiempo real.
+                </p>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className='schedule-explorer__filters'>
+              <div className='schedule-explorer__filter-group'>
+                <label>Fecha</label>
+                <div className='input-wrapper'>
+                  <CalendarIcon className='icon' size={16} />
+                  <input
+                    type='date'
+                    value={explorerFilters.date}
+                    onChange={e =>
+                      setExplorerFilters(prev => ({
+                        ...prev,
+                        date: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className='schedule-explorer__filter-group'>
+                <label>Cancha</label>
+                <div className='select-wrapper'>
+                  <select
+                    value={explorerFilters.productId}
+                    onChange={e =>
+                      setExplorerFilters(prev => ({
+                        ...prev,
+                        productId: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value='all'>Todas las canchas</option>
+                    {products.map(product => (
+                      <option key={product.id} value={product.id}>
+                        {product.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Grid */}
+            <div className='schedule-explorer__grid'>
+              {explorerLoading ? (
+                <div className='schedule-explorer__loading'>
+                  <RefreshCw className='animate-spin' /> Cargando horarios...
+                </div>
+              ) : explorerSchedules.length === 0 ? (
+                <div className='schedule-explorer__empty'>
+                  No se encontraron horarios para los filtros seleccionados.
+                </div>
+              ) : (
+                explorerSchedules.map((schedule, index) => (
+                  <div
+                    key={schedule.id || `schedule-${index}`}
+                    className='explorer-card'
+                  >
+                    <div className='explorer-card__header'>
+                      <h3 className='explorer-card__court-name'>
+                        {schedule.product_name ||
+                          products.find(p => p.id === schedule.product_id)
+                            ?.name ||
+                          'Cancha'}
+                      </h3>
+                      <Badge
+                        variant='outline'
+                        className={`explorer-card__badge ${
+                          schedule.is_available
+                            ? 'explorer-card__badge--available'
+                            : 'explorer-card__badge--booked'
+                        }`}
+                      >
+                        {schedule.is_available ? 'DISPONIBLE' : 'RESERVADO'}
+                      </Badge>
+                    </div>
+                    <div className='explorer-card__body'>
+                      <span className='explorer-card__time'>
+                        <Clock size={14} />
+                        {formatTime(schedule.start_time)} -{' '}
+                        {formatTime(schedule.end_time)}
+                      </span>
+                    </div>
+                    <div className='explorer-card__footer'>
+                      <button
+                        className='explorer-card__action'
+                        disabled={!schedule.is_available}
+                      >
+                        {schedule.is_available ? 'Reservar' : 'No disponible'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </TabsContent>
       </Tabs>

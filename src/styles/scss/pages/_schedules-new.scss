@@ -391,3 +391,276 @@
     height: 16px;
   }
 }
+
+// --- Schedule Explorer ---
+.schedule-explorer {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  &__title {
+    @include heading-2;
+    margin-bottom: $spacing-4;
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__description {
+    @include body;
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-24;
+    padding: $spacing-24;
+    border-radius: $border-radius-large;
+
+    @include themify($themes) {
+      background-color: themed('surface-card');
+      border: 1px solid themed('border-default');
+    }
+  }
+
+  &__filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+    min-width: 240px;
+
+    label {
+      font-size: $font-size-200;
+      font-weight: $font-weight-semibold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+
+      @include themify($themes) {
+        color: themed('text-secondary');
+      }
+    }
+
+    .input-wrapper,
+    .select-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+
+      .icon {
+        position: absolute;
+        left: $spacing-12;
+        pointer-events: none;
+        z-index: 1;
+
+        @include themify($themes) {
+          color: themed('text-tertiary');
+        }
+      }
+
+      input,
+      select {
+        width: 100%;
+        height: 44px;
+        padding: 0 $spacing-16;
+        border-radius: $border-radius-medium;
+        font-size: $font-size-300;
+        transition: all 0.2s ease;
+        appearance: none;
+
+        @include themify($themes) {
+          background-color: themed(
+            'bg-primary'
+          ); // Changed from bg-secondary to ensure contrast
+          border: 1px solid themed('border-default');
+          color: themed('text-primary');
+        }
+
+        &:focus {
+          outline: none;
+          @include themify($themes) {
+            border-color: themed('action-primary');
+            box-shadow: 0 0 0 2px alpha-color(themed('action-primary'), 0.2);
+          }
+        }
+      }
+
+      // Specific padding for inputs with icons
+      &:has(.icon) input {
+        padding-left: $spacing-40;
+      }
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(240px, 1fr)
+    ); // Reduced min-width slightly
+    gap: $spacing-16; // Reduced gap
+  }
+
+  &__loading,
+  &__empty {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-48;
+    gap: $spacing-16;
+    text-align: center;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+      background-color: themed('surface-card');
+      border: 1px dashed themed('border-default');
+      border-radius: $border-radius-large;
+    }
+  }
+}
+
+// --- Explorer Card ---
+.explorer-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: $border-radius-medium;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  @include themify($themes) {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-default');
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    @include themify($themes) {
+      box-shadow: themed('shadow-depth-4');
+      border-color: themed('border-hover');
+    }
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-16;
+    border-bottom: 1px solid;
+
+    @include themify($themes) {
+      border-color: themed('border-subtle');
+      background-color: themed(
+        'bg-secondary'
+      ); // Slightly different bg for header
+    }
+  }
+
+  &__court-name {
+    margin: 0;
+    font-size: $font-size-300;
+    font-weight: $font-weight-bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 70%;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__badge {
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    border-radius: $border-radius-small;
+    padding: 2px 6px;
+    flex-shrink: 0;
+
+    &--available {
+      @include themify($themes) {
+        background-color: rgba(#22c55e, 0.1);
+        color: #15803d;
+        border: none;
+      }
+    }
+
+    &--booked {
+      @include themify($themes) {
+        background-color: themed('bg-tertiary');
+        color: themed('text-secondary');
+        border: none;
+      }
+    }
+  }
+
+  &__body {
+    padding: $spacing-16;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+  }
+
+  &__time {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    font-weight: $font-weight-medium;
+    font-size: $font-size-300;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__footer {
+    padding: $spacing-16;
+    padding-top: 0;
+  }
+
+  &__action {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-8 $spacing-16;
+    border-radius: $border-radius-medium;
+    font-size: $font-size-300;
+    font-weight: $font-weight-semibold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+
+    @include themify($themes) {
+      background-color: themed('action-primary');
+      color: #ffffff; // Always white text for primary button
+    }
+
+    &:hover:not(:disabled) {
+      @include themify($themes) {
+        background-color: themed('action-primary-hover');
+      }
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+      @include themify($themes) {
+        background-color: themed('bg-tertiary');
+        color: themed('text-disabled');
+      }
+    }
+  }
+}
