@@ -1,0 +1,777 @@
+@use '../abstracts' as *;
+
+// Legacy spacing aliases while this page awaits full token migration
+$spacing-xs: $spacing-8 !default;
+$spacing-s: $spacing-12 !default;
+$spacing-m: $spacing-16 !default;
+$spacing-l: $spacing-20 !default;
+$spacing-xl: $spacing-24 !default;
+$spacing-xxl: $spacing-32 !default;
+$spacing-xxxl: $spacing-48 !default;
+
+// ============================================================================
+// INVENTORY ADJUSTMENT MANUAL PAGE
+// ============================================================================
+
+.inventory-adjustment-manual-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: $spacing-xxl;
+
+  // Header
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-l;
+    margin-bottom: $spacing-xxl;
+
+    .btn--icon {
+      flex-shrink: 0;
+    }
+  }
+
+  &__title {
+    @include heading-3;
+    flex: 1;
+    margin: 0;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  // Content Layout
+  &__content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-xxl;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xxl;
+  }
+
+  &__right {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+// ============================================================================
+// SELECTED PRODUCT CARD
+// ============================================================================
+
+.selected-product-card {
+  padding: $spacing-l;
+  border-radius: $border-radius-large;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    border: 1px solid themed('border-default');
+    box-shadow: themed('shadow-card');
+  }
+
+  &__header {
+    @include heading-4;
+    margin: 0 0 $spacing-m 0;
+    font-size: $font-size-300;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__content {
+    display: flex;
+    gap: $spacing-m;
+    align-items: center;
+  }
+
+  &__image {
+    width: 64px;
+    height: 64px;
+    border-radius: $border-radius-medium;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    @include themify {
+      border: 1px solid themed('border-default');
+      background-color: themed('bg-primary');
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__info {
+    flex: 1;
+  }
+
+  &__sku {
+    @include body;
+    font-size: $font-size-200;
+    margin: 0 0 $spacing-xs 0;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__name {
+    @include body;
+    font-weight: $font-weight-semibold;
+    margin: 0 0 $spacing-s 0;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__stock {
+    @include body;
+    margin: 0;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+
+    strong {
+      font-weight: $font-weight-semibold;
+
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+  }
+
+  &__empty {
+    @include body;
+    text-align: center;
+    padding: $spacing-l;
+    font-size: $font-size-200;
+
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+}
+
+// ============================================================================
+// ADJUSTMENT FORM CARD
+// ============================================================================
+
+.adjustment-form-card {
+  padding: $spacing-xxl;
+  border-radius: $border-radius-large;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    border: 1px solid themed('border-default');
+    box-shadow: themed('shadow-card');
+  }
+
+  &__header {
+    @include heading-4;
+    margin: 0 0 $spacing-l 0;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+}
+
+.adjustment-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-l;
+
+  &__metadata {
+    padding: $spacing-m;
+    border-radius: $border-radius-medium;
+
+    @include themify {
+      background-color: themed('bg-tertiary');
+      border: 1px solid themed('border-subtle');
+    }
+
+    p {
+      @include body;
+    font-size: $font-size-200;
+      margin: $spacing-xs 0;
+
+      @include themify {
+        color: themed('text-secondary');
+      }
+
+      strong {
+        font-weight: $font-weight-semibold;
+
+        @include themify {
+          color: themed('text-primary');
+        }
+      }
+    }
+  }
+
+  &__success {
+    padding: $spacing-m;
+    border-radius: $border-radius-medium;
+
+    @include themify {
+      background-color: themed('success-bg');
+      color: themed('success-fg');
+      border: 1px solid themed('success');
+    }
+  }
+
+  &__error {
+    padding: $spacing-m;
+    border-radius: $border-radius-medium;
+
+    @include themify {
+      background-color: themed('error-bg');
+      color: themed('error-fg');
+      border: 1px solid themed('error');
+    }
+  }
+
+  &__buttons {
+    display: flex;
+    gap: $spacing-m;
+    margin-top: $spacing-s;
+
+    .btn {
+      flex: 1;
+    }
+  }
+}
+
+// Form Fields
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  &__label {
+    @include body;
+    font-weight: $font-weight-semibold;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__input,
+  &__textarea,
+  &__select {
+    padding: $spacing-s $spacing-m;
+    border-radius: $border-radius-medium;
+    @include body;
+    transition: border-color $duration-fast ease;
+
+    @include themify {
+      background-color: themed('bg-primary');
+      color: themed('text-primary');
+      border: 1px solid themed('border-default');
+    }
+
+    &:hover:not(:disabled) {
+      @include themify {
+        border-color: themed('border-strong');
+      }
+    }
+
+    &:focus {
+      outline: none;
+
+      @include themify {
+        border-color: themed('state-focus-border');
+        box-shadow: 0 0 0 1px themed('state-focus-border');
+      }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+
+      @include themify {
+        background-color: themed('bg-disabled');
+      }
+    }
+
+    &::placeholder {
+      @include themify {
+        color: themed('text-tertiary');
+      }
+    }
+
+    &--error {
+      @include themify {
+        border-color: themed('error');
+      }
+
+      &:focus {
+        @include themify {
+          border-color: themed('error');
+          box-shadow: 0 0 0 1px themed('error');
+        }
+      }
+    }
+  }
+
+  &__textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: $font-family-base;
+  }
+
+  &__select {
+    cursor: pointer;
+  }
+
+  &__error {
+    @include body;
+    font-size: $font-size-200;
+
+    @include themify {
+      color: themed('error');
+    }
+  }
+}
+
+// ============================================================================
+// HISTORY CARD
+// ============================================================================
+
+.history-card {
+  padding: $spacing-xxl;
+  border-radius: $border-radius-large;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    border: 1px solid themed('border-default');
+    box-shadow: themed('shadow-card');
+  }
+
+  &__header {
+    @include heading-4;
+    margin: 0 0 $spacing-l 0;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__search {
+    position: relative;
+    margin-bottom: $spacing-l;
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: $spacing-m;
+    top: 50%;
+    transform: translateY(-50%);
+
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__search-input {
+    width: 100%;
+    padding: $spacing-s $spacing-m $spacing-s 40px;
+    border-radius: $border-radius-medium;
+    @include body;
+
+    @include themify {
+      background-color: themed('bg-primary');
+      color: themed('text-primary');
+      border: 1px solid themed('border-default');
+    }
+
+    &:focus {
+      outline: none;
+
+      @include themify {
+        border-color: themed('state-focus-border');
+        box-shadow: 0 0 0 1px themed('state-focus-border');
+      }
+    }
+
+    &::placeholder {
+      @include themify {
+        color: themed('text-tertiary');
+      }
+    }
+  }
+
+  &__loading,
+  &__empty {
+    @include body;
+    text-align: center;
+    padding: $spacing-xxl;
+
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+}
+
+// ============================================================================
+// HISTORY TABLE
+// ============================================================================
+
+.history-table {
+  flex: 1;
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead {
+    @include themify {
+      background-color: themed('bg-tertiary');
+    }
+
+    th {
+      @include body;
+    font-weight: $font-weight-semibold;
+      padding: $spacing-m;
+      text-align: left;
+
+      @include themify {
+        color: themed('text-primary');
+        border-bottom: 1px solid themed('border-default');
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      transition: background-color $duration-fast ease;
+
+      &:hover {
+        @include themify {
+          background-color: themed('state-hover-overlay');
+        }
+      }
+    }
+
+    td {
+      @include body;
+      padding: $spacing-m;
+
+      @include themify {
+        color: themed('text-secondary');
+        border-bottom: 1px solid themed('border-subtle');
+      }
+    }
+  }
+
+  &__positive {
+    @include themify {
+      color: themed('success-fg');
+    }
+    font-weight: $font-weight-semibold;
+  }
+
+  &__negative {
+    @include themify {
+      color: themed('error-fg');
+    }
+    font-weight: $font-weight-semibold;
+  }
+
+  &__reason {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: 2px $spacing-s;
+    border-radius: $border-radius-circular;
+    @include body;
+    font-size: $font-size-200;
+    font-weight: $font-weight-semibold;
+    text-transform: capitalize;
+
+    @include themify {
+      background-color: themed('bg-tertiary');
+      color: themed('text-secondary');
+      border: 1px solid themed('border-default');
+    }
+  }
+
+  &__type {
+    display: inline-block;
+    padding: 2px $spacing-s;
+    border-radius: $border-radius-small;
+    @include body;
+    font-size: $font-size-200;
+    font-weight: $font-weight-semibold;
+    text-transform: capitalize;
+
+    &--stock {
+      @include themify {
+        background-color: themed('info-bg');
+        color: themed('info-fg');
+        border: 1px solid themed('info');
+      }
+    }
+
+    &--price {
+      @include themify {
+        background-color: themed('warning-bg');
+        color: themed('warning-fg');
+        border: 1px solid themed('warning');
+      }
+    }
+  }
+}
+
+// ============================================================================
+// PRODUCT SEARCH MODAL
+// ============================================================================
+
+.product-search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+
+    @include themify {
+      background-color: themed('bg-overlay');
+    }
+  }
+
+  &__content {
+    position: relative;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    border-radius: $border-radius-xlarge;
+    display: flex;
+    flex-direction: column;
+
+    @include themify {
+      background-color: themed('bg-primary');
+      box-shadow: themed('shadow-dialog');
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-xxl;
+    border-radius: $border-radius-xlarge $border-radius-xlarge 0 0;
+
+    @include themify {
+      border-bottom: 1px solid themed('border-default');
+    }
+
+    h2 {
+      @include heading-4;
+      margin: 0;
+
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+
+    .btn {
+      font-size: 24px;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  &__search {
+    position: relative;
+    padding: 0 $spacing-xxl $spacing-l;
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: $spacing-xxl + $spacing-m;
+    top: 50%;
+    transform: translateY(-50%);
+
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__search-input {
+    width: 100%;
+    padding: $spacing-m $spacing-m $spacing-m 48px;
+    border-radius: $border-radius-medium;
+    @include body;
+
+    @include themify {
+      background-color: themed('bg-secondary');
+      color: themed('text-primary');
+      border: 1px solid themed('border-default');
+    }
+
+    &:focus {
+      outline: none;
+
+      @include themify {
+        border-color: themed('state-focus-border');
+        box-shadow: 0 0 0 1px themed('state-focus-border');
+      }
+    }
+  }
+
+  &__results {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 $spacing-xxl $spacing-xxl;
+  }
+
+  &__empty {
+    @include body;
+    text-align: center;
+    padding: $spacing-xxxl;
+
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+}
+
+// ============================================================================
+// PRODUCT SEARCH ITEM
+// ============================================================================
+
+.product-search-item {
+  display: flex;
+  gap: $spacing-m;
+  padding: $spacing-m;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  transition: background-color $duration-fast ease;
+
+  @include themify {
+    border: 1px solid themed('border-default');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('state-hover-overlay');
+      border-color: themed('border-strong');
+    }
+  }
+
+  &:not(:last-child) {
+    margin-bottom: $spacing-s;
+  }
+
+  &__image {
+    width: 56px;
+    height: 56px;
+    border-radius: $border-radius-small;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    @include themify {
+      background-color: themed('bg-tertiary');
+      border: 1px solid themed('border-subtle');
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    svg {
+      @include themify {
+        color: themed('text-tertiary');
+      }
+    }
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__sku {
+    @include body;
+    font-size: $font-size-200;
+    margin: 0 0 2px 0;
+
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__name {
+    @include body;
+    font-weight: $font-weight-semibold;
+    margin: 0 0 $spacing-xs 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__stock {
+    @include body;
+    font-size: $font-size-200;
+    margin: 0;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+}

@@ -142,6 +142,7 @@ const MainLayout = ({ children }) => {
       },
       { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
       { name: 'Ventas (Nueva)', href: '/ventas-nueva', icon: ShoppingCart },
+      { name: 'Gestión Reservas', href: '/gestion-reservas', icon: Calendar },
       { name: 'Reservas', href: '/reservas', icon: Calendar },
       { name: 'Compras', href: '/compras', icon: ShoppingBag },
       {
