@@ -780,6 +780,7 @@ Object.assign(DICTIONARY.es, {
   'purchasePaymentsMvp.status.pending': 'Pendiente',
   'purchasePaymentsMvp.status.partial': 'Pago parcial',
   'purchasePaymentsMvp.status.paid': 'Pagado',
+  'purchasePaymentsMvp.status.completed': 'Completado',
   'purchasePaymentsMvp.status.overdue': 'Vencido',
   'purchasePaymentsMvp.status.cancelled': 'Cancelado',
   'purchasePaymentsMvp.status.overdueLabel': 'Pago vencido',
@@ -897,6 +898,7 @@ Object.assign(DICTIONARY.en, {
   'purchasePaymentsMvp.status.pending': 'Pending',
   'purchasePaymentsMvp.status.partial': 'Partially paid',
   'purchasePaymentsMvp.status.paid': 'Paid',
+  'purchasePaymentsMvp.status.completed': 'Completed',
   'purchasePaymentsMvp.status.overdue': 'Overdue',
   'purchasePaymentsMvp.status.cancelled': 'Cancelled',
   'purchasePaymentsMvp.status.overdueLabel': 'Payment overdue',
@@ -2082,7 +2084,8 @@ Object.assign(DICTIONARY.es, {
   'purchases.form.unit_price': 'Precio Unitario',
   'purchases.form.total': 'Total',
   'purchases.form.actions': 'Acciones',
-  'purchases.form.no_products': 'No hay productos agregados aún. Busca y agrega productos a la orden de compra.',
+  'purchases.form.no_products':
+    'No hay productos agregados aún. Busca y agrega productos a la orden de compra.',
   'purchases.form.summary': 'Resumen',
   'purchases.form.subtotal': 'Subtotal',
   'purchases.form.taxes': 'Impuestos (0%)',
@@ -2121,7 +2124,8 @@ Object.assign(DICTIONARY.es, {
   'purchases.form.loading_currencies': 'Cargando monedas...',
   'purchases.form.remove_item': 'Eliminar',
   'purchases.modal.title': 'Agregar producto a la compra',
-  'purchases.modal.subtitle': 'Seleccione un artículo del catálogo, ajuste la cantidad y configure el margen de ganancia antes de añadirlo a la orden.',
+  'purchases.modal.subtitle':
+    'Seleccione un artículo del catálogo, ajuste la cantidad y configure el margen de ganancia antes de añadirlo a la orden.',
   'purchases.modal.selected_product': 'Producto seleccionado',
   'purchases.modal.select_product': 'Selecciona un producto',
   'purchases.modal.product_placeholder': 'Buscar producto...',
@@ -2131,7 +2135,8 @@ Object.assign(DICTIONARY.es, {
   'purchases.modal.profit_note': 'Porcentaje de ganancia sobre el costo',
   'purchases.modal.subtotal': 'Subtotal (costo x cant.)',
   'purchases.modal.line_total': 'Total venta (cant. x precio venta)',
-  'purchases.modal.search_min_chars': 'Escribe al menos 2 caracteres para buscar',
+  'purchases.modal.search_min_chars':
+    'Escribe al menos 2 caracteres para buscar',
   'purchases.modal.no_results': 'No se encontraron productos',
   'purchases.modal.pricing_mode': 'Método de Precio',
   'purchases.modal.pricing_mode.margin': 'Por margen de ganancia',
@@ -2143,8 +2148,10 @@ Object.assign(DICTIONARY.es, {
   'purchases.form.profit_margin': 'Margen de Ganancia (%)',
   'purchases.form.items': 'Artículos',
   'purchases.form.errors.supplier_required': 'Debe seleccionar un proveedor',
-  'purchases.form.errors.products_required': 'Debe agregar al menos un producto',
-  'purchases.form.errors.duplicate_product': 'Este producto ya ha sido agregado. Use doble click para editar.',
+  'purchases.form.errors.products_required':
+    'Debe agregar al menos un producto',
+  'purchases.form.errors.duplicate_product':
+    'Este producto ya ha sido agregado. Use doble click para editar.',
   'purchases.form.success': 'Orden de compra creada exitosamente',
   'purchases.form.error': 'Error al crear orden de compra',
   'purchases.table.product_id': 'ID Producto',

@@ -52,8 +52,14 @@ const usePriceAdjustmentNewStore = create(
           let pagination = { page: 1, page_size: pageSize, total: 0, total_pages: 0 };
 
           if (result && !result.circuitOpen) {
-            products = result.data || [];
-            const total = result.total || products.length;
+            // Filtrar solo productos activos
+            const allProducts = result.data || [];
+            products = allProducts.filter(product => {
+              // Un producto está activo si ninguno de estos campos es false
+              return product.state !== false && product.is_active !== false;
+            });
+
+            const total = products.length;
             pagination = {
               page: page,
               page_size: pageSize,

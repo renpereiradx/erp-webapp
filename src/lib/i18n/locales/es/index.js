@@ -7,6 +7,9 @@ import { common } from './common.js'
 import { products } from './products.js'
 import { purchases } from './purchases.js'
 import { priceAdjustments } from './priceAdjustments.js'
+import { productAdjustments } from './productAdjustments.js'
+import { inventoryAdjustments } from './inventoryAdjustments.js'
+import { inventoryManagement } from './inventoryManagement.js'
 import { purchasePaymentsMvp } from './purchasePaymentsMvp.js'
 import { clients } from './clients.js'
 import { suppliers } from './suppliers.js'
@@ -25,6 +28,9 @@ export const es = {
   ...products,
   ...purchases,
   ...priceAdjustments,
+  ...productAdjustments,
+  ...inventoryAdjustments,
+  ...inventoryManagement,
   ...purchasePaymentsMvp,
   ...clients,
   ...suppliers,
