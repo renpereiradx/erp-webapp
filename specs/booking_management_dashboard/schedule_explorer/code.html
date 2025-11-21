@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Court Schedule Explorer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#137fec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200">
+<div class="relative flex min-h-screen w-full flex-col font-display group/design-root">
+<div class="layout-container flex h-full grow flex-col">
+<main class="flex-1 px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+<div class="mx-auto flex max-w-4xl flex-col gap-8">
+<!-- Page Header -->
+<header class="flex flex-col gap-2">
+<h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight md:text-4xl">Explore Court Schedules</h1>
+<p class="text-base text-slate-600 dark:text-slate-400">Select a date and court to find available time slots.</p>
+</header>
+<!-- Filter Section -->
+<div class="flex flex-col gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-4 sm:flex-row sm:items-end">
+<label class="flex flex-col min-w-40 flex-1">
+<p class="text-sm font-medium leading-normal pb-2 text-slate-700 dark:text-slate-300">Date</p>
+<div class="relative">
+<span class="material-symbols-outlined pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">calendar_today</span>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 h-12 placeholder:text-slate-400 dark:placeholder:text-slate-500 py-2.5 pl-10 pr-4 text-base font-normal leading-normal focus:border-primary focus:ring-primary/20 focus:ring-2 dark:text-white" placeholder="Select a date" type="text" value="October 26, 2023"/>
+</div>
+</label>
+<label class="flex flex-col min-w-40 flex-1">
+<p class="text-sm font-medium leading-normal pb-2 text-slate-700 dark:text-slate-300">Court</p>
+<div class="relative">
+<span class="material-symbols-outlined pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">sports_tennis</span>
+<select class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 h-12 placeholder:text-slate-400 dark:placeholder:text-slate-500 py-2.5 pl-10 pr-4 text-base font-normal leading-normal focus:border-primary focus:ring-primary/20 focus:ring-2 appearance-none dark:text-white">
+<option>Padel Court 1</option>
+<option>Padel Court 2</option>
+<option>Tennis Court A</option>
+</select>
+<span class="material-symbols-outlined pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">expand_more</span>
+</div>
+</label>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 dark:focus:ring-offset-background-dark">
+<span class="truncate">Search</span>
+</button>
+</div>
+<!-- Results Section -->
+<div class="flex flex-col gap-4">
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+<!-- Available Card -->
+<div class="flex flex-col gap-4 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-4 shadow-sm transition-all hover:shadow-md dark:hover:border-primary/50">
+<div class="flex items-center justify-between">
+<p class="text-lg font-bold text-slate-900 dark:text-white">Padel Court 1</p>
+<div class="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-green-500/20 px-2.5 py-1 text-xs font-medium text-green-800 dark:text-green-300">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                                        Available
+                                    </div>
+</div>
+<div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-base">schedule</span>
+<p class="text-sm">10:00 AM - 11:00 AM</p>
+</div>
+<button class="mt-2 flex w-full min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 dark:focus:ring-offset-background-dark">
+<span class="truncate">Book Now</span>
+</button>
+</div>
+<!-- Booked Card -->
+<div class="flex flex-col gap-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 p-4 opacity-70">
+<div class="flex items-center justify-between">
+<p class="text-lg font-bold text-slate-500 dark:text-slate-400">Padel Court 1</p>
+<div class="inline-flex items-center gap-1.5 rounded-full bg-slate-200 dark:bg-slate-700 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-sm">cancel</span>
+                                        Booked
+                                    </div>
+</div>
+<div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-base">schedule</span>
+<p class="text-sm">11:00 AM - 12:00 PM</p>
+</div>
+<div class="mt-2 flex items-center justify-center text-sm text-slate-500 dark:text-slate-400 h-10">
+<p>Booked by J.D.</p>
+</div>
+</div>
+<!-- Available Card -->
+<div class="flex flex-col gap-4 rounded-xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-4 shadow-sm transition-all hover:shadow-md dark:hover:border-primary/50">
+<div class="flex items-center justify-between">
+<p class="text-lg font-bold text-slate-900 dark:text-white">Padel Court 1</p>
+<div class="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-green-500/20 px-2.5 py-1 text-xs font-medium text-green-800 dark:text-green-300">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                                        Available
+                                    </div>
+</div>
+<div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-base">schedule</span>
+<p class="text-sm">12:00 PM - 01:00 PM</p>
+</div>
+<button class="mt-2 flex w-full min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 dark:focus:ring-offset-background-dark">
+<span class="truncate">Book Now</span>
+</button>
+</div>
+</div>
+<!-- Empty State -->
+<div class="hidden flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/50 py-16 text-center">
+<div class="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+<span class="material-symbols-outlined text-3xl text-slate-500 dark:text-slate-400">event_busy</span>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="text-xl font-bold text-slate-800 dark:text-slate-200">No available schedules</h3>
+<p class="text-slate-600 dark:text-slate-400">Try selecting a different date or court to see available times.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

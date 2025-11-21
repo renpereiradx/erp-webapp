@@ -14,5 +14,9 @@
 @use 'settings';
 @use 'purchases';
 @use 'purchase-payments-mvp';
-
-// ... (will be added as pages are migrated)
+@use 'product-adjustments';
+@use 'inventory-adjustments';
+@use 'inventory-adjustment-manual';
+@use 'inventory-management';
+@use 'reservations-and-schedules';
+@use 'schedules-new';

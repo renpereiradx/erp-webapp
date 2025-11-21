@@ -1,0 +1,132 @@
+// Reservations and Schedules Page
+// Basado en Fluent Design System 2 + BEM Methodology
+
+@use '../abstracts' as *;
+
+// Legacy spacing aliases while this page awaits full token migration
+$spacing-xs: $spacing-8 !default;
+$spacing-s: $spacing-12 !default;
+$spacing-l: $spacing-16 !default;
+$spacing-xxl: $spacing-32 !default;
+$spacing-xxxl: $spacing-48 !default;
+
+.reservations-schedules-page {
+  max-width: 56rem; // max-w-4xl
+  margin: 0 auto;
+  padding: 0 $spacing-l;
+
+  // Header
+  &__header {
+    margin-bottom: $spacing-xxxl;
+  }
+
+  &__title {
+    @include heading-3;
+    margin-bottom: $spacing-s;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__subtitle {
+    @include body;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  // Cards Grid
+  &__cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-xxl;
+
+    @media (min-width: 640px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
+// Reservation Card Component
+.reservation-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: $spacing-xxl;
+  border-radius: $border-radius-xlarge;
+  cursor: pointer;
+  transition: box-shadow $duration-normal $ease-decelerate,
+    border-color $duration-fast $ease-ease-in-out;
+
+  @include themify {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-subtle');
+  }
+
+  @include elevation(4);
+
+  &:hover {
+    @include themify {
+      border-color: themed('action-primary');
+    }
+
+    @include elevation(8);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  // Content wrapper
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-l;
+    margin-bottom: $spacing-xxl;
+  }
+
+  // Icon Container
+  &__icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: $border-radius-large;
+
+    @include themify {
+      background-color: rgba(themed('action-primary'), 0.1);
+      color: themed('action-primary');
+    }
+  }
+
+  // Info section
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__title {
+    @include heading-5;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__description {
+    @include body;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  // Button
+  &__button {
+    width: 100%;
+  }
+}

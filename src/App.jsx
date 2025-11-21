@@ -19,7 +19,9 @@ import Suppliers from '@/pages/Suppliers'
 import Sales from '@/pages/Sales'
 import SalesNew from '@/pages/SalesNew'
 import Reservations from '@/pages/Reservations'
-import Schedules from '@/pages/Schedules'
+// import Schedules from '@/pages/Schedules'
+import SchedulesNew from '@/pages/SchedulesNew'
+import ReservationsAndSchedules from '@/pages/ReservationsAndSchedules'
 import Inventory from '@/pages/Inventory'
 import PriceAdjustments from '@/pages/PriceAdjustments'
 import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
@@ -27,6 +29,9 @@ import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
 import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
 import PriceAdjustmentHistoryDetail from '@/pages/PriceAdjustmentHistoryDetail'
 import ProductAdjustments from '@/pages/ProductAdjustments'
+import InventoryAdjustments from '@/pages/InventoryAdjustments'
+import InventoryAdjustmentManual from '@/pages/InventoryAdjustmentManual'
+import InventoryManagement from '@/pages/InventoryManagement'
 import Reports from '@/pages/Reports'
 // ISOLATED IMPORTS - Pages temporarily disabled for refactoring
 // import BookingSales from '@/pages/BookingSales';
@@ -121,8 +126,12 @@ function AppContent() {
                       <Route path='/ventas' element={<Sales />} />
                       <Route path='/ventas-nueva' element={<SalesNew />} />
                       <Route path='/reportes' element={<Reports />} />
+                      <Route
+                        path='/gestion-reservas'
+                        element={<ReservationsAndSchedules />}
+                      />
                       <Route path='/reservas' element={<Reservations />} />
-                      <Route path='/horarios' element={<Schedules />} />
+                      <Route path='/horarios' element={<SchedulesNew />} />
                       <Route path='/inventario' element={<Inventory />} />
                       <Route
                         path='/ajustes-precios'
@@ -151,6 +160,18 @@ function AppContent() {
                       <Route
                         path='/ajustes-producto'
                         element={<ProductAdjustments />}
+                      />
+                      <Route
+                        path='/ajustes-inventario'
+                        element={<InventoryAdjustments />}
+                      />
+                      <Route
+                        path='/ajuste-inventario-unitario'
+                        element={<InventoryAdjustmentManual />}
+                      />
+                      <Route
+                        path='/ajuste-inventario-masivo'
+                        element={<InventoryManagement />}
                       />
 
                       {/* --- RUTAS AISLADAS TEMPORALMENTE PARA REFACTORING --- */}
