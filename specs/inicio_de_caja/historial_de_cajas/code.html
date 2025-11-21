@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gestión de Cajas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#128aed",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101a22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="w-64 flex-shrink-0 bg-white/5 dark:bg-black/20 p-4 flex flex-col justify-between">
+<div class="flex flex-col gap-4">
+<div class="flex gap-3 items-center p-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User avatar of Ricardo Gomez" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA0eKUB803yuvUDLxN0sx5wYXUfJBSJUX03qWhQr4Ozz8sZZHvA5cQWFn8Or_SdMyCn2dwILD0Zx3LDhi_HnQBEdT-97iVg0kOoGxRAAsOiQ9eeS8vr40hb08d5MAaLAzHjxBlvdUmp5DDa-KHj2E0E-_EDPT5_LnmgOt14f1ig_XD_fXwTh5m6J8OjjdR34mprD5gRvApxNL9zBqMrOE8cGvSMvDPvoO_4x9P6YAatqrLkPRxb0d3hNJS29riWGNjIz30UlzRbz6hO");'></div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-medium leading-normal">Ricardo Gomez</h1>
+<p class="text-gray-400 dark:text-gray-500 text-sm font-normal leading-normal">Supervisor</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2 text-gray-300 dark:text-gray-400 hover:bg-white/10 rounded-lg" href="#">
+<span class="material-symbols-outlined">home</span>
+<p class="text-sm font-medium leading-normal">Inicio</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 text-primary" href="#">
+<span class="material-symbols-outlined !fill-1">inventory_2</span>
+<p class="text-sm font-medium leading-normal">Gestión de Cajas</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-300 dark:text-gray-400 hover:bg-white/10 rounded-lg" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<p class="text-sm font-medium leading-normal">Informes</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-300 dark:text-gray-400 hover:bg-white/10 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-sm font-medium leading-normal">Configuración</p>
+</a>
+</nav>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 text-gray-300 dark:text-gray-400 hover:bg-white/10 rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<p class="text-sm font-medium leading-normal">Ayuda</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-300 dark:text-gray-400 hover:bg-white/10 rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<p class="text-sm font-medium leading-normal">Cerrar Sesión</p>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-8">
+<div class="max-w-7xl mx-auto">
+<!-- Breadcrumbs -->
+<div class="flex items-center gap-2 mb-4">
+<a class="text-gray-400 dark:text-gray-500 text-sm font-medium leading-normal" href="#">Inicio</a>
+<span class="text-gray-400 dark:text-gray-500 text-sm font-medium leading-normal">/</span>
+<span class="text-white text-sm font-medium leading-normal">Gestión de Cajas</span>
+</div>
+<!-- PageHeading -->
+<div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+<div class="flex flex-col">
+<h1 class="text-white text-3xl font-bold leading-tight tracking-tight">Gestión de Cajas</h1>
+<p class="text-gray-400 dark:text-gray-500 text-base font-normal leading-normal">Visualiza, filtra y gestiona todas las cajas registradoras abiertas y cerradas.</p>
+</div>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] gap-2 hover:bg-primary/90">
+<span class="material-symbols-outlined text-base">add</span>
+<span class="truncate">Abrir Nueva Caja</span>
+</button>
+</div>
+<!-- Filters & Toolbar -->
+<div class="bg-white/5 dark:bg-black/20 rounded-xl p-4 mb-6">
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div class="flex flex-wrap items-center gap-3">
+<!-- Chips -->
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-black/20 dark:bg-white/5 pl-4 pr-2 hover:bg-black/30 dark:hover:bg-white/10">
+<p class="text-white text-sm font-medium leading-normal">Rango de Fechas</p>
+<span class="material-symbols-outlined text-base">calendar_today</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-black/20 dark:bg-white/5 pl-4 pr-2 hover:bg-black/30 dark:hover:bg-white/10">
+<p class="text-white text-sm font-medium leading-normal">Usuario</p>
+<span class="material-symbols-outlined text-base">arrow_drop_down</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-black/20 dark:bg-white/5 pl-4 pr-2 hover:bg-black/30 dark:hover:bg-white/10">
+<p class="text-white text-sm font-medium leading-normal">Estado: Todos</p>
+<span class="material-symbols-outlined text-base">arrow_drop_down</span>
+</button>
+</div>
+<!-- ToolBar -->
+<div class="flex items-center gap-2">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+<input class="w-full h-9 bg-black/20 dark:bg-white/5 text-white rounded-lg pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary focus:outline-none border-transparent focus:border-transparent" placeholder="Buscar por ID de caja..." type="text"/>
+</div>
+<button class="p-2 text-white hover:bg-black/20 dark:hover:bg-white/10 rounded-lg">
+<span class="material-symbols-outlined">refresh</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-white/5 dark:bg-black/20 rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-black/20 dark:bg-white/5">
+<tr>
+<th class="p-4 text-sm font-semibold text-gray-300 dark:text-gray-400">ID Caja</th>
+<th class="p-4 text-sm font-semibold text-gray-300 dark:text-gray-400">Usuario</th>
+<th class="p-4 text-sm font-semibold text-gray-300 dark:text-gray-400">Estado</th>
+<th class="p-4 text-sm font-semibold text-gray-300 dark:text-gray-400">Balance Actual</th>
+<th class="p-4 text-sm font-semibold text-gray-300 dark:text-gray-400">Fecha Apertura</th>
+<th class="p-4 text-sm font-semibold text-gray-300 dark:text-gray-400">Fecha Cierre</th>
+<th class="p-4 text-sm font-semibold text-gray-300 dark:text-gray-400">Variación</th>
+<th class="p-4 text-sm font-semibold text-gray-300 dark:text-gray-400 text-right">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5 dark:divide-black/20">
+<tr class="hover:bg-black/10 dark:hover:bg-white/5">
+<td class="p-4 text-sm text-white font-medium">CJ-00124</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">Ana Morales</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
+<span>Abierta</span>
+</div>
+</td>
+<td class="p-4 text-sm text-white font-medium">$ 1,250.75</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">2023-10-27 08:00</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">-</td>
+<td class="p-4 text-sm text-green-400 font-medium">+ $5.20</td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 text-gray-300 dark:text-gray-400 hover:text-white hover:bg-black/20 dark:hover:bg-white/10 rounded-lg"><span class="material-symbols-outlined text-xl">visibility</span></button>
+<button class="p-2 text-gray-300 dark:text-gray-400 hover:text-white hover:bg-black/20 dark:hover:bg-white/10 rounded-lg"><span class="material-symbols-outlined text-xl">print</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-black/10 dark:hover:bg-white/5">
+<td class="p-4 text-sm text-white font-medium">CJ-00123</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">Juan Pérez</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 bg-gray-500 rounded-full"></span>
+<span>Cerrada</span>
+</div>
+</td>
+<td class="p-4 text-sm text-white font-medium">$ 0.00</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">2023-10-26 08:02</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">2023-10-26 17:30</td>
+<td class="p-4 text-sm text-red-500 font-medium">- $12.50</td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 text-gray-300 dark:text-gray-400 hover:text-white hover:bg-black/20 dark:hover:bg-white/10 rounded-lg"><span class="material-symbols-outlined text-xl">visibility</span></button>
+<button class="p-2 text-gray-300 dark:text-gray-400 hover:text-white hover:bg-black/20 dark:hover:bg-white/10 rounded-lg"><span class="material-symbols-outlined text-xl">print</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-black/10 dark:hover:bg-white/5">
+<td class="p-4 text-sm text-white font-medium">CJ-00122</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">Ana Morales</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 bg-gray-500 rounded-full"></span>
+<span>Cerrada</span>
+</div>
+</td>
+<td class="p-4 text-sm text-white font-medium">$ 0.00</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">2023-10-25 07:55</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400">2023-10-25 17:28</td>
+<td class="p-4 text-sm text-gray-300 dark:text-gray-400 font-medium">$ 0.00</td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-2">
+<button class="p-2 text-gray-300 dark:text-gray-400 hover:text-white hover:bg-black/20 dark:hover:bg-white/10 rounded-lg"><span class="material-symbols-outlined text-xl">visibility</span></button>
+<button class="p-2 text-gray-300 dark:text-gray-400 hover:text-white hover:bg-black/20 dark:hover:bg-white/10 rounded-lg"><span class="material-symbols-outlined text-xl">print</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-4 flex items-center justify-between border-t border-white/5 dark:border-black/20">
+<p class="text-sm text-gray-400 dark:text-gray-500">Mostrando <span class="font-medium text-white">1-3</span> de <span class="font-medium text-white">25</span> resultados</p>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center size-8 text-gray-300 dark:text-gray-400 hover:bg-black/20 dark:hover:bg-white/10 rounded-lg disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-lg">chevron_left</span>
+</button>
+<button class="flex items-center justify-center size-8 text-white bg-primary/20 dark:bg-primary/30 rounded-lg">1</button>
+<button class="flex items-center justify-center size-8 text-gray-300 dark:text-gray-400 hover:bg-black/20 dark:hover:bg-white/10 rounded-lg">2</button>
+<button class="flex items-center justify-center size-8 text-gray-300 dark:text-gray-400 hover:bg-black/20 dark:hover:bg-white/10 rounded-lg">3</button>
+<button class="flex items-center justify-center size-8 text-gray-300 dark:text-gray-400 hover:bg-black/20 dark:hover:bg-white/10 rounded-lg">
+<span class="material-symbols-outlined text-lg">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
