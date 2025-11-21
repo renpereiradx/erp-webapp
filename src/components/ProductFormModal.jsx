@@ -17,7 +17,7 @@ import BusinessManagementAPI from '../services/BusinessManagementAPI';
  */
 export default function ProductFormModal({ isOpen, onClose, product = null }) {
   const { t } = useI18n();
-  const { createProduct, updateProduct } = useProductStore();
+  const { createProduct, updateProduct, deleteProduct } = useProductStore();
   const apiClient = new BusinessManagementAPI();
 
   const isEditMode = product !== null;
@@ -35,6 +35,8 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
@@ -189,6 +191,24 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
       // TODO: Show error notification
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Handle delete
+  const handleDelete = async () => {
+    if (!isEditMode) return;
+
+    setIsDeleting(true);
+    try {
+      const productId = product.product_id || product.id;
+      await deleteProduct(productId);
+      setShowDeleteConfirm(false);
+      onClose();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      // TODO: Show error notification
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -440,24 +460,83 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
 
           {/* Footer */}
           <div className="product-form-modal__footer">
-            <button
-              type="button"
-              className="product-form-modal__button product-form-modal__button--secondary"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              {t('products.modal.action.cancel')}
-            </button>
-            <button
-              type="submit"
-              className="product-form-modal__button product-form-modal__button--primary"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? t('products.modal.action.saving') : t('products.modal.action.save')}
-            </button>
+            <div className="product-form-modal__footer-left">
+              {isEditMode && (
+                <button
+                  type="button"
+                  className="product-form-modal__button product-form-modal__button--danger"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isSubmitting || isDeleting}
+                >
+                  {t('products.modal.action.delete')}
+                </button>
+              )}
+            </div>
+            <div className="product-form-modal__footer-right">
+              <button
+                type="button"
+                className="product-form-modal__button product-form-modal__button--secondary"
+                onClick={onClose}
+                disabled={isSubmitting || isDeleting}
+              >
+                {t('products.modal.action.cancel')}
+              </button>
+              <button
+                type="submit"
+                className="product-form-modal__button product-form-modal__button--primary"
+                disabled={isSubmitting || isDeleting}
+              >
+                {isSubmitting ? t('products.modal.action.saving') : t('products.modal.action.save')}
+              </button>
+            </div>
           </div>
         </form>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="product-form-modal__backdrop" style={{ zIndex: 1001 }}>
+          <div className="product-form-modal__dialog">
+            <div className="product-form-modal__container product-form-modal__container--compact">
+              <div className="product-form-modal__header">
+                <h2 className="product-form-modal__title">
+                  {t('products.modal.delete.title')}
+                </h2>
+              </div>
+
+              <div className="product-form-modal__body">
+                <p className="product-form-modal__delete-message">
+                  {t('products.modal.delete.message', { name: product?.product_name || product?.name || '' })}
+                </p>
+                <p className="product-form-modal__delete-warning">
+                  {t('products.modal.delete.warning')}
+                </p>
+              </div>
+
+              <div className="product-form-modal__footer">
+                <div className="product-form-modal__footer-right">
+                  <button
+                    type="button"
+                    className="product-form-modal__button product-form-modal__button--secondary"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isDeleting}
+                  >
+                    {t('products.modal.action.cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    className="product-form-modal__button product-form-modal__button--danger"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? t('products.modal.action.deleting') : t('products.modal.action.confirmDelete')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

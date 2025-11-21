@@ -316,7 +316,7 @@
   &__footer {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
     gap: $spacing-12;
     padding: $spacing-16; // Reduced from $spacing-24
     border-top: 1px solid;
@@ -325,6 +325,18 @@
     @include themify($themes) {
       border-color: themed('border-default');
     }
+  }
+
+  &__footer-left {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+  }
+
+  &__footer-right {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
   }
 
   &__button {
@@ -391,6 +403,64 @@
       &:active:not(:disabled) {
         opacity: 0.9;
       }
+    }
+  }
+
+  &__button--danger {
+    background-color: #d13438;
+    color: #ffffff;
+    border: 1px solid #d13438;
+
+    &:hover:not(:disabled) {
+      background-color: #b92d31;
+    }
+
+    &:active:not(:disabled) {
+      background-color: #a02629;
+      opacity: 0.9;
+    }
+
+    &:disabled {
+      background-color: #d13438;
+      opacity: 0.5;
+    }
+  }
+
+  // ============================================================================
+  // Delete Confirmation Dialog
+  // ============================================================================
+
+  &__dialog {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-24;
+  }
+
+  &__container--compact {
+    max-width: 500px;
+  }
+
+  &__delete-message {
+    font-size: $font-size-500;
+    line-height: 1.5;
+    margin-bottom: $spacing-12;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__delete-warning {
+    font-size: $font-size-300;
+    line-height: 1.5;
+    padding: $spacing-12;
+    border-radius: $border-radius-medium;
+
+    @include themify($themes) {
+      background-color: themed('warning-bg');
+      color: themed('warning-fg');
+      border: 1px solid themed('warning');
     }
   }
 }
