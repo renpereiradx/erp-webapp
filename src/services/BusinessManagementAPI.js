@@ -290,10 +290,10 @@ class BusinessManagementAPI {
     })
   }
 
-  // Eliminar producto
+  // Eliminar producto (eliminación lógica)
   async deleteProduct(id) {
-    return this.makeRequest(`/products/${id}`, {
-      method: 'DELETE',
+    return this.makeRequest(`/products/delete/${id}`, {
+      method: 'PUT',
     })
   }
 
@@ -370,7 +370,6 @@ class BusinessManagementAPI {
           return product ? [product] : []
         } catch (error) {
           // Si falla, continuar con otras búsquedas
-          console.log('Not found by ID, trying other methods')
         }
       }
 
@@ -382,7 +381,6 @@ class BusinessManagementAPI {
           return product ? [product] : []
         } catch (error) {
           // Si falla, continuar con búsqueda por nombre
-          console.log('Not found by barcode, trying name search')
         }
       }
 
