@@ -87,7 +87,7 @@ const PriceAdjustmentNew = () => {
   const handleSelectProduct = async (product) => {
     await selectProductForAdjustment(product.product_id);
     // Navegar a página de detalle para ajustar el precio
-    navigate('/ajustes-precios-nuevo/detalle', { state: { selectedProduct: product } });
+    navigate('/ajustes-precios/detalle', { state: { selectedProduct: product } });
   };
 
   // Manejar paginación

@@ -19,6 +19,7 @@ import { reservations } from './reservations.js'
 import { booking } from './booking.js'
 import { bookingManagement } from './booking-management.js'
 import { other } from './other.js'
+import { availableSlots } from './availableSlots.js'
 
 /**
  * Diccionario completo de traducciones en español
@@ -40,5 +41,6 @@ export const es = {
   ...reservations,
   ...booking,
   ...bookingManagement,
+  ...availableSlots,
   ...other,
 }

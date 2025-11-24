@@ -18,13 +18,13 @@ const PriceAdjustmentLayout = () => {
     {
       id: 'new-adjustment',
       label: t('priceAdjustment.tabs.newAdjustment', 'Nuevo Ajuste'),
-      path: '/ajustes-precios-nuevo',
+      path: '/ajustes-precios',
       exact: true,
     },
     {
       id: 'history',
       label: t('priceAdjustment.tabs.history', 'Historial Global'),
-      path: '/ajustes-precios-nuevo/historial',
+      path: '/ajustes-precios/historial',
       exact: false,
     },
   ];

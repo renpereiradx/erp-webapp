@@ -390,7 +390,7 @@ const PurchasePaymentsMvpPage = () => {
   const handleViewOrder = useCallback(
     orderId => {
       if (!orderId) return
-      navigate(`/pagos/compras-mvp/${encodeURIComponent(orderId)}`)
+      navigate(`/pagos-compras/${encodeURIComponent(orderId)}`)
     },
     [navigate]
   )

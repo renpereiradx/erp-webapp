@@ -337,7 +337,7 @@ const SchedulesNew = () => {
 
         <TabsContent value='schedules' className='mt-0'>
           {/* Toolbar (Filters + Actions) */}
-          <div className='schedules-new__toolbar'>
+          <section className='schedules-new__toolbar card card--elevated'>
             {/* Filters */}
             <div className='schedules-new__filters'>
               <div className='filter-group'>
@@ -441,10 +441,10 @@ const SchedulesNew = () => {
                 Generar Rango Personalizado
               </button>
             </div>
-          </div>
+          </section>
 
           {/* Data Table */}
-          <div className='schedules-new__table-container'>
+          <section className='schedules-new__table-container card card--elevated'>
             <table className='schedules-table'>
               <thead>
                 <tr>
@@ -541,7 +541,7 @@ const SchedulesNew = () => {
                 )}
               </tbody>
             </table>
-          </div>
+          </section>
         </TabsContent>
 
         <TabsContent value='details' className='mt-0'>
@@ -560,7 +560,7 @@ const SchedulesNew = () => {
             </div>
 
             {/* Filters */}
-            <div className='schedule-explorer__filters'>
+            <section className='schedule-explorer__filters card card--elevated'>
               <div className='schedule-explorer__filter-group'>
                 <label>Fecha</label>
                 <div className='input-wrapper'>
@@ -599,7 +599,7 @@ const SchedulesNew = () => {
                   </select>
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* Grid */}
             <div className='schedule-explorer__grid'>
@@ -613,9 +613,9 @@ const SchedulesNew = () => {
                 </div>
               ) : (
                 explorerSchedules.map((schedule, index) => (
-                  <div
+                  <article
                     key={schedule.id || `schedule-${index}`}
-                    className='explorer-card'
+                    className='card card--elevated explorer-card'
                   >
                     <div className='explorer-card__header'>
                       <h3 className='explorer-card__court-name'>
@@ -650,7 +650,7 @@ const SchedulesNew = () => {
                         {schedule.is_available ? 'Reservar' : 'No disponible'}
                       </button>
                     </div>
-                  </div>
+                  </article>
                 ))
               )}
             </div>

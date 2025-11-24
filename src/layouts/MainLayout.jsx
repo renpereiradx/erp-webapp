@@ -25,7 +25,6 @@ import {
   CreditCard,
   Receipt,
   DollarSign,
-  Edit,
   ChevronRight,
   ChevronDown,
   BookOpen,
@@ -128,13 +127,6 @@ const MainLayout = ({ children }) => {
       { name: 'Productos', href: '/productos', icon: Package },
       { name: 'Clientes', href: '/clientes', icon: Users },
       { name: 'Proveedores', href: '/proveedores', icon: Truck },
-      { name: 'Ajuste de inventario', href: '/inventario', icon: Package },
-      { name: 'Ajustes de Precios', href: '/ajustes-precios', icon: Edit },
-      {
-        name: 'Ajuste de Precios Nuevo',
-        href: '/ajustes-precios-nuevo',
-        icon: Edit,
-      },
       {
         name: 'Ajustes de Producto',
         href: '/ajustes-producto',
@@ -143,7 +135,6 @@ const MainLayout = ({ children }) => {
       { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
       { name: 'Ventas (Nueva)', href: '/ventas-nueva', icon: ShoppingCart },
       { name: 'Gestión Reservas', href: '/gestion-reservas', icon: Calendar },
-      { name: 'Reservas', href: '/reservas', icon: Calendar },
       { name: 'Compras', href: '/compras', icon: ShoppingBag },
       {
         name: 'Pagos',
@@ -155,10 +146,9 @@ const MainLayout = ({ children }) => {
             href: '/caja-registradora',
             icon: DollarSign,
           },
-          { name: 'Pagos Compras', href: '/pagos-compras', icon: CreditCard },
           {
-            name: 'Pagos Compras MVP',
-            href: '/pagos/compras-mvp',
+            name: 'Pagos Compras',
+            href: '/pagos-compras',
             icon: CircleDollarSign,
           },
           { name: 'Pagos Ventas', href: '/pagos-ventas', icon: Receipt },

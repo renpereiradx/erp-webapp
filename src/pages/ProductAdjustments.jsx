@@ -20,7 +20,7 @@ const ProductAdjustmentsPage = () => {
         {/* Price Adjustment Card */}
         <div
           className='adjustment-card'
-          onClick={() => navigate('/ajustes-precios-nuevo')}
+          onClick={() => navigate('/ajustes-precios')}
         >
           <div className='adjustment-card__content'>
             <div className='adjustment-card__icon-container'>
@@ -39,7 +39,7 @@ const ProductAdjustmentsPage = () => {
             className='btn btn--primary adjustment-card__button'
             onClick={e => {
               e.stopPropagation()
-              navigate('/ajustes-precios-nuevo')
+              navigate('/ajustes-precios')
             }}
           >
             Gestionar Precios

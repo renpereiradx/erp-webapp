@@ -262,7 +262,7 @@ const PurchasePaymentsMvpDetail = () => {
           undefined,
           () => (lang === 'en' ? 'Home' : 'Inicio')
         ),
-        to: '/pagos/compras-mvp',
+        to: '/pagos-compras',
       },
     ],
     [lang, t]

@@ -101,7 +101,7 @@ const PriceAdjustmentDetail = () => {
   // Redirigir si no hay producto seleccionado
   useEffect(() => {
     if (!product) {
-      navigate('/ajustes-precios-nuevo');
+      navigate('/ajustes-precios');
     }
   }, [product, navigate]);
 
@@ -212,7 +212,7 @@ const PriceAdjustmentDetail = () => {
 
       // Redirigir de vuelta a la página de búsqueda después de un breve delay
       setTimeout(() => {
-        navigate('/ajustes-precios-nuevo');
+        navigate('/ajustes-precios');
       }, 1500);
     }
   };
@@ -230,7 +230,7 @@ const PriceAdjustmentDetail = () => {
       {/* Header con navegación */}
       <div className="price-adjustment-detail__header">
         <button
-          onClick={() => navigate('/ajustes-precios-nuevo')}
+          onClick={() => navigate('/ajustes-precios')}
           className="back-button"
           aria-label={t('action.back', 'Volver')}
         >
@@ -481,7 +481,7 @@ const PriceAdjustmentDetail = () => {
                             <td className="history-table__td history-table__td--actions">
                               <button
                                 className="btn btn--sm btn--secondary"
-                                onClick={() => navigate(`/ajustes-precios-nuevo/historial/${adjustment.adjustment_id}`, {
+                                onClick={() => navigate(`/ajustes-precios/historial/${adjustment.adjustment_id}`, {
                                   state: { adjustment, product }
                                 })}
                                 aria-label={t('priceAdjustmentDetail.action.viewDetails', 'Ver detalles')}

@@ -23,8 +23,6 @@ import BookingManagement from '@/pages/BookingManagement'
 // import Schedules from '@/pages/Schedules'
 import SchedulesNew from '@/pages/SchedulesNew'
 import ReservationsAndSchedules from '@/pages/ReservationsAndSchedules'
-import Inventory from '@/pages/Inventory'
-import PriceAdjustments from '@/pages/PriceAdjustments'
 import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
 import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
 import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
@@ -40,7 +38,6 @@ import Purchases from '@/pages/Purchases'
 import PurchasePaymentsMvp from '@/pages/PurchasePaymentsMvp'
 import PurchasePaymentsMvpDetail from '@/pages/PurchasePaymentsMvpDetail'
 import CashRegister from '@/pages/CashRegister'
-import PurchasePayment from '@/pages/PurchasePayment'
 import SalePayment from '@/pages/SalePayment'
 import PaymentDocumentation from '@/pages/PaymentDocumentation'
 import PaymentManagement from '@/pages/PaymentManagement'
@@ -133,14 +130,9 @@ function AppContent() {
                       />
                       <Route path='/reservas' element={<BookingManagement />} />
                       <Route path='/horarios' element={<SchedulesNew />} />
-                      <Route path='/inventario' element={<Inventory />} />
-                      <Route
-                        path='/ajustes-precios'
-                        element={<PriceAdjustments />}
-                      />
                       {/* Rutas con layout de tabs */}
                       <Route
-                        path='/ajustes-precios-nuevo'
+                        path='/ajustes-precios'
                         element={<PriceAdjustmentLayout />}
                       >
                         <Route index element={<PriceAdjustmentNew />} />
@@ -151,11 +143,11 @@ function AppContent() {
                       </Route>
                       {/* Rutas independientes sin tabs */}
                       <Route
-                        path='/ajustes-precios-nuevo/detalle'
+                        path='/ajustes-precios/detalle'
                         element={<PriceAdjustmentDetail />}
                       />
                       <Route
-                        path='/ajustes-precios-nuevo/historial/:adjustmentId'
+                        path='/ajustes-precios/historial/:adjustmentId'
                         element={<PriceAdjustmentHistoryDetail />}
                       />
                       <Route
@@ -185,14 +177,10 @@ function AppContent() {
                       />
                       <Route
                         path='/pagos-compras'
-                        element={<PurchasePayment />}
-                      />
-                      <Route
-                        path='/pagos/compras-mvp'
                         element={<PurchasePaymentsMvp />}
                       />
                       <Route
-                        path='/pagos/compras-mvp/:orderId'
+                        path='/pagos-compras/:orderId'
                         element={<PurchasePaymentsMvpDetail />}
                       />
                       <Route path='/pagos-ventas' element={<SalePayment />} />

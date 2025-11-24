@@ -153,16 +153,18 @@
   // Toolbar
   &__toolbar {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
+    flex-direction: column;
     gap: $spacing-24;
-    padding: $spacing-16;
-    border-radius: $border-radius-large;
     margin-bottom: $spacing-24;
 
-    @include themify($themes) {
-      background-color: themed('surface-card');
-      border: 1px solid themed('border-default');
+    &.card {
+      padding: $spacing-24;
+    }
+
+    @include desktop {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
     }
   }
 
@@ -243,12 +245,12 @@
 
   // Table
   &__table-container {
+    display: block;
     border-radius: $border-radius-large;
     overflow: hidden;
 
-    @include themify($themes) {
-      background-color: themed('surface-card');
-      border: 1px solid themed('border-default');
+    &.card {
+      padding: 0;
     }
 
     .schedules-table {
@@ -423,12 +425,10 @@
     display: flex;
     flex-wrap: wrap;
     gap: $spacing-24;
-    padding: $spacing-24;
     border-radius: $border-radius-large;
 
-    @include themify($themes) {
-      background-color: themed('surface-card');
-      border: 1px solid themed('border-default');
+    &.card {
+      padding: $spacing-24;
     }
   }
 
@@ -533,21 +533,16 @@
 .explorer-card {
   display: flex;
   flex-direction: column;
-  border-radius: $border-radius-medium;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
-  @include themify($themes) {
-    background-color: themed('surface-card');
-    border: 1px solid themed('border-default');
+  &.card {
+    padding: 0;
+    border-radius: $border-radius-medium;
   }
 
   &:hover {
     transform: translateY(-2px);
-    @include themify($themes) {
-      box-shadow: themed('shadow-depth-4');
-      border-color: themed('border-hover');
-    }
   }
 
   &__header {
