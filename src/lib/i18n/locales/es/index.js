@@ -17,6 +17,7 @@ import { sales } from './sales.js'
 import { inventory } from './inventory.js'
 import { reservations } from './reservations.js'
 import { booking } from './booking.js'
+import { bookingManagement } from './booking-management.js'
 import { other } from './other.js'
 
 /**
@@ -38,5 +39,6 @@ export const es = {
   ...inventory,
   ...reservations,
   ...booking,
+  ...bookingManagement,
   ...other,
 }

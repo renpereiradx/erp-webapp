@@ -19,6 +19,7 @@ import Suppliers from '@/pages/Suppliers'
 import Sales from '@/pages/Sales'
 import SalesNew from '@/pages/SalesNew'
 import Reservations from '@/pages/Reservations'
+import BookingManagement from '@/pages/BookingManagement'
 // import Schedules from '@/pages/Schedules'
 import SchedulesNew from '@/pages/SchedulesNew'
 import ReservationsAndSchedules from '@/pages/ReservationsAndSchedules'
@@ -130,7 +131,7 @@ function AppContent() {
                         path='/gestion-reservas'
                         element={<ReservationsAndSchedules />}
                       />
-                      <Route path='/reservas' element={<Reservations />} />
+                      <Route path='/reservas' element={<BookingManagement />} />
                       <Route path='/horarios' element={<SchedulesNew />} />
                       <Route path='/inventario' element={<Inventory />} />
                       <Route
