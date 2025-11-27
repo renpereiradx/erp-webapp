@@ -16,13 +16,13 @@ import Dashboard from '@/pages/Dashboard'
 import Products from '@/pages/Products'
 import Clients from '@/pages/Clients'
 import Suppliers from '@/pages/Suppliers'
-import Sales from '@/pages/Sales'
 import SalesNew from '@/pages/SalesNew'
 import Reservations from '@/pages/Reservations'
 import BookingManagement from '@/pages/BookingManagement'
 // import Schedules from '@/pages/Schedules'
 import SchedulesNew from '@/pages/SchedulesNew'
 import ReservationsAndSchedules from '@/pages/ReservationsAndSchedules'
+import AvailableSlots from '@/pages/AvailableSlots'
 import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
 import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
 import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
@@ -121,8 +121,7 @@ function AppContent() {
                       <Route path='/productos' element={<Products />} />
                       <Route path='/clientes' element={<Clients />} />
                       <Route path='/proveedores' element={<Suppliers />} />
-                      <Route path='/ventas' element={<Sales />} />
-                      <Route path='/ventas-nueva' element={<SalesNew />} />
+                      <Route path='/ventas' element={<SalesNew />} />
                       <Route path='/reportes' element={<Reports />} />
                       <Route
                         path='/gestion-reservas'
@@ -130,6 +129,10 @@ function AppContent() {
                       />
                       <Route path='/reservas' element={<BookingManagement />} />
                       <Route path='/horarios' element={<SchedulesNew />} />
+                      <Route
+                        path='/horarios-disponibles'
+                        element={<AvailableSlots />}
+                      />
                       {/* Rutas con layout de tabs */}
                       <Route
                         path='/ajustes-precios'

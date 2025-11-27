@@ -1014,6 +1014,13 @@ export const DEMO_CONFIG_SCHEDULES = {
   pageSize: 20, // Items per page
 }
 
+export const DEMO_CONFIG_AVAILABLE_SLOTS = {
+  enabled: true, // Enable/disable demo mode
+  useRealAPI: false, // Toggle real API calls
+  simulateDelay: true, // Simulate network delay
+  delayMs: 450, // Delay in milliseconds
+}
+
 // Demo reservations data
 export const DEMO_RESERVATIONS_DATA = [
   {
@@ -1107,6 +1114,95 @@ export const DEMO_SCHEDULES_DATA = [
     is_available: true,
   },
 ]
+
+const toISODate = value => {
+  if (!value) return null
+  try {
+    return new Date(value).toISOString().split('T')[0]
+  } catch (error) {
+    return null
+  }
+}
+
+const getSlotDurationMinutes = (start, end) => {
+  if (!start || !end) return 0
+  const startDate = new Date(start)
+  const endDate = new Date(end)
+  const diff = endDate - startDate
+  return diff > 0 ? Math.round(diff / 60000) : 0
+}
+
+export const getDemoAvailableSlotProducts = async () => {
+  await simulateDelay(DEMO_CONFIG_AVAILABLE_SLOTS.delayMs)
+
+  const reservableProducts = DEMO_PRODUCT_DATA.filter(
+    product => product.reservable || product.type === 'service'
+  )
+
+  const data = reservableProducts.map(product => ({
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    duration_minutes:
+      product.metadata?.duration_minutes ||
+      (product.metadata?.duration_hours
+        ? product.metadata.duration_hours * 60
+        : product.duration_minutes || 60),
+    raw: product,
+  }))
+
+  return {
+    success: true,
+    data,
+    total: data.length,
+    source: 'demo',
+  }
+}
+
+export const getDemoAvailableSlots = async (params = {}) => {
+  await simulateDelay(DEMO_CONFIG_AVAILABLE_SLOTS.delayMs)
+
+  const { productId, date, durationMinutes = 60 } = params
+  const normalizedDate = date ? toISODate(date) : null
+
+  const data = DEMO_SCHEDULES_DATA.filter(schedule => {
+    if (!schedule.is_available) return false
+    if (productId && schedule.product_id !== productId) return false
+
+    if (normalizedDate) {
+      const scheduleDate = toISODate(schedule.start_time)
+      if (scheduleDate !== normalizedDate) return false
+    }
+
+    const slotDuration = getSlotDurationMinutes(
+      schedule.start_time,
+      schedule.end_time
+    )
+
+    return slotDuration >= durationMinutes
+  }).map(schedule => ({
+    id: schedule.id,
+    product_id: schedule.product_id,
+    product_name: schedule.product_name,
+    start_time: schedule.start_time,
+    end_time: schedule.end_time,
+    duration_minutes: getSlotDurationMinutes(
+      schedule.start_time,
+      schedule.end_time
+    ),
+    is_available: schedule.is_available,
+    source: 'demo',
+  }))
+
+  return {
+    success: true,
+    data,
+    pagination: {
+      total: data.length,
+    },
+    source: 'demo',
+  }
+}
 
 /**
  * Get demo reservations with pagination and filtering

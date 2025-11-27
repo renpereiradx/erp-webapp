@@ -133,8 +133,12 @@ const MainLayout = ({ children }) => {
         icon: SlidersHorizontal,
       },
       { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
-      { name: 'Ventas (Nueva)', href: '/ventas-nueva', icon: ShoppingCart },
       { name: 'Gestión Reservas', href: '/gestion-reservas', icon: Calendar },
+      {
+        name: 'Horarios Disponibles',
+        href: '/horarios-disponibles',
+        icon: Calendar,
+      },
       { name: 'Compras', href: '/compras', icon: ShoppingBag },
       {
         name: 'Pagos',
