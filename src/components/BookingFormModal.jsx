@@ -12,7 +12,7 @@ import useReservationStore from '@/store/useReservationStore';
 import useProductStore from '@/store/useProductStore';
 import useClientStore from '@/store/useClientStore';
 
-const BookingFormModal = ({ isOpen, onClose, onSuccess, editingReservation = null }) => {
+const BookingFormModal = ({ isOpen, onClose, onSuccess, editingReservation = null, initialData = null }) => {
   const { t } = useI18n();
 
   // Stores
@@ -25,13 +25,21 @@ const BookingFormModal = ({ isOpen, onClose, onSuccess, editingReservation = nul
     product_id: '',
     client_id: '',
     start_time: '',
-    duration: 60 // Duration in minutes (1 hour default)
+    duration: 1 // Duration in hours (1 hour default)
   });
 
   const [errors, setErrors] = useState({});
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState(null);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
+
+  // Helper: Convert ISO 8601 to datetime-local format
+  const convertToDatetimeLocal = (isoString) => {
+    if (!isoString) return '';
+    // Remove the 'Z' and milliseconds if present
+    // Format: YYYY-MM-DDTHH:mm
+    return isoString.replace(/\.\d{3}Z$/, '').replace('Z', '').slice(0, 16);
+  };
 
   // Reset form when modal opens/closes or when editing changes
   useEffect(() => {
@@ -40,26 +48,37 @@ const BookingFormModal = ({ isOpen, onClose, onSuccess, editingReservation = nul
       setFormData({
         product_id: editingReservation.product_id || '',
         client_id: editingReservation.client_id || '',
-        start_time: editingReservation.start_time || '',
-        duration: editingReservation.duration || 60
+        start_time: convertToDatetimeLocal(editingReservation.start_time),
+        duration: editingReservation.duration || 1
       });
       setSelectedClient(editingReservation.client_name ? {
         id: editingReservation.client_id,
         name: editingReservation.client_name
       } : null);
+    } else if (isOpen && initialData) {
+      // Load initial data from slot selection
+      setFormData({
+        product_id: initialData.product_id || '',
+        client_id: '',
+        start_time: convertToDatetimeLocal(initialData.start_time),
+        duration: initialData.duration || 1
+      });
+      setSelectedClient(null);
+      setClientSearchTerm('');
+      setErrors({});
     } else if (isOpen) {
       // Reset for new reservation
       setFormData({
         product_id: '',
         client_id: '',
         start_time: '',
-        duration: 60
+        duration: 1
       });
       setSelectedClient(null);
       setClientSearchTerm('');
       setErrors({});
     }
-  }, [isOpen, editingReservation]);
+  }, [isOpen, editingReservation, initialData]);
 
   // Client search handler
   const handleClientSearch = async (term) => {
@@ -114,24 +133,32 @@ const BookingFormModal = ({ isOpen, onClose, onSuccess, editingReservation = nul
     }
 
     try {
+      // Convert datetime-local to ISO 8601 format for API
+      const apiData = {
+        ...formData,
+        start_time: formData.start_time ? `${formData.start_time}:00Z` : ''
+      };
+
       let result;
 
       if (editingReservation) {
         // Update existing reservation
-        result = await updateReservation(editingReservation.id, formData);
+        result = await updateReservation(editingReservation.id, apiData);
       } else {
         // Create new reservation
-        result = await createReservation(formData);
+        result = await createReservation(apiData);
       }
 
-      if (result.success) {
+      if (result && result.success) {
+        // Close modal first
+        onClose();
+        // Then call onSuccess which will show notification and redirect
         if (onSuccess) {
           onSuccess();
         }
-        onClose();
       } else {
         // Show API error
-        setErrors({ submit: result.error || t('booking.modal.error.generic') });
+        setErrors({ submit: result?.error || t('booking.modal.error.generic') });
       }
     } catch (error) {
       setErrors({ submit: error.message || t('booking.modal.error.generic') });
@@ -167,29 +194,39 @@ const BookingFormModal = ({ isOpen, onClose, onSuccess, editingReservation = nul
             <label htmlFor="product" className="form-field__label">
               {t('booking.modal.product')}
             </label>
-            <select
-              id="product"
-              className={`form-field__select ${errors.product_id ? 'form-field__select--error' : ''}`}
-              value={formData.product_id}
-              onChange={(e) => {
-                setFormData(prev => ({ ...prev, product_id: e.target.value }));
-                setErrors(prev => ({ ...prev, product_id: '' }));
-              }}
-            >
-              <option value="">{t('booking.modal.select_product')}</option>
-              {products.map(product => (
-                <option key={product.id} value={product.id}>
-                  {product.name}
-                </option>
-              ))}
-            </select>
+            {initialData ? (
+              <input
+                type="text"
+                className="form-field__input"
+                value={initialData.product_name || formData.product_id}
+                disabled
+                style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
+              />
+            ) : (
+              <select
+                id="product"
+                className={`form-field__select ${errors.product_id ? 'form-field__select--error' : ''}`}
+                value={formData.product_id}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, product_id: e.target.value }));
+                  setErrors(prev => ({ ...prev, product_id: '' }));
+                }}
+              >
+                <option value="">{t('booking.modal.select_product')}</option>
+                {products.map(product => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            )}
             {errors.product_id && (
               <p className="form-field__error">{errors.product_id}</p>
             )}
           </div>
 
           {/* Client Search */}
-          <div className="form-field">
+          <div className="form-field" style={{ position: 'relative' }}>
             <label htmlFor="client" className="form-field__label">
               {t('booking.modal.client')}
             </label>
@@ -212,19 +249,66 @@ const BookingFormModal = ({ isOpen, onClose, onSuccess, editingReservation = nul
 
             {/* Client dropdown */}
             {showClientDropdown && clientSearchResults.length > 0 && (
-              <div className="client-dropdown">
+              <div
+                className="client-dropdown"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% - 0.5rem)',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '0.375rem',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  zIndex: 9999,
+                  marginTop: '0.25rem'
+                }}
+              >
                 {clientSearchResults.slice(0, 5).map(client => (
                   <button
                     key={client.id}
                     type="button"
                     className="client-dropdown__item"
                     onClick={() => handleSelectClient(client)}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      textAlign: 'left',
+                      border: 'none',
+                      backgroundColor: '#ffffff',
+                      cursor: 'pointer',
+                      borderBottom: '1px solid #f3f4f6',
+                      transition: 'background-color 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f9fafb';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#ffffff';
+                    }}
                   >
-                    <div className="client-dropdown__name">
+                    <div
+                      className="client-dropdown__name"
+                      style={{
+                        fontWeight: '500',
+                        color: '#111827',
+                        fontSize: '0.875rem',
+                        marginBottom: client.document_id ? '0.25rem' : 0
+                      }}
+                    >
                       {client.name || client.displayName}
                     </div>
                     {client.document_id && (
-                      <div className="client-dropdown__doc">
+                      <div
+                        className="client-dropdown__doc"
+                        style={{
+                          fontSize: '0.75rem',
+                          color: '#6b7280'
+                        }}
+                      >
                         {client.document_id}
                       </div>
                     )}
@@ -253,6 +337,8 @@ const BookingFormModal = ({ isOpen, onClose, onSuccess, editingReservation = nul
                   setFormData(prev => ({ ...prev, start_time: e.target.value }));
                   setErrors(prev => ({ ...prev, start_time: '' }));
                 }}
+                disabled={!!initialData}
+                style={initialData ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed' } : {}}
               />
               <Calendar className="form-field__icon" size={20} />
             </div>
@@ -264,19 +350,21 @@ const BookingFormModal = ({ isOpen, onClose, onSuccess, editingReservation = nul
           {/* Duration */}
           <div className="form-field">
             <label htmlFor="duration" className="form-field__label">
-              {t('booking.modal.duration')}
+              Horas
             </label>
             <input
               id="duration"
               type="number"
-              min="15"
-              step="15"
+              min="1"
+              step="1"
               className={`form-field__input ${errors.duration ? 'form-field__input--error' : ''}`}
               value={formData.duration}
               onChange={(e) => {
                 setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }));
                 setErrors(prev => ({ ...prev, duration: '' }));
               }}
+              disabled={!!initialData}
+              style={initialData ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed' } : {}}
             />
             {errors.duration && (
               <p className="form-field__error">{errors.duration}</p>
@@ -291,26 +379,79 @@ const BookingFormModal = ({ isOpen, onClose, onSuccess, editingReservation = nul
           )}
 
           {/* Action Buttons */}
-          <div className="booking-modal__footer">
-            <Button
+          <div
+            className="booking-modal__footer"
+            style={{
+              display: 'flex',
+              gap: '0.75rem',
+              justifyContent: 'flex-end',
+              marginTop: '1.5rem',
+              paddingTop: '1.5rem',
+              borderTop: '1px solid #e5e7eb'
+            }}
+          >
+            <button
               type="button"
-              variant="secondary"
               onClick={onClose}
               disabled={loading}
+              style={{
+                padding: '0.625rem 1.25rem',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                borderRadius: '0.375rem',
+                border: '1px solid #d1d5db',
+                backgroundColor: '#ffffff',
+                color: '#374151',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.6 : 1,
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = '#f9fafb';
+                  e.currentTarget.style.borderColor = '#9ca3af';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  e.currentTarget.style.borderColor = '#d1d5db';
+                }
+              }}
             >
               {t('action.cancel')}
-            </Button>
-            <Button
+            </button>
+            <button
               type="submit"
-              variant="primary"
               disabled={loading}
+              style={{
+                padding: '0.625rem 1.25rem',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                borderRadius: '0.375rem',
+                border: 'none',
+                backgroundColor: loading ? '#93c5fd' : '#3b82f6',
+                color: '#ffffff',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = '#2563eb';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) {
+                  e.currentTarget.style.backgroundColor = '#3b82f6';
+                }
+              }}
             >
               {loading
                 ? t('booking.modal.creating')
                 : (editingReservation
                     ? t('booking.modal.update')
                     : t('booking.modal.create'))}
-            </Button>
+            </button>
           </div>
         </form>
       </div>

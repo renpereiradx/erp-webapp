@@ -27,14 +27,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import DataState from '@/components/ui/DataState'
 import BookingFormModal from '@/components/BookingFormModal'
 import AvailableSlots from '@/pages/AvailableSlots'
+import ToastContainer from '@/components/ui/ToastContainer'
 import { useI18n } from '@/lib/i18n'
 import useReservationStore from '@/store/useReservationStore'
 import useProductStore from '@/store/useProductStore'
 import useClientStore from '@/store/useClientStore'
+import { useToast } from '@/hooks/useToast'
 
 const BookingManagement = () => {
   const { t } = useI18n()
   const navigate = useNavigate()
+  const { toasts, removeToast, success: showSuccess } = useToast()
 
   // Estados del store
   const { reservations, loading, error, fetchReservations, clearError } =
@@ -56,6 +59,7 @@ const BookingManagement = () => {
   // Estados del modal
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingReservation, setEditingReservation] = useState(null)
+  const [initialReservationData, setInitialReservationData] = useState(null)
 
   // Estados para el explorador de horarios disponibles
   const [showScheduleExplorer, setShowScheduleExplorer] = useState(false)
@@ -125,11 +129,25 @@ const BookingManagement = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setEditingReservation(null)
+    setInitialReservationData(null)
+    // Volver a mostrar el explorador de horarios
+    setShowScheduleExplorer(true)
   }
 
   const handleModalSuccess = () => {
     // Refresh reservations list after creating/updating
     fetchReservations()
+    // Cerrar explorador y volver a lista de reservas
+    setShowScheduleExplorer(false)
+    // Mostrar notificación de éxito
+    showSuccess('Reserva creada exitosamente')
+  }
+
+  const handleReserveSlot = (slotData) => {
+    // Cuando el usuario hace clic en "Reservar" en un slot
+    setInitialReservationData(slotData)
+    setShowScheduleExplorer(false)
+    setIsModalOpen(true)
   }
 
   const handleRetry = () => {
@@ -238,7 +256,7 @@ const BookingManagement = () => {
                   display: none;
                 }
               `}</style>
-              <AvailableSlots />
+              <AvailableSlots onReserveClick={handleReserveSlot} />
             </div>
           </div>
         </div>
@@ -367,22 +385,26 @@ const BookingManagement = () => {
               </div>
 
               {/* Tabla de reservas */}
-              {filteredReservations.length === 0 ? (
-                <DataState
-                  variant='empty'
-                  title={
-                    searchTerm ||
+              <div style={{ minHeight: '400px' }}>
+                {filteredReservations.length === 0 ? (
+                  <div className='flex items-center justify-center' style={{ minHeight: '400px' }}>
+                    {searchTerm ||
                     selectedProduct !== 'all' ||
                     selectedClient !== 'all' ||
-                    selectedStatus !== 'all'
-                      ? t('booking.empty.no_results')
-                      : t('booking.empty.title')
-                  }
-                  message={t('booking.empty.message')}
-                  actionLabel={t('booking.action.create')}
-                  onAction={handleCreateReservation}
-                />
-              ) : (
+                    selectedStatus !== 'all' ? (
+                      <DataState
+                        variant='empty'
+                        title={t('booking.empty.no_results')}
+                        message={t('booking.empty.message')}
+                      />
+                    ) : (
+                      <div className='text-center'>
+                        <h3 className='text-lg font-semibold mb-2'>Sin reservas</h3>
+                        <p className='text-muted-foreground'>No hay información para mostrar</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
                 <>
                   <div className='reservations-table'>
                     <div className='reservations-table__wrapper'>
@@ -539,6 +561,7 @@ const BookingManagement = () => {
                   )}
                 </>
               )}
+              </div>
             </TabsContent>
           </Tabs>
         </>
@@ -550,7 +573,11 @@ const BookingManagement = () => {
         onClose={handleCloseModal}
         onSuccess={handleModalSuccess}
         editingReservation={editingReservation}
+        initialData={initialReservationData}
       />
+
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   )
 }

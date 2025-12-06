@@ -356,21 +356,6 @@ export const reservationService = {
 
       return result
     } catch (error) {
-      // 🚨 DEBUG ERROR LOGS
-      console.group('🚨 [DEBUG] Available Schedules ERROR')
-      console.error('❌ Error Details:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        config: {
-          url: error.config?.url,
-          params: error.config?.params,
-          method: error.config?.method,
-        },
-      })
-      console.groupEnd()
-
       telemetry.record('reservations.service.error', {
         duration: Date.now() - startTime,
         error: error.message,

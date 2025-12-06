@@ -18,7 +18,7 @@ import availableSlotsService from '@/services/availableSlotsService'
 // Solo horas completas: 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h (en minutos)
 const DURATION_OPTIONS = [60, 120, 180, 240, 300, 360, 420, 480]
 
-const AvailableSlots = () => {
+const AvailableSlots = ({ onReserveClick }) => {
   const { t, lang } = useI18n()
   const products = useAvailableSlotsStore(state => state.products)
   const slots = useAvailableSlotsStore(state => state.slots)
@@ -170,15 +170,24 @@ const AvailableSlots = () => {
 
       // Verificar si todas las horas necesarias están disponibles
       let allHoursAvailable = true
+      const slotsInRange = []
+
       for (let i = 0; i < durationHours; i++) {
         const checkTimeMs = startTimeMs + i * oneHourMs
-        if (!availableHours.has(checkTimeMs)) {
+        const slotInHour = allSlots.find(s => {
+          const sTime = new Date(s.start_time.replace('Z', '')).getTime()
+          return sTime === checkTimeMs
+        })
+
+        if (!slotInHour) {
           allHoursAvailable = false
           break
         }
+
+        slotsInRange.push(slotInHour)
       }
 
-      if (allHoursAvailable) {
+      if (allHoursAvailable && slotsInRange.length > 0) {
         const endTimeMs = startTimeMs + durationMinutes * 60 * 1000
         const slotEnd = new Date(endTimeMs)
 
@@ -191,6 +200,9 @@ const AvailableSlots = () => {
         const seconds = String(slotEnd.getSeconds()).padStart(2, '0')
         const endTimeFormatted = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}Z`
 
+        // El slot combinado solo está disponible si TODOS los slots del rango están disponibles
+        const isRangeAvailable = slotsInRange.every(s => s.is_available !== false)
+
         newSlots.push({
           id: null,
           product_id: slot.product_id,
@@ -199,7 +211,7 @@ const AvailableSlots = () => {
           end_time: endTimeFormatted,
           duration_minutes: durationMinutes,
           available_consecutive_hours: durationHours,
-          is_available: true,
+          is_available: isRangeAvailable,
         })
       }
     })
@@ -246,27 +258,83 @@ const AvailableSlots = () => {
 
     return (
       <div className='available-slots__grid' role='list'>
-        {slotsToShow.map((slot, index) => (
-          <div
-            key={`${slot.start_time}-${
-              slot.available_consecutive_hours || slot.duration_minutes || index
-            }`}
-            className='available-slots__slot-card'
-            role='listitem'
-          >
-            <p className='available-slots__slot-time'>
-              {formatSlotRange(slot)}
-            </p>
-            <Button
-              type='button'
-              size='sm'
-              variant='outline'
-              className='available-slots__reserve-button'
+        {slotsToShow.map((slot, index) => {
+          const isAvailable = slot.is_available !== false
+          const uniqueKey = slot.id || `${slot.start_time}-${slot.end_time}-${index}`
+
+          return (
+            <div
+              key={uniqueKey}
+              className='available-slots__slot-card'
+              role='listitem'
+              style={{
+                position: 'relative',
+                backgroundColor: isAvailable ? '#ffffff' : '#f9fafb',
+                borderColor: isAvailable ? '#e5e7eb' : '#e5e7eb',
+                opacity: isAvailable ? 1 : 1,
+                cursor: isAvailable ? 'default' : 'not-allowed',
+                transition: 'all 0.2s ease'
+              }}
             >
-              {t('availableSlots.action.reserve')}
-            </Button>
-          </div>
-        ))}
+              {!isAvailable && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '0.75rem',
+                    right: '0.75rem',
+                    padding: '0.25rem 0.625rem',
+                    fontSize: '0.6875rem',
+                    fontWeight: '700',
+                    color: '#dc2626',
+                    backgroundColor: '#fee2e2',
+                    borderRadius: '0.375rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.025em',
+                    border: '1px solid #fecaca'
+                  }}
+                >
+                  Reservado
+                </div>
+              )}
+              <p
+                className='available-slots__slot-time'
+                style={{
+                  color: isAvailable ? '#111827' : '#6b7280',
+                  fontWeight: isAvailable ? '600' : '500'
+                }}
+              >
+                {formatSlotRange(slot)}
+              </p>
+              {isAvailable && (
+                <Button
+                  type='button'
+                  size='sm'
+                  variant='outline'
+                  className='available-slots__reserve-button'
+                  onClick={() => {
+                    if (onReserveClick) {
+                      // Convertir duration de minutos a horas para la API
+                      const durationInHours = slot.duration_minutes ? slot.duration_minutes / 60 : 1
+
+                      // Encontrar el producto seleccionado para obtener su nombre
+                      const selectedProduct = products.find(p => p.id === filters.productId)
+
+                      onReserveClick({
+                        product_id: filters.productId,
+                        product_name: selectedProduct?.name || '',
+                        start_time: slot.start_time,
+                        duration: durationInHours,
+                        date: filters.date
+                      })
+                    }
+                  }}
+                >
+                  {t('availableSlots.action.reserve')}
+                </Button>
+              )}
+            </div>
+          )
+        })}
       </div>
     )
   }

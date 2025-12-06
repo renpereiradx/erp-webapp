@@ -1,5 +1,6 @@
 import { reservationService } from '@/services/reservationService'
 import { productService } from '@/services/productService'
+import { scheduleService } from '@/services/scheduleService'
 import { telemetry } from '@/utils/telemetry'
 import {
   DEMO_CONFIG_AVAILABLE_SLOTS,
@@ -136,62 +137,23 @@ export const availableSlotsService = {
     const durationHours = durationMinutes / 60
 
     try {
-      // Usar el endpoint de horarios disponibles de la API real
-      const response = await reservationService.getAvailableSchedules(
+      // Usar el endpoint que devuelve TODOS los schedules (disponibles y reservados)
+      const response = await scheduleService.getAllSchedulesByProductAndDate(
         productId,
-        date,
-        durationMinutes // Enviar directamente en minutos
+        date
       )
 
-      const normalizedData = normalizeSlots(response)
+      // Extraer los schedules del response
+      const schedules = response?.data || response || []
+      const normalizedData = normalizeSlots(schedules)
 
-      // 🎯 Transformar ventanas acumulativas en slots individuales
-      // El backend devuelve: 14:00-15:00, 14:00-16:00, 14:00-17:00, etc.
-      // Necesitamos: 14:00-15:00, 15:00-16:00, 16:00-17:00, etc.
-      const individualSlots = []
-
-      // Encontrar el slot con mayor duración (ventana más larga)
-      const maxSlot = normalizedData.reduce((max, slot) => {
-        return (slot.available_consecutive_hours || 0) >
-          (max.available_consecutive_hours || 0)
-          ? slot
-          : max
-      }, normalizedData[0] || {})
-
-      if (maxSlot && maxSlot.start_time && maxSlot.end_time) {
-        // Parsear las fechas como timestamps UTC y trabajar con milisegundos
-        const startDate = new Date(maxSlot.start_time)
-        const endDate = new Date(maxSlot.end_time)
-
-        // Convertir a milisegundos desde epoch
-        let currentTimeMs = startDate.getTime()
-        const endTimeMs = endDate.getTime()
-        const durationMs = durationMinutes * 60 * 1000
-
-        // Generar slots individuales de la duración solicitada
-        while (currentTimeMs < endTimeMs) {
-          const nextTimeMs = currentTimeMs + durationMs
-
-          if (nextTimeMs <= endTimeMs) {
-            const slotStart = new Date(currentTimeMs)
-            const slotEnd = new Date(nextTimeMs)
-
-            individualSlots.push({
-              id: null,
-              product_id: maxSlot.product_id,
-              product_name: maxSlot.product_name,
-              start_time: slotStart.toISOString().replace('.000Z', 'Z'),
-              end_time: slotEnd.toISOString().replace('.000Z', 'Z'),
-              duration_minutes: durationMinutes,
-              available_consecutive_hours: durationHours,
-              is_available: true,
-              raw: maxSlot.raw,
-            })
-          }
-
-          currentTimeMs = nextTimeMs
-        }
-      }
+      // 🎯 Devolver todos los slots que vienen del backend
+      // El backend ya devuelve los slots en el formato correcto
+      const individualSlots = normalizedData.map(slot => ({
+        ...slot,
+        duration_minutes: durationMinutes,
+        available_consecutive_hours: durationHours,
+      }))
 
       telemetry.record('availableSlots.service.slots', {
         duration: Date.now() - startTime,
