@@ -319,7 +319,7 @@ const BookingManagement = () => {
                     onChange={e => setSelectedProduct(e.target.value)}
                     aria-label={t('booking.filter.product')}
                   >
-                    <option value='all'>
+                    <option key='all' value='all'>
                       {t('booking.filter.all_products')}
                     </option>
                     {products.map(product => (
@@ -336,7 +336,7 @@ const BookingManagement = () => {
                     onChange={e => setSelectedClient(e.target.value)}
                     aria-label={t('booking.filter.client')}
                   >
-                    <option value='all'>
+                    <option key='all' value='all'>
                       {t('booking.filter.all_clients')}
                     </option>
                     {clients.map(client => (
@@ -353,16 +353,16 @@ const BookingManagement = () => {
                     onChange={e => setSelectedStatus(e.target.value)}
                     aria-label={t('booking.filter.status')}
                   >
-                    <option value='all'>
+                    <option key='all' value='all'>
                       {t('booking.filter.all_statuses')}
                     </option>
-                    <option value='confirmed'>
+                    <option key='confirmed' value='confirmed'>
                       {t('booking.status.confirmed')}
                     </option>
-                    <option value='pending'>
+                    <option key='pending' value='pending'>
                       {t('booking.status.pending')}
                     </option>
-                    <option value='cancelled'>
+                    <option key='cancelled' value='cancelled'>
                       {t('booking.status.cancelled')}
                     </option>
                   </select>
