@@ -41,7 +41,20 @@ class BusinessManagementAPI {
   }
 
   async makeRequest(endpoint, options = {}) {
-    const url = `${this.baseUrl}${endpoint}`
+    // 🔧 NUEVO: Procesar query params si existen
+    let url = `${this.baseUrl}${endpoint}`
+    if (options.params) {
+      const searchParams = new URLSearchParams()
+      Object.entries(options.params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, value)
+        }
+      })
+      const queryString = searchParams.toString()
+      if (queryString) {
+        url += `${url.includes('?') ? '&' : '?'}${queryString}`
+      }
+    }
 
     // 🔧 FIX: Obtener token FRESCO en cada request (no solo al inicio)
     // Esto garantiza que si el token cambió o se renovó, se use el nuevo
@@ -53,8 +66,8 @@ class BusinessManagementAPI {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), this.timeout)
 
-    // Remover skipAuth de options antes de pasarlo a fetch
-    const { skipAuth, ...fetchOptions } = options
+    // Remover skipAuth y params de options antes de pasarlo a fetch
+    const { skipAuth, params, ...fetchOptions } = options
 
     const config = {
       signal: controller.signal,
@@ -316,7 +329,17 @@ class BusinessManagementAPI {
    * @returns {Promise} Producto con datos financieros enriquecidos
    */
   async getProductFinancialByBarcode(barcode) {
-    return this.makeRequest(`/products/financial/barcode/${encodeURIComponent(barcode)}`)
+    return this.makeRequest(
+      `/products/financial/barcode/${encodeURIComponent(barcode)}`
+    )
+  }
+
+  /**
+   * Obtiene productos de tipo SERVICE (servicios reservables como canchas)
+   * @returns {Promise} Array de productos de tipo SERVICE
+   */
+  async getServiceProducts() {
+    return this.makeRequest('/products/financial/name/cancha?limit=100')
   }
 
   /**
@@ -329,7 +352,9 @@ class BusinessManagementAPI {
    */
   async searchProductsFinancialByName(name, options = {}) {
     const { limit = 50, signal } = options
-    const url = `/products/financial/name/${encodeURIComponent(name)}?limit=${limit}`
+    const url = `/products/financial/name/${encodeURIComponent(
+      name
+    )}?limit=${limit}`
     return this.makeRequest(url, { signal })
   }
 
@@ -356,10 +381,10 @@ class BusinessManagementAPI {
     //    - Mínimo 6 caracteres (los códigos de barras reales son más largos)
     //    - Solo números O formato con guiones (ABC-123-XYZ)
     //    Ejemplos válidos: "123456789", "ABC-123-456", "7501234567890"
-    const isLikelyBarcode = (
-      /^[0-9]{6,50}$/.test(term) || // Solo números, min 6 dígitos
-      /^[A-Z0-9]+-[A-Z0-9]+-?[A-Z0-9]*$/i.test(term) // Formato con guiones (ABC-123 o ABC-123-XYZ)
-    ) && !isLikelyId
+    const isLikelyBarcode =
+      (/^[0-9]{6,50}$/.test(term) || // Solo números, min 6 dígitos
+        /^[A-Z0-9]+-[A-Z0-9]+-?[A-Z0-9]*$/i.test(term)) && // Formato con guiones (ABC-123 o ABC-123-XYZ)
+      !isLikelyId
 
     try {
       // Intentar búsqueda por ID primero si parece un ID
@@ -392,13 +417,6 @@ class BusinessManagementAPI {
     }
   }
 
-
-
-
-
-
-
-
   /**
    * Método de búsqueda general de productos - usa búsqueda inteligente
    * @param {string} searchTerm - Término de búsqueda (ID, código de barras o nombre)
@@ -408,21 +426,6 @@ class BusinessManagementAPI {
   async searchProducts(searchTerm, options = {}) {
     return this.smartSearchProducts(searchTerm, options)
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   // ============================================================================
   // CLIENTS

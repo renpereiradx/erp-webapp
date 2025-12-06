@@ -5,7 +5,10 @@ import {
   DEMO_CONFIG_AVAILABLE_SLOTS,
   getDemoAvailableSlotProducts,
   getDemoAvailableSlots,
+  getDemoAvailableSlotsDefaultDate,
 } from '@/config/demoData'
+
+const getTodayISODate = () => new Date().toISOString().split('T')[0]
 
 const ensureArray = payload => {
   if (!payload) return []
@@ -71,17 +74,13 @@ const normalizeSlots = payload =>
       : 0
 
     return {
-      id:
-        slot?.id ??
-        slot?.schedule_id ??
-        slot?.slot_id ??
-        slot?.uuid ??
-        `${slot?.product_id || slot?.productId}-${start}`,
+      id: slot?.id ?? slot?.schedule_id ?? slot?.slot_id ?? slot?.uuid ?? null,
       product_id: slot?.product_id ?? slot?.productId ?? slot?.service_id ?? '',
       product_name: slot?.product_name ?? slot?.productName ?? '',
       start_time: start,
       end_time: end,
       duration_minutes: Math.round(durationMinutes || 0),
+      available_consecutive_hours: slot?.available_consecutive_hours,
       is_available:
         typeof slot?.is_available === 'boolean'
           ? slot.is_available
@@ -90,24 +89,25 @@ const normalizeSlots = payload =>
     }
   })
 
-const shouldUseDemoData = () =>
-  DEMO_CONFIG_AVAILABLE_SLOTS.enabled && !DEMO_CONFIG_AVAILABLE_SLOTS.useRealAPI
-
 export const availableSlotsService = {
+  getDefaultSearchDate() {
+    return getTodayISODate()
+  },
+
+  getMinimumSearchDate() {
+    return getTodayISODate()
+  },
+
+  isDemoMode() {
+    return false
+  },
+
   async getReservableProducts() {
     const startTime = Date.now()
 
-    if (shouldUseDemoData()) {
-      const result = await getDemoAvailableSlotProducts()
-      telemetry.record('availableSlots.service.products.demo', {
-        duration: Date.now() - startTime,
-        count: result?.data?.length || 0,
-      })
-      return result
-    }
-
     try {
-      const response = await productService.getServiceCourts()
+      // Usar getBeachTennisCourts que es el método disponible en apiClient
+      const response = await productService.getBeachTennisCourts()
       const data = normalizeProducts(response)
 
       telemetry.record('availableSlots.service.products', {
@@ -126,15 +126,6 @@ export const availableSlotsService = {
         error: error?.message,
       })
 
-      if (DEMO_CONFIG_AVAILABLE_SLOTS.enabled) {
-        const fallback = await getDemoAvailableSlotProducts()
-        telemetry.record('availableSlots.service.products.demo_fallback', {
-          duration: Date.now() - startTime,
-          count: fallback?.data?.length || 0,
-        })
-        return fallback
-      }
-
       throw error
     }
   },
@@ -142,37 +133,75 @@ export const availableSlotsService = {
   async searchAvailableSlots({ productId, date, duration }) {
     const startTime = Date.now()
     const durationMinutes = Number(duration) || 60
-    const durationHours = Math.max(durationMinutes / 60, 0.5)
-
-    if (shouldUseDemoData()) {
-      const result = await getDemoAvailableSlots({
-        productId,
-        date,
-        durationMinutes,
-      })
-      telemetry.record('availableSlots.service.slots.demo', {
-        duration: Date.now() - startTime,
-        count: result?.data?.length || 0,
-      })
-      return result
-    }
+    const durationHours = durationMinutes / 60
 
     try {
+      // Usar el endpoint de horarios disponibles de la API real
       const response = await reservationService.getAvailableSchedules(
         productId,
         date,
-        durationHours
+        durationMinutes // Enviar directamente en minutos
       )
-      const data = normalizeSlots(response)
+
+      const normalizedData = normalizeSlots(response)
+
+      // 🎯 Transformar ventanas acumulativas en slots individuales
+      // El backend devuelve: 14:00-15:00, 14:00-16:00, 14:00-17:00, etc.
+      // Necesitamos: 14:00-15:00, 15:00-16:00, 16:00-17:00, etc.
+      const individualSlots = []
+
+      // Encontrar el slot con mayor duración (ventana más larga)
+      const maxSlot = normalizedData.reduce((max, slot) => {
+        return (slot.available_consecutive_hours || 0) >
+          (max.available_consecutive_hours || 0)
+          ? slot
+          : max
+      }, normalizedData[0] || {})
+
+      if (maxSlot && maxSlot.start_time && maxSlot.end_time) {
+        // Parsear las fechas como timestamps UTC y trabajar con milisegundos
+        const startDate = new Date(maxSlot.start_time)
+        const endDate = new Date(maxSlot.end_time)
+
+        // Convertir a milisegundos desde epoch
+        let currentTimeMs = startDate.getTime()
+        const endTimeMs = endDate.getTime()
+        const durationMs = durationMinutes * 60 * 1000
+
+        // Generar slots individuales de la duración solicitada
+        while (currentTimeMs < endTimeMs) {
+          const nextTimeMs = currentTimeMs + durationMs
+
+          if (nextTimeMs <= endTimeMs) {
+            const slotStart = new Date(currentTimeMs)
+            const slotEnd = new Date(nextTimeMs)
+
+            individualSlots.push({
+              id: null,
+              product_id: maxSlot.product_id,
+              product_name: maxSlot.product_name,
+              start_time: slotStart.toISOString().replace('.000Z', 'Z'),
+              end_time: slotEnd.toISOString().replace('.000Z', 'Z'),
+              duration_minutes: durationMinutes,
+              available_consecutive_hours: durationHours,
+              is_available: true,
+              raw: maxSlot.raw,
+            })
+          }
+
+          currentTimeMs = nextTimeMs
+        }
+      }
 
       telemetry.record('availableSlots.service.slots', {
         duration: Date.now() - startTime,
-        count: data.length,
+        count: individualSlots.length,
+        total_from_backend: normalizedData.length,
       })
 
       return {
         success: true,
-        data,
+        data: individualSlots,
         raw: response,
       }
     } catch (error) {
@@ -180,19 +209,6 @@ export const availableSlotsService = {
         duration: Date.now() - startTime,
         error: error?.message,
       })
-
-      if (DEMO_CONFIG_AVAILABLE_SLOTS.enabled) {
-        const fallback = await getDemoAvailableSlots({
-          productId,
-          date,
-          durationMinutes,
-        })
-        telemetry.record('availableSlots.service.slots.demo_fallback', {
-          duration: Date.now() - startTime,
-          count: fallback?.data?.length || 0,
-        })
-        return fallback
-      }
 
       throw error
     }

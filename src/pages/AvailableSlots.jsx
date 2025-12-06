@@ -13,10 +13,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import availableSlotsService from '@/services/availableSlotsService'
 
-const DURATION_OPTIONS = [60, 90, 120]
-
-const getTodayISODate = () => new Date().toISOString().split('T')[0]
+// Solo horas completas: 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h (en minutos)
+const DURATION_OPTIONS = [60, 120, 180, 240, 300, 360, 420, 480]
 
 const AvailableSlots = () => {
   const { t, lang } = useI18n()
@@ -30,13 +30,23 @@ const AvailableSlots = () => {
   const searchSlots = useAvailableSlotsStore(state => state.searchSlots)
   const clearError = useAvailableSlotsStore(state => state.clearError)
 
+  const autoSearchRef = useRef(false)
+  const [allSlots, setAllSlots] = useState([])
+  const [filteredSlots, setFilteredSlots] = useState([])
+
+  const defaultSearchDate = useMemo(() => {
+    return availableSlotsService.getDefaultSearchDate()
+  }, [])
+
+  const minimumSearchDate = useMemo(() => {
+    return availableSlotsService.getMinimumSearchDate()
+  }, [])
+
   const [filters, setFilters] = useState({
     productId: '',
-    date: getTodayISODate(),
+    date: defaultSearchDate,
     duration: String(DURATION_OPTIONS[0]),
   })
-
-  const autoSearchRef = useRef(false)
 
   const timeFormatter = useMemo(
     () =>
@@ -55,8 +65,13 @@ const AvailableSlots = () => {
       }
 
       try {
-        const startDate = new Date(slot.start_time)
-        const endDate = new Date(slot.end_time)
+        // Remover la 'Z' para que JavaScript interprete como hora local
+        const startTimeLocal = slot.start_time.replace('Z', '')
+        const endTimeLocal = slot.end_time.replace('Z', '')
+
+        const startDate = new Date(startTimeLocal)
+        const endDate = new Date(endTimeLocal)
+
         return `${timeFormatter.format(startDate)} - ${timeFormatter.format(
           endDate
         )}`
@@ -98,25 +113,99 @@ const AvailableSlots = () => {
   }, [filters, products.length, searchSlots])
 
   const handleSearch = useCallback(
-    event => {
+    async event => {
       event?.preventDefault()
       if (!filters.productId || !filters.date) {
         return
       }
 
       clearError()
-      searchSlots({
+
+      // Buscar con la duración mínima (1 hora) para obtener todos los slots
+      const result = await searchSlots({
         productId: filters.productId,
         date: filters.date,
-        duration: Number(filters.duration),
+        duration: 60, // Siempre buscar con 1 hora para obtener todos los slots
       })
+
+      // Guardar todos los slots para filtrado dinámico
+      if (result?.success && result?.data) {
+        setAllSlots(result.data)
+      }
     },
-    [filters, clearError, searchSlots]
+    [filters.productId, filters.date, clearError, searchSlots]
   )
 
   const handleFilterChange = useCallback((field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }))
   }, [])
+
+  // Filtrar slots dinámicamente cuando cambia la duración
+  useEffect(() => {
+    if (allSlots.length === 0) {
+      setFilteredSlots(slots)
+      return
+    }
+
+    const durationMinutes = Number(filters.duration)
+    const durationHours = durationMinutes / 60
+
+    // Generar TODOS los slots posibles con la duración solicitada
+    // No solo consecutivos, sino cada hora de inicio posible
+    const newSlots = []
+
+    // Crear un Set de horas disponibles para búsqueda rápida
+    const availableHours = new Set()
+    allSlots.forEach(slot => {
+      const startDate = new Date(slot.start_time.replace('Z', ''))
+      availableHours.add(startDate.getTime())
+    })
+
+    // Para cada slot de 1 hora, verificar si hay disponibilidad consecutiva
+    // para la duración completa
+    allSlots.forEach(slot => {
+      const startDate = new Date(slot.start_time.replace('Z', ''))
+      const startTimeMs = startDate.getTime()
+      const oneHourMs = 60 * 60 * 1000
+
+      // Verificar si todas las horas necesarias están disponibles
+      let allHoursAvailable = true
+      for (let i = 0; i < durationHours; i++) {
+        const checkTimeMs = startTimeMs + i * oneHourMs
+        if (!availableHours.has(checkTimeMs)) {
+          allHoursAvailable = false
+          break
+        }
+      }
+
+      if (allHoursAvailable) {
+        const endTimeMs = startTimeMs + durationMinutes * 60 * 1000
+        const slotEnd = new Date(endTimeMs)
+
+        // Formatear como ISO local (sin conversión UTC)
+        const year = slotEnd.getFullYear()
+        const month = String(slotEnd.getMonth() + 1).padStart(2, '0')
+        const day = String(slotEnd.getDate()).padStart(2, '0')
+        const hours = String(slotEnd.getHours()).padStart(2, '0')
+        const minutes = String(slotEnd.getMinutes()).padStart(2, '0')
+        const seconds = String(slotEnd.getSeconds()).padStart(2, '0')
+        const endTimeFormatted = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}Z`
+
+        newSlots.push({
+          id: null,
+          product_id: slot.product_id,
+          product_name: slot.product_name,
+          start_time: slot.start_time, // Ya tiene formato correcto
+          end_time: endTimeFormatted,
+          duration_minutes: durationMinutes,
+          available_consecutive_hours: durationHours,
+          is_available: true,
+        })
+      }
+    })
+
+    setFilteredSlots(newSlots)
+  }, [filters.duration, allSlots, slots])
 
   const renderResults = () => {
     if (loading) {
@@ -142,7 +231,9 @@ const AvailableSlots = () => {
       )
     }
 
-    if (!slots.length) {
+    const slotsToShow = filteredSlots.length > 0 ? filteredSlots : slots
+
+    if (!slotsToShow.length) {
       return (
         <DataState
           variant='empty'
@@ -155,9 +246,11 @@ const AvailableSlots = () => {
 
     return (
       <div className='available-slots__grid' role='list'>
-        {slots.map(slot => (
+        {slotsToShow.map((slot, index) => (
           <div
-            key={slot.id}
+            key={`${slot.start_time}-${
+              slot.available_consecutive_hours || slot.duration_minutes || index
+            }`}
             className='available-slots__slot-card'
             role='listitem'
           >
@@ -185,9 +278,6 @@ const AvailableSlots = () => {
           <h1 className='available-slots__title'>
             {t('availableSlots.title')}
           </h1>
-          <p className='available-slots__description'>
-            {t('availableSlots.description')}
-          </p>
         </div>
 
         {!!productsError && (
@@ -215,7 +305,11 @@ const AvailableSlots = () => {
                 </SelectTrigger>
                 <SelectContent className='available-slots__select-content'>
                   {products.map(product => (
-                    <SelectItem key={product.id} value={String(product.id)}>
+                    <SelectItem
+                      key={product.id}
+                      value={String(product.id)}
+                      className='available-slots__select-item'
+                    >
                       {product.name}
                     </SelectItem>
                   ))}
@@ -230,18 +324,16 @@ const AvailableSlots = () => {
               <div className='available-slots__input-wrapper'>
                 <Input
                   type='date'
-                  name='available-slot-date'
                   value={filters.date}
-                  min={getTodayISODate()}
+                  min={minimumSearchDate}
                   onChange={event =>
                     handleFilterChange('date', event.target.value)
                   }
-                  aria-label={t('availableSlots.filter.date')}
                   className='available-slots__input-field'
                 />
-                <div className='available-slots__input-icon' aria-hidden='true'>
-                  <CalendarDays className='size-4' />
-                </div>
+                <span className='available-slots__input-icon'>
+                  <CalendarDays className='size-4' aria-hidden='true' />
+                </span>
               </div>
             </label>
 
@@ -257,13 +349,18 @@ const AvailableSlots = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className='available-slots__select-content'>
-                  {DURATION_OPTIONS.map(option => (
-                    <SelectItem key={option} value={String(option)}>
-                      {t('availableSlots.filter.durationOption', {
-                        minutes: option,
-                      })}
-                    </SelectItem>
-                  ))}
+                  {DURATION_OPTIONS.map(option => {
+                    const hours = option / 60
+                    return (
+                      <SelectItem
+                        key={option}
+                        value={String(option)}
+                        className='available-slots__select-item'
+                      >
+                        {hours === 1 ? '1 hora' : `${hours} horas`}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </label>
@@ -272,14 +369,11 @@ const AvailableSlots = () => {
           <div className='available-slots__actions'>
             <Button
               type='submit'
-              variant='outline'
-              size='lg'
+              size='sm'
               disabled={loading || productsLoading || !filters.productId}
               className='available-slots__search-button'
             >
-              <span className='available-slots__search-icon' aria-hidden='true'>
-                <Search className='size-4' />
-              </span>
+              <Search className='size-4' aria-hidden='true' />
               <span>{t('availableSlots.action.search')}</span>
             </Button>
           </div>

@@ -1132,6 +1132,29 @@ const getSlotDurationMinutes = (start, end) => {
   return diff > 0 ? Math.round(diff / 60000) : 0
 }
 
+export const getDemoAvailableSlotsDefaultDate = () => {
+  if (!Array.isArray(DEMO_SCHEDULES_DATA) || DEMO_SCHEDULES_DATA.length === 0) {
+    return null
+  }
+
+  const sortedSchedules = [...DEMO_SCHEDULES_DATA]
+    .filter(schedule => Boolean(schedule?.start_time))
+    .sort(
+      (a, b) =>
+        new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    )
+
+  if (!sortedSchedules.length) {
+    return null
+  }
+
+  try {
+    return new Date(sortedSchedules[0].start_time).toISOString().split('T')[0]
+  } catch (error) {
+    return null
+  }
+}
+
 export const getDemoAvailableSlotProducts = async () => {
   await simulateDelay(DEMO_CONFIG_AVAILABLE_SLOTS.delayMs)
 
