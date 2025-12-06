@@ -49,8 +49,21 @@ const BookingManagement = () => {
   // Estados locales para filtros
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedProduct, setSelectedProduct] = useState('all')
-  const [selectedClient, setSelectedClient] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
+
+  // Filtros de fecha - por defecto últimos 30 días
+  const getDefaultDates = () => {
+    const today = new Date()
+    const thirtyDaysAgo = new Date(today)
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    return {
+      startDate: thirtyDaysAgo.toISOString().split('T')[0],
+      endDate: today.toISOString().split('T')[0]
+    }
+  }
+
+  const [dateRange, setDateRange] = useState(getDefaultDates())
 
   // Estados de paginación
   const [currentPage, setCurrentPage] = useState(1)
@@ -64,12 +77,15 @@ const BookingManagement = () => {
   // Estados para el explorador de horarios disponibles
   const [showScheduleExplorer, setShowScheduleExplorer] = useState(false)
 
-  // Cargar datos al montar
+  // Cargar datos al montar y cuando cambia el rango de fechas
   useEffect(() => {
-    fetchReservations()
+    fetchReservations({
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate
+    })
     fetchProducts()
     // Note: Clients are loaded on-demand via search, not pre-loaded
-  }, [fetchReservations, fetchProducts])
+  }, [fetchReservations, fetchProducts, dateRange.startDate, dateRange.endDate])
 
   // Filtrado local de reservas
   const filteredReservations = useMemo(() => {
@@ -85,23 +101,17 @@ const BookingManagement = () => {
         selectedProduct === 'all' ||
         reservation.product_id === parseInt(selectedProduct)
 
-      // Filtro por cliente
-      const matchesClient =
-        selectedClient === 'all' ||
-        reservation.client_id === parseInt(selectedClient)
-
       // Filtro por estado
       const matchesStatus =
         selectedStatus === 'all' ||
         reservation.status?.toLowerCase() === selectedStatus.toLowerCase()
 
-      return matchesSearch && matchesProduct && matchesClient && matchesStatus
+      return matchesSearch && matchesProduct && matchesStatus
     })
   }, [
     reservations,
     searchTerm,
     selectedProduct,
-    selectedClient,
     selectedStatus,
   ])
 
@@ -114,7 +124,7 @@ const BookingManagement = () => {
   // Resetear página al cambiar filtros
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, selectedProduct, selectedClient, selectedStatus])
+  }, [searchTerm, selectedProduct, selectedStatus])
 
   // Handlers
   const handleBack = () => {
@@ -312,6 +322,30 @@ const BookingManagement = () => {
               {/* Barra de filtros */}
               <div className='filters-bar'>
                 <div className='filters-bar__filters'>
+                  {/* Filtro: Fecha Inicio */}
+                  <div className='filter-date-group'>
+                    <label className='filter-date-label'>Desde</label>
+                    <Input
+                      type='date'
+                      value={dateRange.startDate}
+                      onChange={e => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                      className='filter-button'
+                      aria-label='Fecha inicio'
+                    />
+                  </div>
+
+                  {/* Filtro: Fecha Fin */}
+                  <div className='filter-date-group'>
+                    <label className='filter-date-label'>Hasta</label>
+                    <Input
+                      type='date'
+                      value={dateRange.endDate}
+                      onChange={e => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                      className='filter-button'
+                      aria-label='Fecha fin'
+                    />
+                  </div>
+
                   {/* Filtro: Producto */}
                   <select
                     className='filter-button'
@@ -325,23 +359,6 @@ const BookingManagement = () => {
                     {products.map(product => (
                       <option key={product.id} value={product.id}>
                         {product.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Filtro: Cliente */}
-                  <select
-                    className='filter-button'
-                    value={selectedClient}
-                    onChange={e => setSelectedClient(e.target.value)}
-                    aria-label={t('booking.filter.client')}
-                  >
-                    <option key='all' value='all'>
-                      {t('booking.filter.all_clients')}
-                    </option>
-                    {clients.map(client => (
-                      <option key={client.id} value={client.id}>
-                        {client.name}
                       </option>
                     ))}
                   </select>
@@ -390,7 +407,6 @@ const BookingManagement = () => {
                   <div className='flex items-center justify-center' style={{ minHeight: '400px' }}>
                     {searchTerm ||
                     selectedProduct !== 'all' ||
-                    selectedClient !== 'all' ||
                     selectedStatus !== 'all' ? (
                       <DataState
                         variant='empty'
@@ -400,7 +416,9 @@ const BookingManagement = () => {
                     ) : (
                       <div className='text-center'>
                         <h3 className='text-lg font-semibold mb-2'>Sin reservas</h3>
-                        <p className='text-muted-foreground'>No hay información para mostrar</p>
+                        <p className='text-muted-foreground'>
+                          No hay reservas en el rango de fechas seleccionado
+                        </p>
                       </div>
                     )}
                   </div>
