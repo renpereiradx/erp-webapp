@@ -2,6 +2,7 @@
 // Purchase Payments MVP Page - Fluent Design System 2 + BEM
 // =============================================================================
 
+@use 'sass:color';
 @use '../abstracts' as *;
 
 .purchase-payments-mvp {
@@ -1378,7 +1379,7 @@
     @include themify($themes) {
       background: linear-gradient(
         90deg,
-        lighten(themed('accent-primary'), 8%),
+        color.adjust(themed('accent-primary'), $lightness: 8%),
         themed('accent-primary')
       );
     }

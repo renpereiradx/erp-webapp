@@ -1,0 +1,152 @@
+// =============================================================================
+// DROPDOWN MENU COMPONENT
+// =============================================================================
+// Radix UI Dropdown Menu styling with Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+.dropdown-menu {
+  &__content {
+    min-width: 180px;
+    border-radius: $border-radius-medium;
+    padding: $spacing-4;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    overflow: visible;
+    background-color: white;
+
+    @include themify($themes) {
+      background-color: themed('surface-default');
+      border: 1px solid themed('border-subtle');
+    }
+
+    // Animation states
+    &[data-state='open'] {
+      animation: dropdown-menu-content-show 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    &[data-state='closed'] {
+      animation: dropdown-menu-content-hide 100ms ease-in;
+    }
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    padding: $spacing-8 $spacing-12;
+    border-radius: $border-radius-small;
+    font-size: $font-size-300;
+    cursor: pointer;
+    transition: all $duration-fast $ease-ease-in-out;
+    outline: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+
+    @include themify($themes) {
+      background-color: transparent;
+      color: themed('text-primary');
+
+      &:hover:not([data-disabled]) {
+        background-color: themed('state-hover-overlay');
+      }
+
+      &:active:not([data-disabled]) {
+        background-color: themed('state-pressed-overlay');
+      }
+
+      &:focus-visible {
+        background-color: themed('state-hover-overlay');
+        box-shadow: 0 0 0 2px themed('action-primary');
+      }
+
+      &[data-disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    // Success variant (Confirm)
+    &--success {
+      @include themify($themes) {
+        color: themed('status-success');
+
+        svg {
+          color: themed('status-success');
+        }
+
+        &:hover:not([data-disabled]) {
+          background-color: themed('status-success-subtle');
+        }
+      }
+    }
+
+    // Danger variant (Cancel)
+    &--danger {
+      @include themify($themes) {
+        color: themed('status-danger');
+
+        svg {
+          color: themed('status-danger');
+        }
+
+        &:hover:not([data-disabled]) {
+          background-color: themed('status-danger-subtle');
+        }
+      }
+    }
+  }
+
+  &__separator {
+    height: 1px;
+    margin: $spacing-4 0;
+
+    @include themify($themes) {
+      background-color: themed('border-subtle');
+    }
+  }
+
+  &__label {
+    padding: $spacing-4 $spacing-12;
+    font-size: $font-size-200;
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__group {
+    // Grouping container, no specific styles needed
+  }
+}
+
+// Animations
+@keyframes dropdown-menu-content-show {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes dropdown-menu-content-hide {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+}

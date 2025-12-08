@@ -20,10 +20,26 @@ import {
   MoreVertical,
   ChevronLeft,
   ChevronRight,
+  X,
+  Check,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import DataState from '@/components/ui/DataState'
 import BookingFormModal from '@/components/BookingFormModal'
 import AvailableSlots from '@/pages/AvailableSlots'
@@ -40,8 +56,15 @@ const BookingManagement = () => {
   const { toasts, removeToast, success: showSuccess } = useToast()
 
   // Estados del store
-  const { reservations, loading, error, fetchReservations, clearError } =
-    useReservationStore()
+  const {
+    reservations,
+    loading,
+    error,
+    fetchReservations,
+    clearError,
+    cancelReservation,
+    confirmReservation,
+  } = useReservationStore()
 
   const { products, fetchProducts } = useProductStore()
   const { searchResults: clients } = useClientStore()
@@ -59,7 +82,7 @@ const BookingManagement = () => {
 
     return {
       startDate: thirtyDaysAgo.toISOString().split('T')[0],
-      endDate: today.toISOString().split('T')[0]
+      endDate: today.toISOString().split('T')[0],
     }
   }
 
@@ -77,15 +100,23 @@ const BookingManagement = () => {
   // Estados para el explorador de horarios disponibles
   const [showScheduleExplorer, setShowScheduleExplorer] = useState(false)
 
-  // Cargar datos al montar y cuando cambia el rango de fechas
+  // Estados para cancelación de reservas
+  const [cancellingReservation, setCancellingReservation] = useState(null)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+
+  // Estados para confirmación de reservas
+  const [confirmingReservation, setConfirmingReservation] = useState(null)
+  const [showConfirmConfirm, setShowConfirmConfirm] = useState(false)
+
+  // Cargar datos al montar (solo una vez con fechas por defecto)
   useEffect(() => {
     fetchReservations({
       startDate: dateRange.startDate,
-      endDate: dateRange.endDate
+      endDate: dateRange.endDate,
     })
     fetchProducts()
     // Note: Clients are loaded on-demand via search, not pre-loaded
-  }, [fetchReservations, fetchProducts, dateRange.startDate, dateRange.endDate])
+  }, [fetchReservations, fetchProducts])
 
   // Filtrado local de reservas
   const filteredReservations = useMemo(() => {
@@ -108,12 +139,7 @@ const BookingManagement = () => {
 
       return matchesSearch && matchesProduct && matchesStatus
     })
-  }, [
-    reservations,
-    searchTerm,
-    selectedProduct,
-    selectedStatus,
-  ])
+  }, [reservations, searchTerm, selectedProduct, selectedStatus])
 
   // Paginación local
   const totalPages = Math.ceil(filteredReservations.length / itemsPerPage)
@@ -153,7 +179,7 @@ const BookingManagement = () => {
     showSuccess('Reserva creada exitosamente')
   }
 
-  const handleReserveSlot = (slotData) => {
+  const handleReserveSlot = slotData => {
     // Cuando el usuario hace clic en "Reservar" en un slot
     setInitialReservationData(slotData)
     setShowScheduleExplorer(false)
@@ -163,6 +189,72 @@ const BookingManagement = () => {
   const handleRetry = () => {
     clearError()
     fetchReservations()
+  }
+
+  const handleCancelClick = reservation => {
+    setCancellingReservation(reservation)
+    setShowCancelConfirm(true)
+  }
+
+  const handleConfirmCancel = async () => {
+    if (!cancellingReservation) return
+
+    try {
+      const result = await cancelReservation(
+        cancellingReservation.id || cancellingReservation.reserve_id
+      )
+      if (result && result.success) {
+        showSuccess('Reserva cancelada exitosamente')
+        // Refrescar lista de reservas
+        fetchReservations({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        })
+      }
+    } catch (error) {
+      console.error('Error al cancelar reserva:', error)
+    } finally {
+      setShowCancelConfirm(false)
+      setCancellingReservation(null)
+    }
+  }
+
+  const handleCancelCancel = () => {
+    setShowCancelConfirm(false)
+    setCancellingReservation(null)
+  }
+
+  const handleConfirmClick = reservation => {
+    setConfirmingReservation(reservation)
+    setShowConfirmConfirm(true)
+  }
+
+  const handleConfirmConfirm = async () => {
+    if (!confirmingReservation) return
+
+    try {
+      const result = await confirmReservation(
+        confirmingReservation.id || confirmingReservation.reserve_id
+      )
+      if (result && result.success) {
+        showSuccess('Reserva confirmada exitosamente')
+        // Refrescar lista de reservas
+        fetchReservations({
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+        })
+      }
+    } catch (error) {
+      console.error('Error al confirmar reserva:', error)
+    } finally {
+      setShowConfirmConfirm(false)
+      setConfirmingReservation(null)
+    }
+  }
+
+  const handleCancelConfirmDialog = () => {
+    setShowConfirmConfirm(false)
+    setConfirmingReservation(null)
   }
 
   const getStatusBadgeClass = status => {
@@ -190,7 +282,8 @@ const BookingManagement = () => {
 
   const formatDuration = duration => {
     if (!duration) return '-'
-    return `${duration} ${t('booking.duration.minutes')}`
+    // La duración viene en horas desde la API
+    return `${Math.round(parseFloat(duration))} hrs`
   }
 
   const formatCurrency = amount => {
@@ -304,7 +397,7 @@ const BookingManagement = () => {
             defaultValue='reservations'
             className='booking-management-page__tabs'
           >
-            <TabsList>
+            <TabsList style={{ display: 'none' }}>
               <TabsTrigger value='reservations'>
                 {t('booking.tab.reservations')}
               </TabsTrigger>
@@ -319,16 +412,21 @@ const BookingManagement = () => {
               value='reservations'
               className='booking-management-page__tab-content'
             >
-              {/* Barra de filtros */}
-              <div className='filters-bar'>
-                <div className='filters-bar__filters'>
+              {/* Barra de filtros - Sección 1: Filtros de API (Fechas) */}
+              <div className='filters-bar' style={{ marginBottom: '12px' }}>
+                <div className='filters-bar__filters' style={{ gap: '12px' }}>
                   {/* Filtro: Fecha Inicio */}
                   <div className='filter-date-group'>
                     <label className='filter-date-label'>Desde</label>
                     <Input
                       type='date'
                       value={dateRange.startDate}
-                      onChange={e => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                      onChange={e =>
+                        setDateRange(prev => ({
+                          ...prev,
+                          startDate: e.target.value,
+                        }))
+                      }
                       className='filter-button'
                       aria-label='Fecha inicio'
                     />
@@ -340,12 +438,37 @@ const BookingManagement = () => {
                     <Input
                       type='date'
                       value={dateRange.endDate}
-                      onChange={e => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                      onChange={e =>
+                        setDateRange(prev => ({
+                          ...prev,
+                          endDate: e.target.value,
+                        }))
+                      }
                       className='filter-button'
                       aria-label='Fecha fin'
                     />
                   </div>
 
+                  {/* Botón Buscar */}
+                  <Button
+                    className='btn btn--secondary'
+                    onClick={() =>
+                      fetchReservations({
+                        startDate: dateRange.startDate,
+                        endDate: dateRange.endDate,
+                      })
+                    }
+                    style={{ marginTop: '24px' }}
+                  >
+                    <Search size={20} />
+                    Buscar
+                  </Button>
+                </div>
+              </div>
+
+              {/* Barra de filtros - Sección 2: Filtros Locales */}
+              <div className='filters-bar'>
+                <div className='filters-bar__filters'>
                   {/* Filtro: Producto */}
                   <select
                     className='filter-button'
@@ -404,7 +527,10 @@ const BookingManagement = () => {
               {/* Tabla de reservas */}
               <div style={{ minHeight: '400px' }}>
                 {filteredReservations.length === 0 ? (
-                  <div className='flex items-center justify-center' style={{ minHeight: '400px' }}>
+                  <div
+                    className='flex items-center justify-center'
+                    style={{ minHeight: '400px' }}
+                  >
                     {searchTerm ||
                     selectedProduct !== 'all' ||
                     selectedStatus !== 'all' ? (
@@ -415,7 +541,9 @@ const BookingManagement = () => {
                       />
                     ) : (
                       <div className='text-center'>
-                        <h3 className='text-lg font-semibold mb-2'>Sin reservas</h3>
+                        <h3 className='text-lg font-semibold mb-2'>
+                          Sin reservas
+                        </h3>
                         <p className='text-muted-foreground'>
                           No hay reservas en el rango de fechas seleccionado
                         </p>
@@ -423,162 +551,226 @@ const BookingManagement = () => {
                     )}
                   </div>
                 ) : (
-                <>
-                  <div className='reservations-table'>
-                    <div className='reservations-table__wrapper'>
-                      <table className='reservations-table__table' role='table'>
-                        <thead className='reservations-table__thead'>
-                          <tr>
-                            <th className='reservations-table__th' scope='col'>
-                              {t('booking.table.product')}
-                            </th>
-                            <th className='reservations-table__th' scope='col'>
-                              {t('booking.table.client')}
-                            </th>
-                            <th className='reservations-table__th' scope='col'>
-                              {t('booking.table.user')}
-                            </th>
-                            <th className='reservations-table__th' scope='col'>
-                              {t('booking.table.created_date')}
-                            </th>
-                            <th className='reservations-table__th' scope='col'>
-                              {t('booking.table.status')}
-                            </th>
-                            <th className='reservations-table__th' scope='col'>
-                              {t('booking.table.duration')}
-                            </th>
-                            <th
-                              className='reservations-table__th reservations-table__th--right'
-                              scope='col'
-                            >
-                              {t('booking.table.total')}
-                            </th>
-                            <th
-                              className='reservations-table__th reservations-table__th--center'
-                              scope='col'
-                            >
-                              {t('booking.table.actions')}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className='reservations-table__tbody'>
-                          {paginatedReservations.map(reservation => (
-                            <tr
-                              key={reservation.id || reservation.reserve_id}
-                              className='reservations-table__tr'
-                            >
-                              <td className='reservations-table__td reservations-table__td--product'>
-                                {reservation.product_name || '-'}
-                              </td>
-                              <td className='reservations-table__td reservations-table__td--secondary'>
-                                {reservation.client_name || '-'}
-                              </td>
-                              <td className='reservations-table__td reservations-table__td--secondary'>
-                                {reservation.user_email ||
-                                  reservation.created_by ||
-                                  '-'}
-                              </td>
-                              <td className='reservations-table__td reservations-table__td--secondary'>
-                                {formatDateTime(reservation.created_at)}
-                              </td>
-                              <td className='reservations-table__td'>
-                                <div
-                                  className={`status-badge ${getStatusBadgeClass(
-                                    reservation.status
-                                  )}`}
-                                >
-                                  <span className='status-badge__dot'></span>
-                                  {getStatusLabel(reservation.status)}
-                                </div>
-                              </td>
-                              <td className='reservations-table__td reservations-table__td--secondary'>
-                                {formatDuration(reservation.duration)}
-                              </td>
-                              <td className='reservations-table__td reservations-table__td--right'>
-                                {formatCurrency(reservation.total_amount)}
-                              </td>
-                              <td className='reservations-table__td reservations-table__td--center'>
-                                <button
-                                  className='actions-menu-button'
-                                  aria-label={t('booking.table.actions')}
-                                  title={t('booking.table.actions')}
-                                >
-                                  <MoreVertical size={20} />
-                                </button>
-                              </td>
+                  <>
+                    <div className='reservations-table'>
+                      <div className='reservations-table__wrapper'>
+                        <table
+                          className='reservations-table__table'
+                          role='table'
+                        >
+                          <thead className='reservations-table__thead'>
+                            <tr>
+                              <th
+                                className='reservations-table__th'
+                                scope='col'
+                              >
+                                {t('booking.table.product')}
+                              </th>
+                              <th
+                                className='reservations-table__th'
+                                scope='col'
+                              >
+                                {t('booking.table.client')}
+                              </th>
+                              <th
+                                className='reservations-table__th'
+                                scope='col'
+                              >
+                                {t('booking.table.user')}
+                              </th>
+                              <th
+                                className='reservations-table__th'
+                                scope='col'
+                              >
+                                {t('booking.table.created_date')}
+                              </th>
+                              <th
+                                className='reservations-table__th'
+                                scope='col'
+                              >
+                                {t('booking.table.status')}
+                              </th>
+                              <th
+                                className='reservations-table__th'
+                                scope='col'
+                              >
+                                {t('booking.table.duration')}
+                              </th>
+                              <th
+                                className='reservations-table__th reservations-table__th--right'
+                                scope='col'
+                              >
+                                {t('booking.table.total')}
+                              </th>
+                              <th
+                                className='reservations-table__th reservations-table__th--center'
+                                scope='col'
+                              >
+                                {t('booking.table.actions')}
+                              </th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* Paginación */}
-                  {totalPages > 1 && (
-                    <div className='pagination'>
-                      <div className='pagination__info'>
-                        {t('booking.pagination.showing')}{' '}
-                        <span className='pagination__info-highlight'>
-                          {startIndex + 1}
-                          {t('booking.pagination.to')}
-                          {Math.min(endIndex, filteredReservations.length)}
-                        </span>{' '}
-                        {t('booking.pagination.of')}{' '}
-                        <span className='pagination__info-highlight'>
-                          {filteredReservations.length}
-                        </span>
+                          </thead>
+                          <tbody className='reservations-table__tbody'>
+                            {paginatedReservations.map(reservation => (
+                              <tr
+                                key={reservation.id || reservation.reserve_id}
+                                className='reservations-table__tr'
+                              >
+                                <td className='reservations-table__td reservations-table__td--product'>
+                                  {reservation.product_name || '-'}
+                                </td>
+                                <td className='reservations-table__td reservations-table__td--secondary'>
+                                  {reservation.client_name || '-'}
+                                </td>
+                                <td className='reservations-table__td reservations-table__td--secondary'>
+                                  {reservation.user_email ||
+                                    reservation.created_by ||
+                                    '-'}
+                                </td>
+                                <td className='reservations-table__td reservations-table__td--secondary'>
+                                  {formatDateTime(
+                                    reservation.reserve_date ||
+                                      reservation.created_at
+                                  )}
+                                </td>
+                                <td className='reservations-table__td'>
+                                  <div
+                                    className={`status-badge ${getStatusBadgeClass(
+                                      reservation.status
+                                    )}`}
+                                  >
+                                    <span className='status-badge__dot'></span>
+                                    {getStatusLabel(reservation.status)}
+                                  </div>
+                                </td>
+                                <td className='reservations-table__td reservations-table__td--secondary'>
+                                  {formatDuration(reservation.duration)}
+                                </td>
+                                <td className='reservations-table__td reservations-table__td--right'>
+                                  {formatCurrency(reservation.total_amount)}
+                                </td>
+                                <td className='reservations-table__td reservations-table__td--center'>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button
+                                        className='actions-menu-button'
+                                        aria-label={t('booking.table.actions')}
+                                        title={t('booking.table.actions')}
+                                      >
+                                        <MoreVertical size={20} />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align='end'>
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          handleConfirmClick(reservation)
+                                        }
+                                        disabled={
+                                          reservation.status?.toLowerCase() ===
+                                            'confirmed' ||
+                                          reservation.status?.toLowerCase() ===
+                                            'confirmada' ||
+                                          reservation.status?.toLowerCase() ===
+                                            'cancelled' ||
+                                          reservation.status?.toLowerCase() ===
+                                            'cancelada'
+                                        }
+                                        className='dropdown-menu__item--success'
+                                      >
+                                        <Check size={16} />
+                                        Confirmar Reserva
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          handleCancelClick(reservation)
+                                        }
+                                        disabled={
+                                          reservation.status?.toLowerCase() ===
+                                            'cancelled' ||
+                                          reservation.status?.toLowerCase() ===
+                                            'cancelada'
+                                        }
+                                        className='dropdown-menu__item--danger'
+                                      >
+                                        <X size={16} />
+                                        Cancelar Reserva
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
+                    </div>
 
-                      <div className='pagination__controls'>
-                        <button
-                          className='pagination__button'
-                          onClick={() =>
-                            setCurrentPage(prev => Math.max(1, prev - 1))
-                          }
-                          disabled={currentPage === 1}
-                          aria-label={t('booking.pagination.previous')}
-                        >
-                          <ChevronLeft size={16} />
-                        </button>
+                    {/* Paginación */}
+                    {totalPages > 1 && (
+                      <div className='pagination'>
+                        <div className='pagination__info'>
+                          {t('booking.pagination.showing')}{' '}
+                          <span className='pagination__info-highlight'>
+                            {startIndex + 1}
+                            {t('booking.pagination.to')}
+                            {Math.min(endIndex, filteredReservations.length)}
+                          </span>{' '}
+                          {t('booking.pagination.of')}{' '}
+                          <span className='pagination__info-highlight'>
+                            {filteredReservations.length}
+                          </span>
+                        </div>
 
-                        {Array.from(
-                          { length: totalPages },
-                          (_, i) => i + 1
-                        ).map(page => (
+                        <div className='pagination__controls'>
                           <button
-                            key={page}
-                            className={`pagination__button ${
-                              page === currentPage
-                                ? 'pagination__button--active'
-                                : ''
-                            }`}
-                            onClick={() => setCurrentPage(page)}
-                            aria-label={`Página ${page}`}
-                            aria-current={
-                              page === currentPage ? 'page' : undefined
+                            className='pagination__button'
+                            onClick={() =>
+                              setCurrentPage(prev => Math.max(1, prev - 1))
                             }
+                            disabled={currentPage === 1}
+                            aria-label={t('booking.pagination.previous')}
                           >
-                            {page}
+                            <ChevronLeft size={16} />
                           </button>
-                        ))}
 
-                        <button
-                          className='pagination__button'
-                          onClick={() =>
-                            setCurrentPage(prev =>
-                              Math.min(totalPages, prev + 1)
-                            )
-                          }
-                          disabled={currentPage === totalPages}
-                          aria-label={t('booking.pagination.next')}
-                        >
-                          <ChevronRight size={16} />
-                        </button>
+                          {Array.from(
+                            { length: totalPages },
+                            (_, i) => i + 1
+                          ).map(page => (
+                            <button
+                              key={page}
+                              className={`pagination__button ${
+                                page === currentPage
+                                  ? 'pagination__button--active'
+                                  : ''
+                              }`}
+                              onClick={() => setCurrentPage(page)}
+                              aria-label={`Página ${page}`}
+                              aria-current={
+                                page === currentPage ? 'page' : undefined
+                              }
+                            >
+                              {page}
+                            </button>
+                          ))}
+
+                          <button
+                            className='pagination__button'
+                            onClick={() =>
+                              setCurrentPage(prev =>
+                                Math.min(totalPages, prev + 1)
+                              )
+                            }
+                            disabled={currentPage === totalPages}
+                            aria-label={t('booking.pagination.next')}
+                          >
+                            <ChevronRight size={16} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </>
-              )}
+                    )}
+                  </>
+                )}
               </div>
             </TabsContent>
           </Tabs>
@@ -593,6 +785,120 @@ const BookingManagement = () => {
         editingReservation={editingReservation}
         initialData={initialReservationData}
       />
+
+      {/* Modal de confirmación de cancelación */}
+      <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+        <DialogContent className='booking-cancel-dialog'>
+          <DialogHeader>
+            <DialogTitle>Confirmar Cancelación</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea cancelar la reserva?
+            </DialogDescription>
+          </DialogHeader>
+          {cancellingReservation && (
+            <div className='booking-management-page__reservation-details'>
+              <p>
+                <strong>Producto:</strong> {cancellingReservation.product_name}
+              </p>
+              <p>
+                <strong>Cliente:</strong> {cancellingReservation.client_name}
+              </p>
+              <p>
+                <strong>Fecha:</strong>{' '}
+                {formatDateTime(cancellingReservation.start_time)}
+              </p>
+            </div>
+          )}
+          <DialogFooter style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <button
+              onClick={handleCancelCancel}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: '120px',
+                padding: '8px 16px',
+                backgroundColor: '#f3f4f6',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                color: '#111827',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#e5e7eb'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#f3f4f6'
+              }}
+            >
+              No, volver
+            </button>
+            <button
+              onClick={handleConfirmCancel}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: '120px',
+                padding: '8px 16px',
+                backgroundColor: '#dc2626',
+                border: '1px solid #dc2626',
+                borderRadius: '6px',
+                color: '#ffffff',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#b91c1c'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#dc2626'
+              }}
+            >
+              Sí, cancelar reserva
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de confirmación para confirmar reserva */}
+      <Dialog open={showConfirmConfirm} onOpenChange={setShowConfirmConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar Reserva</DialogTitle>
+            <DialogDescription>
+              ¿Está seguro que desea confirmar la reserva?
+            </DialogDescription>
+          </DialogHeader>
+          {confirmingReservation && (
+            <div className='booking-management-page__reservation-details'>
+              <p>
+                <strong>Producto:</strong> {confirmingReservation.product_name}
+              </p>
+              <p>
+                <strong>Cliente:</strong> {confirmingReservation.client_name}
+              </p>
+              <p>
+                <strong>Fecha:</strong>{' '}
+                {formatDateTime(confirmingReservation.start_time)}
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant='ghost' onClick={handleCancelConfirmDialog}>
+              No, volver
+            </Button>
+            <Button className='btn btn--primary' onClick={handleConfirmConfirm}>
+              Sí, confirmar reserva
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />

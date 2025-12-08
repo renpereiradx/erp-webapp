@@ -46,18 +46,16 @@
     width: 40px;
     height: 40px;
     border-radius: $border-radius-medium;
-    border: 1px solid;
+    border: none;
     background: transparent;
     cursor: pointer;
     transition: all $duration-fast $ease-ease-in-out;
 
     @include themify($themes) {
-      border-color: themed('border-default');
       color: themed('text-primary');
 
       &:hover {
         background-color: themed('state-hover-overlay');
-        border-color: themed('action-primary');
       }
 
       &:active {
@@ -848,6 +846,127 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+// Reservation Details in Confirmation Dialogs
+// ===========================================================================
+.booking-management-page {
+  &__reservation-details {
+    margin-top: $spacing-16;
+    padding: $spacing-16;
+    border-radius: $border-radius-medium;
+    border: 1px solid;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      border-color: themed('border-default');
+    }
+
+    p {
+      margin: $spacing-8 0;
+      font-size: $font-size-300;
+      line-height: $line-height-400;
+
+      @include themify($themes) {
+        color: themed('text-primary');
+      }
+
+      &:first-child {
+        margin-top: 0;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      strong {
+        display: inline-block;
+        font-weight: $font-weight-semibold;
+        min-width: 80px;
+        margin-right: $spacing-8;
+
+        @include themify($themes) {
+          color: themed('text-secondary');
+        }
+      }
+    }
+  }
+}
+
+// Cancel Dialog Specific Styles
+// ===========================================================================
+// Estilos específicos para el modal de cancelación de reservas
+.booking-cancel-dialog {
+  // Header del modal de cancelación
+  .radix-dialog__header {
+    padding-bottom: $spacing-8;
+    border-bottom: 1px solid;
+
+    @include themify($themes) {
+      border-color: themed('border-subtle');
+    }
+  }
+
+  // Título del modal de cancelación
+  .radix-dialog__title {
+    @include themify($themes) {
+      color: themed('status-danger');
+    }
+  }
+
+  // Descripción del modal
+  .radix-dialog__description {
+    font-size: $font-size-300;
+    line-height: $line-height-400;
+    margin-top: $spacing-8;
+  }
+
+  // Footer con botones
+  .radix-dialog__footer {
+    padding-top: $spacing-16;
+    border-top: 1px solid;
+
+    @include themify($themes) {
+      border-color: themed('border-subtle');
+    }
+
+    // Asegurar visibilidad de los botones
+    button {
+      min-width: 120px;
+
+      // Forzar estilos para btn--secondary
+      &.btn--secondary {
+        @include themify($themes) {
+          background-color: themed('bg-secondary') !important;
+          border: 1px solid themed('border-default') !important;
+          color: themed('text-primary') !important;
+        }
+
+        &:hover:not(:disabled) {
+          @include themify($themes) {
+            background-color: themed('surface-hover') !important;
+            border-color: themed('border-strong') !important;
+          }
+        }
+      }
+
+      // Forzar estilos para btn--danger
+      &.btn--danger {
+        @include themify($themes) {
+          background-color: themed('status-danger') !important;
+          color: #FFFFFF !important;
+          border: 1px solid themed('status-danger') !important;
+        }
+
+        &:hover:not(:disabled) {
+          @include themify($themes) {
+            background-color: themed('status-danger-hover') !important;
+            border-color: themed('status-danger-hover') !important;
+          }
+        }
+      }
+    }
   }
 }
 

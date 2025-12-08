@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   CreditCard,
   DollarSign,
@@ -10,102 +11,12 @@ import {
   User,
   X,
 } from 'lucide-react'
-
-const PRODUCT_CATALOG = [
-  { id: 'product-a', sku: 'SKU-001', name: 'Producto A', price: 120 },
-  { id: 'product-b', sku: 'SKU-002', name: 'Producto B', price: 85 },
-  { id: 'product-c', sku: 'SKU-003', name: 'Producto C', price: 75 },
-  { id: 'product-d', sku: 'SKU-004', name: 'Producto D', price: 140 },
-]
-
-const INITIAL_ITEMS = [
-  {
-    id: 'line-1',
-    productId: 'product-a',
-    name: 'Producto A',
-    quantity: 2,
-    price: 100,
-    discount: 0,
-  },
-  {
-    id: 'line-2',
-    productId: 'product-b',
-    name: 'Producto B',
-    quantity: 1,
-    price: 50,
-    discount: 0,
-  },
-  {
-    id: 'line-3',
-    productId: 'product-c',
-    name: 'Producto C',
-    quantity: 3,
-    price: 75,
-    discount: 0,
-  },
-]
-
-const CLIENTS = [
-  {
-    id: 'client-a',
-    name: 'Juan Pérez',
-    email: 'juan.perez@email.com',
-    phone: '+1 234 567 890',
-  },
-  {
-    id: 'client-b',
-    name: 'Ana Gómez',
-    email: 'ana.gomez@email.com',
-    phone: '+1 987 654 321',
-  },
-  {
-    id: 'client-c',
-    name: 'Carlos Ruiz',
-    email: 'carlos.ruiz@email.com',
-    phone: '+1 555 123 456',
-  },
-]
-
-const PAYMENT_METHODS = [
-  { value: 'cash', label: 'Efectivo' },
-  { value: 'card', label: 'Tarjeta de Crédito/Débito' },
-  { value: 'transfer', label: 'Transferencia Bancaria' },
-  { value: 'other', label: 'Otro' },
-]
-
-const CURRENCIES = [
-  { value: 'USD', label: 'USD - Dólar Estadounidense' },
-  { value: 'EUR', label: 'EUR - Euro' },
-  { value: 'MXN', label: 'MXN - Peso Mexicano' },
-  { value: 'PYG', label: 'PYG - Guaraní Paraguayo' },
-]
-
-const SALE_HISTORY = [
-  {
-    id: '12345',
-    date: '2023-10-26',
-    client: 'Cliente C',
-    total: 350,
-    salesperson: 'Vendedor 1',
-    status: 'completed',
-  },
-  {
-    id: '12344',
-    date: '2023-10-25',
-    client: 'Cliente D',
-    total: 120.5,
-    salesperson: 'Vendedor 2',
-    status: 'completed',
-  },
-  {
-    id: '12343',
-    date: '2023-10-24',
-    client: 'Cliente E',
-    total: 800,
-    salesperson: 'Vendedor 1',
-    status: 'cancelled',
-  },
-]
+import useProductStore from '@/store/useProductStore'
+import useClientStore from '@/store/useClientStore'
+import useSaleStore from '@/store/useSaleStore'
+import { PaymentMethodService } from '@/services/paymentMethodService'
+import { CurrencyService } from '@/services/currencyService'
+import { productService } from '@/services/productService'
 
 const STATUS_STYLES = {
   completed: { label: 'Completada', badge: 'badge--subtle-success' },
@@ -113,29 +24,237 @@ const STATUS_STYLES = {
   pending: { label: 'Pendiente', badge: 'badge--subtle-warning' },
 }
 
-const formatCurrency = (value, currencyCode) =>
-  new Intl.NumberFormat('es-ES', {
+const formatCurrency = (value, currencyCode) => {
+  const isPYG = currencyCode === 'PYG'
+  return new Intl.NumberFormat('es-PY', {
     style: 'currency',
     currency: currencyCode,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: isPYG ? 0 : 2,
+    maximumFractionDigits: isPYG ? 0 : 2,
   }).format(value)
+}
+
+const formatDocumentId = value => {
+  if (!value) return ''
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
+const getProductDisplay = product => {
+  if (!product) return { name: '', id: '', price: 0, sku: '' }
+  return {
+    name: product.name || product.product_name || '',
+    id: product.id || product.product_id || '',
+    price:
+      product.sale_price ||
+      product.price ||
+      product.unit_prices?.[0]?.price_per_unit ||
+      0,
+    sku: product.sku || product.barcode || product.code || '',
+  }
+}
 
 const SalesNew = () => {
+  const navigate = useNavigate()
+  const clientSearchContainerRef = useRef(null)
+
+  // Zustand stores
+  const {
+    products,
+    fetchProducts,
+    loading: productsLoading,
+  } = useProductStore()
+  const {
+    searchResults: clients,
+    searchClients,
+    loading: clientsLoading,
+  } = useClientStore()
+  const {
+    createSale,
+    sales,
+    fetchSalesByDateRange,
+    loading: saleLoading,
+  } = useSaleStore()
+
+  // Tab state
   const [activeTab, setActiveTab] = useState('new-sale')
-  const [items, setItems] = useState(INITIAL_ITEMS)
+
+  // Cart state (temporal - se envía a API al guardar)
+  const [items, setItems] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [generalDiscount, setGeneralDiscount] = useState(0)
-  const [selectedClientId, setSelectedClientId] = useState(CLIENTS[0].id)
-  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[1].value)
-  const [currency, setCurrency] = useState(CURRENCIES[0].value)
+
+  // Client search state
+  const [clientSearchTerm, setClientSearchTerm] = useState('')
+  const [selectedClient, setSelectedClient] = useState(null)
+  const [showClientDropdown, setShowClientDropdown] = useState(false)
+
+  // Payment and currency state
+  const [paymentMethodId, setPaymentMethodId] = useState(1)
+  const [currencyId, setCurrencyId] = useState(1)
+  const [paymentMethods, setPaymentMethods] = useState([])
+  const [currencies, setCurrencies] = useState([])
+  const [paymentMethodsLoading, setPaymentMethodsLoading] = useState(false)
+  const [currenciesLoading, setCurrenciesLoading] = useState(false)
+
+  // History tab state
   const [historySearch, setHistorySearch] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+
+  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [modalProductId, setModalProductId] = useState(PRODUCT_CATALOG[0].id)
+  const [selectedModalProduct, setSelectedModalProduct] = useState(null)
   const [modalQuantity, setModalQuantity] = useState(1)
   const [modalDiscount, setModalDiscount] = useState(0)
+  const [modalDiscountType, setModalDiscountType] = useState('amount') // 'amount' | 'percent'
+  const [modalDiscountReason, setModalDiscountReason] = useState('')
+
+  // Modal product search state
+  const [productSearchTerm, setProductSearchTerm] = useState('')
+  const [modalSearchResults, setModalSearchResults] = useState([])
+  const [isSearchingProducts, setIsSearchingProducts] = useState(false)
+  const [showProductDropdown, setShowProductDropdown] = useState(false)
+  const productSearchContainerRef = useRef(null)
+  const productDropdownRef = useRef(null)
+
+  // Cargar productos al montar
+  useEffect(() => {
+    fetchProducts({ page: 1, pageSize: 100 })
+  }, [fetchProducts])
+
+  // Cargar métodos de pago y monedas al montar
+  useEffect(() => {
+    const loadPaymentData = async () => {
+      try {
+        setPaymentMethodsLoading(true)
+        const methods = await PaymentMethodService.getAll()
+        setPaymentMethods(methods)
+        if (methods.length > 0) {
+          setPaymentMethodId(methods[0].id)
+        }
+      } catch (error) {
+        console.error('Error loading payment methods:', error)
+      } finally {
+        setPaymentMethodsLoading(false)
+      }
+
+      try {
+        setCurrenciesLoading(true)
+        const currencyList = await CurrencyService.getAll()
+        setCurrencies(currencyList)
+        if (currencyList.length > 0) {
+          setCurrencyId(currencyList[0].id)
+        }
+      } catch (error) {
+        console.error('Error loading currencies:', error)
+      } finally {
+        setCurrenciesLoading(false)
+      }
+    }
+    loadPaymentData()
+  }, [])
+
+  // Buscar clientes cuando cambia el término de búsqueda
+  useEffect(() => {
+    const searchTimeout = setTimeout(async () => {
+      if (clientSearchTerm.trim().length >= 3) {
+        // Evitar búsqueda si el término coincide con el cliente seleccionado
+        if (selectedClient && clientSearchTerm === selectedClient.name) {
+          return
+        }
+
+        try {
+          await searchClients(clientSearchTerm)
+          setShowClientDropdown(true)
+        } catch (error) {
+          console.error('Error searching clients:', error)
+          setShowClientDropdown(false)
+        }
+      } else {
+        setShowClientDropdown(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(searchTimeout)
+  }, [clientSearchTerm, searchClients, selectedClient])
+
+  // Buscar productos para el modal
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      const term = (productSearchTerm || '').trim()
+      if (term.length >= 3) {
+        // Evitar búsqueda si el término coincide con el producto seleccionado
+        const currentProduct = getProductDisplay(selectedModalProduct)
+        if (selectedModalProduct && term === currentProduct.name) {
+          return
+        }
+
+        setIsSearchingProducts(true)
+        try {
+          const results = await productService.searchProducts(term)
+          const allResults = Array.isArray(results)
+            ? results
+            : results
+            ? [results]
+            : []
+          // Filtrar productos activos (state !== false && is_active !== false)
+          // Nota: La API puede devolver 'state', 'status' o 'is_active'
+          const activeResults = allResults.filter(p => {
+            // Si tiene 'status' explícito (booleano), usarlo
+            if (typeof p.status === 'boolean') return p.status
+            
+            // Lógica de Products.jsx: state !== false && is_active !== false
+            return p.state !== false && p.is_active !== false
+          })
+          setModalSearchResults(activeResults)
+          setShowProductDropdown(true)
+        } catch (error) {
+          console.error('Error searching products:', error)
+          setModalSearchResults([])
+        } finally {
+          setIsSearchingProducts(false)
+        }
+      } else {
+        setModalSearchResults([])
+        // No cerrar dropdown aquí para permitir ver mensaje de "escribe más caracteres"
+      }
+    }, 500)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [productSearchTerm, selectedModalProduct])
+
+  // Establecer producto inicial en modal cuando carguen productos
+  useEffect(() => {
+    if (products.length > 0 && !selectedModalProduct) {
+      // No pre-seleccionar automáticamente para obligar a buscar
+      // setSelectedModalProduct(products[0])
+    }
+  }, [products, selectedModalProduct])
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (
+        clientSearchContainerRef.current &&
+        !clientSearchContainerRef.current.contains(event.target)
+      ) {
+        setShowClientDropdown(false)
+      }
+      if (
+        productSearchContainerRef.current &&
+        !productSearchContainerRef.current.contains(event.target)
+      ) {
+        setShowProductDropdown(false)
+      }
+    }
+
+    if (showClientDropdown || showProductDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [showClientDropdown, showProductDropdown])
 
   const subtotal = useMemo(
     () => items.reduce((acc, item) => acc + item.price * item.quantity, 0),
@@ -165,31 +284,35 @@ const SalesNew = () => {
     [subtotal, lineDiscounts, generalDiscount, taxes]
   )
 
-  const activeClient = useMemo(
-    () => CLIENTS.find(client => client.id === selectedClientId),
-    [selectedClientId]
-  )
+  // Cargar ventas por rango de fechas
+  useEffect(() => {
+    if (dateFrom && dateTo) {
+      fetchSalesByDateRange({
+        start_date: dateFrom,
+        end_date: dateTo,
+        page: 1,
+        page_size: 50,
+      })
+    }
+  }, [dateFrom, dateTo, fetchSalesByDateRange])
 
   const filteredHistory = useMemo(
     () =>
-      SALE_HISTORY.filter(entry => {
-        const matchesTerm =
-          !historySearch ||
-          entry.client.toLowerCase().includes(historySearch.toLowerCase()) ||
-          entry.id.toLowerCase().includes(historySearch.toLowerCase())
-        const matchesFrom = !dateFrom || entry.date >= dateFrom
-        const matchesTo = !dateTo || entry.date <= dateTo
-        return matchesTerm && matchesFrom && matchesTo
+      (sales || []).filter(entry => {
+        if (!historySearch) return true
+        const searchLower = historySearch.toLowerCase()
+        return (
+          entry.client_name?.toLowerCase().includes(searchLower) ||
+          entry.sale_id?.toString().toLowerCase().includes(searchLower)
+        )
       }),
-    [historySearch, dateFrom, dateTo]
+    [sales, historySearch]
   )
 
-  const modalProduct = useMemo(
-    () => PRODUCT_CATALOG.find(item => item.id === modalProductId),
-    [modalProductId]
-  )
+  const modalProduct = selectedModalProduct
+  const modalDisplay = getProductDisplay(modalProduct)
 
-  const modalUnitPrice = modalProduct?.price ?? 0
+  const modalUnitPrice = modalDisplay.price
 
   const parsedModalQuantity = useMemo(() => {
     const quantityValue = Number(modalQuantity)
@@ -212,10 +335,24 @@ const SalesNew = () => {
     [modalUnitPrice, parsedModalQuantity]
   )
 
-  const modalDiscountValue = useMemo(
-    () => Math.min(parsedModalDiscount, modalSubtotal),
-    [parsedModalDiscount, modalSubtotal]
-  )
+  const modalDiscountValue = useMemo(() => {
+    let totalDiscount = 0
+    if (modalDiscountType === 'percent') {
+      // Porcentaje sobre el precio unitario, multiplicado por cantidad
+      const discountPerUnit = modalUnitPrice * (parsedModalDiscount / 100)
+      totalDiscount = discountPerUnit * parsedModalQuantity
+    } else {
+      // Monto fijo unitario, multiplicado por cantidad
+      totalDiscount = parsedModalDiscount * parsedModalQuantity
+    }
+    return Math.min(totalDiscount, modalSubtotal)
+  }, [
+    parsedModalDiscount,
+    modalSubtotal,
+    modalDiscountType,
+    modalUnitPrice,
+    parsedModalQuantity,
+  ])
 
   const modalLineTotal = useMemo(
     () => Math.max(0, modalSubtotal - modalDiscountValue),
@@ -226,11 +363,22 @@ const SalesNew = () => {
     setItems(prev => prev.filter(item => item.id !== lineId))
   }
 
+  const handleSelectClient = client => {
+    setSelectedClient(client)
+    setShowClientDropdown(false)
+    setClientSearchTerm(client.name || '')
+  }
+
   const handleOpenModal = () => {
-    setModalProductId(PRODUCT_CATALOG[0].id)
+    setSelectedModalProduct(null)
+    setProductSearchTerm('')
     setModalQuantity(1)
     setModalDiscount(0)
+    setModalDiscountType('amount')
+    setModalDiscountReason('')
     setIsModalOpen(true)
+    setShowProductDropdown(false)
+    setModalSearchResults([])
   }
 
   const handleConfirmAdd = () => {
@@ -239,43 +387,110 @@ const SalesNew = () => {
       return
     }
 
+    // Validar razón de descuento si hay descuento
+    if (modalDiscountValue > 0 && !modalDiscountReason.trim()) {
+      alert('Debes ingresar una razón para el descuento')
+      return
+    }
+
     setItems(prev => [
       ...prev,
       {
-        id: `${modalProduct.id}-${prev.length + 1}`,
-        productId: modalProduct.id,
-        name: modalProduct.name,
+        id: `${modalDisplay.id}-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
+        productId: modalDisplay.id,
+        name: modalDisplay.name,
         quantity: parsedModalQuantity,
-        price: modalProduct.price,
-        discount: modalDiscountValue,
+        price: modalDisplay.price,
+        discount: modalDiscountValue, // Total discount amount for the line
+        discountType: modalDiscountType,
+        discountInput: parsedModalDiscount, // Unitary value entered
+        discountReason: modalDiscountReason,
       },
     ])
     setModalQuantity(1)
     setModalDiscount(0)
+    setModalDiscountType('amount')
+    setModalDiscountReason('')
     setIsModalOpen(false)
   }
 
   const resetSaleForm = () => {
-    setItems(INITIAL_ITEMS)
+    setItems([])
     setGeneralDiscount(0)
-    setSelectedClientId(CLIENTS[0].id)
-    setPaymentMethod(PAYMENT_METHODS[1].value)
-    setCurrency(CURRENCIES[0].value)
+    if (clients.length > 0) {
+      setSelectedClient(clients[0])
+    }
+    setPaymentMethodId(1)
+    setCurrencyId(1)
   }
 
-  const handleSaveSale = () => {
-    // Placeholder para flujo de guardado real
-    console.info('Venta guardada (mock)', {
-      items,
-      subtotal,
-      lineDiscounts,
-      generalDiscount,
-      taxes,
-      total,
-      client: activeClient,
-      paymentMethod,
-      currency,
-    })
+  const handleSaveSale = async () => {
+    // Validaciones según SALE_API.md
+    if (!selectedClient) {
+      alert('Por favor selecciona un cliente')
+      return
+    }
+
+    if (items.length === 0) {
+      alert('Por favor agrega al menos un producto al carrito')
+      return
+    }
+
+    // Construir estructura según SALE_API.md
+    const saleData = {
+      client_id: selectedClient.id,
+      allow_price_modifications: items.some(item => item.discount > 0),
+      product_details: items.map(item => {
+        const detail = {
+          product_id: item.productId,
+          quantity: item.quantity,
+        }
+
+        // Agregar descuentos si existen
+        if (item.discount > 0) {
+          if (item.discountType === 'percent') {
+            detail.discount_percent = Number(item.discountInput)
+          } else {
+            // Es monto fijo unitario
+            detail.discount_amount = Number(item.discountInput)
+          }
+          detail.discount_reason =
+            item.discountReason || 'Descuento aplicado en venta'
+        }
+
+        return detail
+      }),
+      payment_method_id: paymentMethodId,
+      currency_id: currencyId,
+    }
+
+    try {
+      const response = await createSale(saleData)
+
+      if (response && response.sale_id) {
+        alert(`Venta creada exitosamente: ${response.sale_id}`)
+
+        // Limpiar carrito
+        setItems([])
+        setGeneralDiscount(0)
+      } else {
+        alert('Error: No se recibió ID de venta')
+      }
+    } catch (error) {
+      console.error('Error al guardar venta:', error)
+      alert(
+        `Error al guardar la venta: ${error.message || 'Error desconocido'}`
+      )
+    }
+  }
+
+  const handleSelectProduct = product => {
+    const display = getProductDisplay(product)
+    setSelectedModalProduct(product)
+    setProductSearchTerm(display.name)
+    setShowProductDropdown(false)
   }
 
   return (
@@ -394,13 +609,13 @@ const SalesNew = () => {
                                 <td>{item.name}</td>
                                 <td className='text-right'>{item.quantity}</td>
                                 <td className='text-right'>
-                                  {formatCurrency(item.price, currency)}
+                                  {formatCurrency(item.price, 'PYG')}
                                 </td>
                                 <td className='text-right'>
-                                  {formatCurrency(item.discount || 0, currency)}
+                                  {formatCurrency(item.discount || 0, 'PYG')}
                                 </td>
                                 <td className='text-right'>
-                                  {formatCurrency(lineTotal, currency)}
+                                  {formatCurrency(lineTotal, 'PYG')}
                                 </td>
                                 <td className='text-right'>
                                   <button
@@ -438,25 +653,25 @@ const SalesNew = () => {
                     <div className='sales-new__summary-column'>
                       <div className='sales-new__summary-row'>
                         <span className='text-muted'>Subtotal</span>
-                        <span>{formatCurrency(subtotal, currency)}</span>
+                        <span>{formatCurrency(subtotal, 'PYG')}</span>
                       </div>
                       <div className='sales-new__summary-row'>
                         <span className='text-muted'>Impuestos (IVA 16%)</span>
-                        <span>{formatCurrency(taxes, currency)}</span>
+                        <span>{formatCurrency(taxes, 'PYG')}</span>
                       </div>
                       <div className='sales-new__summary-row'>
                         <span className='text-muted'>Descuentos</span>
                         <span>
                           {formatCurrency(
                             lineDiscounts + generalDiscount,
-                            currency
+                            'PYG'
                           )}
                         </span>
                       </div>
                       <hr className='card__divider' />
                       <div className='sales-new__summary-row sales-new__summary-total'>
                         <span>Total</span>
-                        <span>{formatCurrency(total, currency)}</span>
+                        <span>{formatCurrency(total, 'PYG')}</span>
                       </div>
                     </div>
                     <div className='sales-new__summary-actions'>
@@ -479,8 +694,9 @@ const SalesNew = () => {
                           type='button'
                           className='btn btn--primary'
                           onClick={handleSaveSale}
+                          disabled={saleLoading || items.length === 0}
                         >
-                          Guardar Venta
+                          {saleLoading ? 'Guardando...' : 'Guardar Venta'}
                         </button>
                       </div>
                     </div>
@@ -505,37 +721,175 @@ const SalesNew = () => {
                   </h3>
                 </div>
                 <div className='card__content'>
-                  <label className='form-field__label' htmlFor='client-select'>
+                  <label className='form-field__label' htmlFor='client-search'>
                     Buscar Cliente
                   </label>
-                  <select
-                    id='client-select'
-                    className='input'
-                    value={selectedClientId}
-                    onChange={event => setSelectedClientId(event.target.value)}
+                  <div
+                    style={{ position: 'relative' }}
+                    ref={clientSearchContainerRef}
                   >
-                    {CLIENTS.map(client => (
-                      <option key={client.id} value={client.id}>
-                        {client.name}
-                      </option>
-                    ))}
-                  </select>
+                    <div className='search-box'>
+                      <Search className='search-box__icon' aria-hidden='true' />
+                      <input
+                        id='client-search'
+                        type='search'
+                        className='input search-box__input'
+                        placeholder='Escribe al menos 3 caracteres...'
+                        value={clientSearchTerm}
+                        onChange={event => {
+                          setClientSearchTerm(event.target.value)
+                          if (
+                            selectedClient &&
+                            event.target.value !== selectedClient.name
+                          ) {
+                            setSelectedClient(null)
+                          }
+                        }}
+                        onFocus={() => {
+                          if (
+                            clientSearchTerm.length >= 3 &&
+                            clients.length > 0
+                          ) {
+                            setShowClientDropdown(true)
+                          }
+                        }}
+                        disabled={clientsLoading}
+                      />
+                    </div>
 
-                  {activeClient && (
+                    {showClientDropdown && clients.length > 0 && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          marginTop: '4px',
+                          backgroundColor: 'white',
+                          border: '1px solid var(--color-border-default)',
+                          borderRadius: '6px',
+                          boxShadow:
+                            '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                          maxHeight: '240px',
+                          overflowY: 'auto',
+                          zIndex: 1000,
+                        }}
+                      >
+                        {clients.map((client, index) => (
+                          <button
+                            key={`${client.id}-${index}`}
+                            type='button'
+                            onClick={() => handleSelectClient(client)}
+                            style={{
+                              width: '100%',
+                              padding: '12px 16px',
+                              textAlign: 'left',
+                              border: 'none',
+                              backgroundColor: 'transparent',
+                              cursor: 'pointer',
+                              transition: 'background-color 0.15s',
+                              borderBottom:
+                                '1px solid var(--color-border-subtle)',
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.backgroundColor =
+                                'var(--color-bg-secondary)'
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.backgroundColor =
+                                'transparent'
+                            }}
+                          >
+                            <div
+                              style={{ fontWeight: '500', marginBottom: '2px' }}
+                            >
+                              {client.name}
+                            </div>
+                            {client.document_id && (
+                              <div
+                                style={{
+                                  fontSize: '0.875rem',
+                                  color: 'var(--color-text-muted)',
+                                }}
+                              >
+                                Doc: {formatDocumentId(client.document_id)}
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {clientSearchTerm.length > 0 &&
+                      clientSearchTerm.length < 3 && (
+                        <p
+                          style={{
+                            fontSize: '0.875rem',
+                            color: 'var(--color-text-muted)',
+                            marginTop: '4px',
+                          }}
+                        >
+                          Escribe al menos 3 caracteres para buscar
+                        </p>
+                      )}
+
+                    {clientsLoading && clientSearchTerm.length >= 3 && (
+                      <p
+                        style={{
+                          fontSize: '0.875rem',
+                          color: 'var(--color-text-muted)',
+                          marginTop: '4px',
+                        }}
+                      >
+                        Buscando...
+                      </p>
+                    )}
+
+                    {!clientsLoading &&
+                      clientSearchTerm.length >= 3 &&
+                      clients.length === 0 && (
+                        <p
+                          style={{
+                            fontSize: '0.875rem',
+                            color: 'var(--color-text-muted)',
+                            marginTop: '4px',
+                          }}
+                        >
+                          No se encontraron clientes
+                        </p>
+                      )}
+                  </div>
+
+                  {selectedClient && (
                     <div className='client-info' aria-live='polite'>
                       <p>
-                        <strong>Nombre:</strong> {activeClient.name}
+                        <strong>Nombre:</strong> {selectedClient.name}
                       </p>
-                      <p>
-                        <strong>Email:</strong> {activeClient.email}
-                      </p>
-                      <p>
-                        <strong>Teléfono:</strong> {activeClient.phone}
-                      </p>
+                      {selectedClient.document_id && (
+                        <p>
+                          <strong>Documento:</strong>{' '}
+                          {formatDocumentId(selectedClient.document_id)}
+                        </p>
+                      )}
+                      {selectedClient.contact?.email && (
+                        <p>
+                          <strong>Email:</strong> {selectedClient.contact.email}
+                        </p>
+                      )}
+                      {selectedClient.contact?.phone && (
+                        <p>
+                          <strong>Teléfono:</strong>{' '}
+                          {selectedClient.contact.phone}
+                        </p>
+                      )}
                     </div>
                   )}
 
-                  <button type='button' className='btn btn--ghost btn--block'>
+                  <button
+                    type='button'
+                    className='btn btn--ghost btn--block'
+                    onClick={() => navigate('/clientes')}
+                  >
                     Crear nuevo cliente
                   </button>
                 </div>
@@ -557,33 +911,56 @@ const SalesNew = () => {
                   <select
                     id='payment-method'
                     className='input'
-                    value={paymentMethod}
-                    onChange={event => setPaymentMethod(event.target.value)}
+                    value={paymentMethodId}
+                    onChange={event =>
+                      setPaymentMethodId(Number(event.target.value))
+                    }
+                    disabled={paymentMethodsLoading}
                   >
-                    {PAYMENT_METHODS.map(method => (
-                      <option key={method.value} value={method.value}>
-                        {method.label}
-                      </option>
-                    ))}
+                    {paymentMethodsLoading ? (
+                      <option value=''>Cargando métodos de pago...</option>
+                    ) : paymentMethods.length === 0 ? (
+                      <option value=''>No hay métodos disponibles</option>
+                    ) : (
+                      paymentMethods.map((method, index) => (
+                        <option key={`${method.id}-${index}`} value={method.id}>
+                          {method.method_code} - {method.description}
+                        </option>
+                      ))
+                    )}
                   </select>
 
                   <label
                     className='form-field__label'
-                    htmlFor='currency-select'
+                    htmlFor='currency'
+                    style={{ marginTop: '12px' }}
                   >
                     Moneda
                   </label>
                   <select
-                    id='currency-select'
+                    id='currency'
                     className='input'
-                    value={currency}
-                    onChange={event => setCurrency(event.target.value)}
+                    value={currencyId}
+                    onChange={event =>
+                      setCurrencyId(Number(event.target.value))
+                    }
+                    disabled={currenciesLoading}
                   >
-                    {CURRENCIES.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
+                    {currenciesLoading ? (
+                      <option value=''>Cargando monedas...</option>
+                    ) : currencies.length === 0 ? (
+                      <option value=''>No hay monedas disponibles</option>
+                    ) : (
+                      currencies.map((currency, index) => (
+                        <option
+                          key={`${currency.id}-${index}`}
+                          value={currency.id}
+                        >
+                          {currency.currency_code} -{' '}
+                          {currency.currency_name || currency.name}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
               </article>
@@ -643,37 +1020,60 @@ const SalesNew = () => {
                       <th scope='col' className='text-right'>
                         Total
                       </th>
-                      <th scope='col'>Vendedor</th>
                       <th scope='col' className='text-center'>
                         Estado
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredHistory.map(entry => {
-                      const status =
-                        STATUS_STYLES[entry.status] || STATUS_STYLES.pending
-                      return (
-                        <tr key={entry.id}>
-                          <td className='font-medium'>#{entry.id}</td>
-                          <td>
-                            {new Date(entry.date).toLocaleDateString('es-ES')}
-                          </td>
-                          <td>{entry.client}</td>
-                          <td className='text-right'>
-                            {formatCurrency(entry.total, currency)}
-                          </td>
-                          <td>{entry.salesperson}</td>
-                          <td className='text-center'>
-                            <span
-                              className={`badge badge--pill badge--small ${status.badge}`}
-                            >
-                              {status.label}
-                            </span>
-                          </td>
-                        </tr>
-                      )
-                    })}
+                    {saleLoading ? (
+                      <tr>
+                        <td colSpan={5} className='text-center text-muted'>
+                          Cargando ventas...
+                        </td>
+                      </tr>
+                    ) : filteredHistory.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className='text-center text-muted'>
+                          {dateFrom && dateTo
+                            ? 'No se encontraron ventas en el rango de fechas seleccionado'
+                            : 'Selecciona un rango de fechas para ver el historial de ventas'}
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredHistory.map((entry, index) => {
+                        const status =
+                          STATUS_STYLES[entry.status] || STATUS_STYLES.pending
+                        return (
+                          <tr key={`${entry.sale_id || entry.id}-${index}`}>
+                            <td className='font-medium'>
+                              #{entry.sale_id || entry.id}
+                            </td>
+                            <td>
+                              {entry.order_date
+                                ? new Date(entry.order_date).toLocaleDateString(
+                                    'es-ES'
+                                  )
+                                : '—'}
+                            </td>
+                            <td>{entry.client_name || '—'}</td>
+                            <td className='text-right'>
+                              {formatCurrency(
+                                entry.total_amount || entry.total || 0,
+                                'PYG'
+                              )}
+                            </td>
+                            <td className='text-center'>
+                              <span
+                                className={`badge badge--pill badge--small ${status.badge}`}
+                              >
+                                {status.label}
+                              </span>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -722,13 +1122,13 @@ const SalesNew = () => {
                       Producto seleccionado
                     </span>
                     <span className='sales-modal__value'>
-                      {modalProduct?.name || 'Selecciona un producto'}
+                      {modalDisplay.name || 'Selecciona un producto'}
                     </span>
                   </div>
                   <div className='sales-modal__info-item'>
-                    <span className='sales-modal__label'>SKU</span>
+                    <span className='sales-modal__label'>ID</span>
                     <span className='sales-modal__value'>
-                      {modalProduct?.sku || '—'}
+                      {modalDisplay.id || '—'}
                     </span>
                   </div>
                 </div>
@@ -738,26 +1138,141 @@ const SalesNew = () => {
                 <div className='sales-modal__form-grid'>
                   <label className='sales-modal__field' htmlFor='modal-product'>
                     <span className='sales-modal__field-label'>Producto</span>
-                    <select
-                      id='modal-product'
-                      className='input'
-                      value={modalProductId}
-                      onChange={event => setModalProductId(event.target.value)}
+                    <div
+                      style={{ position: 'relative' }}
+                      ref={productSearchContainerRef}
                     >
-                      {PRODUCT_CATALOG.filter(product =>
-                        product.name
-                          .toLowerCase()
-                          .includes(searchTerm.toLowerCase())
-                      ).map(product => (
-                        <option key={product.id} value={product.id}>
-                          {product.name} —{' '}
-                          {formatCurrency(product.price, currency)}
-                        </option>
-                      ))}
-                    </select>
+                      <input
+                        id='modal-product'
+                        type='text'
+                        className='input'
+                        value={productSearchTerm}
+                        onChange={event => {
+                          setProductSearchTerm(event.target.value)
+                          setShowProductDropdown(true)
+                        }}
+                        onFocus={() => setShowProductDropdown(true)}
+                        onKeyDown={e => {
+                          if (e.key === 'ArrowDown') {
+                            e.preventDefault()
+                            setShowProductDropdown(true)
+                            setTimeout(() => {
+                              const firstBtn =
+                                productDropdownRef.current?.querySelector(
+                                  'button'
+                                )
+                              if (firstBtn) firstBtn.focus()
+                            }, 0)
+                          }
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            if (
+                              showProductDropdown &&
+                              modalSearchResults.length > 0
+                            ) {
+                              handleSelectProduct(modalSearchResults[0])
+                            }
+                          }
+                        }}
+                        placeholder='Buscar por nombre, ID o código de barras...'
+                        disabled={false}
+                        autoComplete='off'
+                      />
+                      {showProductDropdown && (
+                        <div
+                          ref={productDropdownRef}
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            marginTop: '4px',
+                            backgroundColor: 'white',
+                            border: '1px solid var(--color-border-default)',
+                            borderRadius: '6px',
+                            boxShadow:
+                              '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                            maxHeight: '240px',
+                            overflowY: 'auto',
+                            zIndex: 1000,
+                          }}
+                        >
+                          {isSearchingProducts ? (
+                            <div style={{ padding: '12px 16px' }}>
+                              Buscando...
+                            </div>
+                          ) : modalSearchResults.length === 0 ? (
+                            <div style={{ padding: '12px 16px' }}>
+                              {productSearchTerm.length < 3
+                                ? 'Escribe al menos 3 caracteres'
+                                : 'No se encontraron productos'}
+                            </div>
+                          ) : (
+                            modalSearchResults.map((product, index) => {
+                              const display = getProductDisplay(product)
+                              return (
+                                <button
+                                  key={`${display.id}-${index}`}
+                                  type='button'
+                                  className='product-dropdown-item'
+                                  onClick={() => handleSelectProduct(product)}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault()
+                                      handleSelectProduct(product)
+                                    }
+                                    if (e.key === 'ArrowDown') {
+                                      e.preventDefault()
+                                      const next =
+                                        e.currentTarget.nextElementSibling
+                                      if (next) next.focus()
+                                    }
+                                    if (e.key === 'ArrowUp') {
+                                      e.preventDefault()
+                                      const prev =
+                                        e.currentTarget.previousElementSibling
+                                      if (prev) prev.focus()
+                                      else {
+                                        const input =
+                                          productSearchContainerRef.current?.querySelector(
+                                            'input'
+                                          )
+                                        if (input) input.focus()
+                                      }
+                                    }
+                                    if (e.key === 'Escape') {
+                                      setShowProductDropdown(false)
+                                      const input =
+                                        productSearchContainerRef.current?.querySelector(
+                                          'input'
+                                        )
+                                      if (input) input.focus()
+                                    }
+                                  }}
+                                >
+                                  <div className='product-dropdown-item__info'>
+                                    <div className='product-dropdown-item__name'>
+                                      {display.name}
+                                    </div>
+                                    <div className='product-dropdown-item__meta'>
+                                      ID: {display.id}
+                                    </div>
+                                  </div>
+                                  <div className='product-dropdown-item__price-block'>
+                                    <div className='product-dropdown-item__price'>
+                                      {formatCurrency(display.price, 'PYG')}
+                                    </div>
+                                  </div>
+                                </button>
+                              )
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
                     <span className='sales-modal__field-note'>
                       Precio unitario actual:{' '}
-                      {formatCurrency(modalUnitPrice, currency)}
+                      {formatCurrency(modalUnitPrice, 'PYG')}
                     </span>
                   </label>
 
@@ -782,34 +1297,73 @@ const SalesNew = () => {
 
                   <label
                     className='sales-modal__field'
+                    htmlFor='modal-discount-type'
+                  >
+                    <span className='sales-modal__field-label'>
+                      Tipo de Descuento
+                    </span>
+                    <select
+                      id='modal-discount-type'
+                      className='input'
+                      value={modalDiscountType}
+                      onChange={e => setModalDiscountType(e.target.value)}
+                    >
+                      <option value='amount'>Monto Fijo (Unitario)</option>
+                      <option value='percent'>Porcentaje (%)</option>
+                    </select>
+                  </label>
+
+                  <label
+                    className='sales-modal__field'
                     htmlFor='modal-discount'
                   >
                     <span className='sales-modal__field-label'>
-                      Descuento por línea
+                      Valor del Descuento
                     </span>
                     <div className='sales-modal__input-wrapper'>
                       <input
                         id='modal-discount'
                         type='number'
                         min='0'
-                        step='0.01'
+                        step={modalDiscountType === 'percent' ? '1' : '0.01'}
                         className='input sales-modal__input'
                         value={modalDiscount}
                         onChange={event => setModalDiscount(event.target.value)}
-                        placeholder='0.00'
-                        aria-describedby='modal-discount-help'
+                        placeholder={
+                          modalDiscountType === 'percent' ? '0' : '0.00'
+                        }
                       />
                       <span className='sales-modal__input-affix'>
-                        {currency}
+                        {modalDiscountType === 'percent' ? '%' : 'PYG'}
                       </span>
                     </div>
-                    <span
-                      id='modal-discount-help'
-                      className='sales-modal__field-note'
-                    >
-                      No puede exceder {formatCurrency(modalSubtotal, currency)}
+                    <span className='sales-modal__field-note'>
+                      {modalDiscountType === 'percent'
+                        ? 'Porcentaje sobre precio unitario'
+                        : 'Monto a descontar por unidad'}
                     </span>
                   </label>
+
+                  {modalDiscountValue > 0 && (
+                    <label
+                      className='sales-modal__field'
+                      htmlFor='modal-discount-reason'
+                      style={{ gridColumn: '1 / -1' }}
+                    >
+                      <span className='sales-modal__field-label'>
+                        Razón del Descuento (Requerido)
+                      </span>
+                      <input
+                        id='modal-discount-reason'
+                        type='text'
+                        className='input'
+                        value={modalDiscountReason}
+                        onChange={e => setModalDiscountReason(e.target.value)}
+                        placeholder='Ej: Promoción de verano, Cliente frecuente...'
+                        required
+                      />
+                    </label>
+                  )}
                 </div>
               </section>
 
@@ -821,7 +1375,7 @@ const SalesNew = () => {
                         Precio unitario
                       </span>
                       <span className='sales-modal__value'>
-                        {formatCurrency(modalUnitPrice, currency)}
+                        {formatCurrency(modalUnitPrice, 'PYG')}
                       </span>
                     </div>
                     <div className='sales-modal__info-item'>
@@ -829,7 +1383,7 @@ const SalesNew = () => {
                         Subtotal sin descuento
                       </span>
                       <span className='sales-modal__value'>
-                        {formatCurrency(modalSubtotal, currency)}
+                        {formatCurrency(modalSubtotal, 'PYG')}
                       </span>
                     </div>
                     <div className='sales-modal__info-item'>
@@ -837,13 +1391,13 @@ const SalesNew = () => {
                         Descuento aplicado
                       </span>
                       <span className='sales-modal__value'>
-                        {formatCurrency(modalDiscountValue, currency)}
+                        {formatCurrency(modalDiscountValue, 'PYG')}
                       </span>
                     </div>
                     <div className='sales-modal__info-item'>
                       <span className='sales-modal__label'>Total de línea</span>
                       <span className='sales-modal__value sales-modal__value--highlight'>
-                        {formatCurrency(modalLineTotal, currency)}
+                        {formatCurrency(modalLineTotal, 'PYG')}
                       </span>
                     </div>
                   </div>
