@@ -38,6 +38,8 @@ import PurchasePaymentsMvp from '@/pages/PurchasePaymentsMvp'
 import PurchasePaymentsMvpDetail from '@/pages/PurchasePaymentsMvpDetail'
 import CashRegister from '@/pages/CashRegister'
 import SalePayment from '@/pages/SalePayment'
+import SalesPaymentNew from '@/pages/SalesPaymentNew'
+import SalesOrderDetail from '@/pages/SalesOrderDetail'
 import PaymentDocumentation from '@/pages/PaymentDocumentation'
 import PaymentManagement from '@/pages/PaymentManagement'
 import Login from '@/pages/Login'
@@ -186,6 +188,14 @@ function AppContent() {
                         element={<PurchasePaymentsMvpDetail />}
                       />
                       <Route path='/pagos-ventas' element={<SalePayment />} />
+                      <Route
+                        path='/cobros-ventas'
+                        element={<SalesPaymentNew />}
+                      />
+                      <Route
+                        path='/cobros-ventas/:saleId'
+                        element={<SalesOrderDetail />}
+                      />
                       <Route
                         path='/pagos/documentacion'
                         element={<PaymentDocumentation />}

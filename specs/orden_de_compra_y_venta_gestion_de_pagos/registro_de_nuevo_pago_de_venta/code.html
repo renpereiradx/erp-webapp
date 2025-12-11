@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registrar Nuevo Pago</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#137fec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+              "fluent-primary": "#0078D4",
+              "fluent-text-main": "#323130",
+              "fluent-text-secondary": "#605E5C",
+              "fluent-success": "#107C10",
+              "fluent-warning": "#FFB900",
+              "fluent-error": "#A80000",
+            },
+            fontFamily: {
+              "display": ["Inter", "Segoe UI", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .form-input {
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .form-input:focus {
+            border-color: #0078D4;
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.3);
+            outline: none;
+        }
+        .form-input.border-fluent-error {
+            border-color: #A80000;
+        }
+        .form-input.border-fluent-error:focus {
+            border-color: #A80000;
+            box-shadow: 0 0 0 2px rgba(168, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-fluent-text-main">
+<div class="relative flex min-h-screen w-full flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+<div class="w-full max-w-2xl rounded-xl border border-[#dbe0e6] bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+<!-- Header -->
+<div class="mb-6 border-b border-[#dbe0e6] pb-4 dark:border-gray-700">
+<p class="text-[#111418] text-2xl font-bold leading-tight tracking-tight dark:text-white">Registrar Nuevo Pago para Orden #SO-2024-00123</p>
+<p class="text-[#617589] text-base font-normal leading-normal dark:text-gray-400">Saldo Pendiente: <span class="font-semibold text-fluent-text-main dark:text-gray-300">$850.00</span></p>
+</div>
+<!-- Notification Banner -->
+<div class="mb-6 flex items-start gap-3 rounded-lg bg-yellow-100 p-4 dark:bg-yellow-900/30">
+<span class="material-symbols-outlined text-yellow-600 dark:text-fluent-warning" style="font-size: 20px;">warning</span>
+<div class="flex flex-col">
+<p class="text-sm font-semibold text-yellow-800 dark:text-yellow-300">Advertencia</p>
+<p class="text-sm text-yellow-700 dark:text-yellow-400">La caja seleccionada está actualmente cerrada. Los pagos se registrarán pero no se reflejarán en el arqueo hasta su apertura.</p>
+</div>
+</div>
+<!-- Form -->
+<div class="flex flex-col gap-6">
+<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+<!-- Monto Recibido -->
+<label class="flex flex-col">
+<p class="text-[#111418] text-sm font-medium leading-normal pb-2 dark:text-gray-300">Monto Recibido (Efectivo)</p>
+<div class="relative">
+<span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-base text-gray-500">$</span>
+<input autofocus="" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-[#dbe0e6] bg-white p-3 pl-7 pr-3 text-base font-normal leading-normal text-[#111418] placeholder:text-[#617589] focus:border-fluent-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" placeholder="0.00" type="text" value="1000.00"/>
+</div>
+</label>
+<!-- Monto a Aplicar -->
+<label class="flex flex-col">
+<p class="text-[#111418] text-sm font-medium leading-normal pb-2 dark:text-gray-300">Monto a Aplicar</p>
+<div class="relative">
+<span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-base text-gray-500">$</span>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-[#dbe0e6] bg-white p-3 pl-7 pr-3 text-base font-normal leading-normal text-[#111418] placeholder:text-[#617589] focus:border-fluent-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" type="text" value="850.00"/>
+</div>
+</label>
+</div>
+<!-- Caja Registradora -->
+<label class="flex flex-col">
+<p class="text-[#111418] text-sm font-medium leading-normal pb-2 dark:text-gray-300">Caja Registradora</p>
+<select class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-[#dbe0e6] bg-white p-3 text-base font-normal leading-normal text-[#111418] focus:border-fluent-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+<option>Caja Principal (Cerrada)</option>
+<option>Caja Secundaria (Abierta)</option>
+</select>
+</label>
+<!-- Validation Error Example -->
+<div>
+<label class="flex flex-col">
+<p class="text-[#111418] text-sm font-medium leading-normal pb-2 dark:text-gray-300">Monto a Pagar (Ejemplo con error)</p>
+<div class="relative">
+<span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-base text-gray-500">$</span>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-fluent-error bg-white p-3 pl-7 pr-3 text-base font-normal leading-normal text-[#111418] placeholder:text-[#617589] focus:border-fluent-primary dark:border-red-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" type="text" value="-100"/>
+</div>
+</label>
+<p class="mt-1 text-xs text-fluent-error dark:text-red-400">El monto debe ser un número positivo.</p>
+</div>
+<!-- Notas -->
+<label class="flex flex-col">
+<p class="text-[#111418] text-sm font-medium leading-normal pb-2 dark:text-gray-300">Notas del Pago (Opcional)</p>
+<textarea class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-[#dbe0e6] bg-white p-3 text-base font-normal leading-normal text-[#111418] placeholder:text-[#617589] focus:border-fluent-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400" placeholder="Añadir comentarios sobre el pago..." rows="3"></textarea>
+</label>
+<!-- Resumen y Vuelto -->
+<div class="mt-2 rounded-lg bg-green-50 p-4 dark:bg-green-900/30">
+<div class="flex items-center justify-between">
+<p class="text-lg font-semibold text-fluent-success dark:text-green-300">Vuelto a Entregar:</p>
+<p class="text-3xl font-bold text-fluent-success dark:text-green-300">$150.00</p>
+</div>
+</div>
+<!-- Actions -->
+<div class="mt-4 flex flex-col-reverse items-center justify-end gap-3 border-t border-[#dbe0e6] pt-6 sm:flex-row dark:border-gray-700">
+<button class="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg px-5 py-3 text-base font-semibold text-fluent-text-secondary transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 sm:w-auto">Cancelar</button>
+<button class="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-fluent-primary px-5 py-3 text-base font-semibold text-white transition-colors hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
+<span class="material-symbols-outlined" style="font-size: 20px;">check_circle</span>
+                        Confirmar Pago
+                    </button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

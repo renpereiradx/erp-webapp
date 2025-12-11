@@ -28,7 +28,12 @@ $theme-map: null !default;
       $theme-map: () !global;
       @each $key, $submap in $map {
         $value: map.get(map.get($themes, $theme), '#{$key}');
-        $theme-map: map.merge($theme-map, ($key: $value)) !global;
+        $theme-map: map.merge(
+          $theme-map,
+          (
+            $key: $value,
+          )
+        ) !global;
       }
       @content;
       $theme-map: null !global;
@@ -153,7 +158,11 @@ $theme-map: null !default;
 // 5. TYPOGRAPHY MIXINS
 // -----------------------------------------------------------------------------
 
-@mixin text-style($size, $weight: $font-weight-regular, $line-height: $line-height-400) {
+@mixin text-style(
+  $size,
+  $weight: $font-weight-regular,
+  $line-height: $line-height-400
+) {
   font-size: $size;
   font-weight: $weight;
   line-height: $line-height;
@@ -199,6 +208,32 @@ $theme-map: null !default;
   @include text-style($font-size-200, $font-weight-regular, $line-height-300);
 }
 
+@mixin typography($variant) {
+  @if $variant == 'display' {
+    @include heading-1;
+  } @else if $variant == 'title-1' {
+    @include heading-2;
+  } @else if $variant == 'title-2' {
+    @include heading-3;
+  } @else if $variant == 'title-3' {
+    @include heading-4;
+  } @else if $variant == 'subtitle-1' {
+    @include heading-5;
+  } @else if $variant == 'subtitle-2' {
+    @include heading-6;
+  } @else if $variant == 'body-large' {
+    @include body-large;
+  } @else if $variant == 'body' {
+    @include body;
+  } @else if $variant == 'body-sm' or $variant == 'body-small' {
+    @include body-small;
+  } @else if $variant == 'caption' {
+    @include caption;
+  } @else {
+    @error "Typography variant '#{$variant}' not found.";
+  }
+}
+
 // -----------------------------------------------------------------------------
 // 6. TRUNCATION
 // -----------------------------------------------------------------------------
@@ -241,7 +276,11 @@ $theme-map: null !default;
 // 8. TRANSITIONS
 // -----------------------------------------------------------------------------
 
-@mixin transition($property: all, $duration: $duration-normal, $easing: $ease-ease-in-out) {
+@mixin transition(
+  $property: all,
+  $duration: $duration-normal,
+  $easing: $ease-ease-in-out
+) {
   transition: $property $duration $easing;
 }
 
@@ -334,5 +373,19 @@ $theme-map: null !default;
         background-color: themed('border-strong');
       }
     }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 12. COMPONENT UTILITIES
+// -----------------------------------------------------------------------------
+
+@mixin card {
+  border-radius: $border-radius-large;
+  @include elevation(2);
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
   }
 }

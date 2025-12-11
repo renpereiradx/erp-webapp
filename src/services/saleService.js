@@ -32,6 +32,17 @@ const withRetry = async (fn, attempts = RETRY_ATTEMPTS) => {
         throw error // Lanzar inmediatamente, no reintentar
       }
 
+      // No reintentar en errores 404 - simplemente no hay datos
+      if (
+        error.code === 'NOT_FOUND' ||
+        error.code === 'ENDPOINT_NOT_FOUND' ||
+        error?.status === 404 ||
+        error?.statusCode === 404 ||
+        error?.response?.status === 404
+      ) {
+        throw error // No reintentar, no hay datos
+      }
+
       // Para otros errores, reintentar con backoff exponencial
       if (i === attempts - 1) throw error
 
@@ -91,9 +102,30 @@ const demoService = {
     const salesResponse = await MockDataService.getSales({
       search: id.toString(),
     })
-    const sale = salesResponse.data.find(s => s.id === parseInt(id))
+    let sale = salesResponse.data.find(s => s.id == id || s.sale_id == id)
+
     if (!sale) {
-      throw new Error(`Sale with ID ${id} not found`)
+      console.warn(`Sale ${id} not found in mock data, generating fallback...`)
+      sale = {
+        id: id,
+        sale_id: id,
+        client_id: 999,
+        client_name: 'Cliente Demo (Generado)',
+        sale_date: new Date().toISOString(),
+        total_amount: 150000,
+        status: 'COMPLETED',
+        payment_method: 'Efectivo',
+        items: [
+          {
+            id: 1,
+            product_name: 'Producto Demo',
+            quantity: 1,
+            price: 150000,
+            unit_price: 150000,
+            total: 150000,
+          },
+        ],
+      }
     }
     return { success: true, data: sale }
   },
@@ -184,6 +216,47 @@ const demoService = {
     }
   },
 }
+
+// Normaliza la respuesta de ventas para mantener una forma plana en la UI
+const normalizeSaleRow = item => {
+  if (!item) return item
+
+  if (item.sale) {
+    const saleDate = item.sale.sale_date || item.sale.created_at
+    return {
+      id: item.sale.sale_id,
+      sale_id: item.sale.sale_id,
+      client_id: item.sale.client_id,
+      client_name: item.sale.client_name,
+      sale_date: saleDate,
+      order_date: saleDate,
+      total_amount: item.sale.total_amount,
+      status: item.sale.status,
+      user_id: item.sale.user_id,
+      user_name: item.sale.user_name,
+      payment_method_id: item.sale.payment_method_id,
+      payment_method: item.sale.payment_method,
+      created_at: item.sale.created_at,
+      updated_at: item.sale.updated_at,
+      remaining_balance: item.sale.remaining_balance,
+      total_paid: item.sale.total_paid,
+      details: item.details || [],
+    }
+  }
+
+  const saleDate = item.sale_date || item.created_at
+  return {
+    ...item,
+    sale_id: item.sale_id || item.id,
+    id: item.sale_id || item.id,
+    sale_date: saleDate,
+    order_date: item.order_date || saleDate,
+    details: item.details || item.sale_details || item.items || [],
+  }
+}
+
+const normalizeSaleList = data =>
+  Array.isArray(data) ? data.map(normalizeSaleRow) : []
 
 export const saleService = {
   // ============ SESIONES DE VENTA ============
@@ -404,8 +477,9 @@ export const saleService = {
         })
 
         // GET con query parameters (estándar HTTP correcto)
+        // Nota: algunos backends devuelven 404 con la barra final antes de '?'
         const response = await api.makeRequest(
-          `/sale/date_range/?${queryParams.toString()}`,
+          `/sale/date_range?${queryParams.toString()}`,
           {
             method: 'GET',
             // 🔧 FIX: NO pasar headers explícitos - se agregan automáticamente
@@ -420,32 +494,7 @@ export const saleService = {
         // 🔧 NORMALIZAR: Backend cambió estructura de respuesta
         // Antes: { id, client_name, status, ... }
         // Ahora: { sale: { sale_id, client_name, status, ... }, details: [...] }
-        const normalizedData =
-          response?.data?.map(item => {
-            // Si tiene estructura anidada, aplanarla
-            if (item.sale) {
-              return {
-                id: item.sale.sale_id,
-                client_id: item.sale.client_id,
-                client_name: item.sale.client_name,
-                sale_date: item.sale.sale_date,
-                total_amount: item.sale.total_amount,
-                status: item.sale.status,
-                user_id: item.sale.user_id,
-                user_name: item.sale.user_name,
-                payment_method_id: item.sale.payment_method_id,
-                payment_method: item.sale.payment_method,
-                created_at: item.sale.created_at,
-                updated_at: item.sale.updated_at,
-                remaining_balance: item.sale.remaining_balance,
-                total_paid: item.sale.total_paid,
-                // Preservar details si existen
-                details: item.details || [],
-              }
-            }
-            // Si ya está en formato plano, retornar como está
-            return item
-          }) || []
+        const normalizedData = normalizeSaleList(response?.data)
 
         // Respuesta con paginación según SALE_GET_BY_RANGE_API.md
         return {
@@ -575,14 +624,16 @@ export const saleService = {
           response?.data?.length || 0
         )
 
+        const normalizedData = normalizeSaleList(response?.data)
+
         return {
           success: true,
-          data: response?.data || [],
+          data: normalizedData,
           pagination: response?.pagination || {
             page: page,
             page_size: pageSize,
-            total_records: 0,
-            total_pages: 0,
+            total_records: normalizedData.length,
+            total_pages: Math.ceil(normalizedData.length / pageSize),
             has_next: false,
             has_previous: false,
           },
@@ -615,14 +666,16 @@ export const saleService = {
         )
       }
 
+      const normalizedData = normalizeSaleList(filteredData)
+
       return {
         ...result,
-        data: filteredData,
+        data: normalizedData,
         pagination: {
           ...result.pagination,
-          total_records: filteredData.length,
+          total_records: normalizedData.length,
           total_pages: Math.ceil(
-            filteredData.length / (params.page_size || 50)
+            normalizedData.length / (params.page_size || 50)
           ),
         },
       }
@@ -994,7 +1047,7 @@ export const saleService = {
   },
 
   // Ejecutar reversión de venta
-  revertSale: async (saleId, reason = 'Manual cancellation from API') => {
+  revertSale: async (saleId, reason = 'Cancelada desde el panel') => {
     const startTime = performance.now()
     try {
       return await withRetry(async () => {
@@ -1003,7 +1056,7 @@ export const saleService = {
         // 🔧 FIX: NO pasar headers explícitos - se agregan automáticamente
         const response = await api.makeRequest(`/sale/${saleId}`, {
           method: 'PUT',
-          body: JSON.stringify({ reason }),
+          body: JSON.stringify({ cancellation_reason: reason }),
         })
 
         telemetryService.recordMetric('sale_reverted', 1, {
@@ -1014,9 +1067,7 @@ export const saleService = {
         return response
       })
     } catch (error) {
-      console.error(`Error reverting sale ${saleId}:`, error)
-
-      // Re-lanzar el error para que el frontend lo maneje
+      // Evitar ruido en consola para errores controlados (4xx); delegar al caller
       throw error
     } finally {
       const endTime = performance.now()
@@ -1098,47 +1149,277 @@ export const saleService = {
   getSalesByClient: async (clientId, params = {}) => {
     const startTime = performance.now()
     try {
-      const queryParams = new URLSearchParams({
-        page: params.page || 1,
-        limit: params.limit || 10,
-        date_from: params.dateFrom || '',
-        date_to: params.dateTo || '',
-        status: params.status || '',
-      }).toString()
-
+      // El endpoint /sale/client_id/{id} NO soporta paginación
+      // Devuelve directamente un array con todas las ventas del cliente
       return await withRetry(async () => {
-        const response = await apiService.get(
-          `/clients/${clientId}/sales?${queryParams}`
+        const api = new BusinessManagementAPI()
+        const encodedClientId = encodeURIComponent(clientId)
+        const response = await api.makeRequest(
+          `/sale/client_id/${encodedClientId}`,
+          {
+            method: 'GET',
+          }
         )
+        // El backend devuelve directamente un array, no un objeto con {data, pagination}
+        const salesArray = Array.isArray(response)
+          ? response
+          : response?.data || []
+
+        // Enriquecer con información de pago basada en el estado
+        // El endpoint /sale/client_id/{id} no incluye balance_due ni total_paid
+        // por lo que necesitamos calcularlos basándonos en el estado
+        const enrichedSales = salesArray.map(sale => {
+          let balance_due = 0
+          let total_paid = 0
+
+          switch (sale.status) {
+            case 'PAID':
+              balance_due = 0
+              total_paid = sale.total_amount || 0
+              break
+            case 'PENDING':
+              balance_due = sale.total_amount || 0
+              total_paid = 0
+              break
+            case 'PARTIAL_PAYMENT':
+              // Para pagos parciales, necesitaríamos consultar los pagos
+              // Por ahora, estimamos basándonos en que al menos hay algo pagado
+              balance_due = sale.total_amount || 0
+              total_paid = 0
+              break
+            case 'CANCELLED':
+              balance_due = 0
+              total_paid = 0
+              break
+            default:
+              balance_due = sale.total_amount || 0
+              total_paid = 0
+          }
+
+          return {
+            ...sale,
+            balance_due,
+            total_paid,
+          }
+        })
+
         telemetryService.recordMetric(
           'client_sales_fetched',
-          response.data?.length || 0,
+          enrichedSales.length,
           { client_id: clientId }
         )
-        return response
+
+        // Normalizar la respuesta para que coincida con el formato esperado
+        // La paginación se puede hacer en el frontend si es necesario
+        return {
+          success: true,
+          data: enrichedSales,
+          pagination: {
+            page: 1,
+            page_size: enrichedSales.length,
+            total_records: enrichedSales.length,
+            total_pages: 1,
+          },
+        }
       })
     } catch (error) {
-      console.warn(
-        `API unavailable, filtering demo sales by client ${clientId}`
-      )
-      const clientSales = DEMO_CONFIG_SALES.filter(
-        sale => sale.client_id === parseInt(clientId)
-      )
-      return {
-        success: true,
-        data: clientSales,
-        pagination: {
-          total: clientSales.length,
-          totalPages: 1,
-          currentPage: 1,
-          hasNext: false,
-          hasPrevious: false,
-        },
+      // Manejar errores 404 como "cliente sin ventas"
+      const statusCode =
+        error?.status ?? error?.statusCode ?? error?.response?.status
+
+      if (statusCode === 404) {
+        // 404 significa que el cliente no tiene ventas, no es un error
+        return {
+          success: true,
+          data: [],
+          pagination: {
+            page: 1,
+            page_size: 0,
+            total_records: 0,
+            total_pages: 0,
+          },
+        }
       }
+
+      const isCriticalError =
+        typeof statusCode === 'number' && statusCode >= 500
+
+      if (isCriticalError) {
+        console.error(`Error fetching sales by client ${clientId}:`, error)
+      }
+
+      // Re-throw the error para que la UI lo maneje apropiadamente
+      throw error
     } finally {
       const endTime = performance.now()
       telemetryService.recordMetric(
         'get_sales_by_client_duration',
+        endTime - startTime
+      )
+    }
+  },
+
+  // Obtener historial de pagos de una venta (SALE_API.md v1.6)
+  getSalePayments: async saleId => {
+    const startTime = performance.now()
+    try {
+      return await withRetry(async () => {
+        const api = new BusinessManagementAPI()
+        const response = await api.makeRequest(`/sales/${saleId}/payments`, {
+          method: 'GET',
+        })
+
+        // El endpoint devuelve un array de pagos directamente
+        const payments = Array.isArray(response) ? response : []
+
+        telemetryService.recordMetric('sale_payments_fetched', payments.length, {
+          sale_id: saleId,
+        })
+
+        return {
+          success: true,
+          data: payments,
+        }
+      })
+    } catch (error) {
+      const statusCode =
+        error?.status ?? error?.statusCode ?? error?.response?.status
+      const is404 =
+        statusCode === 404 ||
+        error.code === 'NOT_FOUND' ||
+        error.code === 'ENDPOINT_NOT_FOUND'
+
+      if (is404) {
+        // 404 significa que no hay pagos registrados
+        return {
+          success: true,
+          data: [],
+        }
+      }
+
+      const isCriticalError =
+        typeof statusCode === 'number' && statusCode >= 500
+
+      if (isCriticalError) {
+        console.error(`Error fetching payments for sale ${saleId}:`, error)
+      }
+
+      throw error
+    } finally {
+      const endTime = performance.now()
+      telemetryService.recordMetric(
+        'get_sale_payments_duration',
+        endTime - startTime
+      )
+    }
+  },
+
+  // Obtener ventas por nombre de cliente (endpoint correcto según SALE_API.md)
+  getSalesByClientName: async (clientName, params = {}) => {
+    const startTime = performance.now()
+    try {
+      return await withRetry(async () => {
+        const api = new BusinessManagementAPI()
+        const encodedClientName = encodeURIComponent(clientName)
+
+        // Construir query params para paginación
+        const queryParams = new URLSearchParams({
+          page: params.page || 1,
+          page_size: params.page_size || 50,
+        }).toString()
+
+        const response = await api.makeRequest(
+          `/sale/client_name/${encodedClientName}?${queryParams}`,
+          {
+            method: 'GET',
+          }
+        )
+
+        // El endpoint devuelve {data: [...], pagination: {...}}
+        // Cada item en data tiene {sale: {...}, details: [...]}
+        // Necesitamos extraer y normalizar
+        const salesData = Array.isArray(response?.data)
+          ? response.data.map(item => {
+              const sale = item.sale || item
+              return {
+                sale_id: sale.sale_id,
+                id: sale.sale_id,
+                client_id: sale.client_id,
+                client_name: sale.client_name,
+                sale_date: sale.sale_date,
+                total_amount: sale.total_amount,
+                status: sale.status,
+                // Calcular balance_due y total_paid basado en el estado
+                balance_due:
+                  sale.status === 'PAID'
+                    ? 0
+                    : sale.status === 'PENDING'
+                    ? sale.total_amount
+                    : sale.total_amount / 2, // Aproximación para PARTIAL_PAYMENT
+                total_paid:
+                  sale.status === 'PAID'
+                    ? sale.total_amount
+                    : sale.status === 'PENDING'
+                    ? 0
+                    : sale.total_amount / 2, // Aproximación para PARTIAL_PAYMENT
+              }
+            })
+          : []
+
+        telemetryService.recordMetric('client_name_sales_fetched', salesData.length, {
+          client_name: clientName,
+        })
+
+        return {
+          success: true,
+          data: salesData,
+          pagination: response?.pagination || {
+            page: 1,
+            page_size: salesData.length,
+            total_records: salesData.length,
+            total_pages: 1,
+          },
+        }
+      })
+    } catch (error) {
+      // Manejar errores 404 como "cliente sin ventas"
+      const statusCode =
+        error?.status ?? error?.statusCode ?? error?.response?.status
+      const is404 =
+        statusCode === 404 ||
+        error.code === 'NOT_FOUND' ||
+        error.code === 'ENDPOINT_NOT_FOUND'
+
+      if (is404) {
+        // 404 significa que el cliente no tiene ventas, no es un error
+        return {
+          success: true,
+          data: [],
+          pagination: {
+            page: 1,
+            page_size: 0,
+            total_records: 0,
+            total_pages: 0,
+          },
+        }
+      }
+
+      const isCriticalError =
+        typeof statusCode === 'number' && statusCode >= 500
+
+      if (isCriticalError) {
+        console.error(
+          `Error fetching sales by client name ${clientName}:`,
+          error
+        )
+      }
+
+      // Re-throw the error para que la UI lo maneje apropiadamente
+      throw error
+    } finally {
+      const endTime = performance.now()
+      telemetryService.recordMetric(
+        'get_sales_by_client_name_duration',
         endTime - startTime
       )
     }

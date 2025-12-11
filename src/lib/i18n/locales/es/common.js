@@ -35,6 +35,7 @@ export const common = {
   'action.export': 'Exportar',
   'action.import': 'Importar',
   'action.print': 'Imprimir',
+  'action.email': 'Enviar por Email',
   'action.download': 'Descargar',
   'action.upload': 'Subir',
   'action.refresh': 'Actualizar',
@@ -81,8 +82,20 @@ export const common = {
   // Hints de error (mensajes técnicos)
   'errors.hint.INTERNAL': 'Error interno del servidor, intenta más tarde.',
   'errors.hint.NETWORK': 'Revisa tu conexión a internet.',
-  'errors.hint.UNAUTHORIZED': 'Por favor inicia sesión nuevamente para continuar.',
+  'errors.hint.UNAUTHORIZED':
+    'Por favor inicia sesión nuevamente para continuar.',
   'errors.hint.NOT_FOUND': 'El recurso no existe o fue eliminado.',
   'errors.hint.VALIDATION': 'Por favor corrige los errores en el formulario.',
   'errors.hint.TIMEOUT': 'La solicitud tardó demasiado tiempo.',
+
+  // Acciones adicionales
+  'common.action.view_detail': 'Ver Detalle',
+  'common.action.clear_filters': 'Limpiar Filtros',
+  'common.action.apply_filters': 'Aplicar Filtros',
+
+  // Paginación
+  'common.pagination.previous': 'Anterior',
+  'common.pagination.next': 'Siguiente',
+  'common.pagination.showing': 'Mostrando',
+  'common.pagination.of': 'de',
 }

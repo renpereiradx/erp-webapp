@@ -3,26 +3,91 @@ import { useNavigate } from 'react-router-dom'
 import {
   CreditCard,
   DollarSign,
+  Eye,
   Filter,
+  MoreVertical,
   Plus,
   Search,
   ShoppingCart,
-  Trash2,
   User,
   X,
 } from 'lucide-react'
 import useProductStore from '@/store/useProductStore'
 import useClientStore from '@/store/useClientStore'
 import useSaleStore from '@/store/useSaleStore'
+import { useToast } from '@/hooks/useToast'
+import saleService from '@/services/saleService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
 import { CurrencyService } from '@/services/currencyService'
 import { productService } from '@/services/productService'
+import apiService from '@/services/api'
 
 const STATUS_STYLES = {
   completed: { label: 'Completada', badge: 'badge--subtle-success' },
   cancelled: { label: 'Cancelada', badge: 'badge--subtle-error' },
   pending: { label: 'Pendiente', badge: 'badge--subtle-warning' },
 }
+
+const dropdownMenuStyle = {
+  outline: 'none',
+  backgroundColor: '#fff',
+  border: '1px solid #dfe3e6',
+  boxShadow: '0 12px 30px rgba(15, 23, 42, 0.14)',
+  borderRadius: '10px',
+  minWidth: '180px',
+  padding: '6px 0',
+  zIndex: 10,
+}
+
+const dropdownMenuItemStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  width: '100%',
+  background: 'transparent',
+  border: 'none',
+  padding: '8px 12px',
+  fontSize: '14px',
+  color: '#1f2933',
+  cursor: 'pointer',
+  textAlign: 'left',
+}
+
+const dropdownMenuDangerStyle = {
+  color: '#b42318',
+}
+
+const RadioGroup = ({ label, options, value, onChange, name }) => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      flexWrap: 'wrap',
+    }}
+    role='radiogroup'
+    aria-label={label}
+  >
+    <span style={{ fontWeight: 600 }}>{label}</span>
+    <div style={{ display: 'flex', gap: '12px' }}>
+      {options.map(option => (
+        <label
+          key={option.value}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <input
+            type='radio'
+            name={name}
+            value={option.value}
+            checked={value === option.value}
+            onChange={event => onChange(event.target.value)}
+          />
+          <span>{option.label}</span>
+        </label>
+      ))}
+    </div>
+  </div>
+)
 
 const formatCurrency = (value, currencyCode) => {
   const isPYG = currencyCode === 'PYG'
@@ -37,6 +102,25 @@ const formatCurrency = (value, currencyCode) => {
 const formatDocumentId = value => {
   if (!value) return ''
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
+const formatDateTime = value => {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleString('es-PY', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  })
+}
+
+const formatStatusLabel = status =>
+  STATUS_STYLES[status]?.label || status || '—'
+
+const toDateInputValue = date => {
+  const local = new Date(date)
+  local.setMinutes(date.getMinutes() - date.getTimezoneOffset())
+  return local.toISOString().split('T')[0]
 }
 
 const getProductDisplay = product => {
@@ -55,7 +139,10 @@ const getProductDisplay = product => {
 
 const SalesNew = () => {
   const navigate = useNavigate()
+  const toast = useToast()
   const clientSearchContainerRef = useRef(null)
+  const productSearchContainerRef = useRef(null)
+  const productDropdownRef = useRef(null)
 
   // Zustand stores
   const {
@@ -72,6 +159,9 @@ const SalesNew = () => {
     createSale,
     sales,
     fetchSalesByDateRange,
+    fetchSalesByClientName,
+    clearSales,
+    cancelSale,
     loading: saleLoading,
   } = useSaleStore()
 
@@ -98,8 +188,18 @@ const SalesNew = () => {
 
   // History tab state
   const [historySearch, setHistorySearch] = useState('')
+  const [historyFilterMode, setHistoryFilterMode] = useState('name')
+  const [historyFilterError, setHistoryFilterError] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [historyActionMenuId, setHistoryActionMenuId] = useState(null)
+  const [selectedHistorySale, setSelectedHistorySale] = useState(null)
+  const [showSaleDetailModal, setShowSaleDetailModal] = useState(false)
+  const [showCancelSaleModal, setShowCancelSaleModal] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
+  const [cancelPreview, setCancelPreview] = useState(null)
+  const [cancelPreviewLoading, setCancelPreviewLoading] = useState(false)
+  const [cancelSubmitting, setCancelSubmitting] = useState(false)
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -108,14 +208,21 @@ const SalesNew = () => {
   const [modalDiscount, setModalDiscount] = useState(0)
   const [modalDiscountType, setModalDiscountType] = useState('amount') // 'amount' | 'percent'
   const [modalDiscountReason, setModalDiscountReason] = useState('')
+  const [editingItemId, setEditingItemId] = useState(null)
+  const [openActionMenuId, setOpenActionMenuId] = useState(null)
 
   // Modal product search state
   const [productSearchTerm, setProductSearchTerm] = useState('')
   const [modalSearchResults, setModalSearchResults] = useState([])
   const [isSearchingProducts, setIsSearchingProducts] = useState(false)
   const [showProductDropdown, setShowProductDropdown] = useState(false)
-  const productSearchContainerRef = useRef(null)
-  const productDropdownRef = useRef(null)
+
+  // Client status state
+  const [pendingReservations, setPendingReservations] = useState([])
+  const [showReservationModal, setShowReservationModal] = useState(false)
+  const [activeSales, setActiveSales] = useState([])
+  const [activeSale, setActiveSale] = useState(null)
+  const [showActiveSaleModal, setShowActiveSaleModal] = useState(false)
 
   // Cargar productos al montar
   useEffect(() => {
@@ -198,11 +305,9 @@ const SalesNew = () => {
             ? [results]
             : []
           // Filtrar productos activos (state !== false && is_active !== false)
-          // Nota: La API puede devolver 'state', 'status' o 'is_active'
           const activeResults = allResults.filter(p => {
             // Si tiene 'status' explícito (booleano), usarlo
             if (typeof p.status === 'boolean') return p.status
-            
             // Lógica de Products.jsx: state !== false && is_active !== false
             return p.state !== false && p.is_active !== false
           })
@@ -276,25 +381,29 @@ const SalesNew = () => {
 
   const taxes = useMemo(() => {
     const taxableBase = Math.max(0, subtotal - lineDiscounts - generalDiscount)
-    return taxableBase * 0.16
-  }, [subtotal, lineDiscounts, generalDiscount])
+
+    // Calcular monto de reservas (exentas de IVA adicional)
+    const reservationAmount = items.reduce((acc, item) => {
+      if (item.isReservation) {
+        return acc + item.price * item.quantity - (item.discount || 0)
+      }
+      return acc
+    }, 0)
+
+    // Restar reservas de la base imponible
+    const taxableAmount = Math.max(0, taxableBase - reservationAmount)
+
+    // El IVA es el 10% (no 16%) según la legislación local para servicios deportivos
+    // Pero mantenemos 16% si es la configuración global, o ajustamos si es necesario.
+    // Asumiendo que el sistema usa 10% para todo lo demás, o 16% si es estándar.
+    // El código original tenía 0.16. Lo mantengo.
+    return taxableAmount * 0.16
+  }, [subtotal, lineDiscounts, generalDiscount, items])
 
   const total = useMemo(
     () => Math.max(0, subtotal - lineDiscounts - generalDiscount + taxes),
     [subtotal, lineDiscounts, generalDiscount, taxes]
   )
-
-  // Cargar ventas por rango de fechas
-  useEffect(() => {
-    if (dateFrom && dateTo) {
-      fetchSalesByDateRange({
-        start_date: dateFrom,
-        end_date: dateTo,
-        page: 1,
-        page_size: 50,
-      })
-    }
-  }, [dateFrom, dateTo, fetchSalesByDateRange])
 
   const filteredHistory = useMemo(
     () =>
@@ -308,6 +417,54 @@ const SalesNew = () => {
       }),
     [sales, historySearch]
   )
+
+  const historyFilterHint = useMemo(() => {
+    if (historyFilterMode === 'name') {
+      return historySearch
+        ? 'Buscando ventas por coincidencia parcial de nombre de cliente'
+        : 'Ingresa el nombre o parte del nombre y presiona Filtrar'
+    }
+    if (dateFrom && dateTo) {
+      return 'Filtrando por rango de fechas seleccionado'
+    }
+    return 'Selecciona un rango de fechas completo y presiona Filtrar'
+  }, [historyFilterMode, historySearch, dateFrom, dateTo])
+
+  const applyDatePreset = preset => {
+    const today = new Date()
+    let start = ''
+    let end = ''
+
+    if (preset === 'today') {
+      start = toDateInputValue(today)
+      end = toDateInputValue(today)
+    }
+
+    if (preset === 'last7') {
+      const sevenAgo = new Date(today)
+      sevenAgo.setDate(today.getDate() - 6)
+      start = toDateInputValue(sevenAgo)
+      end = toDateInputValue(today)
+    }
+
+    if (preset === 'month') {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+      start = toDateInputValue(firstDay)
+      end = toDateInputValue(today)
+    }
+
+    setHistoryFilterMode('date')
+    setDateFrom(start)
+    setDateTo(end)
+    setHistoryFilterError('')
+  }
+
+  const selectedSaleDetails = useMemo(() => {
+    if (!selectedHistorySale) return []
+    if (Array.isArray(selectedHistorySale.details))
+      return selectedHistorySale.details
+    return []
+  }, [selectedHistorySale])
 
   const modalProduct = selectedModalProduct
   const modalDisplay = getProductDisplay(modalProduct)
@@ -363,13 +520,290 @@ const SalesNew = () => {
     setItems(prev => prev.filter(item => item.id !== lineId))
   }
 
+  const checkClientStatus = async client => {
+    if (!client || !client.id) return
+
+    try {
+      // 1. Verificar Reservas Pendientes
+      const reservations = await apiService.getReservationReport({
+        client_id: client.id,
+        status: 'CONFIRMED', // Asumimos que CONFIRMED son las listas para pagar
+      })
+
+      if (reservations && reservations.length > 0) {
+        setPendingReservations(reservations)
+        setShowReservationModal(true)
+      }
+
+      // 2. Verificar Ventas Activas (Pendientes de Pago)
+      try {
+        let clientSales = []
+        try {
+          clientSales = await apiService.getSalesByClientId(client.id)
+        } catch (idError) {
+          console.warn('Error fetching sales by ID, trying by name...', idError)
+          // Fallback: Try by name if ID fails (e.g. 500 error)
+          if (client.name) {
+            const fullName = client.last_name
+              ? `${client.name} ${client.last_name}`.trim()
+              : client.name
+            clientSales = await apiService.getSalesByClientName(fullName)
+          }
+        }
+
+        // Filtrar ventas con estado 'PENDING' u 'OPEN'
+        const pendingSales = Array.isArray(clientSales)
+          ? clientSales.filter(
+              s => s.status === 'PENDING' || s.status === 'OPEN'
+            )
+          : []
+
+        if (pendingSales.length > 0) {
+          setActiveSales(pendingSales)
+          setActiveSale(pendingSales[0])
+          setShowActiveSaleModal(true)
+        }
+      } catch (saleError) {
+        console.warn('Could not fetch client sales:', saleError)
+        // No bloqueamos el flujo si falla la consulta de ventas
+      }
+    } catch (error) {
+      console.error('Error checking client status:', error)
+    }
+  }
+
   const handleSelectClient = client => {
     setSelectedClient(client)
     setShowClientDropdown(false)
     setClientSearchTerm(client.name || '')
+
+    // Verificar estado del cliente (reservas/ventas)
+    checkClientStatus(client)
+  }
+
+  const toggleHistoryActionMenu = saleId => {
+    setHistoryActionMenuId(prev => (prev === saleId ? null : saleId))
+  }
+
+  const handleHistoryFilter = async () => {
+    setHistoryFilterError('')
+    if (historyFilterMode === 'name') {
+      const term = historySearch.trim()
+      if (!term) {
+        toast.error('Ingresa un nombre de cliente para buscar')
+        setHistoryFilterError('Ingresa un nombre de cliente antes de filtrar')
+        return
+      }
+
+      try {
+        await fetchSalesByClientName(term, { page: 1, page_size: 50 })
+      } catch (error) {
+        toast.errorFrom(error, {
+          fallback: 'No se pudo obtener ventas por nombre',
+        })
+      }
+      return
+    }
+
+    if (!dateFrom || !dateTo) {
+      toast.error('Selecciona un rango de fechas')
+      setHistoryFilterError(
+        'Selecciona fecha desde y hasta para filtrar por rango'
+      )
+      return
+    }
+
+    try {
+      await fetchSalesByDateRange({
+        start_date: dateFrom,
+        end_date: dateTo,
+        page: 1,
+        page_size: 50,
+      })
+    } catch (error) {
+      toast.errorFrom(error, {
+        fallback: 'No se pudo obtener ventas por fechas',
+      })
+    }
+  }
+
+  const handleHistoryClear = () => {
+    setHistorySearch('')
+    setDateFrom('')
+    setDateTo('')
+    setHistoryFilterMode('date')
+    setHistoryFilterError('')
+    clearSales()
+  }
+
+  const handleViewSale = sale => {
+    setSelectedHistorySale(sale)
+    setShowSaleDetailModal(true)
+    setHistoryActionMenuId(null)
+  }
+
+  const handleCancelSale = async sale => {
+    const saleId = sale?.sale_id || sale?.id
+    if (!saleId) return
+
+    setHistoryActionMenuId(null)
+    setCancelPreview(null)
+    setSelectedHistorySale(sale)
+    setCancelReason('')
+    setCancelPreviewLoading(true)
+
+    try {
+      const preview = await saleService.previewSaleCancellation(saleId)
+      setCancelPreview(preview)
+      setShowCancelSaleModal(true)
+    } catch (error) {
+      toast.errorFrom(error, {
+        fallback: 'No se pudo previsualizar la anulación de la venta',
+      })
+    } finally {
+      setCancelPreviewLoading(false)
+    }
+  }
+
+  const handleConfirmCancelSale = async () => {
+    if (!selectedHistorySale) return
+    const saleId = selectedHistorySale.sale_id || selectedHistorySale.id
+    if (!saleId) return
+
+    setCancelSubmitting(true)
+    try {
+      await cancelSale(saleId, cancelReason || 'Cancelada por el usuario')
+      toast.success('Venta cancelada exitosamente')
+
+      setSelectedHistorySale(prev =>
+        prev ? { ...prev, status: 'cancelled' } : prev
+      )
+      setShowCancelSaleModal(false)
+      setCancelPreview(null)
+
+      if (historyFilterMode === 'name' && historySearch.trim()) {
+        fetchSalesByClientName(historySearch.trim(), {
+          page: 1,
+          page_size: 50,
+        })
+      } else if (dateFrom && dateTo) {
+        fetchSalesByDateRange({
+          start_date: dateFrom,
+          end_date: dateTo,
+          page: 1,
+          page_size: 50,
+        })
+      }
+    } catch (error) {
+      toast.errorFrom(error, {
+        fallback: 'No se pudo cancelar la venta',
+      })
+    } finally {
+      setCancelSubmitting(false)
+    }
+  }
+
+  const toggleActionMenu = itemId => {
+    setOpenActionMenuId(prev => (prev === itemId ? null : itemId))
+  }
+
+  const handleEditItem = item => {
+    const discountValue = item.discountInput ?? item.discount ?? 0
+    setSelectedModalProduct({
+      id: item.productId || item.id,
+      name: item.name,
+      price: item.price,
+    })
+    setModalQuantity(item.quantity)
+    setModalDiscountType(item.discountType || 'amount')
+    setModalDiscount(discountValue)
+    setModalDiscountReason(item.discountReason || '')
+    setEditingItemId(item.id)
+    setIsModalOpen(true)
+    setOpenActionMenuId(null)
+  }
+
+  const handleAddReservations = () => {
+    const newItems = pendingReservations.map(res => {
+      const duration = res.duration || res.duration_hours || 1
+      // Asegurar que el precio sea numérico
+      const price = Number(res.total_amount) || 0
+      const reserveKey =
+        res.reserve_id ||
+        res.id ||
+        res.product_id ||
+        `${res.product_name || 'res'}-${res.start_time || ''}`
+
+      return {
+        id: `RES-${reserveKey}`,
+        productId: res.product_id || `RES-${reserveKey}`, // Fallback ID
+        name: `Reserva: ${res.product_name} (${duration} hrs)`,
+        quantity: 1, // Mantenemos 1 para respetar el precio total del paquete
+        price: price,
+        discount: 0,
+        isReservation: true,
+        reserveId: res.reserve_id,
+        reserveKey,
+      }
+    })
+
+    setItems(prev => {
+      const existingKeys = new Set(
+        prev
+          .filter(item => item.reserveId || item.reserveKey)
+          .map(item => item.reserveKey || item.reserveId)
+      )
+
+      const deduped = []
+      newItems.forEach(item => {
+        const key = item.reserveKey || item.reserveId || item.id
+        if (existingKeys.has(key)) return
+        existingKeys.add(key)
+        deduped.push(item)
+      })
+
+      if (deduped.length === 0) return prev
+      return [...prev, ...deduped]
+    })
+    setShowReservationModal(false)
+    setPendingReservations([])
+  }
+
+  const handleContinueSale = async () => {
+    if (!activeSale) return
+
+    let saleDetails = activeSale.details || []
+
+    // Si no tiene detalles, intentar obtenerlos por ID
+    if (saleDetails.length === 0 && activeSale.id) {
+      try {
+        const fullSale = await apiService.getSaleById(activeSale.id)
+        if (fullSale && fullSale.details) {
+          saleDetails = fullSale.details
+        }
+      } catch (error) {
+        console.error('Error fetching sale details:', error)
+        // Fallback o notificación de error
+      }
+    }
+
+    const loadedItems = saleDetails.map(detail => ({
+      id: `SALE-${activeSale.id}-${detail.product_id}-${Date.now()}`,
+      productId: detail.product_id,
+      name: detail.product_name || 'Producto existente',
+      quantity: detail.quantity,
+      price: detail.unit_price || detail.price || 0,
+      discount: detail.discount_amount || 0,
+    }))
+
+    setItems(prev => [...prev, ...loadedItems])
+    setShowActiveSaleModal(false)
+    // Nota: Aquí podríamos setear un 'currentSaleId' si fuéramos a actualizar la venta existente
+    // en lugar de crear una nueva.
   }
 
   const handleOpenModal = () => {
+    setEditingItemId(null)
     setSelectedModalProduct(null)
     setProductSearchTerm('')
     setModalQuantity(1)
@@ -393,26 +827,32 @@ const SalesNew = () => {
       return
     }
 
-    setItems(prev => [
-      ...prev,
-      {
-        id: `${modalDisplay.id}-${Date.now()}-${Math.random()
+    const newItem = {
+      id:
+        editingItemId ||
+        `${modalDisplay.id}-${Date.now()}-${Math.random()
           .toString(36)
           .substr(2, 9)}`,
-        productId: modalDisplay.id,
-        name: modalDisplay.name,
-        quantity: parsedModalQuantity,
-        price: modalDisplay.price,
-        discount: modalDiscountValue, // Total discount amount for the line
-        discountType: modalDiscountType,
-        discountInput: parsedModalDiscount, // Unitary value entered
-        discountReason: modalDiscountReason,
-      },
-    ])
+      productId: modalDisplay.id,
+      name: modalDisplay.name,
+      quantity: parsedModalQuantity,
+      price: modalDisplay.price,
+      discount: modalDiscountValue, // Total discount amount for the line
+      discountType: modalDiscountType,
+      discountInput: parsedModalDiscount, // Unitary value entered
+      discountReason: modalDiscountReason,
+    }
+
+    setItems(prev =>
+      editingItemId
+        ? prev.map(item => (item.id === editingItemId ? newItem : item))
+        : [...prev, newItem]
+    )
     setModalQuantity(1)
     setModalDiscount(0)
     setModalDiscountType('amount')
     setModalDiscountReason('')
+    setEditingItemId(null)
     setIsModalOpen(false)
   }
 
@@ -576,6 +1016,7 @@ const SalesNew = () => {
                     >
                       <thead>
                         <tr>
+                          <th scope='col'>ID</th>
                           <th scope='col'>Producto</th>
                           <th scope='col' className='text-right'>
                             Cantidad
@@ -589,13 +1030,15 @@ const SalesNew = () => {
                           <th scope='col' className='text-right'>
                             Total
                           </th>
-                          <th scope='col' aria-label='Acciones' />
+                          <th scope='col' className='text-right'>
+                            ACCIONES
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredItems.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className='text-center text-muted'>
+                            <td colSpan={7} className='text-center text-muted'>
                               No se encontraron productos que coincidan con la
                               búsqueda.
                             </td>
@@ -606,6 +1049,7 @@ const SalesNew = () => {
                               item.price * item.quantity - (item.discount || 0)
                             return (
                               <tr key={item.id}>
+                                <td>{item.productId || item.id || '-'}</td>
                                 <td>{item.name}</td>
                                 <td className='text-right'>{item.quantity}</td>
                                 <td className='text-right'>
@@ -618,14 +1062,66 @@ const SalesNew = () => {
                                   {formatCurrency(lineTotal, 'PYG')}
                                 </td>
                                 <td className='text-right'>
-                                  <button
-                                    type='button'
-                                    className='btn btn--destructive btn--icon-only btn--small'
-                                    onClick={() => handleRemoveItem(item.id)}
-                                    aria-label={`Eliminar ${item.name}`}
+                                  <div
+                                    style={{
+                                      position: 'relative',
+                                      display: 'inline-block',
+                                    }}
                                   >
-                                    <Trash2 size={16} aria-hidden='true' />
-                                  </button>
+                                    <button
+                                      type='button'
+                                      className='btn btn--ghost btn--icon-only btn--small'
+                                      onClick={() => toggleActionMenu(item.id)}
+                                      aria-label={`Acciones para ${item.name}`}
+                                    >
+                                      <MoreVertical
+                                        size={16}
+                                        aria-hidden='true'
+                                      />
+                                    </button>
+                                    {openActionMenuId === item.id && (
+                                      <div
+                                        role='menu'
+                                        aria-orientation='vertical'
+                                        data-side='bottom'
+                                        data-align='end'
+                                        data-state='open'
+                                        className='dropdown-menu__content'
+                                        style={{
+                                          position: 'absolute',
+                                          right: 0,
+                                          top: 'calc(100% + 6px)',
+                                          ...dropdownMenuStyle,
+                                          minWidth: '160px',
+                                        }}
+                                      >
+                                        <button
+                                          type='button'
+                                          role='menuitem'
+                                          className='dropdown-menu__item'
+                                          style={dropdownMenuItemStyle}
+                                          onClick={() => handleEditItem(item)}
+                                        >
+                                          Editar
+                                        </button>
+                                        <button
+                                          type='button'
+                                          role='menuitem'
+                                          className='dropdown-menu__item dropdown-menu__item--danger'
+                                          style={{
+                                            ...dropdownMenuItemStyle,
+                                            ...dropdownMenuDangerStyle,
+                                          }}
+                                          onClick={() => {
+                                            handleRemoveItem(item.id)
+                                            setOpenActionMenuId(null)
+                                          }}
+                                        >
+                                          Eliminar
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             )
@@ -979,36 +1475,307 @@ const SalesNew = () => {
         >
           <article className='card card--elevated'>
             <div className='card__content'>
-              <div className='sales-history__filters'>
-                <div className='search-box'>
-                  <Search className='search-box__icon' aria-hidden='true' />
-                  <input
-                    type='search'
-                    className='input search-box__input'
-                    placeholder='Buscar por cliente o ID...'
-                    value={historySearch}
-                    onChange={event => setHistorySearch(event.target.value)}
-                  />
+              <div
+                className='sales-history__filters'
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '14px',
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '14px',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '12px',
+                    flexWrap: 'wrap',
+                    alignItems: 'flex-start',
+                  }}
+                >
+                  <div
+                    style={{
+                      flex: '1 1 260px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '6px',
+                    }}
+                  >
+                    <label
+                      className='form-field__label'
+                      htmlFor='history-search'
+                    >
+                      Buscar por cliente o ID
+                    </label>
+                    <div className='search-box'>
+                      <Search className='search-box__icon' aria-hidden='true' />
+                      <input
+                        id='history-search'
+                        type='search'
+                        className='input search-box__input'
+                        placeholder='Ej: Juan, Pérez o #1234'
+                        value={historySearch}
+                        onChange={event => setHistorySearch(event.target.value)}
+                        aria-describedby='history-filter-hint'
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      flex: '0 1 260px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                    }}
+                  >
+                    <span className='form-field__label'>Filtrar por</span>
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        padding: '4px',
+                        borderRadius: '12px',
+                        background: '#eef2ff',
+                        border: '1px solid #dfe3f3',
+                        gap: '6px',
+                      }}
+                      role='radiogroup'
+                      aria-label='Filtrar por'
+                    >
+                      {[
+                        { value: 'name', label: 'Nombre de cliente' },
+                        { value: 'date', label: 'Rango de fechas' },
+                      ].map(option => {
+                        const active = historyFilterMode === option.value
+                        return (
+                          <button
+                            key={option.value}
+                            type='button'
+                            onClick={() => setHistoryFilterMode(option.value)}
+                            className='btn btn--ghost btn--small'
+                            aria-pressed={active}
+                            style={{
+                              borderRadius: '10px',
+                              background: active ? '#fff' : 'transparent',
+                              border: active
+                                ? '1px solid #4f46e5'
+                                : '1px solid transparent',
+                              color: active ? '#111827' : '#374151',
+                              boxShadow: active
+                                ? '0 1px 4px rgba(79, 70, 229, 0.15)'
+                                : 'none',
+                              transition: 'all 0.15s ease',
+                            }}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px',
+                      }}
+                    >
+                      <small
+                        id='history-filter-hint'
+                        style={{ color: '#4b5563', lineHeight: 1.4 }}
+                      >
+                        {historyFilterHint}
+                      </small>
+                      {historyFilterError && (
+                        <small
+                          style={{ color: '#b42318', lineHeight: 1.4 }}
+                          role='alert'
+                        >
+                          {historyFilterError}
+                        </small>
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      flex: '0 1 340px',
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '10px',
+                      alignItems: 'end',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                      }}
+                    >
+                      <label
+                        className='form-field__label'
+                        htmlFor='history-date-from'
+                      >
+                        Desde
+                      </label>
+                      <input
+                        id='history-date-from'
+                        type='date'
+                        className='input'
+                        value={dateFrom}
+                        onChange={event => setDateFrom(event.target.value)}
+                        aria-label='Fecha desde'
+                        disabled={historyFilterMode !== 'date'}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                      }}
+                    >
+                      <label
+                        className='form-field__label'
+                        htmlFor='history-date-to'
+                      >
+                        Hasta
+                      </label>
+                      <input
+                        id='history-date-to'
+                        type='date'
+                        className='input'
+                        value={dateTo}
+                        onChange={event => setDateTo(event.target.value)}
+                        aria-label='Fecha hasta'
+                        disabled={historyFilterMode !== 'date'}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        gridColumn: '1 / span 2',
+                        display: 'flex',
+                        gap: '8px',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <button
+                        type='button'
+                        className='btn btn--ghost btn--small'
+                        disabled={historyFilterMode !== 'date'}
+                        onClick={() => applyDatePreset('today')}
+                      >
+                        Hoy
+                      </button>
+                      <button
+                        type='button'
+                        className='btn btn--ghost btn--small'
+                        disabled={historyFilterMode !== 'date'}
+                        onClick={() => applyDatePreset('last7')}
+                      >
+                        Últimos 7 días
+                      </button>
+                      <button
+                        type='button'
+                        className='btn btn--ghost btn--small'
+                        disabled={historyFilterMode !== 'date'}
+                        onClick={() => applyDatePreset('month')}
+                      >
+                        Mes actual
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <input
-                  type='date'
-                  className='input'
-                  value={dateFrom}
-                  onChange={event => setDateFrom(event.target.value)}
-                  aria-label='Fecha desde'
-                />
-                <input
-                  type='date'
-                  className='input'
-                  value={dateTo}
-                  onChange={event => setDateTo(event.target.value)}
-                  aria-label='Fecha hasta'
-                />
-                <button type='button' className='btn btn--primary'>
-                  <Filter size={16} aria-hidden='true' />
-                  Filtrar
-                </button>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: '12px',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div
+                    style={{
+                      flex: '0 0 auto',
+                      display: 'flex',
+                      flexDirection: 'row',
+                      gap: '8px',
+                      alignItems: 'stretch',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <button
+                      type='button'
+                      className='btn btn--primary'
+                      onClick={handleHistoryFilter}
+                      style={{ minWidth: '140px' }}
+                    >
+                      <Filter size={16} aria-hidden='true' />
+                      Filtrar
+                    </button>
+                    <button
+                      type='button'
+                      className='btn btn--ghost'
+                      onClick={handleHistoryClear}
+                      style={{ minWidth: '140px' }}
+                    >
+                      <X size={16} aria-hidden='true' />
+                      Limpiar
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              {(historyFilterMode === 'name' && historySearch.trim()) ||
+              (historyFilterMode === 'date' && dateFrom && dateTo) ? (
+                <div
+                  style={{
+                    marginTop: '10px',
+                    display: 'flex',
+                    gap: '8px',
+                    flexWrap: 'wrap',
+                  }}
+                  aria-live='polite'
+                >
+                  {historyFilterMode === 'name' && historySearch.trim() && (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px 10px',
+                        background: '#eef2ff',
+                        color: '#3730a3',
+                        borderRadius: '999px',
+                        fontSize: '0.9rem',
+                        border: '1px solid #c7d2fe',
+                      }}
+                    >
+                      Filtro: nombre contiene “{historySearch.trim()}”
+                    </span>
+                  )}
+                  {historyFilterMode === 'date' && dateFrom && dateTo && (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px 10px',
+                        background: '#ecfdf3',
+                        color: '#166534',
+                        borderRadius: '999px',
+                        fontSize: '0.9rem',
+                        border: '1px solid #bbf7d0',
+                      }}
+                    >
+                      Rango: {dateFrom} → {dateTo}
+                    </span>
+                  )}
+                </div>
+              ) : null}
 
               <div className='table-container'>
                 <table className='table' aria-label='Historial de ventas'>
@@ -1023,36 +1790,45 @@ const SalesNew = () => {
                       <th scope='col' className='text-center'>
                         Estado
                       </th>
+                      <th scope='col' className='text-right'>
+                        ACCIONES
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {saleLoading ? (
                       <tr>
-                        <td colSpan={5} className='text-center text-muted'>
+                        <td colSpan={6} className='text-center text-muted'>
                           Cargando ventas...
                         </td>
                       </tr>
                     ) : filteredHistory.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className='text-center text-muted'>
-                          {dateFrom && dateTo
+                        <td colSpan={6} className='text-center text-muted'>
+                          {historyFilterMode === 'name' && historySearch
+                            ? 'No se encontraron ventas para el nombre ingresado'
+                            : dateFrom && dateTo
                             ? 'No se encontraron ventas en el rango de fechas seleccionado'
-                            : 'Selecciona un rango de fechas para ver el historial de ventas'}
+                            : 'Usa Filtrar para consultar por nombre o fechas'}
                         </td>
                       </tr>
                     ) : (
                       filteredHistory.map((entry, index) => {
+                        const saleId = entry.sale_id || entry.id
+                        const statusKey = (entry.status || '').toLowerCase()
                         const status =
-                          STATUS_STYLES[entry.status] || STATUS_STYLES.pending
+                          STATUS_STYLES[statusKey] || STATUS_STYLES.pending
                         return (
-                          <tr key={`${entry.sale_id || entry.id}-${index}`}>
-                            <td className='font-medium'>
-                              #{entry.sale_id || entry.id}
-                            </td>
+                          <tr key={`${saleId}-${index}`}>
+                            <td className='font-medium'>#{saleId}</td>
                             <td>
                               {entry.order_date
-                                ? new Date(entry.order_date).toLocaleDateString(
-                                    'es-ES'
+                                ? new Date(entry.order_date).toLocaleString(
+                                    'es-ES',
+                                    {
+                                      dateStyle: 'short',
+                                      timeStyle: 'short',
+                                    }
                                   )
                                 : '—'}
                             </td>
@@ -1070,6 +1846,64 @@ const SalesNew = () => {
                                 {status.label}
                               </span>
                             </td>
+                            <td className='text-right'>
+                              <div
+                                style={{
+                                  position: 'relative',
+                                  display: 'inline-block',
+                                }}
+                              >
+                                <button
+                                  type='button'
+                                  className='btn btn--ghost btn--icon-only btn--small'
+                                  onClick={() =>
+                                    toggleHistoryActionMenu(saleId)
+                                  }
+                                  aria-label={`Acciones para la venta ${saleId}`}
+                                >
+                                  <MoreVertical size={16} aria-hidden='true' />
+                                </button>
+                                {historyActionMenuId === saleId && (
+                                  <div
+                                    role='menu'
+                                    aria-orientation='vertical'
+                                    data-side='bottom'
+                                    data-align='end'
+                                    data-state='open'
+                                    className='dropdown-menu__content'
+                                    style={{
+                                      position: 'absolute',
+                                      right: 0,
+                                      top: 'calc(100% + 6px)',
+                                      ...dropdownMenuStyle,
+                                    }}
+                                  >
+                                    <button
+                                      type='button'
+                                      role='menuitem'
+                                      className='dropdown-menu__item'
+                                      style={dropdownMenuItemStyle}
+                                      onClick={() => handleViewSale(entry)}
+                                    >
+                                      <Eye size={16} aria-hidden='true' /> Ver
+                                    </button>
+                                    <button
+                                      type='button'
+                                      role='menuitem'
+                                      className='dropdown-menu__item dropdown-menu__item--danger'
+                                      style={{
+                                        ...dropdownMenuItemStyle,
+                                        ...dropdownMenuDangerStyle,
+                                      }}
+                                      onClick={() => handleCancelSale(entry)}
+                                    >
+                                      <X size={16} aria-hidden='true' />{' '}
+                                      Cancelar venta
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
                           </tr>
                         )
                       })
@@ -1082,6 +1916,393 @@ const SalesNew = () => {
         </section>
       )}
 
+      {showSaleDetailModal && selectedHistorySale && (
+        <div
+          className='sales-modal'
+          role='dialog'
+          aria-modal='true'
+          aria-labelledby='sale-detail-modal-title'
+        >
+          <div
+            className='sales-modal__overlay'
+            onClick={() => {
+              setShowSaleDetailModal(false)
+              setSelectedHistorySale(null)
+            }}
+            aria-hidden='true'
+          />
+          <div className='sales-modal__dialog'>
+            <header className='sales-modal__header'>
+              <div className='sales-modal__header-content'>
+                <h3 id='sale-detail-modal-title' className='sales-modal__title'>
+                  Venta #{selectedHistorySale.sale_id || selectedHistorySale.id}
+                </h3>
+                <p className='sales-modal__subtitle'>
+                  Detalles completos de la venta seleccionada.
+                </p>
+              </div>
+              <button
+                type='button'
+                className='sales-modal__close'
+                onClick={() => {
+                  setShowSaleDetailModal(false)
+                  setSelectedHistorySale(null)
+                }}
+              >
+                <X size={16} aria-hidden='true' />
+                <span className='sr-only'>Cerrar</span>
+              </button>
+            </header>
+
+            <div className='sales-modal__body'>
+              <section className='sales-modal__section sales-modal__section--context'>
+                <div className='sales-modal__info-grid'>
+                  <div className='sales-modal__info-item'>
+                    <span className='sales-modal__label'>Cliente</span>
+                    <span className='sales-modal__value'>
+                      {selectedHistorySale.client_name || '—'}
+                    </span>
+                  </div>
+                  <div className='sales-modal__info-item'>
+                    <span className='sales-modal__label'>Fecha</span>
+                    <span className='sales-modal__value'>
+                      {formatDateTime(
+                        selectedHistorySale.order_date ||
+                          selectedHistorySale.sale_date ||
+                          selectedHistorySale.created_at
+                      )}
+                    </span>
+                  </div>
+                  <div className='sales-modal__info-item'>
+                    <span className='sales-modal__label'>Estado</span>
+                    <span className='sales-modal__value'>
+                      {formatStatusLabel(selectedHistorySale.status)}
+                    </span>
+                  </div>
+                  <div className='sales-modal__info-item'>
+                    <span className='sales-modal__label'>Total</span>
+                    <span className='sales-modal__value'>
+                      {formatCurrency(
+                        selectedHistorySale.total_amount ||
+                          selectedHistorySale.total ||
+                          0,
+                        'PYG'
+                      )}
+                    </span>
+                  </div>
+                  <div className='sales-modal__info-item'>
+                    <span className='sales-modal__label'>Método de pago</span>
+                    <span className='sales-modal__value'>
+                      {selectedHistorySale.payment_method || '—'}
+                    </span>
+                  </div>
+                  <div className='sales-modal__info-item'>
+                    <span className='sales-modal__label'>Atendido por</span>
+                    <span className='sales-modal__value'>
+                      {selectedHistorySale.user_name || '—'}
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              <section className='sales-modal__section'>
+                <h4 className='sales-modal__section-title'>Productos</h4>
+                <div className='table-container'>
+                  <table className='table' aria-label='Productos de la venta'>
+                    <thead>
+                      <tr>
+                        <th scope='col'>Producto</th>
+                        <th scope='col' className='text-right'>
+                          Cantidad
+                        </th>
+                        <th scope='col' className='text-right'>
+                          Precio
+                        </th>
+                        <th scope='col' className='text-right'>
+                          Descuento
+                        </th>
+                        <th scope='col' className='text-right'>
+                          Total
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedSaleDetails.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className='text-center text-muted'>
+                            No hay detalles de productos para esta venta.
+                          </td>
+                        </tr>
+                      ) : (
+                        selectedSaleDetails.map((detail, detailIndex) => {
+                          const quantity = Number(detail.quantity) || 0
+                          const unitPrice =
+                            detail.unit_price ||
+                            detail.sale_price ||
+                            detail.price ||
+                            detail.base_price ||
+                            0
+                          const discountAmount =
+                            detail.discount_amount || detail.discount || 0
+                          const lineTotal =
+                            detail.total_with_tax ||
+                            detail.subtotal ||
+                            quantity * unitPrice - discountAmount
+
+                          return (
+                            <tr
+                              key={`${
+                                detail.id ||
+                                detail.order_id ||
+                                detail.product_id ||
+                                'detail'
+                              }-${detailIndex}`}
+                            >
+                              <td>
+                                {detail.product_name ||
+                                  detail.product_id ||
+                                  'Producto'}
+                              </td>
+                              <td className='text-right'>{quantity}</td>
+                              <td className='text-right'>
+                                {formatCurrency(unitPrice, 'PYG')}
+                              </td>
+                              <td className='text-right'>
+                                {formatCurrency(discountAmount, 'PYG')}
+                              </td>
+                              <td className='text-right'>
+                                {formatCurrency(lineTotal, 'PYG')}
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+
+            <footer className='sales-modal__footer'>
+              <button
+                type='button'
+                className='btn btn--secondary'
+                onClick={() => {
+                  setShowSaleDetailModal(false)
+                  setSelectedHistorySale(null)
+                }}
+              >
+                Cerrar
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {showCancelSaleModal && selectedHistorySale && (
+        <div
+          className='sales-modal'
+          role='dialog'
+          aria-modal='true'
+          aria-labelledby='cancel-sale-modal-title'
+        >
+          <div
+            className='sales-modal__overlay'
+            onClick={() => {
+              if (cancelSubmitting) return
+              setShowCancelSaleModal(false)
+              setCancelPreview(null)
+              setSelectedHistorySale(null)
+            }}
+            aria-hidden='true'
+          />
+          <div className='sales-modal__dialog'>
+            <header className='sales-modal__header'>
+              <div className='sales-modal__header-content'>
+                <h3 id='cancel-sale-modal-title' className='sales-modal__title'>
+                  Anular venta #
+                  {selectedHistorySale.sale_id || selectedHistorySale.id}
+                </h3>
+                <p className='sales-modal__subtitle'>
+                  Previsualiza el impacto antes de confirmar la anulación.
+                </p>
+              </div>
+              <button
+                type='button'
+                className='sales-modal__close'
+                onClick={() => {
+                  if (cancelSubmitting) return
+                  setShowCancelSaleModal(false)
+                  setCancelPreview(null)
+                  setSelectedHistorySale(null)
+                }}
+              >
+                <X size={16} aria-hidden='true' />
+                <span className='sr-only'>Cerrar</span>
+              </button>
+            </header>
+
+            <div className='sales-modal__body'>
+              {cancelPreviewLoading ? (
+                <p className='text-muted'>Cargando previsualización...</p>
+              ) : (
+                <>
+                  <section className='sales-modal__section sales-modal__section--context'>
+                    <div className='sales-modal__info-grid'>
+                      <div className='sales-modal__info-item'>
+                        <span className='sales-modal__label'>Cliente</span>
+                        <span className='sales-modal__value'>
+                          {selectedHistorySale.client_name || '—'}
+                        </span>
+                      </div>
+                      <div className='sales-modal__info-item'>
+                        <span className='sales-modal__label'>Fecha</span>
+                        <span className='sales-modal__value'>
+                          {formatDateTime(
+                            selectedHistorySale.order_date ||
+                              selectedHistorySale.sale_date ||
+                              selectedHistorySale.created_at
+                          )}
+                        </span>
+                      </div>
+                      <div className='sales-modal__info-item'>
+                        <span className='sales-modal__label'>
+                          Estado actual
+                        </span>
+                        <span className='sales-modal__value'>
+                          {formatStatusLabel(selectedHistorySale.status)}
+                        </span>
+                      </div>
+                      <div className='sales-modal__info-item'>
+                        <span className='sales-modal__label'>Total</span>
+                        <span className='sales-modal__value'>
+                          {formatCurrency(
+                            selectedHistorySale.total_amount ||
+                              selectedHistorySale.total ||
+                              0,
+                            'PYG'
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className='sales-modal__section'>
+                    <h4 className='sales-modal__section-title'>Impacto</h4>
+                    <div className='sales-modal__info-grid'>
+                      <div className='sales-modal__info-item'>
+                        <span className='sales-modal__label'>
+                          Reversiones de stock
+                        </span>
+                        <span className='sales-modal__value'>
+                          {cancelPreview?.impact_summary
+                            ?.stock_reversion_count ??
+                            cancelPreview?.summary?.stock_movements ??
+                            '—'}
+                        </span>
+                      </div>
+                      <div className='sales-modal__info-item'>
+                        <span className='sales-modal__label'>
+                          Pagos a revertir
+                        </span>
+                        <span className='sales-modal__value'>
+                          {cancelPreview?.impact_summary?.payment_reversals ??
+                            cancelPreview?.summary?.payments_to_refund ??
+                            '—'}
+                        </span>
+                      </div>
+                      <div className='sales-modal__info-item'>
+                        <span className='sales-modal__label'>
+                          Monto a reembolsar
+                        </span>
+                        <span className='sales-modal__value'>
+                          {formatCurrency(
+                            cancelPreview?.impact_summary?.total_refund ||
+                              cancelPreview?.summary?.total_refund ||
+                              0,
+                            'PYG'
+                          )}
+                        </span>
+                      </div>
+                      <div className='sales-modal__info-item'>
+                        <span className='sales-modal__label'>
+                          ¿Se puede anular?
+                        </span>
+                        <span className='sales-modal__value'>
+                          {cancelPreview?.is_cancellable === false
+                            ? 'No'
+                            : 'Sí'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {Array.isArray(cancelPreview?.warnings) &&
+                      cancelPreview.warnings.length > 0 && (
+                        <div
+                          className='alert alert--warning'
+                          style={{ marginTop: '12px' }}
+                        >
+                          <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                            {cancelPreview.warnings.map((warning, idx) => (
+                              <li key={`warning-${idx}`}>{warning}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                  </section>
+
+                  <section className='sales-modal__section'>
+                    <label
+                      className='sales-modal__field'
+                      htmlFor='cancel-reason'
+                    >
+                      <span className='sales-modal__field-label'>
+                        Motivo de la anulación
+                      </span>
+                      <textarea
+                        id='cancel-reason'
+                        className='input'
+                        rows={3}
+                        placeholder='Ej: El cliente canceló la compra.'
+                        value={cancelReason}
+                        onChange={event => setCancelReason(event.target.value)}
+                        disabled={cancelSubmitting}
+                        required
+                      />
+                    </label>
+                  </section>
+                </>
+              )}
+            </div>
+
+            <footer className='sales-modal__footer'>
+              <button
+                type='button'
+                className='btn btn--secondary'
+                onClick={() => {
+                  if (cancelSubmitting) return
+                  setShowCancelSaleModal(false)
+                  setCancelPreview(null)
+                  setSelectedHistorySale(null)
+                }}
+              >
+                Cerrar
+              </button>
+              <button
+                type='button'
+                className='btn btn--destructive'
+                disabled={
+                  cancelSubmitting || cancelPreview?.is_cancellable === false
+                }
+                onClick={handleConfirmCancelSale}
+              >
+                {cancelSubmitting ? 'Anulando...' : 'Confirmar anulación'}
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
       {isModalOpen && (
         <div
           className='sales-modal'
@@ -1091,7 +2312,10 @@ const SalesNew = () => {
         >
           <div
             className='sales-modal__overlay'
-            onClick={() => setIsModalOpen(false)}
+            onClick={() => {
+              setIsModalOpen(false)
+              setEditingItemId(null)
+            }}
             aria-hidden='true'
           />
           <div className='sales-modal__dialog'>
@@ -1108,7 +2332,10 @@ const SalesNew = () => {
               <button
                 type='button'
                 className='sales-modal__close'
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false)
+                  setEditingItemId(null)
+                }}
               >
                 <X size={16} aria-hidden='true' />
                 <span className='sr-only'>Cerrar</span>
@@ -1408,7 +2635,10 @@ const SalesNew = () => {
               <button
                 type='button'
                 className='btn btn--secondary'
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false)
+                  setEditingItemId(null)
+                }}
               >
                 Cancelar
               </button>
@@ -1418,6 +2648,244 @@ const SalesNew = () => {
                 onClick={handleConfirmAdd}
               >
                 Confirmar
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Reservas Pendientes */}
+      {showReservationModal && (
+        <div
+          className='sales-modal'
+          role='dialog'
+          aria-modal='true'
+          aria-labelledby='reservation-modal-title'
+        >
+          <div
+            className='sales-modal__overlay'
+            onClick={() => setShowReservationModal(false)}
+            aria-hidden='true'
+          />
+          <div className='sales-modal__dialog'>
+            <header className='sales-modal__header'>
+              <div className='sales-modal__header-content'>
+                <h3 id='reservation-modal-title' className='sales-modal__title'>
+                  Reservas Pendientes
+                </h3>
+                <p className='sales-modal__subtitle'>
+                  El cliente tiene reservas confirmadas pendientes de pago.
+                </p>
+              </div>
+              <button
+                type='button'
+                className='sales-modal__close'
+                onClick={() => setShowReservationModal(false)}
+              >
+                <X size={16} aria-hidden='true' />
+                <span className='sr-only'>Cerrar</span>
+              </button>
+            </header>
+            <div className='sales-modal__body'>
+              <div className='table-container'>
+                <table className='table'>
+                  <thead>
+                    <tr>
+                      <th>Servicio</th>
+                      <th>Fecha</th>
+                      <th className='text-right'>Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingReservations.map((res, index) => (
+                      <tr key={`${res.reserve_id || res.id}-${index}`}>
+                        <td>
+                          {res.product_name}
+                          <span
+                            style={{
+                              display: 'block',
+                              fontSize: '0.85em',
+                              color: 'var(--color-text-secondary)',
+                            }}
+                          >
+                            Duración: {res.duration || res.duration_hours || 1}{' '}
+                            hrs
+                          </span>
+                        </td>
+                        <td>{new Date(res.start_time).toLocaleDateString()}</td>
+                        <td className='text-right'>
+                          {formatCurrency(res.total_amount, 'PYG')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <footer className='sales-modal__footer'>
+              <button
+                type='button'
+                className='btn btn--secondary'
+                onClick={() => setShowReservationModal(false)}
+              >
+                Ignorar
+              </button>
+              <button
+                type='button'
+                className='btn btn--primary'
+                onClick={handleAddReservations}
+              >
+                Agregar a la Venta
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Venta Activa */}
+      {showActiveSaleModal && activeSale && (
+        <div
+          className='sales-modal'
+          role='dialog'
+          aria-modal='true'
+          aria-labelledby='active-sale-modal-title'
+        >
+          <div
+            className='sales-modal__overlay'
+            onClick={() => setShowActiveSaleModal(false)}
+            aria-hidden='true'
+          />
+          <div className='sales-modal__dialog'>
+            <header className='sales-modal__header'>
+              <div className='sales-modal__header-content'>
+                <h3 id='active-sale-modal-title' className='sales-modal__title'>
+                  Ventas Activas Encontradas
+                </h3>
+                <p className='sales-modal__subtitle'>
+                  Selecciona una venta pendiente para continuar o inicia una
+                  nueva.
+                </p>
+              </div>
+              <button
+                type='button'
+                className='sales-modal__close'
+                onClick={() => setShowActiveSaleModal(false)}
+              >
+                <X size={16} aria-hidden='true' />
+                <span className='sr-only'>Cerrar</span>
+              </button>
+            </header>
+            <div className='sales-modal__body'>
+              <div
+                className='sales-modal__list'
+                style={{
+                  display: 'grid',
+                  gap: '12px',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                }}
+              >
+                {activeSales.map(sale => {
+                  const saleId = sale.sale_id || sale.id
+                  const selected =
+                    saleId &&
+                    (saleId === activeSale?.sale_id ||
+                      saleId === activeSale?.id)
+
+                  return (
+                    <label
+                      key={saleId}
+                      className={`sales-modal__list-item card ${
+                        selected ? 'sales-modal__list-item--active' : ''
+                      }`}
+                      style={{
+                        border: selected
+                          ? '2px solid #0e4775'
+                          : '1px solid #d2d0ce',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        boxShadow: selected
+                          ? '0 4px 8px rgba(0, 0, 0, 0.12)'
+                          : '0 2px 4px rgba(0, 0, 0, 0.08)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        <input
+                          type='radio'
+                          name='active-sale'
+                          checked={selected}
+                          onChange={() => setActiveSale(sale)}
+                          aria-label={`Seleccionar venta ${saleId}`}
+                        />
+                        <div className='sales-modal__list-title'>
+                          Venta #{saleId}
+                        </div>
+                        <span
+                          className='badge badge--pill badge--small'
+                          style={{
+                            marginLeft: 'auto',
+                            backgroundColor: '#f3f9ff',
+                            color: '#0c3b5e',
+                            border: '1px solid #0e4775',
+                          }}
+                        >
+                          {formatStatusLabel(sale.status)}
+                        </span>
+                      </div>
+
+                      <div className='sales-modal__list-subtitle'>
+                        Cliente: {sale.client_name || 'Sin nombre'}
+                      </div>
+
+                      <div className='sales-modal__list-meta'>
+                        Fecha:{' '}
+                        {formatDateTime(sale.sale_date || sale.created_at)}
+                      </div>
+                      <div className='sales-modal__list-meta'>
+                        Total: {formatCurrency(sale.total_amount || 0, 'PYG')}
+                      </div>
+
+                      {Array.isArray(sale.details) &&
+                        sale.details.length > 0 && (
+                          <div
+                            className='sales-modal__list-meta'
+                            style={{ marginTop: '8px', color: '#605e5c' }}
+                          >
+                            {sale.details.slice(0, 2).map(detail => (
+                              <div key={`${saleId}-${detail.product_id}`}>
+                                • {detail.product_name || detail.product_id} ×{' '}
+                                {detail.quantity}
+                              </div>
+                            ))}
+                            {sale.details.length > 2 && '…'}
+                          </div>
+                        )}
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+            <footer className='sales-modal__footer'>
+              <button
+                type='button'
+                className='btn btn--secondary'
+                onClick={() => setShowActiveSaleModal(false)}
+              >
+                Nueva Venta
+              </button>
+              <button
+                type='button'
+                className='btn btn--primary'
+                onClick={handleContinueSale}
+              >
+                Continuar Venta
               </button>
             </footer>
           </div>

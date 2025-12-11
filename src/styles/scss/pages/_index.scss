@@ -18,7 +18,9 @@
 @use 'inventory-adjustments';
 @use 'inventory-adjustment-manual';
 @use 'inventory-management';
+@use 'sales-order-detail';
 @use 'reservations-and-schedules';
 @use 'schedules-new';
 @use 'booking-management';
 @use 'available-slots';
+@use 'sales-payment-new';
