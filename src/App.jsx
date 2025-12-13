@@ -40,6 +40,7 @@ import CashRegister from '@/pages/CashRegister'
 import SalePayment from '@/pages/SalePayment'
 import SalesPaymentNew from '@/pages/SalesPaymentNew'
 import SalesOrderDetail from '@/pages/SalesOrderDetail'
+import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
 import PaymentDocumentation from '@/pages/PaymentDocumentation'
 import PaymentManagement from '@/pages/PaymentManagement'
 import Login from '@/pages/Login'
@@ -195,6 +196,10 @@ function AppContent() {
                       <Route
                         path='/cobros-ventas/:saleId'
                         element={<SalesOrderDetail />}
+                      />
+                      <Route
+                        path='/cobros-ventas/:saleId/pagos'
+                        element={<SalesPaymentHistory />}
                       />
                       <Route
                         path='/pagos/documentacion'

@@ -1,7 +1,7 @@
 # 🛒 Ventas y Pagos - Guía Completa de API
 
-**Versión:** 1.6
-**Fecha:** 08 de Diciembre de 2025
+**Versión:** 1.7
+**Fecha:** 11 de Diciembre de 2025
 **Endpoint Base:** `http://localhost:5050`
 **Estado:** ✅ Production Ready
 
@@ -9,12 +9,16 @@
 
 ## 📋 Descripción General
 
-Esta guía unifica la documentación para todo el ciclo de vida de una venta, desde su creación hasta su pago completo, incluyendo la consulta de ventas históricas. El sistema de ventas es flexible y soporta modificaciones de precios, descuentos por producto, y la integración con reservas de servicios.
+Esta guía documenta la API para el ciclo de vida de una venta, desde su creación y modificación hasta su anulación y consulta. El sistema de ventas es flexible y soporta modificaciones de precios, descuentos por producto y la integración con reservas de servicios.
 
-El proceso se divide en tres acciones principales, cada una con su propio endpoint:
-1.  **Crear una Venta:** A través de `POST /sales/orders`, se registra una nueva orden de venta, especificando cliente, productos, y posibles descuentos o precios especiales.
-2.  **Procesar un Pago:** A través de `POST /payment/process-partial`, se registran los pagos (parciales o completos) para una venta ya creada, con manejo avanzado de efectivo y vuelto.
-3.  **Consultar Ventas:** A través de `GET /sale/date_range`, se obtienen ventas existentes por rango de fechas con paginación y detalles completos.
+Para la gestión de pagos y cobranzas, consulte la guía:
+- **[💸 Pagos y Cobranzas - Guía de API](./SALE_PAYMENT.md)**
+
+El proceso de venta se divide en las siguientes acciones principales:
+1.  **Crear una Venta:** A través de `POST /sales/orders`, se registra una nueva orden de venta.
+2.  **Modificar una Venta:** Se pueden agregar productos a una venta existente.
+3.  **Anular una Venta:** Se puede cancelar una venta que cumpla ciertas condiciones.
+4.  **Consultar Ventas:** Se pueden obtener ventas por diversos criterios, como rango de fechas o cliente.
 
 ### Características Principales
 
@@ -22,9 +26,9 @@ El proceso se divide en tres acciones principales, cada una con su propio endpoi
 - ✅ **Modificación de Precios**: Permite ajustar precios manualmente con justificación.
 - ✅ **Sistema de Descuentos**: Aplica descuentos por monto fijo o porcentaje a productos individuales.
 - ✅ **Integración con Reservas**: Convierte una reserva confirmada en una venta.
-- ✅ **Procesamiento de Pagos Avanzado**: Maneja pagos parciales, completos y cálculo de vuelto.
-- ✅ **Integración con Caja Registradora**: Todos los pagos se asocian a una caja abierta.
-- ✅ **Consulta de Ventas por Rango de Fechas**: Obtiene ventas históricas con paginación y detalles completos.
+- ✅ **Modificación de Ventas**: Permite agregar productos a ventas pendientes.
+- ✅ **Anulación de Ventas**: Flujo para cancelar ventas y revertir stock.
+- ✅ **Consulta de Ventas Avanzada**: Obtiene ventas históricas por diferentes criterios con paginación y detalles completos.
 
 ---
 
@@ -342,170 +346,117 @@ Anula una venta de forma definitiva. Esto cambiará el estado de la venta a `CAN
 | `CANCELLATION_NOT_ALLOWED` | 403 | La venta no puede ser anulada (ej: por política de tiempo). |
 | `REASON_IS_REQUIRED` | 400 | No se proveyó un motivo de anulación. |
 
----
 
-## 💸 Procesamiento de Pagos
-
-Esta sección cubre cómo procesar pagos para una venta existente.
-
-### 5. Procesar Pago de Venta
-
-**Endpoint:** `POST /payment/process-partial`
-
-Procesa un pago parcial o completo para una orden de venta existente. Este endpoint tiene un manejo avanzado de efectivo que permite registrar la cantidad exacta de dinero recibida del cliente y calcular el vuelto automáticamente.
-
-**Request Body:**
-
-```json
-{
-  "sales_order_id": "24aBcDeF",
-  "amount_received": 200000.00,
-  "amount_to_apply": 185500.00,
-  "cash_register_id": 6,
-  "payment_notes": "Cliente paga con billete de 200.000 Gs."
-}
-```
-
-**Parámetros del Request:**
-
-| Campo | Tipo | Requerido | Descripción |
-|-------|------|-----------|-------------|
-| `sales_order_id` | string | ✅ Sí | ID de la orden de venta a la que se aplica el pago. |
-| `amount_received` | number | ✅ Sí | El monto de efectivo físico que el cliente entrega. Debe ser > 0. |
-| `amount_to_apply` | number | ❌ No | El monto que se aplicará a la deuda de la venta. Si se omite, el sistema intenta aplicar el `amount_received` completo (o lo que falte para saldar la deuda). |
-| `cash_register_id` | number | ⚠️ Condicional | **Obligatorio** si se especifica `amount_to_apply`. Si se omite, el sistema buscará una caja abierta automáticamente. |
-| `payment_notes` | string | ❌ No | Notas adicionales sobre el pago. |
-
-> **⚠️ Regla Clave:** `amount_received` debe ser siempre mayor o igual a `amount_to_apply`.
-
-**Response (200 OK con vuelto):**
-
-```json
-{
-  "success": true,
-  "message": "Payment completed",
-  "payment_id": 32,
-  "payment_summary": {
-    "total_sale_amount": 185500.00,
-    "previous_payments": 0.00,
-    "current_payment": 185500.00,
-    "total_paid": 185500.00,
-    "remaining_balance": 0.00,
-    "sale_status": "PAID"
-  },
-  "cash_summary": {
-    "cash_received": 200000.00,
-    "amount_applied": 185500.00,
-    "change_given": 14500.00,
-    "net_cash_impact": 185500.00
-  },
-  "payment_complete": true,
-  "requires_change": true
-}
-```
-
-**Estructura del Response de Pago:**
-
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `payment_summary` | object | Resumen del estado de la deuda de la venta. |
-| `cash_summary` | object | Detalle del movimiento de efectivo (recibido, aplicado, vuelto). |
-| `payment_complete` | boolean | `true` si la venta ha sido saldada completamente. |
-| `requires_change` | boolean | `true` si se debe entregar vuelto al cliente (`change_given > 0`). |
-
-**Errores Posibles:**
-
-| Error | HTTP Status | Descripción | Solución |
-|---|---|-------------|-------------|----------|
-| `Sale not found` | 404 | La venta con el `sales_order_id` no existe. | Verificar que el ID de la venta sea correcto. |
-| `Sale already fully paid` | 400 | Se intentó pagar una venta que ya está saldada. | Verificar el estado de la venta antes de intentar un pago. Se puede obtener con `GET /sales/payment-status/{id}`. |
-| `Cash register is not open` | 400 | La caja registradora asociada está cerrada. | Abrir una caja antes de procesar pagos. |
-| `Insufficient cash` | 400 | `amount_to_apply` es mayor que `amount_received`. | Validar en el frontend que el monto a aplicar no supere el recibido. |
-
-
----
 
 ## 📊 Consulta de Ventas
 
-Esta sección cubre cómo consultar ventas existentes por rango de fechas.
+Esta sección cubre cómo consultar ventas existentes por rango de fechas o por datos del cliente.
 
-### 6. Obtener Historial de Pagos de una Venta
 
-**Endpoint:** `GET /sales/{id}/payments`
 
-Obtiene todos los pagos registrados para una venta específica. Es útil para ver el historial de pagos parciales y el detalle de cada transacción.
+### 5. Obtener Ventas por ID de Cliente
+
+**Endpoint:** `GET /sale/client_id/{id}`
+
+Obtiene una lista paginada de ventas realizadas a un cliente específico, identificado por su ID.
 
 **Path Parameters:**
 
 | Parámetro | Tipo   | Descripción                     |
 |-----------|--------|---------------------------------|
-| `id`      | string | ID único de la venta a consultar. |
+| `id`      | string | ID único del cliente.           |
 
-**Response (200 OK):**
-Un array de objetos, donde cada objeto representa un pago.
-```json
-[
-  {
-    "id": 101,
-    "sales_order_id": "24aBcDeF",
-    "client_name": "Juan Pérez",
-    "amount_due": 185500.00,
-    "amount_received": 100000.00,
-    "change_amount": 0.00,
-    "currency_code": "PYG",
-    "payment_method_code": "CASH",
-    "payment_reference": "REF-PARTIAL-1",
-    "payment_notes": "Primer pago parcial.",
-    "payment_date": "2025-12-10T10:00:00Z",
-    "processed_by_name": "Admin User",
-    "status": "COMPLETED"
-  },
-  {
-    "id": 102,
-    "sales_order_id": "24aBcDeF",
-    "client_name": "Juan Pérez",
-    "amount_due": 85500.00,
-    "amount_received": 100000.00,
-    "change_amount": 14500.00,
-    "currency_code": "PYG",
-    "payment_method_code": "CASH",
-    "payment_reference": "REF-FINAL-2",
-    "payment_notes": "Pago final para saldar la deuda.",
-    "payment_date": "2025-12-10T11:30:00Z",
-    "processed_by_name": "Admin User",
-    "status": "COMPLETED"
-  }
-]
+**Query Parameters:**
+
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `page` | number | ❌ No | Número de página (default: 1). Debe ser > 0. |
+| `page_size` | number | ❌ No | Cantidad de registros por página (default: 50). Debe ser > 0. |
+
+**Ejemplo de Request:**
+
+```bash
+GET http://localhost:5050/sale/client_id/4hu5VK6Ng?page=1&page_size=10
 ```
 
-**Campos del Response (por cada pago en el array):**
+**Response (200 OK):**
+```json
+{
+  "data": [
+    {
+      "sale": {
+        "sale_id": "24aBcDeF",
+        "client_id": "4hu5VK6Ng",
+        "client_name": "Nombre del Cliente",
+        "sale_date": "2025-05-15T14:30:00Z",
+        "total_amount": 185500.50,
+        "status": "PAID",
+        "user_id": "USER_123",
+        "user_name": "Carlos González",
+        "payment_method_id": 1,
+        "payment_method": "Efectivo",
+        "currency_id": 1,
+        "currency": "Guaraníes",
+        "metadata": {
+          "reserve_id": 123,
+          "notes": "Venta con descuento VIP"
+        }
+      },
+      "details": [
+        {
+          "id": 501,
+          "order_id": "24aBcDeF",
+          "product_id": "PROD_A",
+          "product_name": "Producto Premium",
+          "product_type": "PHYSICAL",
+          "quantity": 2.0,
+          "base_price": 10000.00,
+          "unit_price": 9500.00,
+          "discount_amount": 500.00,
+          "subtotal": 19000.00,
+          "tax_amount": 1900.00,
+          "total_with_tax": 20900.00,
+          "price_modified": true,
+          "reserve_id": 0,
+          "tax_rate_id": 1
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "page_size": 10,
+    "total_records": 1,
+    "total_pages": 1,
+    "has_next": false,
+    "has_previous": false
+  }
+}
+```
 
-| Campo | Tipo | Descripción |
-|---|---|---|
-| `id` | number | ID único del registro de pago. |
-| `sales_order_id` | string | ID de la venta a la que pertenece el pago. |
-| `client_name` | string | Nombre del cliente de la venta. |
-| `amount_due` | number | El monto que se debía al momento de este pago. |
-| `amount_received` | number | El monto que se recibió en esta transacción de pago. |
-| `change_amount` | number | El vuelto que se entregó en esta transacción. |
-| `currency_code` | string | Código de la moneda (ej: "PYG"). |
-| `payment_method_code`| string | Código del método de pago (ej: "CASH", "CARD"). |
-| `payment_reference` | string \| null | Referencia o código de transacción del pago. |
-| `payment_notes` | string \| null | Notas adicionales sobre el pago. |
-| `payment_date` | string (ISO 8601) | Fecha y hora en que se registró el pago. |
-| `processed_by_name` | string | Nombre del usuario que procesó el pago. |
-| `status` | string | Estado del pago (`COMPLETED`, `REFUNDED`, etc.). |
+**Campos del Response:**
+
+Los campos del `Response` (incluyendo los objetos `sale`, `details` y `pagination`) son idénticos a los descritos en la sección `Obtener Ventas por Rango de Fechas`.
 
 **Errores Posibles:**
 
 | Error | HTTP Status | Descripción | Solución |
-|---|---|-------------|-------------|----------|
-| `Sale not found` | 404 | La venta con el `id` especificado no existe. | Verificar que el ID de la venta sea correcto. |
+|-------|-------------|-------------|----------|
+| `client_id is required` | 400 | El ID del cliente no fue proporcionado. | Asegurarse de incluir el ID del cliente en la URL. |
 | `Unauthorized` | 401 | Token JWT inválido o ausente. | Verificar que el header `Authorization: Bearer <token>` esté presente y sea válido. |
+| `Internal Server Error` | 500 | Error al procesar la consulta en el servidor. | Contactar a soporte si persiste. |
+
+**Validaciones Recomendadas en Frontend:**
+
+1. ✅ Verificar que el `id` del cliente no esté vacío antes de enviar.
+2. ✅ Si se especifica `page`, asegurar que sea un número entero > 0.
+3. ✅ Si se especifica `page_size`, asegurar que sea un número entero > 0.
+4. 💡 Sugerencia: Limitar `page_size` a un máximo razonable (ej: 100) para evitar respuestas muy grandes.
 
 ---
 
-### 7. Obtener Ventas por Nombre de Cliente
+### 6. Obtener Ventas por Nombre de Cliente
+
 
 **Endpoint:** `GET /sale/client_name/{name}`
 
@@ -607,7 +558,7 @@ Los campos del `Response` (incluyendo los objetos `sale`, `details` y `paginatio
 
 ---
 
-### 8. Obtener Ventas por Rango de Fechas
+### 7. Obtener Ventas por Rango de Fechas
 
 **Endpoint:** `GET /sale/date_range`
 
@@ -825,42 +776,7 @@ GET /sale/date_range?start_date=2025-05-01&end_date=2025-06-19&page=1&page_size=
 ```
 **Resultado:** El producto se venderá a 8,750 Gs. la unidad, sin importar su precio original.
 
-### Caso 3: Pago Exacto (Modo Simple)
-
-**Escenario:** Una venta tiene un saldo pendiente de 50.000 Gs. y el cliente paga exactamente eso.
-
-**Request a `POST /payment/process-partial`:**
-```json
-{
-  "sales_order_id": "ID_DE_LA_VENTA",
-  "amount_received": 50000.00
-}
-```
-**Resultado:**
-- `amount_applied`: 50000.00
-- `change_given`: 0.00
-- `sale_status`: "PAID"
-
-### Caso 4: Pago con Vuelto (Modo Avanzado)
-
-**Escenario:** Una venta tiene un saldo de 164.000 Gs. El cliente paga con un billete de 200.000 Gs.
-
-**Request a `POST /payment/process-partial`:**
-```json
-{
-  "sales_order_id": "ID_DE_LA_VENTA",
-  "amount_received": 200000.00,
-  "amount_to_apply": 164000.00,
-  "cash_register_id": 1
-}
-```
-**Resultado:**
-- `cash_received`: 200000.00
-- `amount_applied`: 164000.00
-- `change_given`: 36000.00
-- `requires_change`: `true` (¡Indicar al cajero que debe dar vuelto!)
-
-### Caso 5: Consultar Ventas del Mes
+### Caso 3: Consultar Ventas del Mes
 
 **Escenario:** Necesitas obtener todas las ventas del mes de mayo de 2025, mostrando 20 registros por página.
 
@@ -893,22 +809,15 @@ GET /sale/date_range?start_date=2025-05-01&end_date=2025-05-31&page=1&page_size=
 3.  ✅ No permitir `discount_amount` y `discount_percent` en el mismo item.
 4.  ✅ Validar que `discount_percent` esté entre 0 y 100.
 
-**Para `POST /payment/process-partial`:**
-1.  ✅ `amount_received` debe ser un número positivo.
-2.  ✅ Si se usa `amount_to_apply`, validar que `amount_received >= amount_to_apply`.
-3.  ✅ Antes de enviar, consultar el saldo de la venta y validar que `amount_to_apply` no lo exceda.
-
 ---
 
 ## 🎯 Recomendaciones de Implementación
 
-### Flujo Completo de Venta y Pago
+### Flujo de Creación de Venta
 
 1.  **Crear la Venta:** El usuario arma el carrito. Al confirmar, enviar la solicitud a `POST /sales/orders`.
 2.  **Guardar el ID:** Al recibir una respuesta exitosa, guardar el `sale_id` retornado.
-3.  **Proceder al Pago:** Usar el `sale_id` para realizar una o más llamadas a `POST /payment/process-partial` hasta que la venta esté pagada.
-4.  **Manejar el Vuelto:** Si la respuesta de pago incluye `requires_change: true`, mostrar una alerta clara al cajero con el monto de `change_given`.
-5.  **Finalizar:** Una vez `payment_complete: true`, se puede imprimir el recibo y finalizar el flujo.
+3.  **Continuar al Pago:** Usar el `sale_id` para navegar a la sección de pagos de la aplicación, donde se utilizará la **[Guía de API de Pagos y Cobranzas](./SALE_PAYMENT.md)**.
 
 ---
 
@@ -921,6 +830,11 @@ Para una especificación técnica completa y machine-readable de esta API, consu
 ---
 
 ## 📝 Historial de Cambios
+
+### v1.7 - 11 de Diciembre de 2025
+- ✅ Separada la documentación de pagos a un archivo dedicado: `SALE_PAYMENT.md`.
+- ✅ Actualizada la `Descripción General`, `Características Principales`, `Casos de Uso`, `Validaciones` y `Recomendaciones de Implementación` para reflejar la separación.
+- ✅ Renumerados los endpoints existentes.
 
 ### v1.6 - 10 de Diciembre de 2025
 - ✅ Agregada documentación del endpoint `GET /sales/{id}/payments` para obtener el historial de pagos de una venta.

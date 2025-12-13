@@ -145,6 +145,7 @@ export const sales = {
   'sales.detail.notes': 'Notas',
   'sales.detail.customer': 'Información del Cliente',
   'sales.detail.customerName': 'Nombre',
+  'sales.detail.customerContact': 'Contacto',
   'sales.detail.customerEmail': 'Email',
   'sales.detail.customerPhone': 'Teléfono',
   'sales.detail.payment': 'Información de Pago',
@@ -170,6 +171,7 @@ export const sales = {
   'sales.detail.branch': 'Sucursal',
   'sales.detail.productsTitle': 'Productos de la Orden',
   'sales.detail.productSku': 'Producto / SKU',
+  'sales.detail.productId': 'Producto / ID',
   'sales.detail.quantityShort': 'Cant.',
   'sales.detail.unitPrice': 'Precio Unit.',
   'sales.detail.paymentHistory': 'Historial de Pagos',
@@ -180,10 +182,99 @@ export const sales = {
   'sales.detail.paymentChange': 'Vuelto',
   'sales.detail.paymentStatus': 'Estado',
   'sales.detail.noPayments': 'No hay pagos registrados para esta venta',
+  'sales.detail.viewPaymentHistory': 'Ver Historial Completo',
   'sales.detail.status.pending': 'Pendiente',
+  'sales.detail.status.partial': 'Parcial',
+  'sales.detail.status.partial_payment': 'Pago Parcial',
   'sales.detail.status.completed': 'Completado',
   'sales.detail.status.cancelled': 'Anulado',
   'sales.detail.status.confirmed': 'Confirmado',
   'sales.detail.status.void': 'Anulado',
   'sales.detail.status.paid': 'Pagado',
+
+  // Historial de Pagos
+  'sales.paymentHistory.breadcrumb.sales': 'Ventas',
+  'sales.paymentHistory.breadcrumb.orders': 'Órdenes',
+  'sales.paymentHistory.breadcrumb.current': 'Historial de Pagos',
+  'sales.paymentHistory.title': 'Historial de Pagos para',
+  'sales.paymentHistory.notFound': 'No se encontró la orden de venta',
+  'sales.paymentHistory.action.addPayment': 'Añadir Nuevo Pago',
+  'sales.paymentHistory.orderStatus': 'Estado de la Orden',
+  'sales.paymentHistory.orderStatusMessage':
+    'Esta orden de venta tiene un saldo pendiente. Esperando pago completo.',
+  'sales.paymentHistory.viewOrderDetails': 'Ver Detalles de la Orden',
+  'sales.paymentHistory.paymentProgress': 'Progreso del Pago',
+  'sales.paymentHistory.paid': 'Pagado',
+  'sales.paymentHistory.balanceDue': 'Saldo Pendiente',
+  'sales.paymentHistory.total': 'Total',
+  'sales.paymentHistory.table.date': 'FECHA',
+  'sales.paymentHistory.table.user': 'USUARIO',
+  'sales.paymentHistory.table.method': 'MÉTODO DE PAGO',
+  'sales.paymentHistory.table.amount': 'MONTO',
+  'sales.paymentHistory.table.status': 'ESTADO',
+  'sales.paymentHistory.noPayments': 'No hay pagos registrados',
+  'sales.paymentHistory.customer': 'Cliente',
+  'sales.paymentHistory.customerId': 'ID Cliente',
+  'sales.paymentHistory.viewFullProfile': 'Ver Perfil Completo',
+  'sales.paymentHistory.productsInOrder': 'Productos en la Orden',
+  'sales.paymentHistory.quantity': 'Cant',
+  'sales.paymentHistory.noProducts': 'Sin productos',
+  'sales.paymentHistory.status.pending': 'Pendiente',
+  'sales.paymentHistory.status.partial': 'Parcial',
+  'sales.paymentHistory.status.partial_payment': 'Pago Parcial',
+  'sales.paymentHistory.status.completed': 'Completado',
+  'sales.paymentHistory.status.paid': 'Pagado',
+  'sales.paymentHistory.status.cancelled': 'Cancelado',
+  'sales.paymentHistory.status.reversed': 'Reversado',
+  'sales.paymentHistory.status.failed': 'Fallido',
+
+  // Modal de Registro de Pago
+  'sales.registerPaymentModal.title': 'Registrar Nuevo Pago',
+  'sales.registerPaymentModal.titleWithOrder':
+    'Registrar Nuevo Pago para Orden #{{orderId}}',
+  'sales.registerPaymentModal.orderLabel': 'Orden #{{orderId}}',
+  'sales.registerPaymentModal.balanceDue': 'Saldo Pendiente: {{amount}}',
+  'sales.registerPaymentModal.orderFallback':
+    'Seleccione una orden para registrar el pago',
+  'sales.registerPaymentModal.amountReceived.label': 'Monto Recibido (Efectivo)',
+  'sales.registerPaymentModal.amountReceived.errorRequired':
+    'El monto recibido debe ser mayor o igual a 0',
+  'sales.registerPaymentModal.amountToApply.label': 'Monto a Aplicar',
+  'sales.registerPaymentModal.amountToApply.pending':
+    'Saldo pendiente: {{amount}}',
+  'sales.registerPaymentModal.amountToApply.errorRequired':
+    'El monto a aplicar debe ser mayor a 0',
+  'sales.registerPaymentModal.amountToApply.errorExceeded':
+    'El monto a aplicar no puede exceder el saldo pendiente',
+  'sales.registerPaymentModal.amountToApply.errorExceedsReceived':
+    'El monto a aplicar no puede exceder el monto recibido',
+  'sales.registerPaymentModal.cashRegister.label': 'Caja Registradora',
+  'sales.registerPaymentModal.cashRegister.placeholder':
+    'Seleccionar caja registradora',
+  'sales.registerPaymentModal.cashRegister.loading': 'Cargando cajas...',
+  'sales.registerPaymentModal.cashRegister.empty':
+    'No hay cajas registradoras abiertas disponibles',
+  'sales.registerPaymentModal.cashRegister.none': 'Sin caja registradora',
+  'sales.registerPaymentModal.cashRegister.balance': 'Saldo: {{amount}}',
+  'sales.registerPaymentModal.cashRegister.closed': 'Cerrada',
+  'sales.registerPaymentModal.cashRegister.closedWarning':
+    'La caja seleccionada está actualmente cerrada. El pago se registrará pero no afectará el balance de la caja hasta que se reabra.',
+  'sales.registerPaymentModal.cashRegister.errorRequired':
+    'Debe seleccionar una caja registradora',
+  'sales.registerPaymentModal.cashRegister.loadError':
+    'Error al cargar cajas registradoras',
+  'sales.registerPaymentModal.notes.label': 'Notas del Pago (Opcional)',
+  'sales.registerPaymentModal.notes.placeholder':
+    'Añadir comentarios sobre el pago...',
+  'sales.registerPaymentModal.change.label': 'Vuelto a Entregar:',
+  'sales.registerPaymentModal.change.noChange': 'No hay vuelto',
+  'sales.registerPaymentModal.change.willReturn': 'Entregar al cliente:',
+  'sales.registerPaymentModal.feedback.selectSale':
+    'Debe seleccionar una venta para registrar el pago',
+  'sales.registerPaymentModal.cancel': 'Cancelar',
+  'sales.registerPaymentModal.confirm': 'Confirmar Pago',
+  'sales.registerPaymentModal.loading': 'Procesando...',
+  'sales.registerPaymentModal.submitError':
+    'Error al procesar el pago. Intente nuevamente.',
+  'sales.registerPaymentModal.successMessage': 'Pago registrado exitosamente',
 }

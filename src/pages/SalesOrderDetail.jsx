@@ -14,8 +14,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import DataState from '@/components/ui/DataState'
+import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal'
 import { useI18n } from '@/lib/i18n'
+import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
+import { clientService } from '@/services/clientService'
 import { useToast } from '@/hooks/useToast'
 import '@/styles/scss/pages/_sales-order-detail.scss'
 
@@ -23,13 +26,13 @@ const SalesOrderDetail = () => {
   const { saleId } = useParams()
   const navigate = useNavigate()
   const { t } = useI18n()
-  const { error: showError } = useToast()
+  const { error: showError, success: showSuccess } = useToast()
 
   const [sale, setSale] = useState(null)
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [loadingPayments, setLoadingPayments] = useState(false)
   const [error, setError] = useState(null)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
   const loadSale = useCallback(async () => {
     if (!saleId) return
@@ -38,43 +41,119 @@ const SalesOrderDetail = () => {
     setError(null)
 
     try {
-      const response = await saleService.getSaleById(saleId)
-      if (response) {
-        // Handle both direct object and { data: ... } wrapper
-        const saleData = response.data || response
-        setSale(saleData)
+      // PASO 1: Obtener estado de pago con historial de pagos
+      // Endpoint: GET /sale/{id}/payment-status (SALE_PAYMENT_API.md)
+      const paymentStatusResponse =
+        await salePaymentService.getSalePaymentStatus(saleId)
 
-        // Cargar historial de pagos usando el endpoint oficial
-        loadPayments()
-      } else {
+      if (!paymentStatusResponse) {
         setError('Sale not found')
+        return
+      }
+
+      // PASO 2: Obtener detalles completos de la venta (con items/productos)
+      // Endpoint: GET /sale/client_id/{id} (SALE_API.md)
+      // Este endpoint devuelve: {data: [{sale: {...}, details: [...]}, ...], pagination: {...}}
+      // También contiene user_name (vendedor que creó la venta)
+      let saleDetails = null
+
+      try {
+        const clientSalesResponse = await saleService.getSalesByClient(
+          paymentStatusResponse.client_id
+        )
+
+        // Buscar la venta específica en la lista de ventas del cliente
+        if (clientSalesResponse?.data && Array.isArray(clientSalesResponse.data)) {
+          // clientSalesResponse.data es un array de ventas
+          // Cada elemento puede tener formato: {sale: {...}, details: [...]} o formato plano
+          const saleItem = clientSalesResponse.data.find(item => {
+            const itemSaleId = item.sale_id || item.id || item.sale?.sale_id
+            return itemSaleId === saleId
+          })
+
+          if (saleItem) {
+            saleDetails = saleItem
+          }
+        }
+      } catch (err) {
+        console.warn('Error loading sale details from client endpoint:', err)
+        // No critical - continue with payment status data only
+      }
+
+      // PASO 3: Obtener datos completos del cliente desde CLIENT_API
+      let clientDetails = null
+
+      try {
+        if (paymentStatusResponse.client_id) {
+          clientDetails = await clientService.getById(paymentStatusResponse.client_id)
+        }
+      } catch (err) {
+        console.warn('Error loading client details:', err)
+        // No crítico - continuar sin datos de cliente
+      }
+
+      // PASO 4: Combinar datos de todos los endpoints
+      const balanceDue = paymentStatusResponse.balance_due || 0
+      let correctedStatus = paymentStatusResponse.status
+
+      // CORRECCIÓN: Si balance_due = 0, el estado debe ser PAID, no PARTIAL_PAYMENT
+      if (balanceDue === 0 && correctedStatus === 'PARTIAL_PAYMENT') {
+        correctedStatus = 'PAID'
+      }
+
+      const saleData = {
+        ...paymentStatusResponse,
+        // ID de la venta (asegurar que esté disponible)
+        id: paymentStatusResponse.sale_id,
+        sale_id: paymentStatusResponse.sale_id,
+        // Estado corregido
+        status: correctedStatus,
+        balance_due: balanceDue,
+        // Agregar items/details desde saleDetails si existen
+        items:
+          saleDetails?.details ||
+          saleDetails?.items ||
+          saleDetails?.sale?.details ||
+          [],
+        // Agregar user_name (vendedor) desde SALE_API
+        user_name:
+          saleDetails?.sale?.user_name ||
+          saleDetails?.user_name,
+        user_id:
+          saleDetails?.sale?.user_id ||
+          saleDetails?.user_id,
+        // Datos de cliente desde CLIENT_API (document_id, contact)
+        client_document: clientDetails?.document_id,
+        client_contact: clientDetails?.contact,
+        client_last_name: clientDetails?.last_name,
+      }
+
+      setSale(saleData)
+
+      // Los pagos vienen en paymentStatusResponse.payments
+      if (
+        paymentStatusResponse.payments &&
+        Array.isArray(paymentStatusResponse.payments)
+      ) {
+        setPayments(paymentStatusResponse.payments)
       }
     } catch (err) {
       console.error('Error loading sale:', err)
-      setError(err.message || 'Error loading sale details')
+
+      // Manejar 404 apropiadamente
+      const statusCode = err?.status ?? err?.statusCode ?? err?.response?.status
+      if (statusCode === 404) {
+        setError('Sale not found')
+      } else {
+        setError(err.message || 'Error loading sale details')
+      }
+
       showError('Error loading sale details')
     } finally {
       setLoading(false)
     }
   }, [saleId, showError])
 
-  const loadPayments = async () => {
-    if (!saleId) return
-
-    setLoadingPayments(true)
-    try {
-      const response = await saleService.getSalePayments(saleId)
-      if (response && response.data) {
-        setPayments(response.data)
-      }
-    } catch (err) {
-      console.error('Error loading payments:', err)
-      // No mostrar error crítico, solo mantener pagos vacíos
-      setPayments([])
-    } finally {
-      setLoadingPayments(false)
-    }
-  }
 
   useEffect(() => {
     loadSale()
@@ -82,6 +161,21 @@ const SalesOrderDetail = () => {
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handlePaymentSubmit = async paymentData => {
+    try {
+      await salePaymentService.processSalePaymentWithCashRegister(paymentData)
+      showSuccess(
+        t('common.success'),
+        t('sales.registerPaymentModal.successMessage', 'Pago registrado exitosamente')
+      )
+      // Reload sale data to update balance and payment history
+      await loadSale()
+    } catch (error) {
+      console.error('Error registering payment:', error)
+      throw error // Re-throw so modal can handle it
+    }
   }
 
   const getStatusBadgeVariant = status => {
@@ -100,7 +194,11 @@ const SalesOrderDetail = () => {
 
   const formatDate = dateString => {
     if (!dateString) return '-'
-    return new Date(dateString).toLocaleDateString()
+    const date = new Date(dateString)
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
   }
 
   const formatCurrency = amount => {
@@ -119,15 +217,18 @@ const SalesOrderDetail = () => {
   const balanceDue =
     sale?.balance_due ?? sale?.balance ?? Math.max(totalAmount - paidAmount, 0)
 
-  // Normalizar pagos desde el endpoint oficial GET /sales/{id}/payments
+  // Normalizar pagos desde el endpoint GET /sale/{id}/payment-status
+  // Este endpoint devuelve los pagos con: payment_id, amount_paid, status, payment_date, etc.
   const normalizedPayments = payments.length
     ? payments.map(payment => ({
-        id: payment.id,
+        id: payment.payment_id || payment.id,
         date: payment.payment_date,
         user: payment.processed_by_name || '—',
-        amount: payment.amount_received || 0,
+        // payment-status usa amount_paid; /sales/{id}/payments usa amount_received
+        amount: payment.amount_paid || payment.amount_received || 0,
         change: payment.change_amount || 0,
-        method: payment.payment_method_code || 'CASH',
+        // Algunos pagos pueden no tener método especificado
+        method: payment.payment_method_code || payment.payment_method || 'CASH',
         reference: payment.payment_reference || '—',
         notes: payment.payment_notes || '',
         status: (payment.status || 'COMPLETED').toLowerCase(),
@@ -205,7 +306,11 @@ const SalesOrderDetail = () => {
           </p>
         </div>
 
-        <Button className='sales-order-detail__primary-action btn btn--primary'>
+        <Button
+          className='sales-order-detail__primary-action btn btn--primary'
+          onClick={() => setIsPaymentModalOpen(true)}
+          disabled={!sale || balanceDue <= 0}
+        >
           <CreditCard size={16} />
           {t('sales.detail.registerPayment')}
         </Button>
@@ -263,10 +368,10 @@ const SalesOrderDetail = () => {
               </div>
               <div className='sales-order-detail__info-row'>
                 <span className='sales-order-detail__label'>
-                  {t('sales.detail.customerEmail')}
+                  {t('sales.detail.customerContact')}
                 </span>
                 <span className='sales-order-detail__value'>
-                  {sale.client_email || '—'}
+                  {sale.client_contact || '—'}
                 </span>
               </div>
             </div>
@@ -290,15 +395,7 @@ const SalesOrderDetail = () => {
                   {t('sales.detail.seller')}
                 </span>
                 <span className='sales-order-detail__value'>
-                  {sale.user_name || sale.seller || '—'}
-                </span>
-              </div>
-              <div className='sales-order-detail__info-row'>
-                <span className='sales-order-detail__label'>
-                  {t('sales.detail.branch')}
-                </span>
-                <span className='sales-order-detail__value'>
-                  {sale.branch || sale.store || '—'}
+                  {sale.user_name || '—'}
                 </span>
               </div>
             </div>
@@ -316,7 +413,7 @@ const SalesOrderDetail = () => {
               <table className='sales-order-detail__table'>
                 <thead>
                   <tr>
-                    <th>{t('sales.detail.productSku')}</th>
+                    <th>{t('sales.detail.productId')}</th>
                     <th className='text-center'>
                       {t('sales.detail.quantityShort')}
                     </th>
@@ -334,7 +431,7 @@ const SalesOrderDetail = () => {
                           {item.product_name || item.name || '—'}
                         </div>
                         <div className='sales-order-detail__cell-sub'>
-                          {item.sku || item.code || 'SKU'}
+                          ID: {item.product_id || item.id || '—'}
                         </div>
                       </td>
                       <td className='text-center'>{item.quantity || 0}</td>
@@ -359,12 +456,16 @@ const SalesOrderDetail = () => {
               <h3 className='sales-order-detail__card-title'>
                 {t('sales.detail.paymentHistory')}
               </h3>
+              <Button
+                onClick={() => navigate(`/cobros-ventas/${saleId}/pagos`)}
+                variant='ghost'
+                size='sm'
+                className='btn btn--ghost btn--small'
+              >
+                {t('sales.detail.viewPaymentHistory', 'Ver Historial Completo')}
+              </Button>
             </div>
-            {loadingPayments ? (
-              <div className='sales-order-detail__table-wrapper'>
-                <DataState variant='loading' />
-              </div>
-            ) : normalizedPayments.length > 0 ? (
+            {normalizedPayments.length > 0 ? (
               <div className='sales-order-detail__table-wrapper'>
                 <table className='sales-order-detail__table'>
                   <thead>
@@ -419,6 +520,14 @@ const SalesOrderDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de registro de pago */}
+      <RegisterSalePaymentModal
+        open={isPaymentModalOpen}
+        onOpenChange={setIsPaymentModalOpen}
+        sale={sale}
+        onSubmit={handlePaymentSubmit}
+      />
     </div>
   )
 }

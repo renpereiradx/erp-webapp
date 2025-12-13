@@ -155,6 +155,11 @@ const MainLayout = ({ children }) => {
             href: '/pagos-compras',
             icon: CircleDollarSign,
           },
+          {
+            name: 'Cobros Ventas',
+            href: '/cobros-ventas',
+            icon: CreditCard,
+          },
           { name: 'Pagos Ventas', href: '/pagos-ventas', icon: Receipt },
           {
             name: 'Documentación de Pagos',

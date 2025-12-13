@@ -1,0 +1,596 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.payment-history {
+  padding: clamp($spacing-16, 2vw, $spacing-24)
+    clamp($spacing-16, 2vw, $spacing-32);
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: fadeIn 0.25s ease-in-out;
+
+  @include themify($themes) {
+    color: themed('text-primary');
+  }
+
+  // Breadcrumbs
+  &__breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    margin-bottom: $spacing-24;
+    @include typography('body-sm');
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__breadcrumb-link {
+    text-decoration: none;
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+
+    &:hover {
+      @include themify($themes) {
+        color: themed('action-primary');
+      }
+    }
+  }
+
+  &__breadcrumb-separator {
+    opacity: 0.6;
+  }
+
+  &__breadcrumb-current {
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+    font-weight: $font-weight-medium;
+  }
+
+  // Header
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-16;
+    margin-bottom: $spacing-24;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    @include typography('title-2');
+    margin: 0;
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+  }
+
+  &__action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: $border-radius-medium;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    @include themify($themes) {
+      background-color: transparent;
+      color: themed('text-secondary');
+    }
+
+    &:hover {
+      @include themify($themes) {
+        background-color: themed('state-hover-overlay');
+        color: themed('text-primary');
+      }
+    }
+  }
+
+  &__action-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  // Layout
+  &__layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: $spacing-24;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+  }
+
+  // Alert Banner
+  &__alert {
+    @include card;
+    padding: $spacing-16 $spacing-20;
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-12;
+    border-left: 4px solid;
+
+    &--warning {
+      @include themify($themes) {
+        background-color: themed('warning-background');
+        border-color: themed('warning');
+      }
+    }
+  }
+
+  &__alert-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+
+    @include themify($themes) {
+      color: themed('warning');
+    }
+  }
+
+  &__alert-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__alert-title {
+    @include typography('body');
+    font-weight: $font-weight-semibold;
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('warning-foreground');
+    }
+  }
+
+  &__alert-message {
+    @include typography('body-sm');
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('warning-foreground');
+    }
+  }
+
+  &__alert-link {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-4;
+    text-decoration: none;
+    @include typography('body-sm');
+    font-weight: $font-weight-semibold;
+    white-space: nowrap;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__alert-link-icon {
+    width: 16px;
+    height: 16px;
+    transform: rotate(180deg);
+  }
+
+  // Card
+  &__card {
+    @include card;
+    padding: $spacing-24;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+  }
+
+  // Progress Bar
+  &__progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__progress-label {
+    @include typography('body-sm');
+    margin: 0;
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__progress-percentage {
+    @include typography('body');
+    font-weight: $font-weight-semibold;
+    margin: 0;
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__progress-bar {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+
+    @include themify($themes) {
+      background-color: themed('bg-tertiary');
+    }
+  }
+
+  &__progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+
+    @include themify($themes) {
+      background-color: themed('action-primary');
+    }
+  }
+
+  &__progress-stats {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-16;
+    flex-wrap: wrap;
+  }
+
+  &__progress-stat {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__progress-stat-value {
+    @include typography('body');
+    font-weight: $font-weight-semibold;
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__progress-stat-label {
+    @include typography('caption');
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  // Table
+  &__table-wrapper {
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    @include typography('body-sm');
+
+    thead tr {
+      @include themify($themes) {
+        background-color: themed('bg-tertiary');
+      }
+    }
+
+    th {
+      padding: $spacing-12 $spacing-16;
+      text-align: left;
+      font-weight: $font-weight-semibold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      @include typography('caption');
+
+      @include themify($themes) {
+        color: themed('text-secondary');
+      }
+
+      &.text-right {
+        text-align: right;
+      }
+
+      &.text-center {
+        text-align: center;
+      }
+    }
+
+    tbody tr {
+      @include themify($themes) {
+        border-bottom: 1px solid themed('border-subtle');
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: $spacing-16;
+
+      &.text-right {
+        text-align: right;
+      }
+
+      &.text-center {
+        text-align: center;
+      }
+    }
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+  }
+
+  &__user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: $font-weight-semibold;
+    @include typography('body-sm');
+
+    @include themify($themes) {
+      background-color: themed('action-primary');
+      color: themed('text-on-primary');
+    }
+  }
+
+  &__amount {
+    font-weight: $font-weight-semibold;
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-4;
+    padding: $spacing-4 $spacing-12;
+    border-radius: 999px;
+    @include typography('caption');
+    font-weight: $font-weight-medium;
+
+    &--success,
+    &--completed {
+      @include themify($themes) {
+        background-color: themed('success-background');
+        color: themed('success-foreground');
+      }
+    }
+
+    &--warning,
+    &--pending {
+      @include themify($themes) {
+        background-color: themed('warning-background');
+        color: themed('warning-foreground');
+      }
+    }
+
+    &--error,
+    &--failed,
+    &--reversed {
+      @include themify($themes) {
+        background-color: themed('error-background');
+        color: themed('error-foreground');
+      }
+    }
+
+    &--info,
+    &--default {
+      @include themify($themes) {
+        background-color: themed('bg-tertiary');
+        color: themed('text-secondary');
+      }
+    }
+  }
+
+  &__status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: currentColor;
+  }
+
+  // Empty State
+  &__empty {
+    padding: $spacing-48;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-16;
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+
+    svg {
+      opacity: 0.5;
+    }
+
+    p {
+      @include typography('body');
+      margin: 0;
+    }
+  }
+
+  // Sidebar
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+  }
+
+  &__sidebar-card {
+    @include card;
+    padding: $spacing-20;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+  }
+
+  &__sidebar-title {
+    @include typography('title-3');
+    margin: 0;
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  // Customer
+  &__customer {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+  }
+
+  &__customer-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: $font-weight-semibold;
+    @include typography('title-3');
+
+    @include themify($themes) {
+      background-color: themed('bg-tertiary');
+      color: themed('text-primary');
+    }
+  }
+
+  &__customer-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__customer-name {
+    @include typography('body');
+    font-weight: $font-weight-semibold;
+    margin: 0;
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__customer-id {
+    @include typography('caption');
+    margin: 0;
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__sidebar-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-8;
+    padding: $spacing-8 $spacing-12;
+    border-radius: $border-radius-medium;
+    text-decoration: none;
+    @include typography('body-sm');
+    font-weight: $font-weight-semibold;
+    transition: background-color 0.2s ease;
+
+    @include themify($themes) {
+      background-color: themed('bg-tertiary');
+      color: themed('text-primary');
+    }
+
+    &:hover {
+      @include themify($themes) {
+        background-color: themed('state-hover-overlay');
+      }
+    }
+  }
+
+  &__sidebar-link-icon {
+    width: 16px;
+    height: 16px;
+    transform: rotate(180deg);
+  }
+
+  // Products List
+  &__product-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-12;
+  }
+
+  &__product-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-8;
+  }
+
+  &__product-link {
+    flex: 1;
+    text-decoration: none;
+    @include typography('body-sm');
+
+    @include themify($themes) {
+      color: themed('action-primary');
+    }
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__product-quantity {
+    @include typography('caption');
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__sidebar-empty {
+    @include typography('body-sm');
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

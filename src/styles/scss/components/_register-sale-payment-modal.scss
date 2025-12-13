@@ -1,0 +1,417 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+// =============================================================================
+// REGISTER SALE PAYMENT MODAL
+// =============================================================================
+// Modal para registrar pagos de órdenes de venta
+// Siguiendo Fluent Design System 2 y metodología BEM
+// =============================================================================
+
+.register-sale-payment-modal {
+  // Form container
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-20;
+  }
+
+  // Header
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+  }
+
+  &__title {
+    @include typography('title-2');
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__description {
+    @include typography('body');
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__balance {
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('action-primary');
+    }
+  }
+
+  // Body
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+  }
+
+  // Form fields
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__label {
+    @include typography('body');
+    font-weight: $font-weight-semibold;
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__control {
+    @include typography('body');
+    padding: $spacing-12 $spacing-16;
+    border-radius: $border-radius-medium;
+    border: 1px solid;
+    transition:
+      border-color $duration-fast $ease-ease-in-out,
+      box-shadow $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      border-color: themed('border-default');
+      color: themed('text-primary');
+    }
+
+    &:hover:not(:disabled) {
+      @include themify($themes) {
+        border-color: themed('border-hover');
+      }
+    }
+
+    &:focus {
+      outline: none;
+      @include themify($themes) {
+        border-color: themed('action-primary');
+        box-shadow: 0 0 0 1px themed('action-primary');
+      }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      @include themify($themes) {
+        background-color: themed('bg-tertiary');
+        color: themed('text-disabled');
+      }
+    }
+
+    &[aria-invalid='true'] {
+      @include themify($themes) {
+        border-color: themed('error');
+      }
+    }
+
+    &--select {
+      cursor: pointer;
+    }
+
+    &--textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+  }
+
+  &__hint {
+    @include typography('caption');
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__error {
+    @include typography('caption');
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('error');
+    }
+  }
+
+  // Cash register select options
+  &__select-content {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  &__select-item {
+    cursor: pointer;
+  }
+
+  &__cash-register-option {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__cash-register-name {
+    @include typography('body');
+    font-weight: $font-weight-medium;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__cash-register-status {
+    @include typography('caption');
+    font-weight: $font-weight-regular;
+
+    @include themify($themes) {
+      color: themed('warning');
+    }
+  }
+
+  &__cash-register-balance {
+    @include typography('caption');
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__cash-register-meta {
+    @include typography('caption');
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
+  // Change display box (green success box)
+  &__change-box {
+    padding: $spacing-16 $spacing-20;
+    border-radius: $border-radius-medium;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+
+    @include themify($themes) {
+      // Very light green background
+      background-color: rgba(16, 185, 129, 0.08);
+    }
+  }
+
+  &__change-label {
+    @include typography('body');
+    font-weight: $font-weight-medium;
+    margin: 0;
+    color: rgb(5, 150, 105); // Green-700 for better contrast on light background
+  }
+
+  &__change-value {
+    @include typography('title-1');
+    font-weight: $font-weight-semibold;
+    margin: 0;
+    color: rgb(5, 150, 105); // Green-700 for better contrast on light background
+  }
+
+  // Warning banner (yellow warning for closed cash register)
+  &__warning {
+    padding: $spacing-16 $spacing-20;
+    border-radius: $border-radius-medium;
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-12;
+    border-left: 4px solid;
+
+    @include themify($themes) {
+      background-color: themed('warning-background');
+      border-color: themed('warning');
+    }
+  }
+
+  &__warning-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-top: 2px;
+
+    @include themify($themes) {
+      color: themed('warning');
+    }
+  }
+
+  &__warning-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__warning-title {
+    @include typography('body');
+    font-weight: $font-weight-semibold;
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('warning-foreground');
+    }
+  }
+
+  &__warning-text {
+    @include typography('body');
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('warning-foreground');
+    }
+  }
+
+  // Alert (error message)
+  &__alert {
+    padding: $spacing-12 $spacing-16;
+    border-radius: $border-radius-medium;
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+
+    @include themify($themes) {
+      background-color: themed('error-background');
+      color: themed('error-foreground');
+    }
+  }
+
+  &__alert-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+
+    @include themify($themes) {
+      color: themed('error');
+    }
+  }
+
+  // Footer
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-12;
+    padding-top: $spacing-16;
+    border-top: 1px solid;
+
+    @include themify($themes) {
+      border-color: themed('border-subtle');
+    }
+  }
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-8;
+    padding: $spacing-12 $spacing-20;
+    border-radius: $border-radius-medium;
+    @include typography('body');
+    font-weight: $font-weight-semibold;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition:
+      background-color $duration-fast $ease-ease-in-out,
+      border-color $duration-fast $ease-ease-in-out,
+      color $duration-fast $ease-ease-in-out;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    &--ghost {
+      @include themify($themes) {
+        background-color: transparent;
+        border-color: themed('border-default');
+        color: themed('text-primary');
+      }
+
+      &:hover:not(:disabled) {
+        @include themify($themes) {
+          background-color: themed('state-hover-overlay');
+          border-color: themed('border-hover');
+        }
+      }
+    }
+
+    &--primary {
+      // Forzar color blanco con máxima especificidad
+      color: #ffffff !important;
+      background-color: rgb(0, 120, 212) !important;
+
+      @include themify($themes) {
+        background-color: themed('action-primary') !important;
+        color: themed('text-on-primary') !important;
+      }
+
+      &:hover:not(:disabled) {
+        color: #ffffff !important;
+
+        @include themify($themes) {
+          background-color: themed('action-primary-hover') !important;
+          color: themed('text-on-primary') !important;
+        }
+      }
+
+      &:active:not(:disabled) {
+        color: #ffffff !important;
+
+        @include themify($themes) {
+          background-color: themed('action-primary-pressed') !important;
+          color: themed('text-on-primary') !important;
+        }
+      }
+
+      &:disabled {
+        color: #ffffff !important;
+        opacity: 0.5;
+      }
+
+      // Asegurar que los iconos también sean blancos
+      svg {
+        color: #ffffff !important;
+
+        @include themify($themes) {
+          color: themed('text-on-primary') !important;
+        }
+      }
+    }
+  }
+
+  &__button-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  &__button-spinner {
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

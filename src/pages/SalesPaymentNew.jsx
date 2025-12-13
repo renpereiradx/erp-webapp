@@ -26,7 +26,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import DataState from '@/components/ui/DataState'
+import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal'
 import { useI18n } from '@/lib/i18n'
+import { useToast } from '@/hooks/useToast'
 import useClientStore from '@/store/useClientStore'
 import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
@@ -34,6 +36,7 @@ import { saleService } from '@/services/saleService'
 const SalesPaymentNew = () => {
   const { t } = useI18n()
   const navigate = useNavigate()
+  const { error: showError, success: showSuccess } = useToast()
 
   // Zustand stores
   const { searchResults, searchClients } = useClientStore()
@@ -45,7 +48,8 @@ const SalesPaymentNew = () => {
 
   // Filtros
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedClient, setSelectedClient] = useState('')
+  const [selectedClient, setSelectedClient] = useState('') // ID del cliente
+  const [selectedClientName, setSelectedClientName] = useState('') // Nombre del cliente para API
   const [selectedStatus, setSelectedStatus] = useState('')
 
   // Estado para dropdown de clientes
@@ -80,6 +84,7 @@ const SalesPaymentNew = () => {
 
   // Venta seleccionada para procesar pago (solo una a la vez)
   const [selectedSaleId, setSelectedSaleId] = useState(null)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -106,19 +111,33 @@ const SalesPaymentNew = () => {
     try {
       let response
 
-      // LÓGICA DE FILTROS:
-      // 1. Si hay cliente seleccionado -> usar endpoint /sale/client_id/{id}
-      // 2. Si NO hay cliente pero SÍ hay fechas -> usar endpoint /sale/date_range
+      // LÓGICA DE FILTROS según SALE_PAYMENT_API.md:
+      // 1. Si hay cliente seleccionado -> usar GET /sale/client_name/{name}/payment-status
+      // 2. Si NO hay cliente pero SÍ hay fechas -> usar GET /sale/date_range/payment-status
 
       const hasValidDateRange = dateRange.start_date && dateRange.end_date
       const hasValidClient =
-        selectedClient && selectedClient !== '' && selectedClient !== 'all'
+        selectedClient &&
+        selectedClient !== '' &&
+        selectedClient !== 'all' &&
+        selectedClientName
 
       if (hasValidClient) {
-        // PRIORIDAD 1: Buscar por cliente usando endpoint específico
-        response = await saleService.getSalesByClient(selectedClient)
+        // PRIORIDAD 1: Buscar por nombre de cliente con estado de pago
+        // Endpoint: GET /sale/client_name/{name}/payment-status
+        const filters = {
+          page: pagination.page,
+          page_size: pagination.page_size,
+        }
+
+        response =
+          await salePaymentService.getSalesByClientNameWithPaymentStatus(
+            selectedClientName,
+            filters
+          )
       } else if (hasValidDateRange) {
-        // PRIORIDAD 2: Buscar por rango de fechas
+        // PRIORIDAD 2: Buscar por rango de fechas con estado de pago
+        // Endpoint: GET /sale/date_range/payment-status
         const filters = {
           page: pagination.page,
           page_size: pagination.page_size,
@@ -142,10 +161,17 @@ const SalesPaymentNew = () => {
       }
 
       if (response && response.data) {
-        // Mapear datos para asegurar estructura consistente
+        // Los endpoints de payment-status devuelven datos con la estructura correcta:
+        // { sale_id, client_name, total_amount, status, balance_due, total_paid, payment_progress, ... }
         const salesData = response.data.map(item => {
-          // Si viene de getSalesByClient o getSalesByClientName (estructura con sale_id, client_id, etc.)
-          // El endpoint /sale/client_id/{id} devuelve objetos planos directamente
+          const balanceDue = item.balance_due || 0
+          let correctedStatus = item.status
+
+          // CORRECCIÓN: Si balance_due = 0, el estado debe ser PAID, no PARTIAL_PAYMENT
+          if (balanceDue === 0 && correctedStatus === 'PARTIAL_PAYMENT') {
+            correctedStatus = 'PAID'
+          }
+
           return {
             id: item.sale_id || item.id,
             sale_id: item.sale_id || item.id,
@@ -153,9 +179,13 @@ const SalesPaymentNew = () => {
             client_name: item.client_name,
             sale_date: item.sale_date,
             total_amount: item.total_amount,
-            status: item.status,
-            balance_due: item.balance_due,
-            total_paid: item.total_paid,
+            status: correctedStatus,
+            balance_due: balanceDue,
+            total_paid: item.total_paid || 0,
+            payment_progress: item.payment_progress || 0,
+            payment_count: item.payment_count || 0,
+            is_fully_paid: item.is_fully_paid || balanceDue === 0,
+            requires_payment: item.requires_payment !== false && balanceDue > 0,
           }
         })
 
@@ -245,6 +275,7 @@ const SalesPaymentNew = () => {
   const handleClearFilters = () => {
     setSearchTerm('')
     setSelectedClient('')
+    setSelectedClientName('') // Limpiar nombre también
     setClientSearchTerm('')
     setSelectedStatus('')
     setDateRange(getDefaultDateRange()) // Restablecer a fechas por defecto
@@ -267,6 +298,7 @@ const SalesPaymentNew = () => {
 
   const handleClientSelect = (clientId, clientName) => {
     setSelectedClient(clientId)
+    setSelectedClientName(clientName) // Guardar nombre para usar en API
     setClientSearchTerm(clientName)
     setIsClientDropdownOpen(false)
     setHighlightedClientIndex(0)
@@ -409,6 +441,25 @@ const SalesPaymentNew = () => {
     setSelectedSaleId(prev => (prev === saleId ? null : saleId))
   }
 
+  // Manejar envío de pago
+  const handlePaymentSubmit = async paymentData => {
+    try {
+      await salePaymentService.processSalePaymentWithCashRegister(paymentData)
+      showSuccess(
+        t('common.success'),
+        t('sales.registerPaymentModal.successMessage', 'Pago registrado exitosamente')
+      )
+      // Reload sales data to update balance
+      await handleLoadSales()
+      // Clear selection and close modal
+      setSelectedSaleId(null)
+      setIsPaymentModalOpen(false)
+    } catch (error) {
+      console.error('Error registering payment:', error)
+      throw error // Re-throw so modal can handle it
+    }
+  }
+
   // Formatear moneda en guaraníes
   const formatCurrency = amount => {
     if (amount === null || amount === undefined || isNaN(amount)) return 'Gs. 0'
@@ -506,10 +557,7 @@ const SalesPaymentNew = () => {
             {t('sales.payment.action.refresh', 'Actualizar Lista')}
           </Button>
           <Button
-            onClick={() => {
-              // TODO: Abrir modal de pago con la venta seleccionada
-              console.log('Proceder al pago con venta ID:', selectedSaleId)
-            }}
+            onClick={() => setIsPaymentModalOpen(true)}
             disabled={!selectedSaleId}
             className='btn btn--primary'
           >
@@ -552,6 +600,7 @@ const SalesPaymentNew = () => {
                   // Limpiar cliente seleccionado cuando el usuario escribe para buscar otro
                   if (selectedClient) {
                     setSelectedClient('')
+                    setSelectedClientName('')
                   }
                 }}
                 onClick={handleClientInputClick}
@@ -867,6 +916,14 @@ const SalesPaymentNew = () => {
           />
         )}
       </div>
+
+      {/* Modal de registro de pago */}
+      <RegisterSalePaymentModal
+        open={isPaymentModalOpen}
+        onOpenChange={setIsPaymentModalOpen}
+        sale={rawSales.find(s => s.id === selectedSaleId)}
+        onSubmit={handlePaymentSubmit}
+      />
     </div>
   )
 }

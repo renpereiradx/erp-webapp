@@ -161,7 +161,7 @@
 
     &--warning {
       @include themify($themes) {
-        color: themed('warning-foreground');
+        color: themed('error-foreground');
       }
     }
   }
