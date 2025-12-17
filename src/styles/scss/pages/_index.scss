@@ -13,7 +13,7 @@
 @use 'suppliers';
 @use 'settings';
 @use 'purchases';
-@use 'purchase-payments-mvp';
+@use 'purchase-payments';
 @use 'product-adjustments';
 @use 'inventory-adjustments';
 @use 'inventory-adjustment-manual';
@@ -24,4 +24,5 @@
 @use 'schedules-new';
 @use 'booking-management';
 @use 'available-slots';
-@use 'sales-payment-new';
+@use 'sale-payment';
+@use 'new-cash-register';

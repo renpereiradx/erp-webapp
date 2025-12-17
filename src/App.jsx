@@ -34,11 +34,11 @@ import Reports from '@/pages/Reports'
 // ISOLATED IMPORTS - Pages temporarily disabled for refactoring
 // import BookingSales from '@/pages/BookingSales';
 import Purchases from '@/pages/Purchases'
-import PurchasePaymentsMvp from '@/pages/PurchasePaymentsMvp'
-import PurchasePaymentsMvpDetail from '@/pages/PurchasePaymentsMvpDetail'
-import CashRegister from '@/pages/CashRegister'
+import PurchasePayments from '@/pages/PurchasePayments'
+import PurchasePaymentDetail from '@/pages/PurchasePaymentDetail'
+// import CashRegister from '@/pages/CashRegister' // Obsoleto - usar NewCashRegister
+import NewCashRegister from '@/pages/NewCashRegister'
 import SalePayment from '@/pages/SalePayment'
-import SalesPaymentNew from '@/pages/SalesPaymentNew'
 import SalesOrderDetail from '@/pages/SalesOrderDetail'
 import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
 import PaymentDocumentation from '@/pages/PaymentDocumentation'
@@ -178,21 +178,17 @@ function AppContent() {
                       {/* Nuevas rutas de sistemas de pagos */}
                       <Route
                         path='/caja-registradora'
-                        element={<CashRegister />}
+                        element={<NewCashRegister />}
                       />
                       <Route
                         path='/pagos-compras'
-                        element={<PurchasePaymentsMvp />}
+                        element={<PurchasePayments />}
                       />
                       <Route
                         path='/pagos-compras/:orderId'
-                        element={<PurchasePaymentsMvpDetail />}
+                        element={<PurchasePaymentDetail />}
                       />
-                      <Route path='/pagos-ventas' element={<SalePayment />} />
-                      <Route
-                        path='/cobros-ventas'
-                        element={<SalesPaymentNew />}
-                      />
+                      <Route path='/cobros-ventas' element={<SalePayment />} />
                       <Route
                         path='/cobros-ventas/:saleId'
                         element={<SalesOrderDetail />}

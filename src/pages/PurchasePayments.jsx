@@ -40,7 +40,7 @@ import {
 import usePurchasePaymentsMvpStore from '@/store/usePurchasePaymentsMvpStore'
 import { useToast } from '@/hooks/useToast'
 import { classifySupplierSearchTerm } from '@/services/purchasePaymentsMvpService'
-import '@/styles/scss/pages/_purchase-payments-mvp.scss'
+import '@/styles/scss/pages/_purchase-payments.scss'
 
 const currencyFormatter = (lang, currency) =>
   new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
@@ -83,7 +83,7 @@ const normalizeOrderForModal = order => {
   }
 }
 
-const PurchasePaymentsMvpPage = () => {
+const PurchasePaymentsPage = () => {
   const { t, lang } = useI18n()
   const navigate = useNavigate()
   const { info: showInfo, success: showSuccess, error: showError } = useToast()
@@ -1189,4 +1189,4 @@ const PurchasePaymentsMvpPage = () => {
   )
 }
 
-export default PurchasePaymentsMvpPage
+export default PurchasePaymentsPage

@@ -45,7 +45,15 @@ export const common = {
   'action.submit': 'Enviar',
   'action.reset': 'Restablecer',
   'action.inline': 'Inline',
+  'action.create': 'Crear',
+  'action.update': 'Actualizar',
+  'action.saving': 'Guardando...',
+  'action.select_all': 'Seleccionar todos',
+  'action.select_item': 'Seleccionar item',
   'action.delete_product': 'Eliminar producto',
+
+  // Modales
+  'modal.cancel': 'Cancelar',
 
   // Estados comunes
   'status.active': 'Activo',

@@ -44,7 +44,15 @@ export const common = {
   'action.submit': 'Submit',
   'action.reset': 'Reset',
   'action.inline': 'Inline',
+  'action.create': 'Create',
+  'action.update': 'Update',
+  'action.saving': 'Saving...',
+  'action.select_all': 'Select all',
+  'action.select_item': 'Select item',
   'action.delete_product': 'Delete product',
+
+  // Modals
+  'modal.cancel': 'Cancel',
 
   // Common states
   'status.active': 'Active',

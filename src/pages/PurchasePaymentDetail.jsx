@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/useToast'
 import { useI18n } from '@/lib/i18n'
 import { purchasePaymentsMvpService } from '@/services/purchasePaymentsMvpService'
 import usePurchasePaymentsMvpStore from '@/store/usePurchasePaymentsMvpStore'
-import '@/styles/scss/pages/_purchase-payments-mvp.scss'
+import '@/styles/scss/pages/_purchase-payments.scss'
 
 const DEFAULT_CURRENCY_CODE = 'PYG'
 const CURRENCY_ID_MAP = {
@@ -82,7 +82,7 @@ const translateWithFallback = (t, key, params, fallback) => {
   return translated
 }
 
-const PurchasePaymentsMvpDetail = () => {
+const PurchasePaymentDetail = () => {
   const { orderId } = useParams()
   const { t, lang } = useI18n()
   const refreshList = usePurchasePaymentsMvpStore(state => state.refresh)
@@ -1039,4 +1039,4 @@ const PurchasePaymentsMvpDetail = () => {
   )
 }
 
-export default PurchasePaymentsMvpDetail
+export default PurchasePaymentDetail

@@ -1,11 +1,11 @@
 /**
- * Traducciones de pagos de compras MVP en español
+ * Traducciones de pagos de compras en español
  * Módulo: Gestión de pagos de órdenes de compra, seguimiento de saldos
  */
 
 export const purchasePaymentsMvp = {
   // Títulos y subtítulos
-  'purchasePaymentsMvp.title': 'Pagos Compras (MVP)',
+  'purchasePaymentsMvp.title': 'Pagos de compras',
   'purchasePaymentsMvp.subtitle':
     'Supervisa saldos pendientes, pagos parciales y vencidos de tus órdenes de compra.',
 
@@ -136,7 +136,7 @@ export const purchasePaymentsMvp = {
 
   // Detalle de orden
   'purchasePaymentsMvp.detail.breadcrumb.home': 'Pagos de compras',
-  'purchasePaymentsMvp.detail.back': 'Volver a Pagos Compras (MVP)',
+  'purchasePaymentsMvp.detail.back': 'Volver a pagos de compras',
   'purchasePaymentsMvp.detail.heading': 'Orden de compra {orderId}',
   'purchasePaymentsMvp.detail.description':
     'Revisá el estado, pagos registrados y productos asociados a la orden.',

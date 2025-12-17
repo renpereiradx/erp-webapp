@@ -21,25 +21,33 @@ export const priceAdjustments = {
   'priceAdjustment.modal.history': 'HISTORIAL DE AJUSTES',
 
   // Búsqueda
-  'priceAdjustment.search.placeholder': 'Buscar por producto, razón o usuario...',
+  'priceAdjustment.search.placeholder':
+    'Buscar por producto, razón o usuario...',
 
   // Campos del formulario
   'priceAdjustment.field.product': 'PRODUCTO',
-  'priceAdjustment.field.product.placeholder': 'Buscar producto por ID, nombre o código...',
+  'priceAdjustment.field.product.placeholder':
+    'Buscar producto por ID, nombre o código...',
   'priceAdjustment.field.newPrice': 'NUEVO PRECIO',
   'priceAdjustment.field.unit': 'UNIDAD',
   'priceAdjustment.field.reason': 'RAZÓN DEL AJUSTE',
-  'priceAdjustment.field.reason.placeholder': 'Explique la razón del ajuste de precio...',
+  'priceAdjustment.field.reason.placeholder':
+    'Explique la razón del ajuste de precio...',
 
   // Layout - Tabs
   'priceAdjustment.layout.title': 'Gestión de Ajustes de Precios',
-  'priceAdjustment.layout.description': 'Administra los precios de tus productos y consulta el historial de cambios',
+  'priceAdjustment.layout.description':
+    'Administra los precios de tus productos y consulta el historial de cambios',
   'priceAdjustment.tabs.newAdjustment': 'Nuevo Ajuste',
   'priceAdjustment.tabs.history': 'Historial Global',
 
   // Nuevo Ajuste - Búsqueda y selección de productos
   'priceAdjustmentNew.title': 'Búsqueda y Selección de Productos',
-  'priceAdjustmentNew.search.placeholder': 'Buscar por nombre o ID de producto...',
+  'priceAdjustmentNew.search.placeholder':
+    'Buscar por nombre o ID de producto...',
+  'priceAdjustmentNew.search.hint': 'Escribe al menos 4 caracteres para buscar',
+  'priceAdjustmentNew.loading': 'Cargando productos...',
+  'priceAdjustmentNew.action.retry': 'Reintentar',
   'priceAdjustmentNew.table.name': 'Nombre del Producto',
   'priceAdjustmentNew.table.id': 'ID del Producto',
   'priceAdjustmentNew.table.price': 'Precio Actual',
@@ -64,11 +72,13 @@ export const priceAdjustments = {
   'priceAdjustmentDetail.field.unit': 'Unidad de Medida',
   'priceAdjustmentDetail.field.reasonTemplate': 'Plantilla de Razón',
   'priceAdjustmentDetail.field.reason': 'Razón del Ajuste',
-  'priceAdjustmentDetail.field.reason.placeholder': 'Escriba la razón personalizada del ajuste de precio...',
+  'priceAdjustmentDetail.field.reason.placeholder':
+    'Escriba la razón personalizada del ajuste de precio...',
   'priceAdjustmentDetail.field.reason.hintCustom': '(Personalizada)',
   'priceAdjustmentDetail.field.reason.hintAuto': '(Generada automáticamente)',
   'priceAdjustmentDetail.field.reason.characters': 'caracteres',
-  'priceAdjustmentDetail.field.reason.selectTemplate': 'Seleccione una plantilla arriba para generar la razón automáticamente',
+  'priceAdjustmentDetail.field.reason.selectTemplate':
+    'Seleccione una plantilla arriba para generar la razón automáticamente',
   'priceAdjustmentDetail.field.metadata': 'Metadata Adicional (JSON)',
   'priceAdjustmentDetail.unit.unit': 'unidad',
   'priceAdjustmentDetail.unit.kg': 'kg',
@@ -88,56 +98,80 @@ export const priceAdjustments = {
   'priceAdjustmentDetail.table.user': 'Usuario',
   'priceAdjustmentDetail.table.actions': 'Acciones',
   'priceAdjustmentDetail.action.viewDetails': 'Ver Detalles',
-  'priceAdjustmentDetail.history.empty': 'No hay historial de ajustes disponible',
+  'priceAdjustmentDetail.history.empty':
+    'No hay historial de ajustes disponible',
 
   // Plantillas de razón
   'priceAdjustmentDetail.reasonTemplate.select': 'Seleccionar plantilla...',
-  'priceAdjustmentDetail.reasonTemplate.market': 'Ajuste por condiciones del mercado',
-  'priceAdjustmentDetail.reasonTemplate.costIncrease': 'Aumento de costos de proveedor',
-  'priceAdjustmentDetail.reasonTemplate.costDecrease': 'Reducción de costos de proveedor',
-  'priceAdjustmentDetail.reasonTemplate.promotional': 'Precio promocional temporal',
+  'priceAdjustmentDetail.reasonTemplate.market':
+    'Ajuste por condiciones del mercado',
+  'priceAdjustmentDetail.reasonTemplate.costIncrease':
+    'Aumento de costos de proveedor',
+  'priceAdjustmentDetail.reasonTemplate.costDecrease':
+    'Reducción de costos de proveedor',
+  'priceAdjustmentDetail.reasonTemplate.promotional':
+    'Precio promocional temporal',
   'priceAdjustmentDetail.reasonTemplate.competitive': 'Ajuste por competencia',
   'priceAdjustmentDetail.reasonTemplate.clearance': 'Liquidación de inventario',
-  'priceAdjustmentDetail.reasonTemplate.quality': 'Ajuste por calidad del producto',
+  'priceAdjustmentDetail.reasonTemplate.quality':
+    'Ajuste por calidad del producto',
   'priceAdjustmentDetail.reasonTemplate.seasonal': 'Ajuste estacional',
   'priceAdjustmentDetail.reasonTemplate.bulk': 'Descuento por volumen',
   'priceAdjustmentDetail.reasonTemplate.error': 'Corrección de error previo',
   'priceAdjustmentDetail.reasonTemplate.management': 'Decisión gerencial',
-  'priceAdjustmentDetail.reasonTemplate.supplier': 'Renegociación con proveedor',
+  'priceAdjustmentDetail.reasonTemplate.supplier':
+    'Renegociación con proveedor',
   'priceAdjustmentDetail.reasonTemplate.currency': 'Fluctuación cambiaria',
   'priceAdjustmentDetail.reasonTemplate.initial': 'Carga inicial de inventario',
   'priceAdjustmentDetail.reasonTemplate.custom': 'Razón personalizada...',
 
   // Textos de razón auto-generados
-  'priceAdjustmentDetail.reasonText.market': 'Ajuste de precio por condiciones actuales del mercado',
-  'priceAdjustmentDetail.reasonText.costIncrease': 'Aumento de precio debido al incremento en costos de proveedor',
-  'priceAdjustmentDetail.reasonText.costDecrease': 'Reducción de precio por disminución en costos de proveedor',
-  'priceAdjustmentDetail.reasonText.promotional': 'Precio promocional temporal para impulsar ventas',
-  'priceAdjustmentDetail.reasonText.competitive': 'Ajuste de precio para mantener competitividad en el mercado',
-  'priceAdjustmentDetail.reasonText.clearance': 'Precio reducido para liquidación de inventario',
-  'priceAdjustmentDetail.reasonText.quality': 'Ajuste de precio por cambios en la calidad del producto',
-  'priceAdjustmentDetail.reasonText.seasonal': 'Ajuste estacional por demanda del período',
-  'priceAdjustmentDetail.reasonText.bulk': 'Descuento aplicado por compra en volumen',
-  'priceAdjustmentDetail.reasonText.error': 'Corrección de error en precio anterior',
-  'priceAdjustmentDetail.reasonText.management': 'Ajuste autorizado por decisión gerencial',
-  'priceAdjustmentDetail.reasonText.supplier': 'Nuevo precio por renegociación con proveedor',
-  'priceAdjustmentDetail.reasonText.currency': 'Ajuste por fluctuaciones en tipo de cambio',
-  'priceAdjustmentDetail.reasonText.initial': 'Declaración de precio inicial para carga de inventario',
+  'priceAdjustmentDetail.reasonText.market':
+    'Ajuste de precio por condiciones actuales del mercado',
+  'priceAdjustmentDetail.reasonText.costIncrease':
+    'Aumento de precio debido al incremento en costos de proveedor',
+  'priceAdjustmentDetail.reasonText.costDecrease':
+    'Reducción de precio por disminución en costos de proveedor',
+  'priceAdjustmentDetail.reasonText.promotional':
+    'Precio promocional temporal para impulsar ventas',
+  'priceAdjustmentDetail.reasonText.competitive':
+    'Ajuste de precio para mantener competitividad en el mercado',
+  'priceAdjustmentDetail.reasonText.clearance':
+    'Precio reducido para liquidación de inventario',
+  'priceAdjustmentDetail.reasonText.quality':
+    'Ajuste de precio por cambios en la calidad del producto',
+  'priceAdjustmentDetail.reasonText.seasonal':
+    'Ajuste estacional por demanda del período',
+  'priceAdjustmentDetail.reasonText.bulk':
+    'Descuento aplicado por compra en volumen',
+  'priceAdjustmentDetail.reasonText.error':
+    'Corrección de error en precio anterior',
+  'priceAdjustmentDetail.reasonText.management':
+    'Ajuste autorizado por decisión gerencial',
+  'priceAdjustmentDetail.reasonText.supplier':
+    'Nuevo precio por renegociación con proveedor',
+  'priceAdjustmentDetail.reasonText.currency':
+    'Ajuste por fluctuaciones en tipo de cambio',
+  'priceAdjustmentDetail.reasonText.initial':
+    'Declaración de precio inicial para carga de inventario',
 
   // Historial Global
   'priceAdjustmentHistory.title': 'Historial de Ajustes Manuales',
-  'priceAdjustmentHistory.description': 'Consulta todos los ajustes de precios recientes aplicados a los productos.',
+  'priceAdjustmentHistory.description':
+    'Consulta todos los ajustes de precios recientes aplicados a los productos.',
   'priceAdjustmentHistory.actions.refresh': 'Actualizar',
   'priceAdjustmentHistory.actions.export': 'Exportar',
   'priceAdjustmentHistory.filters.title': 'Filtros de Búsqueda',
   'priceAdjustmentHistory.filters.product': 'Producto',
-  'priceAdjustmentHistory.filters.productPlaceholder': 'Buscar por nombre o SKU',
+  'priceAdjustmentHistory.filters.productPlaceholder':
+    'Buscar por nombre o SKU',
   'priceAdjustmentHistory.filters.user': 'Usuario',
   'priceAdjustmentHistory.filters.userPlaceholder': 'Buscar por nombre o ID',
   'priceAdjustmentHistory.filters.unit': 'Unidad',
   'priceAdjustmentHistory.filters.unitPlaceholder': 'Seleccionar unidad',
   'priceAdjustmentHistory.filters.adjustmentType': 'Tipo de Ajuste',
-  'priceAdjustmentHistory.filters.adjustmentTypePlaceholder': 'Seleccionar tipo',
+  'priceAdjustmentHistory.filters.adjustmentTypePlaceholder':
+    'Seleccionar tipo',
   'priceAdjustmentHistory.filters.dateRange': 'Rango de Fechas',
   'priceAdjustmentHistory.filters.dateFromPlaceholder': 'Fecha de inicio',
   'priceAdjustmentHistory.filters.dateToPlaceholder': 'Fecha de fin',
@@ -163,7 +197,9 @@ export const priceAdjustments = {
   'priceAdjustmentHistory.pagination.previous': 'Anterior',
   'priceAdjustmentHistory.pagination.next': 'Siguiente',
   'priceAdjustmentHistory.empty.title': 'No se encontraron resultados',
-  'priceAdjustmentHistory.empty.description': 'Prueba a cambiar o eliminar algunos filtros para encontrar lo que buscas.',
+  'priceAdjustmentHistory.empty.description':
+    'Prueba a cambiar o eliminar algunos filtros para encontrar lo que buscas.',
   'priceAdjustmentHistory.error.title': 'Error al cargar historial',
-  'priceAdjustmentHistory.error.loading': 'No se pudo cargar el historial de ajustes',
+  'priceAdjustmentHistory.error.loading':
+    'No se pudo cargar el historial de ajustes',
 }
