@@ -58,8 +58,6 @@ export const purchasePaymentService = {
     const startTime = Date.now()
 
     try {
-      console.log('🌐 PurchasePayment: Creating enhanced purchase order...')
-
       // Transformar datos al formato de la API
       const apiData = {
         supplier_id: purchaseData.supplier_id,
@@ -94,9 +92,6 @@ export const purchasePaymentService = {
         itemsProcessed: result.items_processed,
       })
 
-      console.log(
-        '✅ PurchasePayment: Enhanced purchase order created successfully'
-      )
       return result
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {
@@ -117,8 +112,6 @@ export const purchasePaymentService = {
     const startTime = Date.now()
 
     try {
-      console.log('🌐 PurchasePayment: Loading purchase orders...')
-
       // Usar el endpoint existente de purchase service que funciona
       const result = await _fetchWithRetry(async () => {
         // Usar el endpoint paginado existente en lugar del no implementado
@@ -135,7 +128,6 @@ export const purchasePaymentService = {
         orderCount: normalizedResult.length || 0,
       })
 
-      console.log('✅ PurchasePayment: Purchase orders loaded')
       return normalizedResult
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {
@@ -156,9 +148,6 @@ export const purchasePaymentService = {
     const startTime = Date.now()
 
     try {
-      console.log(
-        `🌐 PurchasePayment: Loading purchase order ${purchaseOrderId}...`
-      )
       const result = await _fetchWithRetry(async () => {
         // Usar el endpoint existente de purchase service
         return await apiClient.makeRequest(`/purchase/${purchaseOrderId}`)
@@ -169,13 +158,6 @@ export const purchasePaymentService = {
         purchaseOrderId,
       })
 
-      console.log('✅ PurchasePayment: Purchase order loaded')
-      console.log('🔍 Purchase order data structure:', result)
-      console.log(
-        '🔍 Purchase order keys:',
-        result ? Object.keys(result) : 'null/undefined'
-      )
-
       // Map nested structure to flat structure expected by UI
       if (result && result.purchase) {
         const mappedResult = {
@@ -184,7 +166,6 @@ export const purchasePaymentService = {
           payments: result.payments,
           cost_info: result.cost_info,
         }
-        console.log('🔍 Mapped purchase order:', mappedResult)
         return mappedResult
       }
 
@@ -208,12 +189,7 @@ export const purchasePaymentService = {
     const startTime = Date.now()
 
     try {
-      console.log(
-        `🌐 PurchasePayment: Loading payment history for order ${purchaseOrderId}...`
-      )
-
       // Endpoint not implemented in backend yet, return empty array for now
-      console.warn('⚠️ Payment history endpoint not yet implemented in backend')
 
       telemetry.record('purchase_payment.service.get_payment_history', {
         duration: Date.now() - startTime,
@@ -222,9 +198,6 @@ export const purchasePaymentService = {
         mock: true,
       })
 
-      console.log(
-        '✅ PurchasePayment: Payment history loaded (empty - endpoint not implemented)'
-      )
       return []
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {
@@ -249,10 +222,6 @@ export const purchasePaymentService = {
     const startTime = Date.now()
 
     try {
-      console.log(
-        `🌐 PurchasePayment: Processing payment for order ${purchaseOrderId}...`
-      )
-
       const apiData = {
         purchase_order_id: purchaseOrderId,
         amount_paid: paymentData.amount_paid,
@@ -286,31 +255,16 @@ export const purchasePaymentService = {
         apiData.cash_register_id = resolvedCashRegisterId
       }
 
-      console.log('📤 PurchasePayment: Sending API request:', {
-        endpoint: API_ENDPOINTS.processPayment,
-        data: apiData,
-      })
-
       // Backend endpoint is now fully implemented
 
       const result = await _fetchWithRetry(async () => {
         return await apiClient.post(API_ENDPOINTS.processPayment, apiData)
       })
 
-      console.log('📥 PurchasePayment: API response received:', result)
-      console.log('📊 Response type:', typeof result)
-      console.log(
-        '📊 Response keys:',
-        result ? Object.keys(result) : 'null/undefined'
-      )
-
       // Backend now has full implementation - no more mock needed
 
       // Validate response structure
       if (!result.payment_details) {
-        console.warn(
-          '⚠️ API response missing payment_details - endpoint may not be fully implemented'
-        )
         throw new Error(
           '❌ La respuesta del servidor no contiene los detalles del pago. El endpoint puede no estar completamente implementado.'
         )
@@ -324,7 +278,6 @@ export const purchasePaymentService = {
         paymentStatus: result.payment_details?.payment_status,
       })
 
-      console.log('✅ PurchasePayment: Payment processed successfully')
       return result
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {
@@ -347,7 +300,6 @@ export const purchasePaymentService = {
     const startTime = Date.now()
 
     try {
-      console.log(`🌐 PurchasePayment: Cancelling payment ${paymentId}...`)
       const result = await _fetchWithRetry(async () => {
         return await apiClient.put(`/purchase/payment/${paymentId}/cancel`, {
           purchase_order_id: purchaseOrderId,
@@ -362,7 +314,6 @@ export const purchasePaymentService = {
         paymentId,
       })
 
-      console.log('✅ PurchasePayment: Payment cancelled successfully')
       return result
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {
@@ -383,7 +334,6 @@ export const purchasePaymentService = {
     const startTime = Date.now()
 
     try {
-      console.log('🌐 PurchasePayment: Loading payment statistics...')
       const params = new URLSearchParams(filters)
       const url = `${API_ENDPOINTS.paymentStatistics}?${params}`
 
@@ -395,7 +345,6 @@ export const purchasePaymentService = {
         duration: Date.now() - startTime,
       })
 
-      console.log('✅ PurchasePayment: Payment statistics loaded')
       return result
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {
@@ -419,9 +368,6 @@ export const purchasePaymentService = {
     const startTime = Date.now()
 
     try {
-      console.log(
-        `🌐 PurchasePayment: Cancelling purchase order ${purchaseOrderId}...`
-      )
       const result = await _fetchWithRetry(async () => {
         return await apiClient.put(`/purchase/cancel/${purchaseOrderId}`, {
           cancellation_reason: cancellationData.reason || 'Cancelled by user',
@@ -437,9 +383,6 @@ export const purchasePaymentService = {
         actionsPerformed: result.actions_performed?.length || 0,
       })
 
-      console.log(
-        '✅ PurchasePayment: Enhanced purchase order cancelled successfully'
-      )
       return result
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {
@@ -460,9 +403,6 @@ export const purchasePaymentService = {
     const startTime = Date.now()
 
     try {
-      console.log(
-        `🌐 PurchasePayment: Getting cancellation preview for order ${purchaseOrderId}...`
-      )
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(
           `/purchase/${purchaseOrderId}/preview-cancellation`
@@ -476,7 +416,6 @@ export const purchasePaymentService = {
         estimatedComplexity: result.recommendations?.estimated_complexity,
       })
 
-      console.log('✅ PurchasePayment: Enhanced cancellation preview loaded')
       return result
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {
@@ -498,7 +437,6 @@ export const purchasePaymentService = {
     const startTime = Date.now()
 
     try {
-      console.log('🌐 PurchasePayment: Verifying integration...')
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(API_ENDPOINTS.verifyIntegration)
       })
@@ -507,7 +445,6 @@ export const purchasePaymentService = {
         duration: Date.now() - startTime,
       })
 
-      console.log('✅ PurchasePayment: Integration verified')
       return result
     } catch (error) {
       telemetry.record('purchase_payment.service.error', {

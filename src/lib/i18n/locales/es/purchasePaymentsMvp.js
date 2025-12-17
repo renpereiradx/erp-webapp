@@ -22,15 +22,34 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.filters.search.label': 'Buscar órdenes',
   'purchasePaymentsMvp.filters.search.placeholder':
     'Buscar por ID de orden o proveedor...',
+  'purchasePaymentsMvp.filters.search.hint':
+    'Ingresá solo números (ID) o solo letras (nombre).',
   'purchasePaymentsMvp.filters.supplier.label': 'Proveedor',
   'purchasePaymentsMvp.filters.supplier.placeholder': 'Selecciona un proveedor',
   'purchasePaymentsMvp.filters.supplier.all': 'Todos los proveedores',
+  'purchasePaymentsMvp.filters.badge.supplier': 'Proveedor: {value}',
   'purchasePaymentsMvp.filters.status.label': 'Estado de pago',
   'purchasePaymentsMvp.filters.status.placeholder': 'Selecciona un estado',
   'purchasePaymentsMvp.filters.status.all': 'Todos los estados',
   'purchasePaymentsMvp.filters.dateFrom.label': 'Desde',
   'purchasePaymentsMvp.filters.dateTo.label': 'Hasta',
   'purchasePaymentsMvp.filters.dateRange.label': 'Rango de fechas',
+  'purchasePaymentsMvp.filters.orderId.label': 'ID de Orden',
+  'purchasePaymentsMvp.filters.orderId.placeholder': 'Filtrar por ID de orden',
+  'purchasePaymentsMvp.filters.orderId.hint':
+    'Filtro local sobre resultados cargados.',
+  'purchasePaymentsMvp.filters.badge.orderId': 'ID Orden: {value}',
+  'purchasePaymentsMvp.filters.badge.date': 'Rango: {from} → {to}',
+  'purchasePaymentsMvp.filters.badge.status': 'Estado: {value}',
+  'purchasePaymentsMvp.filters.helper':
+    'Refiná la lista con proveedor, fechas y estado.',
+  'purchasePaymentsMvp.filters.hints.searchMode':
+    'La búsqueda por proveedor está activa. Limpiá el campo para usar el rango de fechas.',
+  'purchasePaymentsMvp.filters.hints.dateMode':
+    'El rango de fechas está activo. Borrá las fechas para buscar por proveedor.',
+  'purchasePaymentsMvp.filters.hints.default':
+    'Usá la búsqueda por proveedor o el rango de fechas (la API no permite combinarlos).',
+  'purchasePaymentsMvp.filters.clearAll': 'Limpiar filtros',
   'purchasePaymentsMvp.filters.pendingOnly': 'Solo con saldo pendiente',
   'purchasePaymentsMvp.filters.apply': 'Aplicar filtros',
   'purchasePaymentsMvp.filters.reset': 'Restablecer',
@@ -45,6 +64,7 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.status.pending': 'Pendiente',
   'purchasePaymentsMvp.status.partial': 'Pago parcial',
   'purchasePaymentsMvp.status.paid': 'Pagado',
+  'purchasePaymentsMvp.status.unpaid': 'Impago',
   'purchasePaymentsMvp.status.completed': 'Completado',
   'purchasePaymentsMvp.status.overdue': 'Vencido',
   'purchasePaymentsMvp.status.cancelled': 'Cancelado',
@@ -54,6 +74,7 @@ export const purchasePaymentsMvp = {
   'PurchasePaymentsMvp.Status.Pending': 'Pendiente',
   'PurchasePaymentsMvp.Status.Partial': 'Pago parcial',
   'PurchasePaymentsMvp.Status.Paid': 'Pagado',
+  'PurchasePaymentsMvp.Status.Unpaid': 'Impago',
   'PurchasePaymentsMvp.Status.Completed': 'Completado',
   'PurchasePaymentsMvp.Status.Overdue': 'Vencido',
   'PurchasePaymentsMvp.Status.Cancelled': 'Cancelado',
@@ -68,6 +89,7 @@ export const purchasePaymentsMvp = {
 
   // Tabla
   'purchasePaymentsMvp.table.order': 'Orden de compra',
+  'purchasePaymentsMvp.table.id': 'ID',
   'purchasePaymentsMvp.table.supplier': 'Proveedor',
   'purchasePaymentsMvp.table.issueDate': 'Fecha de emisión',
   'purchasePaymentsMvp.table.dueDate': 'Fecha de vencimiento',
@@ -92,6 +114,8 @@ export const purchasePaymentsMvp = {
 
   // Resultados
   'purchasePaymentsMvp.results.sectionLabel': 'Resultados de pagos de compras',
+  'purchasePaymentsMvp.results.subtitle':
+    'Revisá órdenes pendientes, parciales y pagadas.',
 
   // Paginación
   'purchasePaymentsMvp.pagination.range':
@@ -107,8 +131,11 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.selection.all': 'Seleccionar todas las órdenes',
   'purchasePaymentsMvp.selection.row': 'Seleccionar orden {id}',
   'purchasePaymentsMvp.selection.count': '{count} órdenes seleccionadas',
+  'purchasePaymentsMvp.selection.helper':
+    'Seleccioná una orden para habilitar el registro de pago.',
 
   // Detalle de orden
+  'purchasePaymentsMvp.detail.breadcrumb.home': 'Pagos de compras',
   'purchasePaymentsMvp.detail.back': 'Volver a Pagos Compras (MVP)',
   'purchasePaymentsMvp.detail.heading': 'Orden de compra {orderId}',
   'purchasePaymentsMvp.detail.description':
@@ -116,6 +143,7 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.detail.registerPayment': 'Registrar nuevo pago',
 
   // Resumen de orden
+  'purchasePaymentsMvp.detail.summary.eyebrow': 'Estado general',
   'purchasePaymentsMvp.detail.summary.title': 'Resumen de la orden',
   'purchasePaymentsMvp.detail.summary.progress': 'Progreso del pago',
   'purchasePaymentsMvp.detail.summary.total': 'Monto total',
@@ -142,6 +170,13 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.detail.history.reference.empty': 'Sin referencia',
   'purchasePaymentsMvp.detail.history.register.blank': 'Sin caja asociada',
 
+  // Cronología
+  'purchasePaymentsMvp.detail.timeline.title': 'Actividad reciente',
+  'purchasePaymentsMvp.detail.timeline.empty':
+    'Todavía no hay actividad registrada para esta orden.',
+  'purchasePaymentsMvp.detail.timeline.unknownDate': 'Fecha desconocida',
+  'purchasePaymentsMvp.detail.timeline.unknownActor': 'Sistema',
+
   // Modal de registro de pagos
   'purchasePaymentsMvp.registerModal.title': 'Registrar nuevo pago',
   'purchasePaymentsMvp.registerModal.orderLabel':
@@ -162,6 +197,8 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.registerModal.method.cash': 'Efectivo',
   'purchasePaymentsMvp.registerModal.method.empty':
     'No hay métodos de pago disponibles.',
+  'purchasePaymentsMvp.registerModal.method.loading':
+    'Cargando métodos de pago...',
   'purchasePaymentsMvp.registerModal.method.reload': 'Recargar métodos',
   'purchasePaymentsMvp.registerModal.method.loadError':
     'No se pudieron cargar los métodos de pago. Intentá nuevamente.',
@@ -232,6 +269,8 @@ export const purchasePaymentsMvp = {
   'purchasePaymentsMvp.detail.products.title': 'Productos incluidos',
   'purchasePaymentsMvp.detail.products.empty':
     'No hay productos asociados a esta orden.',
+  'purchasePaymentsMvp.detail.products.labels.sku': 'Código: {code}',
+  'purchasePaymentsMvp.detail.products.labels.quantity': 'Cantidad: {quantity}',
   'purchasePaymentsMvp.detail.products.headers.product': 'Producto',
   'purchasePaymentsMvp.detail.products.headers.quantity': 'Cantidad',
   'purchasePaymentsMvp.detail.products.headers.total': 'Total',
