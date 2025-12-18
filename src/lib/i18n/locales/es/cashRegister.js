@@ -12,6 +12,10 @@ export const cashRegister = {
 
   // Formulario de Apertura
   'cashRegister.open.title': 'Abrir Nueva Caja Registradora',
+  'cashRegister.open.name': 'Nombre de la Caja',
+  'cashRegister.open.name.placeholder': 'Ej: Caja Principal - Turno Mañana',
+  'cashRegister.open.location': 'Ubicación',
+  'cashRegister.open.location.placeholder': 'Ej: Punto de Venta 1',
   'cashRegister.open.cashier': 'Cajero',
   'cashRegister.open.cashier.placeholder': 'Seleccionar cajero',
   'cashRegister.open.register': 'Caja',
@@ -52,7 +56,8 @@ export const cashRegister = {
   'cashRegister.error.generic': 'Error al procesar la solicitud. Intente nuevamente.',
   'cashRegister.error.opening': 'Error al abrir la caja registradora',
   'cashRegister.error.closing': 'Error al cerrar la caja registradora',
-  'cashRegister.error.invalidBalance': 'El saldo ingresado no es válido',
+  'cashRegister.error.invalidBalance': 'El saldo inicial debe ser mayor a 0',
+  'cashRegister.error.noName': 'Debe ingresar un nombre para la caja',
   'cashRegister.error.noCashier': 'Debe seleccionar un cajero',
   'cashRegister.error.noRegister': 'Debe seleccionar una caja',
 
@@ -66,7 +71,7 @@ export const cashRegister = {
   'cashRegister.field.date': 'Fecha',
   'cashRegister.field.balance': 'Saldo',
   'cashRegister.field.notes': 'Notas',
-  'cashRegister.field.currency': '$',
+  'cashRegister.field.currency': '₲',
 
   // Loading states
   'cashRegister.loading': 'Cargando...',

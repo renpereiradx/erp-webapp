@@ -21,6 +21,7 @@ import { bookingManagement } from './booking-management.js'
 import { other } from './other.js'
 import { availableSlots } from './availableSlots.js'
 import { cashRegister } from './cashRegister.js'
+import { cashMovement } from './cashMovement.js'
 
 /**
  * Diccionario completo de traducciones en español
@@ -44,5 +45,6 @@ export const es = {
   ...bookingManagement,
   ...availableSlots,
   ...cashRegister,
+  ...cashMovement,
   ...other,
 }

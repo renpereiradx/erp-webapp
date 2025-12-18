@@ -65,6 +65,9 @@ export const common = {
   'status.published': 'Publicado',
 
   // Mensajes comunes
+  'common.home': 'Inicio',
+  'common.cancel': 'Cancelar',
+  'common.save': 'Guardar',
   'common.loading': 'Cargando...',
   'common.saving': 'Guardando...',
   'common.searching': 'Buscando...',

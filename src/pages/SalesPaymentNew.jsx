@@ -33,7 +33,7 @@ import useClientStore from '@/store/useClientStore'
 import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
 
-const SalesPaymentNew = () => {
+const SalePayment = () => {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { error: showError, success: showSuccess } = useToast()
@@ -196,7 +196,8 @@ const SalesPaymentNew = () => {
         if (response.pagination) {
           setPagination(prev => ({
             ...prev,
-            total_records: response.pagination.total_records || salesData.length,
+            total_records:
+              response.pagination.total_records || salesData.length,
             total_pages: response.pagination.total_pages || 1,
           }))
         }
@@ -447,7 +448,10 @@ const SalesPaymentNew = () => {
       await salePaymentService.processSalePaymentWithCashRegister(paymentData)
       showSuccess(
         t('common.success'),
-        t('sales.registerPaymentModal.successMessage', 'Pago registrado exitosamente')
+        t(
+          'sales.registerPaymentModal.successMessage',
+          'Pago registrado exitosamente'
+        )
       )
       // Reload sales data to update balance
       await handleLoadSales()
@@ -928,4 +932,4 @@ const SalesPaymentNew = () => {
   )
 }
 
-export default SalesPaymentNew
+export default SalePayment

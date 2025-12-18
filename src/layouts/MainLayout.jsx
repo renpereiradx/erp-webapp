@@ -136,11 +136,6 @@ const MainLayout = ({ children }) => {
       { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
       { name: 'Gestión Reservas', href: '/gestion-reservas', icon: Calendar },
       {
-        name: 'Horarios Disponibles',
-        href: '/horarios-disponibles',
-        icon: Calendar,
-      },
-      {
         name: 'Pagos',
         href: '#',
         icon: DollarSign,
@@ -160,7 +155,6 @@ const MainLayout = ({ children }) => {
             href: '/cobros-ventas',
             icon: CreditCard,
           },
-          { name: 'Pagos Ventas', href: '/pagos-ventas', icon: Receipt },
           {
             name: 'Documentación de Pagos',
             href: '/pagos/documentacion',

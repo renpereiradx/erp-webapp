@@ -1,25 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge'
+  Receipt,
+  RefreshCw,
+  Search,
+  CreditCard,
+  ChevronDown,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -35,1806 +25,905 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import DataState from '@/components/ui/DataState'
+import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal'
 import { useI18n } from '@/lib/i18n'
-import { useThemeStyles } from '@/hooks/useThemeStyles'
-import { useSalePaymentStore } from '@/store/useSalePaymentStore'
+import { useToast } from '@/hooks/useToast'
 import useClientStore from '@/store/useClientStore'
-import saleService from '@/services/saleService'
-import salePaymentService from '@/services/salePaymentService'
-import { cashRegisterService } from '@/services/cashRegisterService'
-import { calculateCashRegisterBalance } from '@/utils/cashRegisterUtils'
-import {
-  Receipt,
-  CreditCard,
-  Eye,
-  X,
-  Users,
-  User,
-  DollarSign,
-  CheckCircle,
-  AlertTriangle,
-  Calendar,
-  Package,
-  RefreshCw,
-  Clock,
-  TrendingUp,
-} from 'lucide-react'
+import { salePaymentService } from '@/services/salePaymentService'
+import { saleService } from '@/services/saleService'
 
 const SalePayment = () => {
   const { t } = useI18n()
-  const { styles, styleConfig } = useThemeStyles()
+  const navigate = useNavigate()
+  const { error: showError, success: showSuccess } = useToast()
 
-  // Función para formatear moneda en Guaraníes
-  const formatGuaranies = amount => {
-    if (amount === null || amount === undefined || isNaN(amount)) return '₲0'
-    return `₲${Number(amount).toLocaleString('es-PY', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    })}`
-  }
+  // Zustand stores
+  const { searchResults, searchClients } = useClientStore()
 
-  // Obtener fechas por defecto (últimos 30 días)
-  const getDefaultDates = () => {
-    const now = new Date()
+  // Local state para ventas y filtros
+  const [rawSales, setRawSales] = useState([]) // Datos sin filtrar de la API
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
 
-    // Usar fecha local en lugar de UTC para evitar problemas de zona horaria
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    const endDate = `${year}-${month}-${day}`
+  // Filtros
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedClient, setSelectedClient] = useState('') // ID del cliente
+  const [selectedClientName, setSelectedClientName] = useState('') // Nombre del cliente para API
+  const [selectedStatus, setSelectedStatus] = useState('')
 
-    // Restar 30 días
-    const thirtyDaysAgo = new Date(now)
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const startYear = thirtyDaysAgo.getFullYear()
-    const startMonth = String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0')
-    const startDay = String(thirtyDaysAgo.getDate()).padStart(2, '0')
-    const startDate = `${startYear}-${startMonth}-${startDay}`
+  // Estado para dropdown de clientes
+  const [clientSearchTerm, setClientSearchTerm] = useState('')
+  const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false)
+  const [highlightedClientIndex, setHighlightedClientIndex] = useState(0)
+  const clientDropdownRef = useRef(null)
+  const clientInputRef = useRef(null)
+  const clientListRef = useRef(null)
+
+  // Inicializar con fechas del último mes por defecto
+  const getDefaultDateRange = () => {
+    const today = new Date()
+    const lastMonth = new Date(today)
+    lastMonth.setMonth(today.getMonth() - 1)
 
     return {
-      start_date: startDate,
-      end_date: endDate,
+      start_date: lastMonth.toISOString().split('T')[0],
+      end_date: today.toISOString().split('T')[0],
     }
   }
 
-  const {
-    currentSale,
-    paymentHistory,
-    isProcessingPayment,
-    isCancellingSale,
-    getSaleById,
-    processPayment,
-    processSalePaymentWithCashRegister,
-    getPaymentDetails,
-    getCancellationPreview,
-    cancelSale,
-  } = useSalePaymentStore()
+  const [dateRange, setDateRange] = useState(getDefaultDateRange())
 
-  const { fetchClients } = useClientStore()
-
-  // Estado local para las ventas (similar a SalesHistorySection)
-  const [sales, setSales] = useState([])
-  const [isSalesLoading, setIsSalesLoading] = useState(false)
-  const [salesError, setSalesError] = useState(null)
-
-  const [saleDetailDialog, setSaleDetailDialog] = useState(false)
-  const [paymentDialog, setPaymentDialog] = useState(false)
-  const [cancellationDialog, setCancellationDialog] = useState(false)
-  const [selectedSaleId, setSelectedSaleId] = useState(null)
-  const [selectedSaleData, setSelectedSaleData] = useState(null) // Datos completos de la venta
-  const [paymentMode, setPaymentMode] = useState('cash_register') // Default: con caja registradora
-
-  // Estado para cajas registradoras
-  const [cashRegisters, setCashRegisters] = useState([])
-  const [selectedCashRegister, setSelectedCashRegister] = useState(null)
-  const [isCashRegistersLoading, setIsCashRegistersLoading] = useState(false)
-
-  const [paymentForm, setPaymentForm] = useState({
-    amount_received: '',
-    payment_reference: '',
-    payment_notes: '',
-  })
-
-  const [cancellationForm, setCancellationForm] = useState({
-    reason: '',
-    user_id: '1', // TODO: obtener del contexto de usuario
-  })
-
-  const defaultDates = getDefaultDates()
-  const [dateFilters, setDateFilters] = useState({
-    start_date: defaultDates.start_date,
-    end_date: defaultDates.end_date,
+  // Paginación
+  const [pagination, setPagination] = useState({
     page: 1,
-    page_size: 20,
+    page_size: 10,
+    total_records: 0,
+    total_pages: 0,
   })
 
-  const [filters, setFilters] = useState({
-    status: '',
-    client_id: '',
-  })
+  // Venta seleccionada para procesar pago (solo una a la vez)
+  const [selectedSaleId, setSelectedSaleId] = useState(null)
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
-  // Estado para búsqueda de cliente por nombre (filtro local)
-  const [clientNameSearch, setClientNameSearch] = useState('')
-
-  // Estado para todas las ventas sin filtrar (para filtro local)
-  const [allSales, setAllSales] = useState([])
-
-  // Cargar ventas, cajas y clientes automáticamente al montar el componente
+  // Cargar datos iniciales
   useEffect(() => {
     handleLoadSales()
-    handleLoadCashRegisters()
-    handleLoadClients()
-  }, []) // Solo al montar
+  }, [])
 
-  const handleLoadCashRegisters = async () => {
-    setIsCashRegistersLoading(true)
-    try {
-      // Cargar todas las cajas disponibles (sin filtro de status para ver todas)
-      const allCashRegisters = await cashRegisterService.getCashRegisters()
-
-      // Filtrar solo las que están abiertas (status === 'OPEN')
-      const openCashRegisters =
-        allCashRegisters?.filter(
-          cr => cr.status === 'OPEN' || cr.state === 'OPEN'
-        ) || []
-
-      // 🔧 WORKAROUND: Calcular balance para cada caja si el backend no lo envía
-      const cashRegistersWithBalance = await Promise.all(
-        openCashRegisters.map(async cashRegister => {
-          // Si el backend ya envía current_balance > 0, usarlo
-          if (
-            cashRegister.current_balance &&
-            cashRegister.current_balance > 0
-          ) {
-            return cashRegister
-          }
-
-          // Si no, calcular desde movimientos
-          try {
-            const movements = await cashRegisterService.getMovements(
-              cashRegister.id
-            )
-            return calculateCashRegisterBalance(cashRegister, movements)
-          } catch (error) {
-            return cashRegister // Retornar sin modificar si falla
-          }
-        })
-      )
-
-      setCashRegisters(cashRegistersWithBalance)
-
-      if (openCashRegisters.length > 0) {
-        // Intentar obtener la caja activa del usuario
-        try {
-          const activeCashRegister =
-            await cashRegisterService.getActiveCashRegister()
-
-          if (activeCashRegister) {
-            setSelectedCashRegister(activeCashRegister.id)
-          } else {
-            // Si no hay caja activa específica, seleccionar la primera abierta
-            setSelectedCashRegister(openCashRegisters[0].id)
-          }
-        } catch (error) {
-          // Si falla al obtener la activa, usar la primera abierta
-          setSelectedCashRegister(openCashRegisters[0].id)
-        }
-      }
-    } catch (error) {
-      // Si hay un error real (no solo cajas vacías), limpiar estado
-      setCashRegisters([])
-    } finally {
-      setIsCashRegistersLoading(false)
+  // Cargar clientes mediante búsqueda
+  const handleLoadClients = async (searchTerm = '') => {
+    if (!searchTerm || searchTerm.length < 2) {
+      return // Requerir al menos 2 caracteres
     }
-  }
-
-  const handleLoadSales = async () => {
-    setIsSalesLoading(true)
-    setSalesError(null)
-
     try {
-      // Construir filtros sin valores undefined
-      const requestFilters = {
-        start_date: dateFilters.start_date,
-        end_date: dateFilters.end_date,
-        page: dateFilters.page,
-        page_size: dateFilters.page_size,
-      }
-
-      // Solo agregar status si tiene valor
-      if (filters.status) {
-        requestFilters.status = filters.status
-      }
-
-      // Solo agregar client_id si tiene valor
-      if (filters.client_id) {
-        requestFilters.client_id = filters.client_id
-      }
-
-      // Usar el nuevo endpoint con payment status
-      const response =
-        await salePaymentService.getSalesByDateRangeWithPaymentStatus(requestFilters)
-
-      // El servicio retorna { data, pagination }
-      if (response && response.data) {
-        // Los datos ya vienen en formato plano con payment status
-        const salesData = response.data.map(item => {
-          return {
-            ...item,
-            id: item.id || item.sale_id,
-          }
-        })
-        // Guardar todas las ventas sin filtrar para el filtro local
-        setAllSales(salesData)
-        setSales(salesData)
-      } else {
-        setAllSales([])
-        setSales([])
-      }
-    } catch (error) {
-      console.error('Error loading sales:', error)
-      setSalesError(error.message || 'Error al cargar las ventas')
-      setSales([])
-    } finally {
-      setIsSalesLoading(false)
-    }
-  }
-
-  const handleLoadClients = async () => {
-    try {
-      await fetchClients(1000) // Cargar hasta 1000 clientes para búsqueda local
+      await searchClients(searchTerm)
     } catch (error) {
       console.error('Error loading clients:', error)
     }
   }
 
-  const handleOpenPaymentModal = saleId => {
-    setSelectedSaleId(saleId)
-
-    // Buscar los datos completos de la venta
-    const saleData = sales.find(s => s.id === saleId)
-    setSelectedSaleData(saleData)
-
-    // Validación: Si el modo es caja y no hay cajas disponibles, cambiar a modo estándar
-    if (paymentMode === 'cash_register' && cashRegisters.length === 0) {
-      setPaymentMode('payment')
-    }
-
-    setPaymentDialog(true)
-  }
-
-  const handleProcessPayment = async e => {
-    e.preventDefault()
-    if (!selectedSaleId) return
-
-    // Validación final: si modo caja, debe haber caja seleccionada
-    if (paymentMode === 'cash_register' && !selectedCashRegister) {
-      alert(
-        '⚠️ Debe seleccionar una caja registradora o cambiar a modo "Pago Estándar"'
-      )
-      return
-    }
+  // Cargar ventas con lógica inteligente según filtros
+  const handleLoadSales = async () => {
+    setIsLoading(true)
+    setError(null)
 
     try {
-      // Obtener el monto recibido
-      let amountReceived = parseFloat(paymentForm.amount_received)
+      let response
 
-      // Si hay balance_due y el monto recibido lo excede, ajustarlo al balance exacto
-      if (selectedSaleData?.balance_due !== undefined) {
-        const balanceDue = selectedSaleData.balance_due
-        if (amountReceived > balanceDue) {
-          console.warn(
-            `⚠️ Amount received (${amountReceived}) exceeds balance due (${balanceDue}). Adjusting to exact balance.`
+      // LÓGICA DE FILTROS según SALE_PAYMENT_API.md:
+      // 1. Si hay cliente seleccionado -> usar GET /sale/client_name/{name}/payment-status
+      // 2. Si NO hay cliente pero SÍ hay fechas -> usar GET /sale/date_range/payment-status
+
+      const hasValidDateRange = dateRange.start_date && dateRange.end_date
+      const hasValidClient =
+        selectedClient &&
+        selectedClient !== '' &&
+        selectedClient !== 'all' &&
+        selectedClientName
+
+      if (hasValidClient) {
+        // PRIORIDAD 1: Buscar por nombre de cliente con estado de pago
+        // Endpoint: GET /sale/client_name/{name}/payment-status
+        const filters = {
+          page: pagination.page,
+          page_size: pagination.page_size,
+        }
+
+        response =
+          await salePaymentService.getSalesByClientNameWithPaymentStatus(
+            selectedClientName,
+            filters
           )
-          amountReceived = balanceDue
+      } else if (hasValidDateRange) {
+        // PRIORIDAD 2: Buscar por rango de fechas con estado de pago
+        // Endpoint: GET /sale/date_range/payment-status
+        const filters = {
+          page: pagination.page,
+          page_size: pagination.page_size,
+          start_date: dateRange.start_date,
+          end_date: dateRange.end_date,
         }
-      }
 
-      const paymentData = {
-        sales_order_id: selectedSaleId,
-        amount_received: amountReceived,
-        payment_reference: paymentForm.payment_reference,
-        payment_notes: paymentForm.payment_notes,
-      }
-
-      let result
-
-      if (paymentMode === 'cash_register') {
-        const paymentDataWithCashRegister = {
-          ...paymentData,
-          cash_register_id: selectedCashRegister,
-        }
-        result = await processSalePaymentWithCashRegister(
-          paymentDataWithCashRegister
-        )
+        response =
+          await salePaymentService.getSalesByDateRangeWithPaymentStatus(filters)
       } else {
-        result = await processPayment(paymentData)
-      }
-
-      // Mostrar información detallada del pago procesado
-
-      // Si hay cash_summary, mostrar detalles
-      if (result?.cash_summary) {
-        // ⚠️ IMPORTANTE: Alertar si hay vuelto a entregar
-        if (result.requires_change && result.cash_summary.change_given > 0) {
-          alert(
-            `✅ PAGO PROCESADO EXITOSAMENTE\n\n` +
-              `⚠️ ENTREGAR VUELTO AL CLIENTE:\n` +
-              `${formatGuaranies(result.cash_summary.change_given)}\n\n` +
-              `Detalles:\n` +
-              `• Recibido: ${formatGuaranies(
-                result.cash_summary.cash_received
-              )}\n` +
-              `• Aplicado a la venta: ${formatGuaranies(
-                result.cash_summary.amount_applied
-              )}\n` +
-              `• Vuelto: ${formatGuaranies(result.cash_summary.change_given)}`
-          )
-        } else {
-          alert(`✅ Pago procesado exitosamente`)
+        // Sin filtros válidos, usar rango por defecto del último mes
+        const filters = {
+          page: pagination.page,
+          page_size: pagination.page_size,
+          start_date: dateRange.start_date,
+          end_date: dateRange.end_date,
         }
-      } else {
-        alert(`✅ Pago procesado exitosamente`)
+
+        response =
+          await salePaymentService.getSalesByDateRangeWithPaymentStatus(filters)
       }
-
-      // Cerrar modal de pago
-      setPaymentDialog(false)
-      setPaymentForm({
-        amount_received: '',
-        payment_reference: '',
-        payment_notes: '',
-      })
-      setSelectedSaleData(null)
-
-      // Pequeño delay para asegurar que el backend actualizó los datos
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      // Recargar ventas para reflejar el cambio
-      await handleLoadSales()
-
-      // Si se usó caja registradora, recargar su balance actualizado
-      if (paymentMode === 'cash_register' && selectedCashRegister) {
-        await handleLoadCashRegisters()
-      }
-    } catch (error) {
-    }
-  }
-
-  const handleCancelSale = async e => {
-    e.preventDefault()
-    if (!selectedSaleId) return
-
-    try {
-      await cancelSale(selectedSaleId, {
-        user_id: cancellationForm.user_id,
-        reason: cancellationForm.reason,
-      })
-
-      setCancellationDialog(false)
-      setCancellationForm({
-        reason: '',
-        user_id: '1',
-      })
-    } catch (error) {
-    }
-  }
-
-  const handleViewSaleDetail = async saleId => {
-    setSelectedSaleId(saleId)
-
-    // Buscar la venta en los datos que ya tenemos
-    const saleData = sales.find(s => s.id === saleId || s.sale_id === saleId)
-
-    if (saleData) {
-      // Si ya tenemos los datos, usarlos directamente
-      setSelectedSaleData(saleData)
-      setSaleDetailDialog(true)
-    } else {
-      // Solo si no encontramos los datos, hacer la llamada al backend
-      try {
-        await getSaleById(saleId)
-        await getPaymentDetails(saleId)
-        setSaleDetailDialog(true)
-      } catch (error) {
-      }
-    }
-  }
-
-  const handleFilterByStatus = async status => {
-    setFilters(prev => ({ ...prev, status }))
-    // Recargar ventas inmediatamente con el nuevo filtro
-    setIsSalesLoading(true)
-    setSalesError(null)
-
-    try {
-      // Construir filtros sin valores undefined
-      const requestFilters = {
-        start_date: dateFilters.start_date,
-        end_date: dateFilters.end_date,
-        page: dateFilters.page,
-        page_size: dateFilters.page_size,
-      }
-
-      // Solo agregar status si tiene valor
-      if (status) {
-        requestFilters.status = status
-      }
-
-      // Solo agregar client_id si tiene valor
-      if (filters.client_id) {
-        requestFilters.client_id = filters.client_id
-      }
-
-      const response =
-        await salePaymentService.getSalesByDateRangeWithPaymentStatus(requestFilters)
 
       if (response && response.data) {
+        // Los endpoints de payment-status devuelven datos con la estructura correcta:
+        // { sale_id, client_name, total_amount, status, balance_due, total_paid, payment_progress, ... }
         const salesData = response.data.map(item => {
+          const balanceDue = item.balance_due || 0
+          let correctedStatus = item.status
+
+          // CORRECCIÓN: Si balance_due = 0, el estado debe ser PAID, no PARTIAL_PAYMENT
+          if (balanceDue === 0 && correctedStatus === 'PARTIAL_PAYMENT') {
+            correctedStatus = 'PAID'
+          }
+
           return {
-            ...item,
-            id: item.id || item.sale_id,
+            id: item.sale_id || item.id,
+            sale_id: item.sale_id || item.id,
+            client_id: item.client_id,
+            client_name: item.client_name,
+            sale_date: item.sale_date,
+            total_amount: item.total_amount,
+            status: correctedStatus,
+            balance_due: balanceDue,
+            total_paid: item.total_paid || 0,
+            payment_progress: item.payment_progress || 0,
+            payment_count: item.payment_count || 0,
+            is_fully_paid: item.is_fully_paid || balanceDue === 0,
+            requires_payment: item.requires_payment !== false && balanceDue > 0,
           }
         })
-        // Actualizar todas las ventas sin filtrar
-        setAllSales(salesData)
-        setSales(salesData)
-        // Limpiar el filtro de búsqueda por nombre
-        setClientNameSearch('')
+
+        // Guardar datos - el filtrado por estado se hace reactivamente
+        setRawSales(salesData)
+
+        // Actualizar paginación
+        if (response.pagination) {
+          setPagination(prev => ({
+            ...prev,
+            total_records: response.pagination.total_records || salesData.length,
+            total_pages: response.pagination.total_pages || 1,
+          }))
+        }
       } else {
-        setAllSales([])
-        setSales([])
+        setRawSales([])
       }
     } catch (error) {
-      console.error('Error loading sales:', error)
-      setSalesError(error.message || 'Error al cargar las ventas')
-      setSales([])
+      // NO mostrar errores 404 como críticos - simplemente no hay resultados
+      const statusCode =
+        error?.status ?? error?.statusCode ?? error?.response?.status
+      const is404 = statusCode === 404
+      const isCriticalError =
+        typeof statusCode === 'number' && statusCode >= 500
+
+      if (isCriticalError) {
+        console.error('Error loading sales:', error)
+        // Mostrar error en UI solo para errores críticos
+        setError(error.message || 'Error al cargar las ventas')
+      }
+      // 404 y otros errores no críticos se manejan silenciosamente - no hay resultados
+
+      // Siempre limpiar los datos en caso de error
+      setRawSales([])
     } finally {
-      setIsSalesLoading(false)
+      setIsLoading(false)
     }
   }
 
-  const handleFilterByClient = async clientId => {
-    const actualClientId = clientId === 'all' ? '' : clientId
-    setFilters(prev => ({ ...prev, client_id: actualClientId }))
+  // Filtrar ventas reactivamente por estado
+  const sales = React.useMemo(() => {
+    let filtered = rawSales
 
-    // Recargar ventas inmediatamente con el nuevo filtro
-    setIsSalesLoading(true)
-    setSalesError(null)
-
-    try {
-      // Construir filtros sin valores undefined
-      const requestFilters = {
-        start_date: dateFilters.start_date,
-        end_date: dateFilters.end_date,
-        page: dateFilters.page,
-        page_size: dateFilters.page_size,
-      }
-
-      // Solo agregar status si tiene valor
-      if (filters.status) {
-        requestFilters.status = filters.status
-      }
-
-      // Solo agregar client_id si tiene valor
-      if (actualClientId) {
-        requestFilters.client_id = actualClientId
-      }
-
-      const response =
-        await salePaymentService.getSalesByDateRangeWithPaymentStatus(requestFilters)
-
-      if (response && response.data) {
-        const salesData = response.data.map(item => {
-          return {
-            ...item,
-            id: item.id || item.sale_id,
-          }
-        })
-        // Actualizar todas las ventas sin filtrar
-        setAllSales(salesData)
-        setSales(salesData)
-        // Limpiar el filtro de búsqueda por nombre
-        setClientNameSearch('')
-      } else {
-        setAllSales([])
-        setSales([])
-      }
-    } catch (error) {
-      console.error('Error loading sales:', error)
-      setSalesError(error.message || 'Error al cargar las ventas')
-      setSales([])
-    } finally {
-      setIsSalesLoading(false)
-    }
-  }
-
-  // Función para filtrar ventas localmente por nombre de cliente
-  const handleSearchClientByName = () => {
-    if (!clientNameSearch.trim()) {
-      // Si el campo está vacío, mostrar todas las ventas
-      setSales(allSales)
-      return
+    // Aplicar filtro de estado si está seleccionado
+    if (selectedStatus) {
+      filtered = filtered.filter(sale => sale.status === selectedStatus)
     }
 
-    // Filtrar ventas localmente por nombre de cliente
-    const searchTerm = clientNameSearch.toLowerCase().trim()
+    return filtered
+  }, [rawSales, selectedStatus])
 
-    const filteredSales = allSales.filter(sale => {
+  // Filtrar ventas localmente por búsqueda de texto
+  const filteredSales = React.useMemo(() => {
+    if (!searchTerm.trim()) {
+      return sales
+    }
+
+    const term = searchTerm.toLowerCase().trim()
+    return sales.filter(sale => {
+      const orderId = (sale.id || '').toString().toLowerCase()
       const clientName = (sale.client_name || '').toLowerCase()
-      return clientName.includes(searchTerm)
+      return orderId.includes(term) || clientName.includes(term)
     })
+  }, [sales, searchTerm])
 
-    setSales(filteredSales)
-
-    if (filteredSales.length === 0) {
-    }
-
+  // Manejar cambio de página
+  const handlePageChange = newPage => {
+    setPagination(prev => ({ ...prev, page: newPage }))
+    // Recargar con nueva página
+    setTimeout(() => handleLoadSales(), 0)
   }
 
-  // Función para manejar Enter en el input de búsqueda
-  const handleClientSearchKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearchClientByName()
+  // Manejar filtro de estado (local, no recarga API)
+  const handleStatusFilter = status => {
+    const newStatus = selectedStatus === status ? '' : status // Toggle: si ya está seleccionado, deseleccionar
+    setSelectedStatus(newStatus)
+    // No recargar API - el filtro se aplica localmente en handleLoadSales
+  }
+
+  // Aplicar filtros
+  const handleApplyFilters = () => {
+    setPagination(prev => ({ ...prev, page: 1 })) // Reset a página 1
+    handleLoadSales()
+  }
+
+  // Limpiar filtros
+  const handleClearFilters = () => {
+    setSearchTerm('')
+    setSelectedClient('')
+    setSelectedClientName('') // Limpiar nombre también
+    setClientSearchTerm('')
+    setSelectedStatus('')
+    setDateRange(getDefaultDateRange()) // Restablecer a fechas por defecto
+    setPagination(prev => ({ ...prev, page: 1 }))
+    // Recargar con filtros por defecto
+    setTimeout(() => handleLoadSales(), 0)
+  }
+
+  // Funciones para el dropdown de clientes
+  const filteredClients = React.useMemo(() => {
+    // SIEMPRE usar searchResults si están disponibles (después de búsqueda API)
+    // Si no hay searchResults, no mostrar nada hasta que se busque
+    if (clientSearchTerm.length >= 2 && searchResults.length > 0) {
+      return searchResults
+    }
+
+    // Si hay menos de 2 caracteres o no hay resultados, retornar vacío
+    return []
+  }, [searchResults, clientSearchTerm])
+
+  const handleClientSelect = (clientId, clientName) => {
+    setSelectedClient(clientId)
+    setSelectedClientName(clientName) // Guardar nombre para usar en API
+    setClientSearchTerm(clientName)
+    setIsClientDropdownOpen(false)
+    setHighlightedClientIndex(0)
+    // NO recargar automáticamente - solo cuando se aplique el filtro
+    // NO buscar de nuevo cuando se selecciona (prevenir búsqueda del nombre completo)
+  }
+
+  // Buscar clientes cuando el usuario escribe (con debounce)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // SOLO buscar si NO hay cliente seleccionado (estamos escribiendo para buscar)
+      // Si ya hay cliente seleccionado, NO buscar (el input muestra el nombre del cliente seleccionado)
+      if (clientSearchTerm && clientSearchTerm.length >= 2 && !selectedClient) {
+        handleLoadClients(clientSearchTerm)
+      }
+    }, 500) // Debounce de 500ms
+
+    return () => clearTimeout(timer)
+  }, [clientSearchTerm, selectedClient])
+
+  const handleClientInputClick = () => {
+    setIsClientDropdownOpen(true)
+    setHighlightedClientIndex(0)
+  }
+
+  const handleClientInputKeyDown = e => {
+    if (!isClientDropdownOpen) {
+      if (e.key === 'Enter' || e.key === 'ArrowDown') {
+        setIsClientDropdownOpen(true)
+        setHighlightedClientIndex(0)
+        e.preventDefault()
+      }
+      return
+    }
+
+    const clientsToShow = [
+      {
+        id: 'all',
+        name: t('sales.payment.filter.all_clients', 'Todos los clientes'),
+      },
+      ...filteredClients,
+    ]
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setHighlightedClientIndex(prev =>
+          prev < clientsToShow.length - 1 ? prev + 1 : prev
+        )
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setHighlightedClientIndex(prev => (prev > 0 ? prev - 1 : 0))
+        break
+      case 'Enter': {
+        e.preventDefault()
+        const selectedItem = clientsToShow[highlightedClientIndex]
+        if (selectedItem) {
+          const clientName =
+            selectedItem.id === 'all'
+              ? ''
+              : selectedItem.name ||
+                `${selectedItem.first_name} ${selectedItem.last_name}`
+          handleClientSelect(selectedItem.id.toString(), clientName)
+        }
+        break
+      }
+      case 'Escape':
+        setIsClientDropdownOpen(false)
+        setHighlightedClientIndex(0)
+        break
+      default:
+        break
     }
   }
 
+  // Cerrar dropdown al hacer clic fuera o presionar ESC
+  useEffect(() => {
+    if (!isClientDropdownOpen) return
+
+    const handleClickOutside = event => {
+      if (
+        clientDropdownRef.current &&
+        !clientDropdownRef.current.contains(event.target)
+      ) {
+        setIsClientDropdownOpen(false)
+      }
+    }
+
+    const handleEscapeKey = event => {
+      if (event.key === 'Escape') {
+        setIsClientDropdownOpen(false)
+        // Devolver el focus al input
+        clientInputRef.current?.focus()
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscapeKey)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscapeKey)
+    }
+  }, [isClientDropdownOpen])
+
+  // Focus en el primer elemento cuando se abre el dropdown
+  useEffect(() => {
+    if (isClientDropdownOpen && clientListRef.current) {
+      // Primero quitar el focus del input
+      clientInputRef.current?.blur()
+
+      // Usar requestAnimationFrame para asegurar que el DOM esté completamente renderizado
+      requestAnimationFrame(() => {
+        const firstElement = clientListRef.current?.children[0]
+        if (firstElement && typeof firstElement.focus === 'function') {
+          firstElement.focus()
+        }
+      })
+    }
+  }, [isClientDropdownOpen])
+
+  // Scroll al item destacado
+  useEffect(() => {
+    if (isClientDropdownOpen && clientListRef.current) {
+      const highlightedElement =
+        clientListRef.current.children[highlightedClientIndex]
+      if (highlightedElement) {
+        highlightedElement.scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth',
+        })
+      }
+    }
+  }, [highlightedClientIndex, isClientDropdownOpen])
+
+  // Manejar selección de venta (solo una a la vez)
+  const handleToggleSaleSelection = saleId => {
+    // Si ya está seleccionada, deseleccionar; sino, seleccionar esta
+    setSelectedSaleId(prev => (prev === saleId ? null : saleId))
+  }
+
+  // Manejar envío de pago
+  const handlePaymentSubmit = async paymentData => {
+    try {
+      await salePaymentService.processSalePaymentWithCashRegister(paymentData)
+      showSuccess(
+        t('common.success'),
+        t('sales.registerPaymentModal.successMessage', 'Pago registrado exitosamente')
+      )
+      // Reload sales data to update balance
+      await handleLoadSales()
+      // Clear selection and close modal
+      setSelectedSaleId(null)
+      setIsPaymentModalOpen(false)
+    } catch (error) {
+      console.error('Error registering payment:', error)
+      throw error // Re-throw so modal can handle it
+    }
+  }
+
+  // Formatear moneda en guaraníes
+  const formatCurrency = amount => {
+    if (amount === null || amount === undefined || isNaN(amount)) return 'Gs. 0'
+    return `Gs. ${Number(amount).toLocaleString('es-PY', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })}`
+  }
+
+  // Formatear fecha
+  const formatDate = dateString => {
+    if (!dateString) return 'N/A'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('es-PY', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+  }
+
+  // Obtener badge de estado
   const getStatusBadge = status => {
     const statusConfig = {
       PENDING: {
-        label: 'Pendiente',
-        className:
-          'bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200',
-        icon: AlertTriangle,
+        label: t('sales.payment.status.pending', 'Pendiente'),
+        className: 'sales-payment-new__status-badge--pending',
       },
       PARTIAL_PAYMENT: {
-        label: 'Pago Parcial',
-        className:
-          'bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200',
-        icon: DollarSign,
-      },
-      COMPLETED: {
-        label: 'Completada',
-        className:
-          'bg-green-100 text-green-800 border-green-300 hover:bg-green-200',
-        icon: CheckCircle,
+        label: t('sales.payment.status.partial', 'Parcialmente Pagado'),
+        className: 'sales-payment-new__status-badge--partial',
       },
       PAID: {
-        label: 'Pagada',
-        className:
-          'bg-green-100 text-green-800 border-green-300 hover:bg-green-200',
-        icon: CheckCircle,
+        label: t('sales.payment.status.paid', 'Pagado'),
+        className: 'sales-payment-new__status-badge--paid',
       },
       CANCELLED: {
-        label: 'Cancelada',
-        className: 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200',
-        icon: X,
+        label: t('sales.payment.status.cancelled', 'Cancelada'),
+        className: 'sales-payment-new__status-badge--cancelled',
       },
     }
 
     const config = statusConfig[status] || statusConfig['PENDING']
-    const Icon = config.icon
 
     return (
-      <Badge className={`flex items-center gap-1 border ${config.className}`}>
-        <Icon className='w-3 h-3' />
+      <span className={`sales-payment-new__status-badge ${config.className}`}>
         {config.label}
-      </Badge>
+      </span>
+    )
+  }
+
+  // Estados de UI
+  if (isLoading && sales.length === 0) {
+    return <DataState variant='loading' skeletonVariant='list' />
+  }
+
+  if (error && sales.length === 0) {
+    return (
+      <DataState
+        variant='error'
+        title={t('sales.payment.error.title', 'Error al cargar')}
+        message={error}
+        onRetry={handleLoadSales}
+      />
     )
   }
 
   return (
-    <div className='container mx-auto p-6 space-y-6'>
-      {/* Header - Adaptado al tema */}
-      <div className='flex flex-col md:flex-row items-start md:items-center justify-between gap-4'>
-        <div className='flex items-center gap-4'>
-          <div
-            className={`p-3 ${
-              styleConfig?.colors?.accent || 'bg-primary'
-            } rounded-lg shadow-sm`}
-          >
-            <Receipt className='w-8 h-8' />
+    <div className='sales-payment-new'>
+      {/* Header */}
+      <div className='sales-payment-new__header'>
+        <div className='sales-payment-new__header-content'>
+          <div className='sales-payment-new__header-icon'>
+            <Receipt className='icon icon--large' />
           </div>
-          <div>
-            <h1 className={`text-3xl font-bold`}>Gestión de Pagos de Ventas</h1>
-            <p className='text-muted-foreground'>
-              Procesar pagos y cancelar ventas existentes
+          <div className='sales-payment-new__header-text'>
+            <h1 className='sales-payment-new__title'>
+              {t('sales.payment.title', 'Gestión de Cobros')}
+            </h1>
+            <p className='sales-payment-new__subtitle'>
+              {t(
+                'sales.payment.subtitle',
+                'Busque y seleccione órdenes para procesar pagos.'
+              )}
             </p>
           </div>
         </div>
-
-        <div className='flex gap-3'>
+        <div className='sales-payment-new__header-actions'>
           <Button
             onClick={handleLoadSales}
-            disabled={isSalesLoading}
-            className={styles.button('primary')}
+            disabled={isLoading}
+            variant='outline'
+            className='btn btn--secondary'
           >
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${isSalesLoading ? 'animate-spin' : ''}`}
-            />
-            {isSalesLoading ? 'Actualizando...' : 'Actualizar Ventas'}
+            <RefreshCw className={`icon ${isLoading ? 'animate-spin' : ''}`} />
+            {t('sales.payment.action.refresh', 'Actualizar Lista')}
           </Button>
           <Button
-            onClick={handleLoadClients}
-            variant='outline'
-            className={styles.button('secondary')}
+            onClick={() => setIsPaymentModalOpen(true)}
+            disabled={!selectedSaleId}
+            className='btn btn--primary'
           >
-            <Users className='w-4 h-4 mr-2' />
-            Cargar Clientes
+            <CreditCard className='icon' />
+            {t('sales.payment.action.proceed', 'Proceder al Pago')}
           </Button>
         </div>
       </div>
 
-      {/* Filters Section - Rediseñado con sistema multi-tema */}
-      <Card className={`${styles.card()} shadow-lg`}>
-        <CardHeader className={`border-b`}>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-3'>
-              <Calendar className='w-5 h-5' />
-              <CardTitle>Filtros de Fecha</CardTitle>
-            </div>
-            <Badge variant='outline' className='text-sm'>
-              {sales.length || 0} ventas
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className='pt-6 space-y-4'>
-          {/* Grid 10 columnas: Fecha Inicio (40%) | Fecha Fin (30%) | Registros (30%) */}
-          <div className='grid grid-cols-10 gap-4'>
-            {/* Fecha Inicio - 4 de 10 = 40% */}
-            <div className='col-span-4 space-y-2'>
-              <Label htmlFor='start_date' className='text-sm font-medium'>
-                Fecha Inicio
-              </Label>
-              <Input
-                id='start_date'
-                type='date'
-                value={dateFilters.start_date}
-                onChange={e =>
-                  setDateFilters(prev => ({
-                    ...prev,
-                    start_date: e.target.value,
-                  }))
-                }
-                className={styles.input()}
-              />
-            </div>
-
-            {/* Fecha Fin - 3 de 10 = 30% */}
-            <div className='col-span-3 space-y-2'>
-              <Label htmlFor='end_date' className='text-sm font-medium'>
-                Fecha Fin
-              </Label>
-              <Input
-                id='end_date'
-                type='date'
-                value={dateFilters.end_date}
-                onChange={e =>
-                  setDateFilters(prev => ({
-                    ...prev,
-                    end_date: e.target.value,
-                  }))
-                }
-                className={styles.input()}
-              />
-            </div>
-
-            {/* Registros - 3 de 10 = 30% */}
-            <div className='col-span-3 space-y-2'>
-              <Label
-                htmlFor='page_size_desktop'
-                className='text-sm font-medium'
-              >
-                Registros
-              </Label>
-              <Select
-                value={dateFilters.page_size.toString()}
-                onValueChange={value =>
-                  setDateFilters(prev => ({
-                    ...prev,
-                    page_size: parseInt(value),
-                  }))
-                }
-              >
-                <SelectTrigger
-                  className={styles.input()}
-                  id='page_size_desktop'
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='10'>10</SelectItem>
-                  <SelectItem value='20'>20</SelectItem>
-                  <SelectItem value='50'>50</SelectItem>
-                  <SelectItem value='100'>100</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      {/* Filtros */}
+      <div className='sales-payment-new__filters'>
+        {/* Búsqueda y Selectores */}
+        <div className='sales-payment-new__filters-row'>
+          {/* Búsqueda por texto */}
+          <div className='sales-payment-new__filter-search'>
+            <Search className='sales-payment-new__filter-search-icon' />
+            <Input
+              placeholder={t(
+                'sales.payment.search.placeholder',
+                'Buscar por ID de orden o nombre de cliente'
+              )}
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className='sales-payment-new__filter-input'
+            />
           </div>
 
-          {/* Botón de Aplicar Filtros */}
-          <Button
-            onClick={handleLoadSales}
-            className={`w-full ${styles.button('primary')}`}
-            disabled={isSalesLoading}
-            size='lg'
+          {/* Selector de cliente con búsqueda */}
+          <div
+            className='sales-payment-new__filter-select'
+            ref={clientDropdownRef}
           >
-            {isSalesLoading ? (
-              <>
-                <Package className='w-4 h-4 mr-2 animate-spin' />
-                Cargando ventas...
-              </>
-            ) : (
-              <>
-                <CheckCircle className='w-4 h-4 mr-2' />
-                Aplicar Filtros
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Status and Client Filters - Compacto */}
-      <Card className={`${styles.card()} shadow-md`}>
-        <CardHeader className='border-b py-3'>
-          <div className='flex items-center gap-2'>
-            <AlertTriangle className='w-4 h-4' />
-            <CardTitle className='text-base'>
-              Filtros de Estado y Cliente
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className='py-4'>
-          <div className='flex flex-col sm:flex-row gap-4 items-start sm:items-center'>
-            {/* Estado Buttons - Inline */}
-            <div className='flex flex-wrap gap-2 flex-1'>
-              <Label className='text-sm font-medium w-full sm:w-auto'>
-                Estado de Venta
-              </Label>
-              <Button
-                variant={filters.status === '' ? 'default' : 'outline'}
-                size='sm'
-                onClick={() => handleFilterByStatus('')}
-                className={
-                  filters.status === ''
-                    ? styles.button('primary')
-                    : styles.button('secondary')
-                }
-                disabled={isSalesLoading}
-              >
-                <Package className='w-4 h-4 mr-2' />
-                Todas
-              </Button>
-              <Button
-                variant={filters.status === 'PENDING' ? 'default' : 'outline'}
-                size='sm'
-                onClick={() => handleFilterByStatus('PENDING')}
-                className={
-                  filters.status === 'PENDING'
-                    ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-                    : styles.button('secondary')
-                }
-                disabled={isSalesLoading}
-              >
-                <AlertTriangle className='w-4 h-4 mr-2' />
-                Pendientes
-              </Button>
-              <Button
-                variant={
-                  filters.status === 'PARTIAL_PAYMENT' ? 'default' : 'outline'
-                }
-                size='sm'
-                onClick={() => handleFilterByStatus('PARTIAL_PAYMENT')}
-                className={
-                  filters.status === 'PARTIAL_PAYMENT'
-                    ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                    : styles.button('secondary')
-                }
-                disabled={isSalesLoading}
-              >
-                <Clock className='w-4 h-4 mr-2' />
-                Pago Parcial
-              </Button>
-              <Button
-                variant={filters.status === 'COMPLETED' ? 'default' : 'outline'}
-                size='sm'
-                onClick={() => handleFilterByStatus('COMPLETED')}
-                className={
-                  filters.status === 'COMPLETED'
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : styles.button('secondary')
-                }
-                disabled={isSalesLoading}
-              >
-                <CheckCircle className='w-4 h-4 mr-2' />
-                Completadas
-              </Button>
-              <Button
-                variant={filters.status === 'CANCELLED' ? 'default' : 'outline'}
-                size='sm'
-                onClick={() => handleFilterByStatus('CANCELLED')}
-                className={
-                  filters.status === 'CANCELLED'
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : styles.button('secondary')
-                }
-                disabled={isSalesLoading}
-              >
-                <X className='w-4 h-4 mr-2' />
-                Canceladas
-              </Button>
-            </div>
-
-            {/* Búsqueda de Cliente - Inline con Input y Botón */}
-            <div className='w-full sm:w-auto sm:min-w-[300px]'>
-              <Label className='text-sm font-medium block mb-2'>
-                Filtrar por Cliente
-              </Label>
-              <div className='flex gap-2'>
-                <Input
-                  value={clientNameSearch}
-                  onChange={(e) => setClientNameSearch(e.target.value)}
-                  onKeyPress={handleClientSearchKeyPress}
-                  placeholder='Buscar por nombre...'
-                  className={`flex-1 ${styles.input()}`}
-                />
-                <Button
-                  onClick={handleSearchClientByName}
-                  disabled={isSalesLoading}
-                  className={styles.button('primary')}
-                  size='sm'
+            <div className='sales-payment-new__client-dropdown'>
+              <input
+                ref={clientInputRef}
+                type='text'
+                value={clientSearchTerm}
+                onChange={e => {
+                  setClientSearchTerm(e.target.value)
+                  // Limpiar cliente seleccionado cuando el usuario escribe para buscar otro
+                  if (selectedClient) {
+                    setSelectedClient('')
+                    setSelectedClientName('')
+                  }
+                }}
+                onClick={handleClientInputClick}
+                onKeyDown={handleClientInputKeyDown}
+                placeholder={t(
+                  'sales.payment.filter.client',
+                  'Seleccionar cliente'
+                )}
+                className='sales-payment-new__filter-input sales-payment-new__client-input'
+              />
+              <ChevronDown
+                className='sales-payment-new__client-dropdown-icon'
+                onClick={handleClientInputClick}
+              />
+              {isClientDropdownOpen && (
+                <div
+                  className='sales-payment-new__client-dropdown-menu'
+                  ref={clientListRef}
                 >
-                  <Users className='w-4 h-4' />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Sales List - Compacto */}
-      <Card className={`${styles.card()} shadow-md`}>
-        <CardHeader className='border-b py-3'>
-          <div className='flex items-center gap-2'>
-            <Receipt className='w-4 h-4' />
-            <CardTitle className='text-base'>
-              Ventas para Gestión de Pagos
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className='pt-6'>
-          {isSalesLoading ? (
-            <div className='text-center py-12'>
-              <div
-                className={`inline-block animate-spin rounded-full h-12 w-12 border-b-2 ${
-                  styleConfig?.colors?.accent || 'bg-primary'
-                } mb-4`}
-              ></div>
-              <p className='text-muted-foreground'>Cargando ventas...</p>
-            </div>
-          ) : salesError ? (
-            <div className='text-center py-12'>
-              <AlertTriangle className='w-16 h-16 mx-auto text-red-500 mb-4' />
-              <h3 className='text-lg font-semibold text-red-600 mb-2'>
-                Error al cargar ventas
-              </h3>
-              <p className='text-muted-foreground mb-4'>{salesError}</p>
-              <Button
-                onClick={handleLoadSales}
-                variant='outline'
-                className={styles.button('secondary')}
-              >
-                Reintentar
-              </Button>
-            </div>
-          ) : sales && sales.length > 0 ? (
-            <div className='grid grid-cols-2 gap-4'>
-              {sales.map(sale => {
-                // Extraer información de payment status y redondear valores
-                const totalAmount = Math.round(sale.total_amount || 0)
-                const totalPaid = Math.round(sale.total_paid || 0)
-                const balanceDue = Math.round(sale.balance_due || 0)
-                const paymentProgress = sale.payment_progress || 0
-                const paymentCount = sale.payment_count || 0
-                const isFullyPaid = sale.is_fully_paid || false
-                const hasPaymentStatus = sale.hasOwnProperty('balance_due')
-
-                return (
-                  <Card
-                    key={sale.id}
-                    className={`${styles.card()} hover:shadow-lg transition-all duration-200`}
+                  <button
+                    type='button'
+                    className={`sales-payment-new__client-dropdown-item ${
+                      highlightedClientIndex === 0
+                        ? 'sales-payment-new__client-dropdown-item--highlighted'
+                        : ''
+                    }`}
+                    onClick={() => handleClientSelect('all', '')}
+                    onMouseEnter={() => setHighlightedClientIndex(0)}
+                    onFocus={() => setHighlightedClientIndex(0)}
                   >
-                    <CardContent className='p-4'>
-                      <div className='space-y-3'>
-                        {/* Header con ID y estado */}
-                        <div className='flex items-center justify-between'>
-                          <div className='flex items-center gap-2'>
-                            <Receipt className='w-4 h-4' />
-                            <h3 className='font-bold text-base'>
-                              Venta #{sale.id}
-                            </h3>
-                          </div>
-                          {getStatusBadge(sale.status)}
-                        </div>
-
-                        {/* Info compacta */}
-                        <div className='space-y-2 text-sm'>
-                          <div className='flex items-center gap-2'>
-                            <User className='w-4 h-4 text-muted-foreground' />
-                            <span className='text-muted-foreground'>
-                              <strong>Cliente:</strong> {sale.client_name}
-                            </span>
-                          </div>
-                          <div className='flex items-center gap-2'>
-                            <Calendar className='w-4 h-4 text-muted-foreground' />
-                            <span className='text-muted-foreground'>
-                              <strong>Fecha:</strong>{' '}
-                              {new Date(
-                                sale.sale_date || sale.created_at
-                              ).toLocaleDateString('es-PY')}
-                            </span>
-                          </div>
-                          <div className='flex items-center gap-2'>
-                            <DollarSign className='w-4 h-4 text-muted-foreground' />
-                            <span className='font-semibold'>
-                              <strong>Total:</strong>{' '}
-                              {formatGuaranies(totalAmount)}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Payment Status - NUEVO */}
-                        {hasPaymentStatus && (
-                          <div className='space-y-2 pt-2 border-t'>
-                            {/* Barra de progreso */}
-                            <div className='space-y-1'>
-                              <div className='flex items-center justify-between text-xs'>
-                                <span className='font-medium text-gray-600'>
-                                  {paymentProgress.toFixed(0)}% pagado
-                                </span>
-                                {paymentCount > 0 && (
-                                  <span className='text-gray-500'>
-                                    {paymentCount} pago
-                                    {paymentCount > 1 ? 's' : ''}
-                                  </span>
-                                )}
-                              </div>
-                              <div className='w-full bg-gray-200 rounded-full h-2'>
-                                <div
-                                  className={`h-2 rounded-full transition-all ${
-                                    isFullyPaid
-                                      ? 'bg-green-500'
-                                      : 'bg-orange-500'
-                                  }`}
-                                  style={{
-                                    width: `${Math.min(paymentProgress, 100)}%`,
-                                  }}
-                                />
-                              </div>
-                            </div>
-
-                            {/* Monto pagado y pendiente */}
-                            <div className='grid grid-cols-2 gap-2 text-xs'>
-                              {totalPaid > 0 && (
-                                <div className='flex items-center gap-1'>
-                                  <TrendingUp className='w-3 h-3 text-green-600' />
-                                  <span className='text-green-600 font-medium'>
-                                    {formatGuaranies(totalPaid)}
-                                  </span>
-                                </div>
-                              )}
-                              {balanceDue > 0 && (
-                                <div className='flex items-center gap-1'>
-                                  <Clock className='w-3 h-3 text-orange-600' />
-                                  <span className='text-orange-600 font-medium'>
-                                    {formatGuaranies(balanceDue)}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Actions */}
-                        <div className='flex flex-wrap gap-2 pt-2'>
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            onClick={() => handleViewSaleDetail(sale.id)}
-                            className={`flex-1 ${styles.button('secondary')}`}
-                          >
-                            <Eye className='w-4 h-4 mr-1' />
-                            Ver Detalles
-                          </Button>
-
-                          {(sale.status === 'PENDING' ||
-                            sale.status === 'PARTIAL_PAYMENT') && (
-                            <Button
-                              size='sm'
-                              onClick={() => handleOpenPaymentModal(sale.id)}
-                              className='bg-green-600 hover:bg-green-700 text-white flex-1'
-                            >
-                              <CreditCard className='w-4 h-4 mr-1' />
-                              Pago Parcial
-                            </Button>
-                          )}
-
-                          {(sale.status === 'PENDING' ||
-                            sale.status === 'COMPLETED') && (
-                            <Button
-                              variant='destructive'
-                              size='sm'
-                              onClick={() => {
-                                setSelectedSaleId(sale.id)
-                                setCancellationDialog(true)
-                              }}
-                            >
-                              <X className='w-4 h-4' />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          ) : (
-            <div className='text-center py-16'>
-              <div
-                className={`inline-block p-6 ${
-                  styleConfig?.colors?.accent || 'bg-primary'
-                } rounded-full mb-4`}
-              >
-                <Package className='w-16 h-16' />
-              </div>
-              <h3 className={`text-xl font-semibold mb-2`}>No hay ventas</h3>
-              <p className={`${'text-muted-foreground'} mb-6 max-w-md mx-auto`}>
-                Ajusta los filtros de fecha y haz clic en "Aplicar Filtros" para
-                ver las ventas existentes
-              </p>
-              <Button
-                onClick={handleLoadSales}
-                className={styles.button('primary')}
-              >
-                <Package className='w-4 h-4 mr-2' />
-                Cargar Ventas
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Payment Dialog */}
-      <Dialog open={paymentDialog} onOpenChange={setPaymentDialog}>
-        <DialogContent className='!max-w-4xl'>
-          <DialogHeader>
-            <DialogTitle className='text-2xl flex items-center gap-2'>
-              <CreditCard className='w-6 h-6' />
-              Procesar Pago de Venta
-            </DialogTitle>
-          </DialogHeader>
-
-          <form onSubmit={handleProcessPayment} className='space-y-6'>
-            {/* Sale Info Summary */}
-            {selectedSaleData && (
-              <div className='bg-muted/40 p-4 rounded-lg border-l-4 border-primary'>
-                <div className='flex items-center gap-2 mb-3'>
-                  <Receipt className='w-5 h-5 text-primary' />
-                  <h4 className='font-semibold'>Información de la Venta</h4>
-                </div>
-                <div className='grid grid-cols-2 gap-3 text-sm'>
-                  <div>
-                    <span className='text-muted-foreground'>ID:</span>
-                    <p className='font-medium'>{selectedSaleData.id}</p>
-                  </div>
-                  <div>
-                    <span className='text-muted-foreground'>Cliente:</span>
-                    <p className='font-medium'>
-                      {selectedSaleData.client_name}
-                    </p>
-                  </div>
-
-                  {/* Mostrar desglose de pagos si hay payment status */}
-                  {selectedSaleData.hasOwnProperty('balance_due') ? (
-                    <>
-                      {/* Grid 2 columnas: Total Venta y Pendiente a Pagar */}
-                      <div className='col-span-2 grid grid-cols-2 gap-3 border-t pt-3'>
-                        <div className='bg-gray-50 border border-gray-200 rounded p-3'>
-                          <span className='text-gray-700 font-semibold text-sm'>
-                            Total Venta:
-                          </span>
-                          <p className='text-2xl font-bold text-gray-900 mb-2'>
-                            {formatGuaranies(
-                              Math.round(selectedSaleData.total_amount || 0)
-                            )}
-                          </p>
-                          <div className='border-t border-gray-300 pt-2 mt-2'>
-                            <div className='flex items-center justify-between'>
-                              <span className='text-green-600 text-xs font-medium'>
-                                Ya Pagado:
-                              </span>
-                              <span className='font-semibold text-green-600 text-sm'>
-                                {formatGuaranies(
-                                  Math.round(selectedSaleData.total_paid || 0)
-                                )}
-                              </span>
-                            </div>
-                            {selectedSaleData.payment_count > 0 && (
-                              <div className='text-xs text-muted-foreground mt-1'>
-                                ({selectedSaleData.payment_count} pago
-                                {selectedSaleData.payment_count > 1 ? 's' : ''}{' '}
-                                realizado
-                                {selectedSaleData.payment_count > 1 ? 's' : ''})
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className='bg-orange-50 border border-orange-200 rounded p-3'>
-                          <span className='text-orange-800 font-semibold text-sm'>
-                            Pendiente a Pagar:
-                          </span>
-                          <p className='text-2xl font-bold text-orange-600'>
-                            {formatGuaranies(Math.round(selectedSaleData.balance_due || 0))}
-                          </p>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className='col-span-2'>
-                      <span className='text-muted-foreground'>
-                        Total a Pagar:
-                      </span>
-                      <p className='text-2xl font-bold text-primary'>
-                        {formatGuaranies(Math.round(selectedSaleData.total_amount || 0))}
-                      </p>
+                    {t(
+                      'sales.payment.filter.all_clients',
+                      'Todos los clientes'
+                    )}
+                  </button>
+                  {filteredClients.map((client, index) => {
+                    const clientName =
+                      client.name || `${client.first_name} ${client.last_name}`
+                    return (
+                      <button
+                        type='button'
+                        key={client.id}
+                        className={`sales-payment-new__client-dropdown-item ${
+                          highlightedClientIndex === index + 1
+                            ? 'sales-payment-new__client-dropdown-item--highlighted'
+                            : ''
+                        }`}
+                        onClick={() =>
+                          handleClientSelect(client.id.toString(), clientName)
+                        }
+                        onMouseEnter={() =>
+                          setHighlightedClientIndex(index + 1)
+                        }
+                        onFocus={() => setHighlightedClientIndex(index + 1)}
+                      >
+                        {clientName}
+                      </button>
+                    )
+                  })}
+                  {filteredClients.length === 0 && (
+                    <div className='sales-payment-new__client-dropdown-item sales-payment-new__client-dropdown-item--empty'>
+                      No se encontraron clientes
                     </div>
                   )}
                 </div>
-              </div>
-            )}
-
-            {/* Payment Mode y Caja Registradora - Grid 2 columnas */}
-            <div className='grid grid-cols-2 gap-4'>
-              {/* Payment Mode */}
-              <div className='space-y-3'>
-                <Label className='text-sm font-semibold flex items-center gap-2'>
-                  <DollarSign className='w-4 h-4' />
-                  Modo de Pago
-                </Label>
-                <Select value={paymentMode} onValueChange={setPaymentMode}>
-                  <SelectTrigger className='h-11 text-sm px-4 py-3'>
-                    <SelectValue placeholder='Seleccione el modo de pago' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem
-                      value='cash_register'
-                      className='text-sm py-3 px-3'
-                    >
-                      <div className='flex items-center gap-2'>
-                        <Package className='w-4 h-4' />
-                        <span>Con Caja Registradora</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value='standard' className='text-sm py-3 px-3'>
-                      <div className='flex items-center gap-2'>
-                        <CreditCard className='w-4 h-4' />
-                        <span>Pago Estándar</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Cash Register Selector */}
-              <div className='space-y-3'>
-                <Label
-                  htmlFor='cash_register'
-                  className='text-sm font-semibold flex items-center gap-2'
-                >
-                  <Package className='w-4 h-4' />
-                  Caja Registradora{' '}
-                  {paymentMode === 'cash_register' && (
-                    <span className='text-red-500'>*</span>
-                  )}
-                </Label>
-                <Select
-                  value={selectedCashRegister?.toString()}
-                  onValueChange={value =>
-                    setSelectedCashRegister(parseInt(value))
-                  }
-                  disabled={
-                    isCashRegistersLoading ||
-                    cashRegisters.length === 0 ||
-                    paymentMode !== 'cash_register'
-                  }
-                >
-                  <SelectTrigger className='h-11 text-sm px-4 py-3'>
-                    <SelectValue
-                      placeholder={
-                        paymentMode !== 'cash_register'
-                          ? 'No aplica'
-                          : isCashRegistersLoading
-                          ? 'Cargando...'
-                          : cashRegisters.length === 0
-                          ? 'No hay cajas abiertas'
-                          : 'Seleccione una caja'
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cashRegisters.map(cashRegister => (
-                      <SelectItem
-                        key={cashRegister.id}
-                        value={cashRegister.id.toString()}
-                        className='text-sm py-3 px-3'
-                      >
-                        <div>
-                          <div className='font-medium'>
-                            Caja #{cashRegister.id}
-                            {cashRegister.name && ` - ${cashRegister.name}`}
-                          </div>
-                          <div className='text-xs text-muted-foreground'>
-                            Balance:{' '}
-                            {formatGuaranies(cashRegister.current_balance || 0)}
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {paymentMode === 'cash_register' &&
-                  cashRegisters.length === 0 &&
-                  !isCashRegistersLoading && (
-                    <p className='text-xs text-amber-700'>
-                      ⚠️ No hay cajas abiertas
-                    </p>
-                  )}
-              </div>
+              )}
             </div>
-
-            {/* Grid 2 columnas: Monto Exacto Recibido y Vuelto a entregar */}
-            <div className='grid grid-cols-2 gap-4'>
-              {/* Monto Recibido */}
-              <div className='space-y-3'>
-                <Label
-                  htmlFor='amount_received'
-                  className='text-sm font-semibold flex items-center gap-2'
-                >
-                  <DollarSign className='w-4 h-4' />
-                  MONTO EXACTO RECIBIDO <span className='text-red-500'>*</span>
-                </Label>
-                <div className='relative'>
-                  <span className='absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold text-muted-foreground'>
-                    ₲
-                  </span>
-                  <Input
-                    id='amount_received'
-                    type='number'
-                    step='1'
-                    min='0'
-                    value={paymentForm.amount_received}
-                    onChange={e =>
-                      setPaymentForm(prev => ({
-                        ...prev,
-                        amount_received: e.target.value,
-                      }))
-                    }
-                    placeholder='0'
-                    className='h-14 text-lg font-semibold pl-8 tabular-nums'
-                    required
-                    autoFocus
-                  />
-                </div>
-              </div>
-
-              {/* Change Calculation */}
-              <div className='space-y-3'>
-                <Label className='text-sm font-semibold flex items-center gap-2'>
-                  <AlertTriangle className='w-4 h-4' />
-                  VUELTO / PENDIENTE
-                </Label>
-                {selectedSaleData &&
-                paymentForm.amount_received &&
-                parseFloat(paymentForm.amount_received) > 0 ? (
-                  <div className='h-14 flex items-center'>
-                    {(() => {
-                      // Redondear a enteros porque Guaraníes no tiene decimales
-                      const amountReceived = Math.round(parseFloat(
-                        paymentForm.amount_received
-                      ))
-
-                      // Usar balance_due si existe, sino usar total_amount
-                      const rawAmountDue = selectedSaleData.hasOwnProperty(
-                        'balance_due'
-                      )
-                        ? selectedSaleData.balance_due || 0
-                        : selectedSaleData.total_amount || 0
-
-                      // Redondear amount_due también
-                      const amountDue = Math.round(rawAmountDue)
-
-                      // DEBUG LOG: Cálculo de vuelto/pendiente
-                      console.group('🔍 [DEBUG] Payment Change Calculation')
-                      console.log('Amount Received (input):', paymentForm.amount_received)
-                      console.log('Amount Received (rounded):', amountReceived)
-                      console.log('Amount Due (raw):', rawAmountDue)
-                      console.log('Amount Due (rounded):', amountDue)
-                      console.log('Difference:', amountReceived - amountDue)
-                      console.log('Has balance_due?', selectedSaleData.hasOwnProperty('balance_due'))
-                      console.log('Selected Sale Data:', selectedSaleData)
-                      console.groupEnd()
-
-                      // Verificar si el monto excede ligeramente debido a decimales
-                      const inputAmount = parseFloat(paymentForm.amount_received)
-                      const exceedsBalance = inputAmount > rawAmountDue
-                      const smallExcess = exceedsBalance && (inputAmount - rawAmountDue) < 1
-
-                      if (amountReceived >= amountDue) {
-                        return (
-                          <div className='space-y-2'>
-                            <div className='w-full flex items-center justify-between border-amber-200 bg-amber-50 rounded-lg px-3 py-3 border-2'>
-                              <span className='font-semibold text-sm text-amber-900'>
-                                Vuelto a entregar:
-                              </span>
-                              <span className='text-xl font-bold text-amber-700'>
-                                {formatGuaranies(amountReceived - amountDue)}
-                              </span>
-                            </div>
-                            {smallExcess && (
-                              <div className='text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded border border-amber-200'>
-                                ℹ️ Monto ajustado a balance exacto: {formatGuaranies(rawAmountDue)}
-                              </div>
-                            )}
-                          </div>
-                        )
-                      } else {
-                        return (
-                          <div className='w-full flex items-center justify-between text-blue-700 bg-blue-50 border-blue-200 rounded-lg px-3 py-3 border-2'>
-                            <span className='font-semibold text-sm'>
-                              Quedarán pendientes:
-                            </span>
-                            <span className='text-xl font-bold text-blue-700'>
-                              {formatGuaranies(amountDue - amountReceived)}
-                            </span>
-                          </div>
-                        )
-                      }
-                    })()}
-                  </div>
-                ) : (
-                  <div className='h-14 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-lg'>
-                    <span className='text-sm text-muted-foreground'>
-                      Ingrese el monto recibido
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Nota de pago y Referencia de pago - Grid 2 columnas */}
-            <div className='grid grid-cols-2 gap-4'>
-              {/* Payment Notes */}
-              <div className='space-y-3'>
-                <Label
-                  htmlFor='payment_notes'
-                  className='text-sm font-semibold'
-                >
-                  Nota del Pago
-                  <span className='text-xs font-normal text-muted-foreground ml-2'>
-                    (Opcional)
-                  </span>
-                </Label>
-                <Textarea
-                  id='payment_notes'
-                  value={paymentForm.payment_notes}
-                  onChange={e =>
-                    setPaymentForm(prev => ({
-                      ...prev,
-                      payment_notes: e.target.value,
-                    }))
-                  }
-                  placeholder='Información adicional del pago...'
-                  rows={3}
-                  className='resize-none text-sm'
-                />
-              </div>
-
-              {/* Payment Reference */}
-              <div className='space-y-3'>
-                <Label
-                  htmlFor='payment_reference'
-                  className='text-sm font-semibold'
-                >
-                  Referencia de Pago
-                  <span className='text-xs font-normal text-muted-foreground ml-2'>
-                    (Opcional)
-                  </span>
-                </Label>
-                <Input
-                  id='payment_reference'
-                  value={paymentForm.payment_reference}
-                  onChange={e =>
-                    setPaymentForm(prev => ({
-                      ...prev,
-                      payment_reference: e.target.value,
-                    }))
-                  }
-                  placeholder='Ej: Transferencia #12345, Cheque #987'
-                  className='h-11 text-sm'
-                />
-              </div>
-            </div>
-
-            {/* Action Buttons - Grid 2 columnas */}
-            <div className='grid grid-cols-2 gap-4 pt-4 border-t'>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() => setPaymentDialog(false)}
-                className='h-12 px-6'
-                disabled={isProcessingPayment}
-              >
-                <X className='w-4 h-4 mr-2' />
-                Cancelar
-              </Button>
-              <Button
-                type='submit'
-                disabled={
-                  isProcessingPayment ||
-                  !paymentForm.amount_received ||
-                  (paymentMode === 'cash_register' && !selectedCashRegister)
-                }
-                className='h-12 px-8 bg-green-600 hover:bg-green-700'
-              >
-                {isProcessingPayment ? (
-                  <>
-                    <RefreshCw className='w-4 h-4 mr-2 animate-spin' />
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className='w-4 h-4 mr-2' />
-                    Procesar Pago
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Cancellation Dialog */}
-      <Dialog open={cancellationDialog} onOpenChange={setCancellationDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cancelar Venta</DialogTitle>
-            <DialogDescription>
-              Esta acción cancelará completamente la venta y revertirá todos los
-              cambios asociados
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleCancelSale} className='space-y-4'>
-            <div>
-              <Label htmlFor='cancel_reason'>Razón de Cancelación</Label>
-              <Textarea
-                id='cancel_reason'
-                value={cancellationForm.reason}
-                onChange={e =>
-                  setCancellationForm(prev => ({
-                    ...prev,
-                    reason: e.target.value,
-                  }))
-                }
-                placeholder='Describa la razón de la cancelación...'
-                rows={4}
-                required
-              />
-            </div>
-
-            <DialogFooter>
-              <Button
-                type='button'
-                variant='outline'
-                onClick={() => setCancellationDialog(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type='submit'
-                variant='destructive'
-                disabled={isCancellingSale}
-              >
-                {isCancellingSale ? 'Cancelando...' : 'Confirmar Cancelación'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Sale Detail Dialog */}
-      <Dialog open={saleDetailDialog} onOpenChange={setSaleDetailDialog}>
-        <DialogContent className='max-w-[90vw] w-[1100px] max-h-[85vh] overflow-hidden flex flex-col'>
-          <DialogHeader className='flex-shrink-0'>
-            <DialogTitle className='text-xl'>Detalles de la Venta</DialogTitle>
-            <DialogDescription>
-              Información completa de la venta y pagos asociados
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className='flex-1 overflow-y-auto pr-2'>
-            {(selectedSaleData || currentSale) && (
-              <div className='space-y-6 pb-4'>
-                {(() => {
-                  const sale = selectedSaleData || currentSale
-                  return (
-                    <>
-                      {/* Sale Info */}
-                      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                        <div className='space-y-3 bg-muted/30 p-4 rounded-lg'>
-                          <h3 className='font-semibold text-lg border-b pb-2'>
-                            Información de la Venta
-                          </h3>
-                          <div className='space-y-2.5'>
-                            <p className='text-sm leading-relaxed'>
-                              <strong className='inline-block w-20'>ID:</strong>
-                              <span className='text-muted-foreground'>
-                                {sale.sale_id || sale.id || 'N/A'}
-                              </span>
-                            </p>
-                            <p className='text-sm leading-relaxed'>
-                              <strong className='inline-block w-20'>
-                                Cliente:
-                              </strong>
-                              <span className='text-muted-foreground'>
-                                {sale.client_name || 'N/A'}
-                              </span>
-                            </p>
-                            <p className='text-sm leading-relaxed'>
-                              <strong className='inline-block w-20'>
-                                Fecha:
-                              </strong>
-                              <span className='text-muted-foreground'>
-                                {sale.sale_date
-                                  ? new Date(sale.sale_date).toLocaleDateString(
-                                      'es-PY',
-                                      {
-                                        year: 'numeric',
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                      }
-                                    )
-                                  : 'N/A'}
-                              </span>
-                            </p>
-                            <p className='text-sm leading-relaxed flex items-center gap-2'>
-                              <strong className='inline-block w-20'>
-                                Estado:
-                              </strong>
-                              {getStatusBadge(
-                                sale.status?.toUpperCase() || 'PENDING'
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                        <div className='space-y-3 bg-muted/30 p-4 rounded-lg'>
-                          <h3 className='font-semibold text-lg border-b pb-2'>
-                            Información de Pago
-                          </h3>
-                          <div className='space-y-2.5'>
-                            <p className='text-sm leading-relaxed'>
-                              <strong className='inline-block w-32'>
-                                Total:
-                              </strong>
-                              <span className='text-muted-foreground font-semibold text-base'>
-                                {formatGuaranies(Math.round(sale.total_amount || 0))}
-                              </span>
-                            </p>
-
-                            {/* Mostrar información de payment status si está disponible */}
-                            {sale.hasOwnProperty('balance_due') && (
-                              <>
-                                <div className='border-t pt-2 mt-2'>
-                                  <p className='text-sm leading-relaxed'>
-                                    <strong className='inline-block w-32'>
-                                      Total Pagado:
-                                    </strong>
-                                    <span className='text-green-600 font-semibold'>
-                                      {formatGuaranies(Math.round(sale.total_paid || 0))}
-                                    </span>
-                                  </p>
-                                  <p className='text-sm leading-relaxed'>
-                                    <strong className='inline-block w-32'>
-                                      Balance Pendiente:
-                                    </strong>
-                                    <span className='text-orange-600 font-semibold'>
-                                      {formatGuaranies(Math.round(sale.balance_due || 0))}
-                                    </span>
-                                  </p>
-                                  <p className='text-sm leading-relaxed'>
-                                    <strong className='inline-block w-32'>
-                                      Progreso:
-                                    </strong>
-                                    <span className='text-muted-foreground'>
-                                      {sale.payment_progress?.toFixed(1)}% (
-                                      {sale.payment_count || 0} pago
-                                      {sale.payment_count !== 1 ? 's' : ''})
-                                    </span>
-                                  </p>
-                                </div>
-
-                                {/* Barra de progreso */}
-                                <div className='space-y-1 pt-2'>
-                                  <div className='w-full bg-gray-200 rounded-full h-3'>
-                                    <div
-                                      className={`h-3 rounded-full transition-all ${
-                                        sale.is_fully_paid
-                                          ? 'bg-green-500'
-                                          : 'bg-orange-500'
-                                      }`}
-                                      style={{
-                                        width: `${Math.min(
-                                          sale.payment_progress || 0,
-                                          100
-                                        )}%`,
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                              </>
-                            )}
-
-                            <div className='border-t pt-2 mt-2'>
-                              <p className='text-sm leading-relaxed'>
-                                <strong className='inline-block w-32'>
-                                  Usuario:
-                                </strong>
-                                <span className='text-muted-foreground'>
-                                  {sale.user_name || 'N/A'}
-                                </span>
-                              </p>
-                              <p className='text-sm leading-relaxed'>
-                                <strong className='inline-block w-32'>
-                                  Método de Pago:
-                                </strong>
-                                <span className='text-muted-foreground'>
-                                  {sale.payment_method || 'N/A'}
-                                </span>
-                              </p>
-                              {sale.currency && (
-                                <p className='text-sm leading-relaxed'>
-                                  <strong className='inline-block w-32'>
-                                    Moneda:
-                                  </strong>
-                                  <span className='text-muted-foreground'>
-                                    {sale.currency}
-                                  </span>
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Products Table */}
-                      {sale.details && sale.details.length > 0 && (
-                        <div className='space-y-4'>
-                          <div className='flex items-center justify-between'>
-                            <h3 className='font-semibold text-lg'>Productos</h3>
-                            <Badge variant='outline' className='text-sm'>
-                              {sale.items || sale.details.length}{' '}
-                              {sale.items === 1 || sale.details.length === 1
-                                ? 'producto'
-                                : 'productos'}
-                            </Badge>
-                          </div>
-                          <div className='border rounded-lg overflow-x-auto'>
-                            <Table>
-                              <TableHeader>
-                                <TableRow className='bg-muted/50'>
-                                  <TableHead className='font-semibold min-w-[200px]'>
-                                    Producto
-                                  </TableHead>
-                                  <TableHead className='font-semibold text-center w-[100px]'>
-                                    Cantidad
-                                  </TableHead>
-                                  <TableHead className='font-semibold text-right w-[140px]'>
-                                    Precio Base
-                                  </TableHead>
-                                  <TableHead className='font-semibold text-right w-[180px]'>
-                                    Precio Final
-                                  </TableHead>
-                                  <TableHead className='font-semibold text-right w-[120px]'>
-                                    Subtotal
-                                  </TableHead>
-                                  <TableHead className='font-semibold text-right w-[120px]'>
-                                    Total
-                                  </TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {sale.details.map((detail, index) => (
-                                  <TableRow key={detail.id || index}>
-                                    <TableCell className='font-medium min-w-[200px]'>
-                                      <div>
-                                        <div>{detail.product_name}</div>
-                                        {detail.product_type && (
-                                          <div className='text-xs text-muted-foreground'>
-                                            {detail.product_type}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </TableCell>
-                                    <TableCell className='text-center w-[100px] tabular-nums'>
-                                      {detail.quantity}
-                                    </TableCell>
-                                    <TableCell className='text-right w-[140px] tabular-nums'>
-                                      {formatGuaranies(detail.base_price)}
-                                    </TableCell>
-                                    <TableCell className='text-right w-[180px]'>
-                                      <div className='flex items-center justify-end gap-2'>
-                                        <span className='tabular-nums'>
-                                          {formatGuaranies(detail.unit_price)}
-                                        </span>
-                                        {detail.price_modified && (
-                                          <Badge
-                                            variant='warning'
-                                            className='text-xs whitespace-nowrap'
-                                          >
-                                            Modificado
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </TableCell>
-                                    <TableCell className='text-right w-[120px] tabular-nums'>
-                                      {formatGuaranies(detail.subtotal)}
-                                    </TableCell>
-                                    <TableCell className='text-right font-semibold w-[120px] tabular-nums'>
-                                      {formatGuaranies(detail.total_with_tax)}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-
-                          {/* Total Summary */}
-                          <div className='flex justify-end pt-4 border-t-2'>
-                            <div className='space-y-2 min-w-[350px]'>
-                              <div className='border-t pt-2 mt-2'>
-                                <div className='bg-primary/5 px-4 py-3 rounded-lg'>
-                                  <div className='flex justify-between items-center text-xl font-bold'>
-                                    <span>Total:</span>
-                                    <span className='tabular-nums'>
-                                      {formatGuaranies(Math.round(sale.total_amount || 0))}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )
-                })()}
-              </div>
-            )}
           </div>
 
-          <DialogFooter className='flex-shrink-0 border-t pt-4 mt-4'>
-            <Button
-              onClick={() => setSaleDetailDialog(false)}
-              className={styles.button('primary')}
-              size='lg'
+          {/* Selector de rango de fechas */}
+          <div className='sales-payment-new__filter-date'>
+            <Input
+              type='date'
+              value={dateRange.start_date}
+              onChange={e =>
+                setDateRange(prev => ({ ...prev, start_date: e.target.value }))
+              }
+              placeholder={t('sales.payment.filter.start_date', 'Fecha inicio')}
+              className='sales-payment-new__filter-input'
+            />
+            <Input
+              type='date'
+              value={dateRange.end_date}
+              onChange={e =>
+                setDateRange(prev => ({ ...prev, end_date: e.target.value }))
+              }
+              placeholder={t('sales.payment.filter.end_date', 'Fecha fin')}
+              className='sales-payment-new__filter-input'
+            />
+          </div>
+        </div>
+
+        {/* Filtros de Estado */}
+        <div className='sales-payment-new__filters-row sales-payment-new__filters-row--status'>
+          <div className='sales-payment-new__status-label'>
+            {t('sales.payment.filter.status', 'Estado')}:
+          </div>
+          <div className='sales-payment-new__status-filters'>
+            <button
+              type='button'
+              onClick={() => handleStatusFilter('PENDING')}
+              className={`sales-payment-new__status-pill ${
+                selectedStatus === 'PENDING'
+                  ? 'sales-payment-new__status-pill--active sales-payment-new__status-pill--pending'
+                  : 'sales-payment-new__status-pill--pending'
+              }`}
             >
-              Cerrar
+              {t('sales.payment.status.pending', 'Pendiente')}
+            </button>
+            <button
+              type='button'
+              onClick={() => handleStatusFilter('PARTIAL_PAYMENT')}
+              className={`sales-payment-new__status-pill ${
+                selectedStatus === 'PARTIAL_PAYMENT'
+                  ? 'sales-payment-new__status-pill--active sales-payment-new__status-pill--partial'
+                  : 'sales-payment-new__status-pill--partial'
+              }`}
+            >
+              {t('sales.payment.status.partial', 'Parcialmente Pagado')}
+            </button>
+          </div>
+          <div className='sales-payment-new__filter-actions'>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={handleClearFilters}
+              className='sales-payment-new__clear-filters'
+            >
+              {t('common.action.clear_filters', 'Limpiar Filtros')}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <Button
+              onClick={handleApplyFilters}
+              disabled={isLoading}
+              className='btn btn--primary'
+            >
+              {t('common.action.apply_filters', 'Aplicar Filtros')}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabla */}
+      <div className='sales-payment-new__table-container'>
+        {filteredSales.length > 0 ? (
+          <>
+            <Table className='sales-payment-new__table'>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className='sales-payment-new__table-head sales-payment-new__table-head--checkbox'>
+                    {/* Columna para selección individual */}
+                  </TableHead>
+                  <TableHead className='sales-payment-new__table-head'>
+                    {t('sales.payment.table.order_id', 'ID ORDEN')}
+                  </TableHead>
+                  <TableHead className='sales-payment-new__table-head'>
+                    {t('sales.payment.table.client', 'CLIENTE')}
+                  </TableHead>
+                  <TableHead className='sales-payment-new__table-head'>
+                    {t('sales.payment.table.date', 'FECHA')}
+                  </TableHead>
+                  <TableHead className='sales-payment-new__table-head sales-payment-new__table-head--right'>
+                    {t('sales.payment.table.total', 'MONTO TOTAL')}
+                  </TableHead>
+                  <TableHead className='sales-payment-new__table-head sales-payment-new__table-head--right'>
+                    {t('sales.payment.table.balance', 'SALDO PENDIENTE')}
+                  </TableHead>
+                  <TableHead className='sales-payment-new__table-head'>
+                    {t('sales.payment.table.status', 'ESTADO')}
+                  </TableHead>
+                  <TableHead className='sales-payment-new__table-head sales-payment-new__table-head--actions'>
+                    {t('sales.payment.table.action', 'ACCIÓN')}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredSales.map(sale => (
+                  <TableRow
+                    key={sale.id}
+                    className={`sales-payment-new__table-row ${
+                      selectedSaleId === sale.id
+                        ? 'sales-payment-new__table-row--selected'
+                        : ''
+                    }`}
+                    onClick={() => handleToggleSaleSelection(sale.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <TableCell className='sales-payment-new__table-cell sales-payment-new__table-cell--checkbox'>
+                      <input
+                        type='radio'
+                        name='sale-selection'
+                        checked={selectedSaleId === sale.id}
+                        onChange={() => handleToggleSaleSelection(sale.id)}
+                        onClick={e => e.stopPropagation()}
+                        className='sales-payment-new__radio'
+                      />
+                    </TableCell>
+                    <TableCell className='sales-payment-new__table-cell'>
+                      <span className='sales-payment-new__order-id'>
+                        #{sale.id}
+                      </span>
+                    </TableCell>
+                    <TableCell className='sales-payment-new__table-cell'>
+                      {sale.client_name || 'N/A'}
+                    </TableCell>
+                    <TableCell className='sales-payment-new__table-cell'>
+                      {formatDate(sale.sale_date || sale.created_at)}
+                    </TableCell>
+                    <TableCell className='sales-payment-new__table-cell sales-payment-new__table-cell--right'>
+                      <span className='sales-payment-new__amount'>
+                        {formatCurrency(sale.total_amount)}
+                      </span>
+                    </TableCell>
+                    <TableCell className='sales-payment-new__table-cell sales-payment-new__table-cell--right'>
+                      <span className='sales-payment-new__balance'>
+                        {formatCurrency(sale.balance_due)}
+                      </span>
+                    </TableCell>
+                    <TableCell className='sales-payment-new__table-cell'>
+                      {getStatusBadge(sale.status)}
+                    </TableCell>
+                    <TableCell className='sales-payment-new__table-cell sales-payment-new__table-cell--actions'>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        onClick={e => {
+                          e.stopPropagation()
+                          navigate(`/cobros-ventas/${sale.id}`)
+                        }}
+                        className='btn btn--ghost btn--small'
+                      >
+                        {t('common.action.view_detail', 'Ver Detalle')}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            {/* Paginación */}
+            <div className='sales-payment-new__pagination'>
+              <div className='sales-payment-new__pagination-info'>
+                {t('sales.payment.pagination.showing', 'Mostrando')}{' '}
+                {(pagination.page - 1) * pagination.page_size + 1}-
+                {Math.min(
+                  pagination.page * pagination.page_size,
+                  pagination.total_records
+                )}{' '}
+                {t('sales.payment.pagination.of', 'de')}{' '}
+                {pagination.total_records}
+              </div>
+              <div className='sales-payment-new__pagination-controls'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1 || isLoading}
+                  className='btn btn--secondary btn--small'
+                >
+                  {t('common.pagination.previous', 'Anterior')}
+                </Button>
+                <div className='sales-payment-new__pagination-pages'>
+                  {Array.from(
+                    { length: Math.min(pagination.total_pages, 3) },
+                    (_, i) => {
+                      const pageNumber = i + 1
+                      return (
+                        <Button
+                          key={pageNumber}
+                          variant={
+                            pagination.page === pageNumber
+                              ? 'default'
+                              : 'outline'
+                          }
+                          size='sm'
+                          onClick={() => handlePageChange(pageNumber)}
+                          disabled={isLoading}
+                          className={`btn ${
+                            pagination.page === pageNumber
+                              ? 'btn--primary'
+                              : 'btn--secondary'
+                          } btn--small`}
+                        >
+                          {pageNumber}
+                        </Button>
+                      )
+                    }
+                  )}
+                </div>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={
+                    pagination.page === pagination.total_pages || isLoading
+                  }
+                  className='btn btn--secondary btn--small'
+                >
+                  {t('common.pagination.next', 'Siguiente')}
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <DataState
+            variant='empty'
+            title={t('sales.payment.empty.title', 'Sin resultados')}
+            message={t(
+              'sales.payment.empty.message',
+              'No se encontraron órdenes de venta con los filtros seleccionados'
+            )}
+            onAction={handleClearFilters}
+            actionLabel={t('common.action.clear_filters', 'Limpiar Filtros')}
+          />
+        )}
+      </div>
+
+      {/* Modal de registro de pago */}
+      <RegisterSalePaymentModal
+        open={isPaymentModalOpen}
+        onOpenChange={setIsPaymentModalOpen}
+        sale={rawSales.find(s => s.id === selectedSaleId)}
+        onSubmit={handlePaymentSubmit}
+      />
     </div>
   )
 }

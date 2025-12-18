@@ -143,6 +143,7 @@ const SalesNew = () => {
   const clientSearchContainerRef = useRef(null)
   const productSearchContainerRef = useRef(null)
   const productDropdownRef = useRef(null)
+  const modalProductInputRef = useRef(null)
 
   // Zustand stores
   const {
@@ -223,6 +224,7 @@ const SalesNew = () => {
   const [activeSales, setActiveSales] = useState([])
   const [activeSale, setActiveSale] = useState(null)
   const [showActiveSaleModal, setShowActiveSaleModal] = useState(false)
+  const [currentSaleId, setCurrentSaleId] = useState(null) // ID de venta pendiente siendo actualizada
 
   // Cargar productos al montar
   useEffect(() => {
@@ -335,6 +337,16 @@ const SalesNew = () => {
       // setSelectedModalProduct(products[0])
     }
   }, [products, selectedModalProduct])
+
+  // Autofocus en el input del modal cuando se abre
+  useEffect(() => {
+    if (isModalOpen && modalProductInputRef.current) {
+      // Timeout para asegurar que el modal esté completamente renderizado
+      setTimeout(() => {
+        modalProductInputRef.current?.focus()
+      }, 100)
+    }
+  }, [isModalOpen])
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
@@ -714,12 +726,14 @@ const SalesNew = () => {
       name: item.name,
       price: item.price,
     })
+    setProductSearchTerm(item.name) // Setear el nombre del producto en el campo de búsqueda
     setModalQuantity(item.quantity)
     setModalDiscountType(item.discountType || 'amount')
     setModalDiscount(discountValue)
     setModalDiscountReason(item.discountReason || '')
     setEditingItemId(item.id)
     setIsModalOpen(true)
+    setShowProductDropdown(false) // Cerrar dropdown al editar
     setOpenActionMenuId(null)
   }
 
@@ -734,50 +748,117 @@ const SalesNew = () => {
         res.product_id ||
         `${res.product_name || 'res'}-${res.start_time || ''}`
 
+      // Formatear la fecha y hora de la reserva
+      let timeInfo = ''
+      if (res.start_time) {
+        try {
+          const date = new Date(res.start_time)
+          const dateStr = date.toLocaleDateString('es-PY', {
+            day: '2-digit',
+            month: '2-digit',
+          })
+          const timeStr = date.toLocaleTimeString('es-PY', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          })
+          timeInfo = ` • ${dateStr} ${timeStr}h`
+        } catch (e) {
+          console.warn('Error formatting reservation time:', e)
+        }
+      }
+
       return {
         id: `RES-${reserveKey}`,
         productId: res.product_id || `RES-${reserveKey}`, // Fallback ID
-        name: `Reserva: ${res.product_name} (${duration} hrs)`,
+        name: `${res.product_name}${timeInfo}`,
         quantity: 1, // Mantenemos 1 para respetar el precio total del paquete
         price: price,
         discount: 0,
         isReservation: true,
         reserveId: res.reserve_id,
         reserveKey,
+        reservationTime: res.start_time, // Guardar para referencia
       }
     })
 
     setItems(prev => {
-      const existingKeys = new Set(
+      // Para servicios/reservas: solo verificar por reserveId único
+      // Permitir múltiples reservas del mismo servicio (ej: cancha en diferentes horarios)
+      const existingReserveKeys = new Set(
         prev
           .filter(item => item.reserveId || item.reserveKey)
           .map(item => item.reserveKey || item.reserveId)
       )
 
       const deduped = []
+      const skippedReservations = []
+
       newItems.forEach(item => {
-        const key = item.reserveKey || item.reserveId || item.id
-        if (existingKeys.has(key)) return
-        existingKeys.add(key)
+        const reserveKey = item.reserveKey || item.reserveId || item.id
+
+        // Solo verificar si esta reserva específica ya existe
+        // NO verificar por productId para permitir servicios duplicados
+        if (existingReserveKeys.has(reserveKey)) {
+          skippedReservations.push(item.name)
+          return
+        }
+
+        existingReserveKeys.add(reserveKey)
         deduped.push(item)
       })
 
-      if (deduped.length === 0) return prev
+      if (deduped.length === 0) {
+        alert('Todas las reservas ya están en el carrito')
+        return prev
+      }
+
+      if (skippedReservations.length > 0) {
+        alert(
+          `Se agregaron ${deduped.length} reserva(s). ${skippedReservations.length} reserva(s) duplicada(s) omitida(s).`
+        )
+      }
+
       return [...prev, ...deduped]
     })
     setShowReservationModal(false)
     setPendingReservations([])
   }
 
+  const handleSearchReservations = async () => {
+    if (!selectedClient || !selectedClient.id) {
+      alert('Por favor selecciona un cliente primero')
+      return
+    }
+
+    try {
+      const reservations = await apiService.getReservationReport({
+        client_id: selectedClient.id,
+        status: 'CONFIRMED',
+      })
+
+      if (reservations && reservations.length > 0) {
+        setPendingReservations(reservations)
+        setShowReservationModal(true)
+      } else {
+        alert('No se encontraron reservas confirmadas para este cliente')
+      }
+    } catch (error) {
+      console.error('Error buscando reservas:', error)
+      alert('Error al buscar reservas del cliente')
+    }
+  }
+
   const handleContinueSale = async () => {
     if (!activeSale) return
 
     let saleDetails = activeSale.details || []
+    const saleId = activeSale.sale_id || activeSale.id
 
     // Si no tiene detalles, intentar obtenerlos por ID
-    if (saleDetails.length === 0 && activeSale.id) {
+    if (saleDetails.length === 0 && saleId) {
       try {
-        const fullSale = await apiService.getSaleById(activeSale.id)
+        const fullSale = await apiService.getSaleById(saleId)
         if (fullSale && fullSale.details) {
           saleDetails = fullSale.details
         }
@@ -787,19 +868,41 @@ const SalesNew = () => {
       }
     }
 
-    const loadedItems = saleDetails.map(detail => ({
-      id: `SALE-${activeSale.id}-${detail.product_id}-${Date.now()}`,
+    const loadedItems = saleDetails.map((detail, index) => ({
+      id: `SALE-${saleId}-${detail.product_id}-${Date.now()}-${index}`,
       productId: detail.product_id,
       name: detail.product_name || 'Producto existente',
       quantity: detail.quantity,
       price: detail.unit_price || detail.price || 0,
       discount: detail.discount_amount || 0,
+      isFromPendingSale: true, // Marcar como producto existente de venta pendiente
     }))
 
-    setItems(prev => [...prev, ...loadedItems])
+    // Prevenir duplicados: verificar qué productos ya existen en el carrito
+    setItems(prev => {
+      const existingProductIds = new Set(prev.map(item => item.productId))
+      const newItems = loadedItems.filter(
+        item => !existingProductIds.has(item.productId)
+      )
+
+      if (newItems.length === 0) {
+        alert('Todos los productos de esta venta ya están en el carrito')
+        return prev
+      }
+
+      if (newItems.length < loadedItems.length) {
+        const skipped = loadedItems.length - newItems.length
+        alert(
+          `Se cargaron ${newItems.length} producto(s). ${skipped} producto(s) ya estaban en el carrito.`
+        )
+      }
+
+      return [...prev, ...newItems]
+    })
+
     setShowActiveSaleModal(false)
-    // Nota: Aquí podríamos setear un 'currentSaleId' si fuéramos a actualizar la venta existente
-    // en lugar de crear una nueva.
+    // Guardar el ID de la venta activa para actualizarla en lugar de crear una nueva
+    setCurrentSaleId(saleId)
   }
 
   const handleOpenModal = () => {
@@ -843,11 +946,47 @@ const SalesNew = () => {
       discountReason: modalDiscountReason,
     }
 
-    setItems(prev =>
-      editingItemId
-        ? prev.map(item => (item.id === editingItemId ? newItem : item))
-        : [...prev, newItem]
-    )
+    setItems(prev => {
+      if (editingItemId) {
+        // Modo edición: actualizar el item existente
+        return prev.map(item => (item.id === editingItemId ? newItem : item))
+      } else {
+        // Modo agregar: verificar que el producto no exista ya
+        const existingItem = prev.find(
+          item => item.productId === modalDisplay.id && !item.isReservation
+        )
+
+        if (existingItem) {
+          // Producto normal duplicado: preguntar si quiere sumar cantidad
+          const shouldMerge = window.confirm(
+            `El producto "${modalDisplay.name}" ya está en el carrito.\n\n` +
+            `Cantidad actual: ${existingItem.quantity}\n` +
+            `Nueva cantidad: ${parsedModalQuantity}\n\n` +
+            `¿Deseas sumar las cantidades?`
+          )
+
+          if (shouldMerge) {
+            // Sumar la cantidad al item existente
+            return prev.map(item => {
+              if (item.id === existingItem.id) {
+                return {
+                  ...item,
+                  quantity: item.quantity + parsedModalQuantity,
+                  // Mantener el descuento y precio del item existente
+                }
+              }
+              return item
+            })
+          } else {
+            // Usuario canceló, no hacer nada
+            return prev
+          }
+        }
+
+        return [...prev, newItem]
+      }
+    })
+
     setModalQuantity(1)
     setModalDiscount(0)
     setModalDiscountType('amount')
@@ -864,6 +1003,7 @@ const SalesNew = () => {
     }
     setPaymentMethodId(1)
     setCurrencyId(1)
+    setCurrentSaleId(null) // Limpiar venta pendiente seleccionada
   }
 
   const handleSaveSale = async () => {
@@ -878,45 +1018,97 @@ const SalesNew = () => {
       return
     }
 
-    // Construir estructura según SALE_API.md
-    const saleData = {
-      client_id: selectedClient.id,
-      allow_price_modifications: items.some(item => item.discount > 0),
-      product_details: items.map(item => {
-        const detail = {
-          product_id: item.productId,
-          quantity: item.quantity,
-        }
-
-        // Agregar descuentos si existen
-        if (item.discount > 0) {
-          if (item.discountType === 'percent') {
-            detail.discount_percent = Number(item.discountInput)
-          } else {
-            // Es monto fijo unitario
-            detail.discount_amount = Number(item.discountInput)
-          }
-          detail.discount_reason =
-            item.discountReason || 'Descuento aplicado en venta'
-        }
-
-        return detail
-      }),
-      payment_method_id: paymentMethodId,
-      currency_id: currencyId,
-    }
-
     try {
-      const response = await createSale(saleData)
+      // Si hay una venta pendiente seleccionada, actualizar en lugar de crear
+      if (currentSaleId) {
+        // Filtrar solo los productos NUEVOS (los que no vienen de la venta pendiente)
+        const newItems = items.filter(item => !item.isFromPendingSale)
 
-      if (response && response.sale_id) {
-        alert(`Venta creada exitosamente: ${response.sale_id}`)
+        if (newItems.length === 0) {
+          alert('No hay productos nuevos para agregar a la venta')
+          return
+        }
 
-        // Limpiar carrito
-        setItems([])
-        setGeneralDiscount(0)
+        // Construir payload para agregar productos según ADD_PRODUCT_TO_SALE.md
+        const addProductsPayload = {
+          allow_price_modifications: newItems.some(item => item.discount > 0),
+          product_details: newItems.map(item => {
+            const detail = {
+              product_id: item.productId,
+              quantity: item.quantity,
+            }
+
+            // Agregar descuentos si existen
+            if (item.discount > 0) {
+              if (item.discountType === 'percent') {
+                detail.discount_percent = Number(item.discountInput)
+              } else {
+                detail.discount_amount = Number(item.discountInput)
+              }
+              detail.discount_reason =
+                item.discountReason || 'Descuento aplicado en venta'
+            }
+
+            return detail
+          }),
+        }
+
+        const response = await saleService.addProductsToSale(
+          currentSaleId,
+          addProductsPayload
+        )
+
+        if (response && response.success) {
+          alert(
+            `Venta actualizada exitosamente. ${response.items_added || newItems.length} producto(s) agregado(s).`
+          )
+
+          // Limpiar carrito y estado de venta pendiente
+          setItems([])
+          setGeneralDiscount(0)
+          setCurrentSaleId(null)
+        } else {
+          alert('Error: No se pudo actualizar la venta')
+        }
       } else {
-        alert('Error: No se recibió ID de venta')
+        // Crear nueva venta
+        const saleData = {
+          client_id: selectedClient.id,
+          allow_price_modifications: items.some(item => item.discount > 0),
+          product_details: items.map(item => {
+            const detail = {
+              product_id: item.productId,
+              quantity: item.quantity,
+            }
+
+            // Agregar descuentos si existen
+            if (item.discount > 0) {
+              if (item.discountType === 'percent') {
+                detail.discount_percent = Number(item.discountInput)
+              } else {
+                detail.discount_amount = Number(item.discountInput)
+              }
+              detail.discount_reason =
+                item.discountReason || 'Descuento aplicado en venta'
+            }
+
+            return detail
+          }),
+          payment_method_id: paymentMethodId,
+          currency_id: currencyId,
+        }
+
+        const response = await createSale(saleData)
+
+        if (response && response.sale_id) {
+          alert(`Venta creada exitosamente: ${response.sale_id}`)
+
+          // Limpiar carrito
+          setItems([])
+          setGeneralDiscount(0)
+        } else {
+          alert('Error: No se recibió ID de venta')
+        }
       }
     } catch (error) {
       console.error('Error al guardar venta:', error)
@@ -1050,7 +1242,22 @@ const SalesNew = () => {
                             return (
                               <tr key={item.id}>
                                 <td>{item.productId || item.id || '-'}</td>
-                                <td>{item.name}</td>
+                                <td>
+                                  {item.isReservation && (
+                                    <span
+                                      className='badge badge--pill badge--small badge--info'
+                                      style={{
+                                        marginRight: '8px',
+                                        fontSize: '0.75rem',
+                                        verticalAlign: 'middle',
+                                      }}
+                                      title='Este item corresponde a una reserva confirmada'
+                                    >
+                                      Reserva
+                                    </span>
+                                  )}
+                                  {item.name}
+                                </td>
                                 <td className='text-right'>{item.quantity}</td>
                                 <td className='text-right'>
                                   {formatCurrency(item.price, 'PYG')}
@@ -1378,6 +1585,14 @@ const SalesNew = () => {
                           {selectedClient.contact.phone}
                         </p>
                       )}
+                      <button
+                        type='button'
+                        className='btn btn--secondary btn--small'
+                        onClick={handleSearchReservations}
+                        style={{ marginTop: '12px', width: '100%' }}
+                      >
+                        Buscar Reservas Confirmadas
+                      </button>
                     </div>
                   )}
 
@@ -2370,6 +2585,7 @@ const SalesNew = () => {
                       ref={productSearchContainerRef}
                     >
                       <input
+                        ref={modalProductInputRef}
                         id='modal-product'
                         type='text'
                         className='input'
