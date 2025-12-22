@@ -1,0 +1,477 @@
+// =============================================================================
+// CASH MOVEMENTS PAGE - Fluent Design System 2
+// =============================================================================
+// Estilos para la página de registro de movimientos de caja
+// Consistente con el sistema de diseño Fluent y la página de ventas
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// LAYOUT
+// -----------------------------------------------------------------------------
+
+.cash-movements-page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+  padding: $spacing-32;
+  max-width: 1920px;
+
+  @include tablet {
+    gap: $spacing-20;
+    padding: $spacing-20;
+  }
+
+  @include mobile {
+    gap: $spacing-16;
+    padding: $spacing-16;
+  }
+
+  // ---------------------------------------------------------------------------
+  // BREADCRUMB
+  // ---------------------------------------------------------------------------
+
+  &__breadcrumb {
+    margin-bottom: $spacing-4;
+
+    ol {
+      display: inline-flex;
+      align-items: center;
+      gap: $spacing-8;
+      font-size: $font-size-300;
+      flex-wrap: nowrap;
+      flex-direction: row;
+
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+
+    li {
+      display: inline-flex;
+      align-items: center;
+
+      a {
+        text-decoration: none;
+        @include transition(color);
+
+        @include themify {
+          color: themed('text-secondary');
+
+          &:hover {
+            color: themed('action-primary');
+          }
+        }
+      }
+    }
+
+    // Separator styling
+    [data-slot='breadcrumb-separator'] {
+      margin: 0 $spacing-4;
+
+      @include themify {
+        color: themed('text-tertiary');
+      }
+    }
+
+    // Current page (last item)
+    [data-slot='breadcrumb-page'] {
+      font-weight: $font-weight-medium;
+
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // HEADER
+  // ---------------------------------------------------------------------------
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+  }
+
+  &__header-content {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__title {
+    font-size: $font-size-800;
+    line-height: $line-height-400;
+    font-weight: $font-weight-semibold;
+    margin: 0;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__description {
+    font-size: $font-size-300;
+    line-height: $line-height-300;
+    margin: $spacing-4 0 0 0;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // ACTION BUTTONS
+  // ---------------------------------------------------------------------------
+
+  &__actions {
+    display: flex;
+    gap: $spacing-12;
+    flex-wrap: wrap;
+  }
+
+  // Cancelar button - Secondary/Ghost style
+  &__btn-cancel {
+    font-size: $font-size-300;
+    font-weight: $font-weight-medium;
+    padding: $spacing-8 $spacing-16;
+    border-radius: $border-radius-medium;
+    @include transition((background-color, color));
+
+    @include themify {
+      background-color: themed('bg-secondary') !important;
+      color: themed('text-primary') !important;
+      border: none !important;
+
+      &:hover {
+        background-color: themed('bg-tertiary') !important;
+      }
+    }
+  }
+
+  // Guardar y Nuevo button - Outline Primary
+  &__btn-save-new {
+    font-size: $font-size-300;
+    font-weight: $font-weight-medium;
+    padding: $spacing-8 $spacing-16;
+    border-radius: $border-radius-medium;
+    @include transition((background-color, border-color, color));
+    box-shadow: $shadow-2;
+
+    @include themify {
+      background-color: themed('bg-primary') !important;
+      color: themed('action-primary') !important;
+      border: 1px solid themed('action-primary') !important;
+
+      &:hover {
+        background-color: $brand-150 !important;
+      }
+    }
+  }
+
+  // Guardar button - Primary
+  &__btn-save {
+    font-size: $font-size-300;
+    font-weight: $font-weight-medium;
+    padding: $spacing-8 $spacing-16;
+    border-radius: $border-radius-medium;
+    @include transition((background-color, box-shadow));
+    box-shadow: $shadow-4;
+
+    @include themify {
+      background-color: themed('action-primary') !important;
+      color: themed('text-inverted') !important;
+      border: none !important;
+
+      &:hover {
+        background-color: themed('action-primary-hover') !important;
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // FORM CARD
+  // ---------------------------------------------------------------------------
+
+  &__card {
+    padding: $spacing-32;
+    border-radius: $border-radius-large;
+    max-width: 896px;
+    @include elevation(2);
+
+    @include themify {
+      background-color: themed('surface-card');
+      border: 1px solid themed('border-subtle');
+    }
+
+    @include mobile {
+      padding: $spacing-20;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // FORM
+  // ---------------------------------------------------------------------------
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+  }
+
+  // ---------------------------------------------------------------------------
+  // SEGMENTED CONTROL (Tabs style)
+  // ---------------------------------------------------------------------------
+
+  .segmented-control {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: $spacing-4;
+    border-radius: $border-radius-medium;
+    border: none;
+    gap: 0;
+
+    @include themify {
+      background-color: themed('bg-secondary');
+    }
+  }
+
+  .segmented-control__indicator {
+    display: none;
+  }
+
+  .segmented-control__option {
+    padding: $spacing-8 $spacing-16;
+    font-size: $font-size-300;
+    font-weight: $font-weight-medium;
+    border-radius: $border-radius-small;
+    background: transparent;
+    @include transition((background-color, color, box-shadow));
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+
+    &:hover:not(:disabled):not(.segmented-control__option--active) {
+      @include themify {
+        color: themed('text-primary');
+        background-color: rgba(themed('text-primary'), 0.06);
+      }
+    }
+
+    &--active {
+      box-shadow: $shadow-2;
+
+      @include themify {
+        background-color: $brand-120 !important;
+        color: $brand-30 !important;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FORM COMPONENTS
+// -----------------------------------------------------------------------------
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+
+  &__label {
+    font-size: $font-size-300;
+    line-height: $line-height-300;
+    font-weight: $font-weight-medium;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__label-optional {
+    font-size: $font-size-300;
+    line-height: $line-height-300;
+    font-weight: $font-weight-regular;
+
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__segmented-control {
+    width: 100%;
+  }
+
+  // Input with prefix ($)
+  &__input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__input-prefix {
+    position: absolute;
+    left: $spacing-12;
+    font-size: $font-size-300;
+    line-height: $line-height-300;
+    pointer-events: none;
+    z-index: 1;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+
+    // Add spacing after the prefix
+    &::after {
+      content: '\00a0'; // non-breaking space
+    }
+  }
+
+  &__input--with-prefix {
+    padding-left: calc(
+      #{$spacing-12} + #{$spacing-24} + #{$spacing-8}
+    ) !important;
+  }
+}
+
+// Form Row (two columns)
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $spacing-24;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SELECT COMPONENT STYLES
+// -----------------------------------------------------------------------------
+
+// Radix Select Trigger styling for this page
+.cash-movements-page {
+  // Target all Select triggers
+  [data-radix-select-trigger],
+  button[role='combobox'] {
+    width: 100%;
+    height: 48px;
+    padding: $spacing-12 $spacing-16;
+    border-radius: $border-radius-medium;
+    font-family: $font-family-base;
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    line-height: $line-height-300;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    @include transition((border-color, box-shadow));
+
+    @include themify {
+      border: 1px solid themed('border-default');
+      background-color: themed('surface-input');
+      color: themed('text-primary');
+
+      &::placeholder {
+        color: themed('text-tertiary');
+      }
+
+      &:hover:not(:disabled) {
+        border-color: themed('border-strong');
+      }
+
+      &:focus,
+      &[data-state='open'] {
+        outline: none;
+        border-color: themed('action-primary');
+        box-shadow: 0 0 0 2px rgba($brand-100, 0.18);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    // Value text
+    span[data-radix-select-value] {
+      flex: 1;
+      text-align: left;
+    }
+
+    // Chevron icon
+    svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      @include transition(transform);
+
+      @include themify {
+        color: themed('text-tertiary');
+      }
+    }
+
+    &[data-state='open'] svg {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+// Select Content (dropdown) styling
+.cash-movements-page__select-content {
+  border-radius: $border-radius-medium !important;
+  overflow: hidden;
+  @include elevation(4);
+  background-color: #ffffff !important;
+
+  @include themify {
+    background-color: themed('surface-card') !important;
+    border: 1px solid themed('border-subtle') !important;
+  }
+
+  // Target the viewport inside
+  [data-radix-select-viewport] {
+    padding: $spacing-4;
+    background-color: #ffffff !important;
+
+    @include themify {
+      background-color: themed('surface-card') !important;
+    }
+  }
+}
+
+// Select Item styling
+.cash-movements-page__select-content [role='option'],
+[data-radix-select-item] {
+  padding: $spacing-12 $spacing-16;
+  font-size: $font-size-300;
+  cursor: pointer;
+  border-radius: $border-radius-small;
+  @include transition(background-color);
+  background-color: transparent;
+
+  @include themify {
+    color: themed('text-primary');
+
+    &:hover,
+    &[data-highlighted] {
+      background-color: themed('bg-secondary') !important;
+      outline: none;
+    }
+
+    &[data-state='checked'] {
+      background-color: $brand-150 !important;
+      color: $brand-30;
+    }
+  }
+}
