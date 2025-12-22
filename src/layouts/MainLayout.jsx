@@ -141,11 +141,6 @@ const MainLayout = ({ children }) => {
         icon: DollarSign,
         children: [
           {
-            name: 'Caja Registradora',
-            href: '/caja-registradora',
-            icon: DollarSign,
-          },
-          {
             name: 'Pagos Compras',
             href: '/pagos-compras',
             icon: CircleDollarSign,
@@ -164,6 +159,23 @@ const MainLayout = ({ children }) => {
             name: 'Gestión de Pagos',
             href: '/pagos/gestion',
             icon: SlidersHorizontal,
+          },
+        ],
+      },
+      {
+        name: 'Registro de Caja',
+        href: '#',
+        icon: DollarSign,
+        children: [
+          {
+            name: 'Apertura y Cierre',
+            href: '/caja-registradora',
+            icon: DollarSign,
+          },
+          {
+            name: 'Registro Manual',
+            href: '/movimientos-caja',
+            icon: DollarSign,
           },
         ],
       },

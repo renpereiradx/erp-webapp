@@ -68,6 +68,7 @@ export const common = {
   'common.home': 'Inicio',
   'common.cancel': 'Cancelar',
   'common.save': 'Guardar',
+  'common.optional': 'Opcional',
   'common.loading': 'Cargando...',
   'common.saving': 'Guardando...',
   'common.searching': 'Buscando...',

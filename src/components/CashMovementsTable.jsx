@@ -8,117 +8,130 @@
  * - Sin necesidad de queries adicionales
  */
 
-import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { ArrowDownIcon, ArrowUpIcon, RefreshCwIcon } from 'lucide-react';
+import React from 'react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { ArrowDownIcon, ArrowUpIcon, RefreshCwIcon } from 'lucide-react'
 
 const CashMovementsTable = ({ movements = [] }) => {
   /**
    * Formatea montos a formato de moneda local
    */
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-ES', {
+  const formatCurrency = amount => {
+    return new Intl.NumberFormat('es-PY', {
       style: 'currency',
-      currency: 'COP',
+      currency: 'PYG',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
 
   /**
    * Retorna el icono y color según el tipo de movimiento
    */
-  const getMovementDisplay = (type) => {
+  const getMovementDisplay = type => {
     const displays = {
       INCOME: {
-        icon: <ArrowUpIcon className="w-4 h-4" />,
+        icon: <ArrowUpIcon className='w-4 h-4' />,
         variant: 'success',
-        label: 'Ingreso'
+        label: 'Ingreso',
       },
       EXPENSE: {
-        icon: <ArrowDownIcon className="w-4 h-4" />,
+        icon: <ArrowDownIcon className='w-4 h-4' />,
         variant: 'destructive',
-        label: 'Egreso'
+        label: 'Egreso',
       },
       ADJUSTMENT: {
-        icon: <RefreshCwIcon className="w-4 h-4" />,
+        icon: <RefreshCwIcon className='w-4 h-4' />,
         variant: 'secondary',
-        label: 'Ajuste'
-      }
-    };
+        label: 'Ajuste',
+      },
+    }
 
-    return displays[type] || displays.ADJUSTMENT;
-  };
+    return displays[type] || displays.ADJUSTMENT
+  }
 
   /**
    * Formatea la fecha de forma legible
    */
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
+  const formatDate = dateString => {
+    const date = new Date(dateString)
     return new Intl.DateTimeFormat('es-ES', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
+      minute: '2-digit',
+    }).format(date)
+  }
 
   if (movements.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className='text-center py-8 text-muted-foreground'>
         No hay movimientos registrados
       </div>
-    );
+    )
   }
 
   return (
-    <div className="rounded-md border">
+    <div className='rounded-md border'>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Fecha</TableHead>
             <TableHead>Tipo</TableHead>
             <TableHead>Concepto</TableHead>
-            <TableHead className="text-right">Monto</TableHead>
-            <TableHead className="text-right">Balance</TableHead>
+            <TableHead className='text-right'>Monto</TableHead>
+            <TableHead className='text-right'>Balance</TableHead>
             <TableHead>Usuario</TableHead>
             <TableHead>Detalles</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {movements.map((movement) => {
-            const display = getMovementDisplay(movement.movement_type);
+          {movements.map(movement => {
+            const display = getMovementDisplay(movement.movement_type)
 
             return (
               <TableRow key={movement.movement_id}>
                 {/* Fecha */}
-                <TableCell className="text-sm">
+                <TableCell className='text-sm'>
                   {formatDate(movement.created_at)}
                 </TableCell>
 
                 {/* Tipo de movimiento */}
                 <TableCell>
-                  <Badge variant={display.variant} className="flex items-center gap-1 w-fit">
+                  <Badge
+                    variant={display.variant}
+                    className='flex items-center gap-1 w-fit'
+                  >
                     {display.icon}
                     {display.label}
                   </Badge>
                 </TableCell>
 
                 {/* Concepto */}
-                <TableCell className="max-w-xs truncate" title={movement.concept}>
+                <TableCell
+                  className='max-w-xs truncate'
+                  title={movement.concept}
+                >
                   {movement.concept}
                 </TableCell>
 
                 {/* Monto */}
-                <TableCell className="text-right font-medium">
+                <TableCell className='text-right font-medium'>
                   {movement.movement_type === 'INCOME' ? '+' : '-'}
                   {formatCurrency(movement.amount)}
                 </TableCell>
 
                 {/* Balance acumulado - ✅ DATO ENRIQUECIDO */}
-                <TableCell className="text-right font-semibold text-primary">
+                <TableCell className='text-right font-semibold text-primary'>
                   {formatCurrency(movement.running_balance)}
                 </TableCell>
 
@@ -130,22 +143,22 @@ const CashMovementsTable = ({ movements = [] }) => {
                 {/* Detalles de venta/compra - ✅ DATOS ENRIQUECIDOS */}
                 <TableCell>
                   {movement.related_sale_id && (
-                    <div className="space-y-1 text-sm">
-                      <div className="font-medium text-blue-600">
+                    <div className='space-y-1 text-sm'>
+                      <div className='font-medium text-blue-600'>
                         {movement.related_sale_id}
                       </div>
                       {movement.sale_client_name && (
-                        <div className="text-muted-foreground">
+                        <div className='text-muted-foreground'>
                           Cliente: {movement.sale_client_name}
                         </div>
                       )}
                       {movement.sale_total !== null && (
-                        <div className="text-xs">
+                        <div className='text-xs'>
                           Total: {formatCurrency(movement.sale_total)}
                         </div>
                       )}
                       {movement.sale_status && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant='outline' className='text-xs'>
                           {movement.sale_status}
                         </Badge>
                       )}
@@ -153,37 +166,38 @@ const CashMovementsTable = ({ movements = [] }) => {
                   )}
 
                   {movement.related_purchase_id && (
-                    <div className="space-y-1 text-sm">
-                      <div className="font-medium text-purple-600">
+                    <div className='space-y-1 text-sm'>
+                      <div className='font-medium text-purple-600'>
                         Compra #{movement.related_purchase_id}
                       </div>
                       {movement.purchase_supplier && (
-                        <div className="text-muted-foreground">
+                        <div className='text-muted-foreground'>
                           Proveedor: {movement.purchase_supplier}
                         </div>
                       )}
                       {movement.purchase_total !== null && (
-                        <div className="text-xs">
+                        <div className='text-xs'>
                           Total: {formatCurrency(movement.purchase_total)}
                         </div>
                       )}
                     </div>
                   )}
 
-                  {!movement.related_sale_id && !movement.related_purchase_id && (
-                    <span className="text-muted-foreground text-sm">-</span>
-                  )}
+                  {!movement.related_sale_id &&
+                    !movement.related_purchase_id && (
+                      <span className='text-muted-foreground text-sm'>-</span>
+                    )}
                 </TableCell>
               </TableRow>
-            );
+            )
           })}
         </TableBody>
       </Table>
     </div>
-  );
-};
+  )
+}
 
-export default CashMovementsTable;
+export default CashMovementsTable
 
 /**
  * Ejemplo de uso:

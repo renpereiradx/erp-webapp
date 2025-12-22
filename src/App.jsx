@@ -39,6 +39,7 @@ import PurchasePaymentDetail from '@/pages/PurchasePaymentDetail'
 // import CashRegister from '@/pages/CashRegister' // Obsoleto - usar NewCashRegister
 import NewCashRegister from '@/pages/NewCashRegister'
 import RegisterCashMovement from '@/pages/RegisterCashMovement'
+import CashMovements from '@/pages/CashMovements'
 import SalePayment from '@/pages/SalePayment'
 import SalesOrderDetail from '@/pages/SalesOrderDetail'
 import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
@@ -183,6 +184,10 @@ function AppContent() {
                       />
                       <Route
                         path='/movimientos-caja'
+                        element={<CashMovements />}
+                      />
+                      <Route
+                        path='/movimientos-caja/nuevo'
                         element={<RegisterCashMovement />}
                       />
                       <Route
