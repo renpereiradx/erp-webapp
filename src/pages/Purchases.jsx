@@ -39,14 +39,14 @@ const Purchases = () => {
   const [activeTab, setActiveTab] = useState('nueva-compra')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState('')
+  const [selectedStatus, _setSelectedStatus] = useState('')
   const [searchType, setSearchType] = useState('date') // 'date' o 'supplier'
 
   // Estados para búsqueda de proveedores
   const [supplierSearch, setSupplierSearch] = useState('')
   const [supplierResults, setSupplierResults] = useState([])
   const [selectedSupplier, setSelectedSupplier] = useState(null)
-  const [showSupplierDropdown, setShowSupplierDropdown] = useState(false)
+  const [_showSupplierDropdown, setShowSupplierDropdown] = useState(false)
   const [searchingSuppliers, setSearchingSuppliers] = useState(false)
   const supplierSearchRef = useRef(null)
 
@@ -88,7 +88,7 @@ const Purchases = () => {
   // Estados para el modal de vista de detalles
   const [showViewModal, setShowViewModal] = useState(false)
   const [viewOrderData, setViewOrderData] = useState(null)
-  const [loadingDetails, setLoadingDetails] = useState(false)
+  const [_loadingDetails, setLoadingDetails] = useState(false)
 
   // Cargar datos al montar y configurar fechas por defecto
   useEffect(() => {
@@ -229,7 +229,8 @@ const Purchases = () => {
   // Búsqueda de proveedores con debounce
   useEffect(() => {
     const searchSuppliers = async () => {
-      if (!supplierSearch || supplierSearch.length < 2) {
+      const currentSearch = supplierSearch
+      if (!currentSearch || currentSearch.length < 2) {
         setSupplierResults([])
         setShowSupplierDropdown(false)
         return
@@ -394,7 +395,7 @@ const Purchases = () => {
     setShowSupplierDropdown(false)
   }
 
-  const handleClearSupplier = () => {
+  const _handleClearSupplier = () => {
     setSelectedSupplier(null)
     setSupplierSearch('')
     setSupplierResults([])
@@ -1169,7 +1170,7 @@ const Purchases = () => {
                           )}
                           className='input'
                           value={supplierSearch}
-                          onChange={e => setSupplierSearch(e.target.value)}
+                          onChange={ev => setSupplierSearch(ev.target.value)}
                         />
                         {supplierSearch && (
                           <button
