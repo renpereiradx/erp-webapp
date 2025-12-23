@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Historial de Pagos - SO-00123</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111418] dark:text-gray-200">
+<div class="relative flex min-h-screen w-full">
+<!-- SideNavBar -->
+<aside class="flex h-screen min-h-screen flex-col bg-white dark:bg-[#1a2530] w-64 p-4 border-r border-gray-200 dark:border-gray-700">
+<div class="flex flex-col gap-4">
+<div class="flex gap-3 items-center">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Company logo for Fluent Systems" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD5Ax30qRfGaoxDWBtrSHOpgLBvTgGusCqRDJtv0ihKtXZWGiwD_BZa1ECJdSaGbdPv_BGDsVz1kEixKpB0sm5kaN_moFU4PTxSXzkVktjrRHv6q04s6IkAWCC3bB4yU5IzvKIy-djUlbjx1RSSAO5zCrinyWX5o2L8PxhLry_RcjIQqz6kJn133pBN2IjpxaYXjHyR_SD1v6ll5WGWVBSPqU2lK48YQaOxd_2B9QwTOc6cfdUGSEqBI5loFu4h6tBwLfYgQonDPA");'></div>
+<div class="flex flex-col">
+<h1 class="text-[#111418] dark:text-white text-base font-medium leading-normal">Fluent Systems</h1>
+<p class="text-[#617589] dark:text-gray-400 text-sm font-normal leading-normal">Operaciones de Caja</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2 mt-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" href="#">
+<span class="material-symbols-outlined text-[#111418] dark:text-gray-300">dashboard</span>
+<p class="text-[#111418] dark:text-gray-300 text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300" href="#">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+<p class="text-primary text-sm font-bold leading-normal">Ventas</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" href="#">
+<span class="material-symbols-outlined text-[#111418] dark:text-gray-300">group</span>
+<p class="text-[#111418] dark:text-gray-300 text-sm font-medium leading-normal">Clientes</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" href="#">
+<span class="material-symbols-outlined text-[#111418] dark:text-gray-300">inventory_2</span>
+<p class="text-[#111418] dark:text-gray-300 text-sm font-medium leading-normal">Productos</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" href="#">
+<span class="material-symbols-outlined text-[#111418] dark:text-gray-300">bar_chart</span>
+<p class="text-[#111418] dark:text-gray-300 text-sm font-medium leading-normal">Reportes</p>
+</a>
+</nav>
+</div>
+<div class="mt-auto flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" href="#">
+<span class="material-symbols-outlined text-[#111418] dark:text-gray-300">settings</span>
+<p class="text-[#111418] dark:text-gray-300 text-sm font-medium leading-normal">Configuración</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" href="#">
+<span class="material-symbols-outlined text-[#111418] dark:text-gray-300">help</span>
+<p class="text-[#111418] dark:text-gray-300 text-sm font-medium leading-normal">Ayuda</p>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-8 overflow-y-auto">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Center Content -->
+<div class="lg:col-span-2 flex flex-col gap-6">
+<!-- Header Section -->
+<div class="flex flex-col gap-4">
+<!-- Breadcrumbs -->
+<div class="flex flex-wrap gap-2">
+<a class="text-[#617589] dark:text-gray-400 text-sm font-medium leading-normal hover:text-primary" href="#">Ventas</a>
+<span class="text-[#617589] dark:text-gray-400 text-sm font-medium leading-normal">/</span>
+<a class="text-[#617589] dark:text-gray-400 text-sm font-medium leading-normal hover:text-primary" href="#">Órdenes</a>
+<span class="text-[#617589] dark:text-gray-400 text-sm font-medium leading-normal">/</span>
+<a class="text-[#617589] dark:text-gray-400 text-sm font-medium leading-normal hover:text-primary" href="#">SO-00123</a>
+<span class="text-[#617589] dark:text-gray-400 text-sm font-medium leading-normal">/</span>
+<span class="text-[#111418] dark:text-white text-sm font-medium leading-normal">Historial de Pagos</span>
+</div>
+<!-- PageHeading & ToolBar -->
+<div class="flex flex-wrap justify-between items-center gap-4">
+<h1 class="text-[#111418] dark:text-white text-3xl font-bold leading-tight">Historial de Pagos para SO-00123</h1>
+<div class="flex gap-2">
+<button class="p-2 text-[#111418] dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+<span class="material-symbols-outlined">print</span>
+</button>
+<button class="p-2 text-[#111418] dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+<span class="material-symbols-outlined">download</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-10 bg-primary text-white gap-2 text-sm font-bold leading-normal px-4 hover:bg-primary/90">
+<span class="material-symbols-outlined text-base">add</span>
+<span class="truncate">Añadir Nuevo Pago</span>
+</button>
+</div>
+</div>
+</div>
+<!-- ActionPanel / InfoBar -->
+<div class="p-4 @container">
+<div class="flex flex-1 flex-col items-start justify-between gap-4 rounded-lg border border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-900/20 p-5 @[480px]:flex-row @[480px]:items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-orange-600 dark:text-orange-400">pending</span>
+<div class="flex flex-col gap-1">
+<p class="text-orange-800 dark:text-orange-200 text-base font-bold leading-tight">Estado de la Orden: Pendiente</p>
+<p class="text-orange-700 dark:text-orange-300 text-sm font-normal leading-normal">Esta orden de venta tiene un saldo pendiente. Esperando pago completo.</p>
+</div>
+</div>
+<a class="text-sm font-bold leading-normal flex gap-2 text-[#111418] dark:text-gray-200 hover:underline" href="#">
+                                Ver Detalles de la Orden
+                                <span class="material-symbols-outlined text-base">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Payment Progress -->
+<div class="bg-white dark:bg-[#1a2530] border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+<div class="flex justify-between items-center mb-2">
+<p class="text-sm font-medium text-gray-600 dark:text-gray-400">Progreso del Pago</p>
+<p class="text-sm font-bold text-gray-800 dark:text-gray-200">66.7%</p>
+</div>
+<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+<div class="bg-primary h-2.5 rounded-full" style="width: 66.7%"></div>
+</div>
+<div class="flex justify-between mt-3 text-sm">
+<div><span class="font-semibold dark:text-white">$2,000.00</span> <span class="text-gray-500 dark:text-gray-400">Pagado</span></div>
+<div><span class="font-semibold dark:text-white">$1,000.00</span> <span class="text-gray-500 dark:text-gray-400">Saldo Pendiente</span></div>
+<div><span class="font-semibold dark:text-white">$3,000.00</span> <span class="text-gray-500 dark:text-gray-400">Total</span></div>
+</div>
+</div>
+<!-- Payments Data Grid -->
+<div class="bg-white dark:bg-[#1a2530] border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left">
+<thead class="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-50 dark:bg-gray-800">
+<tr>
+<th class="px-6 py-3" scope="col">Fecha</th>
+<th class="px-6 py-3" scope="col">Usuario</th>
+<th class="px-6 py-3" scope="col">Método de Pago</th>
+<th class="px-6 py-3 text-right" scope="col">Monto</th>
+<th class="px-6 py-3 text-center" scope="col">Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b dark:border-gray-700">
+<td class="px-6 py-4 text-gray-900 dark:text-white">15 de Julio, 2024 10:30 AM</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full" data-alt="Avatar de Alex Johnson" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsGpqZIU2je5YOA9ceM2M9IQhhKKIHYEAaQ4gASebMND4xrLrFfp0Agy7QLs_K4vu0sD_gvXOhU8rlfS90HapzGTcErlM2lBYE598JiTV5gr0JY3-ZQF4kBx3KoHW4b-1CUfnjC_e5u70_bZyQk9HtKuKybKXQ3dHCvUsXSOJZ2118MBMssa5K7GP-mLZqCb8vSx3gw_xabxvvzKmtbp6aVoYPuS0yf7T18_gdbvFvBDv_z_UMxb5r76-Jlv0uSKXlnZ2eoowtoA"/>
+<span>Alex Johnson</span>
+</div>
+</td>
+<td class="px-6 py-4">Tarjeta de Crédito</td>
+<td class="px-6 py-4 font-medium text-right">$1,500.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+<span class="w-2 h-2 inline-block bg-green-500 rounded-full"></span>
+                                                Completado
+                                            </span>
+</td>
+</tr>
+<tr class="border-b dark:border-gray-700">
+<td class="px-6 py-4 text-gray-900 dark:text-white">10 de Julio, 2024 02:15 PM</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full" data-alt="Avatar de Maria Garcia" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkMWolRDEqAmrTnsNY7b38fP8T2Z8_Ei8jy6eIlNMST5iMTsNqRJKWU0W4k4RlQ6cVGnoQP5Nxt4qrIIzM367KrDEV6Onzln6QLpC6L86Y6_9w6QX48uVcLWEkbPrR2R_9Ddw2m1YwPi2nefv9u2nNf8Umo8Yi-yKTgQ9h4PAxW8TPKWuGXKAP3UmQn11ce4fb_ylS5jNKHyuFu3XwwvJWal-ceG3FvYuhkYNQ_eSNH9GpFDaSrmtRhW90wD-A4c922zm3RaHmsg"/>
+<span>Maria Garcia</span>
+</div>
+</td>
+<td class="px-6 py-4">Transferencia Bancaria</td>
+<td class="px-6 py-4 font-medium text-right">$500.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+<span class="w-2 h-2 inline-block bg-green-500 rounded-full"></span>
+                                                Completado
+                                            </span>
+</td>
+</tr>
+<tr class="border-b dark:border-gray-700">
+<td class="px-6 py-4 text-gray-900 dark:text-white">05 de Julio, 2024 11:00 AM</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full" data-alt="Avatar de Alex Johnson" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3jnHg_j5noPKNtZLvzjHgnYGgOhcIXak-8FWVJzPlaGEJP8Jb8Ku0ttIBjgWduPdzgSWjBPIgXsBWKUAf6RDlzek44E2kw4Xe0oZwv_l99FiJHX6ZA6I-Zr2IDydXwMnf3OLkBTHGdHlSTJPLlTDTIEU0DGCavClFd0xotlb67gpjSx9QjjFHlHokyx5vqGhIdUPAaSBLU1YahJBs7fibtg7xNVJZpFpomxn0dWqR_ARTyoy8UDqT7GGcHJkcaXWEHtQUdGVkiw"/>
+<span>Alex Johnson</span>
+</div>
+</td>
+<td class="px-6 py-4">Tarjeta de Crédito</td>
+<td class="px-6 py-4 font-medium text-right">($500.00)</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+<span class="w-2 h-2 inline-block bg-gray-500 rounded-full"></span>
+                                                Reversado
+                                            </span>
+</td>
+</tr>
+<tr class="">
+<td class="px-6 py-4 text-gray-900 dark:text-white">04 de Julio, 2024 09:45 AM</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full" data-alt="Avatar de Alex Johnson" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvt44kf-79NlK2-60r0n9u1rrY3ahXwpzDLOhC_OfaVb_EzuCthlNLRaKW11Npd6m0Hck5ebwSD-Q5YjXqivHWCo32qNttgtzwjWfHeQvnB4q5eVkFpf8dveCqN9bLOofFpi2-02GxTf5EWR367TYmpaIeAxdwzo3rzFe4B877B5qSd20N5KWn5SkaPPjIuT991YwF7GJJQNwAQgiR9rw0nxBJuDc8Ih09o-5tvTYQByi7Wsd81vzaWcdhnC3bn6ugGqiL6QY7ZQ"/>
+<span>Alex Johnson</span>
+</div>
+</td>
+<td class="px-6 py-4">Tarjeta de Crédito</td>
+<td class="px-6 py-4 font-medium text-right">$500.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+<span class="w-2 h-2 inline-block bg-red-500 rounded-full"></span>
+                                                Fallido
+                                            </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Right Sidebar -->
+<div class="lg:col-span-1 flex flex-col gap-6">
+<!-- Customer Information Card -->
+<div class="bg-white dark:bg-[#1a2530] border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Cliente</h3>
+<div class="flex items-center gap-4">
+<img class="w-16 h-16 rounded-full" data-alt="Foto de perfil de Carlos Rodriguez" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMVJvnqeHBsdTrjxh_e8Pcs2QZ2Nndylvr1M755Htm87iNbSUH4XaYBdsoggDHMvJqqKX6kPWoKf5JUE0y5md9QWI4oQ-3gkQen-RdO6Yf4vel7Eo-NhmftT-repxQvbx_g3L2SMhL-ZWyUcKC8Dt7VAAYzWJkBbS8zaaT0mcsTkbM4CGcLX8On-crNBNTqn75wXhbOAG5GPmfScuRNKYS7uzAiTp7uOi3TUqnfMqHCp7glD_dq4ROl9F8IrXQg25tvdr_wkk_TQ"/>
+<div>
+<p class="font-semibold text-gray-800 dark:text-gray-200">Carlos Rodriguez</p>
+<p class="text-sm text-gray-500 dark:text-gray-400">ID Cliente: CUST-4589</p>
+</div>
+</div>
+<a class="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-gray-100 dark:bg-gray-700 px-4 py-2 text-sm font-bold text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600" href="#">
+                            Ver Perfil Completo
+                            <span class="material-symbols-outlined text-base">arrow_forward</span>
+</a>
+</div>
+<!-- Products Card -->
+<div class="bg-white dark:bg-[#1a2530] border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Productos en la Orden</h3>
+<ul class="space-y-4">
+<li class="flex justify-between items-center">
+<a class="text-primary hover:underline" href="#">Monitor Curvo UltraWide 34"</a>
+<span class="text-gray-500 dark:text-gray-400">Cant: 1</span>
+</li>
+<li class="flex justify-between items-center">
+<a class="text-primary hover:underline" href="#">Teclado Mecánico RGB</a>
+<span class="text-gray-500 dark:text-gray-400">Cant: 1</span>
+</li>
+<li class="flex justify-between items-center">
+<a class="text-primary hover:underline" href="#">Mouse Inalámbrico Pro</a>
+<span class="text-gray-500 dark:text-gray-400">Cant: 2</span>
+</li>
+<li class="flex justify-between items-center">
+<a class="text-primary hover:underline" href="#">Webcam 4K con Micrófono</a>
+<span class="text-gray-500 dark:text-gray-400">Cant: 1</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

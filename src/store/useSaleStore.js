@@ -224,6 +224,75 @@ const useSaleStore = create()(
         }
       },
 
+      // Obtener ventas por rango de fechas según SALE_API.md / SALE_GET_BY_RANGE_API
+      fetchSalesByDateRange: async (params = {}) => {
+        set({ loading: true, error: null })
+        try {
+          const response = await saleService.getSalesByDateRange(params)
+
+          if (response.success) {
+            set({
+              sales: response.data || [],
+              pagination: response.pagination || get().pagination,
+              loading: false,
+            })
+
+            telemetryService.recordEvent('sales_fetched_by_date_range', {
+              count: response.data?.length || 0,
+              params: JSON.stringify(params),
+            })
+          }
+
+          return response
+        } catch (error) {
+          set({ error: error.message, loading: false })
+          throw error
+        }
+      },
+
+      // Obtener ventas por nombre de cliente según SALE_API (GET /sale/client_name/{name})
+      fetchSalesByClientName: async (clientName, params = {}) => {
+        set({ loading: true, error: null })
+        try {
+          const response = await saleService.getSalesByClientName(
+            clientName,
+            params
+          )
+
+          if (response.success) {
+            set({
+              sales: response.data || [],
+              pagination: response.pagination || get().pagination,
+              loading: false,
+            })
+
+            telemetryService.recordEvent('sales_fetched_by_client_name', {
+              count: response.data?.length || 0,
+              client_name: clientName,
+              params: JSON.stringify(params),
+            })
+          }
+
+          return response
+        } catch (error) {
+          set({ error: error.message, loading: false })
+          throw error
+        }
+      },
+
+      clearSales: () => {
+        set({
+          sales: [],
+          pagination: {
+            ...get().pagination,
+            total: 0,
+            totalPages: 0,
+            hasNext: false,
+            hasPrevious: false,
+          },
+        })
+      },
+
       fetchPendingSalesByClient: async clientId => {
         if (!clientId) {
           set({ pendingSales: [], pendingSalesError: null })
@@ -295,31 +364,103 @@ const useSaleStore = create()(
         }
       },
 
+      addProductsToSale: async (saleId, payload) => {
+        set({ loading: true, error: null })
+        try {
+          const response = await saleService.addProductsToSale(saleId, payload)
+
+          // Si devolvemos la venta actualizada, reemplazar en el array local
+          if (response?.data && Array.isArray(get().sales)) {
+            const sales = get().sales.map(sale =>
+              sale.id === saleId || sale.sale_id === saleId
+                ? { ...sale, ...response.data }
+                : sale
+            )
+            set({ sales })
+          }
+
+          telemetryService.recordEvent('sale_products_added', {
+            sale_id: saleId,
+            products_count: payload?.product_details?.length || 0,
+            allow_price_modifications: payload?.allow_price_modifications,
+          })
+
+          set({ loading: false })
+          return response
+        } catch (error) {
+          set({ error: error.message, loading: false })
+          throw error
+        }
+      },
+
       createSale: async (saleData = null) => {
         set({ loading: true, error: null })
         try {
           // Si no se proporciona saleData, usar currentSaleData
-          const dataToSend = saleData || get().currentSaleData
+          const rawData = saleData || get().currentSaleData
 
-          const response = await saleService.createSale({
-            clientId: dataToSend.clientId,
-            sessionId: dataToSend.sessionId,
-            paymentMethod: dataToSend.paymentMethod,
-            amountPaid: dataToSend.amountPaid,
-            items: dataToSend.items,
-            totalAmount: dataToSend.totalAmount,
-            subtotalAmount: dataToSend.subtotalAmount,
-            taxAmount: dataToSend.taxAmount,
-            discountAmount: dataToSend.discountAmount,
-            notes: dataToSend.notes,
-            posTerminalId: dataToSend.posTerminalId,
-          })
+          // Adaptar datos al nuevo esquema SALE_API (snake_case) y mantener compatibilidad
+          const dataToSend =
+            rawData.client_id || rawData.product_details
+              ? rawData
+              : {
+                  client_id: rawData.clientId,
+                  product_details: (rawData.items || []).map(item => {
+                    const detail = {
+                      product_id: item.product_id || item.id,
+                      quantity: item.quantity || 1,
+                    }
+
+                    if (item.sale_price || item.unit_price) {
+                      detail.sale_price = item.sale_price || item.unit_price
+                    }
+                    if (item.discount_amount) {
+                      detail.discount_amount = item.discount_amount
+                    }
+                    if (item.discount_percent) {
+                      detail.discount_percent = item.discount_percent
+                    }
+                    if (item.discount_reason) {
+                      detail.discount_reason = item.discount_reason
+                    }
+
+                    return detail
+                  }),
+                  payment_method_id:
+                    rawData.payment_method_id ||
+                    rawData.paymentMethodId ||
+                    rawData.paymentMethod ||
+                    1,
+                  currency_id: rawData.currency_id || 1,
+                  allow_price_modifications:
+                    rawData.allow_price_modifications || false,
+                  sale_id: rawData.sale_id,
+                  reserve_id: rawData.reserve_id,
+                }
+
+          const response = await saleService.createSale(dataToSend)
+
+          // Normalizar respuesta para evitar undefined en stats/historial
+          const sales = get().sales.filter(Boolean)
+          const newSale = response?.data ||
+            response?.sale || {
+              id: response?.sale_id || response?.id,
+              sale_id: response?.sale_id || response?.id,
+              sale_date: new Date().toISOString(),
+              status: response?.sale_status || response?.status || 'completed',
+              total_amount:
+                response?.total_amount ||
+                rawData.total_amount ||
+                rawData.totalAmount ||
+                0,
+              currency_id: dataToSend.currency_id,
+              client_id: dataToSend.client_id,
+            }
 
           if (response.success) {
             // Actualizar la lista de ventas (MVP: array simple)
-            const sales = get().sales
             set({
-              sales: [response.data, ...sales],
+              sales: [newSale, ...sales],
               loading: false,
             })
 
@@ -331,8 +472,12 @@ const useSaleStore = create()(
 
             telemetryService.recordEvent('sale_created', {
               sale_id: response.data?.id || response.sale_id,
-              total_amount: dataToSend.totalAmount,
-              payment_method: dataToSend.paymentMethod,
+              total_amount: rawData.totalAmount || rawData.total_amount || null,
+              payment_method:
+                rawData.paymentMethod ||
+                rawData.payment_method_id ||
+                rawData.paymentMethodId ||
+                dataToSend.payment_method_id,
             })
           }
 
@@ -369,11 +514,13 @@ const useSaleStore = create()(
       cancelSale: async (id, reason = '') => {
         set({ loading: true, error: null })
         try {
-          const response = await saleService.cancelSale(id, reason)
+          const response = await saleService.revertSale(id, reason)
 
           // Actualizar estado de la venta
           const sales = get().sales.map(sale =>
-            sale.id === id ? { ...sale, status: 'cancelled' } : sale
+            sale.id === id || sale.sale_id === id
+              ? { ...sale, status: 'cancelled' }
+              : sale
           )
 
           set({ sales, loading: false })
@@ -702,10 +849,13 @@ const useSaleStore = create()(
         const sales = get().sales
         const today = new Date().toISOString().split('T')[0]
 
-        const todaySales = sales.filter(
-          sale =>
-            sale.sale_date?.startsWith(today) && sale.status !== 'cancelled'
-        )
+        const todaySales = sales
+          .filter(Boolean)
+          .filter(
+            sale =>
+              sale.sale_date?.toString().startsWith(today) &&
+              sale.status !== 'cancelled'
+          )
 
         const totalRevenue = sales
           .filter(sale => sale.status === 'completed')

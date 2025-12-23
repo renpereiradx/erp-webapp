@@ -1,0 +1,195 @@
+// =============================================================================
+// SELECT/DROPDOWN COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE SELECT
+// -----------------------------------------------------------------------------
+
+.select {
+  // Base input styles
+  display: block;
+  width: 100%;
+  position: relative;
+  font-family: $font-family-base;
+  font-size: $font-size-300;
+  font-weight: $font-weight-regular;
+  line-height: $line-height-400;
+  min-height: 32px;
+  padding: $spacing-8 $spacing-36 $spacing-8 $spacing-12;
+  border-radius: $border-radius-medium;
+  @include transition(all, $duration-fast);
+
+  // Select-specific styles
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23605E5C' d='M2.15 4.65l3.5 3.5a.5.5 0 00.7 0l3.5-3.5a.5.5 0 10-.7-.7L6 7.29 2.85 4.14a.5.5 0 10-.7.7z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right $spacing-12 center;
+  background-size: 12px;
+  cursor: pointer;
+
+  @include themify {
+    background-color: themed('surface-input');
+    color: themed('text-primary');
+    border: 1px solid themed('border-default');
+  }
+
+  &:focus {
+    outline: none;
+    @include themify {
+      border-color: themed('action-primary');
+      box-shadow: 0 0 0 1px themed('action-primary');
+    }
+  }
+
+  &:hover:not(:disabled):not(:focus) {
+    @include themify {
+      border-color: themed('border-strong');
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    @include themify {
+      background-color: themed('action-disabled');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// DROPDOWN MENU
+// -----------------------------------------------------------------------------
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+// Note: Add .btn and .btn--secondary classes to the trigger element in HTML
+.dropdown__trigger {
+  // Styles will come from .btn and .btn--secondary classes
+}
+
+.dropdown__menu {
+  position: absolute;
+  top: calc(100% + #{$spacing-4});
+  left: 0;
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: $spacing-4;
+  border-radius: $border-radius-medium;
+  z-index: z-index(dropdown);
+  @include elevation(8);
+  @include custom-scrollbar;
+
+  @include themify {
+    background-color: themed('bg-elevated');
+    border: 1px solid themed('border-subtle');
+  }
+
+  // Animation
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  @include transition(all, $duration-fast);
+
+  .dropdown--open & {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  // Right aligned
+  .dropdown--right & {
+    left: auto;
+    right: 0;
+  }
+
+  // Top positioned
+  .dropdown--top & {
+    top: auto;
+    bottom: calc(100% + #{$spacing-4});
+    transform: translateY(8px);
+
+    .dropdown--open & {
+      transform: translateY(0);
+    }
+  }
+}
+
+.dropdown__item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  width: 100%;
+  padding: $spacing-8 $spacing-12;
+  border: none;
+  background: transparent;
+  border-radius: $border-radius-small;
+  cursor: pointer;
+  text-align: left;
+  font-size: $font-size-300;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &:active {
+    @include themify {
+      background-color: themed('surface-pressed');
+    }
+  }
+
+  &--selected {
+    @include themify {
+      background-color: themed('surface-hover');
+      font-weight: $font-weight-semibold;
+    }
+  }
+
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  @include focus-visible;
+}
+
+.dropdown__divider {
+  height: 1px;
+  margin: $spacing-4 0;
+
+  @include themify {
+    background-color: themed('border-subtle');
+  }
+}
+
+.dropdown__header {
+  padding: $spacing-8 $spacing-12;
+  font-size: $font-size-200;
+  font-weight: $font-weight-semibold;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+

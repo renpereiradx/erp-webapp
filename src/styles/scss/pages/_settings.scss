@@ -1,0 +1,147 @@
+// ===========================================================================
+// Settings Page - Fluent Design System 2 + BEM
+// ===========================================================================
+
+@use '../abstracts' as *;
+
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+  height: 100%;
+  padding: $spacing-24;
+
+  @media (max-width: 640px) {
+    padding: $spacing-16;
+    gap: $spacing-16;
+  }
+}
+
+// Settings Card
+// ===========================================================================
+.settings-card {
+  border-radius: $border-radius-large;
+  overflow: hidden;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+  }
+
+  &__header {
+    padding: $spacing-24;
+    border-bottom: 1px solid;
+
+    @include themify($themes) {
+      border-bottom-color: themed('border-default');
+    }
+  }
+
+  &__title {
+    font-size: $font-size-600;
+    font-weight: $font-weight-semibold;
+    line-height: 1.3;
+    margin-bottom: $spacing-8;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__description {
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    line-height: 1.5;
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__content {
+    padding: $spacing-24;
+  }
+
+  &__info {
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    line-height: 1.5;
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+}
+
+// Theme Toggle
+// ===========================================================================
+.theme-toggle {
+  display: flex;
+  gap: $spacing-12;
+  max-width: 320px;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+  }
+
+  &__option {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-8;
+    padding: $spacing-16;
+    border-radius: $border-radius-medium;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      border-color: themed('border-default');
+      color: themed('text-secondary');
+
+      &:hover {
+        background-color: themed('bg-hover');
+        border-color: themed('action-primary');
+      }
+
+      &--active {
+        background-color: themed('action-primary');
+        border-color: themed('action-primary');
+        color: themed('text-on-primary');
+
+        &:hover {
+          background-color: themed('action-primary');
+          border-color: themed('action-primary');
+        }
+
+        .theme-toggle__icon,
+        .theme-toggle__label {
+          color: themed('text-on-primary');
+        }
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid;
+      outline-offset: 2px;
+
+      @include themify($themes) {
+        outline-color: themed('action-primary');
+      }
+    }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: $font-size-300;
+    font-weight: $font-weight-semibold;
+    text-align: center;
+  }
+}

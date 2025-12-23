@@ -1,0 +1,693 @@
+// =============================================================================
+// SALES NEW PAGE STYLES
+// =============================================================================
+// Estilos adaptados al diseño de la sección de ventas de la guía HTML
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// LAYOUT
+// -----------------------------------------------------------------------------
+
+.sales-new {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+  padding: $spacing-24;
+
+  @include tablet {
+    gap: $spacing-20;
+    padding: $spacing-20;
+  }
+
+  @include mobile {
+    gap: $spacing-16;
+    padding: $spacing-16;
+  }
+}
+
+.sales-new__tabs {
+  margin-top: $spacing-8;
+  margin-bottom: $spacing-4;
+
+  .tabs__list {
+    gap: $spacing-16;
+    padding-bottom: $spacing-8;
+
+    @include themify {
+      border-bottom: 1px solid themed('border-subtle');
+      background: transparent;
+    }
+  }
+
+  .tabs__tab {
+    padding: $spacing-4 $spacing-12 $spacing-12;
+    border-radius: 0;
+    background: transparent;
+    font-size: $font-size-300;
+    font-weight: $font-weight-medium;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+
+    &:hover:not(.tabs__tab--active) {
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+
+    &.tabs__tab--active {
+      @include themify {
+        color: themed('action-primary');
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 3px;
+        border-radius: 9999px;
+
+        @include themify {
+          background-color: themed('action-primary');
+        }
+      }
+    }
+  }
+}
+
+.sales-new__section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+
+  @include mobile {
+    gap: $spacing-16;
+  }
+}
+
+.sales-new__grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: $spacing-24;
+
+  @include desktop {
+    grid-template-columns: 1fr 320px;
+  }
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+
+  @include mobile {
+    gap: $spacing-16;
+  }
+}
+
+.sales-new__main,
+.sales-new__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+
+  @include mobile {
+    gap: $spacing-16;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SEARCH BOX
+// -----------------------------------------------------------------------------
+
+.sales-new__search-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+
+  @include mobile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-box__icon {
+  position: absolute;
+  left: $spacing-12;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+.search-box__input {
+  padding-left: $spacing-36;
+}
+
+// -----------------------------------------------------------------------------
+// SUMMARY
+// -----------------------------------------------------------------------------
+
+.sales-new__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 240px);
+  gap: $spacing-24;
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sales-new__summary-column {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-12;
+}
+
+.sales-new__summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: $font-size-300;
+}
+
+.sales-new__summary-total {
+  font-size: $font-size-500;
+  font-weight: $font-weight-semibold;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.sales-new__summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+  justify-content: flex-end;
+}
+
+.sales-new__summary-buttons {
+  display: flex;
+  gap: $spacing-12;
+
+  @include mobile {
+    flex-direction: column;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CARD CONTENT
+// -----------------------------------------------------------------------------
+
+.card__content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+}
+
+// -----------------------------------------------------------------------------
+// CLIENT INFO
+// -----------------------------------------------------------------------------
+
+.client-info {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+  padding: $spacing-16;
+  border-radius: $border-radius-medium;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+  }
+
+  p {
+    margin: 0;
+    font-size: $font-size-300;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+
+    strong {
+      font-weight: $font-weight-semibold;
+
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SALES HISTORY
+// -----------------------------------------------------------------------------
+
+.sales-history {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+}
+
+.sales-history__filters {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr 1fr auto;
+  gap: $spacing-16;
+  margin-bottom: $spacing-16;
+
+  @include tablet {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TABLES
+// -----------------------------------------------------------------------------
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: $border-radius-medium;
+
+  @include themify {
+    border: 1px solid themed('border-subtle');
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $font-size-300;
+
+  thead {
+    @include themify {
+      background-color: themed('bg-secondary');
+      color: themed('text-secondary');
+    }
+
+    th {
+      padding: $spacing-12 $spacing-16;
+      font-size: $font-size-200;
+      font-weight: $font-weight-semibold;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      text-align: left;
+
+      &.text-right {
+        text-align: right;
+      }
+
+      &.text-center {
+        text-align: center;
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      @include themify {
+        border-bottom: 1px solid themed('border-subtle');
+      }
+
+      &:hover {
+        @include themify {
+          background-color: themed('surface-hover');
+        }
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: $spacing-12 $spacing-16;
+
+      @include themify {
+        color: themed('text-primary');
+      }
+
+      &.text-right {
+        text-align: right;
+      }
+
+      &.text-center {
+        text-align: center;
+      }
+
+      &.font-medium {
+        font-weight: $font-weight-medium;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// MODAL
+// -----------------------------------------------------------------------------
+
+.sales-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: $spacing-16;
+}
+
+.sales-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.sales-modal__dialog {
+  position: relative;
+  width: min(640px, 100%);
+  border-radius: $border-radius-xlarge;
+  overflow: hidden;
+  @include elevation(16);
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
+  }
+}
+
+.sales-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-16;
+  padding: $spacing-24;
+
+  @include themify {
+    border-bottom: 1px solid themed('border-subtle');
+  }
+}
+
+.sales-modal__header-content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+}
+
+.sales-modal__title {
+  margin: 0;
+  @include heading-5;
+}
+
+.sales-modal__subtitle {
+  margin: 0;
+  @include body-small;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.sales-modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  cursor: pointer;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+  }
+
+  &:active {
+    @include themify {
+      background-color: themed('surface-pressed');
+    }
+  }
+
+  @include focus-visible;
+}
+
+.sales-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+  padding: $spacing-24;
+}
+
+.sales-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-12;
+  padding: $spacing-16 $spacing-24 $spacing-24;
+
+  @include themify {
+    background-color: themed('surface-hover');
+    border-top: 1px solid themed('border-subtle');
+  }
+
+  @include mobile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.sales-modal__section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+}
+
+.sales-modal__section--context {
+  padding-bottom: $spacing-8;
+
+  @include themify {
+    border-bottom: 1px solid themed('border-subtle');
+  }
+}
+
+.sales-modal__info-grid {
+  display: grid;
+  gap: $spacing-16;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.sales-modal__info-item {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.sales-modal__label {
+  @include body-small;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+.sales-modal__value {
+  font-size: $font-size-400;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &--highlight {
+    font-weight: $font-weight-semibold;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+}
+
+.sales-modal__form-grid {
+  display: grid;
+  gap: $spacing-16;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.sales-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+}
+
+.sales-modal__field-label {
+  font-weight: $font-weight-medium;
+}
+
+.sales-modal__field-note {
+  @include body-small;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+.sales-modal__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sales-modal__input {
+  padding-right: $spacing-36;
+}
+
+.sales-modal__input-affix {
+  position: absolute;
+  right: $spacing-12;
+  font-size: $font-size-200;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+.sales-modal__totals {
+  padding-top: $spacing-8;
+
+  @include themify {
+    border-top: 1px solid themed('border-subtle');
+  }
+}
+
+.sales-modal__totals-grid {
+  display: grid;
+  gap: $spacing-16;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+// -----------------------------------------------------------------------------
+// UTILITIES
+// -----------------------------------------------------------------------------
+
+.text-muted {
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.font-medium {
+  font-weight: $font-weight-medium;
+}
+
+// -----------------------------------------------------------------------------
+// PRODUCT DROPDOWN ITEM
+// -----------------------------------------------------------------------------
+
+.product-dropdown-item {
+  width: 100%;
+  padding: $spacing-12 $spacing-16;
+  text-align: left;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-bottom: 1px solid;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  @include themify {
+    border-bottom-color: themed('border-subtle');
+    color: themed('text-primary');
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover,
+  &:focus {
+    outline: none;
+    @include themify {
+      background-color: themed('bg-secondary');
+    }
+  }
+
+  &:focus-visible {
+    @include themify {
+      background-color: themed('bg-secondary');
+      box-shadow: inset 4px 0 0 themed('primary');
+    }
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__name {
+    font-weight: 500;
+    font-size: $font-size-300;
+  }
+
+  &__meta {
+    font-size: $font-size-200;
+    @include themify {
+      color: themed('text-muted');
+    }
+  }
+
+  &__price-block {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__price {
+    font-weight: 600;
+    font-size: $font-size-300;
+    @include themify {
+      color: themed('primary');
+    }
+  }
+
+  &__stock {
+    font-size: $font-size-200;
+    @include themify {
+      color: themed('text-muted');
+    }
+  }
+}

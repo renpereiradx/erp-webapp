@@ -11,22 +11,38 @@ import {
   Navigate,
 } from 'react-router-dom'
 import MainLayout from '@/layouts/MainLayout'
+import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
 import Dashboard from '@/pages/Dashboard'
 import Products from '@/pages/Products'
 import Clients from '@/pages/Clients'
 import Suppliers from '@/pages/Suppliers'
-import Sales from '@/pages/Sales'
-import Reservations from '@/pages/Reservations'
-import Schedules from '@/pages/Schedules'
-import Inventory from '@/pages/Inventory'
-import PriceAdjustments from '@/pages/PriceAdjustments'
+import SalesNew from '@/pages/SalesNew'
+import BookingManagement from '@/pages/BookingManagement'
+// import Schedules from '@/pages/Schedules'
+import SchedulesNew from '@/pages/SchedulesNew'
+import ReservationsAndSchedules from '@/pages/ReservationsAndSchedules'
+import AvailableSlots from '@/pages/AvailableSlots'
+import PriceAdjustmentNew from '@/pages/PriceAdjustmentNew'
+import PriceAdjustmentDetail from '@/pages/PriceAdjustmentDetail'
+import PriceAdjustmentHistory from '@/pages/PriceAdjustmentHistory'
+import PriceAdjustmentHistoryDetail from '@/pages/PriceAdjustmentHistoryDetail'
+import ProductAdjustments from '@/pages/ProductAdjustments'
+import InventoryAdjustments from '@/pages/InventoryAdjustments'
+import InventoryAdjustmentManual from '@/pages/InventoryAdjustmentManual'
+import InventoryManagement from '@/pages/InventoryManagement'
 import Reports from '@/pages/Reports'
 // ISOLATED IMPORTS - Pages temporarily disabled for refactoring
 // import BookingSales from '@/pages/BookingSales';
 import Purchases from '@/pages/Purchases'
-import CashRegister from '@/pages/CashRegister'
-import PurchasePayment from '@/pages/PurchasePayment'
+import PurchasePayments from '@/pages/PurchasePayments'
+import PurchasePaymentDetail from '@/pages/PurchasePaymentDetail'
+// import CashRegister from '@/pages/CashRegister' // Obsoleto - usar NewCashRegister
+import NewCashRegister from '@/pages/NewCashRegister'
+import RegisterCashMovement from '@/pages/RegisterCashMovement'
+import CashMovements from '@/pages/CashMovements'
 import SalePayment from '@/pages/SalePayment'
+import SalesOrderDetail from '@/pages/SalesOrderDetail'
+import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
 import PaymentDocumentation from '@/pages/PaymentDocumentation'
 import PaymentManagement from '@/pages/PaymentManagement'
 import Login from '@/pages/Login'
@@ -35,17 +51,15 @@ import Settings from '@/pages/Settings'
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
-import { ThemeProvider, useTheme } from '@/contexts/ThemeContext'
-import { AnnouncementProvider } from '@/contexts/AnnouncementContext'
-import { apiClient } from '@/services/api'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import './App.css'
 
 // Componente de protección de rutas
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading, authLoading } = useAuth()
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
         <div className='text-lg'>Cargando...</div>
@@ -63,7 +77,6 @@ const ProtectedRoute = ({ children }) => {
 // Componente interno que usa los hooks
 function AppContent() {
   const { isAuthenticated, loading, initializeAuth } = useAuth()
-  const { isInitialized } = useTheme() // El tema se inicializa automáticamente
 
   // Inicializar autenticación al cargar la aplicación
   useEffect(() => {
@@ -112,14 +125,53 @@ function AppContent() {
                       <Route path='/productos' element={<Products />} />
                       <Route path='/clientes' element={<Clients />} />
                       <Route path='/proveedores' element={<Suppliers />} />
-                      <Route path='/ventas' element={<Sales />} />
+                      <Route path='/ventas' element={<SalesNew />} />
                       <Route path='/reportes' element={<Reports />} />
-                      <Route path='/reservas' element={<Reservations />} />
-                      <Route path='/horarios' element={<Schedules />} />
-                      <Route path='/inventario' element={<Inventory />} />
+                      <Route
+                        path='/gestion-reservas'
+                        element={<ReservationsAndSchedules />}
+                      />
+                      <Route path='/reservas' element={<BookingManagement />} />
+                      <Route path='/horarios' element={<SchedulesNew />} />
+                      <Route
+                        path='/horarios-disponibles'
+                        element={<AvailableSlots />}
+                      />
+                      {/* Rutas con layout de tabs */}
                       <Route
                         path='/ajustes-precios'
-                        element={<PriceAdjustments />}
+                        element={<PriceAdjustmentLayout />}
+                      >
+                        <Route index element={<PriceAdjustmentNew />} />
+                        <Route
+                          path='historial'
+                          element={<PriceAdjustmentHistory />}
+                        />
+                      </Route>
+                      {/* Rutas independientes sin tabs */}
+                      <Route
+                        path='/ajustes-precios/detalle'
+                        element={<PriceAdjustmentDetail />}
+                      />
+                      <Route
+                        path='/ajustes-precios/historial/:adjustmentId'
+                        element={<PriceAdjustmentHistoryDetail />}
+                      />
+                      <Route
+                        path='/ajustes-producto'
+                        element={<ProductAdjustments />}
+                      />
+                      <Route
+                        path='/ajustes-inventario'
+                        element={<InventoryAdjustments />}
+                      />
+                      <Route
+                        path='/ajuste-inventario-unitario'
+                        element={<InventoryAdjustmentManual />}
+                      />
+                      <Route
+                        path='/ajuste-inventario-masivo'
+                        element={<InventoryManagement />}
                       />
 
                       {/* --- RUTAS AISLADAS TEMPORALMENTE PARA REFACTORING --- */}
@@ -128,13 +180,33 @@ function AppContent() {
                       {/* Nuevas rutas de sistemas de pagos */}
                       <Route
                         path='/caja-registradora'
-                        element={<CashRegister />}
+                        element={<NewCashRegister />}
+                      />
+                      <Route
+                        path='/movimientos-caja'
+                        element={<CashMovements />}
+                      />
+                      <Route
+                        path='/movimientos-caja/nuevo'
+                        element={<RegisterCashMovement />}
                       />
                       <Route
                         path='/pagos-compras'
-                        element={<PurchasePayment />}
+                        element={<PurchasePayments />}
                       />
-                      <Route path='/pagos-ventas' element={<SalePayment />} />
+                      <Route
+                        path='/pagos-compras/:orderId'
+                        element={<PurchasePaymentDetail />}
+                      />
+                      <Route path='/cobros-ventas' element={<SalePayment />} />
+                      <Route
+                        path='/cobros-ventas/:saleId'
+                        element={<SalesOrderDetail />}
+                      />
+                      <Route
+                        path='/cobros-ventas/:saleId/pagos'
+                        element={<SalesPaymentHistory />}
+                      />
                       <Route
                         path='/pagos/documentacion'
                         element={<PaymentDocumentation />}

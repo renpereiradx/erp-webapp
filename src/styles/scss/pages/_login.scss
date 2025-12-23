@@ -1,0 +1,266 @@
+// =============================================================================
+// LOGIN PAGE STYLES
+// =============================================================================
+// Página de autenticación con Fluent Design System
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// LOGIN LAYOUT
+// -----------------------------------------------------------------------------
+
+.login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: $spacing-24;
+
+  @include themify {
+    background-color: themed('bg-primary');
+  }
+
+  @include mobile {
+    padding: $spacing-16;
+  }
+}
+
+.login__container {
+  width: 100%;
+  max-width: 440px;
+  padding: $spacing-48 $spacing-32;
+  border-radius: $border-radius-large;
+
+  @include themify {
+    background-color: themed('surface-primary');
+    border: 1px solid themed('border-subtle');
+    box-shadow: themed('shadow-card');
+  }
+
+  @include mobile {
+    padding: $spacing-32 $spacing-24;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// HEADER
+// -----------------------------------------------------------------------------
+
+.login__header {
+  text-align: center;
+  margin-bottom: $spacing-32;
+}
+
+.login__title {
+  font-size: $font-size-600;
+  font-weight: $font-weight-semibold;
+  margin: 0 0 $spacing-8 0;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  @include mobile {
+    font-size: $font-size-500;
+  }
+}
+
+.login__subtitle {
+  font-size: $font-size-300;
+  margin: 0;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  @include mobile {
+    font-size: $font-size-200;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FORM
+// -----------------------------------------------------------------------------
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+}
+
+.login__field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+}
+
+.login__label {
+  font-size: $font-size-300;
+  font-weight: $font-weight-medium;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.login__input {
+  width: 100%;
+  padding: $spacing-12 $spacing-16;
+  font-size: $font-size-300;
+  border-radius: $border-radius-medium;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  @include themify {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+    color: themed('text-primary');
+
+    &::placeholder {
+      color: themed('text-tertiary');
+    }
+
+    &:hover {
+      border-color: themed('border-hover');
+    }
+
+    &:focus {
+      outline: none;
+      border-color: themed('accent-primary');
+      box-shadow: 0 0 0 2px themed('accent-light');
+    }
+
+    &:disabled {
+      background-color: themed('bg-disabled');
+      border-color: themed('border-subtle');
+      color: themed('text-disabled');
+      cursor: not-allowed;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// PASSWORD INPUT WITH TOGGLE
+// -----------------------------------------------------------------------------
+
+.login__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login__input--with-button {
+  padding-right: 48px;
+}
+
+.login__toggle-password {
+  position: absolute;
+  right: $spacing-12;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-8;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: $border-radius-small;
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  @include themify {
+    color: themed('text-secondary');
+
+    &:hover {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+
+    &:active {
+      background-color: themed('surface-pressed');
+    }
+
+    &:focus-visible {
+      outline: 2px solid themed('accent-primary');
+      outline-offset: 2px;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ERROR MESSAGE
+// -----------------------------------------------------------------------------
+
+.login__error {
+  padding: $spacing-12 $spacing-16;
+  font-size: $font-size-300;
+  font-weight: $font-weight-medium;
+  text-align: center;
+  border-radius: $border-radius-medium;
+
+  @include themify {
+    background-color: themed('error-bg');
+    color: themed('error-text');
+    border: 1px solid themed('error-border');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SUBMIT BUTTON
+// -----------------------------------------------------------------------------
+
+.login__submit {
+  width: 100%;
+  padding: $spacing-12 $spacing-24;
+  font-size: $font-size-300;
+  font-weight: $font-weight-semibold;
+  border: none;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  @include themify {
+    background-color: themed('accent-primary');
+    color: themed('accent-text');
+
+    &:hover:not(:disabled) {
+      background-color: themed('accent-hover');
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active:not(:disabled) {
+      background-color: themed('accent-pressed');
+      transform: translateY(1px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid themed('accent-primary');
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      background-color: themed('bg-disabled');
+      color: themed('text-disabled');
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FOOTER
+// -----------------------------------------------------------------------------
+
+.login__footer {
+  margin-top: $spacing-24;
+  text-align: center;
+}
+
+.login__footer-text {
+  font-size: $font-size-200;
+  margin: 0;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}

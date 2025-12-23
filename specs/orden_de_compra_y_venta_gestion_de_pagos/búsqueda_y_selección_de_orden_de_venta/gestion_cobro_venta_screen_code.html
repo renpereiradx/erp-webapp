@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gestión de Cobros - Sistema de Ventas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#137fec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+              "fluent-blue": "#0078D4",
+              "fluent-orange": "#FF8C00",
+              "fluent-blue-dark": "#005A9E",
+              "fluent-green": "#107C10",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100">
+<div class="flex h-screen">
+<!-- SideNavBar -->
+<aside class="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+<div class="flex flex-col gap-4 p-4 flex-grow">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDs3RWm2_a6nfbSzVSJlt6bU6yxxeq3-RsrYiZWADwpB2tZXAARiWwJFcAJKT5kld1FkAqP5Cwxi8NHLuKEtEtH0uPjSEQTgpHKWroFn_uODIxW8lehShHqixIkdL9i3DiCIsaeOoNNcCp-ePXzXJSiScMbsWFaXmMUiPR5HIq22iEVgBuvuJYS_bDoNB5zyHYnoN5p0GfaHdI_r1U-ywcU9tzZLO7UwscMdI6ADXXsN2J60KM8tzl0HsON4Zm9euHorJ2nAe6y6A");'></div>
+<div class="flex flex-col">
+<h1 class="text-[#111418] dark:text-white text-base font-medium leading-normal">Caja Principal</h1>
+<p class="text-[#617589] dark:text-gray-400 text-sm font-normal leading-normal">user@email.com</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2 mt-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" href="#">
+<span class="material-symbols-outlined text-lg">dashboard</span>
+<p class="text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<p class="text-sm font-medium leading-normal">Órdenes de Venta</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" href="#">
+<span class="material-symbols-outlined text-lg">group</span>
+<p class="text-sm font-medium leading-normal">Clientes</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" href="#">
+<span class="material-symbols-outlined text-lg">leaderboard</span>
+<p class="text-sm font-medium leading-normal">Reportes</p>
+</a>
+</nav>
+</div>
+<div class="flex flex-col gap-1 p-4 border-t border-gray-200 dark:border-gray-700">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+<p class="text-sm font-medium leading-normal">Configuración</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" href="#">
+<span class="material-symbols-outlined text-lg">help</span>
+<p class="text-sm font-medium leading-normal">Ayuda</p>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col p-6 overflow-auto">
+<div class="flex flex-col gap-6">
+<!-- PageHeading -->
+<header>
+<div class="flex flex-wrap justify-between items-center gap-4">
+<div class="flex flex-col gap-1">
+<h1 class="text-[#111418] dark:text-white text-3xl font-bold tracking-tight">Gestión de Cobros</h1>
+<p class="text-[#617589] dark:text-gray-400 text-base font-normal leading-normal">Busque y seleccione órdenes para procesar pagos.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+<span class="material-symbols-outlined text-lg">refresh</span>
+<span>Actualizar Lista</span>
+</button>
+<button class="flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:bg-primary/50" disabled="">
+<span class="material-symbols-outlined text-lg">payment</span>
+<span>Proceder al Pago</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Filters Section -->
+<section class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+<h3 class="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] mb-4">Filtros</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- SearchBar -->
+<div class="lg:col-span-2">
+<label class="flex flex-col w-full h-12">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-[#617589] dark:text-gray-400 flex bg-gray-100 dark:bg-gray-700 items-center justify-center pl-4 rounded-l-lg border-y border-l border-gray-300 dark:border-gray-600">
+<span class="material-symbols-outlined text-xl">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-[#111418] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 h-full placeholder:text-[#617589] dark:placeholder:text-gray-400 px-4 text-sm font-normal leading-normal" placeholder="Buscar por ID de orden o nombre de cliente" value=""/>
+</div>
+</label>
+</div>
+<!-- TextField: Cliente -->
+<label class="flex flex-col">
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 h-12 placeholder:text-[#617589] dark:placeholder:text-gray-400 p-3 text-sm font-normal leading-normal" placeholder="Seleccionar cliente" value=""/>
+</label>
+<!-- TextField: Rango de Fechas -->
+<label class="flex flex-col">
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 h-12 placeholder:text-[#617589] dark:placeholder:text-gray-400 p-3 text-sm font-normal leading-normal" placeholder="Seleccionar rango de fechas" value=""/>
+</label>
+</div>
+<div class="flex flex-wrap items-center justify-between mt-4">
+<div class="flex items-center gap-4 text-sm">
+<span class="font-medium text-[#111418] dark:text-white">Estado:</span>
+<div class="flex gap-2">
+<button class="px-3 py-1.5 rounded-full text-sm font-medium bg-fluent-orange/10 text-fluent-orange border border-fluent-orange/30">Pendiente</button>
+<button class="px-3 py-1.5 rounded-full text-sm font-medium bg-fluent-blue-dark/10 text-fluent-blue-dark border border-fluent-blue-dark/30">Parcialmente Pagado</button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-sm font-medium text-primary hover:underline">Limpiar Filtros</button>
+<button class="h-10 px-5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90">Aplicar Filtros</button>
+</div>
+</div>
+</section>
+<!-- Data Table -->
+<div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+<thead class="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-50 dark:bg-gray-700">
+<tr>
+<th class="p-4" scope="col">
+<div class="flex items-center">
+<input class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600" id="checkbox-all-search" type="checkbox"/>
+<label class="sr-only" for="checkbox-all-search">checkbox</label>
+</div>
+</th>
+<th class="px-6 py-3" scope="col">ID Orden</th>
+<th class="px-6 py-3" scope="col">Cliente</th>
+<th class="px-6 py-3" scope="col">Fecha</th>
+<th class="px-6 py-3 text-right" scope="col">Monto Total</th>
+<th class="px-6 py-3 text-right" scope="col">Saldo Pendiente</th>
+<th class="px-6 py-3 text-center" scope="col">Estado</th>
+<th class="px-6 py-3 text-center" scope="col">Acción</th>
+</tr>
+</thead>
+<tbody>
+<tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+<td class="w-4 p-4">
+<div class="flex items-center">
+<input class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600" id="checkbox-table-search-1" type="checkbox"/>
+<label class="sr-only" for="checkbox-table-search-1">checkbox</label>
+</div>
+</td>
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">#89124</td>
+<td class="px-6 py-4">Ana Torres</td>
+<td class="px-6 py-4">2023-10-26</td>
+<td class="px-6 py-4 text-right">$1,250.00</td>
+<td class="px-6 py-4 text-right font-bold text-gray-800 dark:text-gray-200">$1,250.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-fluent-orange/20 text-fluent-orange">Pendiente</span>
+</td>
+<td class="px-6 py-4 text-center">
+<button class="font-medium text-primary hover:underline">Ver Detalle</button>
+</td>
+</tr>
+<tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+<td class="w-4 p-4">
+<div class="flex items-center">
+<input class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600" id="checkbox-table-search-2" type="checkbox"/>
+<label class="sr-only" for="checkbox-table-search-2">checkbox</label>
+</div>
+</td>
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">#89123</td>
+<td class="px-6 py-4">Carlos Gómez</td>
+<td class="px-6 py-4">2023-10-26</td>
+<td class="px-6 py-4 text-right">$800.00</td>
+<td class="px-6 py-4 text-right font-bold text-gray-800 dark:text-gray-200">$400.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-fluent-blue-dark/20 text-fluent-blue-dark">Parcialmente Pagado</span>
+</td>
+<td class="px-6 py-4 text-center">
+<button class="font-medium text-primary hover:underline">Ver Detalle</button>
+</td>
+</tr>
+<tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+<td class="w-4 p-4">
+<div class="flex items-center">
+<input class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600" id="checkbox-table-search-3" type="checkbox"/>
+<label class="sr-only" for="checkbox-table-search-3">checkbox</label>
+</div>
+</td>
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">#89122</td>
+<td class="px-6 py-4">Luisa Fernández</td>
+<td class="px-6 py-4">2023-10-25</td>
+<td class="px-6 py-4 text-right">$3,500.00</td>
+<td class="px-6 py-4 text-right font-bold text-gray-800 dark:text-gray-200">$3,500.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-fluent-orange/20 text-fluent-orange">Pendiente</span>
+</td>
+<td class="px-6 py-4 text-center">
+<button class="font-medium text-primary hover:underline">Ver Detalle</button>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Pagination -->
+<nav aria-label="Table navigation" class="flex items-center justify-between p-4">
+<span class="text-sm font-normal text-gray-500 dark:text-gray-400">Mostrando <span class="font-semibold text-gray-900 dark:text-white">1-10</span> de <span class="font-semibold text-gray-900 dark:text-white">1000</span></span>
+<ul class="inline-flex -space-x-px text-sm h-8">
+<li>
+<a class="flex items-center justify-center px-3 h-8 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" href="#">Anterior</a>
+</li>
+<li>
+<a class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" href="#">1</a>
+</li>
+<li>
+<a class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" href="#">2</a>
+</li>
+<li>
+<a aria-current="page" class="flex items-center justify-center px-3 h-8 text-primary border border-gray-300 bg-primary/10 hover:bg-primary/20 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white" href="#">3</a>
+</li>
+<li>
+<a class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" href="#">Siguiente</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</main>
+</div>
+</body></html>

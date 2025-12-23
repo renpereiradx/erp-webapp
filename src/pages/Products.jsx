@@ -1,479 +1,540 @@
-import React, { useState, useEffect, Suspense, useRef } from 'react';
-import { Plus, Search, Filter, X, Package } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import useProductStore from '@/store/useProductStore';
-import { useThemeStyles } from '@/hooks/useThemeStyles';
+// ===========================================================================
+// Products Page - MVP Implementation
+// Patrón: Fluent Design System 2 + BEM + Zustand
+// Basado en: docs/GUIA_MVP_DESARROLLO.md
+// ===========================================================================
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, Filter, Share, Plus, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { useRouteChange } from '@/hooks/useRouteChange';
+import useProductStore from '@/store/useProductStore';
 import DataState from '@/components/ui/DataState';
-import EmptyState from '@/components/ui/EmptyState';
-import MetricsPanel from '@/components/MetricsPanel';
-import ProductGrid from '@/features/products/components/ProductGrid';
-import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import ProductFormModal from '@/components/ProductFormModal';
+import ProductDetailsModal from '@/components/ProductDetailsModal';
+import '@/styles/scss/pages/_products.scss';
 
-// Lazy load modals
-const ProductModal = React.lazy(() => import('@/components/ProductModal'));
-const ProductDetailModal = React.lazy(() => import('@/components/ProductDetailModal'));
-const DeleteProductModal = React.lazy(() => import('@/components/DeleteProductModal'));
+/**
+ * Custom hook para debounce
+ * @param {Function} callback - Función a ejecutar después del debounce
+ * @param {number} delay - Retraso en milisegundos
+ */
+const useDebounce = (callback, delay) => {
+  const timeoutRef = useRef(null);
 
-const ProductsPage = () => {
-  const { t } = useI18n();
-  const { styles } = useThemeStyles();
-  
-  // State from Zustand store
-  const products = useProductStore(state => state.products);
-  const isLoading = useProductStore(state => state.isLoading);
-  const error = useProductStore(state => state.error);
-  const lastSearchTerm = useProductStore(state => state.lastSearchTerm);
-  const isOffline = useProductStore(state => state.isOffline);
-  const searchProducts = useProductStore(state => state.searchProducts);
-  const deleteProduct = useProductStore(state => state.deleteProduct);
-  const reactivateProduct = useProductStore(state => state.reactivateProduct);
-  const fetchProducts = useProductStore(state => state.fetchProducts);
-  const hydrateFromStorage = useProductStore(state => state.hydrateFromStorage);
-  const clearSearchState = useProductStore(state => state.clearSearchState);
-  const refreshProductData = useProductStore(state => state.refreshProductData);
+  const debouncedFunction = useCallback(
+    (...args) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
 
-  // Local UI state
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [apiSearchTerm, setApiSearchTerm] = useState('');
-  const [showMetrics] = useFeatureFlag('productsMetricsPanel', false);
-  const [inlineFlag] = useFeatureFlag('newInlineEdit', true);
-  const [inlineEditingId, setInlineEditingId] = useState(null);
+      timeoutRef.current = setTimeout(() => {
+        callback(...args);
+      }, delay);
+    },
+    [callback, delay]
+  );
 
-  // Detectar cambios de ruta para limpiar búsquedas
-  useRouteChange((prevLocation, currentLocation) => {
-    // Solo limpiar si venimos de otra página que no sea productos
-    if (prevLocation.pathname !== '/productos' && currentLocation.pathname === '/productos') {
-      clearSearchState();
-    }
-  });
-
+  // Cleanup al desmontar
   useEffect(() => {
-    // Limpiar estado de búsquedas previas al montar la página
-    clearSearchState();
-    
-    if (typeof hydrateFromStorage === 'function') {
-      hydrateFromStorage();
-    }
-    
-    // Si no hay productos después de hidratar, hacer una búsqueda inicial
-    // para cargar productos con datos financieros
-    if (products.length === 0 && !isLoading) {
-      searchProducts('').catch(console.error);
-    }
-    // Solo al montar
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, []);
 
-  // State adicional para manejo de errores de búsqueda
-  const [searchError, setSearchError] = useState(null);
+  return debouncedFunction;
+};
+
+const Products = () => {
+  const { t } = useI18n();
+
+  // Zustand store
+  const {
+    products,
+    loading,
+    error,
+    totalProducts,
+    currentPage,
+    totalPages,
+    fetchProducts,
+    setCurrentPage,
+    clearError,
+  } = useProductStore();
+
+  // Estados locales
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
-  // State para filtros locales
-  const [localFilter, setLocalFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('active'); // 'all', 'active', 'inactive'
-  const [rawProducts, setRawProducts] = useState([]); // Productos originales sin filtrar
-  const [showFilters, setShowFilters] = useState(false);
+  // Modal states
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Detectar el tipo de búsqueda
-  const detectSearchType = (term) => {
-    if (!term) return 'none';
-    const trimmed = term.trim();
-    
-    // Detectar si parece un código de barras: 8-15 dígitos
-    const looksLikeBarcode = /^\d{8,15}$/.test(trimmed);
-    if (looksLikeBarcode) return 'barcode';
-    
-    // Detectar si parece un ID: entre 8-30 caracteres alfanuméricos/guiones
-    const looksLikeId = /^[a-zA-Z0-9_-]{8,30}$/.test(trimmed) && 
-                       !/\s/.test(trimmed) && 
-                       trimmed.length >= 8;
-    
-    return looksLikeId ? 'id' : 'name';
-  };
+  // DESHABILITADO: No cargar productos automáticamente
+  // Los productos solo se cargarán cuando el usuario realice una búsqueda explícita
+  // useEffect(() => {
+  //   if (!searchTerm) {
+  //     fetchProducts();
+  //   }
+  // }, []);
 
-  const searchType = detectSearchType(apiSearchTerm);
+  // Función de búsqueda con validación de mínimo 4 caracteres
+  const performSearch = useCallback((term) => {
+    const trimmedTerm = term.trim();
 
-  // Función para aplicar filtros locales
-  const applyLocalFilters = (productsToFilter) => {
-    if (!productsToFilter || productsToFilter.length === 0) return [];
-
-    let filtered = [...productsToFilter];
-
-    // Filtro por texto local
-    if (localFilter.trim()) {
-      const filterTerm = localFilter.trim().toLowerCase();
-      filtered = filtered.filter(product => 
-        product.name?.toLowerCase().includes(filterTerm) ||
-        product.id?.toLowerCase().includes(filterTerm) ||
-        product.barcode?.toLowerCase().includes(filterTerm) ||
-        product.category?.name?.toLowerCase().includes(filterTerm) ||
-        product.description?.toLowerCase().includes(filterTerm)
-      );
-    }
-
-    // Filtro por estado (predeterminado: solo activos)
-    if (statusFilter === 'active') {
-      filtered = filtered.filter(product => product.state === true);
-    } else if (statusFilter === 'inactive') {
-      filtered = filtered.filter(product => product.state === false);
-    }
-    // Si es 'all', no filtramos por estado
-
-    return filtered;
-  };
-
-  // Aplicar filtros cuando cambien los filtros o los productos originales
-  const filteredProducts = applyLocalFilters(rawProducts);
-  
-  // Usar productos filtrados localmente si tenemos filtros activos, sino usar del store
-  const displayProducts = showFilters ? filteredProducts : products;
-
-  const handleApiSearch = async (e) => {
-    e.preventDefault();
-    const trimmed = apiSearchTerm?.trim();
-    
-    // Para IDs, permitir búsqueda inmediata (mínimo 8 caracteres)
-    // Para nombres, requerir mínimo 3 caracteres
-    const minLength = searchType === 'id' ? 8 : 3;
-    
-    if (!trimmed || trimmed.length < minLength) {
+    // Si el término está vacío, limpiar búsqueda pero no cargar productos
+    if (!trimmedTerm) {
+      setIsSearching(false);
+      setHasSearched(false);
       return;
     }
-    
-    // Limpiar errores previos y mostrar estado de carga
-    setSearchError(null);
-    setIsSearching(true);
-    
-    try {
-      const result = await searchProducts(trimmed);
-      
-      // Guardar productos originales para filtrado local
-      const productsArray = Array.isArray(result?.data) ? result.data : 
-                           Array.isArray(result) ? result : 
-                           result ? [result] : [];
-      
-      setRawProducts(productsArray);
-      setShowFilters(productsArray.length > 1); // Mostrar filtros solo si hay múltiples resultados
-      
-      // Limpiar filtros locales en nueva búsqueda
-      setLocalFilter('');
-      setStatusFilter('active'); // Predeterminado: solo activos
-      
-    } catch (error) {
-      console.error('Error en búsqueda:', error);
-      setSearchError({
-        type: searchType,
-        term: trimmed,
-        message: error.message || 'Error en la búsqueda'
-      });
-      setRawProducts([]);
-      setShowFilters(false);
-    } finally {
+
+    // Validar mínimo 4 caracteres
+    if (trimmedTerm.length < 4) {
       setIsSearching(false);
+      return;
     }
+
+    // Realizar búsqueda
+    setIsSearching(true);
+    setHasSearched(true);
+    fetchProducts(1, 10, trimmedTerm).finally(() => {
+      setIsSearching(false);
+    });
+  }, [fetchProducts]);
+
+  // Debounce de 500ms para la búsqueda
+  const debouncedSearch = useDebounce(performSearch, 500);
+
+  // Handlers
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    debouncedSearch(value);
   };
 
-  const handleCreateProduct = () => {
-    setEditingProduct(null);
-    setShowProductModal(true);
-  };
-
-  const handleEditProduct = (product) => {
-    setEditingProduct(product);
-    setShowProductModal(true);
-  };
-
-  const handleViewProduct = (product) => {
-    setSelectedProduct(product);
-    setShowDetailModal(true);
-  };
-
-  const handleDeleteRequest = (product) => {
-    setSelectedProduct(product);
-    setShowDeleteModal(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!selectedProduct) return;
-    await deleteProduct(selectedProduct.id);
-    setShowDeleteModal(false);
-    setSelectedProduct(null);
-  };
-
-  const handleReactivateProduct = async (product) => {
-    if (window.confirm(`¿Reactivar producto ${product.name}?`)) {
-      try {
-        await reactivateProduct(product.id);
-        // Refrescar búsqueda si hay término activo
-        if (lastSearchTerm) {
-          searchProducts(lastSearchTerm);
-        }
-      } catch (error) {
-        console.error('Error reactivating product:', error);
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const value = searchTerm.trim();
+      if (value.length >= 4) {
+        // Cancelar el debounce pendiente y buscar inmediatamente
+        performSearch(value);
       }
     }
   };
 
-  const handleModalSuccess = () => {
-    setShowProductModal(false);
-    setEditingProduct(null);
-    if (lastSearchTerm) searchProducts(lastSearchTerm);
-  };
-
-  // Función para limpiar filtros
-  const clearFilters = () => {
-    setLocalFilter('');
-    setStatusFilter('active');
-    setRawProducts([]);
-    setShowFilters(false);
-  };
-
-  // Limpiar filtros cuando se limpia la búsqueda principal
-  useEffect(() => {
-    if (!apiSearchTerm.trim()) {
-      clearFilters();
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      fetchProducts(currentPage - 1);
     }
-  }, [apiSearchTerm]);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      fetchProducts(currentPage + 1);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === products.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(products.map(p => p.id || p.product_id));
+    }
+  };
+
+  const toggleSelectProduct = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id)
+        ? prev.filter(selectedId => selectedId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const getStockDisplay = (product) => {
+    // Handle both financial API format (stock_quantity) and standard format (stock, quantity)
+    const stock = product.stock_quantity ?? product.stock ?? product.quantity ?? 0;
+    const isLow = stock < 10;
+
+    return {
+      display: isLow ? t('products.stock.low', { quantity: stock }) : stock.toString(),
+      isLow
+    };
+  };
+
+  // Modal handlers
+  const handleOpenCreateModal = () => {
+    setSelectedProduct(null);
+    setIsFormModalOpen(true);
+  };
+
+  const handleOpenEditModal = (product) => {
+    setSelectedProduct(product);
+    setIsFormModalOpen(true);
+  };
+
+  const handleCloseFormModal = () => {
+    setIsFormModalOpen(false);
+    setSelectedProduct(null);
+    // Reload products after modal closes to get updated data
+    fetchProducts();
+  };
+
+  const handleOpenDetailsModal = (product) => {
+    setSelectedProduct(product);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setIsDetailsModalOpen(false);
+    setSelectedProduct(null);
+  };
+
+  const handleEditFromDetails = (product) => {
+    setIsDetailsModalOpen(false);
+    setSelectedProduct(product);
+    setIsFormModalOpen(true);
+  };
+
+  const getHealthIndicator = (product) => {
+    // Use financial health data from API if available, otherwise use simple logic
+    const stock = product.stock_quantity ?? product.stock ?? product.quantity ?? 0;
+    const isActive = product.state !== false && product.is_active !== false;
+
+    // If financial_health data is available from the API, use it
+    if (product.financial_health) {
+      const { has_prices, has_costs, has_stock } = product.financial_health;
+
+      if (!has_prices || !has_costs || !has_stock) {
+        return { level: 'poor', text: t('products.health.poor') };
+      } else if (stock < 10) {
+        return { level: 'at-risk', text: t('products.health.at_risk') };
+      } else {
+        return { level: 'healthy', text: t('products.health.healthy') };
+      }
+    }
+
+    // Fallback to simple logic
+    if (!isActive || stock === 0) {
+      return { level: 'poor', text: t('products.health.poor') };
+    } else if (stock < 10) {
+      return { level: 'at-risk', text: t('products.health.at_risk') };
+    } else {
+      return { level: 'healthy', text: t('products.health.healthy') };
+    }
+  };
+
+  const startIndex = (currentPage - 1) * 10 + 1;
+  const endIndex = Math.min(currentPage * 10, totalProducts);
 
   return (
-    <div className="space-y-4">
-      {isOffline && <div className="bg-amber-100 text-amber-800 p-2 text-center text-sm rounded-md">{t('products.offline_banner')}</div>}
+    <div className="products-page">
+      {/* Page Header */}
+      <header className="page-header">
+        <div className="page-header__content">
+          <h1 className="page-header__title">
+            {t('products.page.title')}
+          </h1>
+          <p className="page-header__subtitle">
+            {t('products.page.subtitle')}
+          </p>
+        </div>
+      </header>
 
-      {/* Breadcrumb discreto para contexto */}
-      <nav className="flex items-center text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">{t('products.title')}</span>
-      </nav>
-
-      {showMetrics && <MetricsPanel />}
-
-      {/* Contenedor principal con posición relativa para los modales */}
-      <div className="relative" id="products-content-container">
-        <div className={styles.card('p-4')}>
-          <div className="flex flex-col sm:flex-row gap-3 mb-4">
-            <form onSubmit={handleApiSearch} className="flex-1">
-              <div className="flex gap-2">
-                <div className="relative group flex-1">
-                  {/* Icono de búsqueda - posición exacta estilo Google */}
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                    <Search className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--primary))] transition-colors" />
-                  </div>
-                  {/* Input campo - padding calculado para evitar superposición */}
-                  <input
-                  type="text"
-                  placeholder={
-                    searchType === 'barcode' 
-                      ? t('products.search.placeholder_barcode') || 'Buscar por código de barras...'
-                      : searchType === 'id' 
-                        ? t('products.search.placeholder_id') || 'Buscar por ID de producto...'
-                        : t('products.search.placeholder') || 'Buscar por nombre, ID o código de barras...'
-                  }
-                  value={apiSearchTerm}
-                  onChange={(e) => {
-                    setApiSearchTerm(e.target.value);
-                    // Limpiar errores cuando el usuario empiece a escribir
-                    if (searchError) setSearchError(null);
-                  }}
-                  className={`${styles.input()} pl-11 hover:border-[hsl(var(--primary))] focus:border-[hsl(var(--primary))] transition-colors w-full h-10`}
-                  style={{ paddingLeft: '2.75rem' }}
-                />
-                {apiSearchTerm && (
-                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10">
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      searchType === 'id' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {searchType === 'id' ? 'ID' : 'Nombre'}
-                    </span>
-                  </div>
-                )}
-                </div>
-                <Button type="submit" variant="outline" className="px-4 h-10">
-                  <Search className="h-4 w-4" />
-                </Button>
-              </div>
-            </form>
-            <Button onClick={handleCreateProduct} variant="primary" className="sm:flex-shrink-0">
-              <Plus className="w-4 h-4 mr-2" />
-              Nuevo producto
-            </Button>
-          </div>
-          
-          {/* Indicador de ayuda */}
-          {apiSearchTerm && apiSearchTerm.length > 0 && !searchError && (
-            <div className="text-xs text-muted-foreground">
-              {searchType === 'id' 
-                ? `💡 Detectado como ID de producto (${apiSearchTerm.length}/8+ caracteres)`
-                : `💡 Buscando por nombre (${apiSearchTerm.length}/3+ caracteres)`
-              }
-            </div>
-          )}
-          
-          {/* Error de búsqueda */}
-          {searchError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-              <div className="flex items-center gap-2 text-red-800">
-                <span className="text-sm font-medium">
-                  {searchError.type === 'id' ? '🆔 Error de búsqueda por ID' : '📝 Error de búsqueda por nombre'}
-                </span>
-              </div>
-              <p className="text-sm text-red-700 mt-1">
-                {searchError.type === 'id' && searchError.message.includes('500') 
-                  ? `El servidor tuvo un problema al buscar el ID "${searchError.term}". Esto puede deberse a un error temporal del servidor.`
-                  : searchError.type === 'id' && searchError.message.includes('404')
-                  ? `No se encontró ningún producto con el ID "${searchError.term}".`
-                  : `Error al buscar "${searchError.term}": ${searchError.message}`
-                }
-              </p>
-              {searchError.type === 'id' && searchError.message.includes('500') && (
-                <p className="text-xs text-red-600 mt-2">
-                  💡 Sugerencia: Intenta buscar por nombre o verifica que el ID sea correcto.
-                </p>
+      {/* Toolbar */}
+      <div className="toolbar">
+        {/* Search */}
+        <div className="toolbar__search">
+          <div className="search-box">
+            <div className="search-box__icon-wrapper">
+              {isSearching ? (
+                <div className="spinner" style={{ width: '16px', height: '16px' }} />
+              ) : (
+                <Search className="search-box__icon" aria-hidden="true" />
               )}
-              <button 
-                onClick={() => setSearchError(null)}
-                className="text-xs text-red-600 underline mt-2 hover:text-red-800"
-              >
-                Cerrar
-              </button>
             </div>
+            <input
+              type="search"
+              className="search-box__input"
+              placeholder={t('products.search.by_name_sku')}
+              value={searchTerm}
+              onChange={handleSearch}
+              onKeyDown={handleSearchKeyDown}
+              aria-label={t('products.search.by_name_sku')}
+              aria-describedby="search-helper"
+            />
+          </div>
+          {searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < 4 && (
+            <p id="search-helper" className="search-box__helper-text" style={{ fontSize: '11px', marginTop: '4px', color: '#605e5c' }}>
+              Escribe al menos 4 caracteres para buscar ({searchTerm.trim().length}/4)
+            </p>
           )}
         </div>
 
-        {/* Filtros locales - Solo se muestran cuando hay múltiples resultados */}
-        {showFilters && (
-          <div className={styles.card('p-4')}>
-            <div className="flex items-center gap-4 mb-3">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">Filtrar resultados ({filteredProducts.length} de {rawProducts.length})</span>
-              </div>
-              {(localFilter || statusFilter !== 'active') && (
-                <button
-                  onClick={() => {
-                    setLocalFilter('');
-                    setStatusFilter('active');
-                  }}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-3 h-3" />
-                  Limpiar filtros
-                </button>
-              )}
-            </div>
+        {/* Actions */}
+        <div className="toolbar__actions">
+          <button
+            className="btn--icon-only"
+            aria-label={t('products.action.filter')}
+            title={t('products.action.filter')}
+          >
+            <Filter className="btn__icon" aria-hidden="true" />
+          </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Filtro por texto */}
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">
-                  Buscar en resultados
-                </label>
-                <Input
-                  placeholder="Ej: Dunk, Air, Pro, código de barras..."
-                  value={localFilter}
-                  onChange={(e) => setLocalFilter(e.target.value)}
-                  className={`text-sm ${styles.input()}`}
-                />
-              </div>
+          <button
+            className="btn--icon-only"
+            aria-label={t('products.action.export')}
+            title={t('products.action.export')}
+          >
+            <Share className="btn__icon" aria-hidden="true" />
+          </button>
 
-              {/* Filtro por estado */}
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">
-                  Estado del producto
-                </label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className={`text-sm ${styles.input()} cursor-pointer`}
-                >
-                  <option value="active">Solo activos</option>
-                  <option value="inactive">Solo inactivos</option>
-                  <option value="all">Todos</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Indicadores de filtros activos */}
-            {(localFilter || statusFilter !== 'active') && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {localFilter && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                    Texto: "{localFilter}"
-                    <button
-                      onClick={() => setLocalFilter('')}
-                      className="hover:bg-blue-200 rounded-full p-0.5"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-                {statusFilter !== 'active' && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                    Estado: {statusFilter === 'all' ? 'Todos' : 'Inactivos'}
-                    <button
-                      onClick={() => setStatusFilter('active')}
-                      className="hover:bg-green-200 rounded-full p-0.5"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {isLoading && displayProducts.length === 0 ? (
-          <DataState variant="loading" skeletonVariant="productGrid" />
-        ) : error && displayProducts.length === 0 ? (
-          <DataState variant="error" title={t('products.error.loading')} message={error} onRetry={() => fetchProducts()} />
-        ) : displayProducts.length === 0 ? (
-          lastSearchTerm ? (
-            <EmptyState
-              icon={Search}
-              title="No se encontraron productos"
-              description="Intenta con otros términos de búsqueda o verifica el ID del producto"
-              variant="search"
-              size="medium"
-            />
-          ) : (
-            <EmptyState
-              icon={Package}
-              title="No hay productos"
-              description="Comienza agregando tu primer producto al inventario"
-              variant="instruction"
-              size="medium"
-              actionLabel="Nuevo producto"
-              onAction={handleCreateProduct}
-            />
-          )
-        ) : (
-          <ProductGrid 
-            products={displayProducts}
-            onView={handleViewProduct}
-            onEdit={handleEditProduct}
-            onDelete={handleDeleteRequest}
-            onReactivate={handleReactivateProduct}
-          />
-        )}
-
-        {/* TODO: Add Pagination Component */}
+          <button
+            className="btn btn--primary"
+            onClick={handleOpenCreateModal}
+          >
+            <Plus className="btn__icon" aria-hidden="true" />
+            <span>{t('products.action.new_product')}</span>
+          </button>
+        </div>
       </div>
 
-      <Suspense fallback={<div>Loading...</div>}>
-        {showProductModal && <ProductModal isOpen={showProductModal} onClose={() => setShowProductModal(false)} product={editingProduct} onSuccess={handleModalSuccess} container={document.getElementById('products-content-container')} />}
-        {showDetailModal && <ProductDetailModal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} product={selectedProduct} container={document.getElementById('products-content-container')} />}
-        {showDeleteModal && <DeleteProductModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} product={selectedProduct} onConfirm={handleConfirmDelete} loading={isLoading} />}
-      </Suspense>
+      {/* Products Table */}
+      <div className="products-table">
+        <div className="products-table__container">
+          <table className="products-table__table">
+            <thead className="products-table__thead">
+              <tr>
+                <th className="products-table__th products-table__th--checkbox" scope="col">
+                  <input
+                    type="checkbox"
+                    className="checkbox"
+                    checked={selectedIds.length === products.length && products.length > 0}
+                    onChange={toggleSelectAll}
+                    aria-label="Seleccionar todos los productos"
+                  />
+                </th>
+                <th className="products-table__th" scope="col">
+                  {t('products.table.product_name')}
+                </th>
+                <th className="products-table__th" scope="col">
+                  {t('products.table.category')}
+                </th>
+                <th className="products-table__th" scope="col">
+                  {t('products.table.stock')}
+                </th>
+                <th className="products-table__th" scope="col">
+                  {t('products.table.state')}
+                </th>
+                <th className="products-table__th" scope="col">
+                  {t('products.table.financial_health')}
+                </th>
+                <th className="products-table__th products-table__th--actions" scope="col">
+                  <span className="sr-only">{t('products.table.actions')}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="products-table__tbody">
+              {/* Estado: Cargando */}
+              {loading && products.length === 0 && hasSearched ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                      <div className="spinner" style={{ width: '48px', height: '48px' }} />
+                      <p style={{ fontSize: '14px', color: '#605e5c', margin: 0 }}>
+                        Buscando productos...
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : /* Estado: Error */
+              error ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ fontSize: '48px', color: '#d13438' }}>⚠</div>
+                      <div>
+                        <p style={{ fontSize: '16px', fontWeight: 600, color: '#323130', margin: '0 0 8px 0' }}>
+                          {t('products.error.title')}
+                        </p>
+                        <p style={{ fontSize: '14px', color: '#605e5c', margin: '0 0 16px 0' }}>
+                          {error}
+                        </p>
+                        <button
+                          className="btn btn--primary"
+                          onClick={() => {
+                            clearError();
+                            if (searchTerm && searchTerm.length >= 4) {
+                              fetchProducts(1, 10, searchTerm);
+                            }
+                          }}
+                        >
+                          Reintentar
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : /* Estado: Sin búsqueda inicial */
+              products.length === 0 && !hasSearched ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                      <Search size={48} style={{ color: '#a19f9d', opacity: 0.5 }} />
+                      <div>
+                        <p style={{ fontSize: '16px', fontWeight: 600, color: '#323130', margin: '0 0 8px 0' }}>
+                          Busca productos para comenzar
+                        </p>
+                        <p style={{ fontSize: '14px', color: '#605e5c', margin: 0 }}>
+                          Escribe al menos 4 caracteres en el buscador para encontrar productos
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : /* Estado: Búsqueda sin resultados */
+              products.length === 0 && hasSearched ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                      <div style={{ fontSize: '48px', color: '#a19f9d', opacity: 0.5 }}>📦</div>
+                      <div>
+                        <p style={{ fontSize: '16px', fontWeight: 600, color: '#323130', margin: '0 0 8px 0' }}>
+                          {t('products.empty.title')}
+                        </p>
+                        <p style={{ fontSize: '14px', color: '#605e5c', margin: '0 0 16px 0' }}>
+                          No se encontraron productos con "{searchTerm}"
+                        </p>
+                        <button
+                          className="btn btn--primary"
+                          onClick={handleOpenCreateModal}
+                        >
+                          <Plus className="btn__icon" aria-hidden="true" />
+                          <span>{t('products.action.new_product')}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : /* Estado: Productos encontrados */
+              products.map((product) => {
+                // Handle both financial API format and standard format
+                const productId = product.product_id || product.id;
+                const productName = product.product_name || product.name || t('field.no_name');
+                const categoryName = product.category_name || product.category?.name || '-';
+                const isSelected = selectedIds.includes(productId);
+                const stockInfo = getStockDisplay(product);
+                const healthInfo = getHealthIndicator(product);
+                const isActive = product.state !== false && product.is_active !== false;
+
+                return (
+                  <tr key={productId}>
+                    <td className="products-table__td products-table__td--checkbox">
+                      <input
+                        type="checkbox"
+                        className="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelectProduct(productId)}
+                        aria-label={`Seleccionar ${productName}`}
+                      />
+                    </td>
+                    <td
+                      className="products-table__td products-table__td--name"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => handleOpenDetailsModal(product)}
+                    >
+                      {productName}
+                    </td>
+                    <td className="products-table__td">
+                      {categoryName}
+                    </td>
+                    <td className={`products-table__td ${stockInfo.isLow ? 'products-table__td--stock-low' : ''}`}>
+                      {stockInfo.display}
+                    </td>
+                    <td className="products-table__td">
+                      <span className={`badge ${isActive ? 'badge--active' : 'badge--inactive'}`}>
+                        {isActive ? t('products.state.active') : t('products.state.inactive')}
+                      </span>
+                    </td>
+                    <td className="products-table__td">
+                      <div className="health-indicator">
+                        <div className={`health-indicator__dot health-indicator__dot--${healthInfo.level}`}></div>
+                        <span className="health-indicator__text">{healthInfo.text}</span>
+                      </div>
+                    </td>
+                    <td className="products-table__td products-table__td--actions">
+                      <button
+                        className="action-btn"
+                        aria-label={`Editar ${productName}`}
+                        onClick={() => handleOpenEditModal(product)}
+                      >
+                        <MoreHorizontal className="action-btn__icon" aria-hidden="true" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="pagination">
+          <span className="pagination__info">
+            {t('products.pagination.showing', {
+              start: startIndex,
+              end: endIndex,
+              total: totalProducts
+            })}
+          </span>
+          <div className="pagination__controls">
+            <button
+              className="pagination__button"
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              aria-label="Página anterior"
+            >
+              <ChevronLeft className="pagination__icon" aria-hidden="true" />
+            </button>
+            <span className="pagination__page-info">
+              {t('products.pagination.page_of', {
+                current: currentPage,
+                total: totalPages || 1
+              })}
+            </span>
+            <button
+              className="pagination__button"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || totalPages === 0}
+              aria-label="Página siguiente"
+            >
+              <ChevronRight className="pagination__icon" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      <ProductFormModal
+        isOpen={isFormModalOpen}
+        onClose={handleCloseFormModal}
+        product={selectedProduct}
+      />
+
+      <ProductDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={handleCloseDetailsModal}
+        product={selectedProduct}
+        onEdit={handleEditFromDetails}
+      />
     </div>
   );
 };
 
-export default ProductsPage;
+export default Products;

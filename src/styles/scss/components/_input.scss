@@ -1,0 +1,579 @@
+// =============================================================================
+// INPUT COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE INPUT
+// -----------------------------------------------------------------------------
+
+.input {
+  // Structure
+  display: block;
+  width: 100%;
+  position: relative;
+
+  // Typography
+  font-family: $font-family-base;
+  font-size: $font-size-300;
+  font-weight: $font-weight-regular;
+  line-height: $line-height-400;
+
+  // Sizing
+  min-height: 32px;
+  padding: $spacing-8 $spacing-12;
+
+  // Visual
+  border-radius: $border-radius-medium;
+  @include transition(all, $duration-fast);
+
+  // Theme colors
+  @include themify {
+    background-color: themed('surface-input');
+    color: themed('text-primary');
+    border: 1px solid themed('border-default');
+  }
+
+  // Placeholder
+  &::placeholder {
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  // Focus state
+  &:focus,
+  &:focus-visible,
+  &:active {
+    outline: none !important;
+    @include themify {
+      border: 2px solid themed('action-primary');
+    }
+    // Ajustar padding para compensar el borde más grueso
+    padding: calc(#{$spacing-8} - 1px) calc(#{$spacing-12} - 1px);
+  }
+
+  // Hover state
+  &:hover:not(:disabled):not(:focus) {
+    @include themify {
+      border-color: themed('border-strong');
+    }
+  }
+
+  // Disabled state
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    @include themify {
+      background-color: themed('action-disabled');
+    }
+  }
+
+  // Read-only state
+  &:read-only {
+    @include themify {
+      background-color: themed('bg-tertiary');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// INPUT VARIANTS
+// -----------------------------------------------------------------------------
+
+// Filled input (stronger background)
+.input--filled {
+  @include themify {
+    background-color: themed('bg-secondary');
+    border: none;
+  }
+
+  &:focus {
+    @include themify {
+      border-bottom: 2px solid themed('action-primary');
+      box-shadow: none;
+    }
+  }
+}
+
+// Outlined input (default)
+.input--outlined {
+  // Already the default style
+}
+
+// Underlined input (minimal)
+.input--underlined {
+  border: none;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+  @include themify {
+    border-bottom: 1px solid themed('border-default');
+    background-color: transparent;
+  }
+
+  &:focus {
+    @include themify {
+      border-bottom: 2px solid themed('action-primary');
+      box-shadow: none;
+    }
+  }
+
+  &:hover:not(:disabled):not(:focus) {
+    @include themify {
+      border-bottom-color: themed('border-strong');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// INPUT STATES
+// -----------------------------------------------------------------------------
+
+.input--error {
+  @include themify {
+    border-color: themed('state-error');
+  }
+
+  &:focus {
+    @include themify {
+      border-color: themed('state-error');
+    }
+  }
+}
+
+.input--success {
+  @include themify {
+    border-color: themed('state-success');
+  }
+
+  &:focus {
+    @include themify {
+      border-color: themed('state-success');
+    }
+  }
+}
+
+.input--warning {
+  @include themify {
+    border-color: themed('state-warning');
+  }
+
+  &:focus {
+    @include themify {
+      border-color: themed('state-warning');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// INPUT SIZES
+// -----------------------------------------------------------------------------
+
+.input--small {
+  min-height: 24px;
+  padding: $spacing-4 $spacing-8;
+  font-size: $font-size-200;
+}
+
+.input--medium {
+  // Default size (already defined in base)
+}
+
+.input--large {
+  min-height: 40px;
+  padding: $spacing-12 $spacing-16;
+  font-size: $font-size-400;
+}
+
+// -----------------------------------------------------------------------------
+// TEXTAREA
+// -----------------------------------------------------------------------------
+
+.textarea {
+  // Base input styles
+  display: block;
+  width: 100%;
+  position: relative;
+  font-family: $font-family-base;
+  font-size: $font-size-300;
+  font-weight: $font-weight-regular;
+  line-height: $line-height-400;
+  min-height: 80px;
+  padding: $spacing-8 $spacing-12;
+  border-radius: $border-radius-medium;
+  @include transition(all, $duration-fast);
+  resize: vertical;
+
+  @include themify {
+    background-color: themed('surface-input');
+    color: themed('text-primary');
+    border: 1px solid themed('border-default');
+  }
+
+  &::placeholder {
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &:focus {
+    outline: none;
+    @include themify {
+      border-color: themed('action-primary');
+    }
+  }
+
+  &:hover:not(:disabled):not(:focus) {
+    @include themify {
+      border-color: themed('border-strong');
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    @include themify {
+      background-color: themed('action-disabled');
+    }
+  }
+
+  &:read-only {
+    @include themify {
+      background-color: themed('bg-tertiary');
+    }
+  }
+
+  &--no-resize {
+    resize: none;
+  }
+
+  &--auto-resize {
+    resize: none;
+    overflow: hidden;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// INPUT GROUP (with icons/buttons)
+// -----------------------------------------------------------------------------
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+
+  .input {
+    flex: 1;
+  }
+}
+
+.input-group__prepend,
+.input-group__append {
+  display: flex;
+  align-items: center;
+  padding: 0 $spacing-12;
+  @include themify {
+    background-color: themed('bg-secondary');
+    border: 1px solid themed('border-default');
+    color: themed('text-secondary');
+  }
+}
+
+.input-group__prepend {
+  border-right: none;
+  border-top-left-radius: $border-radius-medium;
+  border-bottom-left-radius: $border-radius-medium;
+
+  + .input {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+
+.input-group__append {
+  border-left: none;
+  border-top-right-radius: $border-radius-medium;
+  border-bottom-right-radius: $border-radius-medium;
+
+  .input + & {
+    border-left: none;
+  }
+
+  .input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+.input-group__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// INPUT WITH ICON (inline)
+// -----------------------------------------------------------------------------
+
+.input--with-icon-start {
+  padding-left: $spacing-36;
+}
+
+.input--with-icon-end {
+  padding-right: $spacing-36;
+}
+
+.input__icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  @include themify {
+    color: themed('text-tertiary');
+  }
+
+  &--start {
+    left: $spacing-12;
+  }
+
+  &--end {
+    right: $spacing-12;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FORM FIELD (Label + Input + Helper)
+// -----------------------------------------------------------------------------
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+  margin-bottom: $spacing-16;
+}
+
+.form-field__label {
+  @include body-small;
+  font-weight: $font-weight-semibold;
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &--required::after {
+    content: ' *';
+    @include themify {
+      color: themed('state-error');
+    }
+  }
+}
+
+.form-field__required {
+  @include themify {
+    color: themed('state-error');
+  }
+}
+
+.form-field__input {
+  // Alias for .input class
+  @extend .input;
+
+  &--error {
+    @extend .input--error;
+  }
+}
+
+.form-field__error {
+  @include caption;
+  margin-top: -$spacing-4;
+  @include themify {
+    color: themed('state-error');
+  }
+}
+
+.form-field__hint {
+  @include caption;
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.form-field__helper {
+  @include caption;
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  .form-field--error & {
+    @include themify {
+      color: themed('state-error');
+    }
+  }
+
+  .form-field--success & {
+    @include themify {
+      color: themed('state-success');
+    }
+  }
+
+  .form-field--warning & {
+    @include themify {
+      color: themed('state-warning');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FILE INPUT
+// -----------------------------------------------------------------------------
+
+.input-file {
+  position: relative;
+  display: inline-block;
+
+  input[type='file'] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  // Note: Add .btn and .btn--secondary classes to the label element in HTML
+  &__label {
+    // Styles will come from .btn and .btn--secondary classes
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SEARCH INPUT
+// -----------------------------------------------------------------------------
+
+.input-search {
+  position: relative;
+
+  .input {
+    padding-left: $spacing-36;
+    padding-right: $spacing-36;
+
+    &:focus {
+      // Ajustar padding para compensar el borde más grueso en focus
+      padding-left: calc(#{$spacing-36} - 1px);
+      padding-right: calc(#{$spacing-36} - 1px);
+    }
+  }
+
+  &__icon {
+    position: absolute;
+    left: $spacing-12;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__clear {
+    position: absolute;
+    right: $spacing-8;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: $spacing-4;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-radius: $border-radius-small;
+    z-index: 2;
+    @include themify {
+      color: themed('text-tertiary');
+    }
+
+    &:hover {
+      @include themify {
+        background-color: themed('surface-hover');
+        color: themed('text-primary');
+      }
+    }
+
+    &:focus {
+      outline: none;
+      @include themify {
+        background-color: themed('surface-hover');
+        color: themed('text-primary');
+      }
+    }
+  }
+
+  // Prevenir doble borde en el contenedor
+  &:focus,
+  &:focus-within {
+    outline: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+
+
+// Focus visible states
+.input,
+.textarea {
+  @include focus-visible;
+}
+
+// -----------------------------------------------------------------------------
+// FORM FIELD GROUP (Grid Layout)
+// -----------------------------------------------------------------------------
+
+.form-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+  margin-bottom: $spacing-16;
+
+  &--grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-16;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &--grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-16;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // Nested form-field should not have bottom margin
+  .form-field {
+    margin-bottom: 0;
+  }
+}

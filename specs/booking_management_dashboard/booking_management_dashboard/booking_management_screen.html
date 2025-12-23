@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CourtManager - Reservas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#137fec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+            },
+            fontFamily: {
+              "display": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="w-64 flex-shrink-0 bg-white dark:bg-[#1C2127] border-r border-gray-200 dark:border-gray-700/50">
+<div class="flex h-full flex-col p-4">
+<div class="flex items-center gap-3 p-2 mb-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="CourtManager logo" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDNQcN0F7GFvHYqq6Vb-Kj2NSJui-upJGfPs4hlprZ_mfHAxzlyfHHA-nqbOdNbJ3dbCrOKL3f4jY962hcqc01eaN0rLa51N3Bkq0I75G_xbrZ7b8cYkdeCFr0u3lEL1MBmC5PKaYHhXeRiAN8uvn1ckUWCyzbTfA9APK6zKKJ2R53fxM6YErEQ03yXdpGedsB6wlHbZc24ziaShEVpT--DrRUjUjyD1qul9wkIo2Z-5RAGl2K6spzpb-xXi3Puj6Cb7IhwXTEjiY4p');"></div>
+<div class="flex flex-col">
+<h1 class="text-gray-900 dark:text-white text-base font-semibold">CourtManager</h1>
+<p class="text-gray-500 dark:text-gray-400 text-sm">Web App</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2 flex-grow">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<p class="text-sm font-medium">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 text-primary dark:text-white dark:bg-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+<p class="text-sm font-medium">Reservas</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">group</span>
+<p class="text-sm font-medium">Clientes</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">sports_tennis</span>
+<p class="text-sm font-medium">Productos</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<p class="text-sm font-medium">Informes</p>
+</a>
+</nav>
+<div class="flex flex-col gap-1 mt-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-sm font-medium">Ajustes</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<p class="text-sm font-medium">Ayuda</p>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-8">
+<div class="max-w-7xl mx-auto">
+<!-- PageHeading -->
+<div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+<h1 class="text-gray-900 dark:text-white text-3xl font-bold tracking-tight">Reservas</h1>
+<button class="flex items-center justify-center gap-2 min-w-[84px] cursor-pointer rounded-lg h-10 px-4 bg-primary text-white text-sm font-medium leading-normal shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background-light dark:focus:ring-offset-background-dark">
+<span class="material-symbols-outlined">add</span>
+<span class="truncate">Nueva Reserva</span>
+</button>
+</div>
+<!-- Filters and Search Bar -->
+<div class="bg-white dark:bg-[#1C2127] rounded-xl p-4 mb-6 border border-gray-200 dark:border-gray-700/50">
+<div class="flex flex-wrap items-center gap-4">
+<!-- Chips -->
+<div class="flex gap-3 flex-wrap">
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-gray-100 dark:bg-background-dark pl-4 pr-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10">
+<p class="text-sm font-medium">Producto</p>
+<span class="material-symbols-outlined text-base">expand_more</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-gray-100 dark:bg-background-dark pl-4 pr-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10">
+<p class="text-sm font-medium">Cliente</p>
+<span class="material-symbols-outlined text-base">expand_more</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-gray-100 dark:bg-background-dark pl-4 pr-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10">
+<p class="text-sm font-medium">Estado</p>
+<span class="material-symbols-outlined text-base">expand_more</span>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-gray-100 dark:bg-background-dark pl-4 pr-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10">
+<p class="text-sm font-medium">Rango de Fechas</p>
+<span class="material-symbols-outlined text-base">expand_more</span>
+</button>
+</div>
+<div class="flex-grow"></div>
+<!-- SearchBar -->
+<div class="w-full sm:w-auto min-w-[250px]">
+<label class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-gray-400 dark:text-gray-500">search</span>
+<input class="form-input flex w-full h-9 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-background-dark placeholder:text-gray-400 dark:placeholder:text-gray-500 pl-10 pr-4 text-sm" placeholder="Buscar por nombre de cliente..." value=""/>
+</label>
+</div>
+</div>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto bg-white dark:bg-[#1C2127] rounded-xl border border-gray-200 dark:border-gray-700/50">
+<table class="w-full text-sm text-left">
+<thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-background-dark">
+<tr>
+<th class="px-6 py-4 font-medium" scope="col">Producto</th>
+<th class="px-6 py-4 font-medium" scope="col">Cliente</th>
+<th class="px-6 py-4 font-medium" scope="col">Usuario</th>
+<th class="px-6 py-4 font-medium" scope="col">Fecha de Creación</th>
+<th class="px-6 py-4 font-medium" scope="col">Estado</th>
+<th class="px-6 py-4 font-medium" scope="col">Duración</th>
+<th class="px-6 py-4 font-medium text-right" scope="col">Importe Total</th>
+<th class="px-6 py-4 font-medium text-center" scope="col">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200 dark:divide-gray-700/50">
+<tr class="hover:bg-gray-50 dark:hover:bg-white/5">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Pista de Pádel 1</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">Ana García</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">admin@example.com</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">25/10/2023 10:15</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400">
+<span class="size-2 bg-green-500 rounded-full"></span>
+                                        Confirmada
+                                    </span>
+</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">90 min</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap text-right">$45.00</td>
+<td class="px-6 py-4 text-center">
+<button class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+<span class="material-symbols-outlined text-xl">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-white/5">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Cancha de Tenis 2</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">Carlos Rodriguez</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">staff@example.com</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">25/10/2023 09:30</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-400">
+<span class="size-2 bg-yellow-500 rounded-full"></span>
+                                        Pendiente
+                                    </span>
+</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">60 min</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap text-right">$30.00</td>
+<td class="px-6 py-4 text-center">
+<button class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+<span class="material-symbols-outlined text-xl">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-white/5">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Pista de Pádel 2</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">Luisa Martinez</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">admin@example.com</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">24/10/2023 18:00</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400">
+<span class="size-2 bg-green-500 rounded-full"></span>
+                                        Confirmada
+                                    </span>
+</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">90 min</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap text-right">$45.00</td>
+<td class="px-6 py-4 text-center">
+<button class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+<span class="material-symbols-outlined text-xl">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-white/5">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Campo de Fútbol 5</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">Javier Gómez</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">staff@example.com</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">24/10/2023 15:20</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-400">
+<span class="size-2 bg-red-500 rounded-full"></span>
+                                        Cancelada
+                                    </span>
+</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">120 min</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap text-right">$100.00</td>
+<td class="px-6 py-4 text-center">
+<button class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+<span class="material-symbols-outlined text-xl">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-white/5">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Pista de Pádel 1</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">Sofia Fernandez</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">admin@example.com</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">23/10/2023 11:05</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400">
+<span class="size-2 bg-green-500 rounded-full"></span>
+                                        Confirmada
+                                    </span>
+</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">90 min</td>
+<td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap text-right">$45.00</td>
+<td class="px-6 py-4 text-center">
+<button class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+<span class="material-symbols-outlined text-xl">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<nav aria-label="Table navigation" class="flex items-center justify-between pt-4">
+<span class="text-sm font-normal text-gray-500 dark:text-gray-400">Mostrando <span class="font-semibold text-gray-900 dark:text-white">1-5</span> de <span class="font-semibold text-gray-900 dark:text-white">100</span></span>
+<ul class="inline-flex items-center -space-x-px h-8 text-sm">
+<li>
+<a class="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-[#1C2127] dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" href="#">
+<span class="sr-only">Previous</span>
+<span class="material-symbols-outlined text-base">chevron_left</span>
+</a>
+</li>
+<li>
+<a aria-current="page" class="flex items-center justify-center px-3 h-8 text-primary border border-gray-300 bg-primary/20 hover:bg-primary/30 dark:border-gray-700 dark:bg-primary/30 dark:text-white" href="#">1</a>
+</li>
+<li>
+<a class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-[#1C2127] dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" href="#">2</a>
+</li>
+<li>
+<a class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-[#1C2127] dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" href="#">3</a>
+</li>
+<li>
+<a class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-[#1C2127] dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" href="#">
+<span class="sr-only">Next</span>
+<span class="material-symbols-outlined text-base">chevron_right</span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</main>
+</div>
+</body></html>

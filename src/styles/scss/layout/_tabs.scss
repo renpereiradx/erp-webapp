@@ -1,0 +1,638 @@
+// =============================================================================
+// TABS COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE TABS
+// -----------------------------------------------------------------------------
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.tabs__list {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+
+  @include themify {
+    border-bottom: 1px solid themed('border-subtle');
+  }
+}
+
+.tabs__tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-8;
+  padding: $spacing-12 $spacing-16;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: $font-size-300;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+  position: relative;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover:not(:disabled):not(.tabs__tab--active) {
+    @include themify {
+      color: themed('text-primary');
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: themed('surface-pressed');
+    }
+  }
+
+  // Active state - underline by default
+  &--active {
+    @include themify {
+      color: themed('action-primary');
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      @include themify {
+        background-color: themed('action-primary');
+      }
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  @include focus-visible;
+}
+
+.tabs__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.tabs__badge {
+  margin-left: auto;
+}
+
+.tabs__panels {
+  padding: $spacing-20 0;
+}
+
+.tabs__panel {
+  display: none;
+  animation: tabs-panel-in $duration-fast $ease-decelerate;
+
+  &--active {
+    display: block;
+  }
+}
+
+@keyframes tabs-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TABS VARIANTS
+// -----------------------------------------------------------------------------
+
+// Pills variant
+.tabs--pills {
+  .tabs__list {
+    border-bottom: none;
+    gap: $spacing-8;
+  }
+
+  .tabs__tab {
+    border-radius: $border-radius-medium;
+
+    &::after {
+      display: none;
+    }
+
+    &--active {
+      @include themify {
+        background-color: themed('action-primary');
+        color: themed('text-inverted');
+      }
+
+      &:hover {
+        @include themify {
+          background-color: themed('action-primary-hover');
+        }
+      }
+    }
+  }
+}
+
+// Enclosed/Box variant
+.tabs--enclosed {
+  .tabs__list {
+    border-bottom: none;
+    gap: 0;
+  }
+
+  .tabs__tab {
+    border-radius: $border-radius-medium $border-radius-medium 0 0;
+    margin-bottom: -1px;
+
+    @include themify {
+      border: 1px solid transparent;
+      border-bottom: 1px solid themed('border-subtle');
+    }
+
+    &::after {
+      display: none;
+    }
+
+    &--active {
+      @include themify {
+        border-color: themed('border-subtle');
+        border-bottom-color: themed('bg-primary');
+        background-color: themed('bg-primary');
+      }
+    }
+  }
+
+  .tabs__panels {
+    padding: $spacing-20;
+    border-radius: 0 $border-radius-medium $border-radius-medium $border-radius-medium;
+
+    @include themify {
+      border: 1px solid themed('border-subtle');
+    }
+  }
+}
+
+// Subtle variant
+.tabs--subtle {
+  .tabs__list {
+    border-bottom: none;
+  }
+
+  .tabs__tab {
+    &::after {
+      display: none;
+    }
+
+    &--active {
+      @include themify {
+        background-color: themed('surface-hover');
+      }
+    }
+  }
+}
+
+// Transparent variant
+.tabs--transparent {
+  .tabs__list {
+    border-bottom: none;
+  }
+
+  .tabs__tab {
+    background: transparent;
+
+    &--active {
+      @include themify {
+        background-color: alpha-color(themed('action-primary'), 0.1);
+        color: themed('action-primary');
+      }
+
+      &::after {
+        display: none;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TABS SIZES
+// -----------------------------------------------------------------------------
+
+.tabs--small {
+  .tabs__tab {
+    padding: $spacing-8 $spacing-12;
+    font-size: $font-size-200;
+    gap: $spacing-4;
+  }
+
+  .tabs__icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .tabs__panels {
+    padding: $spacing-16 0;
+  }
+}
+
+.tabs--large {
+  .tabs__tab {
+    padding: $spacing-16 $spacing-24;
+    font-size: $font-size-400;
+    gap: $spacing-12;
+  }
+
+  .tabs__icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .tabs__panels {
+    padding: $spacing-24 0;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// VERTICAL TABS
+// -----------------------------------------------------------------------------
+
+.tabs--vertical {
+  flex-direction: row;
+
+  .tabs__list {
+    flex-direction: column;
+    border-bottom: none;
+    min-width: 200px;
+
+    @include themify {
+      border-right: 1px solid themed('border-subtle');
+    }
+  }
+
+  .tabs__tab {
+    width: 100%;
+    justify-content: flex-start;
+
+    &--active {
+      &::after {
+        top: 0;
+        bottom: 0;
+        left: auto;
+        right: 0;
+        width: 2px;
+        height: auto;
+      }
+    }
+  }
+
+  .tabs__panels {
+    flex: 1;
+    padding: 0 $spacing-20;
+  }
+
+  // Vertical pills
+  &.tabs--pills {
+    .tabs__list {
+      border-right: none;
+    }
+  }
+
+  // Vertical enclosed
+  &.tabs--enclosed {
+    .tabs__list {
+      border-right: none;
+    }
+
+    .tabs__tab {
+      border-radius: $border-radius-medium 0 0 $border-radius-medium;
+      margin-right: -1px;
+      margin-bottom: 0;
+
+      @include themify {
+        border-right: 1px solid themed('border-subtle');
+      }
+
+      &--active {
+        @include themify {
+          border-right-color: themed('bg-primary');
+        }
+      }
+    }
+
+    .tabs__panels {
+      border-radius: 0 $border-radius-medium $border-radius-medium 0;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TABS WITH ICONS ONLY
+// -----------------------------------------------------------------------------
+
+.tabs--icon-only {
+  .tabs__tab {
+    padding: $spacing-12;
+    width: 48px;
+    height: 48px;
+  }
+
+  .tabs__icon {
+    margin: 0;
+  }
+
+  // Tooltip on hover for accessibility
+  .tabs__tab[aria-label] {
+    position: relative;
+
+    &::before {
+      content: attr(aria-label);
+      position: absolute;
+      bottom: calc(100% + #{$spacing-8});
+      left: 50%;
+      transform: translateX(-50%);
+      padding: $spacing-4 $spacing-8;
+      border-radius: $border-radius-small;
+      font-size: $font-size-200;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      z-index: z-index(tooltip);
+      @include transition(opacity, $duration-fast);
+
+      @include themify {
+        background-color: themed('bg-tooltip');
+        color: themed('text-inverted');
+      }
+    }
+
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TABS WITH OVERFLOW (scrollable)
+// -----------------------------------------------------------------------------
+
+.tabs--overflow {
+  .tabs__list {
+    overflow-x: auto;
+    overflow-y: hidden;
+    @include custom-scrollbar;
+
+    // Hide scrollbar but keep scrollable
+    scrollbar-width: thin;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+  }
+}
+
+// Tabs with scroll buttons
+.tabs--scrollable {
+  position: relative;
+
+  .tabs__scroll-btn {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    z-index: 1;
+    @include transition(all, $duration-fast);
+
+    @include themify {
+      background: linear-gradient(
+        to right,
+        themed('bg-primary') 0%,
+        transparent 100%
+      );
+      color: themed('text-primary');
+    }
+
+    &--left {
+      left: 0;
+    }
+
+    &--right {
+      right: 0;
+      @include themify {
+        background: linear-gradient(
+          to left,
+          themed('bg-primary') 0%,
+          transparent 100%
+        );
+      }
+    }
+
+    &:hover {
+      @include themify {
+        background-color: themed('surface-hover');
+      }
+    }
+
+    &:disabled {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @include focus-visible;
+  }
+
+  .tabs__list {
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    padding: 0 $spacing-32;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// RESPONSIVE BEHAVIOR
+// -----------------------------------------------------------------------------
+
+@include mobile {
+  .tabs__list {
+    overflow-x: auto;
+    overflow-y: hidden;
+    @include custom-scrollbar;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+  }
+
+  .tabs__tab {
+    padding: $spacing-12;
+    font-size: $font-size-200;
+    min-width: 80px;
+  }
+
+  // Hide labels on very small screens (icon only)
+  .tabs--mobile-icon-only {
+    .tabs__tab {
+      width: 48px;
+      height: 48px;
+      padding: $spacing-8;
+    }
+
+    .tabs__tab > span:not(.tabs__icon) {
+      display: none;
+    }
+  }
+
+  // Stack tabs vertically on mobile
+  .tabs--mobile-vertical {
+    flex-direction: column;
+
+    .tabs__list {
+      flex-direction: column;
+      border-bottom: none;
+
+      @include themify {
+        border-right: none;
+      }
+    }
+
+    .tabs__tab {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .tabs__panels {
+      padding: $spacing-16 0;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TABS WITH DIVIDERS
+// -----------------------------------------------------------------------------
+
+.tabs--divided {
+  .tabs__tab:not(:last-child) {
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1px;
+      height: 60%;
+
+      @include themify {
+        background-color: themed('border-subtle');
+      }
+    }
+  }
+
+  &.tabs--vertical {
+    .tabs__tab:not(:last-child) {
+      &::before {
+        top: auto;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 1px;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TABS WITH CONTENT PADDING
+// -----------------------------------------------------------------------------
+
+.tabs--padded {
+  .tabs__panels {
+    padding: $spacing-20;
+    border-radius: $border-radius-medium;
+
+    @include themify {
+      background-color: themed('bg-secondary');
+    }
+  }
+}
+
+.tabs--elevated {
+  .tabs__panels {
+    padding: $spacing-20;
+    border-radius: $border-radius-medium;
+    @include elevation(2);
+
+    @include themify {
+      background-color: themed('bg-elevated');
+      border: 1px solid themed('border-subtle');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+
+.tabs__list[role='tablist'] {
+  // Already has proper structure
+}
+
+.tabs__tab[role='tab'] {
+  // Ensure proper ARIA attributes
+  &[aria-selected='true'] {
+    // Already handled by --active modifier
+  }
+
+  &[aria-disabled='true'] {
+    // Already handled by :disabled
+  }
+}
+
+.tabs__panel[role='tabpanel'] {
+  // Ensure proper focus management
+  &:focus {
+    outline: none;
+  }
+
+  &[tabindex='0']:focus-visible {
+    outline: 2px solid;
+    outline-offset: 2px;
+    @include themify {
+      outline-color: themed('action-primary');
+    }
+  }
+}

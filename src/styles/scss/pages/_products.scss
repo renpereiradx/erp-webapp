@@ -1,0 +1,511 @@
+// ===========================================================================
+// Products Page - Fluent Design System 2 + BEM
+// ===========================================================================
+
+@use '../abstracts' as *;
+
+.products-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: $spacing-24;
+
+  @media (max-width: 640px) {
+    padding: $spacing-16;
+  }
+}
+
+// Breadcrumb
+// ===========================================================================
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  margin-bottom: $spacing-16;
+
+  &__link {
+    font-size: $font-size-200;
+    font-weight: $font-weight-regular;
+    text-decoration: none;
+    transition: color 0.2s ease;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+
+      &:hover {
+        color: themed('action-primary');
+      }
+    }
+  }
+
+  &__separator {
+    font-size: $font-size-200;
+    font-weight: $font-weight-regular;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__current {
+    font-size: $font-size-200;
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+}
+
+// Page Header
+// ===========================================================================
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-16;
+  margin-bottom: $spacing-24;
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__title {
+    font-size: $font-size-900;
+    font-weight: $font-weight-bold;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__subtitle {
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    line-height: 1.5;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+}
+
+// Toolbar
+// ===========================================================================
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+  margin-bottom: $spacing-16;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__search {
+    flex: 1;
+    max-width: 28rem;
+
+    @media (max-width: 767px) {
+      max-width: 100%;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+
+    @media (max-width: 767px) {
+      width: 100%;
+    }
+  }
+}
+
+// Search Box
+// ===========================================================================
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  height: 2.5rem;
+  border-radius: $border-radius-medium;
+  overflow: hidden;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+  }
+
+  &__icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 $spacing-12;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      color: themed('text-secondary');
+    }
+  }
+
+  &__icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    padding: 0 $spacing-12;
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    border: none;
+    outline: none;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      color: themed('text-primary');
+
+      &::placeholder {
+        color: themed('text-secondary');
+      }
+    }
+
+    &:focus {
+      outline: 2px solid;
+
+      @include themify($themes) {
+        outline-color: themed('action-primary');
+      }
+    }
+  }
+}
+
+// Button Icon
+// ===========================================================================
+.btn--icon-only {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    color: themed('text-secondary');
+    border: 1px solid themed('border-default');
+
+    &:hover {
+      background-color: themed('bg-hover');
+    }
+
+    &:active {
+      background-color: themed('bg-active');
+    }
+  }
+
+  .btn__icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+// Products Table
+// ===========================================================================
+.products-table {
+  border-radius: $border-radius-large;
+  overflow: hidden;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+  }
+
+  &__container {
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    font-size: $font-size-300;
+    text-align: left;
+  }
+
+  &__thead {
+    font-size: $font-size-100;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      color: themed('text-secondary');
+    }
+  }
+
+  &__th {
+    padding: $spacing-12 $spacing-24;
+    white-space: nowrap;
+
+    &--checkbox {
+      width: 3rem;
+      padding: $spacing-12 $spacing-16;
+    }
+
+    &--actions {
+      width: 4rem;
+      text-align: right;
+    }
+  }
+
+  &__tbody {
+    tr {
+      transition: background-color 0.15s ease;
+
+      @include themify($themes) {
+        border-bottom: 1px solid themed('border-default');
+
+        &:hover {
+          background-color: themed('bg-hover');
+        }
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+  }
+
+  &__td {
+    padding: $spacing-16 $spacing-24;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+
+    &--checkbox {
+      width: 3rem;
+      padding: $spacing-16;
+    }
+
+    &--name {
+      font-weight: $font-weight-semibold;
+      white-space: nowrap;
+    }
+
+    &--stock-low {
+      font-weight: $font-weight-semibold;
+
+      @include themify($themes) {
+        color: themed('error-primary');
+      }
+    }
+
+    &--actions {
+      text-align: right;
+    }
+  }
+}
+
+// Badge
+// ===========================================================================
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-4 $spacing-8;
+  font-size: $font-size-100;
+  font-weight: $font-weight-semibold;
+  border-radius: $border-radius-small;
+  white-space: nowrap;
+
+  &--active {
+    @include themify($themes) {
+      background-color: themed('success-background');
+      color: themed('success-foreground');
+    }
+  }
+
+  &--inactive {
+    @include themify($themes) {
+      background-color: themed('error-background');
+      color: themed('error-foreground');
+    }
+  }
+}
+
+// Health Indicator
+// ===========================================================================
+.health-indicator {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+
+  &__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+
+    &--healthy {
+      @include themify($themes) {
+        background-color: themed('success-primary');
+      }
+    }
+
+    &--at-risk {
+      @include themify($themes) {
+        background-color: themed('warning-primary');
+      }
+    }
+
+    &--poor {
+      @include themify($themes) {
+        background-color: themed('error-primary');
+      }
+    }
+  }
+
+  &__text {
+    font-size: $font-size-300;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+}
+
+// Pagination
+// ===========================================================================
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-16;
+  font-size: $font-size-300;
+
+  @include themify($themes) {
+    border-top: 1px solid themed('border-default');
+    color: themed('text-secondary');
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: $spacing-12;
+  }
+
+  &__info {
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+  }
+
+  &__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    border-radius: $border-radius-small;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+
+      &:hover:not(:disabled) {
+        background-color: themed('bg-hover');
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .pagination__icon {
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+
+  &__page-info {
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+}
+
+// Checkbox
+// ===========================================================================
+.checkbox {
+  width: 1rem;
+  height: 1rem;
+  border-radius: $border-radius-small;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  @include themify($themes) {
+    border: 2px solid themed('border-default');
+    background-color: transparent;
+
+    &:checked {
+      background-color: themed('action-primary');
+      border-color: themed('action-primary');
+    }
+
+    &:focus {
+      outline: 2px solid themed('action-primary');
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Action Button
+// ===========================================================================
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+
+    &:hover {
+      color: themed('action-primary');
+    }
+  }
+
+  &__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}

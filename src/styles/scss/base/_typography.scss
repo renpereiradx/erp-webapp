@@ -1,0 +1,383 @@
+// =============================================================================
+// BASE - TYPOGRAPHY
+// =============================================================================
+// Typography system based on Fluent Design System
+// Includes all type ramp levels and utility classes
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// 1. HEADINGS
+// -----------------------------------------------------------------------------
+
+h1,
+.heading-1 {
+  @include heading-1;
+}
+
+h2,
+.heading-2 {
+  @include heading-2;
+}
+
+h3,
+.heading-3 {
+  @include heading-3;
+}
+
+h4,
+.heading-4 {
+  @include heading-4;
+}
+
+h5,
+.heading-5 {
+  @include heading-5;
+}
+
+h6,
+.heading-6 {
+  @include heading-6;
+}
+
+// -----------------------------------------------------------------------------
+// 2. BODY TEXT
+// -----------------------------------------------------------------------------
+
+.body-large {
+  @include body-large;
+}
+
+.body,
+.text-base {
+  @include body;
+}
+
+.body-small {
+  @include body-small;
+}
+
+.caption {
+  @include caption;
+}
+
+// -----------------------------------------------------------------------------
+// 3. TYPE RAMP UTILITY CLASSES
+// -----------------------------------------------------------------------------
+
+.text-100 {
+  font-size: $font-size-100;
+}
+
+.text-200 {
+  font-size: $font-size-200;
+}
+
+.text-300 {
+  font-size: $font-size-300;
+}
+
+.text-400 {
+  font-size: $font-size-400;
+}
+
+.text-500 {
+  font-size: $font-size-500;
+}
+
+.text-600 {
+  font-size: $font-size-600;
+}
+
+.text-700 {
+  font-size: $font-size-700;
+}
+
+.text-800 {
+  font-size: $font-size-800;
+}
+
+.text-900 {
+  font-size: $font-size-900;
+}
+
+.text-1000 {
+  font-size: $font-size-1000;
+}
+
+.text-1100 {
+  font-size: $font-size-1100;
+}
+
+// -----------------------------------------------------------------------------
+// 4. FONT WEIGHT UTILITIES
+// -----------------------------------------------------------------------------
+
+.font-regular {
+  font-weight: $font-weight-regular;
+}
+
+.font-medium {
+  font-weight: $font-weight-medium;
+}
+
+.font-semibold {
+  font-weight: $font-weight-semibold;
+}
+
+.font-bold {
+  font-weight: $font-weight-bold;
+}
+
+// -----------------------------------------------------------------------------
+// 5. LINE HEIGHT UTILITIES
+// -----------------------------------------------------------------------------
+
+.leading-tight {
+  line-height: $line-height-100;
+}
+
+.leading-snug {
+  line-height: $line-height-200;
+}
+
+.leading-normal {
+  line-height: $line-height-300;
+}
+
+.leading-relaxed {
+  line-height: $line-height-400;
+}
+
+.leading-loose {
+  line-height: $line-height-500;
+}
+
+// -----------------------------------------------------------------------------
+// 6. TEXT ALIGNMENT
+// -----------------------------------------------------------------------------
+
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-justify {
+  text-align: justify;
+}
+
+// -----------------------------------------------------------------------------
+// 7. TEXT TRANSFORM
+// -----------------------------------------------------------------------------
+
+.text-uppercase {
+  text-transform: uppercase;
+}
+
+.text-lowercase {
+  text-transform: lowercase;
+}
+
+.text-capitalize {
+  text-transform: capitalize;
+}
+
+.text-normal-case {
+  text-transform: none;
+}
+
+// -----------------------------------------------------------------------------
+// 8. TEXT DECORATION
+// -----------------------------------------------------------------------------
+
+.text-underline {
+  text-decoration: underline;
+}
+
+.text-line-through {
+  text-decoration: line-through;
+}
+
+.text-no-underline {
+  text-decoration: none;
+}
+
+// -----------------------------------------------------------------------------
+// 9. TEXT COLORS
+// -----------------------------------------------------------------------------
+
+.text-primary {
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.text-secondary {
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.text-tertiary {
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+.text-disabled {
+  @include themify {
+    color: themed('text-disabled');
+  }
+}
+
+.text-inverted {
+  @include themify {
+    color: themed('text-inverted');
+  }
+}
+
+.text-success {
+  @include themify {
+    color: themed('state-success');
+  }
+}
+
+.text-warning {
+  @include themify {
+    color: themed('state-warning');
+  }
+}
+
+.text-error {
+  @include themify {
+    color: themed('state-error');
+  }
+}
+
+.text-info {
+  @include themify {
+    color: themed('state-info');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 10. TRUNCATION UTILITIES
+// -----------------------------------------------------------------------------
+
+.truncate {
+  @include truncate;
+}
+
+.line-clamp-1 {
+  @include line-clamp(1);
+}
+
+.line-clamp-2 {
+  @include line-clamp(2);
+}
+
+.line-clamp-3 {
+  @include line-clamp(3);
+}
+
+.line-clamp-4 {
+  @include line-clamp(4);
+}
+
+// -----------------------------------------------------------------------------
+// 11. WHITE SPACE
+// -----------------------------------------------------------------------------
+
+.whitespace-normal {
+  white-space: normal;
+}
+
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+.whitespace-pre {
+  white-space: pre;
+}
+
+.whitespace-pre-line {
+  white-space: pre-line;
+}
+
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
+// -----------------------------------------------------------------------------
+// 12. WORD BREAK
+// -----------------------------------------------------------------------------
+
+.break-normal {
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.break-words {
+  overflow-wrap: break-word;
+}
+
+.break-all {
+  word-break: break-all;
+}
+
+// -----------------------------------------------------------------------------
+// 13. MONOSPACE TEXT
+// -----------------------------------------------------------------------------
+
+.font-mono {
+  font-family: $font-family-monospace;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: $font-family-monospace;
+  font-size: 0.9em;
+
+  @include themify {
+    background-color: themed('bg-tertiary');
+    color: themed('text-primary');
+  }
+
+  padding: $spacing-2 $spacing-4;
+  border-radius: $border-radius-small;
+}
+
+pre {
+  padding: $spacing-12;
+  overflow-x: auto;
+  @include custom-scrollbar;
+
+  code {
+    padding: 0;
+    background: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 14. BLOCKQUOTE
+// -----------------------------------------------------------------------------
+
+blockquote {
+  margin: $spacing-16 0;
+  padding-left: $spacing-16;
+  @include themify {
+    border-left: 4px solid themed('action-primary');
+    color: themed('text-secondary');
+  }
+  font-style: italic;
+}

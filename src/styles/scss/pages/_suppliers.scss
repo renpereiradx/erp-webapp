@@ -1,0 +1,373 @@
+// ===========================================================================
+// Suppliers Page - Fluent Design System 2 + BEM
+// ===========================================================================
+
+@use '../abstracts' as *;
+
+.suppliers-page {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+  padding: $spacing-24;
+  min-height: 100%;
+
+  @media (max-width: 640px) {
+    padding: $spacing-16;
+  }
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: $spacing-16;
+  }
+
+  &__header-left {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__title {
+    font-size: $font-size-900;
+    font-weight: $font-weight-bold;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__subtitle {
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    line-height: 1.5;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: $spacing-16;
+  }
+
+  &__stats-card {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+    padding: $spacing-16;
+    border-radius: $border-radius-large;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      border: 1px solid themed('border-default');
+    }
+  }
+
+  &__stats-label {
+    font-size: $font-size-200;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__stats-value {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    font-size: $font-size-900;
+    font-weight: $font-weight-bold;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__stats-spinner {
+    width: 1.5rem;
+    height: 1.5rem;
+    animation: spin 1s linear infinite;
+
+    @include themify($themes) {
+      color: themed('action-primary');
+    }
+  }
+
+  &__toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+
+  &__toolbar-actions {
+    display: flex;
+    gap: $spacing-8;
+  }
+
+  &__table-container {
+    overflow-x: auto;
+    border-radius: $border-radius-large;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      border: 1px solid themed('border-default');
+    }
+  }
+}
+
+.suppliers-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $font-size-300;
+
+  &__header {
+    text-transform: uppercase;
+    font-size: $font-size-100;
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.05em;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      color: themed('text-secondary');
+    }
+  }
+
+  &__header-cell {
+    padding: $spacing-8 $spacing-16;
+    white-space: nowrap;
+    text-align: left;
+
+    &--checkbox {
+      width: 3rem;
+      padding: $spacing-8 $spacing-12;
+    }
+
+    &--status {
+      width: 6rem;
+    }
+
+    &--actions {
+      width: 3.5rem;
+      text-align: right;
+    }
+  }
+
+  &__body {
+    tr {
+      transition: background-color 0.2s ease;
+
+      @include themify($themes) {
+        border-bottom: 1px solid themed('border-default');
+
+        &:hover {
+          background-color: themed('bg-hover');
+        }
+      }
+    }
+  }
+
+  &__row {
+    cursor: pointer;
+  }
+
+  &__cell {
+    padding: $spacing-12 $spacing-16;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+
+    &--checkbox {
+      width: 3rem;
+      padding: $spacing-12;
+    }
+
+    &--status {
+      width: 6rem;
+    }
+
+    &--actions {
+      text-align: right;
+      position: relative;
+    }
+
+    &--loading,
+    &--empty,
+    &--error {
+      text-align: center;
+      padding: $spacing-32;
+      font-size: $font-size-300;
+
+      @include themify($themes) {
+        color: themed('text-secondary');
+      }
+    }
+
+    &--error {
+      @include themify($themes) {
+        color: themed('error-primary');
+      }
+    }
+  }
+
+  &__name {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__meta {
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__contact,
+  &__tax,
+  &__date {
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__actions {
+    display: inline-flex;
+    position: relative;
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-2 $spacing-8;
+  font-size: $font-size-100;
+  font-weight: $font-weight-semibold;
+  border-radius: $border-radius-small;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  &--success {
+    @include themify($themes) {
+      background-color: themed('success-background');
+      color: themed('success-foreground');
+    }
+  }
+
+  &--default {
+    @include themify($themes) {
+      background-color: themed('bg-disabled');
+      color: themed('text-disabled');
+    }
+  }
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + $spacing-4);
+  right: 0;
+  min-width: 11rem;
+  padding: $spacing-4 0;
+  border-radius: $border-radius-medium;
+  z-index: 20;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+    box-shadow: themed('shadow-flyout');
+  }
+
+  &--portaled {
+    right: auto;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    width: 100%;
+    padding: $spacing-8 $spacing-12;
+    font-size: $font-size-300;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.15s ease;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+
+      &:hover {
+        background-color: themed('bg-hover');
+      }
+    }
+
+    &--danger {
+      @include themify($themes) {
+        color: themed('error-primary');
+
+        &:hover {
+          background-color: themed('error-background');
+        }
+      }
+    }
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+
+    &:hover {
+      color: themed('action-primary');
+    }
+  }
+
+  &__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

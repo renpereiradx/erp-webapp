@@ -1,0 +1,461 @@
+// ===========================================================================
+// Clients Page - Fluent Design System 2 + BEM
+// ===========================================================================
+
+@use '../abstracts' as *;
+
+.clients-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: $spacing-24;
+
+  @media (max-width: 640px) {
+    padding: $spacing-16;
+  }
+
+  // Header
+  // =========================================================================
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: $spacing-16;
+    margin-bottom: $spacing-24;
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  &__header-left {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__title {
+    font-size: $font-size-900;
+    font-weight: $font-weight-bold;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__subtitle {
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    line-height: 1.5;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  // Toolbar
+  // =========================================================================
+  &__toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+    margin-bottom: $spacing-16;
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+
+  &__toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+
+    @media (max-width: 767px) {
+      width: 100%;
+    }
+  }
+
+  // Table Container
+  // =========================================================================
+  &__table-container {
+    overflow-x: auto;
+    border-radius: $border-radius-large;
+    margin-bottom: $spacing-16;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      border: 1px solid themed('border-default');
+    }
+  }
+
+  // Pagination
+  // =========================================================================
+  &__pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-16;
+    font-size: $font-size-300;
+
+    @include themify($themes) {
+      border-top: 1px solid themed('border-default');
+      color: themed('text-secondary');
+    }
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+      gap: $spacing-12;
+    }
+  }
+
+  &__pagination-info {
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+  }
+
+  &__pagination-page {
+    font-weight: $font-weight-semibold;
+    padding: 0 $spacing-12;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+}
+
+// Search Box
+// ===========================================================================
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  height: 2.5rem;
+  border-radius: $border-radius-medium;
+  overflow: hidden;
+  flex: 1;
+  max-width: 28rem;
+
+  @media (max-width: 767px) {
+    max-width: 100%;
+  }
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+  }
+
+  &--with-icon {
+    .search-box__icon {
+      position: absolute;
+      left: $spacing-12;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1rem;
+      height: 1rem;
+      pointer-events: none;
+
+      @include themify($themes) {
+        color: themed('text-secondary');
+      }
+    }
+
+    .search-box__input {
+      padding-left: 2.5rem;
+    }
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 0;
+    padding: 0 $spacing-12;
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    border: none;
+    outline: none;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      color: themed('text-primary');
+
+      &::placeholder {
+        color: themed('text-secondary');
+      }
+    }
+
+    &:focus {
+      outline: 2px solid;
+
+      @include themify($themes) {
+        outline-color: themed('action-primary');
+      }
+    }
+  }
+}
+
+// Clients Table
+// ===========================================================================
+.clients-table {
+  width: 100%;
+  font-size: $font-size-300;
+  text-align: left;
+  border-collapse: collapse;
+
+  &__header {
+    font-size: $font-size-100;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      color: themed('text-secondary');
+    }
+  }
+
+  &__header-cell {
+    padding: $spacing-8 $spacing-16;
+    white-space: nowrap;
+    text-align: left;
+
+    &--checkbox {
+      width: 3rem;
+      padding: $spacing-8 $spacing-12;
+    }
+
+    &--actions {
+      width: 4rem;
+      text-align: right;
+    }
+  }
+
+  &__body {
+    tr {
+      transition: background-color 0.15s ease;
+
+      @include themify($themes) {
+        border-bottom: 1px solid themed('border-default');
+
+        &:hover {
+          background-color: themed('bg-hover');
+        }
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+  }
+
+  &__row {
+    cursor: pointer;
+  }
+
+  &__cell {
+    padding: $spacing-12 $spacing-16;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+
+    &--checkbox {
+      width: 3rem;
+      padding: $spacing-12;
+    }
+
+    &--name {
+      font-weight: $font-weight-semibold;
+    }
+
+    &--actions {
+      text-align: right;
+      position: relative;
+    }
+  }
+
+  &__name {
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__document {
+    font-family: $font-family-monospace;
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__contact {
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+  }
+}
+
+// Badge
+// ===========================================================================
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-2 $spacing-8;
+  font-size: $font-size-100;
+  font-weight: $font-weight-semibold;
+  border-radius: $border-radius-small;
+  white-space: nowrap;
+  line-height: 1.4;
+
+  &--success {
+    @include themify($themes) {
+      background-color: themed('success-background');
+      color: themed('success-foreground');
+    }
+  }
+
+  &--default {
+    @include themify($themes) {
+      background-color: themed('bg-disabled');
+      color: themed('text-disabled');
+    }
+  }
+}
+
+// Dropdown Menu
+// ===========================================================================
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  min-width: 10rem;
+  margin-top: $spacing-4;
+  padding: $spacing-4 0;
+  border-radius: $border-radius-medium;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+    box-shadow: themed('shadow-flyout');
+  }
+
+  &--right {
+    right: 0;
+    left: auto;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    width: 100%;
+    padding: $spacing-8 $spacing-12;
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+
+      &:hover {
+        background-color: themed('bg-hover');
+      }
+    }
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    &--danger {
+      @include themify($themes) {
+        color: themed('error-primary');
+
+        &:hover {
+          background-color: themed('error-background');
+        }
+      }
+    }
+  }
+}
+
+// Checkbox
+// ===========================================================================
+.clients-table input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  border-radius: $border-radius-small;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  @include themify($themes) {
+    border: 2px solid themed('border-default');
+    background-color: transparent;
+
+    &:checked {
+      background-color: themed('action-primary');
+      border-color: themed('action-primary');
+    }
+
+    &:focus {
+      outline: 2px solid themed('action-primary');
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Action Button
+// ===========================================================================
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+
+    &:hover {
+      color: themed('action-primary');
+    }
+  }
+
+  &__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}

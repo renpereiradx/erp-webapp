@@ -130,23 +130,10 @@ export const salePaymentService = {
   async processPayment(paymentData) {
     const startTime = Date.now();
 
-    // DEBUG LOG: Payload enviado al API
-    console.group('🔍 [DEBUG] Payment API Request');
-    console.log('Endpoint:', API_ENDPOINTS.processPayment);
-    console.log('Payload:', JSON.stringify(paymentData, null, 2));
-    console.log('Timestamp:', new Date().toISOString());
-    console.groupEnd();
-
     try {
       const result = await _fetchWithRetry(async () => {
         return await apiClient.post(API_ENDPOINTS.processPayment, paymentData);
       });
-
-      // DEBUG LOG: Respuesta exitosa
-      console.group('✅ [DEBUG] Payment API Response - Success');
-      console.log('Response:', JSON.stringify(result, null, 2));
-      console.log('Duration:', Date.now() - startTime, 'ms');
-      console.groupEnd();
 
       telemetry.record('sale_payment.service.process_payment', {
         duration: Date.now() - startTime,
@@ -158,16 +145,14 @@ export const salePaymentService = {
 
       return result;
     } catch (error) {
-      // DEBUG LOG: Error detallado
-      console.group('❌ [DEBUG] Payment API Response - Error');
-      console.log('Error Message:', error.message);
-      console.log('Error Type:', error.constructor.name);
-      console.log('Error Status:', error.status || 'N/A');
-      console.log('Error Response:', JSON.stringify(error.response || error.data || {}, null, 2));
-      console.log('Original Payload:', JSON.stringify(paymentData, null, 2));
-      console.log('Duration:', Date.now() - startTime, 'ms');
-      console.log('Full Error Object:', error);
-      console.groupEnd();
+      // Solo registrar errores críticos del servidor (500+)
+      if (error.status >= 500) {
+        console.error('❌ Error crítico procesando pago:', {
+          status: error.status,
+          message: error.message,
+          endpoint: API_ENDPOINTS.processPayment
+        });
+      }
 
       telemetry.record('sale_payment.service.error', {
         duration: Date.now() - startTime,
@@ -201,23 +186,9 @@ export const salePaymentService = {
         payload.amount_to_apply = paymentData.amount_to_apply;
       }
 
-      // DEBUG LOG: Payload enviado al API (Cash Register)
-      console.group('🔍 [DEBUG] Cash Register Payment API Request');
-      console.log('Endpoint:', API_ENDPOINTS.processPaymentPartial);
-      console.log('Original Input:', JSON.stringify(paymentData, null, 2));
-      console.log('Constructed Payload:', JSON.stringify(payload, null, 2));
-      console.log('Timestamp:', new Date().toISOString());
-      console.groupEnd();
-
       const result = await _fetchWithRetry(async () => {
         return await apiClient.post(API_ENDPOINTS.processPaymentPartial, payload);
       });
-
-      // DEBUG LOG: Respuesta exitosa
-      console.group('✅ [DEBUG] Cash Register Payment API Response - Success');
-      console.log('Response:', JSON.stringify(result, null, 2));
-      console.log('Duration:', Date.now() - startTime, 'ms');
-      console.groupEnd();
 
       // Telemetry con nueva estructura de respuesta
       telemetry.record('sale_payment.service.cash_register_payment', {
@@ -230,16 +201,14 @@ export const salePaymentService = {
 
       return result;
     } catch (error) {
-      // DEBUG LOG: Error detallado
-      console.group('❌ [DEBUG] Cash Register Payment API Response - Error');
-      console.log('Error Message:', error.message);
-      console.log('Error Type:', error.constructor.name);
-      console.log('Error Status:', error.status || 'N/A');
-      console.log('Error Response:', JSON.stringify(error.response || error.data || {}, null, 2));
-      console.log('Original Input:', JSON.stringify(paymentData, null, 2));
-      console.log('Duration:', Date.now() - startTime, 'ms');
-      console.log('Full Error Object:', error);
-      console.groupEnd();
+      // Solo registrar errores críticos del servidor (500+)
+      if (error.status >= 500) {
+        console.error('❌ Error crítico procesando pago:', {
+          status: error.status,
+          message: error.message,
+          endpoint: API_ENDPOINTS.processPaymentPartial
+        });
+      }
 
       telemetry.record('sale_payment.service.error', {
         duration: Date.now() - startTime,

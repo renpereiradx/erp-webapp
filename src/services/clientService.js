@@ -28,34 +28,6 @@ const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
 };
 
 export const clientService = {
-  async getAll(params = {}) {
-    const startTime = Date.now();
-    try {
-      let endpoint;
-      // Paginación documentada: /client/{page}/{pageSize}
-      if (params.page && params.pageSize) {
-        endpoint = `${API_PREFIX}/${params.page}/${params.pageSize}`;
-      } else {
-        endpoint = API_PREFIX; // fallback no paginado (si backend lo permite)
-      }
-      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
-      // Parsear si la respuesta es string JSON
-      let parsedResult = result;
-      if (typeof result === 'string') {
-        try {
-          parsedResult = JSON.parse(result);
-        } catch (e) {
-          console.error('[clientService.getAll] JSON parse error:', e);
-        }
-      }
-      telemetry.record('client.service.load', { duration: Date.now() - startTime });
-      return parsedResult;
-    } catch (error) {
-      telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getAll' });
-      throw error;
-    }
-  },
-
   async searchByName(name) {
     const startTime = Date.now();
     try {
@@ -159,8 +131,5 @@ export const clientService = {
       telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'delete' });
       throw error;
     }
-  },
-
-  // No existe en docs actuales un endpoint de estadísticas estándar; se mantiene placeholder si se agrega luego
-  async getStatistics() { return { success: false, message: 'Not implemented' }; }
+  }
 };

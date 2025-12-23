@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registrar Nuevo Pago</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#137fec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+              "fluent-blue": "#0078d4",
+              "fluent-error": "#d13438",
+              "fluent-warning": "#f7b31d",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111418] dark:text-gray-200">
+<div class="relative flex h-auto min-h-screen w-full flex-col items-center justify-center p-4 group/design-root" style='font-family: Inter, "Noto Sans", sans-serif;'>
+<div class="w-full max-w-4xl rounded-xl bg-white dark:bg-[#1C2A36] shadow-lg border border-gray-200 dark:border-gray-700">
+<div class="p-6 sm:p-8">
+<!-- PageHeading -->
+<div class="flex flex-wrap justify-between items-start gap-3 pb-6 border-b border-gray-200 dark:border-gray-700">
+<div class="flex min-w-72 flex-col gap-2">
+<h1 class="text-[#111418] dark:text-white tracking-light text-2xl sm:text-3xl font-bold leading-tight">Registrar Nuevo Pago</h1>
+<p class="text-[#617589] dark:text-gray-400 text-sm font-normal leading-normal">Orden de Compra: OC-2024-00123</p>
+</div>
+<button class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white">
+<span class="material-symbols-outlined !text-2xl">close</span>
+</button>
+</div>
+<div class="mt-8 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2">
+<!-- Monto Pagado with error -->
+<div class="sm:col-span-1">
+<label class="block text-base font-medium leading-normal pb-2 text-[#111418] dark:text-gray-200" for="monto">Monto pagado</label>
+<div class="relative">
+<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+<span class="material-symbols-outlined text-gray-400">attach_money</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-fluent-error bg-white dark:bg-background-dark dark:border-fluent-error/70 h-14 placeholder:text-[#617589] p-[15px] pl-10 text-base font-normal leading-normal" id="monto" placeholder="0.00" type="text" value="2000.00"/>
+</div>
+<p class="text-fluent-error text-sm font-normal leading-normal pt-1">El monto no puede ser mayor al saldo pendiente.</p>
+<!-- MetaText -->
+<p class="text-[#617589] dark:text-gray-400 text-sm font-normal leading-normal pt-1">Saldo pendiente: $1,500.00</p>
+</div>
+<!-- Referencia de pago -->
+<div class="sm:col-span-1">
+<label class="block text-base font-medium leading-normal pb-2 text-[#111418] dark:text-gray-200" for="referencia">Referencia de pago</label>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#dbe0e6] dark:border-gray-600 bg-white dark:bg-background-dark h-14 placeholder:text-[#617589] p-[15px] text-base font-normal leading-normal" id="referencia" placeholder="Ej. Número de transferencia, cheque" type="text" value=""/>
+</div>
+<!-- Método de Pago -->
+<div class="sm:col-span-1">
+<p class="text-[#111418] dark:text-gray-200 text-base font-medium leading-normal pb-2">Método de pago</p>
+<div class="grid grid-cols-2 gap-4">
+<label class="flex items-center gap-3 p-3 border border-[#dbe0e6] dark:border-gray-600 rounded-lg has-[:checked]:border-primary has-[:checked]:bg-primary/10 dark:has-[:checked]:bg-primary/20 cursor-pointer">
+<input checked="" class="form-radio text-primary focus:ring-primary/50" name="payment_method" type="radio" value="transfer"/>
+<span class="text-sm font-medium text-[#111418] dark:text-gray-300">Transferencia</span>
+</label>
+<label class="flex items-center gap-3 p-3 border border-[#dbe0e6] dark:border-gray-600 rounded-lg has-[:checked]:border-primary has-[:checked]:bg-primary/10 dark:has-[:checked]:bg-primary/20 cursor-pointer">
+<input class="form-radio text-primary focus:ring-primary/50" name="payment_method" type="radio" value="cash"/>
+<span class="text-sm font-medium text-[#111418] dark:text-gray-300">Efectivo</span>
+</label>
+</div>
+</div>
+<!-- Divisa -->
+<div class="sm:col-span-1">
+<label class="block text-base font-medium leading-normal pb-2 text-[#111418] dark:text-gray-200" for="divisa">Divisa</label>
+<select class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#dbe0e6] dark:border-gray-600 bg-white dark:bg-background-dark h-14 placeholder:text-[#617589] p-[15px] text-base font-normal leading-normal" id="divisa">
+<option value="usd">USD - Dólar estadounidense</option>
+<option value="mxn">MXN - Peso Mexicano</option>
+<option value="eur">EUR - Euro</option>
+</select>
+</div>
+<!-- Caja Registradora -->
+<div class="sm:col-span-1">
+<label class="block text-base font-medium leading-normal pb-2 text-[#111418] dark:text-gray-200" for="caja">Caja registradora</label>
+<select class="form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#dbe0e6] dark:border-gray-600 bg-white dark:bg-background-dark h-14 placeholder:text-[#617589] p-[15px] text-base font-normal leading-normal" id="caja">
+<option value="">Seleccionar caja</option>
+<option value="main">Caja Principal</option>
+<option value="secondary">Caja Secundaria</option>
+</select>
+</div>
+<!-- Notas del pago -->
+<div class="sm:col-span-2">
+<label class="block text-base font-medium leading-normal pb-2 text-[#111418] dark:text-gray-200" for="notas">Notas del pago (Opcional)</label>
+<textarea class="form-textarea block w-full rounded-lg border border-[#dbe0e6] dark:border-gray-600 bg-white dark:bg-background-dark p-[15px] text-[#111418] dark:text-white placeholder:text-[#617589] focus:outline-0 focus:ring-2 focus:ring-primary/50" id="notas" placeholder="Añadir notas adicionales..." rows="4"></textarea>
+</div>
+</div>
+<!-- InfoBar for warning -->
+<div class="mt-6 flex items-start gap-3 rounded-lg bg-fluent-warning/10 p-4 border border-fluent-warning/30">
+<span class="material-symbols-outlined text-fluent-warning mt-0.5">warning</span>
+<div class="flex flex-col">
+<p class="font-medium text-yellow-800 dark:text-yellow-200">Advertencia</p>
+<p class="text-sm text-yellow-700 dark:text-yellow-300">El monto ingresado excede el saldo pendiente. El pago se registrará como un crédito a favor.</p>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-end gap-3">
+<button class="w-full sm:w-auto px-6 py-3 rounded-lg text-base font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-[#111418] dark:text-white">Cancelar</button>
+<button class="w-full sm:w-auto px-6 py-3 rounded-lg text-base font-medium bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">check_circle</span>
+                        Confirmar Pago
+                    </button>
+<!-- Loading state button example -->
+<!-- 
+                    <button class="w-full sm:w-auto px-6 py-3 rounded-lg text-base font-medium bg-primary/80 text-white flex items-center justify-center gap-2" disabled>
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Procesando...
+                    </button>
+                    -->
+</div>
+</div>
+</div>
+</div>
+</body></html>

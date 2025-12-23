@@ -1,0 +1,239 @@
+// =============================================================================
+// DIVIDER COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE DIVIDER
+// -----------------------------------------------------------------------------
+
+.divider {
+  border: 0;
+  margin: $spacing-16 0;
+  @include themify {
+    border-top: 1px solid themed('border-subtle');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// DIVIDER ORIENTATIONS
+// -----------------------------------------------------------------------------
+
+.divider--horizontal {
+  width: 100%;
+  height: 1px;
+}
+
+.divider--vertical {
+  display: inline-block;
+  width: 1px;
+  height: auto;
+  min-height: 24px;
+  margin: 0 $spacing-16;
+  @include themify {
+    border-top: none;
+    border-left: 1px solid themed('border-subtle');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// DIVIDER VARIANTS
+// -----------------------------------------------------------------------------
+
+.divider--subtle {
+  @include themify {
+    border-color: themed('border-subtle');
+  }
+}
+
+.divider--default {
+  @include themify {
+    border-color: themed('border-default');
+  }
+}
+
+.divider--strong {
+  @include themify {
+    border-color: themed('border-strong');
+  }
+}
+
+.divider--dashed {
+  border-style: dashed;
+}
+
+.divider--dotted {
+  border-style: dotted;
+}
+
+// -----------------------------------------------------------------------------
+// DIVIDER WITH TEXT
+// -----------------------------------------------------------------------------
+
+.divider--with-text {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+  text-align: center;
+  margin: $spacing-20 0;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    @include themify {
+      border-top: 1px solid themed('border-subtle');
+    }
+  }
+
+  // Text in divider
+  .divider__text {
+    @include body-small;
+    font-weight: $font-weight-semibold;
+    white-space: nowrap;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  // Left aligned text
+  &.divider--text-left {
+    &::before {
+      flex: 0 0 $spacing-32;
+    }
+  }
+
+  // Right aligned text
+  &.divider--text-right {
+    &::after {
+      flex: 0 0 $spacing-32;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// DIVIDER SPACING
+// -----------------------------------------------------------------------------
+
+.divider--compact {
+  margin: $spacing-8 0;
+
+  &.divider--vertical {
+    margin: 0 $spacing-8;
+    min-height: 16px;
+  }
+}
+
+.divider--comfortable {
+  margin: $spacing-24 0;
+
+  &.divider--vertical {
+    margin: 0 $spacing-24;
+    min-height: 32px;
+  }
+}
+
+.divider--spacious {
+  margin: $spacing-32 0;
+
+  &.divider--vertical {
+    margin: 0 $spacing-32;
+    min-height: 48px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// DIVIDER WITH ICON
+// -----------------------------------------------------------------------------
+
+.divider--with-icon {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+  margin: $spacing-20 0;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    @include themify {
+      border-top: 1px solid themed('border-subtle');
+    }
+  }
+
+  .divider__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// GRADIENT DIVIDER
+// -----------------------------------------------------------------------------
+
+.divider--gradient {
+  border: none;
+  height: 1px;
+  @include themify {
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      themed('border-default') 50%,
+      transparent 100%
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SECTION DIVIDER (with background)
+// -----------------------------------------------------------------------------
+
+.divider--section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-8 0;
+  margin: $spacing-24 0;
+  @include themify {
+    background-color: themed('bg-secondary');
+    border-top: 1px solid themed('border-subtle');
+    border-bottom: 1px solid themed('border-subtle');
+  }
+
+  .divider__text {
+    @include body-small;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+
+// Semantic divider (for screen readers)
+.divider[role='separator'] {
+  &[aria-orientation='horizontal'] {
+    width: 100%;
+    height: 1px;
+  }
+
+  &[aria-orientation='vertical'] {
+    width: 1px;
+    height: auto;
+  }
+}

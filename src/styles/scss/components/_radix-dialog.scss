@@ -1,0 +1,164 @@
+// =============================================================================
+// RADIX DIALOG BASE STYLES
+// =============================================================================
+// Provides core layout and theming for Radix dialog components used across the app
+// =============================================================================
+
+@use '../abstracts' as *;
+
+$dialog-spacing: $spacing-24;
+
+.radix-dialog__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: z-index(modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-16;
+  transition: opacity $duration-fast $ease-ease-in-out;
+
+  @include themify {
+    background-color: themed('bg-overlay');
+  }
+
+  &[data-state='open'] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  &[data-state='closed'] {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.radix-dialog__content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: z-index(modal);
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+  width: min(
+    var(--dialog-max-width, 40rem),
+    calc(100vw - 2 * #{$dialog-spacing})
+  );
+  max-width: min(
+    var(--dialog-max-width, 40rem),
+    calc(100vw - 2 * #{$dialog-spacing})
+  );
+  max-height: min(
+    var(--dialog-max-height, calc(100vh - 2 * #{$dialog-spacing})),
+    calc(100vh - 2 * #{$dialog-spacing})
+  );
+  padding: var(--dialog-padding, $dialog-spacing);
+  border-radius: $border-radius-large;
+  overflow-y: auto;
+  outline: none;
+  transition: transform $duration-fast $ease-decelerate,
+    opacity $duration-fast $ease-decelerate;
+
+  @include themify {
+    background-color: themed('surface-primary');
+    color: themed('text-primary');
+    border: 1px solid themed('border-subtle');
+    box-shadow: $shadow-16;
+  }
+
+  @include custom-scrollbar;
+
+  &[data-state='open'] {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  &[data-state='closed'] {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.97);
+    pointer-events: none;
+  }
+
+  @include mobile {
+    width: calc(100vw - 2 * #{$spacing-12});
+    max-width: calc(100vw - 2 * #{$spacing-12});
+    max-height: calc(100vh - 2 * #{$spacing-12});
+    padding: var(--dialog-padding-mobile, $spacing-16);
+  }
+}
+
+.radix-dialog__close {
+  position: absolute;
+  top: $spacing-16;
+  right: $spacing-16;
+  width: $spacing-32;
+  height: $spacing-32;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: $border-radius-medium;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color $duration-fast $ease-ease-in-out,
+    opacity $duration-fast $ease-ease-in-out;
+
+  &:hover {
+    opacity: 1;
+
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid;
+    outline-offset: 2px;
+
+    @include themify {
+      outline-color: themed('accent-primary');
+    }
+  }
+
+  svg {
+    width: $spacing-16;
+    height: $spacing-16;
+    pointer-events: none;
+  }
+}
+
+.radix-dialog__header {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+  text-align: left;
+}
+
+.radix-dialog__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: $spacing-12;
+}
+
+.radix-dialog__title {
+  margin: 0;
+  font-size: $font-size-600;
+  font-weight: $font-weight-semibold;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.radix-dialog__description {
+  margin: 0;
+  font-size: $font-size-300;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}

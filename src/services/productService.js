@@ -4,47 +4,48 @@
  * Incluye fallback robusto para funcionalidad completa offline
  */
 
-import { apiService as apiClient } from './api';
-import BusinessManagementAPI from './BusinessManagementAPI';
-import { ApiError, toApiError } from '@/utils/ApiError';
+import { apiClient } from './api'
+import BusinessManagementAPI from './BusinessManagementAPI'
+import { ApiError, toApiError } from '@/utils/ApiError'
 // Removed MockDataService import - using real API only
-import { telemetryService } from './telemetryService';
+import { telemetryService } from './telemetryService'
 
 /**
  * Helper para retry con backoff exponencial en errores de red
  */
 const retryWithBackoff = async (fn, maxRetries = 2, baseDelay = 1000) => {
-  let lastError;
-  
+  let lastError
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      return await fn();
+      return await fn()
     } catch (error) {
-      lastError = error;
-      
+      lastError = error
+
       // No hacer retry si es AbortError o si es el último intento
       if (error?.name === 'AbortError' || attempt === maxRetries) {
-        throw error;
+        throw error
       }
-      
+
       // Solo hacer retry en errores de red
-      const isNetworkError = error.message?.includes('ERR_CONNECTION_TIMED_OUT') || 
-                            error.message?.includes('Network Error') ||
-                            error.message?.includes('Failed to fetch') ||
-                            error.code === 'NETWORK_ERROR';
-      
+      const isNetworkError =
+        error.message?.includes('ERR_CONNECTION_TIMED_OUT') ||
+        error.message?.includes('Network Error') ||
+        error.message?.includes('Failed to fetch') ||
+        error.code === 'NETWORK_ERROR'
+
       if (!isNetworkError) {
-        throw error;
+        throw error
       }
-      
+
       // Esperar antes del siguiente intento (backoff exponencial)
-      const delay = baseDelay * Math.pow(2, attempt);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      const delay = baseDelay * Math.pow(2, attempt)
+      await new Promise(resolve => setTimeout(resolve, delay))
     }
   }
-  
-  throw lastError;
-};
+
+  throw lastError
+}
 
 /**
  * @typedef {import('@/types').Product} Product
@@ -55,74 +56,42 @@ const retryWithBackoff = async (fn, maxRetries = 2, baseDelay = 1000) => {
 
 export const productService = {
   // =================== PRODUCTOS ===================
-  
+
   // Obtener productos paginados
-  /**
-   * @param {number} [page=1]
-   * @param {number} [pageSize=10]
-   * @param {Object} [filters={}]
-   * @returns {Promise<Product[]|any>}
-   */
-  getProducts: async (page = 1, pageSize = 10, filters = {}) => {
-    const startTime = performance.now();
-    
-    try {
-      // Using real API only
-      
-      const result = await retryWithBackoff(async () => {
-        return await apiClient.getProducts(page, pageSize);
-      });
-      
-      telemetryService?.recordMetric('products_fetched_api', result.data?.length || 0);
-      return result;
-      
-    } catch (error) {
-      console.error('❌ Products API unavailable:', error.message);
-      
-      // En lugar de usar mock data, retornar error apropiado
-      throw new ApiError(
-        'No se pudieron cargar los productos. Verifique la conexión a la API.',
-        'API_UNAVAILABLE',
-        503,
-        { originalError: error.message }
-      );
-    } finally {
-      const endTime = performance.now();
-      telemetryService?.recordMetric('get_products_duration', endTime - startTime);
-    }
-  },
+  // MÉTODO ELIMINADO: getProducts()
+  // Este sistema solo permite búsqueda explícita de productos.
+  // Usa searchProducts() o searchProductsFinancial() en su lugar.
 
   // Obtener un producto por ID
   /**
    * @param {string} productId
    * @returns {Promise<Product|any>}
    */
-  getProductById: async (productId) => {
-    const startTime = performance.now();
-    
+  getProductById: async productId => {
+    const startTime = performance.now()
+
     try {
-      // Using real API only
-      
+      // Using financial endpoint which includes price data
       const result = await retryWithBackoff(async () => {
-        return await apiClient.getProductById(productId);
-      });
-      
-      telemetryService?.recordMetric('product_fetched_by_id_api', 1);
-      return result;
-      
+        return await apiClient.getProductFinancialById(productId)
+      })
+
+      telemetryService?.recordMetric('product_fetched_by_id_api', 1)
+      return result
     } catch (error) {
-      console.error(`❌ Product API unavailable for ID ${productId}:`, error.message);
-      
       // En lugar de usar mock data, retornar error apropiado
       throw new ApiError(
         `No se pudo cargar el producto con ID ${productId}. Verifique la conexión a la API.`,
         'API_UNAVAILABLE',
         503,
         { originalError: error.message, productId }
-      );
+      )
     } finally {
-      const endTime = performance.now();
-      telemetryService?.recordMetric('get_product_by_id_duration', endTime - startTime);
+      const endTime = performance.now()
+      telemetryService?.recordMetric(
+        'get_product_by_id_duration',
+        endTime - startTime
+      )
     }
   },
 
@@ -131,29 +100,30 @@ export const productService = {
    * @param {string} productId
    * @returns {Promise<Product|any>}
    */
-  getProductByIdEnriched: async (productId) => {
+  getProductByIdEnriched: async productId => {
     try {
-      // El endpoint /products/{id} ya devuelve datos enriquecidos según el ejemplo de Postman
-      const product = await apiClient.getProductById(productId);
-      
+      // Use financial endpoint which includes enriched data
+      const product = await apiClient.getProductFinancialById(productId)
+
       // Si el producto no está marcado como enriquecido pero tiene datos enriquecidos, usar getProductWithDetails
       if (product && !product._enriched) {
-        const hasEnrichedData = product.has_unit_pricing !== undefined || 
-                               product.stock_status !== undefined ||
-                               product.price_formatted !== undefined ||
-                               product.has_valid_price !== undefined ||
-                               product.unit_prices !== undefined;
-        
+        const hasEnrichedData =
+          product.has_unit_pricing !== undefined ||
+          product.stock_status !== undefined ||
+          product.price_formatted !== undefined ||
+          product.has_valid_price !== undefined ||
+          product.unit_prices !== undefined
+
         if (!hasEnrichedData) {
           // Solo usar getProductWithDetails si no hay datos enriquecidos
-          return await apiClient.getProductWithDetails(productId);
+          return await apiClient.getProductWithDetails(productId)
         }
       }
-      
-      return product;
+
+      return product
     } catch (error) {
-      const norm = toApiError(error, 'Error al obtener producto enriquecido');
-      throw norm;
+      const norm = toApiError(error, 'Error al obtener producto enriquecido')
+      throw norm
     }
   },
 
@@ -162,11 +132,11 @@ export const productService = {
    * @param {string} name
    * @returns {Promise<Product[]|any>}
    */
-  searchProductsByName: async (name) => {
+  searchProductsByName: async name => {
     try {
-      return await apiClient.searchProductsByName(name);
+      return await apiClient.searchProductsByName(name)
     } catch (error) {
-      throw toApiError(error, 'Error al buscar productos por nombre');
+      throw toApiError(error, 'Error al buscar productos por nombre')
     }
   },
 
@@ -175,13 +145,13 @@ export const productService = {
    * @param {string} barcode
    * @returns {Promise<Product|any>}
    */
-  getProductByBarcode: async (barcode) => {
+  getProductByBarcode: async barcode => {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getProductByBarcode(barcode);
-      });
+        return await apiClient.getProductByBarcode(barcode)
+      })
     } catch (error) {
-      throw toApiError(error, 'Error al buscar producto por código de barras');
+      throw toApiError(error, 'Error al buscar producto por código de barras')
     }
   },
 
@@ -192,10 +162,13 @@ export const productService = {
   getBeachTennisCourts: async () => {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getBeachTennisCourts();
-      });
+        return await apiClient.getServiceProducts()
+      })
     } catch (error) {
-      throw toApiError(error, 'Error al obtener servicios de canchas de beach tennis');
+      throw toApiError(
+        error,
+        'Error al obtener servicios de canchas de beach tennis'
+      )
     }
   },
 
@@ -206,45 +179,54 @@ export const productService = {
   getServiceCourts: async () => {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.getServiceCourts();
-      });
+        return await apiClient.getServiceProducts()
+      })
     } catch (error) {
-      throw toApiError(error, 'Error al obtener servicios de canchas enriquecidos');
+      throw toApiError(
+        error,
+        'Error al obtener servicios de canchas enriquecidos'
+      )
     }
   },
 
   // =================== FINANCIAL ENRICHED PRODUCTS ===================
-  
+
   // Obtener producto financieramente enriquecido por ID
   /**
    * @param {string} productId
    * @returns {Promise<ProductFinancialEnriched|any>}
    */
-  getProductByIdFinancial: async (productId) => {
+  getProductByIdFinancial: async productId => {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.get(`/products/financial/${productId}`);
-      });
+        return await apiClient.getProductFinancialById(productId)
+      })
     } catch (error) {
-      throw toApiError(error, 'Error al obtener producto financieramente enriquecido');
+      throw toApiError(
+        error,
+        'Error al obtener producto financieramente enriquecido'
+      )
     }
   },
-  
+
   // Obtener producto financieramente enriquecido por código de barras
   /**
    * @param {string} barcode
    * @returns {Promise<ProductFinancialEnriched|any>}
    */
-  getProductByBarcodeFinancial: async (barcode) => {
+  getProductByBarcodeFinancial: async barcode => {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.get(`/products/financial/barcode/${encodeURIComponent(barcode)}`);
-      });
+        return await apiClient.getProductFinancialByBarcode(barcode)
+      })
     } catch (error) {
-      throw toApiError(error, 'Error al buscar producto financiero por código de barras');
+      throw toApiError(
+        error,
+        'Error al buscar producto financiero por código de barras'
+      )
     }
   },
-  
+
   // Buscar productos financieramente enriquecidos por nombre
   /**
    * @param {string} name - Término de búsqueda
@@ -252,16 +234,21 @@ export const productService = {
    * @returns {Promise<ProductFinancialEnriched[]|any>}
    */
   searchProductsFinancial: async (name, options = {}) => {
-    const { limit = 10, signal } = options;
+    const { limit = 50, signal } = options
     try {
       return await retryWithBackoff(async () => {
-        const url = `/products/financial/name/${encodeURIComponent(name)}?limit=${limit}`;
-        return await apiClient.get(url, { signal });
-      });
+        return await apiClient.searchProductsFinancialByName(name, {
+          limit,
+          signal,
+        })
+      })
     } catch (error) {
       // Permitimos que AbortError se propague tal cual
-      if (error?.name === 'AbortError') throw error;
-      throw toApiError(error, 'Error al buscar productos financieros por nombre');
+      if (error?.name === 'AbortError') throw error
+      throw toApiError(
+        error,
+        'Error al buscar productos financieros por nombre'
+      )
     }
   },
 
@@ -274,12 +261,12 @@ export const productService = {
   searchProducts: async (searchTerm, { signal } = {}) => {
     try {
       return await retryWithBackoff(async () => {
-        return await apiClient.searchProducts(searchTerm, { signal });
-      });
+        return await apiClient.searchProducts(searchTerm, { signal })
+      })
     } catch (error) {
       // Permitimos que AbortError se propague tal cual
-      if (error?.name === 'AbortError') throw error;
-      throw toApiError(error, 'Error al buscar productos');
+      if (error?.name === 'AbortError') throw error
+      throw toApiError(error, 'Error al buscar productos')
     }
   },
 
@@ -288,11 +275,11 @@ export const productService = {
    * @param {Partial<Product>} productData
    * @returns {Promise<Product|any>}
    */
-  createProduct: async (productData) => {
+  createProduct: async productData => {
     try {
-      return await apiClient.createProduct(productData);
+      return await apiClient.createProduct(productData)
     } catch (error) {
-      throw toApiError(error, 'Error al crear producto');
+      throw toApiError(error, 'Error al crear producto')
     }
   },
 
@@ -304,9 +291,9 @@ export const productService = {
    */
   updateProduct: async (productId, productData) => {
     try {
-      return await apiClient.updateProduct(productId, productData);
+      return await apiClient.updateProduct(productId, productData)
     } catch (error) {
-      throw toApiError(error, 'Error al actualizar producto');
+      throw toApiError(error, 'Error al actualizar producto')
     }
   },
 
@@ -315,11 +302,11 @@ export const productService = {
    * @param {string} productId
    * @returns {Promise<boolean|any>}
    */
-  deleteProduct: async (productId) => {
+  deleteProduct: async productId => {
     try {
-      return await apiClient.deleteProduct(productId);
+      return await apiClient.deleteProduct(productId)
     } catch (error) {
-      throw toApiError(error, 'Error al eliminar producto');
+      throw toApiError(error, 'Error al eliminar producto')
     }
   },
 
@@ -328,18 +315,18 @@ export const productService = {
    * @param {string} productId
    * @returns {Promise<Product|any>}
    */
-  reactivateProduct: async (productId) => {
+  reactivateProduct: async productId => {
     try {
       // Intentar endpoint específico de reactivación primero
       // Si no existe, usar updateProduct con state: true
       try {
-        return await apiClient.reactivateProduct(productId);
+        return await apiClient.reactivateProduct(productId)
       } catch (reactivateError) {
         // Si no existe endpoint específico, usar update con state: true
-        return await apiClient.updateProduct(productId, { state: true });
+        return await apiClient.updateProduct(productId, { state: true })
       }
     } catch (error) {
-      throw toApiError(error, 'Error al reactivar producto');
+      throw toApiError(error, 'Error al reactivar producto')
     }
   },
 
@@ -353,9 +340,9 @@ export const productService = {
    */
   createProductDescription: async (productId, description) => {
     try {
-      return await apiClient.createProductDescription(productId, description);
+      return await apiClient.createProductDescription(productId, description)
     } catch (error) {
-      throw toApiError(error, 'Error al crear descripción');
+      throw toApiError(error, 'Error al crear descripción')
     }
   },
 
@@ -364,11 +351,11 @@ export const productService = {
    * @param {number} descId
    * @returns {Promise<ProductDescription|any>}
    */
-  getDescriptionById: async (descId) => {
+  getDescriptionById: async descId => {
     try {
-      return await apiClient.getProductDescription(descId);
+      return await apiClient.getProductDescription(descId)
     } catch (error) {
-      throw toApiError(error, 'Error al obtener descripción');
+      throw toApiError(error, 'Error al obtener descripción')
     }
   },
 
@@ -380,9 +367,9 @@ export const productService = {
    */
   updateDescription: async (descId, description) => {
     try {
-      return await apiClient.updateProductDescription(descId, description);
+      return await apiClient.updateProductDescription(descId, description)
     } catch (error) {
-      throw toApiError(error, 'Error al actualizar descripción');
+      throw toApiError(error, 'Error al actualizar descripción')
     }
   },
 
@@ -393,11 +380,11 @@ export const productService = {
    * @param {string} productId
    * @returns {Promise<Product|any>}
    */
-  getProductWithDetails: async (productId) => {
+  getProductWithDetails: async productId => {
     try {
-      return await apiClient.getProductWithDetails(productId);
+      return await apiClient.getProductWithDetails(productId)
     } catch (error) {
-      throw toApiError(error, 'Error al obtener producto con detalles');
+      throw toApiError(error, 'Error al obtener producto con detalles')
     }
   },
 
@@ -406,20 +393,27 @@ export const productService = {
    * @param {string} productId
    * @returns {Promise<ProductDescription[]|any[]>}
    */
-  getProductDescriptions: async (productId) => {
+  getProductDescriptions: async productId => {
     try {
       // Intentar obtener todas las descripciones del producto
-      return await apiClient.makeRequest(`/products/${productId}/descriptions`);
+      return await apiClient.makeRequest(`/products/${productId}/descriptions`)
     } catch (error) {
-      const norm = error instanceof ApiError ? error : toApiError(error);
+      const norm = error instanceof ApiError ? error : toApiError(error)
       // Si es NOT_FOUND, significa que no hay descripciones para este producto
       if (norm.code === 'NOT_FOUND') {
-        console.log('ℹ️ No hay descripciones disponibles para el producto:', productId);
-        return [];
+        console.log(
+          'ℹ️ No hay descripciones disponibles para el producto:',
+          productId
+        )
+        return []
       }
       // Para otros errores, registrar pero no romper flujo
-      console.warn('⚠️ Error obteniendo descripciones para producto:', productId, norm.message);
-      return [];
+      console.warn(
+        '⚠️ Error obteniendo descripciones para producto:',
+        productId,
+        norm.message
+      )
+      return []
     }
   },
 
@@ -430,11 +424,11 @@ export const productService = {
    * @param {string} productId
    * @returns {Promise<ProductPrice|any>}
    */
-  getProductPrice: async (productId) => {
+  getProductPrice: async productId => {
     try {
-      return await apiClient.getProductPrice(productId);
+      return await apiClient.getProductPrice(productId)
     } catch (error) {
-      throw toApiError(error, 'Error al obtener precio');
+      throw toApiError(error, 'Error al obtener precio')
     }
   },
 
@@ -446,9 +440,9 @@ export const productService = {
    */
   createProductPrice: async (productId, priceData) => {
     try {
-      return await apiClient.setProductPrice(productId, priceData);
+      return await apiClient.setProductPrice(productId, priceData)
     } catch (error) {
-      throw toApiError(error, 'Error al crear precio');
+      throw toApiError(error, 'Error al crear precio')
     }
   },
 
@@ -460,9 +454,9 @@ export const productService = {
    */
   updateProductPriceByProductId: async (productId, priceData) => {
     try {
-      return await apiClient.updateProductPrice(productId, priceData);
+      return await apiClient.updateProductPrice(productId, priceData)
     } catch (error) {
-      throw toApiError(error, 'Error al actualizar precio');
+      throw toApiError(error, 'Error al actualizar precio')
     }
   },
 
@@ -473,11 +467,11 @@ export const productService = {
    * @param {string} productId
    * @returns {Promise<Stock|any>}
    */
-  getStockByProductId: async (productId) => {
+  getStockByProductId: async productId => {
     try {
-      return await apiClient.getProductStock(productId);
+      return await apiClient.getProductStock(productId)
     } catch (error) {
-      throw toApiError(error, 'Error al obtener stock');
+      throw toApiError(error, 'Error al obtener stock')
     }
   },
 
@@ -489,9 +483,9 @@ export const productService = {
    */
   createStock: async (productId, stockData) => {
     try {
-      return await apiClient.createStock(productId, stockData);
+      return await apiClient.createStock(productId, stockData)
     } catch (error) {
-      throw toApiError(error, 'Error al crear stock');
+      throw toApiError(error, 'Error al crear stock')
     }
   },
 
@@ -503,9 +497,9 @@ export const productService = {
    */
   updateStockByProductId: async (productId, stockData) => {
     try {
-      return await apiClient.updateStockByProductId(productId, stockData);
+      return await apiClient.updateStockByProductId(productId, stockData)
     } catch (error) {
-      throw toApiError(error, 'Error al actualizar stock');
+      throw toApiError(error, 'Error al actualizar stock')
     }
   },
 
@@ -514,8 +508,8 @@ export const productService = {
    * @param {number} stockId
    * @returns {Promise<Stock|any>}
    */
-  getStockById: async (stockId) => {
-    return await apiClient.getStockById(stockId);
+  getStockById: async stockId => {
+    return await apiClient.getStockById(stockId)
   },
 
   // =================== UTILIDADES ===================
@@ -525,7 +519,7 @@ export const productService = {
    * @returns {Promise<any>}
    */
   getCategories: async () => {
-    return await apiClient.getCategories();
+    return await apiClient.getCategories()
   },
 
   // Obtener todas las categorías
@@ -535,11 +529,11 @@ export const productService = {
   getAllCategories: async () => {
     try {
       return await retryWithBackoff(async () => {
-        const api = new BusinessManagementAPI();
-        return api.getAllCategories();
-      });
+        const api = new BusinessManagementAPI()
+        return api.getAllCategories()
+      })
     } catch (error) {
-      throw toApiError(error, 'Error al obtener categorías');
+      throw toApiError(error, 'Error al obtener categorías')
     }
   },
 
@@ -548,36 +542,40 @@ export const productService = {
    * @param {Partial<Product>} productData
    * @returns {true}
    */
-  validateProductData: (productData) => {
-    const required = ['name'];
-    const missing = required.filter(field => !productData[field]);
+  validateProductData: productData => {
+    const required = ['name']
+    const missing = required.filter(field => !productData[field])
     if (missing.length > 0) {
-      throw new Error(`Campos requeridos faltantes: ${missing.join(', ')}`);
+      throw new Error(`Campos requeridos faltantes: ${missing.join(', ')}`)
     }
-    return true;
+    return true
   },
 
-  validatePriceData: (priceData) => {
-    if (!priceData.costPrice && priceData.costPrice !== 0 && !priceData.cost_price && priceData.cost_price !== 0) {
-      throw new Error('cost_price es requerido');
+  validatePriceData: priceData => {
+    if (
+      !priceData.costPrice &&
+      priceData.costPrice !== 0 &&
+      !priceData.cost_price &&
+      priceData.cost_price !== 0
+    ) {
+      throw new Error('cost_price es requerido')
     }
-    return true;
+    return true
   },
 
-  validateStockData: (stockData) => {
+  validateStockData: stockData => {
     if (!stockData.quantity && stockData.quantity !== 0) {
-      throw new Error('quantity es requerido');
+      throw new Error('quantity es requerido')
     }
-    return true;
+    return true
   },
 
-  validateDescriptionData: (descriptionData) => {
+  validateDescriptionData: descriptionData => {
     if (!descriptionData.description) {
-      throw new Error('description es requerido');
+      throw new Error('description es requerido')
     }
-    return true;
-  }
-};
+    return true
+  },
+}
 
-export default productService;
-
+export default productService

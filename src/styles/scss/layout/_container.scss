@@ -1,0 +1,553 @@
+// =============================================================================
+// CONTAINER & GRID SYSTEM
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// CONTAINER
+// -----------------------------------------------------------------------------
+
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: $spacing-16;
+  padding-right: $spacing-16;
+
+  @include respond-to(sm) {
+    max-width: 640px;
+  }
+
+  @include respond-to(md) {
+    max-width: 768px;
+    padding-left: $spacing-24;
+    padding-right: $spacing-24;
+  }
+
+  @include respond-to(lg) {
+    max-width: 1024px;
+  }
+
+  @include respond-to(xl) {
+    max-width: 1280px;
+  }
+
+  @include respond-to(xxl) {
+    max-width: 1536px;
+  }
+}
+
+.container--fluid {
+  max-width: 100%;
+}
+
+.container--narrow {
+  @include respond-to(sm) {
+    max-width: 540px;
+  }
+
+  @include respond-to(md) {
+    max-width: 720px;
+  }
+
+  @include respond-to(lg) {
+    max-width: 960px;
+  }
+
+  @include respond-to(xl) {
+    max-width: 1140px;
+  }
+}
+
+.container--wide {
+  @include respond-to(sm) {
+    max-width: 720px;
+  }
+
+  @include respond-to(md) {
+    max-width: 960px;
+  }
+
+  @include respond-to(lg) {
+    max-width: 1280px;
+  }
+
+  @include respond-to(xl) {
+    max-width: 1440px;
+  }
+
+  @include respond-to(xxl) {
+    max-width: 1920px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// GRID SYSTEM
+// -----------------------------------------------------------------------------
+
+.grid {
+  display: grid;
+  gap: $spacing-16;
+  width: 100%;
+}
+
+// Grid columns (1-12)
+@for $i from 1 through 12 {
+  .grid-cols-#{$i} {
+    grid-template-columns: repeat($i, 1fr);
+  }
+}
+
+// Responsive grid columns
+@include respond-to(sm) {
+  @for $i from 1 through 12 {
+    .sm\:grid-cols-#{$i} {
+      grid-template-columns: repeat($i, 1fr);
+    }
+  }
+}
+
+@include respond-to(md) {
+  @for $i from 1 through 12 {
+    .md\:grid-cols-#{$i} {
+      grid-template-columns: repeat($i, 1fr);
+    }
+  }
+}
+
+@include respond-to(lg) {
+  @for $i from 1 through 12 {
+    .lg\:grid-cols-#{$i} {
+      grid-template-columns: repeat($i, 1fr);
+    }
+  }
+}
+
+@include respond-to(xl) {
+  @for $i from 1 through 12 {
+    .xl\:grid-cols-#{$i} {
+      grid-template-columns: repeat($i, 1fr);
+    }
+  }
+}
+
+// Grid auto-fit/fill
+.grid-auto-fit {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.grid-auto-fill {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+// Column span
+@for $i from 1 through 12 {
+  .col-span-#{$i} {
+    grid-column: span $i;
+  }
+}
+
+.col-span-full {
+  grid-column: 1 / -1;
+}
+
+// Row span
+@for $i from 1 through 6 {
+  .row-span-#{$i} {
+    grid-row: span $i;
+  }
+}
+
+.row-span-full {
+  grid-row: 1 / -1;
+}
+
+// Grid gap variations
+.grid--gap-0 {
+  gap: 0;
+}
+
+.grid--gap-small {
+  gap: $spacing-8;
+}
+
+.grid--gap-medium {
+  gap: $spacing-16;
+}
+
+.grid--gap-large {
+  gap: $spacing-24;
+}
+
+.grid--gap-xlarge {
+  gap: $spacing-32;
+}
+
+// -----------------------------------------------------------------------------
+// FLEX SYSTEM
+// -----------------------------------------------------------------------------
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-nowrap {
+  flex-wrap: nowrap;
+}
+
+// Justify content
+.justify-start {
+  justify-content: flex-start;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-around {
+  justify-content: space-around;
+}
+
+.justify-evenly {
+  justify-content: space-evenly;
+}
+
+// Align items
+.items-start {
+  align-items: flex-start;
+}
+
+.items-end {
+  align-items: flex-end;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-baseline {
+  align-items: baseline;
+}
+
+.items-stretch {
+  align-items: stretch;
+}
+
+// Gap
+.gap-0 {
+  gap: 0;
+}
+
+.gap-2 {
+  gap: $spacing-2;
+}
+
+.gap-4 {
+  gap: $spacing-4;
+}
+
+.gap-8 {
+  gap: $spacing-8;
+}
+
+.gap-12 {
+  gap: $spacing-12;
+}
+
+.gap-16 {
+  gap: $spacing-16;
+}
+
+.gap-20 {
+  gap: $spacing-20;
+}
+
+.gap-24 {
+  gap: $spacing-24;
+}
+
+.gap-32 {
+  gap: $spacing-32;
+}
+
+// Flex grow/shrink
+.flex-1 {
+  flex: 1 1 0%;
+}
+
+.flex-auto {
+  flex: 1 1 auto;
+}
+
+.flex-initial {
+  flex: 0 1 auto;
+}
+
+.flex-none {
+  flex: none;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.flex-shrink {
+  flex-shrink: 1;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+// -----------------------------------------------------------------------------
+// SPACING UTILITIES
+// -----------------------------------------------------------------------------
+
+// Margin
+.m-0 {
+  margin: 0;
+}
+
+.m-auto {
+  margin: auto;
+}
+
+@each $size in (4, 8, 12, 16, 20, 24, 32, 40, 48, 64) {
+  .m-#{$size} {
+    margin: $size * 0.0625rem;
+  }
+
+  .mt-#{$size} {
+    margin-top: $size * 0.0625rem;
+  }
+
+  .mr-#{$size} {
+    margin-right: $size * 0.0625rem;
+  }
+
+  .mb-#{$size} {
+    margin-bottom: $size * 0.0625rem;
+  }
+
+  .ml-#{$size} {
+    margin-left: $size * 0.0625rem;
+  }
+
+  .mx-#{$size} {
+    margin-left: $size * 0.0625rem;
+    margin-right: $size * 0.0625rem;
+  }
+
+  .my-#{$size} {
+    margin-top: $size * 0.0625rem;
+    margin-bottom: $size * 0.0625rem;
+  }
+}
+
+// Padding
+.p-0 {
+  padding: 0;
+}
+
+@each $size in (4, 8, 12, 16, 20, 24, 32, 40, 48, 64) {
+  .p-#{$size} {
+    padding: $size * 0.0625rem;
+  }
+
+  .pt-#{$size} {
+    padding-top: $size * 0.0625rem;
+  }
+
+  .pr-#{$size} {
+    padding-right: $size * 0.0625rem;
+  }
+
+  .pb-#{$size} {
+    padding-bottom: $size * 0.0625rem;
+  }
+
+  .pl-#{$size} {
+    padding-left: $size * 0.0625rem;
+  }
+
+  .px-#{$size} {
+    padding-left: $size * 0.0625rem;
+    padding-right: $size * 0.0625rem;
+  }
+
+  .py-#{$size} {
+    padding-top: $size * 0.0625rem;
+    padding-bottom: $size * 0.0625rem;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// DISPLAY UTILITIES
+// -----------------------------------------------------------------------------
+
+.block {
+  display: block;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+.inline {
+  display: inline;
+}
+
+.hidden {
+  display: none;
+}
+
+// Responsive display
+@include mobile {
+  .mobile\:block {
+    display: block;
+  }
+
+  .mobile\:hidden {
+    display: none;
+  }
+}
+
+@include tablet {
+  .tablet\:block {
+    display: block;
+  }
+
+  .tablet\:hidden {
+    display: none;
+  }
+}
+
+@include desktop {
+  .desktop\:block {
+    display: block;
+  }
+
+  .desktop\:hidden {
+    display: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// WIDTH & HEIGHT UTILITIES
+// -----------------------------------------------------------------------------
+
+.w-full {
+  width: 100%;
+}
+
+.w-auto {
+  width: auto;
+}
+
+.w-screen {
+  width: 100vw;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.h-auto {
+  height: auto;
+}
+
+.h-screen {
+  height: 100vh;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.max-w-full {
+  max-width: 100%;
+}
+
+// -----------------------------------------------------------------------------
+// POSITION UTILITIES
+// -----------------------------------------------------------------------------
+
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.fixed {
+  position: fixed;
+}
+
+.sticky {
+  position: sticky;
+}
+
+.static {
+  position: static;
+}
+
+// -----------------------------------------------------------------------------
+// OVERFLOW UTILITIES
+// -----------------------------------------------------------------------------
+
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-visible {
+  overflow: visible;
+}
+
+.overflow-scroll {
+  overflow: scroll;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+
+.overflow-y-hidden {
+  overflow-y: hidden;
+}

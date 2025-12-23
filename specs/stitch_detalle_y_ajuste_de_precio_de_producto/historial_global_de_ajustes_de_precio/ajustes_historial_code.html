@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Historial de Ajustes Manuales</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#0078D4",
+              "background-light": "#f3f3f3",
+              "background-dark": "#1e1e1e",
+              "surface-light": "#ffffff",
+              "surface-dark": "#2d2d2d",
+              "text-primary-light": "#000000",
+              "text-primary-dark": "#ffffff",
+              "text-secondary-light": "#323130",
+              "text-secondary-dark": "#e1dfdd",
+              "border-light": "#E1DFDD",
+              "border-dark": "#4a4a4a",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {
+              "DEFAULT": "0.25rem",
+              "lg": "0.5rem",
+              "xl": "0.75rem",
+              "full": "9999px"
+            },
+          },
+        },
+      }
+    </script>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-text-secondary-light dark:text-text-secondary-dark">
+<div class="relative flex h-auto min-h-screen w-full flex-col">
+<div class="layout-container flex h-full grow flex-col">
+<main class="flex-1 px-4 py-8 sm:px-6 md:px-8 lg:px-12">
+<div class="mx-auto flex max-w-7xl flex-col gap-8">
+<!-- Page Heading -->
+<div class="flex flex-wrap items-start justify-between gap-4">
+<div class="flex flex-col gap-2">
+<h1 class="text-3xl font-bold tracking-tight text-text-primary-light dark:text-text-primary-dark">Historial de Ajustes Manuales</h1>
+<p class="text-base text-text-secondary-light dark:text-text-secondary-dark">Consulta todos los ajustes de precios recientes aplicados a los productos.</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex h-10 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg bg-white dark:bg-surface-dark px-4 text-sm font-semibold text-text-secondary-light dark:text-text-secondary-dark border border-border-light dark:border-border-dark hover:bg-gray-100 dark:hover:bg-gray-700">
+<span class="material-symbols-outlined text-base">refresh</span>
+<span class="truncate">Actualizar</span>
+</button>
+<button class="flex h-10 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg bg-primary px-4 text-sm font-semibold text-white">
+<span class="material-symbols-outlined text-base">download</span>
+<span class="truncate">Exportar</span>
+</button>
+</div>
+</div>
+<!-- Filters Panel -->
+<div class="rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark shadow-sm">
+<div class="border-b border-border-light dark:border-border-dark p-4">
+<h3 class="text-lg font-bold leading-tight tracking-tight text-text-primary-light dark:text-text-primary-dark">Filtros de Búsqueda</h3>
+</div>
+<div class="p-4">
+<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+<label class="flex flex-col gap-2">
+<p class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Producto</p>
+<input class="form-input flex h-10 w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-border-light bg-background-light dark:border-border-dark dark:bg-background-dark p-2 text-sm text-text-primary-light dark:text-text-primary-dark placeholder:text-text-secondary-light/70 dark:placeholder:text-text-secondary-dark/70 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/20" placeholder="Buscar por nombre o SKU" value=""/>
+</label>
+<label class="flex flex-col gap-2">
+<p class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Usuario</p>
+<input class="form-input flex h-10 w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-border-light bg-background-light dark:border-border-dark dark:bg-background-dark p-2 text-sm text-text-primary-light dark:text-text-primary-dark placeholder:text-text-secondary-light/70 dark:placeholder:text-text-secondary-dark/70 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/20" placeholder="Buscar por nombre o ID" value=""/>
+</label>
+<label class="flex flex-col gap-2">
+<p class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Unidad</p>
+<input class="form-input flex h-10 w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-border-light bg-background-light dark:border-border-dark dark:bg-background-dark p-2 text-sm text-text-primary-light dark:text-text-primary-dark placeholder:text-text-secondary-light/70 dark:placeholder:text-text-secondary-dark/70 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/20" placeholder="Seleccionar unidad" value=""/>
+</label>
+<label class="flex flex-col gap-2">
+<p class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Tipo de Ajuste</p>
+<input class="form-input flex h-10 w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-border-light bg-background-light dark:border-border-dark dark:bg-background-dark p-2 text-sm text-text-primary-light dark:text-text-primary-dark placeholder:text-text-secondary-light/70 dark:placeholder:text-text-secondary-dark/70 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/20" placeholder="Seleccionar tipo" value=""/>
+</label>
+<div class="flex flex-col gap-2 lg:col-span-2">
+<p class="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Rango de Fechas</p>
+<div class="flex items-center gap-2">
+<input class="form-input flex h-10 w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-border-light bg-background-light dark:border-border-dark dark:bg-background-dark p-2 text-sm text-text-primary-light dark:text-text-primary-dark placeholder:text-text-secondary-light/70 dark:placeholder:text-text-secondary-dark/70 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/20" placeholder="Fecha de inicio" type="text" value="01/10/2024"/>
+<span class="text-text-secondary-light dark:text-text-secondary-dark">-</span>
+<input class="form-input flex h-10 w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg border border-border-light bg-background-light dark:border-border-dark dark:bg-background-dark p-2 text-sm text-text-primary-light dark:text-text-primary-dark placeholder:text-text-secondary-light/70 dark:placeholder:text-text-secondary-dark/70 focus:border-primary focus:outline-0 focus:ring-2 focus:ring-primary/20" placeholder="Fecha de fin" type="text" value="31/10/2024"/>
+</div>
+</div>
+</div>
+<div class="mt-6 flex justify-end gap-2">
+<button class="flex h-10 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-white dark:bg-surface-dark px-4 text-sm font-semibold text-text-secondary-light dark:text-text-secondary-dark border border-border-light dark:border-border-dark hover:bg-gray-100 dark:hover:bg-gray-700">
+<span class="truncate">Limpiar Filtros</span>
+</button>
+<button class="flex h-10 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-primary px-4 text-sm font-semibold text-white">
+<span class="truncate">Aplicar Filtros</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Results Table -->
+<div class="rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark shadow-sm">
+<div class="flex flex-wrap items-center justify-between gap-4 p-4">
+<p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Mostrando <span class="font-semibold text-text-primary-light dark:text-text-primary-dark">25</span> de <span class="font-semibold text-text-primary-light dark:text-text-primary-dark">150</span> resultados</p>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm">
+<thead class="border-b border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark/50 text-xs uppercase text-text-secondary-light dark:text-text-secondary-dark">
+<tr>
+<th class="px-6 py-3 font-semibold tracking-wider" scope="col">ID Ajuste</th>
+<th class="px-6 py-3 font-semibold tracking-wider" scope="col">Producto</th>
+<th class="px-6 py-3 font-semibold tracking-wider" scope="col">Precio Anterior</th>
+<th class="px-6 py-3 font-semibold tracking-wider" scope="col">Precio Nuevo</th>
+<th class="px-6 py-3 font-semibold tracking-wider" scope="col">Usuario</th>
+<th class="px-6 py-3 font-semibold tracking-wider" scope="col">Fecha/Hora</th>
+<th class="px-6 py-3 font-semibold tracking-wider" scope="col">Unidad</th>
+<th class="px-6 py-3 font-semibold tracking-wider" scope="col">Tipo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-border-light dark:border-border-dark hover:bg-black/5 dark:hover:bg-white/5">
+<td class="px-6 py-4 font-medium text-text-primary-light dark:text-text-primary-dark">ADJ-01589</td>
+<td class="px-6 py-4">Leche Entera 1L</td>
+<td class="px-6 py-4">$25.50</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span>$24.99</span>
+<span class="material-symbols-outlined text-base text-red-500">arrow_downward</span>
+</div>
+</td>
+<td class="px-6 py-4">Ana Pérez</td>
+<td class="px-6 py-4">25/10/2024 14:30</td>
+<td class="px-6 py-4">Sucursal Centro</td>
+<td class="px-6 py-4">Descuento</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark hover:bg-black/5 dark:hover:bg-white/5">
+<td class="px-6 py-4 font-medium text-text-primary-light dark:text-text-primary-dark">ADJ-01588</td>
+<td class="px-6 py-4">Pan de Caja Integral</td>
+<td class="px-6 py-4">$42.00</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span>$45.00</span>
+<span class="material-symbols-outlined text-base text-green-500">arrow_upward</span>
+</div>
+</td>
+<td class="px-6 py-4">Juan García</td>
+<td class="px-6 py-4">25/10/2024 11:15</td>
+<td class="px-6 py-4">Almacén General</td>
+<td class="px-6 py-4">Aumento</td>
+</tr>
+<tr class="border-b border-border-light dark:border-border-dark hover:bg-black/5 dark:hover:bg-white/5">
+<td class="px-6 py-4 font-medium text-text-primary-light dark:text-text-primary-dark">ADJ-01587</td>
+<td class="px-6 py-4">Atún en Agua 140g</td>
+<td class="px-6 py-4">$18.90</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span>$18.50</span>
+<span class="material-symbols-outlined text-base text-blue-500">sync_alt</span>
+</div>
+</td>
+<td class="px-6 py-4">Sistema</td>
+<td class="px-6 py-4">24/10/2024 23:00</td>
+<td class="px-6 py-4">Todas</td>
+<td class="px-6 py-4">Corrección</td>
+</tr>
+<!-- Empty State Example -->
+<!-- 
+                                    <tr>
+                                        <td colspan="8" class="text-center py-16 px-4">
+                                            <div class="flex flex-col items-center gap-4">
+                                                <span class="material-symbols-outlined text-5xl text-gray-400 dark:text-gray-500">search_off</span>
+                                                <h4 class="text-lg font-semibold text-text-primary-light dark:text-text-primary-dark">No se encontraron resultados</h4>
+                                                <p class="text-text-secondary-light dark:text-text-secondary-dark">Prueba a cambiar o eliminar algunos filtros para encontrar lo que buscas.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    -->
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex flex-wrap items-center justify-between gap-4 border-t border-border-light dark:border-border-dark p-4">
+<span class="text-sm">Página <span class="font-semibold text-text-primary-light dark:text-text-primary-dark">1</span> de <span class="font-semibold text-text-primary-light dark:text-text-primary-dark">6</span></span>
+<div class="inline-flex items-center gap-2">
+<button class="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark px-3 text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-700">
+<span class="material-symbols-outlined text-base">chevron_left</span>
+<span>Anterior</span>
+</button>
+<button class="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark px-3 text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-700">
+<span>Siguiente</span>
+<span class="material-symbols-outlined text-base">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

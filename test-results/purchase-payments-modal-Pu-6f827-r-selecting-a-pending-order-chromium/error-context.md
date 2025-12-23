@@ -1,0 +1,353 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - complementary:
+          - generic:
+            - generic:
+              - generic:
+                - img
+              - heading [level=1]: ERP System
+          - navigation:
+            - generic:
+              - link:
+                - /url: /dashboard
+                - img
+                - generic: Dashboard
+            - generic:
+              - link:
+                - /url: /productos
+                - img
+                - generic: Productos
+            - generic:
+              - link:
+                - /url: /clientes
+                - img
+                - generic: Clientes
+            - generic:
+              - link:
+                - /url: /proveedores
+                - img
+                - generic: Proveedores
+            - generic:
+              - link:
+                - /url: /inventario
+                - img
+                - generic: Ajuste de inventario
+            - generic:
+              - link:
+                - /url: /ajustes-precios
+                - img
+                - generic: Ajustes de Precios
+            - generic:
+              - link:
+                - /url: /ajustes-precios-nuevo
+                - img
+                - generic: Ajuste de Precios Nuevo
+            - generic:
+              - link:
+                - /url: /ventas
+                - img
+                - generic: Ventas
+            - generic:
+              - link:
+                - /url: /ventas-nueva
+                - img
+                - generic: Ventas (Nueva)
+            - generic:
+              - link:
+                - /url: /reservas
+                - img
+                - generic: Reservas
+            - generic:
+              - link:
+                - /url: /compras
+                - img
+                - generic: Compras
+            - generic:
+              - button:
+                - img
+                - generic: Pagos
+                - img
+              - generic:
+                - link:
+                  - /url: /caja-registradora
+                  - img
+                  - generic: Caja Registradora
+                - link:
+                  - /url: /pagos-compras
+                  - img
+                  - generic: Pagos Compras
+                - link:
+                  - /url: /pagos/compras-mvp
+                  - img
+                  - generic: Pagos Compras (MVP)
+                - link:
+                  - /url: /pagos-ventas
+                  - img
+                  - generic: Pagos Ventas
+                - link:
+                  - /url: /pagos/documentacion
+                  - img
+                  - generic: Documentación de Pagos
+                - link:
+                  - /url: /pagos/gestion
+                  - img
+                  - generic: Gestión de Pagos
+            - generic:
+              - link:
+                - /url: /reportes
+                - img
+                - generic: Reportes
+        - generic:
+          - banner:
+            - generic:
+              - generic:
+                - generic: Tipos de cambio
+                - generic:
+                  - generic:
+                    - img
+                    - generic: ARS
+                    - generic: 4,85
+                    - generic: PYG
+                  - generic:
+                    - img
+                    - generic: BRL
+                    - generic: 1.315,00
+                    - generic: PYG
+                  - generic:
+                    - img
+                    - generic: EUR
+                    - generic: 8.680,00
+                    - generic: PYG
+                  - generic:
+                    - img
+                    - generic: USD
+                    - generic: 7.100,00
+                    - generic: PYG
+              - generic:
+                - button:
+                  - img
+                  - generic: Ajustes
+          - main:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - heading [level=1]: Pagos Compras (MVP)
+                    - paragraph: Supervisa saldos pendientes, pagos parciales y vencidos de tus órdenes de compra.
+                  - generic:
+                    - generic:
+                      - button:
+                        - img
+                      - button:
+                        - img
+                    - button:
+                      - img
+                      - text: Registrar pago
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: Filtros
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: Buscar órdenes
+                          - generic:
+                            - img
+                            - searchbox
+                        - generic:
+                          - generic: Rango de fechas
+                          - generic:
+                            - textbox
+                            - generic: –
+                            - textbox
+                        - generic:
+                          - generic: Estado de pago
+                          - combobox:
+                            - generic: Todos los estados
+                            - img
+                    - generic:
+                      - generic:
+                        - button: Aplicar filtros
+                        - button: Restablecer
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic: Resultados de pagos de compras
+                          - paragraph: Revisá órdenes pendientes, parciales y pagadas.
+                        - generic: Mostrando 1-5 de 5 órdenes
+                    - generic:
+                      - region:
+                        - generic: 1 órdenes seleccionadas
+                        - generic:
+                          - generic:
+                            - table:
+                              - rowgroup:
+                                - row "Seleccionar todas las órdenes Orden de compra Proveedor Fecha de emisión Importe total Saldo pendiente Estado":
+                                  - cell "Seleccionar todas las órdenes":
+                                    - checkbox "Seleccionar todas las órdenes" [checked=mixed]
+                                  - cell "Orden de compra"
+                                  - cell "Proveedor"
+                                  - cell "Fecha de emisión"
+                                  - cell "Importe total"
+                                  - cell "Saldo pendiente"
+                                  - cell "Estado"
+                              - rowgroup:
+                                - row "Seleccionar orden PO-2025-0101 PO-2025-0101 Prioridad alta Distribuidora Nacional S.A. +595 21 555 000 24 oct. 2025 Gs. 5.820.000 Gs. 5.820.000 Pendiente" [selected]:
+                                  - cell "Seleccionar orden PO-2025-0101":
+                                    - checkbox "Seleccionar orden PO-2025-0101" [checked]:
+                                      - generic:
+                                        - img
+                                  - cell "PO-2025-0101 Prioridad alta":
+                                    - generic:
+                                      - button "PO-2025-0101"
+                                      - generic: Prioridad alta
+                                  - cell "Distribuidora Nacional S.A. +595 21 555 000":
+                                    - generic:
+                                      - generic: Distribuidora Nacional S.A.
+                                      - generic: +595 21 555 000
+                                  - cell "24 oct. 2025":
+                                    - generic: 24 oct. 2025
+                                  - cell "Gs. 5.820.000":
+                                    - generic: Gs. 5.820.000
+                                  - cell "Gs. 5.820.000":
+                                    - generic: Gs. 5.820.000
+                                  - cell "Pendiente":
+                                    - generic: Pendiente
+                                - row "Seleccionar orden PO-2025-0097 PO-2025-0097 Prioridad media Tecnología Avanzada del Norte +595 21 411 230 17 oct. 2025 USD 14.500,00 USD 4.200,00 Pago parcial":
+                                  - cell "Seleccionar orden PO-2025-0097":
+                                    - checkbox "Seleccionar orden PO-2025-0097"
+                                  - cell "PO-2025-0097 Prioridad media":
+                                    - generic:
+                                      - button "PO-2025-0097"
+                                      - generic: Prioridad media
+                                  - cell "Tecnología Avanzada del Norte +595 21 411 230":
+                                    - generic:
+                                      - generic: Tecnología Avanzada del Norte
+                                      - generic: +595 21 411 230
+                                  - cell "17 oct. 2025":
+                                    - generic: 17 oct. 2025
+                                  - cell "USD 14.500,00":
+                                    - generic: USD 14.500,00
+                                  - cell "USD 4.200,00":
+                                    - generic: USD 4.200,00
+                                  - cell "Pago parcial":
+                                    - generic: Pago parcial
+                                - row "Seleccionar orden PO-2025-0088 PO-2025-0088 Prioridad crítica Materiales Especializados de Querétaro +595 21 422 880 29 sept. 2025 Gs. 11.800.000 Gs. 2.800.000 Vencido":
+                                  - cell "Seleccionar orden PO-2025-0088":
+                                    - checkbox "Seleccionar orden PO-2025-0088"
+                                  - cell "PO-2025-0088 Prioridad crítica":
+                                    - generic:
+                                      - button "PO-2025-0088"
+                                      - generic: Prioridad crítica
+                                  - cell "Materiales Especializados de Querétaro +595 21 422 880":
+                                    - generic:
+                                      - generic: Materiales Especializados de Querétaro
+                                      - generic: +595 21 422 880
+                                  - cell "29 sept. 2025":
+                                    - generic: 29 sept. 2025
+                                  - cell "Gs. 11.800.000":
+                                    - generic: Gs. 11.800.000
+                                  - cell "Gs. 2.800.000":
+                                    - generic: Gs. 2.800.000
+                                  - cell "Vencido":
+                                    - generic: Vencido
+                                - row "Seleccionar orden PO-2025-0075 PO-2025-0075 Prioridad baja Suministros Industriales del Bajío +595 21 399 300 19 sept. 2025 USD 9.800,00 USD 0,00 Pagado":
+                                  - cell "Seleccionar orden PO-2025-0075":
+                                    - checkbox "Seleccionar orden PO-2025-0075"
+                                  - cell "PO-2025-0075 Prioridad baja":
+                                    - generic:
+                                      - button "PO-2025-0075"
+                                      - generic: Prioridad baja
+                                  - cell "Suministros Industriales del Bajío +595 21 399 300":
+                                    - generic:
+                                      - generic: Suministros Industriales del Bajío
+                                      - generic: +595 21 399 300
+                                  - cell "19 sept. 2025":
+                                    - generic: 19 sept. 2025
+                                  - cell "USD 9.800,00":
+                                    - generic: USD 9.800,00
+                                  - cell "USD 0,00":
+                                    - generic: USD 0,00
+                                  - cell "Pagado":
+                                    - generic: Pagado
+                                - row "Seleccionar orden PO-2025-0069 PO-2025-0069 Prioridad media Logística Express del Pacifico +595 21 415 190 11 sept. 2025 Gs. 3.645.000 Gs. 945.000 Pago parcial":
+                                  - cell "Seleccionar orden PO-2025-0069":
+                                    - checkbox "Seleccionar orden PO-2025-0069"
+                                  - cell "PO-2025-0069 Prioridad media":
+                                    - generic:
+                                      - button "PO-2025-0069"
+                                      - generic: Prioridad media
+                                  - cell "Logística Express del Pacifico +595 21 415 190":
+                                    - generic:
+                                      - generic: Logística Express del Pacifico
+                                      - generic: +595 21 415 190
+                                  - cell "11 sept. 2025":
+                                    - generic: 11 sept. 2025
+                                  - cell "Gs. 3.645.000":
+                                    - generic: Gs. 3.645.000
+                                  - cell "Gs. 945.000":
+                                    - generic: Gs. 945.000
+                                  - cell "Pago parcial":
+                                    - generic: Pago parcial
+                    - generic:
+                      - generic:
+                        - generic: Mostrando 5 de 5 resultados
+                      - generic:
+                        - button "Anterior" [disabled]:
+                          - img
+                        - generic:
+                          - button "1"
+                        - button "Siguiente" [disabled]:
+                          - img
+  - dialog "purchasePaymentsMvp.registerModal.title" [ref=e1]:
+    - generic [ref=e2]:
+      - heading "purchasePaymentsMvp.registerModal.title" [level=2] [ref=e3]
+      - paragraph [ref=e4]: purchasePaymentsMvp.registerModal.orderLabel
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: purchasePaymentsMvp.registerModal.amount.label
+          - generic [ref=e9]:
+            - img [ref=e10]
+            - textbox "purchasePaymentsMvp.registerModal.amount.label" [active] [ref=e13]: "5820000"
+          - paragraph [ref=e14]: purchasePaymentsMvp.registerModal.amount.pending
+        - generic [ref=e15]:
+          - generic [ref=e16]: purchasePaymentsMvp.registerModal.reference.label
+          - textbox "purchasePaymentsMvp.registerModal.reference.label" [ref=e17]
+        - generic [ref=e18]:
+          - paragraph [ref=e19]: purchasePaymentsMvp.registerModal.method.label
+          - radiogroup [ref=e20]:
+            - generic [ref=e21] [cursor=pointer]:
+              - radio "purchasePaymentsMvp.registerModal.method.transfer" [checked]
+              - generic [ref=e23] [cursor=pointer]: purchasePaymentsMvp.registerModal.method.transfer
+            - generic [ref=e24] [cursor=pointer]:
+              - radio "purchasePaymentsMvp.registerModal.method.cash"
+              - generic [ref=e25] [cursor=pointer]: purchasePaymentsMvp.registerModal.method.cash
+        - generic [ref=e26]:
+          - generic [ref=e27]: purchasePaymentsMvp.registerModal.currency.label
+          - combobox "purchasePaymentsMvp.registerModal.currency.label" [ref=e28] [cursor=pointer]:
+            - generic: PYG
+            - img [ref=e29] [cursor=pointer]
+          - combobox [ref=e31]
+        - generic [ref=e32]:
+          - generic [ref=e33]: purchasePaymentsMvp.registerModal.cashRegister.label
+          - combobox "purchasePaymentsMvp.registerModal.cashRegister.label" [ref=e34] [cursor=pointer]:
+            - generic: purchasePaymentsMvp.registerModal.cashRegister.placeholder
+            - img [ref=e35] [cursor=pointer]
+          - combobox [ref=e37]
+        - generic [ref=e38]:
+          - generic [ref=e39]: purchasePaymentsMvp.registerModal.notes.label
+          - textbox "purchasePaymentsMvp.registerModal.notes.label" [ref=e40]
+      - generic [ref=e41]:
+        - button "purchasePaymentsMvp.registerModal.cancel" [ref=e42] [cursor=pointer]
+        - button "purchasePaymentsMvp.registerModal.confirm" [ref=e43] [cursor=pointer]: purchasePaymentsMvp.registerModal.confirm
+    - button "Close" [ref=e46] [cursor=pointer]:
+      - img [ref=e47] [cursor=pointer]
+      - generic [ref=e50] [cursor=pointer]: Close
+```

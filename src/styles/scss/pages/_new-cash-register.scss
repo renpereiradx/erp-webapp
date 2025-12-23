@@ -1,0 +1,323 @@
+// ===========================================================================
+// New Cash Register Page - Fluent Design System 2 + BEM
+// Gestión de Cajas Registradoras (Apertura y Cierre)
+// ===========================================================================
+
+@use '../abstracts' as *;
+
+.new-cash-register-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: $spacing-24;
+
+  @media (max-width: 640px) {
+    padding: $spacing-16;
+  }
+
+  // Header
+  // =========================================================================
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-12;
+    margin-bottom: $spacing-32;
+
+    @media (max-width: 640px) {
+      margin-bottom: $spacing-24;
+    }
+  }
+
+  &__title {
+    font-size: $font-size-1000;
+    font-weight: $font-weight-black;
+    line-height: 1.1;
+    letter-spacing: -0.033em;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__subtitle {
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    line-height: 1.5;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  // Tabs Container
+  // =========================================================================
+  &__tabs {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+  }
+
+  &__tabs-list {
+    display: flex;
+    border-bottom: 1px solid;
+    gap: $spacing-32;
+    padding: 0 $spacing-16;
+
+    @include themify($themes) {
+      border-bottom-color: themed('border-default');
+    }
+
+    @media (max-width: 640px) {
+      gap: $spacing-16;
+      padding: 0 $spacing-8;
+    }
+  }
+
+  &__tab-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-16 0;
+    padding-bottom: 13px;
+    border-bottom: 3px solid transparent;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: $font-size-300;
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.015em;
+    transition: color $duration-fast $ease-ease-in-out, border-color $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+
+    &:hover {
+      @include themify($themes) {
+        color: themed('text-primary');
+      }
+    }
+
+    &--active {
+      @include themify($themes) {
+        border-bottom-color: themed('action-primary');
+        color: themed('text-primary');
+      }
+    }
+
+    @media (max-width: 640px) {
+      font-size: $font-size-200;
+      padding: $spacing-12 0;
+    }
+  }
+
+  &__tab-content {
+    padding: $spacing-20 $spacing-16;
+    max-width: 1080px;
+    margin: 0 auto;
+    width: 100%;
+
+    @media (max-width: 640px) {
+      padding: $spacing-16 $spacing-8;
+    }
+  }
+
+  // Form Section
+  // =========================================================================
+  &__form-title {
+    font-size: $font-size-700;
+    font-weight: $font-weight-semibold;
+    letter-spacing: -0.015em;
+    margin-bottom: $spacing-12;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-16 $spacing-24;
+    padding: $spacing-16 0;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: $spacing-16;
+    }
+  }
+
+  &__form-field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+    min-width: 0;
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__form-label {
+    font-size: $font-size-300;
+    font-weight: $font-weight-medium;
+    line-height: 1.5;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__form-input,
+  &__form-select,
+  &__form-textarea {
+    width: 100%;
+    padding: $spacing-16 $spacing-12;
+    height: 56px;
+    border-radius: $border-radius-large;
+    border: 1px solid;
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    line-height: 1.5;
+    transition: border-color $duration-fast $ease-ease-in-out, box-shadow $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+      background-color: themed('bg-primary');
+      border-color: themed('border-default');
+    }
+
+    &::placeholder {
+      @include themify($themes) {
+        color: themed('text-tertiary');
+      }
+    }
+
+    &:hover {
+      @include themify($themes) {
+        border-color: themed('border-strong');
+      }
+    }
+
+    &:focus {
+      outline: none;
+
+      @include themify($themes) {
+        border-color: themed('action-primary');
+        box-shadow: 0 0 0 1px themed('action-primary');
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+
+      @include themify($themes) {
+        background-color: themed('bg-disabled');
+      }
+    }
+  }
+
+  // Select specific styles
+  &__form-field {
+    // Target all Radix Select triggers within form fields
+    button[data-slot="select-trigger"] {
+      display: flex !important;
+      width: 100% !important;
+      height: 56px !important;
+      padding: $spacing-16 $spacing-12 !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+
+      svg {
+        width: 20px !important;
+        height: 20px !important;
+        opacity: 0.5 !important;
+      }
+    }
+  }
+
+  &__form-textarea {
+    height: auto;
+    min-height: 120px;
+    resize: vertical;
+  }
+
+  &__form-input-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  &__form-input-prefix {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 $spacing-16;
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__form-input--with-prefix {
+    padding-left: $spacing-32;
+  }
+
+  // Form Actions
+  // =========================================================================
+  &__form-actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-16;
+    padding-top: $spacing-24;
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  &__form-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-8 $spacing-24;
+    height: 40px;
+    border-radius: $border-radius-large;
+    border: none;
+    font-size: $font-size-300;
+    font-weight: $font-weight-bold;
+    cursor: pointer;
+    transition: opacity $duration-fast $ease-ease-in-out;
+
+    &:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--primary {
+      @include themify($themes) {
+        background-color: themed('action-primary');
+        color: #ffffff;
+      }
+    }
+
+    &--secondary {
+      @include themify($themes) {
+        background-color: #233748;
+        color: #ffffff;
+      }
+    }
+
+    @media (max-width: 640px) {
+      width: 100%;
+    }
+  }
+}

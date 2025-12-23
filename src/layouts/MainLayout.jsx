@@ -1,13 +1,12 @@
 /**
- * Layout principal del sistema ERP - Multi-tema
- * Soporte para Neo-Brutalism, Material Design y Fluent Design
+ * Layout principal del sistema ERP
  * Incluye sidebar responsive, navbar y área de contenido principal
+ * Diseñado con Fluent Design System
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useTheme } from '@/contexts/ThemeContext'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   LayoutDashboard,
@@ -17,19 +16,15 @@ import {
   ShoppingCart,
   ShoppingBag,
   Calendar,
-  Clock,
   BarChart3,
   Settings,
-  Search,
-  Bell,
-  User,
   Menu,
   X,
   LogOut,
+  User,
   CreditCard,
   Receipt,
   DollarSign,
-  Edit,
   ChevronRight,
   ChevronDown,
   BookOpen,
@@ -43,9 +38,9 @@ import {
   Bitcoin,
   Coins,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { ExchangeRateService } from '@/services/exchangeRateService.js'
 
+// Mapeo de iconos de monedas
 const currencyIconMap = {
   USD: CircleDollarSign,
   USDT: CircleDollarSign,
@@ -73,13 +68,136 @@ const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [expandedMenus, setExpandedMenus] = useState({})
+  const [isLargeScreen, setIsLargeScreen] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false)
+
   const profileBtnRef = useRef(null)
+  const sidebarRef = useRef(null)
   const hasFetchedRatesRef = useRef(false)
+
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0, width: 288 })
   const [navbarRates, setNavbarRates] = useState([])
   const [navbarRatesLoading, setNavbarRatesLoading] = useState(false)
   const [navbarRatesError, setNavbarRatesError] = useState(null)
 
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+
+  // Formateo de números para tipos de cambio
+  const rateFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat('es-PY', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4,
+      }),
+    []
+  )
+
+  // Filtrar rates válidos
+  const displayedRates = useMemo(
+    () =>
+      navbarRates.filter(
+        rate => rate && rate.currency_code && Number.isFinite(rate.rate_to_base)
+      ),
+    [navbarRates]
+  )
+
+  // Obtener código de moneda base
+  const baseCurrencyCode = useMemo(() => {
+    const fromPayload = navbarRates.find(rate => {
+      const candidate = rate?.original?.base_currency_code
+      return candidate && typeof candidate === 'string'
+    })
+
+    if (fromPayload?.original?.base_currency_code) {
+      return String(fromPayload.original.base_currency_code).toUpperCase()
+    }
+
+    return 'PYG'
+  }, [navbarRates])
+
+  const hasNavbarRates = displayedRates.length > 0
+
+  // Configuración de navegación
+  const navigation = useMemo(
+    () => [
+      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { name: 'Productos', href: '/productos', icon: Package },
+      { name: 'Clientes', href: '/clientes', icon: Users },
+      { name: 'Proveedores', href: '/proveedores', icon: Truck },
+      {
+        name: 'Ajustes de Producto',
+        href: '/ajustes-producto',
+        icon: SlidersHorizontal,
+      },
+      { name: 'Compras', href: '/compras', icon: ShoppingBag },
+      { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
+      { name: 'Gestión Reservas', href: '/gestion-reservas', icon: Calendar },
+      {
+        name: 'Pagos',
+        href: '#',
+        icon: DollarSign,
+        children: [
+          {
+            name: 'Pagos Compras',
+            href: '/pagos-compras',
+            icon: CircleDollarSign,
+          },
+          {
+            name: 'Cobros Ventas',
+            href: '/cobros-ventas',
+            icon: CreditCard,
+          },
+          {
+            name: 'Documentación de Pagos',
+            href: '/pagos/documentacion',
+            icon: BookOpen,
+          },
+          {
+            name: 'Gestión de Pagos',
+            href: '/pagos/gestion',
+            icon: SlidersHorizontal,
+          },
+        ],
+      },
+      {
+        name: 'Registro de Caja',
+        href: '#',
+        icon: DollarSign,
+        children: [
+          {
+            name: 'Apertura y Cierre',
+            href: '/caja-registradora',
+            icon: DollarSign,
+          },
+          {
+            name: 'Registro Manual',
+            href: '/movimientos-caja',
+            icon: DollarSign,
+          },
+        ],
+      },
+      { name: 'Reportes', href: '/reportes', icon: BarChart3 },
+    ],
+    []
+  )
+
+  // Detectar tamaño de pantalla
+  useEffect(() => {
+    setIsClient(true)
+    const checkScreenSize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024)
+    }
+
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
+
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
+
+  // Calcular posición del menú de usuario
   useEffect(() => {
     const calcPos = () => {
       if (!profileBtnRef.current) return
@@ -100,498 +218,38 @@ const MainLayout = ({ children }) => {
       window.removeEventListener('scroll', calcPos, true)
     }
   }, [showUserMenu])
-  const [isLargeScreen, setIsLargeScreen] = useState(false)
-  const [isClient, setIsClient] = useState(false)
-  const location = useLocation()
-  const navigate = useNavigate()
-  const { user, logout } = useAuth()
-  // Fallback si no hay usuario
-  const currentUser = user || { name: 'Demo User', email: 'demo@erp.com' }
-  // Usar Context para temas (compatible con React 19)
-  const { theme, isNeoBrutalism, isMaterial, isFluent } = useTheme()
 
-  // Obtener valores computados de las funciones helper
-  const isNeoBrutalismValue = isNeoBrutalism()
-  const isMaterialValue = isMaterial()
-  const isFluentValue = isFluent()
-
-  // Sistema centralizado de estilos - Computa TODOS los estilos necesarios
-  const computedStyles = useMemo(() => {
-    const neo = isNeoBrutalismValue
-    const material = isMaterialValue
-    const fluent = isFluentValue
-
-    return {
-      // Estilos de layout principal
-      layout: {
-        backgroundColor: 'var(--muted, #f9fafb)',
-        fontFamily: 'var(--font-sans)',
-        fontWeight: neo ? 'bold' : 'normal',
-      },
-
-      // Estilos de sidebar desktop y mobile
-      sidebar: {
-        backgroundColor: neo
-          ? 'var(--background)'
-          : fluent
-          ? 'var(--fluent-surface-primary)'
-          : material
-          ? 'var(--material-surface)'
-          : 'var(--background)',
-        borderRight: neo
-          ? '4px solid var(--border)'
-          : '1px solid var(--border)',
-        boxShadow: neo
-          ? '4px 0px 0px 0px rgba(0,0,0,1)'
-          : fluent
-          ? 'var(--fluent-elevation-4)'
-          : material
-          ? 'var(--material-elevation-2)'
-          : 'var(--shadow-sm)',
-      },
-
-      // Estilos específicos para mobile sidebar
-      sidebarMobile: {
-        backgroundColor: 'var(--background)',
-        borderRight: neo
-          ? '4px solid var(--border)'
-          : '1px solid var(--border)',
-        boxShadow: neo ? '4px 0px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-lg)',
-      },
-
-      // Estilos de logo (ambas versiones)
-      logoContainer: {
-        borderBottom: neo
-          ? '4px solid var(--border)'
-          : '1px solid var(--border)',
-      },
-
-      logoIcon: {
-        backgroundColor: 'var(--primary)',
-        color: 'var(--primary-foreground)',
-        border: neo ? '2px solid var(--border)' : '1px solid var(--border)',
-        boxShadow: neo ? '2px 2px 0px 0px rgba(0,0,0,1)' : 'none',
-      },
-
-      // Estilos de upgrade section
-      upgradeCard: {
-        backgroundColor: 'var(--card)',
-        border: neo ? '4px solid var(--border)' : '1px solid var(--border)',
-        boxShadow: neo ? '4px 4px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-sm)',
-      },
-
-      // Estilos de navbar
-      navbar: {
-        backgroundColor: 'var(--background)',
-        borderBottom: neo
-          ? '4px solid var(--border)'
-          : '1px solid var(--border)',
-        boxShadow: neo ? '0px 4px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-sm)',
-        color: 'var(--foreground)',
-        maxWidth: '100%',
-      },
-
-      // Estilos de botón móvil
-      mobileMenuBtn: {
-        borderRight: neo
-          ? '4px solid var(--border)'
-          : '1px solid var(--border)',
-        color: 'var(--foreground)',
-        display: 'flex',
-        width: '48px',
-        height: '48px',
-        minWidth: '48px',
-        minHeight: '48px',
-      },
-
-      // Estilos de close button mobile
-      mobileCloseBtn: {
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        border: neo ? '2px solid white' : 'none',
-      },
-
-      // Estilos de dropdown menu
-      dropdownMenu: {
-        backgroundColor: 'var(--popover)',
-        border: neo ? '4px solid var(--border)' : '1px solid var(--border)',
-        boxShadow: neo ? '8px 8px 0px 0px rgba(0,0,0,1)' : 'var(--shadow-lg)',
-      },
-
-      dropdownHeader: {
-        borderBottom: neo
-          ? '4px solid var(--border)'
-          : '1px solid var(--border)',
-      },
-
-      userAvatar: {
-        backgroundColor: 'var(--primary)',
-        color: 'var(--primary-foreground)',
-        border: neo ? '4px solid var(--border)' : 'none',
-      },
-
-      // Clases CSS
-      css: {
-        navSpacing: neo ? 'space-y-2' : 'space-y-1',
-        titleClass: neo
-          ? 'font-black uppercase tracking-wide'
-          : fluent
-          ? 'fluent-title'
-          : material
-          ? 'material-headline-medium'
-          : 'font-medium',
-        bodyClass: neo
-          ? 'font-bold uppercase tracking-wide'
-          : fluent
-          ? 'fluent-body'
-          : material
-          ? 'material-body-medium'
-          : 'font-medium',
-        captionClass: neo
-          ? 'font-bold uppercase tracking-wide text-sm'
-          : fluent
-          ? 'fluent-caption'
-          : material
-          ? 'material-body-small'
-          : 'font-medium',
-        cardClass: neo
-          ? 'border-4 border-foreground shadow-neo-brutal'
-          : fluent
-          ? 'fluent-elevation-2 fluent-radius-medium'
-          : material
-          ? 'material-card-elevated'
-          : 'border border-border rounded-lg shadow-lg',
-        buttonClass: fluent
-          ? 'fluent-elevation-2 fluent-radius-small'
-          : material
-          ? 'material-button-elevated'
-          : '',
-        cardRadius: neo ? '' : fluent ? 'fluent-radius-medium' : 'rounded-lg',
-        navItemRadius: neo ? '' : fluent ? 'fluent-radius-small' : 'rounded-md',
-        avatarRadius: neo ? '' : 'rounded-full',
-        semiboldClass: neo
-          ? 'font-black uppercase tracking-wide'
-          : 'font-semibold',
-        mediumClass: neo ? 'font-black uppercase tracking-wide' : 'font-medium',
-        boldClass: neo ? 'font-bold uppercase tracking-wide' : '',
-        textWhite: neo ? 'border-2 border-white' : '',
-      },
-
-      // Valores para badges y otros elementos
-      values: {
-        fontWeight: neo ? 900 : material ? 500 : fluent ? 600 : 700,
-        buttonVariant: neo ? 'red' : 'default',
-        configText: neo ? 'CONFIGURACIÓN' : 'Configuración',
-        logoutText: neo ? 'CERRAR SESIÓN' : 'Cerrar Sesión',
-      },
-
-      // Función para obtener estilos de navegación
-      getNavItemStyles: (active, item) => {
-        if (neo) {
-          return {
-            borderWidth: '2px',
-            borderStyle: 'solid',
-            borderColor: 'var(--border)',
-            backgroundColor: active
-              ? `var(--brutalist-${item?.color || 'blue'})`
-              : 'transparent',
-            color: active ? '#000000' : 'var(--foreground)',
-            boxShadow: active ? '2px 2px 0px 0px rgba(0,0,0,1)' : 'none',
-            fontWeight: 'bold',
-            textTransform: 'uppercase',
-            letterSpacing: '0.025em',
-            transition: 'all 150ms ease',
-          }
-        }
-        if (fluent) {
-          return {
-            backgroundColor: active
-              ? 'var(--fluent-brand-primary, #0078d4)'
-              : 'transparent',
-            color: active ? '#ffffff' : 'var(--foreground)',
-            borderRadius: 'var(--fluent-radius-small, 4px)',
-            boxShadow: active
-              ? 'var(--fluent-elevation-2, 0 2px 4px rgba(0,0,0,0.14))'
-              : 'none',
-            transition: 'all 200ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-          }
-        }
-        if (material) {
-          return {
-            backgroundColor: active ? 'var(--md-primary)' : 'transparent',
-            color: active ? 'var(--md-on-primary)' : 'var(--md-on-surface)',
-            borderRadius: 'var(--md-shape-corner-small)',
-            transition:
-              'all var(--md-motion-duration-short4) var(--md-motion-easing-standard)',
-          }
-        }
-        return {
-          backgroundColor: active ? 'var(--accent)' : 'transparent',
-          color: active ? 'var(--accent-foreground)' : 'var(--foreground)',
-          transition: 'colors 200ms ease',
-        }
-      },
-
-      // Función para obtener estilos de hover usando tokens del sistema de diseño
-      getNavItemHoverStyles: theme => {
-        if (theme === 'neo') {
-          return {
-            backgroundColor: 'var(--muted)',
-            color: 'var(--foreground)',
-            boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)',
-            transform: 'translate(1px, 1px)',
-            transition: 'all 150ms ease',
-          }
-        }
-        if (theme === 'fluent') {
-          return {
-            backgroundColor: 'var(--fluent-neutral-grey-14, rgba(0,0,0,0.06))',
-            color: 'var(--foreground)',
-            borderRadius: 'var(--fluent-radius-small, 4px)',
-            transition: 'all 200ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-          }
-        }
-        if (theme === 'material') {
-          return {
-            backgroundColor: 'var(--md-on-surface-hover)',
-            color: 'var(--md-on-surface)',
-            borderRadius: 'var(--md-shape-corner-small)',
-            transition:
-              'all var(--md-motion-duration-short4) var(--md-motion-easing-standard)',
-          }
-        }
-        return {
-          backgroundColor: 'var(--muted)',
-          color: 'var(--foreground)',
-          transition: 'all 200ms ease',
-        }
-      },
-
-      // Función para obtener colores de badges
-      getBadgeColors: (type = 'notification') => {
-        if (neo) {
-          return {
-            notification: {
-              backgroundColor: 'var(--brutalist-red)',
-              color: '#000000',
-            },
-            profile: {
-              backgroundColor: 'var(--brutalist-green)',
-              color: '#000000',
-            },
-          }
-        } else if (material) {
-          return {
-            notification: {
-              backgroundColor: 'var(--md-error-main, #B00020)',
-              color: 'var(--md-on-error, #FFFFFF)',
-            },
-            profile: {
-              backgroundColor: 'var(--md-secondary-main, #03DAC6)',
-              color: 'var(--md-on-secondary, #000000)',
-            },
-          }
-        } else if (fluent) {
-          return {
-            notification: {
-              backgroundColor: 'var(--fluent-semantic-danger, #D13438)',
-              color: '#FFFFFF',
-            },
-            profile: {
-              backgroundColor: 'var(--fluent-brand-primary, #0078D4)',
-              color: '#FFFFFF',
-            },
-          }
-        } else {
-          return {
-            notification: {
-              backgroundColor: 'var(--destructive, #ef4444)',
-              color: 'var(--destructive-foreground, #ffffff)',
-            },
-            profile: {
-              backgroundColor: 'var(--accent, #0078d4)',
-              color: 'var(--accent-foreground, #ffffff)',
-            },
-          }
-        }
-      },
-
-      // Función para obtener estilos base de badges
-      getBaseBadgeStyles: (type = 'notification') => {
-        const colors = neo
-          ? {
-              notification: {
-                backgroundColor: 'var(--brutalist-red)',
-                color: '#000000',
-              },
-              profile: {
-                backgroundColor: 'var(--brutalist-green)',
-                color: '#000000',
-              },
-            }
-          : material
-          ? {
-              notification: {
-                backgroundColor: 'var(--md-error-main, #B00020)',
-                color: 'var(--md-on-error, #FFFFFF)',
-              },
-              profile: {
-                backgroundColor: 'var(--md-secondary-main, #03DAC6)',
-                color: 'var(--md-on-secondary, #000000)',
-              },
-            }
-          : fluent
-          ? {
-              notification: {
-                backgroundColor: 'var(--fluent-semantic-danger, #D13438)',
-                color: '#FFFFFF',
-              },
-              profile: {
-                backgroundColor: 'var(--fluent-brand-primary, #0078D4)',
-                color: '#FFFFFF',
-              },
-            }
-          : {
-              notification: {
-                backgroundColor: 'var(--destructive, #ef4444)',
-                color: 'var(--destructive-foreground, #ffffff)',
-              },
-              profile: {
-                backgroundColor: 'var(--accent, #0078d4)',
-                color: 'var(--accent-foreground, #ffffff)',
-              },
-            }
-
-        const baseStyles = {
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          whiteSpace: 'nowrap',
-          overflow: 'visible',
-          minWidth: '20px',
-          width: '20px',
-          height: '20px',
-          fontSize: '11px',
-          lineHeight: '1',
-          fontWeight: neo ? 900 : material ? 500 : fluent ? 600 : 700,
-          position: 'absolute',
-          top: '-5px',
-          right: '-5px',
-          visibility: 'visible',
-          opacity: '1',
-          zIndex: 20,
-          padding: '0',
-          pointerEvents: 'none',
-          ...colors[type],
-        }
-
-        if (neo) {
-          return {
-            ...baseStyles,
-            border: '2px solid #000000',
-            boxShadow: '2px 2px 0px 0px rgba(0,0,0,1)',
-            borderRadius: '0px',
-            minWidth: '22px',
-            width: '22px',
-            height: '22px',
-          }
-        } else if (material) {
-          return {
-            ...baseStyles,
-            borderRadius: '50%',
-            boxShadow:
-              '0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 2px rgba(0, 0, 0, 0.24)',
-            border: 'none',
-          }
-        } else if (fluent) {
-          return {
-            ...baseStyles,
-            borderRadius: '50%',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            border: 'none',
-          }
-        } else {
-          return {
-            ...baseStyles,
-            borderRadius: '50%',
-            border: 'none',
-          }
-        }
-      },
-    }
-  }, [isNeoBrutalismValue, isMaterialValue, isFluentValue])
-
-  const rateFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat('es-PY', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4,
-      }),
-    []
-  )
-
-  const displayedRates = useMemo(
-    () =>
-      navbarRates.filter(
-        rate => rate && rate.currency_code && Number.isFinite(rate.rate_to_base)
-      ),
-    [navbarRates]
-  )
-
-  const baseCurrencyCode = useMemo(() => {
-    const fromPayload = navbarRates.find(rate => {
-      const candidate = rate?.original?.base_currency_code
-      return candidate && typeof candidate === 'string'
-    })
-
-    if (fromPayload?.original?.base_currency_code) {
-      return String(fromPayload.original.base_currency_code).toUpperCase()
-    }
-
-    return 'PYG'
-  }, [navbarRates])
-
-  const hasNavbarRates = displayedRates.length > 0
-
-  // Hook para detectar cuando estamos en el cliente (post-hidratación)
+  // Obtener tipos de cambio
   useEffect(() => {
-    setIsClient(true)
-    const checkScreenSize = () => {
-      setIsLargeScreen(window.innerWidth >= 1024)
-    }
-
-    checkScreenSize()
-    window.addEventListener('resize', checkScreenSize)
-
-    return () => window.removeEventListener('resize', checkScreenSize)
-  }, [])
-
-  useEffect(() => {
-    if (!isClient) {
-      return undefined
-    }
+    if (!isClient) return undefined
 
     let isActive = true
 
     const fetchRates = async (withLoader = false) => {
-      if (!isActive) return
+      if (!isActive) {
+        return
+      }
       if (withLoader) {
         setNavbarRatesLoading(true)
       }
 
       try {
         const data = await ExchangeRateService.getLatestAll()
-        if (!isActive) return
-        setNavbarRates(Array.isArray(data) ? data : [])
-        setNavbarRatesError(null)
+        if (isActive) {
+          setNavbarRates(Array.isArray(data) ? data : [])
+          setNavbarRatesError(null)
+        }
       } catch (error) {
-        if (!isActive) return
-        setNavbarRatesError(
-          error?.message || 'Sin datos de tipo de cambio disponibles'
-        )
+        if (isActive) {
+          setNavbarRatesError(
+            error?.message || 'Sin datos de tipo de cambio disponibles'
+          )
+        }
       } finally {
-        if (!isActive) return
-        setNavbarRatesLoading(false)
-        hasFetchedRatesRef.current = true
+        if (isActive) {
+          setNavbarRatesLoading(false)
+          hasFetchedRatesRef.current = true
+        }
       }
     }
 
@@ -607,196 +265,7 @@ const MainLayout = ({ children }) => {
     }
   }, [isClient])
 
-  // Asegurar que el tema se aplique correctamente al DOM
-  useEffect(() => {
-    if (typeof window !== 'undefined' && theme) {
-      const body = document.body
-      const html = document.documentElement
-
-      // Asegurar que el tema se aplique tanto al html como al body
-      html.setAttribute('data-theme', theme)
-      body.setAttribute('data-theme', theme)
-    }
-  }, [theme])
-
-  // ...existing code...
-
-  // Manejar logout
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
-
-  // Helper functions para generar clases según el tema activo
-  const getTitleClass = (size = 'title') => {
-    if (isNeoBrutalism) {
-      switch (size) {
-        case 'title':
-          return 'font-black uppercase tracking-wide'
-        case 'body':
-          return 'font-bold uppercase tracking-wide'
-        case 'caption':
-          return 'font-bold uppercase tracking-wide text-sm'
-        default:
-          return 'font-black uppercase tracking-wide'
-      }
-    }
-    if (isFluentValue) {
-      switch (size) {
-        case 'title':
-          return 'fluent-title'
-        case 'body':
-          return 'fluent-body'
-        case 'caption':
-          return 'fluent-caption'
-        default:
-          return 'fluent-body'
-      }
-    }
-    if (isMaterialValue) {
-      switch (size) {
-        case 'title':
-          return 'material-headline-medium'
-        case 'body':
-          return 'material-body-medium'
-        case 'caption':
-          return 'material-body-small'
-        default:
-          return 'material-body-medium'
-      }
-    }
-    return 'font-medium'
-  }
-
-  const getCardClass = () => {
-    if (isNeoBrutalismValue)
-      return 'border-4 border-foreground shadow-neo-brutal'
-    if (isFluentValue) return 'fluent-elevation-2 fluent-radius-medium'
-    if (isMaterialValue) return 'material-card-elevated'
-    return 'border border-border rounded-lg shadow-lg'
-  }
-
-  const getButtonClass = () => {
-    if (isFluentValue) return 'fluent-elevation-2 fluent-radius-small'
-    if (isMaterialValue) return 'material-button-elevated'
-    return ''
-  }
-  // Configuración de navegación
-  const navigation = useMemo(
-    () => [
-      {
-        name: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutDashboard,
-        color: 'lime',
-        badge: '1',
-      },
-      {
-        name: 'Productos',
-        href: '/productos',
-        icon: Package,
-        color: 'blue',
-        badge: '2',
-      },
-      {
-        name: 'Clientes',
-        href: '/clientes',
-        icon: Users,
-        color: 'orange',
-        badge: '3',
-      },
-      {
-        name: 'Proveedores',
-        href: '/proveedores',
-        icon: Truck,
-        color: 'teal',
-        badge: '4',
-      },
-      {
-        name: 'Ajuste de inventario',
-        href: '/inventario',
-        icon: Package,
-        color: 'purple',
-        badge: '5',
-      },
-      {
-        name: 'Ajustes de Precios',
-        href: '/ajustes-precios',
-        icon: Edit,
-        color: 'orange',
-        badge: '6',
-      },
-      {
-        name: 'Ventas',
-        href: '/ventas',
-        icon: ShoppingCart,
-        color: 'green',
-        badge: '7',
-      },
-      {
-        name: 'Reservas',
-        href: '/reservas',
-        icon: Calendar,
-        color: 'purple',
-        badge: '8',
-      },
-      {
-        name: 'Compras',
-        href: '/compras',
-        icon: ShoppingBag,
-        color: 'indigo',
-        badge: '9',
-      },
-      {
-        name: 'Pagos',
-        href: '#',
-        icon: DollarSign,
-        color: 'green',
-        badge: '10',
-        children: [
-          {
-            name: 'Caja Registradora',
-            href: '/caja-registradora',
-            icon: DollarSign,
-            color: 'green',
-          },
-          {
-            name: 'Pagos Compras',
-            href: '/pagos-compras',
-            icon: CreditCard,
-            color: 'blue',
-          },
-          {
-            name: 'Pagos Ventas',
-            href: '/pagos-ventas',
-            icon: Receipt,
-            color: 'emerald',
-          },
-          {
-            name: 'Documentación de Pagos',
-            href: '/pagos/documentacion',
-            icon: BookOpen,
-            color: 'purple',
-          },
-          {
-            name: 'Gestión de Pagos',
-            href: '/pagos/gestion',
-            icon: SlidersHorizontal,
-            color: 'amber',
-          },
-        ],
-      },
-      {
-        name: 'Reportes',
-        href: '/reportes',
-        icon: BarChart3,
-        color: 'green',
-        badge: '13',
-      },
-    ],
-    []
-  )
-
+  // Auto-expandir menús con sub-items activos
   useEffect(() => {
     navigation.forEach(item => {
       if (
@@ -804,13 +273,8 @@ const MainLayout = ({ children }) => {
         item.children.some(child => child.href === location.pathname)
       ) {
         setExpandedMenus(prev => {
-          if (prev[item.name]) {
-            return prev
-          }
-          return {
-            ...prev,
-            [item.name]: true,
-          }
+          if (prev[item.name]) return prev
+          return { ...prev, [item.name]: true }
         })
       }
     })
@@ -833,860 +297,222 @@ const MainLayout = ({ children }) => {
     }))
   }
 
-  // Aplicar estilos condicionales según el tema
-  const getLayoutStyles = () => {
-    if (isNeoBrutalism) {
-      return {
-        fontFamily: 'var(--font-sans)',
-        fontWeight: 'bold',
-      }
+  const closeSidebarIfPossible = () => {
+    if (!isLargeScreen) return
+    const activeElement = document.activeElement
+    if (sidebarRef.current && sidebarRef.current.contains(activeElement)) {
+      return
     }
-    return {
-      fontFamily: 'var(--font-sans)',
-    }
+    setIsSidebarExpanded(false)
   }
 
-  const getSidebarStyles = () => {
-    if (isNeoBrutalism) {
-      return {
-        backgroundColor: 'var(--background)',
-        borderRight: '4px solid var(--border)',
-        boxShadow: '4px 0px 0px 0px rgba(0,0,0,1)',
-      }
-    }
-    if (isFluentValue) {
-      return {
-        backgroundColor: 'var(--fluent-surface-primary)',
-        borderRight: '1px solid var(--fluent-neutral-grey-30)',
-        boxShadow: 'var(--fluent-elevation-4)',
-      }
-    }
-    if (isMaterialValue) {
-      return {
-        backgroundColor: 'var(--material-surface)',
-        borderRight: '1px solid var(--material-outline)',
-        boxShadow: 'var(--material-elevation-2)',
-      }
-    }
-    return {
-      backgroundColor: 'var(--background)',
-      borderRight: 'var(--border-width, 1px) solid var(--border)',
-      boxShadow: 'var(--shadow-sm)',
-    }
+  const handleSidebarMouseEnter = () => {
+    if (!isLargeScreen) return
+    setIsSidebarExpanded(true)
   }
 
-  const getNavItemStyles = (active, item) => {
-    return computedStyles.getNavItemStyles(active, item)
+  const handleSidebarMouseLeave = () => {
+    if (!isLargeScreen) return
+    closeSidebarIfPossible()
   }
 
-  // Helper function para obtener colores de badges según el tema
-  const getBadgeColors = (type = 'notification') => {
-    return computedStyles.getBadgeColors(type)
+  const handleSidebarFocus = () => {
+    if (!isLargeScreen) return
+    setIsSidebarExpanded(true)
   }
 
-  // Helper function para obtener estilos base de badges
-  const getBaseBadgeStyles = (type = 'notification') => {
-    return computedStyles.getBaseBadgeStyles(type)
+  const handleSidebarBlur = () => {
+    if (!isLargeScreen) return
+    window.requestAnimationFrame(() => {
+      closeSidebarIfPossible()
+    })
+  }
+
+  useEffect(() => {
+    if (!isLargeScreen) {
+      setIsSidebarExpanded(false)
+    }
+  }, [isLargeScreen])
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
+  // Render navigation item
+  const renderNavItem = (item, isMobile = false) => {
+    const Icon = item.icon
+    const hasChildren = item.children && item.children.length > 0
+    const isExpanded = expandedMenus[item.name]
+    const active = hasChildren ? isParentActive(item) : isActive(item.href)
+    const labelVisible = !isLargeScreen || isSidebarExpanded || isMobile
+    const itemAriaLabel = labelVisible ? undefined : item.name
+
+    return (
+      <div key={item.name} className='nav__item-wrapper'>
+        {hasChildren ? (
+          <button
+            onClick={() => toggleMenu(item.name)}
+            className={`nav__item ${active ? 'nav__item--active' : ''}`}
+            aria-expanded={isExpanded}
+            aria-label={itemAriaLabel}
+            title={item.name}
+          >
+            <Icon className='nav__icon' />
+            <span className='nav__text' aria-hidden={!labelVisible}>
+              {item.name}
+            </span>
+            {isExpanded ? (
+              <ChevronDown
+                className='nav__chevron'
+                aria-hidden={!labelVisible}
+              />
+            ) : (
+              <ChevronRight
+                className='nav__chevron'
+                aria-hidden={!labelVisible}
+              />
+            )}
+          </button>
+        ) : (
+          <Link
+            to={item.href}
+            onClick={() => isMobile && setSidebarOpen(false)}
+            className={`nav__item ${active ? 'nav__item--active' : ''}`}
+            aria-label={itemAriaLabel}
+            title={item.name}
+          >
+            <Icon className='nav__icon' />
+            <span className='nav__text' aria-hidden={!labelVisible}>
+              {item.name}
+            </span>
+          </Link>
+        )}
+
+        {/* Submenu */}
+        {hasChildren && isExpanded && (
+          <div className='nav__submenu'>
+            {item.children.map(child => {
+              const ChildIcon = child.icon
+              const childActive = isActive(child.href)
+              const childLabelVisible =
+                !isLargeScreen || isSidebarExpanded || isMobile
+              const childAriaLabel = childLabelVisible ? undefined : child.name
+
+              return (
+                <Link
+                  key={child.name}
+                  to={child.href}
+                  onClick={() => isMobile && setSidebarOpen(false)}
+                  className={`nav__subitem ${
+                    childActive ? 'nav__subitem--active' : ''
+                  }`}
+                  aria-label={childAriaLabel}
+                  title={child.name}
+                >
+                  <ChildIcon className='nav__icon' />
+                  <span className='nav__text' aria-hidden={!childLabelVisible}>
+                    {child.name}
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
-    <div
-      className='erp-main-layout flex min-h-screen'
-      style={computedStyles.layout}
-      data-component='main-layout'
-      data-testid='main-layout'
-    >
-      {/* Sidebar Desktop - Fixed sidebar */}
-      <div
-        className={`erp-sidebar-desktop fixed inset-y-0 left-0 z-30 w-72 ${
-          !isClient ? 'hidden lg:block' : ''
-        }`}
-        style={{
-          display: isClient ? (isLargeScreen ? 'block' : 'none') : undefined,
-        }}
-        data-component='sidebar-desktop'
-        data-testid='sidebar-desktop'
-      >
-        <div
-          className='erp-sidebar-content h-full flex flex-col'
-          style={getSidebarStyles()}
-          data-component='sidebar-content'
-          data-testid='sidebar-content'
+    <div className='layout'>
+      {/* Sidebar Desktop */}
+      {isClient && isLargeScreen && (
+        <aside
+          ref={sidebarRef}
+          className={`sidebar sidebar--desktop ${
+            isSidebarExpanded ? 'sidebar--expanded' : 'sidebar--collapsed'
+          }`}
+          onMouseEnter={handleSidebarMouseEnter}
+          onMouseLeave={handleSidebarMouseLeave}
+          onFocusCapture={handleSidebarFocus}
+          onBlurCapture={handleSidebarBlur}
         >
-          {/* Logo */}
-          <div
-            className='erp-sidebar-logo flex items-center flex-shrink-0 px-6 py-6'
-            style={computedStyles.logoContainer}
-            data-component='sidebar-logo'
-            data-testid='sidebar-logo'
-          >
-            <div
-              className='erp-logo-content flex items-center space-x-3'
-              data-component='logo-content'
-              data-testid='logo-content'
-            >
-              <div
-                className='erp-logo-icon w-10 h-10 flex items-center justify-center rounded-md'
-                style={computedStyles.logoIcon}
-              >
-                <LayoutDashboard className='h-6 w-6' />
+          <div className='sidebar__header'>
+            <div className='sidebar__logo'>
+              <div className='sidebar__logo-icon'>
+                <LayoutDashboard className='sidebar__logo-icon-svg' />
               </div>
-              <div className='erp-logo-text'>
-                <h1
-                  className={`erp-logo-title text-xl ${getTitleClass('title')}`}
-                  style={{ color: 'var(--foreground)' }}
-                  data-testid='logo-title'
-                >
-                  ERP System
-                </h1>
-              </div>
+              <h1 className='sidebar__logo-text'>ERP System</h1>
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav
-            className={`erp-sidebar-nav mt-4 flex-1 px-4 pb-4 ${computedStyles.css.navSpacing} overflow-y-auto`}
-            data-component='sidebar-nav'
-            data-testid='sidebar-nav'
-          >
-            {navigation.map(item => {
-              const Icon = item.icon
-              const hasChildren = item.children && item.children.length > 0
-              const isExpanded = expandedMenus[item.name]
-              const active = hasChildren
-                ? isParentActive(item)
-                : isActive(item.href)
-              const navStyles = getNavItemStyles(active, item)
-
-              return (
-                <div key={item.name} className='relative'>
-                  {/* Main menu item */}
-                  {hasChildren ? (
-                    <button
-                      onClick={() => toggleMenu(item.name)}
-                      className={`erp-nav-item group flex items-center w-full px-3 py-2 text-xs ${getTitleClass(
-                        'body'
-                      )} ${
-                        isNeoBrutalismValue
-                          ? ''
-                          : isFluentValue
-                          ? 'fluent-radius-small'
-                          : 'rounded-md'
-                      } transition-all duration-150`}
-                      style={navStyles}
-                      data-component='nav-item'
-                      data-testid={`nav-item-${item.name.toLowerCase()}`}
-                      data-active={active}
-                      onMouseEnter={e => {
-                        if (!active) {
-                          const themeType = isNeoBrutalismValue
-                            ? 'neo'
-                            : isFluentValue
-                            ? 'fluent'
-                            : isMaterialValue
-                            ? 'material'
-                            : 'default'
-                          const hoverStyles =
-                            computedStyles.getNavItemHoverStyles(themeType)
-
-                          Object.entries(hoverStyles).forEach(
-                            ([prop, value]) => {
-                              e.target.style.setProperty(
-                                prop,
-                                value,
-                                'important'
-                              )
-                            }
-                          )
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if (!active) {
-                          const originalStyles = navStyles
-                          Object.entries(originalStyles).forEach(
-                            ([prop, value]) => {
-                              e.target.style.setProperty(
-                                prop,
-                                value,
-                                'important'
-                              )
-                            }
-                          )
-
-                          if (isNeoBrutalismValue && !active) {
-                            e.target.style.setProperty(
-                              'transform',
-                              'translate(0px, 0px)',
-                              'important'
-                            )
-                            e.target.style.setProperty(
-                              'box-shadow',
-                              'none',
-                              'important'
-                            )
-                          }
-                        }
-                      }}
-                    >
-                      <Icon className='erp-nav-icon mr-2 h-4 w-4 flex-shrink-0' />
-                      <span className='erp-nav-text flex-1'>{item.name}</span>
-                      {isExpanded ? (
-                        <ChevronDown className='h-4 w-4' />
-                      ) : (
-                        <ChevronRight className='h-4 w-4' />
-                      )}
-                      {item.badge &&
-                        (isNeoBrutalismValue ? (
-                          <span
-                            className={`erp-nav-badge ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
-                            style={{
-                              backgroundColor: `var(--brutalist-${item.color})`,
-                              boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)',
-                            }}
-                            data-testid={`nav-badge-${item.name.toLowerCase()}`}
-                          >
-                            {item.badge}
-                          </span>
-                        ) : (
-                          <span
-                            className='erp-nav-badge ml-2 px-2 py-1 text-xs font-medium rounded-full'
-                            style={{
-                              backgroundColor: 'var(--muted)',
-                              color: 'var(--muted-foreground)',
-                            }}
-                            data-testid={`nav-badge-${item.name.toLowerCase()}`}
-                          >
-                            {item.badge}
-                          </span>
-                        ))}
-                    </button>
-                  ) : (
-                    <Link
-                      to={item.href}
-                      className={`erp-nav-item group flex items-center px-3 py-2 text-xs ${getTitleClass(
-                        'body'
-                      )} ${
-                        isNeoBrutalismValue
-                          ? ''
-                          : isFluentValue
-                          ? 'fluent-radius-small'
-                          : 'rounded-md'
-                      } transition-all duration-150`}
-                      style={navStyles}
-                      data-component='nav-item'
-                      data-testid={`nav-item-${item.name.toLowerCase()}`}
-                      data-active={active}
-                      onMouseEnter={e => {
-                        if (!active) {
-                          const themeType = isNeoBrutalismValue
-                            ? 'neo'
-                            : isFluentValue
-                            ? 'fluent'
-                            : isMaterialValue
-                            ? 'material'
-                            : 'default'
-                          const hoverStyles =
-                            computedStyles.getNavItemHoverStyles(themeType)
-
-                          Object.entries(hoverStyles).forEach(
-                            ([prop, value]) => {
-                              e.target.style.setProperty(
-                                prop,
-                                value,
-                                'important'
-                              )
-                            }
-                          )
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if (!active) {
-                          const originalStyles = navStyles
-                          Object.entries(originalStyles).forEach(
-                            ([prop, value]) => {
-                              e.target.style.setProperty(
-                                prop,
-                                value,
-                                'important'
-                              )
-                            }
-                          )
-
-                          if (isNeoBrutalismValue && !active) {
-                            e.target.style.setProperty(
-                              'transform',
-                              'translate(0px, 0px)',
-                              'important'
-                            )
-                            e.target.style.setProperty(
-                              'box-shadow',
-                              'none',
-                              'important'
-                            )
-                          }
-                        }
-                      }}
-                    >
-                      <Icon className='erp-nav-icon mr-2 h-4 w-4 flex-shrink-0' />
-                      <span className='erp-nav-text flex-1'>{item.name}</span>
-                      {item.badge &&
-                        (isNeoBrutalismValue ? (
-                          <span
-                            className={`erp-nav-badge ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
-                            style={{
-                              backgroundColor: `var(--brutalist-${item.color})`,
-                              boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)',
-                            }}
-                            data-testid={`nav-badge-${item.name.toLowerCase()}`}
-                          >
-                            {item.badge}
-                          </span>
-                        ) : (
-                          <span
-                            className='erp-nav-badge ml-2 px-2 py-1 text-xs font-medium rounded-full'
-                            style={{
-                              backgroundColor: 'var(--muted)',
-                              color: 'var(--muted-foreground)',
-                            }}
-                            data-testid={`nav-badge-${item.name.toLowerCase()}`}
-                          >
-                            {item.badge}
-                          </span>
-                        ))}
-                    </Link>
-                  )}
-
-                  {/* Submenu items */}
-                  {hasChildren && isExpanded && (
-                    <div className='ml-4 mt-1 space-y-1'>
-                      {item.children.map(child => {
-                        const ChildIcon = child.icon
-                        const childActive = isActive(child.href)
-                        const childNavStyles = getNavItemStyles(
-                          childActive,
-                          child
-                        )
-
-                        return (
-                          <Link
-                            key={child.name}
-                            to={child.href}
-                            className={`erp-nav-sub-item group flex items-center px-3 py-2 text-xs ${getTitleClass(
-                              'body'
-                            )} ${
-                              isNeoBrutalismValue
-                                ? ''
-                                : isFluentValue
-                                ? 'fluent-radius-small'
-                                : 'rounded-md'
-                            } transition-all duration-150`}
-                            style={childNavStyles}
-                            data-component='nav-sub-item'
-                            data-testid={`nav-sub-item-${child.name.toLowerCase()}`}
-                            data-active={childActive}
-                            onMouseEnter={e => {
-                              if (!childActive) {
-                                const themeType = isNeoBrutalismValue
-                                  ? 'neo'
-                                  : isFluentValue
-                                  ? 'fluent'
-                                  : isMaterialValue
-                                  ? 'material'
-                                  : 'default'
-                                const hoverStyles =
-                                  computedStyles.getNavItemHoverStyles(
-                                    themeType
-                                  )
-
-                                Object.entries(hoverStyles).forEach(
-                                  ([prop, value]) => {
-                                    e.target.style.setProperty(
-                                      prop,
-                                      value,
-                                      'important'
-                                    )
-                                  }
-                                )
-                              }
-                            }}
-                            onMouseLeave={e => {
-                              if (!childActive) {
-                                const originalStyles = childNavStyles
-                                Object.entries(originalStyles).forEach(
-                                  ([prop, value]) => {
-                                    e.target.style.setProperty(
-                                      prop,
-                                      value,
-                                      'important'
-                                    )
-                                  }
-                                )
-
-                                if (isNeoBrutalismValue && !childActive) {
-                                  e.target.style.setProperty(
-                                    'transform',
-                                    'translate(0px, 0px)',
-                                    'important'
-                                  )
-                                  e.target.style.setProperty(
-                                    'box-shadow',
-                                    'none',
-                                    'important'
-                                  )
-                                }
-                              }
-                            }}
-                          >
-                            <ChildIcon className='erp-nav-icon mr-2 h-4 w-4 flex-shrink-0' />
-                            <span className='erp-nav-text flex-1'>
-                              {child.name}
-                            </span>
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+          <nav className='sidebar__nav'>
+            {navigation.map(item => renderNavItem(item))}
           </nav>
-        </div>
-      </div>
+        </aside>
+      )}
 
       {/* Sidebar Mobile */}
       {sidebarOpen && (
-        <div className='fixed inset-0 flex z-40 lg:hidden'>
+        <div className='sidebar-overlay'>
           <div
-            className='fixed inset-0 bg-black bg-opacity-50'
+            className='sidebar-overlay__backdrop'
             onClick={() => setSidebarOpen(false)}
           />
-          <div
-            className='relative flex-1 flex flex-col max-w-xs w-full'
-            style={computedStyles.sidebarMobile}
-          >
-            {/* Close button */}
-            <div className='absolute top-0 right-0 -mr-12 pt-2'>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() => setSidebarOpen(false)}
-                className={`text-white ${computedStyles.css.textWhite}`}
-                style={computedStyles.mobileCloseBtn}
-              >
-                <X className='h-6 w-6' />
-              </Button>
-            </div>
+          <aside className='sidebar sidebar--mobile'>
+            <button
+              className='sidebar__close'
+              onClick={() => setSidebarOpen(false)}
+              aria-label='Cerrar menú'
+            >
+              <X className='sidebar__close-icon' />
+            </button>
 
-            {/* Mobile sidebar content - same as desktop */}
-            <div className='flex flex-col h-full'>
-              {/* Logo */}
-              <div
-                className='flex items-center flex-shrink-0 px-6 py-6'
-                style={{
-                  borderBottom: isNeoBrutalismValue
-                    ? '4px solid var(--border)'
-                    : 'var(--border-width, 1px) solid var(--border)',
-                }}
-              >
-                <div className='flex items-center space-x-3'>
-                  <div
-                    className='w-10 h-10 flex items-center justify-center rounded-md'
-                    style={{
-                      backgroundColor: 'var(--primary)',
-                      color: 'var(--primary-foreground)',
-                      border: isNeoBrutalismValue
-                        ? '2px solid var(--border)'
-                        : 'var(--border-width, 1px) solid var(--border)',
-                      boxShadow: isNeoBrutalismValue
-                        ? '2px 2px 0px 0px rgba(0,0,0,1)'
-                        : 'none',
-                    }}
-                  >
-                    <LayoutDashboard className='h-6 w-6' />
-                  </div>
-                  <div>
-                    <h1
-                      className={`text-xl ${computedStyles.css.titleClass}`}
-                      style={{ color: 'var(--foreground)' }}
-                    >
-                      ERP System
-                    </h1>
-                  </div>
+            <div className='sidebar__header'>
+              <div className='sidebar__logo'>
+                <div className='sidebar__logo-icon'>
+                  <LayoutDashboard className='sidebar__logo-icon-svg' />
                 </div>
+                <h1 className='sidebar__logo-text'>ERP System</h1>
               </div>
-
-              {/* Navigation */}
-              <nav
-                className={`mt-4 flex-1 px-4 pb-4 ${
-                  isNeoBrutalismValue ? 'space-y-2' : 'space-y-1'
-                } overflow-y-auto`}
-              >
-                {navigation.map(item => {
-                  const Icon = item.icon
-                  const hasChildren = item.children && item.children.length > 0
-                  const isExpanded = expandedMenus[item.name]
-                  const active = hasChildren
-                    ? isParentActive(item)
-                    : isActive(item.href)
-                  const navStyles = getNavItemStyles(active, item)
-
-                  return (
-                    <div key={item.name} className='relative'>
-                      {/* Main menu item */}
-                      {hasChildren ? (
-                        <button
-                          onClick={() => toggleMenu(item.name)}
-                          className={`group flex items-center w-full px-3 py-2 text-xs ${
-                            computedStyles.css.mediumClass
-                          } ${
-                            isNeoBrutalismValue ? '' : 'rounded-md'
-                          } transition-all duration-150`}
-                          style={navStyles}
-                          onMouseEnter={e => {
-                            if (!active) {
-                              const themeType = isNeoBrutalismValue
-                                ? 'neo'
-                                : isFluentValue
-                                ? 'fluent'
-                                : isMaterialValue
-                                ? 'material'
-                                : 'default'
-                              const hoverStyles =
-                                computedStyles.getNavItemHoverStyles(themeType)
-
-                              Object.entries(hoverStyles).forEach(
-                                ([prop, value]) => {
-                                  e.target.style.setProperty(
-                                    prop,
-                                    value,
-                                    'important'
-                                  )
-                                }
-                              )
-                            }
-                          }}
-                          onMouseLeave={e => {
-                            if (!active) {
-                              const originalStyles = navStyles
-                              Object.entries(originalStyles).forEach(
-                                ([prop, value]) => {
-                                  e.target.style.setProperty(
-                                    prop,
-                                    value,
-                                    'important'
-                                  )
-                                }
-                              )
-
-                              if (isNeoBrutalismValue && !active) {
-                                e.target.style.setProperty(
-                                  'transform',
-                                  'translate(0px, 0px)',
-                                  'important'
-                                )
-                                e.target.style.setProperty(
-                                  'box-shadow',
-                                  'none',
-                                  'important'
-                                )
-                              }
-                            }
-                          }}
-                        >
-                          <Icon className='mr-2 h-4 w-4 flex-shrink-0' />
-                          <span className='flex-1'>{item.name}</span>
-                          {isExpanded ? (
-                            <ChevronDown className='h-4 w-4' />
-                          ) : (
-                            <ChevronRight className='h-4 w-4' />
-                          )}
-                          {item.badge &&
-                            (isNeoBrutalismValue ? (
-                              <span
-                                className={`ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
-                                style={{
-                                  backgroundColor: `var(--brutalist-${item.color})`,
-                                  boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)',
-                                }}
-                              >
-                                {item.badge}
-                              </span>
-                            ) : (
-                              <span
-                                className='ml-2 px-2 py-1 text-xs font-medium rounded-full'
-                                style={{
-                                  backgroundColor: 'var(--muted)',
-                                  color: 'var(--muted-foreground)',
-                                }}
-                              >
-                                {item.badge}
-                              </span>
-                            ))}
-                        </button>
-                      ) : (
-                        <Link
-                          to={item.href}
-                          onClick={() => setSidebarOpen(false)}
-                          className={`group flex items-center px-3 py-2 text-xs ${
-                            computedStyles.css.mediumClass
-                          } ${
-                            isNeoBrutalismValue ? '' : 'rounded-md'
-                          } transition-all duration-150`}
-                          style={navStyles}
-                          onMouseEnter={e => {
-                            if (!active) {
-                              const themeType = isNeoBrutalismValue
-                                ? 'neo'
-                                : isFluentValue
-                                ? 'fluent'
-                                : isMaterialValue
-                                ? 'material'
-                                : 'default'
-                              const hoverStyles =
-                                computedStyles.getNavItemHoverStyles(themeType)
-
-                              Object.entries(hoverStyles).forEach(
-                                ([prop, value]) => {
-                                  e.target.style.setProperty(
-                                    prop,
-                                    value,
-                                    'important'
-                                  )
-                                }
-                              )
-                            }
-                          }}
-                          onMouseLeave={e => {
-                            if (!active) {
-                              const originalStyles = navStyles
-                              Object.entries(originalStyles).forEach(
-                                ([prop, value]) => {
-                                  e.target.style.setProperty(
-                                    prop,
-                                    value,
-                                    'important'
-                                  )
-                                }
-                              )
-
-                              if (isNeoBrutalismValue && !active) {
-                                e.target.style.setProperty(
-                                  'transform',
-                                  'translate(0px, 0px)',
-                                  'important'
-                                )
-                                e.target.style.setProperty(
-                                  'box-shadow',
-                                  'none',
-                                  'important'
-                                )
-                              }
-                            }
-                          }}
-                        >
-                          <Icon className='mr-2 h-4 w-4 flex-shrink-0' />
-                          <span className='flex-1'>{item.name}</span>
-                          {item.badge &&
-                            (isNeoBrutalismValue ? (
-                              <span
-                                className={`ml-2 px-2 py-1 text-xs font-black border-2 border-black`}
-                                style={{
-                                  backgroundColor: `var(--brutalist-${item.color})`,
-                                  boxShadow: '1px 1px 0px 0px rgba(0,0,0,1)',
-                                }}
-                              >
-                                {item.badge}
-                              </span>
-                            ) : (
-                              <span
-                                className='ml-2 px-2 py-1 text-xs font-medium rounded-full'
-                                style={{
-                                  backgroundColor: 'var(--muted)',
-                                  color: 'var(--muted-foreground)',
-                                }}
-                              >
-                                {item.badge}
-                              </span>
-                            ))}
-                        </Link>
-                      )}
-
-                      {/* Submenu items */}
-                      {hasChildren && isExpanded && (
-                        <div className='ml-4 mt-1 space-y-1'>
-                          {item.children.map(child => {
-                            const ChildIcon = child.icon
-                            const childActive = isActive(child.href)
-                            const childNavStyles = getNavItemStyles(
-                              childActive,
-                              child
-                            )
-
-                            return (
-                              <Link
-                                key={child.name}
-                                to={child.href}
-                                onClick={() => setSidebarOpen(false)}
-                                className={`group flex items-center px-3 py-2 text-xs ${
-                                  computedStyles.css.mediumClass
-                                } ${
-                                  isNeoBrutalismValue ? '' : 'rounded-md'
-                                } transition-all duration-150`}
-                                style={childNavStyles}
-                                onMouseEnter={e => {
-                                  if (!childActive) {
-                                    const themeType = isNeoBrutalismValue
-                                      ? 'neo'
-                                      : isFluentValue
-                                      ? 'fluent'
-                                      : isMaterialValue
-                                      ? 'material'
-                                      : 'default'
-                                    const hoverStyles =
-                                      computedStyles.getNavItemHoverStyles(
-                                        themeType
-                                      )
-
-                                    Object.entries(hoverStyles).forEach(
-                                      ([prop, value]) => {
-                                        e.target.style.setProperty(
-                                          prop,
-                                          value,
-                                          'important'
-                                        )
-                                      }
-                                    )
-                                  }
-                                }}
-                                onMouseLeave={e => {
-                                  if (!childActive) {
-                                    const originalStyles = childNavStyles
-                                    Object.entries(originalStyles).forEach(
-                                      ([prop, value]) => {
-                                        e.target.style.setProperty(
-                                          prop,
-                                          value,
-                                          'important'
-                                        )
-                                      }
-                                    )
-
-                                    if (isNeoBrutalismValue && !childActive) {
-                                      e.target.style.setProperty(
-                                        'transform',
-                                        'translate(0px, 0px)',
-                                        'important'
-                                      )
-                                      e.target.style.setProperty(
-                                        'box-shadow',
-                                        'none',
-                                        'important'
-                                      )
-                                    }
-                                  }
-                                }}
-                              >
-                                <ChildIcon className='mr-2 h-4 w-4 flex-shrink-0' />
-                                <span className='flex-1'>{child.name}</span>
-                              </Link>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </nav>
             </div>
-          </div>
+
+            <nav className='sidebar__nav'>
+              {navigation.map(item => renderNavItem(item, true))}
+            </nav>
+          </aside>
         </div>
       )}
 
-      {/* Main content */}
+      {/* Main Content */}
       <div
-        className={`erp-main-content flex flex-col min-h-screen ${
-          !isClient ? 'lg:ml-72' : ''
+        className={`layout__main ${
+          isClient && isLargeScreen ? 'layout__main--with-sidebar' : ''
+        } ${
+          isClient && isLargeScreen && isSidebarExpanded
+            ? 'layout__main--sidebar-expanded'
+            : ''
         }`}
-        style={{
-          marginLeft: isClient ? (isLargeScreen ? '288px' : '0px') : undefined, // 288px = w-72
-          width: isClient
-            ? isLargeScreen
-              ? 'calc(100vw - 288px)'
-              : '100vw'
-            : undefined,
-          maxWidth: isClient
-            ? isLargeScreen
-              ? 'calc(100vw - 288px)'
-              : '100vw'
-            : undefined,
-        }}
-        data-component='main-content'
-        data-testid='main-content'
       >
-        {/* Top navbar */}
-        <div
-          className='erp-navbar sticky top-0 z-40 flex-shrink-0 flex h-16 w-full'
-          style={computedStyles.navbar}
-          data-component='navbar'
-          data-testid='navbar'
-        >
-          <Button
-            variant='ghost'
-            size='icon'
+        {/* Navbar */}
+        <header className='navbar'>
+          <button
+            className='navbar__menu-btn'
             onClick={() => setSidebarOpen(true)}
-            className={`erp-mobile-menu-btn hide-desktop px-4 lg:hidden`}
-            style={{
-              ...computedStyles.mobileMenuBtn,
-              // Forzar display none en desktop incluso si estados aún no inicializan
-              display: isLargeScreen ? 'none' : 'flex',
-            }}
-            data-testid='mobile-menu-btn'
-            data-component='mobile-menu-btn'
             aria-label='Abrir menú'
+            style={{ display: isLargeScreen ? 'none' : 'flex' }}
           >
-            <Menu className='h-6 w-6' />
-          </Button>
+            <Menu className='navbar__menu-icon' />
+          </button>
 
-          <div
-            className='erp-navbar-content flex-1 px-4 flex items-center justify-between gap-3'
-            data-component='navbar-content'
-            data-testid='navbar-content'
-          >
-            <div
-              className='erp-navbar-rates flex items-center gap-3 text-xs overflow-hidden'
-              style={{
-                paddingTop: '4px',
-                paddingBottom: '4px',
-                maxWidth: isLargeScreen ? '62%' : '70vw',
-              }}
-              data-component='navbar-rates'
-              data-testid='navbar-rates'
-            >
-              <span
-                className={`uppercase tracking-wide ${
-                  isNeoBrutalismValue ? 'font-black' : 'font-semibold'
-                }`}
-                style={{
-                  fontSize: '11px',
-                  color: 'var(--muted-foreground, #64748b)',
-                  flexShrink: 0,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Tipos de cambio
-              </span>
-              <div
-                className='flex items-center gap-2 flex-nowrap overflow-x-auto'
-                style={{
-                  scrollbarWidth: 'thin',
-                  paddingBottom: '2px',
-                }}
-              >
+          <div className='navbar__content'>
+            {/* Exchange Rates */}
+            <div className='navbar__rates'>
+              <span className='navbar__rates-label'>Tipos de cambio</span>
+              <div className='navbar__rates-list'>
                 {navbarRatesLoading ? (
                   <Loader2
-                    className='h-4 w-4 animate-spin'
-                    style={{ color: 'var(--primary, #2563eb)' }}
+                    className='navbar__rates-loader'
                     aria-label='Cargando tipos de cambio'
                   />
                 ) : hasNavbarRates ? (
@@ -1698,18 +524,7 @@ const MainLayout = ({ children }) => {
                     return (
                       <div
                         key={key}
-                        className='flex items-center gap-2'
-                        style={{
-                          backgroundColor:
-                            'var(--muted, rgba(148, 163, 184, 0.12))',
-                          border: isNeoBrutalismValue
-                            ? '2px solid var(--border, #cbd5f5)'
-                            : '1px solid var(--border, #cbd5f5)',
-                          borderRadius: isNeoBrutalismValue ? '12px' : '9999px',
-                          padding: '4px 8px',
-                          color: 'var(--foreground, #0f172a)',
-                          whiteSpace: 'nowrap',
-                        }}
+                        className='navbar__rate'
                         title={
                           rate.currency_name
                             ? `${rate.currency_name} • ${rateFormatter.format(
@@ -1718,36 +533,14 @@ const MainLayout = ({ children }) => {
                             : undefined
                         }
                       >
-                        <Icon
-                          className='h-4 w-4'
-                          style={{ color: 'var(--primary, #2563eb)' }}
-                          aria-hidden='true'
-                        />
-                        <span
-                          className='font-medium'
-                          style={{
-                            fontSize: '11px',
-                            color: 'var(--foreground, #0f172a)',
-                          }}
-                        >
+                        <Icon className='navbar__rate-icon' />
+                        <span className='navbar__rate-code'>
                           {rate.currency_code}
                         </span>
-                        <span
-                          className='font-mono'
-                          style={{
-                            fontSize: '11px',
-                            color: 'var(--muted-foreground, #475569)',
-                          }}
-                        >
+                        <span className='navbar__rate-value'>
                           {rateFormatter.format(rate.rate_to_base)}
                         </span>
-                        <span
-                          className='uppercase'
-                          style={{
-                            fontSize: '10px',
-                            color: 'var(--muted-foreground, #64748b)',
-                          }}
-                        >
+                        <span className='navbar__rate-base'>
                           {baseCurrencyCode}
                         </span>
                       </div>
@@ -1755,224 +548,95 @@ const MainLayout = ({ children }) => {
                   })
                 ) : navbarRatesError ? (
                   <span
-                    className={`${
-                      isNeoBrutalismValue ? 'font-bold' : 'font-medium'
-                    }`}
-                    style={{
-                      fontSize: '11px',
-                      color: 'var(--destructive, #dc2626)',
-                      whiteSpace: 'nowrap',
-                    }}
+                    className='navbar__rates-error'
                     title={navbarRatesError}
                   >
                     Tipos no disponibles
                   </span>
                 ) : (
-                  <span
-                    className={`${
-                      isNeoBrutalismValue ? 'font-bold' : 'font-medium'
-                    }`}
-                    style={{
-                      fontSize: '11px',
-                      color: 'var(--muted-foreground, #64748b)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Sin datos
-                  </span>
+                  <span className='navbar__rates-empty'>Sin datos</span>
                 )}
               </div>
             </div>
 
-            {/* Right side only (search eliminado) */}
-            <div
-              className='erp-navbar-actions ml-auto flex items-center space-x-4'
-              style={{ overflow: 'visible', marginTop: '4px' }}
-              data-component='navbar-actions'
-              data-testid='navbar-actions'
-            >
-              {/* Single settings button — reemplaza notificaciones + perfil */}
-              <div
-                className='erp-profile-menu relative'
-                style={{
-                  overflow: 'visible',
-                  zIndex: 55,
-                  position: 'relative',
+            {/* User Menu */}
+            <div className='navbar__actions'>
+              <button
+                ref={profileBtnRef}
+                className='navbar__settings-btn'
+                onClick={e => {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  setMenuPos({
+                    top: rect.bottom + window.scrollY,
+                    right: rect.right + window.scrollX,
+                    width: 288,
+                  })
+                  setShowUserMenu(prev => !prev)
                 }}
-                data-component='profile-menu'
-                data-testid='profile-menu'
+                aria-label='Abrir ajustes'
               >
-                {/* Single responsive button: icon + text (texto oculto en pantallas pequeñas) */}
-                <Button
-                  variant='ghost'
-                  className='erp-profile-btn inline-flex items-center justify-center gap-2 relative'
-                  style={{
-                    overflow: 'visible',
-                    position: 'relative',
-                    minWidth: '48px',
-                    minHeight: '48px',
-                    height: '40px',
-                    padding: '0 0.75rem',
-                  }}
-                  onClick={e => {
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    setMenuPos({
-                      top: rect.bottom + window.scrollY,
-                      right: rect.right + window.scrollX,
-                      width: 288,
-                    })
-                    setShowUserMenu(prev => !prev)
-                  }}
-                  data-testid='profile-btn'
-                  aria-label='Abrir ajustes'
-                  ref={profileBtnRef}
-                >
-                  <Settings className='h-5 w-5' />
-                  <span className='ml-2 text-sm font-medium hidden md:inline-flex'>
-                    Ajustes
-                  </span>
-                </Button>
-                {showUserMenu &&
-                  profileBtnRef.current &&
-                  createPortal(
-                    <div
-                      className={`erp-user-dropdown fixed ${computedStyles.css.cardRadius}`}
-                      style={{
-                        top: `${menuPos.top}px`,
-                        left: `${menuPos.right - menuPos.width}px`,
-                        width: '18rem',
-                        minWidth: '16rem',
-                        minHeight: '10rem',
-                        maxHeight: '80vh',
-                        backgroundColor: 'var(--popover)',
-                        border: isNeoBrutalismValue
-                          ? '4px solid var(--border)'
-                          : 'var(--border-width, 1px) solid var(--border)',
-                        boxShadow: isNeoBrutalismValue
-                          ? '8px 8px 0px 0px rgba(0,0,0,1)'
-                          : 'var(--shadow-lg)',
-                        overflow: 'hidden',
-                        zIndex: 1000,
-                      }}
-                    >
-                      <div
-                        className='p-4'
-                        style={{
-                          borderBottom: isNeoBrutalismValue
-                            ? '4px solid var(--border)'
-                            : 'var(--border-width, 1px) solid var(--border)',
-                        }}
+                <Settings className='navbar__settings-icon' />
+                <span className='navbar__settings-text'>Ajustes</span>
+              </button>
+
+              {showUserMenu &&
+                profileBtnRef.current &&
+                createPortal(
+                  <div
+                    className='user-menu'
+                    style={{
+                      top: `${menuPos.top}px`,
+                      left: `${menuPos.right - menuPos.width}px`,
+                      width: '18rem',
+                    }}
+                  >
+                    <div className='user-menu__header'>
+                      <div className='user-menu__avatar'>
+                        <User className='user-menu__avatar-icon' />
+                      </div>
+                      <div className='user-menu__info'>
+                        <p className='user-menu__name'>
+                          {user?.name || 'Usuario Demo'}
+                        </p>
+                        <p className='user-menu__email'>
+                          {user?.email || user?.username || 'demo@erp.com'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className='user-menu__body'>
+                      <Link
+                        to='/configuracion'
+                        className='user-menu__item'
+                        onClick={() => setShowUserMenu(false)}
                       >
-                        <div className='flex items-center space-x-3'>
-                          <div
-                            className={`w-12 h-12 flex items-center justify-center ${
-                              isNeoBrutalismValue ? '' : 'rounded-full'
-                            }`}
-                            style={{
-                              backgroundColor: 'var(--primary)',
-                              color: 'var(--primary-foreground)',
-                              border: isNeoBrutalismValue
-                                ? '4px solid var(--border)'
-                                : 'none',
-                            }}
-                          >
-                            <User className='w-6 h-6' />
-                          </div>
-                          <div>
-                            <p
-                              className={`text-sm ${computedStyles.css.semiboldClass}`}
-                              style={{ color: 'var(--foreground)' }}
-                            >
-                              {user?.name || 'Usuario Demo'}
-                            </p>
-                            <p
-                              className={`text-xs ${
-                                isNeoBrutalismValue ? 'font-bold' : ''
-                              }`}
-                              style={{ color: 'var(--muted-foreground)' }}
-                            >
-                              {user?.email || user?.username || 'demo@erp.com'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className='p-2'>
-                        <Link
-                          to='/configuracion'
-                          className={`flex items-center w-full px-4 py-3 text-sm ${
-                            computedStyles.css.mediumClass
-                          } text-left transition-colors ${
-                            isNeoBrutalismValue ? '' : 'rounded-md'
-                          }`}
-                          style={{ color: 'var(--foreground)' }}
-                          onClick={() => setShowUserMenu(false)}
-                          onMouseEnter={e => {
-                            e.target.style.backgroundColor = isNeoBrutalismValue
-                              ? 'var(--muted)'
-                              : 'var(--accent)'
-                            e.target.style.color = isNeoBrutalismValue
-                              ? 'var(--foreground)'
-                              : 'var(--accent-foreground)'
-                          }}
-                          onMouseLeave={e => {
-                            e.target.style.backgroundColor = 'transparent'
-                            e.target.style.color = 'var(--foreground)'
-                          }}
-                        >
-                          <Settings className='w-4 h-4 mr-3' />
-                          {computedStyles.values.configText}
-                        </Link>
-                        <button
-                          onClick={handleLogout}
-                          className={`flex items-center w-full px-4 py-3 text-sm ${
-                            computedStyles.css.mediumClass
-                          } text-left transition-colors ${
-                            isNeoBrutalismValue ? '' : 'rounded-md'
-                          }`}
-                          style={{ color: 'var(--destructive)' }}
-                          onMouseEnter={e => {
-                            e.target.style.backgroundColor =
-                              'var(--destructive)'
-                            e.target.style.color =
-                              'var(--destructive-foreground)'
-                          }}
-                          onMouseLeave={e => {
-                            e.target.style.backgroundColor = 'transparent'
-                            e.target.style.color = 'var(--destructive)'
-                          }}
-                        >
-                          <LogOut className='w-4 h-4 mr-3' />
-                          {computedStyles.values.logoutText}
-                        </button>
-                      </div>
-                    </div>,
-                    document.body
-                  )}
-              </div>
+                        <Settings className='user-menu__item-icon' />
+                        Configuración
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className='user-menu__item user-menu__item--danger'
+                      >
+                        <LogOut className='user-menu__item-icon' />
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  </div>,
+                  document.body
+                )}
             </div>
           </div>
 
           {/* Overlay for user menu */}
           {showUserMenu && (
             <div
-              className='fixed inset-0 z-[999]'
+              className='user-menu-overlay'
               onClick={() => setShowUserMenu(false)}
             />
           )}
-        </div>
+        </header>
 
-        {/* Page content */}
-        <main
-          className='flex-1 relative overflow-y-auto focus:outline-none w-full'
-          style={{ minHeight: '100vh', maxWidth: '100%' }}
-        >
-          <div
-            className='py-8 px-6 lg:px-8 w-full max-w-full'
-            style={{ minHeight: '100%' }}
-          >
-            {children}
-          </div>
-        </main>
+        {/* Page Content */}
+        <main className='layout__content'>{children}</main>
       </div>
     </div>
   )

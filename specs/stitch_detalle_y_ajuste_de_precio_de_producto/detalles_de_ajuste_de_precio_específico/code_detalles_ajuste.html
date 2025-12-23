@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detalle de Ajuste de Precio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b8cee",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-[#0d141b] dark:text-gray-200">
+<div class="flex h-screen w-full">
+<!-- SideNavBar -->
+<aside class="flex w-64 flex-col border-r border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-background-dark/50">
+<div class="mb-8 flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Admin user avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDiJOlsqPUQWGcJer4ZaFAO528R09MPMgp1L1p2MLLWACqdQEgrjxZ3FHGqcuOVWg9DQG7ofE7thnlKCDYJZoiKWJQMQdeA1eFpuxscysiMRcUroOZx7v9iwa2rdt-h28vFhE8KaRY5YTWz7SSO3DHpYIkHiA9dQ6lly_9462AGzMDwgKNrI0dszP7nfy5UYpOn1qDC_4Q9L3XaVJMP9uyrt0aQond3awSnn1GlfMp0y2udC04doLHbuWKIC_COPRSDmq9oalh-SqYK");'></div>
+<div class="flex flex-col">
+<h1 class="text-base font-medium leading-normal text-[#0d141b] dark:text-white">Admin</h1>
+<p class="text-sm font-normal leading-normal text-[#4c739a] dark:text-gray-400">admin@empresa.com</p>
+</div>
+</div>
+<nav class="flex flex-grow flex-col gap-2">
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-primary/10" href="#">
+<span class="material-symbols-outlined text-[#0d141b] dark:text-gray-300">dashboard</span>
+<p class="text-sm font-medium leading-normal text-[#0d141b] dark:text-gray-200">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 rounded-lg bg-primary/20 px-3 py-2" href="#">
+<span class="material-symbols-outlined text-primary dark:text-primary">sell</span>
+<p class="text-sm font-medium leading-normal text-primary">Ajustes de Precio</p>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-primary/10" href="#">
+<span class="material-symbols-outlined text-[#0d141b] dark:text-gray-300">inventory_2</span>
+<p class="text-sm font-medium leading-normal text-[#0d141b] dark:text-gray-200">Productos</p>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-primary/10" href="#">
+<span class="material-symbols-outlined text-[#0d141b] dark:text-gray-300">monitoring</span>
+<p class="text-sm font-medium leading-normal text-[#0d141b] dark:text-gray-200">Reportes</p>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-primary/10" href="#">
+<span class="material-symbols-outlined text-[#0d141b] dark:text-gray-300">settings</span>
+<p class="text-sm font-medium leading-normal text-[#0d141b] dark:text-gray-200">Configuración</p>
+</a>
+</nav>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-primary/10" href="#">
+<span class="material-symbols-outlined text-[#0d141b] dark:text-gray-300">help</span>
+<p class="text-sm font-medium leading-normal text-[#0d141b] dark:text-gray-200">Ayuda</p>
+</a>
+<a class="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-primary/10" href="#">
+<span class="material-symbols-outlined text-[#0d141b] dark:text-gray-300">logout</span>
+<p class="text-sm font-medium leading-normal text-[#0d141b] dark:text-gray-200">Cerrar Sesión</p>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto">
+<div class="mx-auto max-w-7xl p-6 lg:p-8">
+<!-- ToolBar & PageHeading -->
+<header class="mb-6 flex flex-wrap items-center justify-between gap-4">
+<div class="flex flex-col gap-1">
+<p class="text-3xl font-bold tracking-tight text-[#0d141b] dark:text-white">Detalle del Ajuste de Precio</p>
+<p class="text-base font-normal leading-normal text-[#4c739a] dark:text-gray-400">Ajuste #74188-B</p>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center gap-2 rounded-lg bg-background-light p-2 text-[#0d141b] shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-100 dark:bg-white/10 dark:text-white dark:ring-white/20 dark:hover:bg-white/20">
+<span class="material-symbols-outlined">arrow_back</span>
+<span class="hidden text-sm font-medium sm:block">Volver</span>
+</button>
+<button class="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90">
+<span class="material-symbols-outlined" style="font-size: 20px;">history</span>
+                            Revertir Ajuste
+                        </button>
+<button class="rounded-lg p-2 text-[#0d141b] ring-1 ring-inset ring-gray-300 hover:bg-gray-100 dark:text-white dark:ring-white/20 dark:hover:bg-white/20">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+</header>
+<!-- Main Container Card -->
+<div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-background-dark/50 sm:p-6 lg:p-8">
+<!-- Data Grid -->
+<div class="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
+<!-- Left Column: Main Information -->
+<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-1">
+<p class="text-sm font-normal leading-normal text-[#4c739a] dark:text-gray-400">Producto</p>
+<p class="text-base font-medium leading-normal text-[#0d141b] dark:text-white">Laptop Pro Modelo X (SKU: 12345-XYZ)</p>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-normal leading-normal text-[#4c739a] dark:text-gray-400">Valor Anterior</p>
+<p class="text-lg font-medium leading-normal text-gray-500 line-through dark:text-gray-400">$1,550.00 USD</p>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-normal leading-normal text-[#4c739a] dark:text-gray-400">Nuevo Valor</p>
+<div class="flex items-center gap-2">
+<p class="text-4xl font-bold tracking-tight text-green-600 dark:text-green-500">$1,499.00 USD</p>
+<span class="material-symbols-outlined text-red-600 dark:text-red-500">arrow_downward</span>
+</div>
+<p class="text-sm text-red-600 dark:text-red-500">Diferencia: -$51.00 (-3.29%)</p>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-normal leading-normal text-[#4c739a] dark:text-gray-400">Unidad de Medida</p>
+<p class="text-base font-medium leading-normal text-[#0d141b] dark:text-white">Unidad</p>
+</div>
+</div>
+<!-- Right Column: Context -->
+<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-1">
+<p class="text-sm font-normal leading-normal text-[#4c739a] dark:text-gray-400">Usuario</p>
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Avatar de Juan Pérez" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDe7S5I2jHvN-dMW8c1FOBtv-FA7ZQDi_Axe_Mhsfb-05B1iEPRVP7hUv0zjhcGvC_qx7drR8xHxhVTkIodv-8kiJFuzAnuRPoS3tdaYOGOl1CBjQsD8nPTe4eDRvvlwMYZ45O4ljSlF3bSDcYsShBrMHWLLVSF8EiF65K_zLnFErriKfwjsTmiIEGYYMUwSIYhFaAh_AlKd4ZcYgzOfg1UnRxGmk7GR_yXXZ19Z81KXlLvPU4Dc6PcnDwLRid2Yk_--rwWJsEdwCUX");'></div>
+<p class="text-base font-medium leading-normal text-[#0d141b] dark:text-white">Juan Pérez</p>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-normal leading-normal text-[#4c739a] dark:text-gray-400">Fecha y Hora</p>
+<p class="text-base font-medium leading-normal text-[#0d141b] dark:text-white">23 de Octubre, 2023, 14:30</p>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-normal leading-normal text-[#4c739a] dark:text-gray-400">Motivo del Ajuste</p>
+<p class="text-base font-medium leading-normal text-[#0d141b] dark:text-white">Ajuste por campaña promocional de fin de temporada para liquidar stock.</p>
+</div>
+</div>
+</div>
+<!-- Additional Metadata Section -->
+<div class="mt-8 border-t border-gray-200 pt-8 dark:border-gray-800">
+<h3 class="text-lg font-bold leading-tight tracking-tight text-[#0d141b] dark:text-white">Metadatos Adicionales</h3>
+<div class="mt-4 flow-root">
+<div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+<div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+<thead>
+<tr>
+<th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-[#0d141b] dark:text-white sm:pl-0" scope="col">Clave</th>
+<th class="px-3 py-3.5 text-left text-sm font-semibold text-[#0d141b] dark:text-white" scope="col">Valor</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+<tr>
+<td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-[#0d141b] dark:text-gray-200 sm:pl-0">ID de Transacción</td>
+<td class="whitespace-nowrap px-3 py-4 text-sm text-[#4c739a] dark:text-gray-400">tx_1a2b3c4d5e6f7g8h</td>
+</tr>
+<tr>
+<td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-[#0d141b] dark:text-gray-200 sm:pl-0">Fuente del Ajuste</td>
+<td class="whitespace-nowrap px-3 py-4 text-sm text-[#4c739a] dark:text-gray-400">Sistema de Campañas</td>
+</tr>
+<tr>
+<td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-[#0d141b] dark:text-gray-200 sm:pl-0">Campaña Asociada</td>
+<td class="whitespace-nowrap px-3 py-4 text-sm text-[#4c739a] dark:text-gray-400">OFERTAS-FIN-TEMPORADA-2023</td>
+</tr>
+<tr>
+<td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-[#0d141b] dark:text-gray-200 sm:pl-0">Aprobación Requerida</td>
+<td class="whitespace-nowrap px-3 py-4 text-sm text-[#4c739a] dark:text-gray-400">No</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,426 @@
+// =============================================================================
+// BREADCRUMBS COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE BREADCRUMBS
+// -----------------------------------------------------------------------------
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-4;
+  padding: $spacing-12 0;
+  list-style: none;
+  margin: 0;
+}
+
+.breadcrumbs__list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-4;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.breadcrumbs__item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+
+  &:last-child {
+    .breadcrumbs__separator {
+      display: none;
+    }
+  }
+}
+
+.breadcrumbs__link {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  padding: $spacing-4 $spacing-8;
+  border-radius: $border-radius-small;
+  text-decoration: none;
+  font-size: $font-size-300;
+  font-weight: $font-weight-regular;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+  }
+
+  &:active {
+    @include themify {
+      background-color: themed('surface-pressed');
+    }
+  }
+
+  @include focus-visible;
+}
+
+.breadcrumbs__link--current {
+  pointer-events: none;
+  font-weight: $font-weight-semibold;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.breadcrumbs__separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+
+  // Default separator (chevron right)
+  &::before {
+    content: '›';
+    font-size: $font-size-400;
+  }
+}
+
+.breadcrumbs__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+// -----------------------------------------------------------------------------
+// BREADCRUMBS VARIANTS
+// -----------------------------------------------------------------------------
+
+.breadcrumbs--compact {
+  padding: $spacing-8 0;
+  gap: $spacing-2;
+
+  .breadcrumbs__list {
+    gap: $spacing-2;
+  }
+
+  .breadcrumbs__link {
+    padding: $spacing-2 $spacing-4;
+    font-size: $font-size-200;
+  }
+
+  .breadcrumbs__item {
+    gap: $spacing-4;
+  }
+
+  .breadcrumbs__icon,
+  .breadcrumbs__separator {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.breadcrumbs--comfortable {
+  padding: $spacing-16 0;
+  gap: $spacing-8;
+
+  .breadcrumbs__list {
+    gap: $spacing-8;
+  }
+
+  .breadcrumbs__link {
+    padding: $spacing-8 $spacing-12;
+    font-size: $font-size-400;
+  }
+
+  .breadcrumbs__item {
+    gap: $spacing-12;
+  }
+
+  .breadcrumbs__icon,
+  .breadcrumbs__separator {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SEPARATOR STYLES
+// -----------------------------------------------------------------------------
+
+.breadcrumbs--slash {
+  .breadcrumbs__separator::before {
+    content: '/';
+    font-size: $font-size-300;
+  }
+}
+
+.breadcrumbs--dash {
+  .breadcrumbs__separator::before {
+    content: '—';
+    font-size: $font-size-300;
+  }
+}
+
+.breadcrumbs--dot {
+  .breadcrumbs__separator::before {
+    content: '•';
+    font-size: $font-size-300;
+  }
+}
+
+.breadcrumbs--arrow {
+  .breadcrumbs__separator::before {
+    content: '→';
+    font-size: $font-size-300;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// OVERFLOW HANDLING
+// -----------------------------------------------------------------------------
+
+.breadcrumbs--overflow {
+  .breadcrumbs__list {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    @include custom-scrollbar;
+
+    // Hide scrollbar but keep scrollable
+    scrollbar-width: thin;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+  }
+}
+
+.breadcrumbs--collapsed {
+  .breadcrumbs__item:not(:first-child):not(:last-child):not(:nth-last-child(2)) {
+    display: none;
+  }
+
+  // Show ellipsis for hidden items
+  .breadcrumbs__item:nth-child(2) {
+    &::before {
+      content: '...';
+      padding: $spacing-4 $spacing-8;
+      @include themify {
+        color: themed('text-tertiary');
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// RESPONSIVE BEHAVIOR
+// -----------------------------------------------------------------------------
+
+@include mobile {
+  .breadcrumbs {
+    // On mobile, show only last 2 items by default
+    .breadcrumbs__item:not(:last-child):not(:nth-last-child(2)) {
+      display: none;
+    }
+
+    // Show back button style for first visible item
+    .breadcrumbs__item:nth-last-child(2) {
+      .breadcrumbs__link::before {
+        content: '←';
+        margin-right: $spacing-4;
+      }
+    }
+  }
+
+  // Full mobile breadcrumbs
+  .breadcrumbs--full-mobile {
+    .breadcrumbs__item {
+      display: flex;
+    }
+
+    .breadcrumbs__list {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      @include custom-scrollbar;
+    }
+  }
+}
+
+@include tablet {
+  .breadcrumbs {
+    // On tablet, show last 3 items
+    .breadcrumbs__item:not(:last-child):not(:nth-last-child(2)):not(:nth-last-child(3)) {
+      display: none;
+    }
+  }
+
+  .breadcrumbs--full-mobile {
+    .breadcrumbs__item {
+      display: flex;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// WITH BACKGROUND
+// -----------------------------------------------------------------------------
+
+.breadcrumbs--contained {
+  padding: $spacing-12 $spacing-16;
+  border-radius: $border-radius-medium;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    border: 1px solid themed('border-subtle');
+  }
+}
+
+.breadcrumbs--elevated {
+  padding: $spacing-12 $spacing-16;
+  border-radius: $border-radius-medium;
+  @include elevation(2);
+
+  @include themify {
+    background-color: themed('bg-elevated');
+    border: 1px solid themed('border-subtle');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BREADCRUMBS MENU (for overflow items)
+// -----------------------------------------------------------------------------
+
+.breadcrumbs__menu-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-4 $spacing-8;
+  border: none;
+  background: transparent;
+  border-radius: $border-radius-small;
+  cursor: pointer;
+  font-size: $font-size-300;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+  }
+
+  &::before {
+    content: '...';
+  }
+
+  @include focus-visible;
+}
+
+.breadcrumbs__menu {
+  position: absolute;
+  top: calc(100% + #{$spacing-4});
+  left: 0;
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: $spacing-4;
+  border-radius: $border-radius-medium;
+  z-index: z-index(dropdown);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
+  @include transition(all, $duration-fast);
+  @include elevation(8);
+  @include custom-scrollbar;
+
+  @include themify {
+    background-color: themed('bg-elevated');
+    border: 1px solid themed('border-subtle');
+  }
+
+  .breadcrumbs__menu-trigger--open + & {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
+.breadcrumbs__menu-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  width: 100%;
+  padding: $spacing-8 $spacing-12;
+  border: none;
+  background: transparent;
+  border-radius: $border-radius-small;
+  cursor: pointer;
+  text-align: left;
+  font-size: $font-size-300;
+  text-decoration: none;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  @include focus-visible;
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+
+.breadcrumbs {
+  // Aria-label for screen readers
+  &[aria-label] {
+    // Screen reader only label
+    .breadcrumbs__sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+  }
+}
+
+// Current page indicator for screen readers
+.breadcrumbs__link--current[aria-current='page'] {
+  // Already styled, just ensuring attribute is handled
+}

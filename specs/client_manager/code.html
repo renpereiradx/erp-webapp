@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html class="" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Client Management Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="flex h-screen">
+<aside class="w-64 flex-shrink-0 bg-white dark:bg-[#111722] border-r border-gray-200 dark:border-gray-800 flex flex-col">
+<div class="flex flex-col flex-grow p-4">
+<div class="flex items-center gap-3 mb-8">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Fluent ERP company logo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDIENwJyhE4-yznWc8E0yDXywl7Auyxg6csxDUZ2mzgZ_oDhP41APPedhQs2zlcTM13IjNiWWk_DdOj_azSAo8XpghX29jcG7dogh1MHUXRvb3XEe9tWOOl-TxdqsNcWQF8pIgqmtTj8--cBNJQ30IiEK8TNNrAR31Yi27N44ThFmUaEc90joe7epnVTG5d4eXbR8DBU3CIN5pbcG_O3aEbn7VTMbPZukGtdV56ykbWSyu_NPh2Xl3LU4O2C77Q0iCI_bEkn4j9aGI");'></div>
+<div class="flex flex-col">
+<h1 class="text-gray-900 dark:text-white text-base font-medium leading-normal">Fluent ERP</h1>
+<p class="text-gray-500 dark:text-[#92a4c9] text-sm font-normal leading-normal">Admin Portal</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2 flex-grow">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<p class="text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<p class="text-sm font-medium leading-normal">Products</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<p class="text-sm font-medium leading-normal">Orders</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 text-primary dark:bg-[#232f48] dark:text-white" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+<p class="text-sm font-medium leading-normal">Clients</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<p class="text-sm font-medium leading-normal">Analytics</p>
+</a>
+</nav>
+<div class="flex flex-col gap-1 mt-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-sm font-medium leading-normal">Settings</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">help</span>
+<p class="text-sm font-medium leading-normal">Help &amp; Support</p>
+</a>
+</div>
+</div>
+</aside>
+<main class="flex-1 overflow-y-auto">
+<div class="p-6 sm:p-8">
+<div class="flex flex-wrap gap-2 mb-4">
+<a class="text-gray-500 dark:text-[#92a4c9] text-sm font-medium leading-normal hover:text-primary" href="#">Home</a>
+<span class="text-gray-500 dark:text-[#92a4c9] text-sm font-medium leading-normal">/</span>
+<span class="text-gray-900 dark:text-white text-sm font-medium leading-normal">Clients</span>
+</div>
+<div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+<div class="flex flex-col gap-1">
+<h1 class="text-gray-900 dark:text-white text-3xl font-bold leading-tight tracking-tight">Client Management</h1>
+<p class="text-gray-500 dark:text-[#92a4c9] text-base font-normal leading-normal">Manage, filter, and view all clients in the system.</p>
+</div>
+</div>
+<div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+<div class="w-full md:max-w-md">
+<label class="flex flex-col min-w-40 h-10 w-full">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-gray-400 dark:text-[#92a4c9] flex border border-r-0 border-gray-300 dark:border-gray-700 bg-white dark:bg-[#232f48] items-center justify-center pl-3 rounded-l-lg">
+<span class="material-symbols-outlined text-base">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#232f48] focus:border-primary h-full placeholder:text-gray-400 dark:placeholder:text-[#92a4c9] px-3 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal" placeholder="Search clients by name or email" value=""/>
+</div>
+</label>
+</div>
+<div class="flex items-center gap-2 w-full md:w-auto">
+<button class="flex items-center justify-center p-2 rounded-lg text-gray-500 dark:text-gray-300 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
+<span class="material-symbols-outlined text-base">filter_list</span>
+</button>
+<button class="flex items-center justify-center p-2 rounded-lg text-gray-500 dark:text-gray-300 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
+<span class="material-symbols-outlined text-base">ios_share</span>
+</button>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-primary text-white gap-2 text-sm font-bold leading-normal tracking-wide px-4 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">add</span>
+<span class="truncate">New Client</span>
+</button>
+</div>
+</div>
+<div class="bg-white dark:bg-[#111722] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left">
+<thead class="bg-gray-50 dark:bg-gray-900/30 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+<tr>
+<th class="p-4" scope="col"><input class="form-checkbox rounded border-gray-400 dark:border-gray-600 bg-transparent text-primary focus:ring-primary/50" type="checkbox"/></th>
+<th class="px-6 py-3" scope="col">Client Name</th>
+<th class="px-6 py-3" scope="col">Contact Details</th>
+<th class="px-6 py-3" scope="col">Status</th>
+<th class="px-6 py-3" scope="col">Recent Activity</th>
+<th class="px-6 py-3" scope="col"><span class="sr-only">Actions</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/20">
+<td class="p-4"><input class="form-checkbox rounded border-gray-400 dark:border-gray-600 bg-transparent text-primary focus:ring-primary/50" type="checkbox"/></td>
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Acme Corporation</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-medium">john.doe@acme.com</span>
+<span class="text-gray-500 dark:text-gray-400">(555) 123-4567</span>
+</div>
+</td>
+<td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">Active</span></td>
+<td class="px-6 py-4">Invoice #INV-2023-08 sent</td>
+<td class="px-6 py-4 text-right"><button class="text-gray-500 dark:text-gray-400 hover:text-primary"><span class="material-symbols-outlined">more_horiz</span></button></td>
+</tr>
+<tr class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/20">
+<td class="p-4"><input class="form-checkbox rounded border-gray-400 dark:border-gray-600 bg-transparent text-primary focus:ring-primary/50" type="checkbox"/></td>
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Innovate Inc.</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-medium">susan.smith@innovate.com</span>
+<span class="text-gray-500 dark:text-gray-400">(555) 987-6543</span>
+</div>
+</td>
+<td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">Active</span></td>
+<td class="px-6 py-4">Contract signed</td>
+<td class="px-6 py-4 text-right"><button class="text-gray-500 dark:text-gray-400 hover:text-primary"><span class="material-symbols-outlined">more_horiz</span></button></td>
+</tr>
+<tr class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/20">
+<td class="p-4"><input class="form-checkbox rounded border-gray-400 dark:border-gray-600 bg-transparent text-primary focus:ring-primary/50" type="checkbox"/></td>
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Quantum Solutions</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-medium">robert.jones@quantum.io</span>
+<span class="text-gray-500 dark:text-gray-400">(555) 234-5678</span>
+</div>
+</td>
+<td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">On Hold</span></td>
+<td class="px-6 py-4">Awaiting payment</td>
+<td class="px-6 py-4 text-right"><button class="text-gray-500 dark:text-gray-400 hover:text-primary"><span class="material-symbols-outlined">more_horiz</span></button></td>
+</tr>
+<tr class="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/20">
+<td class="p-4"><input class="form-checkbox rounded border-gray-400 dark:border-gray-600 bg-transparent text-primary focus:ring-primary/50" type="checkbox"/></td>
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Synergy Group</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-medium">linda.chen@synergy.co</span>
+<span class="text-gray-500 dark:text-gray-400">(555) 876-5432</span>
+</div>
+</td>
+<td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">Active</span></td>
+<td class="px-6 py-4">Project kickoff meeting scheduled</td>
+<td class="px-6 py-4 text-right"><button class="text-gray-500 dark:text-gray-400 hover:text-primary"><span class="material-symbols-outlined">more_horiz</span></button></td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/20">
+<td class="p-4"><input class="form-checkbox rounded border-gray-400 dark:border-gray-600 bg-transparent text-primary focus:ring-primary/50" type="checkbox"/></td>
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Stark Industries (Past)</td>
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="font-medium">archive@stark.com</span>
+<span class="text-gray-500 dark:text-gray-400">(555) 345-6789</span>
+</div>
+</td>
+<td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">Inactive</span></td>
+<td class="px-6 py-4">Project completed 6 months ago</td>
+<td class="px-6 py-4 text-right"><button class="text-gray-500 dark:text-gray-400 hover:text-primary"><span class="material-symbols-outlined">more_horiz</span></button></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex justify-between items-center p-4 border-t border-gray-200 dark:border-gray-800 text-sm text-gray-500 dark:text-gray-400">
+<span>Showing 1 to 5 of 86 results</span>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-base">chevron_left</span>
+</button>
+<span class="font-medium text-gray-700 dark:text-gray-200">1 / 18</span>
+<button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+<span class="material-symbols-outlined text-base">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

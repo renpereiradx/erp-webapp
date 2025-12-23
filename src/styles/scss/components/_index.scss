@@ -1,0 +1,27 @@
+// =============================================================================
+// COMPONENTS - INDEX
+// =============================================================================
+// This file imports all component-specific styles
+// Components are reusable UI elements
+// =============================================================================
+
+@use 'button';
+@use 'card';
+@use 'input';
+@use 'badge';
+@use 'modal';
+@use 'radix-dialog';
+@use 'select';
+@use 'checkbox';
+@use 'tooltip';
+@use 'alert';
+@use 'spinner';
+@use 'divider';
+@use 'dropdown-menu';
+@use 'product-form-modal';
+@use 'product-details-modal';
+@use 'client-details-modal';
+@use 'data-table';
+@use 'segmented-control';
+@use 'template-metadata-selector';
+@use 'register-sale-payment-modal';

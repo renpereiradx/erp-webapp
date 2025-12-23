@@ -1,0 +1,340 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.sales-order-detail {
+  padding: clamp($spacing-16, 2vw, $spacing-24)
+    clamp($spacing-16, 2vw, $spacing-32);
+  max-width: 1200px;
+  margin: 0 auto;
+  animation: fadeIn 0.25s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+
+  @include themify($themes) {
+    color: themed('text-primary');
+  }
+
+  &__breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    @include typography('body-sm');
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__breadcrumb-link {
+    text-decoration: none;
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+
+    &:hover {
+      @include themify($themes) {
+        color: themed('action-primary');
+      }
+    }
+  }
+
+  &__breadcrumb-separator {
+    opacity: 0.6;
+  }
+
+  &__breadcrumb-current {
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+    font-weight: $font-weight-medium;
+  }
+
+  &__heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $spacing-16;
+    flex-wrap: wrap;
+  }
+
+  &__heading-text {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+  }
+
+  &__heading-row {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    @include typography('title-2');
+    margin: 0;
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-4;
+    padding: $spacing-4 $spacing-12;
+    border-radius: 999px;
+    @include typography('body-sm');
+
+    &--pending {
+      @include themify($themes) {
+        background: themed('warning-background');
+        color: themed('warning-foreground');
+      }
+    }
+    &--completed,
+    &--paid,
+    &--confirmed {
+      @include themify($themes) {
+        background: themed('success-background');
+        color: themed('success-foreground');
+      }
+    }
+    &--cancelled,
+    &--void {
+      @include themify($themes) {
+        background: themed('error-background');
+        color: themed('error-foreground');
+      }
+    }
+  }
+
+  &__subtitle {
+    @include typography('body');
+    max-width: 640px;
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__primary-action {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-8;
+    padding: $spacing-12 $spacing-16;
+    @include typography('body-sm');
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: $spacing-16;
+  }
+
+  &__stat-card {
+    @include card;
+    padding: $spacing-20;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__stat-label {
+    @include typography('body-sm');
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__stat-value {
+    @include typography('title-2');
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+
+    &--positive {
+      @include themify($themes) {
+        color: themed('success-foreground');
+      }
+    }
+
+    &--warning {
+      @include themify($themes) {
+        color: themed('error-foreground');
+      }
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: $spacing-24;
+
+    @include tablet {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__column {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+  }
+
+  &__card {
+    @include card;
+    padding: $spacing-20;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+  }
+
+  &__card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-12;
+  }
+
+  &__card-title {
+    @include typography('subtitle-2');
+    margin: 0;
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__info-list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+  }
+
+  &__info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: $spacing-8;
+    @include typography('body-sm');
+  }
+
+  &__label {
+    @include typography('body-sm');
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__value {
+    @include typography('body');
+    font-weight: $font-weight-medium;
+    text-align: right;
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    @include typography('body-sm');
+
+    thead {
+      @include themify($themes) {
+        color: themed('text-secondary');
+        border-bottom: 1px solid themed('border-default');
+      }
+
+      th {
+        text-align: left;
+        padding: $spacing-12 $spacing-12 $spacing-12 0;
+        &:last-child {
+          padding-right: 0;
+        }
+      }
+    }
+
+    tbody tr {
+      @include themify($themes) {
+        border-bottom: 1px solid themed('border-subtle');
+      }
+    }
+
+    td {
+      padding: $spacing-12 $spacing-12 $spacing-12 0;
+      &:last-child {
+        padding-right: 0;
+      }
+    }
+  }
+
+  &__cell-title {
+    @include typography('body');
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__cell-sub {
+    @include typography('caption');
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__cell-strong {
+    font-weight: $font-weight-semibold;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 96px;
+    padding: $spacing-4 $spacing-12;
+    border-radius: 999px;
+    @include typography('caption');
+    text-transform: capitalize;
+
+    &--pending {
+      @include themify($themes) {
+        background: themed('warning-background');
+        color: themed('warning-foreground');
+      }
+    }
+    &--confirmed,
+    &--completed,
+    &--paid {
+      @include themify($themes) {
+        background: themed('success-background');
+        color: themed('success-foreground');
+      }
+    }
+    &--void,
+    &--cancelled {
+      @include themify($themes) {
+        background: themed('error-background');
+        color: themed('error-foreground');
+      }
+    }
+  }
+
+  /* Responsive tweaks */
+  @include mobile {
+    &__grid {
+      gap: $spacing-16;
+    }
+
+    &__table {
+      th,
+      td {
+        padding: $spacing-12 $spacing-8;
+      }
+    }
+  }
+}

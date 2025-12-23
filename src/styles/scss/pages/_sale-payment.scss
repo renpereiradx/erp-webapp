@@ -1,0 +1,861 @@
+// =============================================================================
+// SALES PAYMENT NEW PAGE
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// PAGE CONTAINER
+// -----------------------------------------------------------------------------
+
+.sales-payment-new {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+  padding: $spacing-24;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: $spacing-16;
+    gap: $spacing-16;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// HEADER SECTION
+// -----------------------------------------------------------------------------
+
+.sales-payment-new__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-24;
+  padding-bottom: $spacing-20;
+  border-bottom: 1px solid;
+
+  @include themify {
+    border-color: themed('border-default');
+  }
+
+  @media (max-width: 968px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.sales-payment-new__header-content {
+  display: flex;
+  align-items: center;
+  gap: $spacing-16;
+}
+
+.sales-payment-new__header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: $border-radius-large;
+
+  @include themify {
+    background-color: themed('action-primary');
+    color: themed('text-inverted');
+  }
+
+  .icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.sales-payment-new__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.sales-payment-new__title {
+  @include heading-4;
+  margin: 0;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.sales-payment-new__subtitle {
+  @include body;
+  margin: 0;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.sales-payment-new__header-actions {
+  display: flex;
+  gap: $spacing-12;
+
+  @media (max-width: 968px) {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn {
+    white-space: nowrap;
+
+    @media (max-width: 968px) {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .icon {
+    width: 16px;
+    height: 16px;
+    margin-right: $spacing-8;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FILTERS SECTION
+// -----------------------------------------------------------------------------
+
+.sales-payment-new__filters {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+  padding: $spacing-20;
+  border-radius: $border-radius-large;
+  border: 1px solid;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    border-color: themed('border-subtle');
+  }
+}
+
+.sales-payment-new__filters-row {
+  display: flex;
+  gap: $spacing-12;
+  align-items: center;
+
+  @media (max-width: 968px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  &--status {
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+    @media (max-width: 968px) {
+      justify-content: flex-start;
+    }
+  }
+}
+
+// Búsqueda
+.sales-payment-new__filter-search {
+  position: relative;
+  flex: 2;
+  min-width: 300px;
+
+  @media (max-width: 968px) {
+    min-width: 100%;
+  }
+}
+
+.sales-payment-new__filter-search-icon {
+  position: absolute;
+  left: $spacing-16;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  z-index: 1;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+.sales-payment-new__filter-input {
+  width: 100%;
+  height: 48px;
+  padding: $spacing-12 $spacing-16;
+  border-radius: $border-radius-large;
+  border: 1px solid;
+  font-size: $font-size-300;
+  font-weight: $font-weight-regular;
+  transition: all $duration-fast $ease-ease-in-out;
+
+  @include themify {
+    background-color: themed('bg-primary');
+    border-color: themed('border-default');
+    color: themed('text-primary');
+  }
+
+  &::placeholder {
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &:focus {
+    outline: none;
+    border-width: 2px;
+
+    @include themify {
+      border-color: themed('action-primary');
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  // Para el input de búsqueda con icono
+  .sales-payment-new__filter-search & {
+    padding-left: 48px;
+  }
+}
+
+// Select
+.sales-payment-new__filter-select {
+  flex: 1;
+  min-width: 200px;
+
+  @media (max-width: 968px) {
+    min-width: 100%;
+  }
+
+  // Override Radix Select styles
+  button[data-radix-select-trigger] {
+    height: 48px;
+    padding: $spacing-12 $spacing-16;
+    border-radius: $border-radius-large;
+    border: 1px solid;
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    transition: all $duration-fast $ease-ease-in-out;
+    width: 100%;
+    justify-content: space-between;
+
+    @include themify {
+      background-color: themed('bg-primary');
+      border-color: themed('border-default');
+      color: themed('text-primary');
+    }
+
+    &:focus {
+      outline: none;
+      border-width: 2px;
+
+      @include themify {
+        border-color: themed('action-primary');
+      }
+    }
+
+    &[data-placeholder] {
+      @include themify {
+        color: themed('text-tertiary');
+      }
+    }
+  }
+}
+
+.sales-payment-new__select-trigger {
+  width: 100%;
+}
+
+// Custom client dropdown
+.sales-payment-new__client-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.sales-payment-new__client-input {
+  padding-right: 40px !important;
+  cursor: pointer;
+}
+
+.sales-payment-new__client-dropdown-icon {
+  position: absolute;
+  right: $spacing-16;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  transition: transform $duration-fast $ease-ease-in-out;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+
+  .sales-payment-new__client-dropdown.open & {
+    transform: translateY(-50%) rotate(180deg);
+  }
+}
+
+.sales-payment-new__client-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  border-radius: $border-radius-large;
+  border: 1px solid;
+  z-index: 100;
+  @include elevation(8);
+  @include custom-scrollbar;
+
+  @include themify {
+    background-color: themed('bg-primary');
+    border-color: themed('border-default');
+  }
+}
+
+.sales-payment-new__client-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: $spacing-12 $spacing-16;
+  cursor: pointer;
+  transition: background-color $duration-fast $ease-ease-in-out;
+  font-size: $font-size-300;
+  text-align: left;
+  border: none;
+  background: none;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &:hover,
+  &--highlighted {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &:focus {
+    outline: none;
+
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &--empty {
+    cursor: default;
+
+    @include themify {
+      color: themed('text-tertiary');
+    }
+
+    &:hover {
+      @include themify {
+        background-color: transparent;
+      }
+    }
+  }
+
+  &:first-child {
+    border-top-left-radius: $border-radius-large;
+    border-top-right-radius: $border-radius-large;
+  }
+
+  &:last-child {
+    border-bottom-left-radius: $border-radius-large;
+    border-bottom-right-radius: $border-radius-large;
+  }
+}
+
+// Date range
+.sales-payment-new__filter-date {
+  display: flex;
+  gap: $spacing-8;
+  flex: 1;
+
+  @media (max-width: 968px) {
+    width: 100%;
+  }
+
+  .sales-payment-new__filter-input {
+    flex: 1;
+  }
+}
+
+// Status filters
+.sales-payment-new__status-label {
+  @include body;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.sales-payment-new__status-filters {
+  display: flex;
+  gap: $spacing-8;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.sales-payment-new__status-pill {
+  @include body-small;
+  padding: $spacing-8 $spacing-16;
+  border-radius: $border-radius-xlarge;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all $duration-fast $ease-ease-in-out;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    color: themed('text-primary');
+    border-color: themed('border-subtle');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+      border-color: themed('border-default');
+    }
+  }
+
+  &--pending {
+    @include themify {
+      background-color: rgba(255, 193, 7, 0.1);
+      color: #f59e0b;
+      border-color: rgba(245, 158, 11, 0.2);
+    }
+
+    &:hover {
+      @include themify {
+        background-color: rgba(255, 193, 7, 0.15);
+        border-color: rgba(245, 158, 11, 0.3);
+      }
+    }
+  }
+
+  &--partial {
+    @include themify {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    &:hover {
+      @include themify {
+        background-color: rgba(59, 130, 246, 0.15);
+        border-color: rgba(59, 130, 246, 0.3);
+      }
+    }
+  }
+
+  &--paid {
+    @include themify {
+      background-color: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+      border-color: rgba(34, 197, 94, 0.2);
+    }
+
+    &:hover {
+      @include themify {
+        background-color: rgba(34, 197, 94, 0.15);
+        border-color: rgba(34, 197, 94, 0.3);
+      }
+    }
+  }
+
+  &--cancelled {
+    @include themify {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    &:hover {
+      @include themify {
+        background-color: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.3);
+      }
+    }
+  }
+
+  &--active {
+    font-weight: $font-weight-semibold;
+
+    &.sales-payment-new__status-pill--pending {
+      @include themify {
+        background-color: #fbbf24;
+        color: #78350f;
+        border-color: #f59e0b;
+      }
+    }
+
+    &.sales-payment-new__status-pill--partial {
+      @include themify {
+        background-color: #3b82f6;
+        color: #ffffff;
+        border-color: #2563eb;
+      }
+    }
+
+    &.sales-payment-new__status-pill--paid {
+      @include themify {
+        background-color: #22c55e;
+        color: #ffffff;
+        border-color: #16a34a;
+      }
+    }
+
+    &.sales-payment-new__status-pill--cancelled {
+      @include themify {
+        background-color: #ef4444;
+        color: #ffffff;
+        border-color: #dc2626;
+      }
+    }
+  }
+}
+
+.sales-payment-new__filter-actions {
+  display: flex;
+  gap: $spacing-16;
+  align-items: center;
+  margin-left: auto;
+
+  @media (max-width: 968px) {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .btn {
+    white-space: nowrap;
+
+    @media (max-width: 968px) {
+      flex: 1;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TABLE SECTION
+// -----------------------------------------------------------------------------
+
+.sales-payment-new__table-container {
+  display: flex;
+  flex-direction: column;
+  border-radius: $border-radius-large;
+  border: 1px solid;
+  overflow: hidden;
+
+  @include themify {
+    background-color: themed('bg-primary');
+    border-color: themed('border-subtle');
+  }
+}
+
+.sales-payment-new__table {
+  width: 100%;
+  border-collapse: collapse;
+
+  @media (max-width: 968px) {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+.sales-payment-new__table-head {
+  @include body-small;
+  font-weight: $font-weight-semibold;
+  text-align: left;
+  padding: $spacing-16;
+  border-bottom: 2px solid;
+  white-space: nowrap;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    color: themed('text-primary');
+    border-color: themed('border-default');
+  }
+
+  &--right {
+    text-align: right;
+  }
+
+  &--actions {
+    text-align: center;
+    width: 120px;
+  }
+
+  &--checkbox {
+    width: 48px;
+    text-align: center;
+    padding: $spacing-12;
+  }
+}
+
+.sales-payment-new__table-row {
+  transition: background-color $duration-fast $ease-ease-in-out;
+  border-bottom: 1px solid;
+
+  @include themify {
+    border-color: themed('border-subtle');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &--selected {
+    @include themify {
+      background-color: rgba(59, 130, 246, 0.08);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    &:hover {
+      @include themify {
+        background-color: rgba(59, 130, 246, 0.12);
+      }
+    }
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.sales-payment-new__table-cell {
+  @include body-small;
+  padding: $spacing-16;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &--right {
+    text-align: right;
+  }
+
+  &--actions {
+    text-align: center;
+  }
+
+  &--checkbox {
+    width: 48px;
+    text-align: center;
+    padding: $spacing-12;
+  }
+}
+
+.sales-payment-new__checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+
+  &:focus {
+    outline: 2px solid;
+    outline-offset: 2px;
+
+    @include themify {
+      outline-color: themed('action-primary');
+    }
+  }
+}
+
+.sales-payment-new__radio {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+
+  &:focus {
+    outline: 2px solid;
+    outline-offset: 2px;
+
+    @include themify {
+      outline-color: themed('action-primary');
+    }
+  }
+}
+
+.sales-payment-new__order-id {
+  @include body-small;
+  font-weight: $font-weight-semibold;
+  font-family: $font-family-monospace;
+
+  @include themify {
+    color: themed('action-primary');
+  }
+}
+
+.sales-payment-new__amount {
+  @include body-small;
+  font-weight: $font-weight-semibold;
+  font-family: $font-family-monospace;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.sales-payment-new__balance {
+  @include body-small;
+  font-weight: $font-weight-semibold;
+  font-family: $font-family-monospace;
+
+  @include themify {
+    color: themed('state-warning');
+  }
+}
+
+// Status badges en la tabla
+.sales-payment-new__status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-4 $spacing-12;
+  border-radius: $border-radius-xlarge;
+  font-size: $font-size-200;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+
+  &--pending {
+    @include themify {
+      background-color: rgba(255, 193, 7, 0.15);
+      color: #f59e0b;
+    }
+  }
+
+  &--partial {
+    @include themify {
+      background-color: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+    }
+  }
+
+  &--paid {
+    @include themify {
+      background-color: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+  }
+
+  &--cancelled {
+    @include themify {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// PAGINATION
+// -----------------------------------------------------------------------------
+
+.sales-payment-new__pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-16 $spacing-20;
+  border-top: 1px solid;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    border-color: themed('border-subtle');
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: $spacing-12;
+    align-items: stretch;
+  }
+}
+
+.sales-payment-new__pagination-info {
+  @include body-small;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  @media (max-width: 768px) {
+    text-align: center;
+  }
+}
+
+.sales-payment-new__pagination-controls {
+  display: flex;
+  gap: $spacing-8;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
+}
+
+.sales-payment-new__pagination-pages {
+  display: flex;
+  gap: $spacing-4;
+}
+
+// -----------------------------------------------------------------------------
+// RESPONSIVE ADJUSTMENTS
+// -----------------------------------------------------------------------------
+
+@media (max-width: 768px) {
+  .sales-payment-new__table-head,
+  .sales-payment-new__table-cell {
+    padding: $spacing-12;
+    font-size: $font-size-200;
+  }
+
+  .sales-payment-new__order-id,
+  .sales-payment-new__amount,
+  .sales-payment-new__balance {
+    font-size: $font-size-200;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// UTILITY CLASSES
+// -----------------------------------------------------------------------------
+
+.icon {
+  flex-shrink: 0;
+
+  &--large {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// Animación de spinner
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin $duration-slow linear infinite;
+}

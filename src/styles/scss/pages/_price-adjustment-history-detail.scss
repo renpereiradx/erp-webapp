@@ -1,0 +1,397 @@
+// =============================================================================
+// PRICE ADJUSTMENT HISTORY DETAIL PAGE - REFERENCE LAYOUT
+// =============================================================================
+// Página de Detalle de Ajuste de Precio Específico
+// Siguiendo diseño de referencia exacto
+// Layout de una sola columna con información fluida
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// 1. PAGE CONTAINER
+// -----------------------------------------------------------------------------
+
+.price-adjustment-history-detail {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: $spacing-24;
+
+  @include mobile {
+    padding: $spacing-16;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 2. HEADER - BACK BUTTON + TITLE
+// -----------------------------------------------------------------------------
+
+.detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-12;
+  margin-bottom: $spacing-32;
+
+  @include mobile {
+    margin-bottom: $spacing-20;
+  }
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-8;
+  padding: $spacing-8 $spacing-12;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  align-self: flex-start;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify($themes) {
+      background-color: themed('state-hover-bg');
+      color: themed('action-primary');
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid;
+    outline-offset: 2px;
+
+    @include themify($themes) {
+      outline-color: themed('state-focus-border');
+    }
+  }
+
+  &__icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  &__text {
+    font-size: 14px;
+    font-weight: 500;
+  }
+}
+
+.detail-title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('text-primary');
+  }
+
+  @include mobile {
+    font-size: 22px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 3. DETAIL CONTENT - SINGLE COLUMN LAYOUT
+// -----------------------------------------------------------------------------
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+  padding: $spacing-24;
+  border-radius: 8px;
+  border: 1px solid;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border-color: themed('border-default');
+  }
+
+  @include mobile {
+    padding: $spacing-16;
+    gap: $spacing-20;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 4. INFO GRID - PRODUCTO Y USUARIO EN 2 COLUMNAS
+// -----------------------------------------------------------------------------
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-20;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+    gap: $spacing-16;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 5. INFO SECTIONS
+// -----------------------------------------------------------------------------
+
+.info-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+}
+
+.info-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+}
+
+.info-value {
+  font-size: 14px;
+  font-weight: 500;
+
+  @include themify($themes) {
+    color: themed('text-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 6. USER INFO CON AVATAR
+// -----------------------------------------------------------------------------
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @include themify($themes) {
+    background-color: themed('action-primary');
+  }
+
+  &__initials {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 7. PRICE SECTION - ESTILO REFERENCIA
+// -----------------------------------------------------------------------------
+
+.price-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-12;
+  padding: $spacing-20 0;
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+
+  @include themify($themes) {
+    border-color: themed('border-default');
+  }
+}
+
+.price-info {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.price-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+}
+
+.price-value {
+  font-size: 16px;
+  font-weight: 500;
+
+  &--old {
+    text-decoration: line-through;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &--new {
+    font-size: 28px;
+    font-weight: 700;
+
+    &.price-value--increase {
+      @include themify($themes) {
+        color: #16a34a; // Verde para aumento
+      }
+    }
+
+    &.price-value--decrease {
+      @include themify($themes) {
+        color: #dc2626; // Rojo para reducción
+      }
+    }
+  }
+
+  @include mobile {
+    &--new {
+      font-size: 24px;
+    }
+  }
+}
+
+.price-change {
+  padding: $spacing-12 0;
+}
+
+.price-change__text {
+  font-size: 14px;
+  font-weight: 600;
+
+  &--increase {
+    color: #16a34a;
+  }
+
+  &--decrease {
+    color: #dc2626;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 8. REASON SECTION
+// -----------------------------------------------------------------------------
+
+.reason-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-12;
+  padding-top: $spacing-16;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('text-primary');
+  }
+}
+
+.reason-text {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('text-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 9. METADATA TABLE - KEY VALUE FORMAT
+// -----------------------------------------------------------------------------
+
+.metadata-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-12;
+  padding-top: $spacing-16;
+}
+
+.metadata-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 4px;
+  overflow: hidden;
+
+  @include themify($themes) {
+    border: 1px solid themed('border-default');
+  }
+}
+
+.metadata-table__header {
+  padding: $spacing-12 $spacing-16;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  @include themify($themes) {
+    background-color: themed('bg-secondary');
+    color: themed('text-secondary');
+    border-bottom: 1px solid themed('border-default');
+  }
+}
+
+.metadata-table__row {
+  @include themify($themes) {
+    border-bottom: 1px solid themed('border-default');
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    @include themify($themes) {
+      background-color: themed('state-hover-bg');
+    }
+  }
+}
+
+.metadata-table__cell {
+  padding: $spacing-12 $spacing-16;
+  font-size: 14px;
+
+  &--key {
+    font-weight: 600;
+    width: 40%;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &--value {
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  @include mobile {
+    padding: $spacing-8 $spacing-12;
+    font-size: 13px;
+  }
+}

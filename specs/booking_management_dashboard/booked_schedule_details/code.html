@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Schedule Details</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#137fec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#0d141b] dark:text-slate-100">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<div class="flex flex-1 justify-center p-4 sm:p-6 md:p-8">
+<div class="layout-content-container flex w-full max-w-4xl flex-col gap-6">
+<!-- Toolbar -->
+<div class="flex justify-between gap-2 px-0 py-3">
+<div class="flex gap-2">
+<button class="p-2 text-[#0d141b] dark:text-slate-100">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+</div>
+</div>
+<!-- Page Heading -->
+<div class="flex flex-wrap items-center justify-between gap-4">
+<p class="text-[#0d141b] dark:text-slate-100 text-4xl font-black leading-tight tracking-[-0.033em] min-w-72">Schedule Details</p>
+<div class="flex flex-wrap gap-2">
+<button class="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-primary/10 dark:bg-primary/20 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/20 dark:hover:bg-primary/30">
+<span class="material-symbols-outlined text-lg">cancel</span>
+                                Cancel Booking
+                            </button>
+<button class="flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90">
+<span class="material-symbols-outlined text-lg">check_circle</span>
+                                Check-in User
+                            </button>
+</div>
+</div>
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+<!-- Left Column / Main Details -->
+<div class="flex flex-col gap-6 lg:col-span-2">
+<!-- Court Details -->
+<div class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-background-dark">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-16" data-alt="Image of Padel Court 1" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA8ZD8K6trDMzzVb1H_BLjX50hdZ4CpZ7SaV3wlMpWfl7cPiHtCC_NPCnNOrD4E-nZeMydUx4p8ESCcub9ZNXSZWHDD36JNTn65z4TaWeMO35A_FMWqkO7rhPn0jmPVk7-zv3Gm51wHiimQcGjisa4CcMWuGRRumz3PVERneMeqXOGs74qufJi_pYWk48ryzyYWM9qXfQO3AXtFbm-cA-VSsyJFvZ5jxHlm7d55em0SAZAzTD83Hb2uMjCLX9IAeYFb3mGF43mpFXla");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-[#0d141b] dark:text-slate-100 text-xl font-bold leading-normal">Padel Court 1</p>
+<p class="text-[#4c739a] dark:text-slate-400 text-sm font-normal leading-normal">Court</p>
+</div>
+</div>
+<div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-6 sm:grid-cols-2">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-xl text-primary">calendar_today</span>
+<div class="flex flex-col">
+<p class="text-[#4c739a] dark:text-slate-400 text-xs font-normal">Date</p>
+<p class="text-[#0d141b] dark:text-slate-100 text-sm font-medium">October 26, 2023</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-xl text-primary">schedule</span>
+<div class="flex flex-col">
+<p class="text-[#4c739a] dark:text-slate-400 text-xs font-normal">Time</p>
+<p class="text-[#0d141b] dark:text-slate-100 text-sm font-medium">18:00 - 19:00</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Booking Details -->
+<div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-background-dark">
+<h3 class="text-[#0d141b] dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Booking Details</h3>
+<div class="px-4 grid grid-cols-[100px_1fr] gap-x-6">
+<div class="col-span-2 grid grid-cols-subgrid border-t border-t-[#cfdbe7] dark:border-t-slate-800 py-4">
+<p class="text-[#4c739a] dark:text-slate-400 text-sm font-normal leading-normal">Booking ID</p>
+<p class="text-[#0d141b] dark:text-slate-100 text-sm font-normal leading-normal">#BK-847361</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid border-t border-t-[#cfdbe7] dark:border-t-slate-800 py-4">
+<p class="text-[#4c739a] dark:text-slate-400 text-sm font-normal leading-normal">Status</p>
+<div class="flex items-center">
+<span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">
+<span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                                Confirmed
+                                            </span>
+</div>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid border-t border-t-[#cfdbe7] dark:border-t-slate-800 py-4">
+<p class="text-[#4c739a] dark:text-slate-400 text-sm font-normal leading-normal">Created At</p>
+<p class="text-[#0d141b] dark:text-slate-100 text-sm font-normal leading-normal">October 24, 2023</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column / Client & Financials -->
+<div class="flex flex-col gap-6">
+<!-- Client & User Info -->
+<div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-background-dark">
+<h3 class="text-[#0d141b] dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">People</h3>
+<div class="flex flex-col">
+<div class="flex items-center gap-3 px-4 py-3 border-t border-slate-200 dark:border-slate-800">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Avatar for Isabella Rossi" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB0TkWxVZFee8XSkQ2LLjfCQ5FO9V8lEaZte0xuCh8xftbnLLIoVXikNZ-SUnzZEF9rRJzmTHGudf8JuW_j6StDCqqDk2e1T1J9WdsenVgipFJIXe5pdiWG0AQty-tdwz2bpGmuZ6FulzXrqqN2bz_-ag8RMJPxuvNhsBbSprI79TRh0GNR13SDxsPtejZ4TEY2wcum8d_4i9PatzdR0KjFsliOOl4XTQzJSL6Ck9bT0RattIA2bpZ8CBRJ2z7wCglZjRWxFj051qOJ");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-[#0d141b] dark:text-slate-100 text-sm font-medium leading-normal">Isabella Rossi</p>
+<p class="text-[#4c739a] dark:text-slate-400 text-xs font-normal leading-normal">Cliente</p>
+</div>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 border-t border-slate-200 dark:border-slate-800">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Avatar for Marco Bianchi" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCx12J_n9vedsNKf-jgihn9dbDMROO7xG2pIoihexIEdfif4TfdC-UXIQuDnHgOTgIaHae__ITz_IRqhrH0V4olpod5iiYvmQnJjpoy3UUEG7cnbzic51j0Zy6kr_GyKYI8631Drf0oME3Q1F-TxSBwK5PUZBgZT7_cGIR7WAJRkNMm0EVXRv6f4ETqOmbaLSzXg2SQYU4ecy9HpAT2B87bhBJGgSsd40nnayZuJBsG0TLcuIVf9lHpelucyq-_Xsw8E96ydSLX7Qy4");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-[#0d141b] dark:text-slate-100 text-sm font-medium leading-normal">Marco Bianchi</p>
+<p class="text-[#4c739a] dark:text-slate-400 text-xs font-normal leading-normal">Usuario</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Financials -->
+<div class="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-background-dark">
+<h3 class="text-[#0d141b] dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Financials</h3>
+<div class="p-4 grid grid-cols-[auto_1fr] gap-x-6">
+<div class="col-span-2 grid grid-cols-subgrid border-t border-t-[#cfdbe7] dark:border-t-slate-800 py-3">
+<p class="text-[#4c739a] dark:text-slate-400 text-sm font-normal">Subtotal</p>
+<p class="text-[#0d141b] dark:text-slate-100 text-sm font-normal text-right">$50.00</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid border-t border-t-[#cfdbe7] dark:border-t-slate-800 py-3">
+<p class="text-[#4c739a] dark:text-slate-400 text-sm font-normal">Discounts</p>
+<p class="text-[#0d141b] dark:text-slate-100 text-sm font-normal text-right">-$5.00</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid border-t border-t-[#cfdbe7] dark:border-t-slate-800 py-3 font-medium">
+<p class="text-[#0d141b] dark:text-slate-100 text-sm">Total Paid</p>
+<p class="text-[#0d141b] dark:text-slate-100 text-sm text-right">$45.00</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid border-t border-t-[#cfdbe7] dark:border-t-slate-800 pt-3">
+<p class="text-[#4c739a] dark:text-slate-400 text-sm font-normal">Payment</p>
+<p class="text-[#0d141b] dark:text-slate-100 text-sm font-normal text-right">Credit Card</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

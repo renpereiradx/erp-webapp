@@ -1,0 +1,280 @@
+/**
+ * Traducciones de ventas en español
+ * Módulo: Gestión de ventas, facturación, procesamiento de pagos
+ */
+
+export const sales = {
+  // Títulos y navegación
+  'sales.title': 'Ventas',
+  'sales.subtitle': 'Gestiona las ventas de productos',
+  'sales.new_sale': 'Nueva Venta',
+  'sales.processing': 'Procesando...',
+  'sales.complete': 'Completar Venta',
+
+  // Tabs
+  'sales.tabs.new': 'Nueva Venta',
+  'sales.tabs.history': 'Historial de Ventas',
+
+  // Nueva venta - Sección de productos
+  'sales.new.title': 'Nueva Venta',
+  'sales.new.products.title': 'Productos',
+  'sales.new.products.search': 'Buscar productos...',
+  'sales.new.products.add': 'Agregar Producto',
+  'sales.new.products.empty': 'No hay productos en la venta',
+  'sales.new.products.empty_description': 'Agrega productos para comenzar',
+  'sales.new.products.table.product': 'Producto',
+  'sales.new.products.table.quantity': 'Cantidad',
+  'sales.new.products.table.price': 'Precio Unit.',
+  'sales.new.products.table.total': 'Total',
+  'sales.new.products.table.actions': 'Acciones',
+
+  // Resumen de venta
+  'sales.summary.title': 'Resumen de Venta',
+  'sales.summary.subtotal': 'Subtotal:',
+  'sales.summary.tax': 'IVA (16%):',
+  'sales.summary.total': 'Total:',
+  'sales.summary.items': 'artículos',
+  'sales.new.summary.title': 'Resumen de Venta',
+  'sales.new.summary.subtotal': 'Subtotal',
+  'sales.new.summary.taxes': 'Impuestos (16%)',
+  'sales.new.summary.discounts': 'Descuentos',
+  'sales.new.summary.total': 'Total',
+  'sales.new.summary.clear': 'Limpiar',
+  'sales.new.summary.complete': 'Completar Venta',
+
+  // Cliente
+  'sales.new.client.title': 'Cliente',
+  'sales.new.client.search': 'Buscar cliente...',
+  'sales.new.client.select': 'Seleccionar cliente',
+  'sales.new.client.create': 'Crear Nuevo Cliente',
+  'sales.new.client.name': 'Nombre',
+  'sales.new.client.email': 'Email',
+  'sales.new.client.phone': 'Teléfono',
+  'sales.new.client.address': 'Dirección',
+
+  // Pago
+  'sales.payment.title': 'Procesamiento de Pago',
+  'sales.payment.method': 'Método de Pago',
+  'sales.payment.amount_paid': 'Monto Pagado',
+  'sales.payment.change': 'Cambio:',
+  'sales.payment.total': 'Total a Pagar:',
+  'sales.new.payment.title': 'Método de Pago',
+  'sales.new.payment.cash': 'Efectivo',
+  'sales.new.payment.card': 'Tarjeta',
+  'sales.new.payment.transfer': 'Transferencia',
+  'sales.new.payment.currency': 'Moneda',
+
+  // Sesión de ventas
+  'sales.session.start': 'Iniciar Sesión de Ventas',
+  'sales.session.end': 'Finalizar Sesión',
+  'sales.session.active': 'Sesión Activa',
+
+  // Detalles
+  'sales.new.details.title': 'Detalles',
+  'sales.new.details.date': 'Fecha',
+  'sales.new.details.salesperson': 'Vendedor',
+  'sales.new.details.notes': 'Notas',
+  'sales.new.details.notes_placeholder': 'Notas adicionales...',
+
+  // Historial
+  'sales.history.title': 'Historial de Ventas',
+  'sales.history.search': 'Buscar ventas...',
+  'sales.history.filter.all': 'Todas',
+  'sales.history.filter.today': 'Hoy',
+  'sales.history.filter.week': 'Última Semana',
+  'sales.history.filter.month': 'Último Mes',
+  'sales.history.filter.clear': 'Limpiar Filtros',
+  'sales.history.table.date': 'Fecha',
+  'sales.history.table.invoice': 'Factura',
+  'sales.history.table.client': 'Cliente',
+  'sales.history.table.items': 'Productos',
+  'sales.history.table.total': 'Total',
+  'sales.history.table.status': 'Estado',
+  'sales.history.table.actions': 'Acciones',
+  'sales.history.empty': 'No hay ventas registradas',
+  'sales.history.empty_description': 'Las ventas aparecerán aquí',
+
+  // Modal de producto
+  'sales.product_modal.title': 'Seleccionar Producto',
+  'sales.product_modal.quantity': 'Cantidad',
+  'sales.product_modal.add': 'Agregar',
+  'sales.product_modal.cancel': 'Cancelar',
+
+  // Estados
+  'sales.status.completed': 'Completada',
+  'sales.status.pending': 'Pendiente',
+  'sales.status.cancelled': 'Cancelada',
+
+  // Gestión de Cobros (Nueva página)
+  'sales.payment.title': 'Gestión de Cobros',
+  'sales.payment.subtitle': 'Busque y seleccione órdenes para procesar pagos.',
+  'sales.payment.action.refresh': 'Actualizar Lista',
+  'sales.payment.action.proceed': 'Proceder al Pago',
+  'sales.payment.search.placeholder':
+    'Buscar por ID de orden o nombre de cliente',
+  'sales.payment.filter.client': 'Seleccionar cliente',
+  'sales.payment.filter.all_clients': 'Todos los clientes',
+  'sales.payment.filter.start_date': 'Fecha inicio',
+  'sales.payment.filter.end_date': 'Fecha fin',
+  'sales.payment.filter.status': 'Estado',
+  'sales.payment.status.pending': 'Pendiente',
+  'sales.payment.status.partial': 'Parcialmente Pagado',
+  'sales.payment.status.paid': 'Pagado',
+  'sales.payment.status.cancelled': 'Cancelada',
+  'sales.payment.table.order_id': 'ID ORDEN',
+  'sales.payment.table.client': 'CLIENTE',
+  'sales.payment.table.date': 'FECHA',
+  'sales.payment.table.total': 'MONTO TOTAL',
+  'sales.payment.table.balance': 'SALDO PENDIENTE',
+  'sales.payment.table.status': 'ESTADO',
+  'sales.payment.table.action': 'ACCIÓN',
+  'sales.payment.pagination.showing': 'Mostrando',
+  'sales.payment.pagination.of': 'de',
+  'sales.payment.empty.title': 'Sin resultados',
+  'sales.payment.empty.message':
+    'No se encontraron órdenes de venta con los filtros seleccionados',
+  'sales.payment.error.title': 'Error al cargar',
+
+  // Detalle de venta
+  'sales.detail.title': 'Detalle de Venta',
+  'sales.detail.items': 'Artículos',
+  'sales.detail.product': 'Producto',
+  'sales.detail.quantity': 'Cantidad',
+  'sales.detail.price': 'Precio',
+  'sales.detail.total': 'Total',
+  'sales.detail.notes': 'Notas',
+  'sales.detail.customer': 'Información del Cliente',
+  'sales.detail.customerName': 'Nombre',
+  'sales.detail.customerContact': 'Contacto',
+  'sales.detail.customerEmail': 'Email',
+  'sales.detail.customerPhone': 'Teléfono',
+  'sales.detail.payment': 'Información de Pago',
+  'sales.detail.paymentMethod': 'Método de Pago',
+  'sales.detail.date': 'Fecha',
+  'sales.detail.summary': 'Resumen Financiero',
+  'sales.detail.subtotal': 'Subtotal',
+  'sales.detail.tax': 'Impuestos',
+  'sales.detail.notFound': 'Venta no encontrada',
+  'sales.detail.breadcrumb.sales': 'Ventas',
+  'sales.detail.breadcrumb.orders': 'Órdenes',
+  'sales.detail.breadcrumb.current': 'Orden #{{id}}',
+  'sales.detail.orderTitle': 'Orden de Venta #{{id}}',
+  'sales.detail.headingDescription':
+    'Revisa la información completa y el historial de pagos de la orden.',
+  'sales.detail.registerPayment': 'Registrar Nuevo Pago',
+  'sales.detail.totalAmount': 'Monto Total',
+  'sales.detail.paidAmount': 'Monto Pagado',
+  'sales.detail.balanceDue': 'Saldo Pendiente',
+  'sales.detail.clientDocument': 'DNI/RUC',
+  'sales.detail.orderInfo': 'Detalles de la Orden',
+  'sales.detail.seller': 'Vendedor',
+  'sales.detail.branch': 'Sucursal',
+  'sales.detail.productsTitle': 'Productos de la Orden',
+  'sales.detail.productSku': 'Producto / SKU',
+  'sales.detail.productId': 'Producto / ID',
+  'sales.detail.quantityShort': 'Cant.',
+  'sales.detail.unitPrice': 'Precio Unit.',
+  'sales.detail.paymentHistory': 'Historial de Pagos',
+  'sales.detail.paymentDate': 'Fecha',
+  'sales.detail.paymentUser': 'Usuario',
+  'sales.detail.paymentMethod': 'Método',
+  'sales.detail.paymentAmount': 'Monto',
+  'sales.detail.paymentChange': 'Vuelto',
+  'sales.detail.paymentStatus': 'Estado',
+  'sales.detail.noPayments': 'No hay pagos registrados para esta venta',
+  'sales.detail.viewPaymentHistory': 'Ver Historial Completo',
+  'sales.detail.status.pending': 'Pendiente',
+  'sales.detail.status.partial': 'Parcial',
+  'sales.detail.status.partial_payment': 'Pago Parcial',
+  'sales.detail.status.completed': 'Completado',
+  'sales.detail.status.cancelled': 'Anulado',
+  'sales.detail.status.confirmed': 'Confirmado',
+  'sales.detail.status.void': 'Anulado',
+  'sales.detail.status.paid': 'Pagado',
+
+  // Historial de Pagos
+  'sales.paymentHistory.breadcrumb.sales': 'Ventas',
+  'sales.paymentHistory.breadcrumb.orders': 'Órdenes',
+  'sales.paymentHistory.breadcrumb.current': 'Historial de Pagos',
+  'sales.paymentHistory.title': 'Historial de Pagos para',
+  'sales.paymentHistory.notFound': 'No se encontró la orden de venta',
+  'sales.paymentHistory.action.addPayment': 'Añadir Nuevo Pago',
+  'sales.paymentHistory.orderStatus': 'Estado de la Orden',
+  'sales.paymentHistory.orderStatusMessage':
+    'Esta orden de venta tiene un saldo pendiente. Esperando pago completo.',
+  'sales.paymentHistory.viewOrderDetails': 'Ver Detalles de la Orden',
+  'sales.paymentHistory.paymentProgress': 'Progreso del Pago',
+  'sales.paymentHistory.paid': 'Pagado',
+  'sales.paymentHistory.balanceDue': 'Saldo Pendiente',
+  'sales.paymentHistory.total': 'Total',
+  'sales.paymentHistory.table.date': 'FECHA',
+  'sales.paymentHistory.table.user': 'USUARIO',
+  'sales.paymentHistory.table.method': 'MÉTODO DE PAGO',
+  'sales.paymentHistory.table.amount': 'MONTO',
+  'sales.paymentHistory.table.status': 'ESTADO',
+  'sales.paymentHistory.noPayments': 'No hay pagos registrados',
+  'sales.paymentHistory.customer': 'Cliente',
+  'sales.paymentHistory.customerId': 'ID Cliente',
+  'sales.paymentHistory.viewFullProfile': 'Ver Perfil Completo',
+  'sales.paymentHistory.productsInOrder': 'Productos en la Orden',
+  'sales.paymentHistory.quantity': 'Cant',
+  'sales.paymentHistory.noProducts': 'Sin productos',
+  'sales.paymentHistory.status.pending': 'Pendiente',
+  'sales.paymentHistory.status.partial': 'Parcial',
+  'sales.paymentHistory.status.partial_payment': 'Pago Parcial',
+  'sales.paymentHistory.status.completed': 'Completado',
+  'sales.paymentHistory.status.paid': 'Pagado',
+  'sales.paymentHistory.status.cancelled': 'Cancelado',
+  'sales.paymentHistory.status.reversed': 'Reversado',
+  'sales.paymentHistory.status.failed': 'Fallido',
+
+  // Modal de Registro de Pago
+  'sales.registerPaymentModal.title': 'Registrar Nuevo Pago',
+  'sales.registerPaymentModal.titleWithOrder':
+    'Registrar Nuevo Pago para Orden #{{orderId}}',
+  'sales.registerPaymentModal.orderLabel': 'Orden #{{orderId}}',
+  'sales.registerPaymentModal.balanceDue': 'Saldo Pendiente: {{amount}}',
+  'sales.registerPaymentModal.orderFallback':
+    'Seleccione una orden para registrar el pago',
+  'sales.registerPaymentModal.amountReceived.label': 'Monto Recibido (Efectivo)',
+  'sales.registerPaymentModal.amountReceived.errorRequired':
+    'El monto recibido debe ser mayor o igual a 0',
+  'sales.registerPaymentModal.amountToApply.label': 'Monto a Aplicar',
+  'sales.registerPaymentModal.amountToApply.pending':
+    'Saldo pendiente: {{amount}}',
+  'sales.registerPaymentModal.amountToApply.errorRequired':
+    'El monto a aplicar debe ser mayor a 0',
+  'sales.registerPaymentModal.amountToApply.errorExceeded':
+    'El monto a aplicar no puede exceder el saldo pendiente',
+  'sales.registerPaymentModal.amountToApply.errorExceedsReceived':
+    'El monto a aplicar no puede exceder el monto recibido',
+  'sales.registerPaymentModal.cashRegister.label': 'Caja Registradora',
+  'sales.registerPaymentModal.cashRegister.placeholder':
+    'Seleccionar caja registradora',
+  'sales.registerPaymentModal.cashRegister.loading': 'Cargando cajas...',
+  'sales.registerPaymentModal.cashRegister.empty':
+    'No hay cajas registradoras abiertas disponibles',
+  'sales.registerPaymentModal.cashRegister.none': 'Sin caja registradora',
+  'sales.registerPaymentModal.cashRegister.balance': 'Saldo: {{amount}}',
+  'sales.registerPaymentModal.cashRegister.closed': 'Cerrada',
+  'sales.registerPaymentModal.cashRegister.closedWarning':
+    'La caja seleccionada está actualmente cerrada. El pago se registrará pero no afectará el balance de la caja hasta que se reabra.',
+  'sales.registerPaymentModal.cashRegister.errorRequired':
+    'Debe seleccionar una caja registradora',
+  'sales.registerPaymentModal.cashRegister.loadError':
+    'Error al cargar cajas registradoras',
+  'sales.registerPaymentModal.notes.label': 'Notas del Pago (Opcional)',
+  'sales.registerPaymentModal.notes.placeholder':
+    'Añadir comentarios sobre el pago...',
+  'sales.registerPaymentModal.change.label': 'Vuelto a Entregar:',
+  'sales.registerPaymentModal.change.noChange': 'No hay vuelto',
+  'sales.registerPaymentModal.change.willReturn': 'Entregar al cliente:',
+  'sales.registerPaymentModal.feedback.selectSale':
+    'Debe seleccionar una venta para registrar el pago',
+  'sales.registerPaymentModal.cancel': 'Cancelar',
+  'sales.registerPaymentModal.confirm': 'Confirmar Pago',
+  'sales.registerPaymentModal.loading': 'Procesando...',
+  'sales.registerPaymentModal.submitError':
+    'Error al procesar el pago. Intente nuevamente.',
+  'sales.registerPaymentModal.successMessage': 'Pago registrado exitosamente',
+}

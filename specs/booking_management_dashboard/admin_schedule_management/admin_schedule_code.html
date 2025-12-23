@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gestión de Horarios - Admin Panel</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="w-64 flex-shrink-0 bg-white dark:bg-gray-900/50 p-4 flex flex-col justify-between border-r border-gray-200 dark:border-gray-800">
+<div>
+<div class="flex items-center gap-3 mb-6">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Company logo placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCJu7pBueCvtos8BgtoZyiFsDnkCjb95tGLh0Dt9e48XSKQiLuh_u39tBpqAJQ_tYJeflzfjbBUIiysh3_DR39k4RUl_PHlQHinJYLnSBCz1261D6av838CA8kV-JUggCrrZ67f0XMRUPI0sNU_OrR9rGKKo3sO5rOxCJZJloppKgBhzPHPI7_A3FOT1br2ECojjX5djlmilfdjjLYbtXHrVWxg_djbCFDWbbnOd0wGJPf6nDXeiX12SXn_guyHI9xl9WrYys3Hr62h");'></div>
+<div class="flex flex-col">
+<h1 class="text-gray-900 dark:text-white text-base font-medium leading-normal">Admin Panel</h1>
+<p class="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal">Court Rentals Inc.</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<p class="text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+<p class="text-sm font-medium leading-normal">Gestión de Horarios</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" href="#">
+<span class="material-symbols-outlined">group</span>
+<p class="text-sm font-medium leading-normal">Usuarios</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<p class="text-sm font-medium leading-normal">Reportes</p>
+</a>
+</nav>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-sm font-medium leading-normal">Settings</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg" href="#">
+<span class="material-symbols-outlined">logout</span>
+<p class="text-sm font-medium leading-normal">Log Out</p>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-6 lg:p-8">
+<div class="w-full max-w-7xl mx-auto">
+<!-- Breadcrumbs -->
+<div class="flex flex-wrap gap-2 mb-2">
+<a class="text-gray-500 dark:text-gray-400 text-sm font-medium leading-normal hover:text-primary" href="#">Admin</a>
+<span class="text-gray-500 dark:text-gray-400 text-sm font-medium leading-normal">/</span>
+<span class="text-gray-900 dark:text-white text-sm font-medium leading-normal">Gestión de Horarios</span>
+</div>
+<!-- PageHeading -->
+<header class="flex flex-wrap justify-between items-center gap-4 mb-6">
+<h1 class="text-gray-900 dark:text-white text-3xl font-bold leading-tight">Gestión de Horarios</h1>
+<!-- Command Bar: ButtonGroup + SingleButton -->
+<div class="flex flex-wrap gap-2">
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 transition-colors">
+<span class="truncate">Generar para Hoy</span>
+</button>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+<span class="truncate">Generar para Mañana</span>
+</button>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-transparent text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+<span class="truncate">Generar Rango Personalizado</span>
+</button>
+</div>
+</header>
+<!-- Filter Panel -->
+<div class="mb-6 p-4 bg-white dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-800">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="producto-filter">Producto</label>
+<select class="w-full h-10 px-3 rounded-lg bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-primary focus:border-primary" id="producto-filter">
+<option>Todas las canchas</option>
+<option>Cancha de Tenis 1</option>
+<option>Cancha de Pádel A</option>
+<option>Cancha de Fútbol 5</option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="fecha-filter">Fecha</label>
+<input class="w-full h-10 px-3 rounded-lg bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-primary focus:border-primary" id="fecha-filter" type="date" value="2024-05-21"/>
+</div>
+<div class="col-span-1 md:col-span-2 lg:col-span-2">
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
+<div class="flex items-center gap-2 h-10">
+<button class="px-4 py-1.5 text-sm font-semibold rounded-full bg-primary/10 text-primary">Todos</button>
+<button class="px-4 py-1.5 text-sm font-semibold rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Disponible</button>
+<button class="px-4 py-1.5 text-sm font-semibold rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">Reservado</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Details List / Data Grid -->
+<div class="bg-white dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left text-gray-600 dark:text-gray-400">
+<thead class="text-xs text-gray-700 dark:text-gray-300 uppercase bg-gray-50 dark:bg-gray-800">
+<tr>
+<th class="px-6 py-3" scope="col">Producto</th>
+<th class="px-6 py-3" scope="col">Fecha y Hora</th>
+<th class="px-6 py-3" scope="col">Estado</th>
+<th class="px-6 py-3" scope="col">Usuario</th>
+<th class="px-6 py-3 text-right" scope="col">Acciones</th>
+</tr>
+</thead>
+<tbody>
+<tr class="bg-white dark:bg-gray-900/50 border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Cancha de Tenis 1</td>
+<td class="px-6 py-4">21 Mayo 2024, 09:00 - 10:00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-green-900/50 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-300">
+<span class="size-1.5 rounded-full bg-green-500"></span>
+                                            Disponible
+                                        </span>
+</td>
+<td class="px-6 py-4">N/A</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 text-gray-500 hover:text-primary rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"><span class="material-symbols-outlined text-base">more_horiz</span></button>
+</td>
+</tr>
+<tr class="bg-white dark:bg-gray-900/50 border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Cancha de Pádel A</td>
+<td class="px-6 py-4">21 Mayo 2024, 09:00 - 10:00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 dark:bg-blue-900/50 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
+<span class="size-1.5 rounded-full bg-blue-500"></span>
+                                            Reservado
+                                        </span>
+</td>
+<td class="px-6 py-4">Ana García</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 text-gray-500 hover:text-primary rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"><span class="material-symbols-outlined text-base">edit</span></button>
+<button class="p-1 text-gray-500 hover:text-red-500 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"><span class="material-symbols-outlined text-base">cancel</span></button>
+</td>
+</tr>
+<tr class="bg-white dark:bg-gray-900/50 border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Cancha de Tenis 1</td>
+<td class="px-6 py-4">21 Mayo 2024, 10:00 - 11:00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 dark:bg-blue-900/50 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
+<span class="size-1.5 rounded-full bg-blue-500"></span>
+                                            Reservado
+                                        </span>
+</td>
+<td class="px-6 py-4">Carlos Ruiz</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 text-gray-500 hover:text-primary rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"><span class="material-symbols-outlined text-base">edit</span></button>
+<button class="p-1 text-gray-500 hover:text-red-500 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"><span class="material-symbols-outlined text-base">cancel</span></button>
+</td>
+</tr>
+<tr class="bg-white dark:bg-gray-900/50 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+<td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">Cancha de Fútbol 5</td>
+<td class="px-6 py-4">21 Mayo 2024, 10:00 - 11:00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-green-900/50 px-2 py-1 text-xs font-medium text-green-700 dark:text-green-300">
+<span class="size-1.5 rounded-full bg-green-500"></span>
+                                            Disponible
+                                        </span>
+</td>
+<td class="px-6 py-4">N/A</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 text-gray-500 hover:text-primary rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"><span class="material-symbols-outlined text-base">more_horiz</span></button>
+</td>
+</tr>
+<!-- Empty State Example -->
+<!-- 
+                                <tr>
+                                    <td colspan="5" class="text-center py-16">
+                                        <div class="flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400">
+                                            <span class="material-symbols-outlined text-5xl">search_off</span>
+                                            <p class="font-semibold">No se encontraron horarios</p>
+                                            <p class="text-sm">Pruebe a cambiar los filtros o genere nuevos horarios.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                -->
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

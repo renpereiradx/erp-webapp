@@ -1,0 +1,12 @@
+// =============================================================================
+// LAYOUT - INDEX
+// =============================================================================
+// This file imports all layout-specific styles
+// Layout includes containers, grids, navigation, sidebars, etc.
+// =============================================================================
+
+@use 'navbar';
+@use 'sidebar';
+@use 'container';
+@use 'breadcrumbs';
+@use 'tabs';

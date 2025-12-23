@@ -1,258 +1,257 @@
 /**
- * Enterprise-grade Theme Context with robust validation and performance optimization
- * Provides centralized theme management with comprehensive error handling
+ * Theme Context for Fluent Design System 2
+ * Simplified implementation with only light/dark modes
+ * Documentation: docs/FLUENT_DESIGN_SYSTEM.md
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  THEME_CONFIG, 
-  DEFAULT_THEME, 
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from 'react'
+import {
+  THEME_CONFIG,
+  DEFAULT_THEME,
   STORAGE_KEY,
   isValidTheme,
   getAllThemeClasses,
   getThemeById,
-  isNeoBrutalism,
-  isMaterial,
-  isFluent,
   isDark,
-  isLight
-} from '../config/themes';
+  isLight,
+  toggleTheme as toggleThemeHelper,
+} from '../config/themes'
 
-const ThemeContext = createContext(null);
+// =============================================================================
+// CONTEXT
+// =============================================================================
+
+const ThemeContext = createContext(null)
+
+// =============================================================================
+// THEME APPLICATION
+// =============================================================================
 
 /**
- * Función robusta para aplicar tema al DOM
- * @param {string} themeId - ID del tema a aplicar
- * @returns {boolean} - true si se aplicó correctamente
+ * Apply theme to DOM
+ * @param {string} themeId - Theme ID ('light' or 'dark')
+ * @returns {boolean} - Success status
  */
-const applyThemeToDOM = (themeId) => {
-  if (typeof window === 'undefined') return false;
-  
-  const themeConfig = getThemeById(themeId);
-  if (!themeConfig) {
-    return false;
-  }
-  
+const applyThemeToDOM = themeId => {
+  if (typeof window === 'undefined') return false
+
+  const themeConfig = getThemeById(themeId)
+  if (!themeConfig) return false
+
+  // Apply theme classes and data attributes to both <html> and <body> so
+  // Sass selectors like `.theme--light body` are activated even when the
+  // theme class lives on the root element.
+  const targets = [document.documentElement, document.body].filter(Boolean)
+
   try {
-    const root = document.documentElement;
-    const body = document.body;
-    
-    // Limpiar todas las clases de tema existentes de forma dinámica
-    const allThemeClasses = getAllThemeClasses();
-    root.classList.remove(...allThemeClasses);
-    body.classList.remove(...allThemeClasses);
-    
-    // Aplicar nuevas clases del tema
-    root.classList.add(...themeConfig.cssClasses);
-    body.classList.add(...themeConfig.cssClasses);
-    
-    // Establecer atributos data dinámicamente
-    Object.entries(themeConfig.dataAttributes).forEach(([key, value]) => {
-      root.setAttribute(`data-${key}`, value);
-      body.setAttribute(`data-${key}`, value);
-    });
-    
-    return true;
+    const allThemeClasses = getAllThemeClasses()
+
+    targets.forEach(el => {
+      // Remove previous theme markers
+      el.classList.remove(...allThemeClasses)
+
+      // Apply new theme markers
+      el.classList.add(...themeConfig.cssClasses)
+
+      // Set data attributes (overwrite if they already exist)
+      Object.entries(themeConfig.dataAttributes).forEach(([key, value]) => {
+        el.setAttribute(`data-${key}`, value)
+      })
+    })
+
+    return true
   } catch (error) {
-    return false;
+    console.error('Failed to apply theme to DOM:', error)
+    return false
   }
-};
+}
+
+// =============================================================================
+// THEME PERSISTENCE
+// =============================================================================
 
 /**
- * Cargar tema inicial con validación y fallbacks
- * @returns {string} - ID del tema válido
+ * Get initial theme from localStorage or default
+ * @returns {string} - Valid theme ID
  */
 const getInitialTheme = () => {
-  if (typeof window === 'undefined') return DEFAULT_THEME;
-  
+  if (typeof window === 'undefined') return DEFAULT_THEME
+
   try {
-  const savedTheme = localStorage.getItem(STORAGE_KEY);
-    
+    const savedTheme = localStorage.getItem(STORAGE_KEY)
+
     if (savedTheme && isValidTheme(savedTheme)) {
-      // Migración: si el tema guardado es uno neo-brutalism por defecto antiguo, mover a material-light
-      if (savedTheme.startsWith('neo-brutalism-')) {
-        localStorage.setItem(STORAGE_KEY, DEFAULT_THEME);
-        return DEFAULT_THEME;
-      }
-      return savedTheme;
+      return savedTheme
     }
-    
-    // Si el tema guardado no es válido, usar el por defecto
-    if (savedTheme && !isValidTheme(savedTheme)) {
-      localStorage.setItem(STORAGE_KEY, DEFAULT_THEME);
-    }
-    
-    return DEFAULT_THEME;
+
+    return DEFAULT_THEME
   } catch (error) {
-    return DEFAULT_THEME;
+    console.error('Failed to get initial theme:', error)
+    return DEFAULT_THEME
   }
-};
+}
 
 /**
- * Persistir tema en localStorage con manejo de errores
- * @param {string} themeId - ID del tema a persistir
- * @returns {boolean} - true si se guardó correctamente
+ * Persist theme to localStorage
+ * @param {string} themeId - Theme ID to persist
+ * @returns {boolean} - Success status
  */
-const persistTheme = (themeId) => {
-  if (typeof window === 'undefined') return false;
-  
+const persistTheme = themeId => {
+  if (typeof window === 'undefined') return false
+
   try {
-    localStorage.setItem(STORAGE_KEY, themeId);
-    return true;
+    localStorage.setItem(STORAGE_KEY, themeId)
+    return true
   } catch (error) {
-    return false;
+    console.error('Failed to persist theme:', error)
+    return false
   }
-};
+}
+
+// =============================================================================
+// PROVIDER
+// =============================================================================
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setThemeState] = useState(getInitialTheme());
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [theme, setThemeState] = useState(getInitialTheme())
+  const [isInitialized, setIsInitialized] = useState(false)
 
   /**
-   * Cambiar tema con validación completa
-   * @param {string} newThemeId - ID del nuevo tema
-   * @returns {boolean} - true si el cambio fue exitoso
+   * Set theme with validation and persistence
+   * @param {string} newThemeId - New theme ID
+   * @returns {boolean} - Success status
    */
-  const setTheme = useCallback((newThemeId) => {
-    // Validar que el tema existe
-    if (!isValidTheme(newThemeId)) {
-      return false;
-    }
-
-    // Si es el mismo tema, no hacer nada
-    if (newThemeId === theme) {
-      return true;
-    }
-
-    try {
-      // Aplicar al DOM primero
-      const domApplied = applyThemeToDOM(newThemeId);
-      if (!domApplied) {
-        return false;
+  const setTheme = useCallback(
+    newThemeId => {
+      // Validate theme
+      if (!isValidTheme(newThemeId)) {
+        console.warn(`Invalid theme ID: ${newThemeId}`)
+        return false
       }
 
-      // Persistir en localStorage
-      persistTheme(newThemeId);
+      // Skip if same theme
+      if (newThemeId === theme) {
+        return true
+      }
 
-      // Actualizar estado
-      setThemeState(newThemeId);
+      try {
+        // Apply to DOM
+        const applied = applyThemeToDOM(newThemeId)
+        if (!applied) return false
 
-      // Theme changed successfully
+        // Persist to localStorage
+        persistTheme(newThemeId)
 
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }, [theme]);
+        // Update state
+        setThemeState(newThemeId)
+
+        return true
+      } catch (error) {
+        console.error('Failed to set theme:', error)
+        return false
+      }
+    },
+    [theme]
+  )
 
   /**
-   * Inicializar tema al montar el componente
+   * Toggle between light and dark mode
    */
-  const initializeTheme = useCallback(() => {
-    if (isInitialized) return;
-    
-    const success = applyThemeToDOM(theme);
-    if (success) {
-      setIsInitialized(true);
-    }
-  }, [theme, isInitialized]);
+  const toggleTheme = useCallback(() => {
+    const newTheme = toggleThemeHelper(theme)
+    return setTheme(newTheme)
+  }, [theme, setTheme])
 
   /**
-   * Obtener configuración completa del tema actual
-   */
-  const themeConfig = useMemo(() => {
-    return getThemeById(theme) || getThemeById(DEFAULT_THEME);
-  }, [theme]);
-
-  /**
-   * Helpers para detectar características del tema (memoizados)
-   */
-  const themeHelpers = useMemo(() => ({
-    isNeoBrutalism: () => isNeoBrutalism(theme),
-    isMaterial: () => isMaterial(theme),
-    isFluent: () => isFluent(theme),
-    isDark: () => isDark(theme),
-    isLight: () => isLight(theme)
-  }), [theme]);
-
-  /**
-   * Resetear tema al por defecto
+   * Reset to default theme
    */
   const resetTheme = useCallback(() => {
-    return setTheme(DEFAULT_THEME);
-  }, [setTheme]);
+    return setTheme(DEFAULT_THEME)
+  }, [setTheme])
 
-  // Inicializar tema cuando el componente se monta
+  /**
+   * Initialize theme on mount
+   */
   useEffect(() => {
-    initializeTheme();
-  }, [initializeTheme]);
+    if (!isInitialized) {
+      const success = applyThemeToDOM(theme)
+      if (success) {
+        setIsInitialized(true)
+      }
+    }
+  }, [theme, isInitialized])
 
-  // Memoizar el value del context para evitar re-renders innecesarios
-  const contextValue = useMemo(() => ({
-    // Estado actual
-    theme,
-    themeConfig,
-    isInitialized,
-    
-    // Acciones
-    setTheme,
-    resetTheme,
-    
-    // Helpers
-    ...themeHelpers,
-    
-    // Utilidades
-    availableThemes: Object.values(THEME_CONFIG),
-    isValidTheme
-  }), [theme, themeConfig, isInitialized, setTheme, resetTheme, themeHelpers]);
+  // Memoize context value
+  const contextValue = useMemo(
+    () => ({
+      // State
+      theme,
+      isInitialized,
+      isDark: isDark(theme),
+      isLight: isLight(theme),
+
+      // Actions
+      setTheme,
+      toggleTheme,
+      resetTheme,
+
+      // Config
+      themeConfig: getThemeById(theme),
+      availableThemes: Object.values(THEME_CONFIG),
+    }),
+    [theme, isInitialized, setTheme, toggleTheme, resetTheme]
+  )
 
   return (
     <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
-  );
-};
+  )
+}
+
+// =============================================================================
+// HOOKS
+// =============================================================================
 
 /**
- * Hook para acceder al contexto de tema con validación robusta
- * @returns {Object} - Contexto de tema completo
+ * Main hook to access theme context
+ * @returns {Object} - Theme context
+ * @throws {Error} - If used outside ThemeProvider
  */
 export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  
+  const context = useContext(ThemeContext)
+
   if (!context) {
     throw new Error(
       'useTheme must be used within a ThemeProvider. ' +
-      'Make sure your component is wrapped with <ThemeProvider>.'
-    );
+        'Wrap your component tree with <ThemeProvider>.'
+    )
   }
-  
-  return context;
-};
+
+  return context
+}
 
 /**
- * Hook para obtener solo los helpers de tema (más performante)
- * @returns {Object} - Solo las funciones helper del tema
- */
-export const useThemeHelpers = () => {
-  const { isNeoBrutalism, isMaterial, isFluent, isDark, isLight } = useTheme();
-  return { isNeoBrutalism, isMaterial, isFluent, isDark, isLight };
-};
-
-/**
- * Hook para obtener solo el tema actual (más performante)
- * @returns {string} - ID del tema actual
+ * Hook to get only the current theme (optimized)
+ * @returns {string} - Current theme ID
  */
 export const useCurrentTheme = () => {
-  const { theme } = useTheme();
-  return theme;
-};
+  const { theme } = useTheme()
+  return theme
+}
 
 /**
- * Hook para obtener solo las acciones de tema (más performante)
- * @returns {Object} - Solo las funciones de acción
+ * Hook to get only theme actions (optimized)
+ * @returns {Object} - Theme actions
  */
 export const useThemeActions = () => {
-  const { setTheme, resetTheme } = useTheme();
-  return { setTheme, resetTheme };
-};
+  const { setTheme, toggleTheme, resetTheme } = useTheme()
+  return { setTheme, toggleTheme, resetTheme }
+}

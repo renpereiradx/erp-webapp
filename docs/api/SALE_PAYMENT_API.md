@@ -1,119 +1,77 @@
-# Guía API - Procesamiento de Pagos de Ventas
+# 💸 Pagos y Cobranzas - Guía de API
 
-**Versión:** 3.0 (Refactorizada)  
-**Fecha:** 02 de Octubre de 2025  
-**Endpoint:** `/payment/process-partial`
+**Versión:** 1.0
+**Fecha:** 11 de Diciembre de 2025
+**Endpoint Base:** `http://localhost:5050`
+**Estado:** ✅ Production Ready
 
 ---
 
 ## 📋 Descripción General
 
-API para procesar pagos parciales o completos de ventas con **soporte completo para vuelto flexible**. El sistema ahora separa correctamente el efectivo recibido del monto aplicado a la venta, permitiendo que un cliente entregue más dinero del necesario y reciba vuelto sin restricciones.
+Esta guía documenta los endpoints para el procesamiento de pagos, cobranzas y la consulta del estado de pago de las ventas.
 
 ### Características Principales
 
-- ✅ **Vuelto flexible**: Cliente puede dar cualquier monto superior al requerido
-- ✅ Procesa pagos parciales y completos
-- ✅ Calcula automáticamente vuelto/cambio
-- ✅ Actualiza estado de venta (PENDING → PARTIAL_PAYMENT → PAID)
-- ✅ Integración obligatoria con caja registradora
-- ✅ Registra movimientos de efectivo separados (INCOME + EXPENSE)
-- ✅ Validaciones completas de negocio
-- ✅ Garantiza integridad: impacto neto en caja = monto aplicado a venta
+- ✅ **Procesamiento de Pagos Avanzado**: Maneja pagos parciales, completos y cálculo de vuelto.
+- ✅ **Integración con Caja Registradora**: Todos los pagos se asocian a una caja abierta.
+- ✅ **Consulta de Estado de Pago**: Endpoints para obtener el estado detallado y resumido de los pagos de una venta.
+- ✅ **Consulta de Historial de Pagos**: Permite ver todos los pagos realizados para una venta específica.
 
 ---
 
-## 🔐 Autenticación
+## 🔧 Configuración General
 
-Requiere token JWT en el header:
+### Base URL
 
-```http
-Authorization: Bearer <token>
+```
+http://localhost:5050
 ```
 
-El token debe contener el `user_id` del usuario que procesa el pago.
+### Headers Requeridos
 
----
-
-## 📡 Endpoint Principal
-
-### **POST** `/payment/process-partial`
-
-Procesa un pago de venta con integración obligatoria de caja registradora.
-
-#### Request
-
-**Headers:**
 ```http
 Content-Type: application/json
 Authorization: Bearer <jwt_token>
 ```
 
-**Body:**
+---
+
+## 💸 Procesamiento de Pagos
+
+Esta sección cubre cómo procesar pagos para una venta existente.
+
+### 1. Procesar Pago de Venta
+
+**Endpoint:** `POST /payment/process-partial`
+
+Procesa un pago parcial o completo para una orden de venta existente. Este endpoint tiene un manejo avanzado de efectivo que permite registrar la cantidad exacta de dinero recibida del cliente y calcular el vuelto automáticamente.
+
+**Request Body:**
+
 ```json
 {
-  "sales_order_id": "23tjXmPNR",
+  "sales_order_id": "24aBcDeF",
   "amount_received": 200000.00,
-  "amount_to_apply": 164000.00,
+  "amount_to_apply": 185500.00,
   "cash_register_id": 6,
-  "payment_reference": "PAY-001",
-  "payment_notes": "Pago con vuelto grande"
+  "payment_notes": "Cliente paga con billete de 200.000 Gs."
 }
 ```
 
-#### Parámetros del Request
+**Parámetros del Request:**
 
 | Campo | Tipo | Requerido | Descripción |
 |-------|------|-----------|-------------|
-| `sales_order_id` | string | ✅ Sí | ID de la orden de venta |
-| `amount_received` | number | ✅ Sí | Efectivo recibido del cliente (debe ser > 0) |
-| `amount_to_apply` | number | ❌ No | Monto a aplicar a la venta (≤ `amount_received`). Si se omite, se aplica todo el efectivo recibido |
-| `cash_register_id` | number | ⚠️ Condicional | **Obligatorio** si se usa `amount_to_apply`. Opcional si solo se envía `amount_received` (sistema busca caja abierta automáticamente) |
-| `payment_reference` | string | ❌ No | Referencia del pago (auto-generada si se omite) |
-| `payment_notes` | string | ❌ No | Notas adicionales del pago |
+| `sales_order_id` | string | ✅ Sí | ID de la orden de venta a la que se aplica el pago. |
+| `amount_received` | number | ✅ Sí | El monto de efectivo físico que el cliente entrega. Debe ser > 0. |
+| `amount_to_apply` | number | ❌ No | El monto que se aplicará a la deuda de la venta. Si se omite, el sistema intenta aplicar el `amount_received` completo (o lo que falte para saldar la deuda). |
+| `cash_register_id` | number | ⚠️ Condicional | **Obligatorio** si se especifica `amount_to_apply`. Si se omite, el sistema buscará una caja abierta automáticamente. |
+| `payment_notes` | string | ❌ No | Notas adicionales sobre el pago. |
 
-#### ⚠️ Reglas Importantes
+> **⚠️ Regla Clave:** `amount_received` debe ser siempre mayor o igual a `amount_to_apply`.
 
-1. **Vuelto Flexible**: Si `amount_received > saldo_pendiente`, el sistema calcula automáticamente el vuelto
-2. **Dos Modos de Operación**:
-   - **Modo Simple**: Solo enviar `amount_received` → Sistema aplica todo el monto y busca caja abierta
-   - **Modo Avanzado**: Enviar `amount_received + amount_to_apply + cash_register_id` → Control total sobre el vuelto
-3. **Validación**: `amount_received` debe ser ≥ `amount_to_apply`
-4. **Validación**: `amount_to_apply` debe ser ≤ saldo pendiente de la venta
-
----
-
-## 📤 Respuestas
-
-### ✅ Respuesta Exitosa (200 OK)
-
-#### Pago Parcial Sin Vuelto
-
-```json
-{
-  "success": true,
-  "message": "Partial payment processed",
-  "payment_id": 30,
-  "payment_summary": {
-    "total_sale_amount": 264000.00,
-    "previous_payments": 0.00,
-    "current_payment": 100000.00,
-    "total_paid": 100000.00,
-    "remaining_balance": 164000.00,
-    "sale_status": "PARTIAL_PAYMENT"
-  },
-  "cash_summary": {
-    "cash_received": 100000.00,
-    "amount_applied": 100000.00,
-    "change_given": 0.00,
-    "net_cash_impact": 100000.00
-  },
-  "payment_complete": false,
-  "requires_change": false
-}
-```
-
-#### Pago Total Con Vuelto Grande
+**Response (200 OK con vuelto):**
 
 ```json
 {
@@ -121,694 +79,136 @@ Authorization: Bearer <jwt_token>
   "message": "Payment completed",
   "payment_id": 32,
   "payment_summary": {
-    "total_sale_amount": 264000.00,
-    "previous_payments": 100000.00,
-    "current_payment": 164000.00,
-    "total_paid": 264000.00,
+    "total_sale_amount": 185500.00,
+    "previous_payments": 0.00,
+    "current_payment": 185500.00,
+    "total_paid": 185500.00,
     "remaining_balance": 0.00,
     "sale_status": "PAID"
   },
   "cash_summary": {
     "cash_received": 200000.00,
-    "amount_applied": 164000.00,
-    "change_given": 36000.00,
-    "net_cash_impact": 164000.00
+    "amount_applied": 185500.00,
+    "change_given": 14500.00,
+    "net_cash_impact": 185500.00
   },
   "payment_complete": true,
   "requires_change": true
 }
 ```
 
-#### Estructura del Response
+**Estructura del Response de Pago:**
 
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `success` | boolean | Indica si el pago fue exitoso |
-| `message` | string | Mensaje descriptivo del resultado |
-| `payment_id` | number | ID del pago registrado en `sale_payments` |
-| `payment_summary` | object | Resumen del estado de la venta (ver detalles abajo) |
-| `cash_summary` | object | **⭐ NUEVO**: Detalle del manejo de efectivo y vuelto |
-| `payment_complete` | boolean | `true` si la venta quedó completamente pagada |
-| `requires_change` | boolean | `true` si `change_given` > 0 (hay vuelto para entregar) |
+| `payment_summary` | object | Resumen del estado de la deuda de la venta. |
+| `cash_summary` | object | Detalle del movimiento de efectivo (recibido, aplicado, vuelto). |
+| `payment_complete` | boolean | `true` si la venta ha sido saldada completamente. |
+| `requires_change` | boolean | `true` si se debe entregar vuelto al cliente (`change_given > 0`). |
 
-#### Objeto `payment_summary`
+**Errores Posibles:**
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `total_sale_amount` | number | Monto total de la venta |
-| `previous_payments` | number | Suma de pagos anteriores aplicados a la venta |
-| `current_payment` | number | **Monto aplicado** a la venta en este pago (no necesariamente igual al recibido) |
-| `total_paid` | number | Total pagado hasta el momento (previous + current) |
-| `remaining_balance` | number | Balance pendiente (0 si está completamente pagada) |
-| `sale_status` | string | `PAID` \| `PARTIAL_PAYMENT` \| `PENDING` |
-
-#### Objeto `cash_summary` ⭐ NUEVO
-
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `cash_received` | number | **Efectivo físico recibido** del cliente |
-| `amount_applied` | number | **Monto aplicado** a la venta (siempre ≤ `cash_received`) |
-| `change_given` | number | **Vuelto entregado** al cliente (`cash_received - amount_applied`) |
-| `net_cash_impact` | number | **Impacto neto en caja** (igual a `amount_applied`). Útil para validaciones |
-
-#### ⚠️ Diferencia Clave: `cash_received` vs `amount_applied`
-
-- **`cash_received`**: Efectivo que el cliente entregó físicamente
-- **`amount_applied`**: Monto que se aplicó al saldo de la venta
-- **Ejemplo**: Cliente debe $164k pero da $200k → `cash_received=200000`, `amount_applied=164000`, `change_given=36000`
+| Error | HTTP Status | Descripción | Solución |
+|---|---|-------------|-------------|----------|
+| `Sale not found` | 404 | La venta con el `sales_order_id` no existe. | Verificar que el ID de la venta sea correcto. |
+| `Sale already fully paid` | 400 | Se intentó pagar una venta que ya está saldada. | Verificar el estado de la venta antes de intentar un pago. Se puede obtener con `GET /sale/{id}/payment-status`. |
+| `Cash register is not open` | 400 | La caja registradora asociada está cerrada. | Abrir una caja antes de procesar pagos. |
+| `Insufficient cash` | 400 | `amount_to_apply` es mayor que `amount_received`. | Validar en el frontend que el monto a aplicar no supere el recibido. |
 
 ---
 
-### ❌ Respuestas de Error
+## 📈 Consulta de Estado de Pagos
 
-#### Venta No Encontrada (404)
+Esta sección detalla los endpoints para consultar el estado agregado de los pagos de una o más ventas, permitiendo al frontend conocer el balance pendiente, el progreso del pago y si una venta está totalmente pagada.
 
-```json
-{
-  "success": false,
-  "error": "Sale not found"
-}
-```
+### 2. Obtener Estado de Pago de una Venta Individual
 
-#### Venta Cancelada (400)
+**Endpoint:** `GET /sale/{id}/payment-status`
 
-```json
-{
-  "success": false,
-  "error": "Cannot process payment for cancelled sale"
-}
-```
+Obtiene el estado de pago completo y detallado para una única venta, incluyendo la lista de todos los pagos realizados.
 
-#### Venta Ya Pagada (400)
+**Path Parameters:**
 
-```json
-{
-  "success": false,
-  "error": "Sale already fully paid"
-}
-```
+| Parámetro | Tipo   | Requerido | Descripción                     |
+|-----------|--------|-----------|---------------------------------|
+| `id`      | string | ✅ Sí       | ID único de la venta (sales_order_id). |
 
-#### Monto Inválido (400)
-
-```json
-{
-  "success": false,
-  "error": "Payment amount must be greater than zero"
-}
-```
-
-#### Efectivo Insuficiente (400) ⭐ NUEVO
-
-```json
-{
-  "success": false,
-  "error": "Cash received must be greater than or equal to amount to apply"
-}
-```
-
-**Causa**: Se intentó aplicar más dinero del que se recibió (`amount_to_apply > amount_received`)
-
-#### Monto Excede Balance (400) ⭐ NUEVO
-
-```json
-{
-  "success": false,
-  "error": "Amount to apply exceeds remaining balance"
-}
-```
-
-**Causa**: Se intentó aplicar más dinero del que se debe (`amount_to_apply > saldo_pendiente`)
-
-#### Caja Cerrada (400)
-
-```json
-{
-  "success": false,
-  "error": "Cash register is not open"
-}
-```
-
-**Causa**: La caja registradora especificada no está abierta
-
-#### Caja No Encontrada (404)
-
-```json
-{
-  "success": false,
-  "error": "No open cash register found"
-}
-```
-
-**Causa**: No se especificó `cash_register_id` y el sistema no encontró ninguna caja abierta automáticamente
-
-#### Error del Sistema (500)
-
-```json
-{
-  "success": false,
-  "error": "Error message details"
-}
-```
-
-#### Códigos de Error y Prevención
-
-| Error | HTTP Status | Prevención |
-|-------|-------------|-----------|
-| `Sale not found` | 404 | Validar que el `sales_order_id` existe antes de enviar |
-| `Sale cancelled` | 400 | Verificar que `status != 'CANCELLED'` |
-| `Sale already paid` | 400 | Verificar que `remaining_balance > 0` antes de pagar |
-| `Invalid amount` | 400 | Validar que `amount_received > 0` en el frontend |
-| `Insufficient cash` | 400 | Validar que `amount_received >= amount_to_apply` |
-| `Amount exceeds balance` | 400 | Validar que `amount_to_apply <= remaining_balance` |
-| `Cash register closed` | 400 | Verificar estado de caja antes de procesar pago |
-| `No open cash register` | 404 | Asegurar que hay una caja abierta o especificar `cash_register_id` |
-
----
-
-## 🔄 Casos de Uso
-
-### Caso 1: Pago Exacto (Modo Simple)
-
-**Escenario:** Cliente paga exactamente lo que debe, sin vuelto.
-
-```json
-POST /payment/process-partial
-{
-  "sales_order_id": "23tjXmPNR",
-  "amount_received": 100000.00
-}
-```
-
-**Resultado:**
-- ✅ `amount_applied` = $100,000
-- ✅ `change_given` = $0
-- ✅ `sale_status` = "PARTIAL_PAYMENT"
-- ✅ Movimiento INCOME: $100,000
-
----
-
-### Caso 2: Pago con Vuelto Pequeño (Modo Simple)
-
-**Escenario:** Cliente da un poco más del saldo, vuelto menor a $10k.
-
-```json
-POST /payment/process-partial
-{
-  "sales_order_id": "SALE-100",
-  "amount_received": 170000.00
-}
-```
-
-Si el saldo era $164,000:
-
-**Resultado:**
-- ✅ `amount_applied` = $164,000
-- ✅ `change_given` = $6,000
-- ✅ `sale_status` = "PAID"
-- ✅ Movimiento INCOME: $170,000
-- ✅ Movimiento EXPENSE: $6,000 (vuelto)
-
----
-
-### Caso 3: Pago con Vuelto Grande (Modo Avanzado) ⭐
-
-**Escenario:** Cliente da mucho más del saldo (por ejemplo, billete grande), vuelto significativo.
-
-```json
-POST /payment/process-partial
-{
-  "sales_order_id": "23tjXmPNR",
-  "amount_received": 200000.00,
-  "amount_to_apply": 164000.00,
-  "cash_register_id": 6
-}
-```
-
-**Resultado:**
-- ✅ `cash_received` = $200,000
-- ✅ `amount_applied` = $164,000
-- ✅ `change_given` = $36,000
-- ✅ `sale_status` = "PAID"
-- ✅ Movimiento INCOME: $200,000
-- ✅ Movimiento EXPENSE: $36,000 (vuelto)
-- ✅ `net_cash_impact` = $164,000
-
-**💡 Ventaja:** Permite al cajero registrar exactamente el efectivo recibido y el vuelto dado, útil para auditoría.
-
----
-
-### Caso 4: Múltiples Pagos Parciales
-
-**Escenario:** Venta de $264,000 pagada en 2 cuotas.
-
-#### Pago 1:
-```json
-POST /payment/process-partial
-{
-  "sales_order_id": "23tjXmPNR",
-  "amount_received": 100000.00,
-  "cash_register_id": 6
-}
-```
-**Resultado:** `remaining_balance` = $164,000, `sale_status` = "PARTIAL_PAYMENT"
-
-#### Pago 2 (con vuelto):
-```json
-POST /payment/process-partial
-{
-  "sales_order_id": "23tjXmPNR",
-  "amount_received": 200000.00,
-  "amount_to_apply": 164000.00,
-  "cash_register_id": 6
-}
-```
-**Resultado:** `remaining_balance` = $0, `sale_status` = "PAID", `change_given` = $36,000
-
----
-
-## 💡 Consideraciones Importantes
-
-### Arquitectura de Pagos
-
-**Nueva separación de conceptos:**
-
-1. **`sale_payments.amount_paid`**: Solo almacena el monto **aplicado** a la venta
-2. **`cash_movements`**: Registra flujo de efectivo real:
-   - **INCOME**: Efectivo recibido del cliente
-   - **EXPENSE**: Vuelto entregado al cliente
-3. **Integridad garantizada**: `Σ(INCOME) - Σ(EXPENSE) = amount_paid`
-
-### Integración con Caja Registradora
-
-1. **Obligatoriedad:**
-   - Si usas `amount_to_apply` → `cash_register_id` es **obligatorio**
-   - Si solo usas `amount_received` → `cash_register_id` es opcional (sistema busca caja abierta)
-
-2. **Validaciones Automáticas:**
-   - La caja DEBE estar en estado `OPEN`
-   - `cash_received` ≥ `amount_to_apply`
-   - `amount_to_apply` ≤ saldo pendiente
-   - Si falla cualquier validación, el pago NO se procesa (transacción atómica)
-
-3. **Movimientos de Efectivo:**
-   - **INCOME**: Siempre se registra con `cash_received` (monto bruto)
-   - **EXPENSE**: Se registra solo si `change_given > 0`
-   - Ambos movimientos quedan vinculados al `payment_id` y `sales_order_id`
-
-### Cálculo de Vuelto
-
-El sistema calcula automáticamente:
-
-```
-Si amount_to_apply no se especifica:
-  amount_to_apply = min(amount_received, remaining_balance)
-  
-change_given = amount_received - amount_to_apply
-net_cash_impact = amount_to_apply
-```
-
-### Estados de Venta
-
-| Estado | Descripción | Transición |
-|--------|-------------|-----------|
-| `PENDING` | Sin pagos registrados | → `PARTIAL_PAYMENT` o `PAID` |
-| `PARTIAL_PAYMENT` | Hay pagos pero `remaining_balance > 0` | → `PAID` |
-| `PAID` | Completamente pagada (`remaining_balance = 0`) | Estado final |
-| `CANCELLED` | No se pueden procesar pagos | Estado final |
-
-### Estados de Pago
-
-| Estado | Descripción |
-|--------|-------------|
-| `PARTIAL` | Pago parcial, aún queda balance en la venta |
-| `COMPLETED` | Pago que completa la venta (último pago) |
-| `REFUNDED` | Pago reembolsado |
-| `CANCELLED` | Pago cancelado |
-
----
-
-## 🎯 Recomendaciones de Implementación
-
-### Validación en Frontend
-
-**Antes de enviar el request:**
-
-1. **Validar saldo pendiente:**
-   ```
-   GET /sales/{sales_order_id}
-   → Obtener remaining_balance actual
-   ```
-
-2. **Validar montos:**
-   ```javascript
-   if (amountReceived <= 0) {
-     error("Monto debe ser mayor a cero");
-   }
-   
-   if (amountToApply && amountToApply > amountReceived) {
-     error("No se puede aplicar más de lo recibido");
-   }
-   
-   if (amountToApply > remainingBalance) {
-     error("Monto excede el saldo pendiente");
-   }
-   ```
-
-3. **Verificar caja abierta:**
-   ```
-   GET /cash-registers/active
-   → Si retorna 404, solicitar apertura de caja
-   ```
-
-### Manejo de Vuelto en UI
-
-**Mostrar cálculo en tiempo real:**
-
-```javascript
-const calculateChange = (received, balance) => {
-  const toApply = Math.min(received, balance);
-  const change = received - toApply;
-  return { toApply, change };
-};
-
-// Actualizar UI mientras el usuario escribe
-onAmountReceivedChange((value) => {
-  const { toApply, change } = calculateChange(value, remainingBalance);
-  
-  displayAppliedAmount(toApply);
-  
-  if (change > 0) {
-    highlightChangeAmount(change); // ⚠️ Destacar vuelto
-  }
-});
-```
-
-### Después del Pago Exitoso
-
-**Acciones recomendadas:**
-
-1. **Si `requires_change = true`:**
-   - Mostrar alerta prominente con el monto del vuelto
-   - No cerrar modal hasta que el usuario confirme que entregó el vuelto
-
-2. **Si `payment_complete = true`:**
-   - Imprimir ticket/recibo
-   - Actualizar lista de ventas
-   - Redirigir o limpiar formulario
-
-3. **Actualizar balance de caja:**
-   - Usar `cash_summary.net_cash_impact` para actualizar UI de caja
-   - Mostrar movimientos registrados
-
-### Ejemplos cURL
-
-#### Pago simple (modo automático):
-```bash
-curl -X POST http://localhost:5050/payment/process-partial \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" \
-  -d '{
-    "sales_order_id": "23tjXmPNR",
-    "amount_received": 100000
-  }'
-```
-
-#### Pago con vuelto grande (modo avanzado):
-```bash
-curl -X POST http://localhost:5050/payment/process-partial \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" \
-  -d '{
-    "sales_order_id": "23tjXmPNR",
-    "amount_received": 200000,
-    "amount_to_apply": 164000,
-    "cash_register_id": 6,
-    "payment_notes": "Cliente pagó con billete de 200k"
-  }'
-```
-
----
-
-## 🔍 Validaciones del Sistema
-
-### Pre-Procesamiento
-
-1. ✅ Venta existe y no está cancelada
-2. ✅ Venta tiene saldo pendiente (`remaining_balance > 0`)
-3. ✅ `amount_received > 0`
-4. ✅ Si se envía `amount_to_apply`: `amount_received >= amount_to_apply`
-5. ✅ `amount_to_apply <= remaining_balance`
-6. ✅ Caja registradora existe y está abierta
-
-### Post-Procesamiento
-
-1. ✅ Pago registrado en `sale_payments` con `amount_paid = amount_to_apply`
-2. ✅ Estado de venta actualizado (`PARTIAL_PAYMENT` o `PAID`)
-3. ✅ Movimiento INCOME registrado con `cash_received`
-4. ✅ Movimiento EXPENSE registrado si `change_given > 0`
-5. ✅ Constraint verificado: `amount_paid ≤ total_amount`
-6. ✅ Transacción atómica: todo o nada
-
----
-
-## � Migración desde Versión Anterior
-
-### Cambios de API
-
-| Antes (v2.0) | Ahora (v3.0) | Notas |
-|--------------|--------------|-------|
-| `change_amount` | `cash_summary.change_given` | Ahora dentro de objeto `cash_summary` |
-| N/A | `cash_summary.cash_received` | **Nuevo**: Efectivo recibido |
-| N/A | `cash_summary.amount_applied` | **Nuevo**: Monto aplicado a venta |
-| N/A | `cash_summary.net_cash_impact` | **Nuevo**: Impacto neto en caja |
-| N/A | `amount_to_apply` (request) | **Nuevo**: Control opcional sobre el monto aplicado |
-
-### Compatibilidad
-
-✅ **Backward compatible**: Si no envías `amount_to_apply`, funciona igual que v2.0
-
-⚠️ **Cambio en response**: `cash_summary` es un objeto nuevo, ajustar parseo en frontend
-
----
-
-## 📊 Auditoría y Trazabilidad
-
-### Datos Registrados Automáticamente
-
-**En `sale_payments`:**
-- `payment_id` - ID único del pago
-- `sales_order_id` - Venta asociada
-- `amount_paid` - Monto aplicado a la venta
-- `cash_register_id` - Caja utilizada
-- `payment_date` - Timestamp del pago
-- `payment_reference` - Referencia única
-- `status` - Estado del pago
-
-**En `cash_movements`:**
-- `movement_id` - ID único del movimiento
-- `movement_type` - INCOME o EXPENSE
-- `amount` - Monto del movimiento
-- `concept` - Descripción automática
-- `sales_order_id` - Venta asociada
-- `payment_id` - Pago asociado
-
-### Triggers Activos
-
-1. **Validación de caja abierta**: Previene pagos en caja cerrada
-2. **Constraint check**: `amount_paid ≤ total_amount` siempre se verifica
-3. **Auditoría automática**: Todos los cambios quedan registrados
-
----
-
-## ⚡ Performance
-
-- **Tiempo de respuesta típico:** 50-150ms
-- **Transacciones atómicas:** Sí (PostgreSQL)
-- **Manejo de concurrencia:** Locks a nivel de row
-- **Validaciones en DB:** Garantizadas por constraints y functions
-
----
-
-## � Información Adicional
-
-**Versión API:** 3.0  
-**Versión DB Functions:** 
-- `process_sale_partial_payment(7 params)` - Control completo
-- `process_sale_partial_payment(5 params)` - Backward compatible
-
-**Documentación Técnica:**
-- Backend: `/PAYMENT_REFACTORING_SUCCESS.md`
-- Base de Datos: `/docs/SALE_PAYMENT_FLEXIBLE_CHANGE.md`
-
-**Repositorio:** [github.com/renpereiradx/business_management](https://github.com/renpereiradx/business_management)
-
----
-
-**Última actualización:** 02 de Octubre de 2025  
-**Estado:** ✅ Production Ready  
-
-**Próxima revisión:** 02 de Noviembre de 2025
-
-# 🔄 Actualización: Endpoints de Estado de Pagos
-
-**Fecha:** 2 de Octubre, 2025  
-**Autor:** Sistema de Pagos - Backend  
-**Estado:** ✅ Implementado y Probado
-
----
-
-## 📋 Resumen Ejecutivo
-
-
-Se implementaron **3 nuevos endpoints** para consultar el estado de pagos de ventas, proporcionando al frontend acceso completo a:
-
-- **Saldo pendiente** (balance_due)
-- **Progreso de pago** (payment_progress)
-- **Historial de pagos** (lista completa de transacciones)
-- **Estado de pago** (COMPLETED/PARTIAL/CANCELLED/REFUNDED)
-
-Además, se corrigió un **bug crítico** en la función SQL `process_payment_FINAL.sql` donde todos los pagos se marcaban como "COMPLETED" incluso cuando eran parciales.
-
----
-
-## 🐛 Bug Corregido
-
-
-### Problema
-
-La función `process_payment_FINAL.sql` asignaba estado "COMPLETED" a todos los pagos en la tabla `sale_payments`, sin importar si la venta quedaba completamente pagada o parcialmente pagada.
-
-**Ejemplo del bug:**
-
-- Venta: SALE-1759430699-12
-- Total: ₲9,100
-- Pago realizado: ₲5,000
-- Estado esperado: `PARTIAL` ❌
-- Estado actual: `COMPLETED` ✅ (incorrecto)
-
-
-### Solución
-
-Se modificó la función SQL para establecer el estado condicionalmente:
-
-```sql
--- ANTES (incorrecto)
-INSERT INTO transactions.sale_payments (..., status)
-VALUES (..., 'COMPLETED');
-
--- DESPUÉS (correcto)
-INSERT INTO transactions.sale_payments (..., status)
-VALUES (..., 
-  CASE 
-    WHEN v_new_status = 'PAID' THEN 'COMPLETED'
-    ELSE 'PARTIAL'
-  END
-);
-```
-
-**Archivo modificado:** `database/sql/process_payment_FINAL.sql`
-
----
-
-## 🆕 Endpoints Implementados
-
-### 1️⃣ Consulta Individual
-
-```http
-GET /sale/{id}/payment-status
-```
-
-**Propósito:** Obtener información completa de pagos de UNA venta específica
-
-
-**Características:**
-
-- ✅ Incluye lista completa de pagos individuales
-- ✅ Información de usuario que procesó cada pago
-- ✅ Información de caja registradora
-- ✅ Balance pendiente (balance_due)
-- ✅ Progreso de pago en porcentaje
-
-
-**Ejemplo de Respuesta:**
+**Response (200 OK):**
 
 ```json
 {
   "sale_id": "SALE-1759430699-12",
+  "client_id": "GC1Yr2bHg",
   "client_name": "Charlie Brown",
+  "sale_date": "2025-10-02 15:44:59",
   "total_amount": 9100,
+  "status": "PARTIAL_PAYMENT",
   "total_paid": 7000,
-  "balance_due": 2100,           // ⬅️ SALDO PENDIENTE
-  "payment_progress": 76.92,     // ⬅️ PORCENTAJE PAGADO
-  "payment_count": 2,
-  "is_fully_paid": false,
-  "requires_payment": true,
+  "balance_due": 2100,
+  "payment_progress": 76.92,
   "payments": [
     {
       "payment_id": 44,
       "amount_paid": 5000,
       "status": "PARTIAL",
       "payment_date": "2025-10-02 15:46:42",
+      "payment_reference": "AUTO-PAY-1759430802",
+      "payment_notes": " | Recibido: ₲5000 | Aplicado: ₲5000 | PAGO PARCIAL",
+      "processed_by": "2pmK5NPfHiRwZUkcd3d3cETC2JW",
       "processed_by_name": "Pedro Sanchez",
-      "cash_register_name": "principal"
-    },
-    {
-      "payment_id": 45,
-      "amount_paid": 2000,
-      "status": "PARTIAL",
-      "payment_date": "2025-10-02 15:58:01",
-      "processed_by_name": "Pedro Sanchez",
+      "cash_register_id": 10,
       "cash_register_name": "principal"
     }
-  ]
+  ],
+  "payment_count": 2,
+  "is_fully_paid": false,
+  "requires_payment": true,
+  "payment_method_id": 1,
+  "payment_method": "Pago en efectivo",
+  "currency_id": 1,
+  "currency": "Guaranies",
+  "metadata": null
 }
 ```
 
+**Campos del Response:**
 
-**Uso Frontend:**
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `sale_id`| string | ID único de la venta. |
+| `total_amount`| number | Monto total de la venta. |
+| `status` | string | Estado actual de la venta (`PAID`, `PENDING`, `PARTIAL_PAYMENT`, `CANCELLED`). |
+| `total_paid`| number | Suma total de los pagos realizados. |
+| `balance_due` | number | Saldo pendiente por pagar (`total_amount` - `total_paid`). |
+| `payment_progress`| number | Porcentaje del pago completado (0-100). |
+| `payments` | array | Lista de todos los pagos individuales realizados para esta venta. |
+| `payment_count` | number | Cantidad total de pagos. |
+| `is_fully_paid` | boolean | `true` si la venta está completamente pagada. |
+| `requires_payment`| boolean | `true` si la venta todavía requiere pagos. |
 
-```javascript
-const response = await fetch(`/sale/${saleId}/payment-status`, {
-  headers: { 'Authorization': `Bearer ${token}` }
-});
-const data = await response.json();
+**Errores Posibles:**
 
-if (data.requires_payment) {
-  alert(`Saldo pendiente: ₲${data.balance_due.toLocaleString()}`);
-}
-```
+| Error | HTTP Status | Descripción | Solución |
+|---|---|---|---|
+| `Sale not found` | 404 | La venta no existe. | Verificar que el `id` de la venta sea correcto. |
+| `Unauthorized` | 401 | Token JWT inválido o ausente. | Enviar un token válido en el header `Authorization`. |
 
----
+### 3. Obtener Estado de Pagos por Rango de Fechas
 
-### 2️⃣ Búsqueda por Rango de Fechas
+**Endpoint:** `GET /sale/date_range/payment-status`
 
-```http
-GET /sale/date_range/payment-status?start_date={start}&end_date={end}&page={page}&page_size={size}
-```
+Obtiene una lista paginada de ventas con el resumen de su estado de pago dentro de un rango de fechas. **No incluye el detalle de pagos individuales** para mantener la respuesta ligera.
 
-**Propósito:** Listar ventas por período con resumen de estado de pago
+**Query Parameters:**
 
+| Parámetro  | Tipo   | Requerido | Descripción                          | Ejemplo                  |
+|------------|--------|-----------|--------------------------------------|--------------------------|
+| `start_date` | string | ✅ Sí       | Fecha inicio (Formato: `YYYY-MM-DD HH:mm:ss`)   | `2025-10-02 00:00:00`      |
+| `end_date`   | string | ✅ Sí       | Fecha fin (Formato: `YYYY-MM-DD HH:mm:ss`)      | `2025-10-02 23:59:59`      |
+| `page`       | int    | ❌ No       | Número de página (default: 1).        | 1                        |
+| `page_size`  | int    | ❌ No       | Tamaño de página (default: 10).       | 5                        |
 
-**Características:**
-
-- ✅ Búsqueda por rango de fechas
-- ✅ Paginación (page, page_size)
-- ✅ NO incluye lista individual de pagos (solo resumen)
-- ✅ Balance pendiente por cada venta
-- ✅ Ideal para reportes y listados
-
-
-**Parámetros:**
-
-| Parámetro  | Tipo   | Requerido | Ejemplo              |
-|------------|--------|-----------|----------------------|
-| start_date | string | Sí        | 2025-10-02 00:00:00  |
-| end_date   | string | Sí        | 2025-10-02 23:59:59  |
-| page       | int    | No        | 1 (default)          |
-| page_size  | int    | No        | 10 (default)         |
-
-
-**Ejemplo de Respuesta:**
+**Response (200 OK):**
 
 ```json
 {
@@ -823,336 +223,166 @@ GET /sale/date_range/payment-status?start_date={start}&end_date={end}&page={page
   "data": [
     {
       "sale_id": "SALE-1759430699-12",
+      "client_id": "GC1Yr2bHg",
       "client_name": "Charlie Brown",
+      "sale_date": "2025-10-02 15:44:59",
       "total_amount": 9100,
+      "status": "PARTIAL_PAYMENT",
       "total_paid": 7000,
-      "balance_due": 2100,          // ⬅️ SALDO PENDIENTE
+      "balance_due": 2100,
       "payment_progress": 76.92,
       "payment_count": 2,
-      "is_fully_paid": false
-    },
-    {
-      "sale_id": "SALE-1759429694-278",
-      "client_name": "Erika Magdalena Maciel",
-      "total_amount": 84100,
-      "total_paid": 84100,
-      "balance_due": 0,              // ⬅️ COMPLETAMENTE PAGADA
-      "payment_progress": 100,
-      "payment_count": 1,
-      "is_fully_paid": true
+      "is_fully_paid": false,
+      "requires_payment": true,
+      "payment_method_id": 1,
+      "payment_method": "Pago en efectivo",
+      "currency_id": 1,
+      "currency": "Guaranies"
     }
   ]
 }
 ```
+> **💡 Nota:** La respuesta está paginada y el campo `data` contiene un array de resúmenes de estado de pago, que es la misma estructura que la del endpoint individual pero **sin el campo `payments`**.
 
+**Errores Posibles:**
 
-**Uso Frontend:**
+| Error | HTTP Status | Descripción | Solución |
+|---|---|---|---|
+| `start_date and end_date are required` | 400 | Faltan los parámetros de fecha. | Asegurarse de proveer `start_date` y `end_date`. |
+| `Invalid date format` | 400 | El formato de fecha no es válido. | Usar el formato `YYYY-MM-DD HH:mm:ss`. |
 
-```javascript
-const params = new URLSearchParams({
-  start_date: '2025-10-02 00:00:00',
-  end_date: '2025-10-02 23:59:59',
-  page: 1,
-  page_size: 10
-});
+### 4. Obtener Estado de Pagos por Nombre de Cliente
 
-const response = await fetch(`/sale/date_range/payment-status?${params}`, {
-  headers: { 'Authorization': `Bearer ${token}` }
-});
-const result = await response.json();
+**Endpoint:** `GET /sale/client_name/{name}/payment-status`
 
-// Calcular total pendiente del período
-const totalPending = result.data.reduce((sum, sale) => sum + sale.balance_due, 0);
-console.log(`Total pendiente de cobro: ₲${totalPending.toLocaleString()}`);
-```
+Obtiene una lista paginada de ventas con resumen de estado de pago para un cliente específico, buscando por su nombre.
 
----
+**Path Parameters:**
 
-### 3️⃣ Búsqueda por Nombre de Cliente
+| Parámetro | Tipo   | Requerido | Descripción                               |
+|-----------|--------|-----------|-------------------------------------------|
+| `name`    | string | ✅ Sí       | Nombre o apellido del cliente (búsqueda parcial, case-insensitive). |
 
-```http
-GET /sale/client_name/{name}/payment-status?page={page}&page_size={size}
-```
+**Query Parameters:**
 
-**Propósito:** Listar ventas de un cliente con resumen de estado de pago
+| Parámetro  | Tipo | Requerido | Descripción                        | Ejemplo |
+|------------|------|-----------|------------------------------------|---------|
+| `page`       | int  | ❌ No       | Número de página (default: 1).      | 1       |
+| `page_size`  | int  | ❌ No       | Tamaño de página (default: 10).     | 5       |
 
-
-**Características:**
-
-- ✅ Búsqueda parcial por nombre o apellido
-- ✅ Case-insensitive (no distingue mayúsculas/minúsculas)
-- ✅ Paginación (page, page_size)
-- ✅ NO incluye lista individual de pagos (solo resumen)
-- ✅ Ideal para ver deuda total de un cliente
-
-
-**Parámetros:**
-
-| Parámetro  | Tipo   | Requerido | Ejemplo  |
-|------------|--------|-----------|----------|
-| name       | string | Sí        | Charlie  |
-| page       | int    | No        | 1        |
-| page_size  | int    | No        | 10       |
-
-
-**Ejemplo de Respuesta:**
-
+**Response (200 OK):**
+La estructura de la respuesta es idéntica a la del endpoint por rango de fechas, incluyendo paginación y un array `data` con resúmenes de estado de pago.
 ```json
 {
   "pagination": {
     "page": 1,
-    "page_size": 5,
+    "page_size": 1,
     "total_records": 1,
-    "total_pages": 1
+    "total_pages": 1,
+    "has_next": false,
+    "has_previous": false
   },
   "data": [
     {
       "sale_id": "SALE-1759430699-12",
       "client_name": "Charlie Brown",
-      "total_amount": 9100,
+      "status": "PARTIAL_PAYMENT",
       "total_paid": 7000,
-      "balance_due": 2100,          // ⬅️ SALDO PENDIENTE
-      "payment_progress": 76.92,
-      "payment_count": 2,
-      "is_fully_paid": false,
-      "requires_payment": true
+      "balance_due": 2100,
+      "payment_progress": 76.92
     }
   ]
 }
 ```
+**Errores Posibles:**
 
-
-**Uso Frontend:**
-
-```javascript
-const clientName = "Charlie";
-const response = await fetch(`/sale/client_name/${encodeURIComponent(clientName)}/payment-status?page=1&page_size=10`, {
-  headers: { 'Authorization': `Bearer ${token}` }
-});
-const result = await response.json();
-
-// Calcular deuda total del cliente
-const totalDebt = result.data
-  .filter(sale => !sale.is_fully_paid)
-  .reduce((sum, sale) => sum + sale.balance_due, 0);
-
-console.log(`Deuda total de ${clientName}: ₲${totalDebt.toLocaleString()}`);
-```
+| Error | HTTP Status | Descripción | Solución |
+|---|---|---|---|
+| `client name is required` | 400 | El nombre del cliente es requerido. | Proveer un nombre en la URL. |
 
 ---
 
-## 📊 Comparación de Endpoints
+## 📊 Consulta de Historial de Pagos
 
+### 5. Obtener Historial de Pagos de una Venta
 
-| Característica                 | Individual         | Rango de Fechas    | Nombre de Cliente  |
-|--------------------------------|--------------------|--------------------|---------------------|
-| **URL**                        | `/{id}/payment-status` | `/date_range/payment-status` | `/client_name/{name}/payment-status` |
-| **Múltiples ventas**           | ❌ No              | ✅ Sí              | ✅ Sí               |
-| **Lista de pagos**             | ✅ Sí (array)      | ❌ No              | ❌ No               |
-| **Resumen de pagos**           | ✅ Sí              | ✅ Sí              | ✅ Sí               |
-| **Paginación**                 | ❌ No aplica       | ✅ Sí              | ✅ Sí               |
-| **balance_due**                | ✅ Sí              | ✅ Sí              | ✅ Sí               |
-| **payment_progress**           | ✅ Sí              | ✅ Sí              | ✅ Sí               |
-| **Uso principal**              | Detalle venta      | Reportes período   | Búsqueda cliente    |
+**Endpoint:** `GET /sales/{id}/payments`
+
+Obtiene todos los pagos registrados para una venta específica. Es útil para ver el historial de pagos parciales y el detalle de cada transacción.
+
+**Path Parameters:**
+
+| Parámetro | Tipo   | Descripción                     |
+|-----------|--------|---------------------------------|
+| `id`      | string | ID único de la venta a consultar. |
+
+**Response (200 OK):**
+Un array de objetos, donde cada objeto representa un pago.
+```json
+[
+  {
+    "id": 101,
+    "sales_order_id": "24aBcDeF",
+    "client_name": "Juan Pérez",
+    "amount_due": 185500.00,
+    "amount_received": 100000.00,
+    "change_amount": 0.00,
+    "currency_code": "PYG",
+    "payment_method_code": "CASH",
+    "payment_reference": "REF-PARTIAL-1",
+    "payment_notes": "Primer pago parcial.",
+    "payment_date": "2025-12-10T10:00:00Z",
+    "processed_by_name": "Admin User",
+    "status": "COMPLETED"
+  },
+  {
+    "id": 102,
+    "sales_order_id": "24aBcDeF",
+    "client_name": "Juan Pérez",
+    "amount_due": 85500.00,
+    "amount_received": 100000.00,
+    "change_amount": 14500.00,
+    "currency_code": "PYG",
+    "payment_method_code": "CASH",
+    "payment_reference": "REF-FINAL-2",
+    "payment_notes": "Pago final para saldar la deuda.",
+    "payment_date": "2025-12-10T11:30:00Z",
+    "processed_by_name": "Admin User",
+    "status": "COMPLETED"
+  }
+]
+```
+
+**Campos del Response (por cada pago en el array):**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | number | ID único del registro de pago. |
+| `sales_order_id` | string | ID de la venta a la que pertenece el pago. |
+| `client_name` | string | Nombre del cliente de la venta. |
+| `amount_due` | number | El monto que se debía al momento de este pago. |
+| `amount_received` | number | El monto que se recibió en esta transacción de pago. |
+| `change_amount` | number | El vuelto que se entregó en esta transacción. |
+| `currency_code` | string | Código de la moneda (ej: "PYG"). |
+| `payment_method_code`| string | Código del método de pago (ej: "CASH", "CARD"). |
+| `payment_reference` | string \| null | Referencia o código de transacción del pago. |
+| `payment_notes` | string \| null | Notas adicionales sobre el pago. |
+| `payment_date` | string (ISO 8601) | Fecha y hora en que se registró el pago. |
+| `processed_by_name` | string | Nombre del usuario que procesó el pago. |
+| `status` | string | Estado del pago (`COMPLETED`, `REFUNDED`, etc.). |
+
+**Errores Posibles:**
+
+| Error | HTTP Status | Descripción | Solución |
+|---|---|-------------|-------------|----------|
+| `Sale not found` | 404 | La venta con el `id` especificado no existe. | Verificar que el ID de la venta sea correcto. |
+| `Unauthorized` | 401 | Token JWT inválido o ausente. | Verificar que el header `Authorization: Bearer <token>` esté presente y sea válido. |
 
 ---
 
-## 🗂️ Archivos Modificados
+## 📝 Historial de Cambios
 
-
-### 1. SQL Function
-
-- **Archivo:** `database/sql/process_payment_FINAL.sql`
-- **Cambio:** Estado de pago condicional (COMPLETED/PARTIAL)
-
-### 2. Models
-
-- **Archivo:** `models/sale.go`
-- **Agregados:**
-  - `SalePaymentInfo` - Información de un pago individual
-  - `SalePaymentStatusResponse` - Respuesta del endpoint individual
-  - `SalePaymentStatusSummary` - Resumen sin lista de pagos
-  - `PaginatedSalesPaymentStatusResponse` - Respuesta paginada
-
-### 3. Repository
-
-- **Archivo:** `database/postgres/sale.go`
-- **Funciones agregadas:**
-  - `GetSalePaymentStatus()` - Consulta individual
-  - `GetSalesByDateRangeWithPaymentStatus()` - Búsqueda por fechas
-  - `GetSalesByClientNameWithPaymentStatus()` - Búsqueda por cliente
-
-### 4. Handlers
-
-- **Archivo:** `handlers/sale.go`
-- **Handlers agregados:**
-  - `GetSalePaymentStatusHandler()`
-  - `GetSalesByDateRangeWithPaymentStatusHandler()`
-  - `GetSalesByClientNameWithPaymentStatusHandler()`
-
-### 5. Repository Interface
-
-- **Archivo:** `repository/repository.go`
-- **Métodos agregados:** 3 nuevos métodos de interface
-
-### 6. Routes
-
-- **Archivo:** `routes/routes.go`
-- **Rutas agregadas:**
-  - `GET /sale/date_range/payment-status`
-  - `GET /sale/client_name/{name}/payment-status`
-  - `GET /sale/{id}/payment-status`
-- **Fix crítico:** Reordenadas rutas (literales antes de parametrizadas)
-
----
-
-## ✅ Pruebas Realizadas
-
-
-### Test 1: Endpoint Individual
-
-```bash
-curl -X GET "http://localhost:5050/sale/SALE-1759430699-12/payment-status" \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-**Resultado:** ✅ SUCCESS
-
-- Total: ₲9,100
-- Pagado: ₲7,000
-- Saldo: ₲2,100
-- Progreso: 76.92%
-- Pagos: 2
-
-### Test 2: Rango de Fechas
-
-```bash
-curl -X GET "http://localhost:5050/sale/date_range/payment-status?start_date=2025-10-02%2000:00:00&end_date=2025-10-02%2023:59:59&page=1&page_size=2"
-```
-
-**Resultado:** ✅ SUCCESS
-
-- Total registros: 5
-- Total páginas: 3
-- Página actual: 1
-- Registros mostrados: 2
-
-### Test 3: Nombre de Cliente
-
-```bash
-curl -X GET "http://localhost:5050/sale/client_name/Charlie/payment-status?page=1&page_size=5"
-```
-
-**Resultado:** ✅ SUCCESS
-
-- Cliente encontrado: Charlie Brown
-- Total ventas: 1
-- Saldo pendiente: ₲2,100
-- Progreso: 76.92%
-
-### Test 4: Cliente con Múltiples Ventas
-
-```bash
-curl -X GET "http://localhost:5050/sale/client_name/Erika/payment-status?page=1&page_size=3"
-```
-
-**Resultado:** ✅ SUCCESS
-
-- Cliente: Erika (Erika Magdalena Maciel)
-- Total ventas: 22
-- Ventas en página: 3
-  - 2 completamente pagadas (balance_due: 0)
-  - 1 sin pagar (balance_due: ₲1,625,000)
-
----
-
-## 🎯 Beneficios de la Implementación
-
-### Para el Frontend
-
-1. **Saldo pendiente siempre disponible:** Campo `balance_due` en todas las respuestas
-2. **Validación antes de pagos:** Verificar `requires_payment` antes de procesar
-3. **Progreso visual:** Campo `payment_progress` para barras de progreso
-4. **Sin cálculos manuales:** Backend calcula automáticamente totales y porcentajes
-5. **Búsqueda flexible:** 3 formas diferentes de buscar ventas con estado de pago
-6. **Paginación eficiente:** Manejo de grandes volúmenes de datos
-
-### Para el Backend
-
-1. **Estados consistentes:** Bug de estados corregido en la fuente (SQL function)
-2. **Queries optimizadas:** Uso de CTEs para cálculos eficientes
-3. **Trazabilidad completa:** Historial de pagos con usuario y caja
-4. **Código reutilizable:** Modelos y funciones compartidas
-5. **Mantenibilidad:** Lógica centralizada en repository layer
-
-### Para el Negocio
-
-1. **Mejor control de cobranza:** Identificar rápidamente ventas con saldo pendiente
-2. **Análisis de flujo de caja:** Reportes por período con totales exactos
-3. **Seguimiento de clientes:** Detectar clientes con deudas acumuladas
-4. **Auditoría mejorada:** Historial completo de pagos con responsables
-
----
-
-## 📝 Notas Importantes
-
-### Estados de Pago
-
-| Estado      | Descripción                                    | Se incluye en total_paid |
-|-------------|------------------------------------------------|--------------------------|
-| COMPLETED   | Pago que completó la venta                     | ✅ Sí                    |
-| PARTIAL     | Pago parcial, queda saldo pendiente            | ✅ Sí                    |
-| CANCELLED   | Pago cancelado/anulado                         | ❌ No                    |
-| REFUNDED    | Pago reembolsado                               | ❌ No                    |
-
-### Cálculos Automáticos
-
-```
-total_paid = SUM(amount_paid) WHERE status IN ('COMPLETED', 'PARTIAL')
-balance_due = total_amount - total_paid
-payment_progress = (total_paid / total_amount) * 100
-is_fully_paid = (balance_due <= 0)
-requires_payment = (balance_due > 0 AND status != 'CANCELLED')
-```
-
-### Ordenamiento de Rutas
-
-**⚠️ IMPORTANTE:** Las rutas literales DEBEN ir antes de las parametrizadas:
-
-```go
-// ✅ CORRECTO
-r.HandleFunc("/sale/date_range/payment-status", handler1)      // Literal
-r.HandleFunc("/sale/client_name/{name}/payment-status", handler2)  // Parametrizada
-r.HandleFunc("/sale/{id}/payment-status", handler3)            // Parametrizada
-
-// ❌ INCORRECTO
-r.HandleFunc("/sale/{id}/payment-status", handler3)            // Parametrizada primero
-r.HandleFunc("/sale/date_range/payment-status", handler1)      // Literal después - NUNCA SE EJECUTA
-```
-
----
-
-## 🔗 Documentación Adicional
-
-- **Documentación completa:** `/docs/SALE_PAYMENT_STATUS_ENDPOINT.md`
-- **Ejemplos de código:** Ver sección de ejemplos en documentación
-- **Componentes React:** Incluidos en documentación
-
----
-
-## 📅 Próximos Pasos
-
-### Sugerencias de Mejora Futura
-
-1. **WebSocket para actualizaciones en tiempo real** cuando se procese un pago
-2. **Filtros adicionales** en búsqueda por fechas (por estado, por monto, etc.)
-3. **Exportación a Excel/PDF** de reportes de cobranza
-4. **Notificaciones automáticas** para ventas con saldo pendiente > X días
-5. **Dashboard de cobranza** con gráficos y estadísticas
-
----
-
-**✅ Estado:** Implementación completada y probada  
-**📅 Fecha de actualización:** 2 de Octubre, 2025  
-**🔧 Servidor:** http://localhost:5050  
-**🗄️ Base de datos:** business_management (PostgreSQL)
+### v1.0 - 11 de Diciembre de 2025
+- ✅ Creación del documento a partir de `SALES_API_GUIDE.md`.
+- ✅ Agregada la sección `Consulta de Estado de Pagos` con los endpoints `payment-status`.
+- ✅ Centralizada toda la documentación de pagos y cobranzas.

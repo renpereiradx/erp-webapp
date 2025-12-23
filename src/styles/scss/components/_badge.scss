@@ -1,0 +1,331 @@
+// =============================================================================
+// BADGE COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE BADGE
+// -----------------------------------------------------------------------------
+
+.badge {
+  // Structure
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-4;
+
+  // Typography
+  font-family: $font-family-base;
+  font-size: $font-size-200;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-300;
+  text-align: center;
+  white-space: nowrap;
+
+  // Sizing
+  min-height: 20px;
+  padding: $spacing-2 $spacing-8;
+
+  // Visual
+  border-radius: $border-radius-small;
+  border: 1px solid transparent;
+
+  // Theme colors (default/primary)
+  @include themify {
+    background-color: themed('action-primary');
+    color: themed('text-inverted');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BADGE VARIANTS
+// -----------------------------------------------------------------------------
+
+.badge--primary {
+  // Default style (already defined in base)
+}
+
+.badge--secondary {
+  @include themify {
+    background-color: themed('bg-secondary');
+    color: themed('text-primary');
+    border-color: themed('border-default');
+  }
+}
+
+.badge--success {
+  @include themify {
+    background-color: themed('state-success');
+    color: themed('text-inverted');
+  }
+}
+
+.badge--warning {
+  @include themify {
+    background-color: themed('state-warning');
+    color: themed('text-inverted');
+  }
+}
+
+.badge--error {
+  @include themify {
+    background-color: themed('state-error');
+    color: themed('text-inverted');
+  }
+}
+
+.badge--info {
+  @include themify {
+    background-color: themed('state-info');
+    color: themed('text-inverted');
+  }
+}
+
+// Subtle variants (softer backgrounds)
+.badge--subtle-primary {
+  @include themify {
+    background-color: alpha-color(themed('action-primary'), 0.1);
+    color: themed('action-primary');
+  }
+}
+
+.badge--subtle-success {
+  @include themify {
+    background-color: alpha-color(themed('state-success'), 0.1);
+    color: themed('state-success');
+  }
+}
+
+.badge--subtle-warning {
+  @include themify {
+    background-color: alpha-color(themed('state-warning'), 0.1);
+    color: themed('state-warning');
+  }
+}
+
+.badge--subtle-error {
+  @include themify {
+    background-color: alpha-color(themed('state-error'), 0.1);
+    color: themed('state-error');
+  }
+}
+
+.badge--subtle-info {
+  @include themify {
+    background-color: alpha-color(themed('state-info'), 0.1);
+    color: themed('state-info');
+  }
+}
+
+// Ghost variant (transparent)
+.badge--ghost {
+  @include themify {
+    background-color: transparent;
+    color: themed('text-primary');
+    border-color: themed('border-default');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BADGE SIZES
+// -----------------------------------------------------------------------------
+
+.badge--small {
+  min-height: 16px;
+  padding: 0 $spacing-4;
+  font-size: $font-size-100;
+}
+
+.badge--medium {
+  // Default size (already defined in base)
+}
+
+.badge--large {
+  min-height: 24px;
+  padding: $spacing-4 $spacing-12;
+  font-size: $font-size-300;
+}
+
+// -----------------------------------------------------------------------------
+// BADGE SHAPES
+// -----------------------------------------------------------------------------
+
+.badge--pill {
+  border-radius: 100px;
+}
+
+.badge--square {
+  border-radius: 0;
+}
+
+.badge--circular {
+  border-radius: $border-radius-circular;
+  padding: $spacing-4;
+  aspect-ratio: 1;
+  min-width: 20px;
+
+  &.badge--small {
+    min-width: 16px;
+    padding: $spacing-2;
+  }
+
+  &.badge--large {
+    min-width: 24px;
+    padding: $spacing-8;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BADGE WITH DOT (Status indicator)
+// -----------------------------------------------------------------------------
+
+.badge--dot {
+  padding-left: $spacing-16;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: $spacing-8;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: $border-radius-circular;
+    background-color: currentColor;
+  }
+
+  &.badge--small {
+    padding-left: $spacing-12;
+
+    &::before {
+      left: $spacing-4;
+      width: 4px;
+      height: 4px;
+    }
+  }
+
+  &.badge--large {
+    padding-left: $spacing-20;
+
+    &::before {
+      left: $spacing-12;
+      width: 8px;
+      height: 8px;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BADGE WITH ICON
+// -----------------------------------------------------------------------------
+
+.badge__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+
+  .badge--small & {
+    width: 10px;
+    height: 10px;
+  }
+
+  .badge--large & {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BADGE WITH CLOSE BUTTON
+// -----------------------------------------------------------------------------
+
+.badge--dismissible {
+  padding-right: $spacing-4;
+}
+
+.badge__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  margin-left: $spacing-4;
+  border: none;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  border-radius: $border-radius-small;
+  @include transition(background-color, $duration-fast);
+
+  &:hover {
+    @include themify {
+      background-color: alpha-color(themed('text-inverted'), 0.2);
+    }
+  }
+
+  .badge--small & {
+    width: 12px;
+    height: 12px;
+  }
+
+  .badge--large & {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// NOTIFICATION BADGE (dot on element)
+// -----------------------------------------------------------------------------
+
+.badge-notification {
+  position: absolute;
+  top: -$spacing-4;
+  right: -$spacing-4;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 $spacing-4;
+  font-size: $font-size-100;
+  font-weight: $font-weight-bold;
+  line-height: 18px;
+  border-radius: 100px;
+  @include themify {
+    background-color: themed('state-error');
+    color: themed('text-inverted');
+    border: 2px solid themed('bg-primary');
+  }
+
+  // Dot only (no number)
+  &--dot {
+    min-width: 8px;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    top: 0;
+    right: 0;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BADGE GROUP
+// -----------------------------------------------------------------------------
+
+.badge-group {
+  display: inline-flex;
+  gap: $spacing-4;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+

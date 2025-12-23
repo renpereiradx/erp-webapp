@@ -1,0 +1,331 @@
+// =============================================================================
+// MODAL/DIALOG COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Documentation: docs/FLUENT_DESIGN_SYSTEM.md
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// MODAL OVERLAY
+// -----------------------------------------------------------------------------
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: z-index(modal-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-16;
+  overflow-y: auto;
+
+  @include themify {
+    background-color: themed('bg-overlay');
+  }
+
+  // Animation
+  animation: modal-overlay-in $duration-normal $ease-decelerate;
+
+  &--closing {
+    animation: modal-overlay-out $duration-fast $ease-accelerate;
+  }
+}
+
+@keyframes modal-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// MODAL CONTAINER
+// -----------------------------------------------------------------------------
+
+.modal {
+  position: relative;
+  z-index: z-index(modal);
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - #{$spacing-32});
+  display: flex;
+  flex-direction: column;
+  border-radius: $border-radius-large;
+  @include elevation(64);
+
+  @include themify {
+    background-color: themed('bg-elevated');
+    color: themed('text-primary');
+  }
+
+  // Animation
+  animation: modal-in $duration-normal $ease-decelerate;
+
+  .modal-overlay--closing & {
+    animation: modal-out $duration-fast $ease-accelerate;
+  }
+
+  @include mobile {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(16px);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// MODAL SECTIONS
+// -----------------------------------------------------------------------------
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-16;
+  padding: $spacing-20;
+  border-bottom: 1px solid;
+
+  @include themify {
+    border-bottom-color: themed('border-subtle');
+  }
+}
+
+.modal__title {
+  @include heading-5;
+  margin: 0;
+  flex: 1;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+  }
+
+  &:active {
+    @include themify {
+      background-color: themed('surface-pressed');
+    }
+  }
+
+  @include focus-visible;
+}
+
+.modal__body {
+  flex: 1;
+  padding: $spacing-20;
+  overflow-y: auto;
+  @include custom-scrollbar;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $spacing-12;
+  padding: $spacing-20;
+  border-top: 1px solid;
+
+  @include themify {
+    border-top-color: themed('border-subtle');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// MODAL SIZES
+// -----------------------------------------------------------------------------
+
+.modal--small {
+  max-width: 400px;
+}
+
+.modal--medium {
+  // Default size (already defined)
+}
+
+.modal--large {
+  max-width: 720px;
+}
+
+.modal--xlarge {
+  max-width: 960px;
+}
+
+.modal--fullscreen {
+  max-width: 100%;
+  max-height: 100vh;
+  border-radius: 0;
+
+  @include desktop {
+    max-width: calc(100% - #{$spacing-32});
+    max-height: calc(100vh - #{$spacing-32});
+    border-radius: $border-radius-large;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// MODAL VARIANTS
+// -----------------------------------------------------------------------------
+
+.modal--alert {
+  .modal__header {
+    padding-bottom: $spacing-12;
+    border-bottom: none;
+  }
+
+  .modal__footer {
+    padding-top: $spacing-16;
+  }
+}
+
+.modal--centered {
+  .modal__body {
+    text-align: center;
+  }
+
+  .modal__footer {
+    justify-content: center;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+
+
+// Prevent body scroll when modal is open
+body.modal-open {
+  overflow: hidden;
+}
+
+// -----------------------------------------------------------------------------
+// DIALOG ALIAS (same as modal)
+// -----------------------------------------------------------------------------
+
+.dialog-overlay {
+  @extend .modal-overlay;
+}
+
+.dialog {
+  @extend .modal;
+
+  &--small {
+    @extend .modal--small;
+  }
+
+  &--medium {
+    max-width: 560px;
+  }
+
+  &--large {
+    @extend .modal--large;
+  }
+
+  &--xlarge {
+    @extend .modal--xlarge;
+  }
+
+  &--fullscreen {
+    @extend .modal--fullscreen;
+  }
+}
+
+.dialog__header {
+  @extend .modal__header;
+}
+
+.dialog__title {
+  @extend .modal__title;
+}
+
+.dialog__close {
+  @extend .modal__close;
+}
+
+.dialog__content {
+  @extend .modal__body;
+}
+
+.dialog__body {
+  @extend .modal__body;
+}
+
+.dialog__footer {
+  @extend .modal__footer;
+}
+
+.dialog__error {
+  padding: $spacing-12;
+  margin-top: $spacing-16;
+  border-radius: $border-radius-medium;
+  font-size: $font-size-300;
+
+  @include themify {
+    background-color: themed('error-background');
+    color: themed('error-foreground');
+    border: 1px solid themed('error-primary');
+  }
+}

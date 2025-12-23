@@ -448,50 +448,24 @@ const useProductStore = create()(
             telemetry.endTimer(t, { total: totalCount, search: true })
             return { data: paginatedProducts, total: totalCount }
           } else {
-            const response = await get()._withRetry(
-              () => productService.getProducts(currentPage, currentPageSize),
-              { telemetryKey: 'products.fetch' }
-            )
-            products = Array.isArray(response) ? response : [response]
-            totalCount = products.length
-            const byId = Object.fromEntries(
-              products.map(p => [p.product_id || p.id, p])
-            )
+            // No se permite obtener todos los productos sin búsqueda
             set({
-              products: products,
-              productsById: byId,
-              totalProducts: totalCount,
-              totalPages: Math.ceil(totalCount / currentPageSize),
-              currentPage: currentPage,
+              products: [],
+              productsById: {},
+              totalProducts: 0,
+              totalPages: 0,
+              currentPage: 1,
               pageSize: currentPageSize,
               loading: false,
-              lastSearchTerm: searchTerm,
+              lastSearchTerm: '',
+              error: null,
             })
-            // cache page
-            set(s => ({
-              pageCache: {
-                ...s.pageCache,
-                [currentPage]: { ts: Date.now(), products },
-              },
-            }))
-            // Trim pageCache (LRU-ish by timestamp) si excede 20 páginas
-            set(s => {
-              const keys = Object.keys(s.pageCache)
-              if (keys.length <= 20) return {}
-              const sorted = keys
-                .map(k => ({ k, ts: s.pageCache[k].ts }))
-                .sort((a, b) => a.ts - b.ts)
-              const toRemove = sorted.slice(0, keys.length - 20)
-              if (!toRemove.length) return {}
-              const clone = { ...s.pageCache }
-              toRemove.forEach(r => {
-                delete clone[r.k]
-              })
-              return { pageCache: clone }
-            })
-            telemetry.record('products.pageCache.trim')
-            telemetry.endTimer(t, { total: totalCount })
-            return { data: products, total: totalCount }
+            telemetry.endTimer(t, { total: 0, noSearch: true })
+            return {
+              data: [],
+              total: 0,
+              message: 'Realiza una búsqueda para ver productos',
+            }
           }
         } catch (apiError) {
           get()._recordFailure()
@@ -1317,9 +1291,12 @@ const useProductStore = create()(
           const newProduct = response?.data || response
           let createdProduct = newProduct
           if (!newProduct || !newProduct.id) {
-            // La API retorna solo mensaje; refrescar lista para obtener producto real
+            // La API retorna solo mensaje; refrescar búsqueda actual
             try {
-              await get().fetchProducts(1, get().pageSize)
+              const currentSearch = get().lastSearchTerm
+              if (currentSearch) {
+                await get().fetchProducts(1, get().pageSize, currentSearch)
+              }
             } catch {}
             createdProduct = null
             set(s => ({ loading: false }))
@@ -1362,9 +1339,12 @@ const useProductStore = create()(
           const updatedProduct = response?.data || response
           let finalProduct = updatedProduct
           if (!updatedProduct || !updatedProduct.id) {
-            // Mensaje sin datos => refrescar productos
+            // Mensaje sin datos => refrescar búsqueda actual
             try {
-              await get().fetchProducts(get().currentPage, get().pageSize)
+              const currentSearch = get().lastSearchTerm
+              if (currentSearch) {
+                await get().fetchProducts(get().currentPage, get().pageSize, currentSearch)
+              }
             } catch {}
             finalProduct = null
             set(s => ({ loading: false }))

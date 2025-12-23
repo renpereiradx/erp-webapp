@@ -1,1061 +1,877 @@
-# 🛒 Guía de Integración API - Sistema de Ventas
+# 🛒 Ventas y Pagos - Guía Completa de API
 
-## 🎯 Descripción General
-
-Esta guía cubre la implementación del **sistema de ventas completo** que incluye gestión de órdenes de venta, pagos, cancelaciones, seguimiento de transacciones y **validación de modificaciones de precio con justificación obligatoria**. El sistema está diseñado para manejar tanto ventas simples como complejas con múltiples métodos de pago y opciones de financiamiento.
-
-### 🚀 Funcionalidades Principales
-
-- ✅ **Gestión de órdenes de venta**: Creación, consulta, modificación y cancelación
-- ✅ **Múltiples métodos de pago**: Efectivo, tarjeta, transferencia, crédito
-- ✅ **Facturación automática**: Generación de facturas con datos fiscales
-- ✅ **Control de stock**: Actualización automática de inventario
-- ✅ **Auditoría completa**: Trazabilidad de todas las transacciones
-- ✅ **Cancelación segura**: Reversión completa con control de integridad
-- ✅ **Reportes financieros**: Análisis de ventas por período, cliente y producto
-- 🆕 **Validación de precios**: Sistema de justificación obligatoria para descuentos
-- 🆕 **Control de modificaciones**: Autorización requerida para cambios de precio
-- 🆕 **Trazabilidad de descuentos**: Registro completo de cambios con metadata
+**Versión:** 1.7
+**Fecha:** 11 de Diciembre de 2025
+**Endpoint Base:** `http://localhost:5050`
+**Estado:** ✅ Production Ready
 
 ---
 
-## 📊 Modelos de Datos TypeScript
+## 📋 Descripción General
 
-### 🛒 Orden de Venta
+Esta guía documenta la API para el ciclo de vida de una venta, desde su creación y modificación hasta su anulación y consulta. El sistema de ventas es flexible y soporta modificaciones de precios, descuentos por producto y la integración con reservas de servicios.
 
-```typescript
-interface SaleOrderRequest {
-  client_id: number;
-  sale_date?: string;         // Default: NOW()
-  payment_method_id: number;
-  currency_id?: number;       // Default: 1 (Guaraníes)
-  total_amount: number;
-  items: SaleOrderItem[];
-  invoice_required?: boolean; // Default: true
-  notes?: string;
-  discount_percentage?: number; // Default: 0
-  allow_price_modifications?: boolean; // 🆕 Permitir modificaciones de precio
-}
+Para la gestión de pagos y cobranzas, consulte la guía:
+- **[💸 Pagos y Cobranzas - Guía de API](./SALE_PAYMENT.md)**
 
-interface SaleOrderItem {
-  product_id: string;
-  quantity: number;
-  unit_price: number;
-  unit?: string;              // Default: 'unit'
-  discount_percentage?: number; // Default: 0
-  tax_rate_id?: number;       // Si no se especifica, usa el default
-  sale_price?: number;        // 🆕 Precio modificado (opcional)
-  price_change_reason?: string; // 🆕 Justificación del cambio (requerida si sale_price != unit_price)
-}
+El proceso de venta se divide en las siguientes acciones principales:
+1.  **Crear una Venta:** A través de `POST /sales/orders`, se registra una nueva orden de venta.
+2.  **Modificar una Venta:** Se pueden agregar productos a una venta existente.
+3.  **Anular una Venta:** Se puede cancelar una venta que cumpla ciertas condiciones.
+4.  **Consultar Ventas:** Se pueden obtener ventas por diversos criterios, como rango de fechas o cliente.
 
-interface SaleOrderResponse {
-  success: boolean;
-  sale_order_id?: number;
-  invoice_number?: string;
-  total_amount?: number;
-  items_processed?: number;
-  stock_updated?: number;
-  message?: string;
-  price_modifications_enabled?: boolean; // 🆕 Si se permitieron modificaciones
-  has_price_changes?: boolean;           // 🆕 Si hubo cambios de precio
-  validation_summary?: ValidationSummary; // 🆕 Resumen de validaciones
-  details?: {
-    client_name: string;
-    payment_method: string;
-    currency: string;
-    created_at: string;
-  };
-}
+### Características Principales
 
-// 🆕 Resumen de validaciones aplicadas
-interface ValidationSummary {
-  price_modifications_allowed: boolean;
-  price_changes_detected: boolean;
-  reserve_integration: 'enabled' | 'disabled';
-}
-```
-
-### 💰 Gestión de Pagos
-
-```typescript
-interface SalePaymentRequest {
-  sale_order_id: number;
-  payment_method_id: number;
-  amount: number;
-  currency_id?: number;       // Default: 1
-  reference_number?: string;  // Para transferencias/tarjetas
-  notes?: string;
-}
-
-interface SalePaymentResponse {
-  success: boolean;
-  payment_id?: number;
-  remaining_balance?: number;
-  payment_status: 'PENDING' | 'PARTIAL' | 'COMPLETED' | 'OVERDUE';
-  message?: string;
-}
-```
-
-### 🔍 Consultas de Ventas
-
-```typescript
-interface SaleOrderEnriched {
-  sale_order: SaleOrderHeader;
-  items: SaleOrderItemDetail[];
-  payments: SalePaymentDetail[];
-  client: ClientInfo;
-  totals: SaleTotals;
-}
-
-interface SaleOrderHeader {
-  id: number;
-  client_id: number;
-  sale_date: string;
-  total_amount: number;
-  status: 'ACTIVE' | 'CANCELLED' | 'REFUNDED';
-  invoice_number: string;
-  payment_method_id: number;
-  currency_id: number;
-  created_by: string;
-  created_at: string;
-}
-
-interface SaleOrderItemDetail {
-  id: number;
-  product_id: string;
-  product_name: string;
-  quantity: number;
-  unit_price: number;
-  unit: string;
-  line_total: number;
-  discount_percentage: number;
-  tax_rate_id: number;
-  tax_rate: number;
-}
-
-interface SalePaymentDetail {
-  id: number;
-  payment_method_id: number;
-  payment_method_name: string;
-  amount: number;
-  currency_name: string;
-  payment_date: string;
-  reference_number: string;
-  status: string;
-}
-
-interface ClientInfo {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  document_number: string;
-}
-
-interface SaleTotals {
-  subtotal: number;
-  tax_amount: number;
-  discount_amount: number;
-  total_amount: number;
-  paid_amount: number;
-  remaining_balance: number;
-}
-```
-
-### ❌ Cancelación de Ventas
-
-```typescript
-interface SaleCancellationRequest {
-  sale_order_id: number;
-  cancellation_reason: string;
-  refund_method?: 'CASH' | 'TRANSFER' | 'CREDIT' | 'STORE_CREDIT';
-  refund_amount?: number;     // Si no se especifica, refund completo
-  cancel_invoice?: boolean;   // Default: true
-}
-
-interface SaleCancellationResponse {
-  success: boolean;
-  cancelled_sale_id?: number;
-  stock_reverted?: number;
-  refund_processed?: boolean;
-  invoice_cancelled?: boolean;
-  message?: string;
-  details?: {
-    original_amount: number;
-    refund_amount: number;
-    stock_items_reverted: number;
-    cancellation_timestamp: string;
-  };
-}
-```
-
-### 🆕 Validación de Precios y Descuentos
-
-```typescript
-// Estructura para cambios de precio con validación
-interface PriceChangeValidation {
-  product_id: string;
-  original_price: number;
-  modified_price: number;
-  price_difference: number;
-  percentage_change: number;
-  justification: string;        // Obligatorio para cualquier cambio
-  authorized_by: string;        // Usuario que autoriza
-  timestamp: string;
-}
-
-// Metadata de cambios de precio para auditoría
-interface PriceChangeMetadata {
-  product_id: string;
-  product_name: string;
-  original_price: number;
-  modified_price: number;
-  price_difference: number;
-  percentage_change: number;
-  user_id: string;
-  reason: string;
-  timestamp: string;
-  change_id: string;
-}
-
-// Respuesta de error específica para validación de precios
-interface PriceValidationError {
-  success: false;
-  error: {
-    code: 'PRICE_MODIFICATION_NOT_ALLOWED' | 'PRICE_CHANGE_REASON_REQUIRED' | 'INSUFFICIENT_STOCK' | 'INVALID_RESERVATION';
-    message: string;
-    details: {
-      product_id?: string;
-      product_name?: string;
-      requested_price?: number;
-      original_price?: number;
-      error_code: string;
-    };
-  };
-}
-```
+- ✅ **Creación de Ventas Flexibles**: Soporte para productos y servicios.
+- ✅ **Modificación de Precios**: Permite ajustar precios manualmente con justificación.
+- ✅ **Sistema de Descuentos**: Aplica descuentos por monto fijo o porcentaje a productos individuales.
+- ✅ **Integración con Reservas**: Convierte una reserva confirmada en una venta.
+- ✅ **Modificación de Ventas**: Permite agregar productos a ventas pendientes.
+- ✅ **Anulación de Ventas**: Flujo para cancelar ventas y revertir stock.
+- ✅ **Consulta de Ventas Avanzada**: Obtiene ventas históricas por diferentes criterios con paginación y detalles completos.
 
 ---
 
-## 🔗 Endpoints de la API
+## 🔧 Configuración General
 
-### 1. 🛒 **Crear Orden de Venta**
+### Base URL
+
+```
+http://localhost:5050
+```
+
+### Headers Requeridos
 
 ```http
-POST /sales/orders
 Content-Type: application/json
-Authorization: Bearer {token}
+Authorization: Bearer <jwt_token>
 ```
 
-**Request Body:**
+### Formato de Respuesta Estándar
+
+En caso de error, el backend puede devolver un formato de error estándar:
 ```json
 {
-  "client_id": 15,
-  "payment_method_id": 1,
-  "currency_id": 1,
-  "total_amount": 150000.00,
+  "success": false,
+  "error_code": "INSUFFICIENT_STOCK",
+  "message": "Error procesando la venta",
+  "details": "Stock insuficiente para el producto PROD_A"
+}
+```
+
+---
+
+## 💳 Creación de Ventas
+
+Esta sección cubre cómo crear una nueva orden de venta.
+
+### 1. Crear Orden de Venta
+
+**Endpoint:** `POST /sales/orders`
+
+Este endpoint crea una nueva venta. Es el punto de entrada para registrar todos los productos que un cliente desea adquirir, aplicando las condiciones comerciales correspondientes (descuentos, precios especiales, etc.).
+
+**Request Body:**
+
+```json
+{
+  "sale_id": "opcional-custom-id",
+  "client_id": "CLIENT_001",
+  "reserve_id": 123,
   "allow_price_modifications": true,
-  "items": [
+  "product_details": [
     {
-      "product_id": "PROD_BANANA_001",
-      "quantity": 10,
-      "unit_price": 15000.00,
-      "sale_price": 12000.00,
-      "price_change_reason": "Descuento por cliente frecuente - 20% off por compras superiores a $500 en el mes",
-      "unit": "kg",
-      "tax_rate_id": 1
+      "product_id": "PROD_A",
+      "quantity": 2,
+      "sale_price": 9500,
+      "price_change_reason": "Precio especial negociado",
+      "discount_percent": 10,
+      "discount_reason": "Descuento adicional 10%"
+    },
+    {
+      "product_id": "PROD_B",
+      "quantity": 5
     }
   ],
-  "invoice_required": true,
-  "notes": "Venta con descuento autorizado"
-}
-```
-
-**Response (201 Created):**
-```json
-{
-  "success": true,
-  "sale_order_id": 78,
-  "invoice_number": "FAC-2025-000078",
-  "total_amount": 120000.00,
-  "items_processed": 1,
-  "stock_updated": 1,
-  "price_modifications_enabled": true,
-  "has_price_changes": true,
-  "message": "Venta procesada exitosamente con cambios de precio justificados",
-  "validation_summary": {
-    "price_modifications_allowed": true,
-    "price_changes_detected": true,
-    "reserve_integration": "disabled"
-  },
-  "details": {
-    "client_name": "María González",
-    "payment_method": "Efectivo",
-    "currency": "Guaraníes",
-    "created_at": "2025-09-25T15:30:00Z"
-  }
-}
-```
-
-### 2. 💰 **Procesar Pago de Venta**
-
-```http
-POST /sales/payments
-Content-Type: application/json
-Authorization: Bearer {token}
-```
-
-**Request Body:**
-```json
-{
-  "sale_order_id": 78,
   "payment_method_id": 1,
-  "amount": 150000.00,
-  "currency_id": 1,
-  "reference_number": "TXN-20250917-001",
-  "notes": "Pago completo en efectivo"
+  "currency_id": 1
 }
 ```
 
+**Parámetros del Request:**
+
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| `sale_id` | string | ❌ No | ID personalizado para la venta. Si se omite, se genera uno automáticamente. |
+| `client_id` | string | ✅ Sí | ID del cliente al que se le realiza la venta. |
+| `reserve_id` | number | ❌ No | ID de una reserva confirmada. Si se incluye, los productos de la reserva se añaden a la venta. |
+| `allow_price_modifications` | boolean | ✅ Sí | Debe ser `true` para poder usar `sale_price`, `discount_amount` o `discount_percent`. |
+| `product_details` | array | ✅ Sí | Lista de productos de la venta. |
+| `payment_method_id` | number | ❌ No | ID del método de pago preferido. |
+| `currency_id` | number | ❌ No | ID de la moneda de la transacción. |
+
+**Estructura de `product_details`:**
+
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| `product_id` | string | ✅ Sí | ID del producto a vender. |
+| `quantity` | number | ✅ Sí | Cantidad del producto. Debe ser > 0. |
+| `tax_rate_id` | number | ❌ No | ID de la tasa de impuesto a aplicar. Si se omite, usa la del producto. |
+| `sale_price` | number | ⚠️ Condicional | **Modificación de Precio:** Precio de venta unitario modificado. Requiere `allow_price_modifications: true`. |
+| `price_change_reason` | string | ⚠️ Condicional | Justificación obligatoria si se usa `sale_price`. |
+| `discount_amount` | number | ⚠️ Condicional | **Descuento Fijo:** Monto de descuento a restar del precio unitario. |
+| `discount_percent` | number | ⚠️ Condicional | **Descuento Porcentual:** Porcentaje de descuento (0-100) a aplicar al precio unitario. |
+| `discount_reason` | string | ⚠️ Condicional | Justificación obligatoria si se aplica cualquier tipo de descuento. |
+
+> **💡 Importante:** No se pueden usar `discount_amount` y `discount_percent` en el mismo producto simultáneamente.
+
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
-  "payment_id": 156,
-  "remaining_balance": 0.00,
-  "payment_status": "COMPLETED",
-  "message": "Pago procesado exitosamente"
+  "sale_id": "24aBcDeF",
+  "total_amount": 185500.50,
+  "items_processed": 2,
+  "has_price_changes": true,
+  "has_discounts": true,
+  "reserve_processed": true,
+  "reserve_id": 123,
+  "message": "Venta procesada exitosamente con reserva y descuentos aplicados"
 }
 ```
 
-### 3. 🔍 **Consultar Venta por ID**
+**Campos del Response:**
 
-```http
-GET /sales/orders/{id}
-Authorization: Bearer {token}
-```
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `success` | boolean | `true` si la venta se creó exitosamente. |
+| `sale_id` | string | El ID único de la venta creada. **Guardar este ID para procesar pagos.** |
+| `total_amount`| number | El monto total calculado para la venta. |
+| `items_processed` | number | El número de productos distintos en la venta. |
+| `has_price_changes` | boolean | `true` si se aplicó alguna modificación de precio manual. |
+| `has_discounts` | boolean | `true` si se aplicó algún descuento. |
+| `reserve_processed`| boolean | `true` si la venta se generó a partir de una reserva. |
+| `reserve_id` | number | El ID de la reserva utilizada, si aplica. |
+| `message` | string | Un mensaje de confirmación. |
 
-**Response (200 OK):**
-```json
-{
-  "sale_order": {
-    "id": 78,
-    "client_id": 15,
-    "sale_date": "2025-09-17",
-    "total_amount": 150000.00,
-    "status": "ACTIVE",
-    "invoice_number": "FAC-2025-000078",
-    "payment_method_id": 1,
-    "currency_id": 1,
-    "created_by": "user_001",
-    "created_at": "2025-09-17T15:30:00Z"
-  },
-  "items": [
-    {
-      "id": 234,
-      "product_id": "PROD_BANANA_001",
-      "product_name": "Banana Premium",
-      "quantity": 10,
-      "unit_price": 15000.00,
-      "unit": "kg",
-      "line_total": 150000.00,
-      "discount_percentage": 0,
-      "tax_rate_id": 1,
-      "tax_rate": 10.00
-    }
-  ],
-  "payments": [
-    {
-      "id": 156,
-      "payment_method_id": 1,
-      "payment_method_name": "Efectivo",
-      "amount": 150000.00,
-      "currency_name": "Guaraníes",
-      "payment_date": "2025-09-17T15:30:00Z",
-      "reference_number": "TXN-20250917-001",
-      "status": "COMPLETED"
-    }
-  ],
-  "client": {
-    "id": 15,
-    "name": "María González",
-    "email": "maria.gonzalez@email.com",
-    "phone": "+595981234567",
-    "address": "Av. Principal 123, Asunción",
-    "document_number": "12345678"
-  },
-  "totals": {
-    "subtotal": 136363.64,
-    "tax_amount": 13636.36,
-    "discount_amount": 0.00,
-    "total_amount": 150000.00,
-    "paid_amount": 150000.00,
-    "remaining_balance": 0.00
-  }
-}
-```
 
-### 4. 📅 **Consultar Ventas por Rango de Fechas**
+**Errores Posibles:**
 
-```http
-GET /sales/orders/date-range?start_date=2025-09-01&end_date=2025-09-30&page=1&page_size=50
-Authorization: Bearer {token}
-```
+| Error | HTTP Status | Descripción | Solución |
+|---|-------------|-------------|----------|
+| `DISCOUNT_REASON_REQUIRED` | 400 | Se aplicó un descuento sin justificación. | Añadir un valor a `discount_reason` cuando se usa `discount_amount` o `discount_percent`. |
+| `PRICE_CHANGE_REASON_REQUIRED` | 400 | Se usó `sale_price` sin justificación. | Añadir un valor a `price_change_reason`. |
+| `EXCESSIVE_DISCOUNT_AMOUNT` | 400 | El descuento es mayor que el precio del producto. | Ajustar el monto del descuento para que no supere el precio unitario. |
+| `INSUFFICIENT_STOCK` | 409 (Conflict) | No hay suficiente stock para uno de los productos. | Validar el stock disponible antes de crear la venta. El mensaje de error indicará el producto. |
+| `INVALID_RESERVATION`| 400 | La reserva especificada no es válida o ya ha sido utilizada. | Asegurarse de que el `reserve_id` es correcto y que la reserva está en estado `CONFIRMED`. |
 
-**Response (200 OK):**
-```json
-[
-  {
-    "sale_order": {
-      "id": 78,
-      "client_id": 15,
-      "sale_date": "2025-09-17",
-      "total_amount": 150000.00,
-      "status": "ACTIVE",
-      "invoice_number": "FAC-2025-000078"
-    },
-    "client": {
-      "name": "María González",
-      "document_number": "12345678"
-    },
-    "totals": {
-      "total_amount": 150000.00,
-      "paid_amount": 150000.00,
-      "remaining_balance": 0.00
-    }
-  }
-]
-```
 
-### 5. 👤 **Consultar Ventas por Cliente**
+---
 
-```http
-GET /sales/orders/client/{client_id}?page=1&page_size=20
-Authorization: Bearer {token}
-```
+## ✍️ Modificación de Ventas
 
-### 6. ❌ **Cancelar Venta**
+Esta sección cubre cómo modificar una orden de venta existente que aún no ha sido pagada en su totalidad.
 
-```http
-POST /sales/orders/{id}/cancel
-Content-Type: application/json
-Authorization: Bearer {token}
-```
+### 2. Agregar Productos a una Venta Existente
+
+**Endpoint:** `POST /sale/{id}/products`
+
+Permite agregar uno o más productos a una venta existente que se encuentra en estado `PENDING`. Esta operación actualiza el monto total de la venta y recalcula los saldos.
+
+**Path Parameters:**
+
+| Parámetro | Tipo   | Descripción                     |
+|-----------|--------|---------------------------------|
+| `id`      | string | ID único de la venta a modificar. |
 
 **Request Body:**
+
 ```json
 {
-  "cancellation_reason": "Cliente solicitó cancelación - producto defectuoso",
-  "refund_method": "CASH",
-  "refund_amount": 150000.00,
-  "cancel_invoice": true
+  "allow_price_modifications": true,
+  "product_details": [
+    {
+      "product_id": "PROD_C",
+      "quantity": 1
+    },
+    {
+      "product_id": "PROD_D",
+      "quantity": 2,
+      "sale_price": 45000,
+      "price_change_reason": "Precio especial por adición"
+    }
+  ]
 }
 ```
 
+**Parámetros del Request:**
+
+| Campo                       | Tipo    | Requerido | Descripción                                                                                           |
+|-----------------------------|---------|-----------|-------------------------------------------------------------------------------------------------------|
+| `allow_price_modifications` | boolean | ✅ Sí       | Debe ser `true` para poder usar `sale_price` u otros campos de descuento en los productos añadidos. |
+| `product_details`           | array   | ✅ Sí       | Lista de nuevos productos a agregar a la venta. La estructura es idéntica a la de creación de ventas. |
+
+> **💡 Nota:** La estructura del array `product_details` es la misma que la utilizada en el endpoint `POST /sales/orders`. Se pueden aplicar descuentos y modificaciones de precio a los nuevos productos siguiendo las mismas reglas.
+
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
-  "cancelled_sale_id": 78,
-  "stock_reverted": 1,
-  "refund_processed": true,
-  "invoice_cancelled": true,
-  "message": "Venta cancelada exitosamente",
-  "details": {
-    "original_amount": 150000.00,
-    "refund_amount": 150000.00,
-    "stock_items_reverted": 1,
-    "cancellation_timestamp": "2025-09-17T16:45:00Z"
-  }
+  "sale_id": "24aBcDeF",
+  "message": "2 producto(s) han sido agregados a la venta.",
+  "items_added": 2,
+  "updated_total_amount": 254500.50,
+  "previous_total_amount": 185500.50
 }
 ```
 
-### 7. 📊 **Reportes de Ventas**
+**Campos del Response:**
 
-```http
-GET /sales/reports/summary?start_date=2025-09-01&end_date=2025-09-30
-Authorization: Bearer {token}
+| Campo                   | Tipo   | Descripción                                           |
+|-------------------------|--------|-------------------------------------------------------|
+| `success`               | boolean| `true` si los productos se agregaron exitosamente.      |
+| `sale_id`               | string | El ID de la venta que fue actualizada.                |
+| `message`               | string | Un mensaje de confirmación.                           |
+| `items_added`           | number | El número de productos distintos que se agregaron.    |
+| `updated_total_amount`  | number | El nuevo monto total de la venta tras la adición.     |
+| `previous_total_amount` | number | El monto total de la venta antes de la adición.       |
+
+**Errores Posibles:**
+
+| Error                  | HTTP Status    | Descripción                                                               | Solución                                                                    |
+|------------------------|----------------|---------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| `Sale not found`       | 404 (Not Found)| La venta con el `id` especificado no existe.                              | Verificar que el ID de la venta sea correcto.                               |
+| `SALE_IS_NOT_PENDING`  | 400 (Bad Request) | La venta ya ha sido pagada (`PAID`) o cancelada (`CANCELLED`).           | Solo se pueden agregar productos a ventas con estado `PENDING`.             |
+| `INSUFFICIENT_STOCK`   | 409 (Conflict) | No hay suficiente stock para uno de los productos que se intentan agregar. | Validar el stock disponible antes de agregar el producto.                   |
+| `MODIFICATIONS_NOT_ALLOWED` | 400 (Bad Request) | Se intentó modificar el precio sin `allow_price_modifications: true`. | Establecer `allow_price_modifications` a `true` si se necesita cambiar precios. |
+
+---
+
+## 🚫 Anulación de Ventas
+
+Esta sección describe el proceso para anular o cancelar una venta. La anulación es un proceso irreversible que revierte el movimiento de stock de los productos vendidos.
+
+### 3. Previsualizar Anulación de Venta
+
+**Endpoint:** `GET /sale/{id}/preview-cancellation`
+
+Antes de anular una venta, es **altamente recomendable** previsualizar el impacto. Este endpoint devuelve un resumen de las acciones que se realizarán, como la devolución de stock, sin ejecutar la anulación.
+
+**Path Parameters:**
+
+| Parámetro | Tipo   | Descripción                     |
+|-----------|--------|---------------------------------|
+| `id`      | string | ID único de la venta a anular. |
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "sale_id": "24aBcDeF",
+  "client_name": "Juan Pérez",
+  "total_amount": 185500.50,
+  "impact_summary": {
+    "stock_reversion_count": 2,
+    "payment_reversals": 1,
+    "cancellation_fee": 0
+  },
+  "warnings": [
+    "La venta ya tiene pagos registrados que serán anulados.",
+    "El producto 'PROD_A' será devuelto al inventario."
+  ],
+  "is_cancellable": true
+}
+```
+
+**Campos del Response:**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `sale_id` | string | ID de la venta. |
+| `impact_summary` | object | Resumen del impacto de la anulación. |
+| `stock_reversion_count` | number | Cantidad de productos cuyo stock será revertido. |
+| `warnings` | array | Lista de strings con advertencias importantes. |
+| `is_cancellable` | boolean | Indica si la venta puede ser anulada. |
+
+---
+
+### 4. Anular Venta
+
+**Endpoint:** `PUT /sale/{id}`
+
+Anula una venta de forma definitiva. Esto cambiará el estado de la venta a `CANCELLED` y revertirá todas las transacciones de stock asociadas.
+
+**⚠️ Advertencia:** Esta acción es irreversible.
+
+**Path Parameters:**
+
+| Parámetro | Tipo   | Descripción                     |
+|-----------|--------|---------------------------------|
+| `id`      | string | ID único de la venta a anular. |
+
+**Request Body:**
+
+```json
+{
+  "cancellation_reason": "El cliente se arrepintió de la compra."
+}
+```
+
+**Parámetros del Request:**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `cancellation_reason`| string | ✅ Sí | Motivo por el cual la venta está siendo anulada. |
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "sale_id": "24aBcDeF",
+  "new_status": "CANCELLED",
+  "message": "La venta ha sido anulada exitosamente. El stock ha sido revertido."
+}
+```
+
+**Errores Posibles:**
+
+| Error | HTTP Status | Descripción |
+|---|---|---|
+| `SALE_NOT_FOUND` | 404 | La venta no existe. |
+| `SALE_ALREADY_CANCELLED` | 400 | La venta ya fue anulada previamente. |
+| `CANCELLATION_NOT_ALLOWED` | 403 | La venta no puede ser anulada (ej: por política de tiempo). |
+| `REASON_IS_REQUIRED` | 400 | No se proveyó un motivo de anulación. |
+
+
+
+## 📊 Consulta de Ventas
+
+Esta sección cubre cómo consultar ventas existentes por rango de fechas o por datos del cliente.
+
+
+
+### 5. Obtener Ventas por ID de Cliente
+
+**Endpoint:** `GET /sale/client_id/{id}`
+
+Obtiene una lista paginada de ventas realizadas a un cliente específico, identificado por su ID.
+
+**Path Parameters:**
+
+| Parámetro | Tipo   | Descripción                     |
+|-----------|--------|---------------------------------|
+| `id`      | string | ID único del cliente.           |
+
+**Query Parameters:**
+
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `page` | number | ❌ No | Número de página (default: 1). Debe ser > 0. |
+| `page_size` | number | ❌ No | Cantidad de registros por página (default: 50). Debe ser > 0. |
+
+**Ejemplo de Request:**
+
+```bash
+GET http://localhost:5050/sale/client_id/4hu5VK6Ng?page=1&page_size=10
 ```
 
 **Response (200 OK):**
 ```json
 {
-  "period": {
-    "start_date": "2025-09-01",
-    "end_date": "2025-09-30"
-  },
-  "summary": {
-    "total_sales": 15,
-    "total_amount": 2250000.00,
-    "total_items_sold": 125,
-    "average_sale_amount": 150000.00,
-    "cancelled_sales": 2,
-    "refund_amount": 300000.00
-  },
-  "top_products": [
+  "data": [
     {
-      "product_id": "PROD_BANANA_001",
-      "product_name": "Banana Premium",
-      "quantity_sold": 50,
-      "total_revenue": 750000.00
+      "sale": {
+        "sale_id": "24aBcDeF",
+        "client_id": "4hu5VK6Ng",
+        "client_name": "Nombre del Cliente",
+        "sale_date": "2025-05-15T14:30:00Z",
+        "total_amount": 185500.50,
+        "status": "PAID",
+        "user_id": "USER_123",
+        "user_name": "Carlos González",
+        "payment_method_id": 1,
+        "payment_method": "Efectivo",
+        "currency_id": 1,
+        "currency": "Guaraníes",
+        "metadata": {
+          "reserve_id": 123,
+          "notes": "Venta con descuento VIP"
+        }
+      },
+      "details": [
+        {
+          "id": 501,
+          "order_id": "24aBcDeF",
+          "product_id": "PROD_A",
+          "product_name": "Producto Premium",
+          "product_type": "PHYSICAL",
+          "quantity": 2.0,
+          "base_price": 10000.00,
+          "unit_price": 9500.00,
+          "discount_amount": 500.00,
+          "subtotal": 19000.00,
+          "tax_amount": 1900.00,
+          "total_with_tax": 20900.00,
+          "price_modified": true,
+          "reserve_id": 0,
+          "tax_rate_id": 1
+        }
+      ]
     }
   ],
-  "payment_methods": [
+  "pagination": {
+    "page": 1,
+    "page_size": 10,
+    "total_records": 1,
+    "total_pages": 1,
+    "has_next": false,
+    "has_previous": false
+  }
+}
+```
+
+**Campos del Response:**
+
+Los campos del `Response` (incluyendo los objetos `sale`, `details` y `pagination`) son idénticos a los descritos en la sección `Obtener Ventas por Rango de Fechas`.
+
+**Errores Posibles:**
+
+| Error | HTTP Status | Descripción | Solución |
+|-------|-------------|-------------|----------|
+| `client_id is required` | 400 | El ID del cliente no fue proporcionado. | Asegurarse de incluir el ID del cliente en la URL. |
+| `Unauthorized` | 401 | Token JWT inválido o ausente. | Verificar que el header `Authorization: Bearer <token>` esté presente y sea válido. |
+| `Internal Server Error` | 500 | Error al procesar la consulta en el servidor. | Contactar a soporte si persiste. |
+
+**Validaciones Recomendadas en Frontend:**
+
+1. ✅ Verificar que el `id` del cliente no esté vacío antes de enviar.
+2. ✅ Si se especifica `page`, asegurar que sea un número entero > 0.
+3. ✅ Si se especifica `page_size`, asegurar que sea un número entero > 0.
+4. 💡 Sugerencia: Limitar `page_size` a un máximo razonable (ej: 100) para evitar respuestas muy grandes.
+
+---
+
+### 6. Obtener Ventas por Nombre de Cliente
+
+
+**Endpoint:** `GET /sale/client_name/{name}`
+
+Obtiene una lista paginada de ventas realizadas a un cliente específico, identificado por su nombre.
+
+**Path Parameters:**
+
+| Parámetro | Tipo   | Descripción                                   |
+|-----------|--------|-----------------------------------------------|
+| `name`    | string | Nombre completo o parcial del cliente.        |
+
+**Query Parameters:**
+
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `page` | number | ❌ No | Número de página (default: 1). Debe ser > 0. |
+| `page_size` | number | ❌ No | Cantidad de registros por página (default: 50). Debe ser > 0. |
+
+**Ejemplo de Request:**
+
+```bash
+GET /sale/client_name/Juan%20Perez?page=1&page_size=10
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "data": [
     {
-      "method_name": "Efectivo",
-      "transaction_count": 10,
-      "total_amount": 1500000.00
+      "sale": {
+        "sale_id": "24aBcDeF",
+        "client_id": "CLIENT_001",
+        "client_name": "Juan Pérez",
+        "sale_date": "2025-05-15T14:30:00Z",
+        "total_amount": 185500.50,
+        "status": "PAID",
+        "user_id": "USER_123",
+        "user_name": "Carlos González",
+        "payment_method_id": 1,
+        "payment_method": "Efectivo",
+        "currency_id": 1,
+        "currency": "Guaraníes",
+        "metadata": {
+          "reserve_id": 123,
+          "notes": "Venta con descuento VIP"
+        }
+      },
+      "details": [
+        {
+          "id": 501,
+          "order_id": "24aBcDeF",
+          "product_id": "PROD_A",
+          "product_name": "Producto Premium",
+          "product_type": "PHYSICAL",
+          "quantity": 2.0,
+          "base_price": 10000.00,
+          "unit_price": 9500.00,
+          "discount_amount": 500.00,
+          "subtotal": 19000.00,
+          "tax_amount": 1900.00,
+          "total_with_tax": 20900.00,
+          "price_modified": true,
+          "reserve_id": 0,
+          "tax_rate_id": 1
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "page_size": 10,
+    "total_records": 1,
+    "total_pages": 1,
+    "has_next": false,
+    "has_previous": false
+  }
+}
+```
+
+**Campos del Response:**
+
+Los campos del `Response` (incluyendo los objetos `sale`, `details` y `pagination`) son idénticos a los descritos en la sección `Obtener Ventas por Rango de Fechas`.
+
+**Errores Posibles:**
+
+| Error | HTTP Status | Descripción | Solución |
+|-------|-------------|-------------|----------|
+| `client name is required` | 400 | El nombre del cliente no fue proporcionado. | Asegurarse de incluir el nombre del cliente en la URL. |
+| `Unauthorized` | 401 | Token JWT inválido o ausente. | Verificar que el header `Authorization: Bearer <token>` esté presente y sea válido. |
+| `Internal Server Error` | 500 | Error al procesar la consulta en el servidor. | Contactar a soporte si persiste. |
+
+**Validaciones Recomendadas en Frontend:**
+
+1. ✅ Verificar que el `name` del cliente no esté vacío antes de enviar.
+2. ✅ Si se especifica `page`, asegurar que sea un número entero > 0.
+3. ✅ Si se especifica `page_size`, asegurar que sea un número entero > 0.
+4. 💡 Sugerencia: Limitar `page_size` a un máximo razonable (ej: 100) para evitar respuestas muy grandes.
+
+---
+
+### 7. Obtener Ventas por Rango de Fechas
+
+**Endpoint:** `GET /sale/date_range`
+
+Obtiene una lista paginada de ventas dentro de un rango de fechas específico, con detalles completos de cada venta y sus productos.
+
+**Query Parameters:**
+
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `start_date` | string | ✅ Sí | Fecha inicial del rango. Formato: `YYYY-MM-DD` o `YYYY-MM-DD HH:MM:SS` |
+| `end_date` | string | ✅ Sí | Fecha final del rango. Formato: `YYYY-MM-DD` o `YYYY-MM-DD HH:MM:SS` |
+| `page` | number | ❌ No | Número de página (default: 1). Debe ser > 0. |
+| `page_size` | number | ❌ No | Cantidad de registros por página (default: 50). Debe ser > 0. |
+
+> **💡 Nota:** Si las fechas se envían en formato `YYYY-MM-DD` (solo fecha), el sistema automáticamente:
+> - Agrega `00:00:00` a `start_date`
+> - Agrega `23:59:59` a `end_date`
+
+**Ejemplo de Request:**
+
+```bash
+GET /sale/date_range?start_date=2025-05-01&end_date=2025-06-19&page=1&page_size=10
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "data": [
+    {
+      "sale": {
+        "sale_id": "24aBcDeF",
+        "client_id": "CLIENT_001",
+        "client_name": "Juan Pérez",
+        "sale_date": "2025-05-15T14:30:00Z",
+        "total_amount": 185500.50,
+        "status": "PAID",
+        "user_id": "USER_123",
+        "user_name": "Carlos González",
+        "payment_method_id": 1,
+        "payment_method": "Efectivo",
+        "currency_id": 1,
+        "currency": "Guaraníes",
+        "metadata": {
+          "reserve_id": 123,
+          "notes": "Venta con descuento VIP"
+        }
+      },
+      "details": [
+        {
+          "id": 501,
+          "order_id": "24aBcDeF",
+          "product_id": "PROD_A",
+          "product_name": "Producto Premium",
+          "product_type": "PHYSICAL",
+          "quantity": 2.0,
+          "base_price": 10000.00,
+          "unit_price": 9500.00,
+          "discount_amount": 500.00,
+          "subtotal": 19000.00,
+          "tax_amount": 1900.00,
+          "total_with_tax": 20900.00,
+          "price_modified": true,
+          "reserve_id": 0,
+          "tax_rate_id": 1
+        },
+        {
+          "id": 502,
+          "order_id": "24aBcDeF",
+          "product_id": "PROD_B",
+          "product_name": "Servicio de Instalación",
+          "product_type": "SERVICE",
+          "quantity": 1.0,
+          "base_price": 50000.00,
+          "unit_price": 50000.00,
+          "discount_amount": 0.00,
+          "subtotal": 50000.00,
+          "tax_amount": 5000.00,
+          "total_with_tax": 55000.00,
+          "price_modified": false,
+          "reserve_id": 123,
+          "tax_rate_id": 1
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "page_size": 10,
+    "total_records": 45,
+    "total_pages": 5,
+    "has_next": true,
+    "has_previous": false
+  }
+}
+```
+
+**Campos del Response:**
+
+**Nivel Superior:**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `data` | array | Lista de ventas con sus detalles. Cada elemento contiene `sale` y `details`. |
+| `pagination` | object | Información de paginación. |
+
+**Objeto `sale`:**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `sale_id` | string | ID único de la venta. |
+| `client_id` | string | ID del cliente. |
+| `client_name` | string | Nombre completo del cliente. |
+| `sale_date` | string (ISO 8601) | Fecha y hora de la venta. |
+| `total_amount` | number | Monto total de la venta. |
+| `status` | string | Estado de la venta: `PENDING` \| `PAID` \| `CANCELLED` |
+| `user_id` | string | ID del usuario que creó la venta. |
+| `user_name` | string | Nombre del usuario que creó la venta. |
+| `payment_method_id` | number \| null | ID del método de pago. |
+| `payment_method` | string \| null | Nombre del método de pago (ej: "Efectivo", "Tarjeta"). |
+| `currency_id` | number \| null | ID de la moneda. |
+| `currency` | string \| null | Nombre de la moneda (ej: "Guaraníes"). |
+| `metadata` | object \| null | Datos adicionales de la venta (reserve_id, notas, etc.). |
+
+**Objeto `details` (array):**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `id` | number | ID único del detalle de venta. |
+| `order_id` | string | ID de la orden de venta (coincide con `sale_id`). |
+| `product_id` | string | ID del producto. |
+| `product_name` | string | Nombre del producto o servicio. |
+| `product_type` | string | Tipo: `PHYSICAL` (producto físico) \| `SERVICE` (servicio) |
+| `quantity` | number | Cantidad vendida (puede tener decimales). |
+| `base_price` | number | Precio base original del producto. |
+| `unit_price` | number | Precio unitario final de venta (después de descuentos/modificaciones). |
+| `discount_amount` | number | Monto de descuento aplicado por unidad. |
+| `subtotal` | number | Subtotal sin impuestos (`quantity × unit_price`). |
+| `tax_amount` | number | Monto del impuesto. |
+| `total_with_tax` | number | Total con impuestos incluidos. |
+| `price_modified` | boolean | `true` si el precio fue modificado manualmente. |
+| `reserve_id` | number | ID de reserva asociada (0 si no hay). |
+| `tax_rate_id` | number | ID de la tasa de impuesto aplicada. |
+
+**Objeto `pagination`:**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `page` | number | Número de página actual. |
+| `page_size` | number | Cantidad de registros por página. |
+| `total_records` | number | Total de registros encontrados. |
+| `total_pages` | number | Total de páginas disponibles. |
+| `has_next` | boolean | `true` si existe una página siguiente. |
+| `has_previous` | boolean | `true` si existe una página anterior. |
+
+**Errores Posibles:**
+
+| Error | HTTP Status | Descripción | Solución |
+|-------|-------------|-------------|----------|
+| `start_date and end_date are required` | 400 | Falta uno o ambos parámetros de fecha. | Enviar ambos parámetros `start_date` y `end_date` en el query string. |
+| `Unauthorized` | 401 | Token JWT inválido o ausente. | Verificar que el header `Authorization: Bearer <token>` esté presente y sea válido. |
+| `Internal Server Error` | 500 | Error al procesar la consulta en el servidor. | Verificar el formato de las fechas y contactar a soporte si persiste. |
+
+**Validaciones Recomendadas en Frontend:**
+
+1. ✅ Verificar que `start_date` y `end_date` no estén vacíos antes de enviar.
+2. ✅ Validar que `end_date` sea mayor o igual a `start_date`.
+3. ✅ Si se especifica `page`, asegurar que sea un número entero > 0.
+4. ✅ Si se especifica `page_size`, asegurar que sea un número entero > 0.
+5. 💡 Sugerencia: Limitar `page_size` a un máximo razonable (ej: 100) para evitar respuestas muy grandes.
+
+---
+
+## 🔄 Casos de Uso
+
+### Caso 1: Venta con Descuento por Porcentaje
+
+**Escenario:** Vender un producto con un 15% de descuento por ser cliente VIP.
+
+**Request a `POST /sales/orders`:**
+```json
+{
+  "client_id": "CLIENT_VIP_007",
+  "allow_price_modifications": true,
+  "product_details": [
+    {
+      "product_id": "PROD_PREMIUM",
+      "quantity": 1,
+      "discount_percent": 15,
+      "discount_reason": "Descuento 15% Cliente VIP"
     }
   ]
 }
 ```
+**Resultado:** El precio final del producto se calculará con un 15% de descuento sobre su precio base.
 
----
+### Caso 2: Venta con Modificación Manual de Precio
 
-## 📋 Códigos de Respuesta
+**Escenario:** Vender un producto con un precio especial acordado con el cliente.
 
-### ✅ Éxito
-- **200 OK** - Operación exitosa
-- **201 Created** - Venta creada exitosamente
-
-### ⚠️ Errores del Cliente
-- **400 Bad Request** - Datos inválidos en la venta
-- **401 Unauthorized** - Token inválido o faltante
-- **403 Forbidden** - Sin permisos para realizar ventas
-- **404 Not Found** - Venta o cliente no encontrado
-- **409 Conflict** - Conflicto en los datos (ej: stock insuficiente)
-
-### 🚨 Errores del Servidor
-- **500 Internal Server Error** - Error en el procedimiento de base de datos
-- **503 Service Unavailable** - Base de datos no disponible
-
-### 🔍 Errores Específicos
-
-#### 🆕 Errores de Validación de Precios
-
+**Request a `POST /sales/orders`:**
 ```json
 {
-  "success": false,
-  "error": {
-    "code": "PRICE_MODIFICATION_NOT_ALLOWED",
-    "message": "Price modifications are not allowed",
-    "details": {
-      "product_id": "PROD_BANANA_001",
-      "product_name": "Banana Premium",
-      "error_code": "PRICE_MODIFICATION_NOT_ALLOWED"
+  "client_id": "CLIENT_002",
+  "allow_price_modifications": true,
+  "product_details": [
+    {
+      "product_id": "PROD_NEGOCIADO",
+      "quantity": 10,
+      "sale_price": 8750,
+      "price_change_reason": "Acuerdo especial por volumen"
     }
-  }
-}
-```
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "PRICE_CHANGE_REASON_REQUIRED",
-    "message": "Price change justification is required",
-    "details": {
-      "product_id": "PROD_BANANA_001",
-      "product_name": "Banana Premium",
-      "original_price": 15000.00,
-      "requested_price": 12000.00,
-      "error_code": "PRICE_CHANGE_REASON_REQUIRED"
-    }
-  }
-}
-```
-
-#### 📦 Otros Errores Comunes
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INSUFFICIENT_STOCK",
-    "message": "Stock insuficiente para el producto PROD_BANANA_001",
-    "details": {
-      "product_id": "PROD_BANANA_001",
-      "requested_quantity": 50,
-      "available_stock": 25,
-      "error_code": "INSUFFICIENT_STOCK"
-    }
-  }
-}
-```
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "CLIENT_INACTIVE",
-    "message": "Cliente inactivo o inexistente",
-    "details": {
-      "client_id": 99,
-      "error_code": "CLIENT_INACTIVE"
-    }
-  }
-}
-```
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INVALID_PAYMENT_METHOD",
-    "message": "Método de pago no disponible",
-    "details": {
-      "payment_method_id": 15,
-      "error_code": "INVALID_PAYMENT_METHOD"
-    }
-  }
-}
-```
-
----
-
-## 🚨 Solución de Problemas Comunes
-
-### 🆕 Errores de Validación de Precios
-
-#### ⚠️ Error: Modificación de Precio No Permitida
-
-**Síntoma:**
-```json
-{
-  "success": false,
-  "error": "PRICE_MODIFICATION_NOT_ALLOWED: No se permiten modificaciones de precio"
-}
-```
-
-**Causa:** Se intentó modificar el precio de un producto sin habilitar `allow_price_modifications`.
-
-**Solución:**
-1. Establecer `allow_price_modifications: true` en el request
-2. Verificar permisos del usuario para modificar precios
-3. Implementar flujo de autorización si es necesario
-
-#### ⚠️ Error: Falta Justificación de Cambio de Precio
-
-**Síntoma:**
-```json
-{
-  "success": false,
-  "error": "PRICE_CHANGE_REASON_REQUIRED: Se requiere justificación para cambiar el precio"
-}
-```
-
-**Causa:** Se modificó el precio pero no se proporcionó `price_change_reason`.
-
-**Solución:**
-1. Agregar campo `price_change_reason` con justificación detallada
-2. Verificar que la razón no esté vacía o nula
-3. Ejemplo: "Descuento por cliente frecuente - 15% off por volumen de compra"
-
-### ⚠️ Error: Stock Insuficiente
-
-**Síntoma:**
-```json
-{
-  "success": false,
-  "error": "Stock insuficiente para producto PROD_BANANA_001"
-}
-```
-
-**Causa:** El producto no tiene suficiente stock para completar la venta.
-
-**Solución:**
-1. Verificar stock actual:
-```sql
-SELECT id_product, quantity FROM products.stock WHERE id_product = 'PROD_BANANA_001';
-```
-
-2. Reducir cantidad en la orden o reabastecer stock.
-
-### ⚠️ Error: Cliente Inactivo
-
-**Síntoma:**
-```json
-{
-  "success": false,
-  "error": "Cliente inactivo o no encontrado"
-}
-```
-
-**Solución:**
-```sql
-UPDATE clients.clients SET state = true WHERE id = {client_id};
-```
-
-### ⚠️ Error: Método de Pago Inválido
-
-**Verificación:**
-```sql
-SELECT id, name, state FROM transactions.payment_methods WHERE state = true;
-```
-
----
-
-## 🔐 Autenticación y Permisos
-
-### 🔑 Headers Requeridos
-```http
-Authorization: Bearer {jwt_token}
-Content-Type: application/json
-X-User-ID: {user_id}  // Opcional, se extrae del token
-```
-
-### 👥 Permisos Necesarios
-```json
-{
-  "required_permissions": [
-    "sales.create",
-    "sales.read", 
-    "sales.update",
-    "sales.cancel",
-    "payments.process",
-    "invoices.generate"
   ]
 }
 ```
+**Resultado:** El producto se venderá a 8,750 Gs. la unidad, sin importar su precio original.
 
----
+### Caso 3: Consultar Ventas del Mes
 
-## 🧪 Ejemplos de Implementación
+**Escenario:** Necesitas obtener todas las ventas del mes de mayo de 2025, mostrando 20 registros por página.
 
-### 🔄 Hook de React para Crear Venta
-
-```typescript
-import { useState } from 'react';
-
-interface UseSalesReturn {
-  createSale: (data: SaleOrderRequest) => Promise<SaleOrderResponse>;
-  loading: boolean;
-  error: string | null;
-}
-
-export const useSales = (): UseSalesReturn => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const createSale = async (data: SaleOrderRequest): Promise<SaleOrderResponse> => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/sales/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      return result;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { createSale, loading, error };
-};
+**Request a `GET /sale/date_range`:**
+```
+GET /sale/date_range?start_date=2025-05-01&end_date=2025-05-31&page=1&page_size=20
 ```
 
-### 📝 Formulario de Venta en React
+**Resultado:**
+- Se obtiene una lista paginada de todas las ventas entre 2025-05-01 00:00:00 y 2025-05-31 23:59:59
+- Cada venta incluye información completa del cliente, usuario, y montos
+- Cada venta incluye el detalle completo de productos con precios, descuentos y cálculos de impuestos
+- El objeto `pagination` indica cuántas páginas hay disponibles y si se puede navegar a la siguiente
 
-```typescript
-import React, { useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-
-interface SalesFormData extends SaleOrderRequest {}
-
-export const SalesForm: React.FC = () => {
-  const { register, control, handleSubmit, formState: { errors } } = useForm<SalesFormData>({
-    defaultValues: {
-      currency_id: 1,
-      invoice_required: true,
-      items: [{ product_id: '', quantity: 1, unit_price: 0, unit: 'unit' }]
-    }
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'items'
-  });
-
-  const { createSale, loading, error } = useSales();
-
-  const onSubmit = async (data: SalesFormData) => {
-    try {
-      const result = await createSale(data);
-      alert(`Venta creada exitosamente: ${result.invoice_number}`);
-    } catch (err) {
-      console.error('Error creating sale:', err);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div>
-        <label>Cliente ID</label>
-        <input
-          type="number"
-          {...register('client_id', { required: true, min: 1 })}
-          className="border rounded px-3 py-2"
-        />
-        {errors.client_id && <span className="text-red-500">Cliente es requerido</span>}
-      </div>
-
-      <div>
-        <label>Método de Pago ID</label>
-        <input
-          type="number"
-          {...register('payment_method_id', { required: true })}
-          className="border rounded px-3 py-2"
-        />
-      </div>
-
-      <div>
-        <label>Monto Total</label>
-        <input
-          type="number"
-          step="0.01"
-          {...register('total_amount', { required: true, min: 0.01 })}
-          className="border rounded px-3 py-2"
-        />
-      </div>
-
-      <div>
-        <h3>Items de Venta</h3>
-        {fields.map((field, index) => (
-          <div key={field.id} className="border p-4 rounded">
-            <input
-              placeholder="ID del Producto"
-              {...register(`items.${index}.product_id`, { required: true })}
-              className="border rounded px-3 py-2 mr-2"
-            />
-            <input
-              type="number"
-              placeholder="Cantidad"
-              {...register(`items.${index}.quantity`, { required: true, min: 1 })}
-              className="border rounded px-3 py-2 mr-2"
-            />
-            <input
-              type="number"
-              step="0.01"
-              placeholder="Precio Unitario"
-              {...register(`items.${index}.unit_price`, { required: true, min: 0.01 })}
-              className="border rounded px-3 py-2 mr-2"
-            />
-            <button
-              type="button"
-              onClick={() => remove(index)}
-              className="bg-red-500 text-white px-3 py-2 rounded"
-            >
-              Eliminar
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => append({ product_id: '', quantity: 1, unit_price: 0, unit: 'unit' })}
-          className="bg-blue-500 text-white px-3 py-2 rounded"
-        >
-          Agregar Item
-        </button>
-      </div>
-
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            {...register('invoice_required')}
-          />
-          Factura Requerida
-        </label>
-      </div>
-
-      <div>
-        <label>Notas</label>
-        <textarea
-          {...register('notes')}
-          className="border rounded px-3 py-2 w-full"
-          rows={3}
-        />
-      </div>
-
-      {error && <div className="text-red-500">{error}</div>}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-green-500 text-white px-6 py-3 rounded"
-      >
-        {loading ? 'Procesando...' : 'Crear Venta'}
-      </button>
-    </form>
-  );
-};
-```
-
-### 🔍 Hook para Consultar Ventas
-
-```typescript
-import { useState, useEffect } from 'react';
-
-interface UseSaleQueryReturn {
-  sale: SaleOrderEnriched | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => void;
-}
-
-export const useSaleQuery = (saleId: number | null): UseSaleQueryReturn => {
-  const [sale, setSale] = useState<SaleOrderEnriched | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchSale = async () => {
-    if (!saleId) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch(`/api/sales/orders/${saleId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setSale(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSale();
-  }, [saleId]);
-
-  return { sale, loading, error, refetch: fetchSale };
-};
-```
+**Uso típico:**
+- Reportes diarios/mensuales de ventas
+- Dashboard de resumen de ventas
+- Exportación de datos para contabilidad
+- Consulta histórica de transacciones
 
 ---
 
-## 📊 Flujo de Trabajo Recomendado
+## 🔍 Validaciones del Sistema
 
-### 1. **Flujo de Venta Estándar**
-1. Validar cliente activo
-2. Verificar stock disponible  
-3. Crear orden de venta
-4. Procesar pago(s)
-5. Generar factura
-6. Actualizar inventario
-7. Enviar confirmación
+### Validaciones en Frontend (Recomendadas)
 
-### 2. **Flujo de Cancelación**
-1. Verificar permisos de cancelación
-2. Validar estado de la venta
-3. Calcular monto de reembolso
-4. Revertir stock
-5. Procesar reembolso
-6. Cancelar factura
-7. Registrar auditoría
-
-### 3. **Flujo de Reportes**
-1. Definir período de análisis
-2. Consultar ventas por rango
-3. Agregar métricas
-4. Generar visualizaciones
-5. Exportar resultados
+**Para `POST /sales/orders`:**
+1.  ✅ Si se usa `discount_amount` o `discount_percent`, asegurar que `discount_reason` no esté vacío.
+2.  ✅ Si se usa `sale_price`, asegurar que `price_change_reason` no esté vacío.
+3.  ✅ No permitir `discount_amount` y `discount_percent` en el mismo item.
+4.  ✅ Validar que `discount_percent` esté entre 0 y 100.
 
 ---
 
-## 🎯 Casos de Uso Comunes
+## 🎯 Recomendaciones de Implementación
 
-### 1. **Venta Simple en Efectivo**
-- Un cliente, un producto
-- Pago completo inmediato
-- Factura requerida
+### Flujo de Creación de Venta
 
-### 2. **Venta con Múltiples Items**
-- Varios productos diferentes
-- Descuentos por línea
-- Múltiples métodos de pago
-
-### 3. **Venta a Crédito**
-- Cliente con línea de crédito
-- Pago diferido
-- Seguimiento de saldo pendiente
-
-### 4. **Cancelación de Venta**
-- Solicitud de reembolso
-- Reversión de stock
-- Cancelación de factura
+1.  **Crear la Venta:** El usuario arma el carrito. Al confirmar, enviar la solicitud a `POST /sales/orders`.
+2.  **Guardar el ID:** Al recibir una respuesta exitosa, guardar el `sale_id` retornado.
+3.  **Continuar al Pago:** Usar el `sale_id` para navegar a la sección de pagos de la aplicación, donde se utilizará la **[Guía de API de Pagos y Cobranzas](./SALE_PAYMENT.md)**.
 
 ---
 
-## 🔄 Estado Actual del Sistema
+## 🔗 Recursos Adicionales
 
-### ✅ Funcionalidades Implementadas (v2.0)
+Para una especificación técnica completa y machine-readable de esta API, consulta el siguiente archivo OpenAPI 3.0:
 
-- ✅ **Sistema de Validación de Precios:** Completo con justificaciones obligatorias
-- ✅ **Auditoría de Cambios:** Registro automático de modificaciones de precio
-- ✅ **Validación de Stock:** Control en tiempo real con reservas
-- ✅ **Gestión de Reservas:** Integración completa con inventario
-- ✅ **Múltiples Métodos de Pago:** Efectivo, tarjeta, transferencia, crédito
-- ✅ **Manejo de Errores:** Códigos específicos y mensajes descriptivos
-- ✅ **Soporte TypeScript:** Interfaces completas para desarrollo frontend
-
-### 🔄 Mejoras Recientes
-
-- **Octubre 2024:** Sistema de validación de precios con justificaciones
-- **Septiembre 2024:** Mejoras en manejo de errores y códigos específicos
-- **Agosto 2024:** Integración completa con sistema de reservas
-
-### 🎯 Recomendaciones para Frontend
-
-1. **Validación de Precios:** Implementar confirmación visual para cambios de precio
-2. **Justificaciones:** Campo de texto requerido cuando se modifiquen precios
-3. **Audit Trail:** Mostrar historial de cambios en interfaz administrativa
-4. **Error Handling:** Implementar notificaciones específicas para cada tipo de error
-5. **Real-time Updates:** Considerar WebSockets para actualizaciones de stock
+- **OpenAPI Spec:** [`sales.json`](../api/sales.json)
 
 ---
 
-**Última actualización**: 17 de Octubre de 2024  
-**Versión del sistema**: Sales API v2.0  
-**Compatibilidad**: Backend Go v2.1+, PostgreSQL 12+
+## 📝 Historial de Cambios
 
-**Características principales:**
-- ✅ Sistema completo de ventas con trazabilidad y validación de precios
-- ✅ Integración con control de stock y facturación  
-- ✅ Soporte para múltiples métodos de pago
-- ✅ Cancelaciones seguras con reversión automática
-- ✅ Reportes detallados y métricas de rendimiento
-- ✅ API RESTful con autenticación JWT
-- ✅ **NUEVO:** Sistema de validación de precios con justificaciones obligatorias
-- ✅ **NUEVO:** Auditoría completa de cambios de precio con metadatos
-- ✅ **NUEVO:** Manejo específico de errores de validación de precios
+### v1.7 - 11 de Diciembre de 2025
+- ✅ Separada la documentación de pagos a un archivo dedicado: `SALE_PAYMENT.md`.
+- ✅ Actualizada la `Descripción General`, `Características Principales`, `Casos de Uso`, `Validaciones` y `Recomendaciones de Implementación` para reflejar la separación.
+- ✅ Renumerados los endpoints existentes.
+
+### v1.6 - 10 de Diciembre de 2025
+- ✅ Agregada documentación del endpoint `GET /sales/{id}/payments` para obtener el historial de pagos de una venta.
+- ✅ Re-numerados los apartados de la sección "Consulta de Ventas".
+
+### v1.5 - 09 de Diciembre de 2025
+- ✅ Agregada documentación del endpoint `GET /sale/client_name/{name}` para obtener ventas por nombre de cliente.
+- ✅ Re-numerados los apartados para mantener el orden lógico.
+- ✅ Actualizada la versión del documento de 1.4 a 1.5.
+
+### v1.4 - 09 de Diciembre de 2025
+- ✅ Agregada documentación para la anulación de ventas (`GET /sale/{id}/preview-cancellation` y `PUT /sale/{id}`).
+- ✅ Creada nueva sección "🚫 Anulación de Ventas".
+- ✅ Re-numerados los apartados para mantener el orden lógico.
+- ✅ Actualizada la versión del documento de 1.3 a 1.4.
+
+### v1.3 - 09 de Diciembre de 2025
+- ✅ Agregada documentación del endpoint `POST /sale/{id}/products` para agregar productos a una venta existente.
+- ✅ Creada nueva sección "✍️ Modificación de Ventas".
+- ✅ Re-numerados los apartados para mantener el orden lógico.
+- ✅ Actualizada la versión del documento de 1.2 a 1.3.
+
+### v1.2 - 08 de Diciembre de 2025
+- ✅ Agregada documentación del endpoint `GET /sale/date_range` para consulta de ventas por rango de fechas.
+- ✅ Incluida nueva sección "📊 Consulta de Ventas" con documentación completa del endpoint.
+- ✅ Agregado Caso de Uso 5: "Consultar Ventas del Mes" con ejemplos prácticos.
+- ✅ Documentada estructura completa de response con objetos `data`, `sale`, `details` y `pagination`.
+- ✅ Especificadas validaciones recomendadas para parámetros de query (query parameters).
+- ✅ Aclarado el uso correcto de query parameters en lugar de request body para peticiones GET.
+
+### v1.1 - 08 de Diciembre de 2025
+- ✅ Alineado con la guía de documentación `FRONTEND_API_DOCUMENTATION_GUIDE.md`.
+- ✅ Agregada tabla de `Campos del Response` para el endpoint de creación de ventas.
+- ✅ Movidos los errores a secciones `Errores Posibles` por cada endpoint.
+- ✅ Añadida columna `Solución` en las tablas de errores.
+- ✅ Eliminada la sección global de errores.
+- ✅ Actualizada la versión del documento de 1.0 a 1.1.
+
+### v1.0 - 08 de Noviembre de 2025
+- ✅ Versión inicial de la guía unificada de ventas y pagos.

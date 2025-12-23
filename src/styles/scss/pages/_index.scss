@@ -1,0 +1,29 @@
+// =============================================================================
+// PAGES - INDEX
+// =============================================================================
+// This file imports all page-specific styles
+// Page styles are unique to specific pages and not reusable
+// =============================================================================
+
+@use 'login';
+@use 'dashboard';
+@use 'sales-new';
+@use 'products';
+@use 'clients';
+@use 'suppliers';
+@use 'settings';
+@use 'purchases';
+@use 'purchase-payments';
+@use 'product-adjustments';
+@use 'inventory-adjustments';
+@use 'inventory-adjustment-manual';
+@use 'inventory-management';
+@use 'sales-order-detail';
+@use 'sales-payment-history';
+@use 'reservations-and-schedules';
+@use 'schedules-new';
+@use 'booking-management';
+@use 'available-slots';
+@use 'sale-payment';
+@use 'new-cash-register';
+@use 'register-cash-movement';

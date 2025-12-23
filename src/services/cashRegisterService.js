@@ -52,16 +52,14 @@ export const cashRegisterService = {
     const startTime = Date.now();
     
     try {
-      console.log('🌐 CashRegister: Loading active cash register...');
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(API_ENDPOINTS.activeCashRegister);
       });
-      
+
       telemetry.record('cash_register.service.get_active', {
         duration: Date.now() - startTime
       });
-      
-      console.log('✅ CashRegister: Active cash register loaded');
+
       return result;
     } catch (error) {
       // 204 No Content o 404 significa no hay caja activa - no es un error real
@@ -91,7 +89,6 @@ export const cashRegisterService = {
     const startTime = Date.now();
 
     try {
-      console.log('🌐 CashRegister: Opening cash register...');
       const result = await _fetchWithRetry(async () => {
         return await apiClient.post(API_ENDPOINTS.openCashRegister, cashRegisterData);
       });
@@ -101,7 +98,6 @@ export const cashRegisterService = {
         initialBalance: cashRegisterData.initial_balance
       });
       
-      console.log('✅ CashRegister: Cash register opened successfully');
       return result;
     } catch (error) {
       telemetry.record('cash_register.service.error', {
@@ -123,8 +119,6 @@ export const cashRegisterService = {
     const startTime = Date.now();
     
     try {
-      console.log(`🌐 CashRegister: Closing cash register ${cashRegisterId}...`);
-      console.log('📤 Close payload:', JSON.stringify(closeData, null, 2));
       const result = await _fetchWithRetry(async () => {
         return await apiClient.put(API_ENDPOINTS.closeCashRegister(cashRegisterId), closeData);
       });
@@ -135,7 +129,6 @@ export const cashRegisterService = {
         variance: result.variance || 0
       });
       
-      console.log('✅ CashRegister: Cash register closed successfully');
       return result;
     } catch (error) {
       telemetry.record('cash_register.service.error', {
@@ -156,7 +149,6 @@ export const cashRegisterService = {
     const startTime = Date.now();
     
     try {
-      console.log('🌐 CashRegister: Loading cash registers...');
       const params = new URLSearchParams(filters);
       const url = params.toString() ? `${API_ENDPOINTS.cashRegisters}?${params}` : API_ENDPOINTS.cashRegisters;
       
@@ -169,7 +161,6 @@ export const cashRegisterService = {
         count: result?.length || 0
       });
       
-      console.log('✅ CashRegister: Cash registers loaded');
       return result;
     } catch (error) {
       telemetry.record('cash_register.service.error', {
@@ -193,7 +184,6 @@ export const cashRegisterService = {
     const startTime = Date.now();
     
     try {
-      console.log('🌐 CashRegister: Registering manual movement...');
       const result = await _fetchWithRetry(async () => {
         return await apiClient.post(API_ENDPOINTS.cashRegisterMovements(cashRegisterId), movementData);
       });
@@ -204,7 +194,6 @@ export const cashRegisterService = {
         amount: movementData.amount
       });
       
-      console.log('✅ CashRegister: Movement registered successfully');
       return result;
     } catch (error) {
       telemetry.record('cash_register.service.error', {
@@ -244,7 +233,6 @@ export const cashRegisterService = {
     const startTime = Date.now();
     
     try {
-      console.log(`🌐 CashRegister: Loading movements for cash register ${cashRegisterId}...`);
       const params = new URLSearchParams(filters);
       const url = params.toString() ? 
         `${API_ENDPOINTS.cashRegisterMovements(cashRegisterId)}?${params}` : 
@@ -260,7 +248,6 @@ export const cashRegisterService = {
         count: result?.length || 0
       });
       
-      console.log('✅ CashRegister: Movements loaded');
       return result;
     } catch (error) {
       telemetry.record('cash_register.service.error', {
@@ -281,7 +268,6 @@ export const cashRegisterService = {
     const startTime = Date.now();
     
     try {
-      console.log(`🌐 CashRegister: Loading summary for cash register ${cashRegisterId}...`);
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(API_ENDPOINTS.cashRegisterSummary(cashRegisterId));
       });
@@ -291,7 +277,6 @@ export const cashRegisterService = {
         cashRegisterId
       });
       
-      console.log('✅ CashRegister: Summary loaded');
       return result;
     } catch (error) {
       telemetry.record('cash_register.service.error', {
@@ -314,7 +299,6 @@ export const cashRegisterService = {
     const startTime = Date.now();
     
     try {
-      console.log('🌐 CashRegister: Processing sale payment with cash register...');
       const result = await _fetchWithRetry(async () => {
         return await apiClient.post(API_ENDPOINTS.paymentsSale, paymentData);
       });
@@ -326,7 +310,6 @@ export const cashRegisterService = {
         netCashImpact: result.cash_register_integration?.net_cash_impact || 0
       });
       
-      console.log('✅ CashRegister: Sale payment processed with cash integration');
       return result;
     } catch (error) {
       telemetry.record('cash_register.service.error', {
@@ -347,7 +330,6 @@ export const cashRegisterService = {
     const startTime = Date.now();
     
     try {
-      console.log('🌐 CashRegister: Processing purchase payment with cash register...');
       const result = await _fetchWithRetry(async () => {
         return await apiClient.post(API_ENDPOINTS.paymentsPurchase, paymentData);
       });
@@ -358,7 +340,6 @@ export const cashRegisterService = {
         cashImpact: result.cash_register_integration?.cash_impact || 0
       });
       
-      console.log('✅ CashRegister: Purchase payment processed with cash integration');
       return result;
     } catch (error) {
       telemetry.record('cash_register.service.error', {
@@ -378,7 +359,6 @@ export const cashRegisterService = {
     const startTime = Date.now();
     
     try {
-      console.log('🌐 CashRegister: Verifying integration...');
       const result = await _fetchWithRetry(async () => {
         return await apiClient.get(API_ENDPOINTS.verifyIntegration);
       });
@@ -387,7 +367,6 @@ export const cashRegisterService = {
         duration: Date.now() - startTime
       });
       
-      console.log('✅ CashRegister: Integration verified');
       return result;
     } catch (error) {
       telemetry.record('cash_register.service.error', {

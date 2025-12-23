@@ -1,310 +1,343 @@
-# 💳 Guía de Integración API - Sistema de Pagos de Compras
+# 💳 API de Pagos de Compras
 
-## 📋 Resumen General
+**Versión:** 2.0  
+**Fecha:** 17 de Noviembre de 2025  
+**Endpoint Base:** `http://localhost:5050`
 
-Esta documentación detalla exclusivamente el **sistema de pagos de compras** integrado con órdenes de compra existentes. Incluye procesamiento de pagos parciales/completos, estadísticas financieras y validación de integridad de pagos.
+---
 
-### 🆕 Características del Sistema de Pagos
-- ✅ **Pagos parciales y completos**: Soporte para múltiples pagos por orden
-- ✅ **Validación automática**: Verificación de montos y saldos pendientes
-- ✅ **Trazabilidad completa**: Registro detallado de todas las transacciones
-- ✅ **Estadísticas financieras**: Análisis consolidado de pagos por período
-- ✅ **Integración con órdenes existentes**: Compatible con cualquier orden de compra
+## 📋 Descripción General
 
-> � **Ver también**: [PURCHASE_ORDERS_API_GUIDE.md](./PURCHASE_ORDERS_API_GUIDE.md) para crear y gestionar órdenes de compra.
+Esta documentación detalla el **sistema de pagos de compras**, diseñado para integrarse con órdenes de compra existentes. Permite procesar pagos parciales o completos, obtener estadísticas financieras y garantizar la integridad de los datos de pago.
 
-## 🔐 Autenticación
+### Características Principales
 
-**Todos los endpoints requieren autenticación JWT.**
+- ✅ **Pagos Parciales y Completos**: Soporte para registrar múltiples pagos por cada orden de compra.
+- ✅ **Validación Automática**: El sistema verifica que los montos de pago no excedan el saldo pendiente.
+- ✅ **Trazabilidad Completa**: Cada pago genera un registro detallado para auditoría.
+- ✅ **Estadísticas Financieras**: Endpoints para analizar los pagos realizados en un período determinado.
+- ✅ **Integración con Órdenes Existentes**: Compatible con el sistema de órdenes de compra.
+
+> 💡 **Ver también**: Para crear y gestionar órdenes de compra, consulta la guía de la API de Órdenes de Compra.
+
+---
+
+## 📝 Historial de Cambios
+
+### v2.1 - 19 de Noviembre de 2025
+- ✅ El campo `cash_register_id` en `POST /purchase/payment/process` ahora es opcional. Esto permite registrar pagos de compras sin asociarlos directamente a una caja registradora.
+
+### v2.0 - 17 de Noviembre de 2025
+- ⚠️ **Breaking**: Documentación reestructurada para seguir el estándar de `FRONTEND_API_DOCUMENTATION_GUIDE.md`.
+- ✅ Agregadas tablas de parámetros, errores y validaciones para cada endpoint.
+- ✅ Reemplazados los modelos de datos de TypeScript con tablas descriptivas.
+- ✅ Mejorados los ejemplos con datos más realistas.
+- ✅ Estandarizado el uso de emojis y formato.
+
+### v1.0 - 23 de Agosto de 2025
+- ✅ Versión inicial del sistema de pagos de compras.
+
+---
+
+## 🔧 Configuración General
+
+### Base URL
 ```
-Authorization: Bearer <token>
+http://localhost:5050
 ```
 
-## 🛠 Endpoints Disponibles
+### Headers Requeridos
+```http
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+```
 
-### 1. Procesar Pago de Compra
-
-**POST** `/purchase/payment/process`
-
-Procesa un pago total o parcial para una orden de compra existente.
-
-#### Request Body
+### Formato de Respuesta Estándar
+La mayoría de los endpoints `POST` retornan una estructura similar a esta:
 ```json
 {
-  "purchase_order_id": 12,
-  "amount_paid": 150000.00,
-  "payment_reference": "PAY-2025-09-001",
-  "payment_notes": "First partial payment - 50% advance",
-  "cash_register_id": 1
+  "success": true,
+  "data": {
+    "payment_id": 15,
+    "message": "Payment processed successfully"
+  },
+  "error": null
 }
 ```
 
-#### Response (Success)
+---
+
+## 💸 Endpoints de Pagos
+
+### 1. Procesar Pago de Compra
+
+**Endpoint:** `POST /purchase/payment/process`
+
+Procesa un pago (parcial o completo) para una orden de compra existente. Si se proporciona un `cash_register_id`, el pago se descuenta del saldo de esa caja. De lo contrario, el pago se registra sin afectar ninguna caja.
+
+**Request Body:**
+```json
+{
+  "purchase_order_id": 42,
+  "amount_paid": 150000,
+  "payment_reference": "TRANS-2025-11-001",
+  "payment_notes": "Adelanto del 50% para la orden de compra #42",
+  "cash_register_id": 3
+}
+```
+
+**Parámetros:**
+
+| Campo | Tipo | Requerido | Descripción |
+|---------------------|--------|-----------|--------------------------------------------------------------------------------|
+| `purchase_order_id` | number | ✅ Sí | ID de la orden de compra a la que se aplica el pago. |
+| `amount_paid` | number | ✅ Sí | Monto a pagar. Debe ser un entero mayor a 0. |
+| `payment_reference` | string | ❌ No | Código o referencia externa del pago (ej. número de transferencia). |
+| `payment_notes` | string | ❌ No | Notas adicionales sobre el pago. |
+| `cash_register_id` | number | ❌ No | ID de la caja registradora para descontar el pago. Si se omite, el pago se registra sin afectar el saldo de ninguna caja. |
+
+**Response (200 OK):**
 ```json
 {
   "success": true,
   "payment_id": 15,
-  "purchase_order_id": 12,
+  "purchase_order_id": 42,
   "payment_details": {
-    "amount_paid": 150000.00,
-    "outstanding_amount": 75000.00,
-    "total_paid_so_far": 150000.00,
-    "total_order_amount": 225000.00,
+    "amount_paid": 150000,
+    "outstanding_amount": 75000,
+    "total_paid_so_far": 150000,
+    "total_order_amount": 225000,
     "payment_status": "partial",
     "order_fully_paid": false
   },
   "message": "Payment processed successfully",
-  "processed_at": "2025-09-10T18:15:30Z",
-  "processed_by": "admin123user"
+  "processed_at": "2025-11-17T10:00:00Z",
+  "processed_by": "usuario_admin"
 }
 ```
 
-#### Response (Error)
-```json
-{
-  "success": false,
-  "purchase_order_id": 42,
-  "message": "Payment processing failed",
-  "error_code": "INVALID_AMOUNT",
-  "details": "Payment amount exceeds outstanding balance"
-}
-```
+**Errores Posibles:**
 
-### 2. Estadísticas de Pagos de Compras
+| Error | HTTP Status | Descripción |
+|-----------------------------|-------------|--------------------------------------------------------------------|
+| `Purchase order not found` | 404 | La orden de compra con el `purchase_order_id` no existe. |
+| `Cash register not found` | 404 | La caja registradora con el `cash_register_id` no existe o no está abierta. |
+| `Invalid amount` | 400 | El `amount_paid` es menor o igual a cero. |
+| `Payment amount exceeds outstanding balance` | 400 | El `amount_paid` es mayor que el saldo pendiente de la orden. |
+| `Insufficient funds in cash register` | 400 | La caja registradora no tiene fondos suficientes para cubrir el pago. |
 
-**GET** `/purchase/payment/statistics`
+**Validaciones Recomendadas en Frontend:**
 
-Obtiene estadísticas consolidadas de pagos de compras para análisis financiero.
+1. ✅ Validar que `amount_paid` sea un número positivo antes de enviar.
+2. ✅ Asegurarse de que el `cash_register_id` seleccionado corresponda a una caja abierta.
+3. ⚠️ Antes de enviar, se puede consultar el saldo de la orden para advertir al usuario si el monto a pagar es mayor al pendiente.
 
-#### Query Parameters (Opcionales)
-- `start_date`: Fecha de inicio (YYYY-MM-DD)
-- `end_date`: Fecha de fin (YYYY-MM-DD)
-- `supplier_id`: ID del proveedor específico
+---
 
-#### Example Request
+### 2. Obtener Estadísticas de Pagos
 
+**Endpoint:** `GET /purchase/payment/statistics`
+
+Obtiene un resumen consolidado de los pagos de compras, ideal para análisis financiero y reportes.
+
+**Query Parameters:**
+
+| Parámetro | Tipo | Requerido | Descripción |
+|-------------|--------|-----------|--------------------------------------------------------------------------------|
+| `start_date` | string | ❌ No | Fecha de inicio del período de análisis (formato `YYYY-MM-DD`). |
+| `end_date` | string | ❌ No | Fecha de fin del período de análisis (formato `YYYY-MM-DD`). |
+| `supplier_id`| number | ❌ No | Filtrar estadísticas para un proveedor específico. |
+
+**Ejemplo de Request:**
 ```bash
-GET /purchase/payment/statistics?start_date=2025-08-01&end_date=2025-08-31&supplier_id=1
+GET http://localhost:5050/purchase/payment/statistics?start_date=2025-10-01&end_date=2025-10-31
 ```
 
-#### Response (Success)
+**Response (200 OK):**
 ```json
 {
   "period": {
-    "start_date": "2025-08-01",
-    "end_date": "2025-08-31",
-    "supplier_id": 1
+    "start_date": "2025-10-01",
+    "end_date": "2025-10-31",
+    "supplier_id": null
   },
   "order_statistics": {
-    "total_orders": 25,
+    "total_orders_in_period": 25,
     "fully_paid_orders": 18,
     "partially_paid_orders": 5,
     "unpaid_orders": 2,
     "payment_completion_rate": 0.72
   },
   "financial_summary": {
-    "total_order_amount": 12500.75,
-    "total_paid_amount": 9200.50,
-    "total_outstanding": 3300.25,
+    "total_order_amount": 12500750,
+    "total_paid_amount": 9200500,
+    "total_outstanding": 3300250,
     "payment_percentage": 73.6
   },
-  "generated_at": "2025-08-23T20:30:00Z"
+  "generated_at": "2025-11-17T11:00:00Z"
 }
 ```
+
+**Errores Posibles:**
+
+| Error | HTTP Status | Descripción |
+|-------------------|-------------|--------------------------------------------------------------------|
+| `Invalid date format` | 400 | Las fechas no cumplen con el formato `YYYY-MM-DD`. |
+| `Supplier not found` | 404 | El `supplier_id` proporcionado no existe. |
 
 ---
 
-## 🆕 Pagos Parciales en Ventas
+## 📊 Estructuras de Datos Clave
 
-### Resumen
-El sistema permite procesar pagos parciales sobre órdenes de venta, manteniendo el estado actualizado del pago, historial de transacciones y reducción automática de stock.
+### Objeto `payment_details`
 
-### Endpoint
-**POST** `/payment/process-partial`
+Este objeto se retorna en la respuesta de un pago exitoso y detalla el estado de la orden de compra después del pago.
 
-#### Request Body
-```json
-{
-  "sales_order_id": "SALE-001",
-  "amount_paid": 50000.00,
-  "payment_method_id": 1,
-  "payment_reference": "REF-001",
-  "notes": "Pago parcial del cliente"
-}
-```
+| Campo | Tipo | Descripción |
+|----------------------|------------------|--------------------------------------------------------------------|
+| `amount_paid` | number | Monto que se pagó en esta transacción específica. |
+| `outstanding_amount` | number | Saldo que queda por pagar en la orden después de este pago. |
+| `total_paid_so_far` | number | Suma de todos los pagos realizados para esta orden hasta la fecha. |
+| `total_order_amount` | number | Costo total original de la orden de compra. |
+| `payment_status` | string | Estado del pago de la orden: `partial` \| `complete`. |
+| `order_fully_paid` | boolean | `true` si la orden ha sido pagada en su totalidad. |
 
-#### Response (Success)
-```json
-{
-  "success": true,
-  "sales_order_id": "SALE-001",
-  "payment_summary": {
-    "total_amount": 100000.00,
-    "total_paid": 50000.00,
-    "remaining_balance": 50000.00,
-    "payment_status": "partial"
-  },
-  "new_payment": {
-    "payment_id": 123,
-    "amount_paid": 50000.00,
-    "payment_method_id": 1,
-    "created_at": "2024-01-01T10:00:00Z"
-  },
-  "message": "Pago parcial procesado exitosamente",
-  "processed_at": "2024-01-01T10:00:00Z"
-}
-```
+---
 
-#### Response (Error)
+## ❌ Manejo de Errores
+
+### Estructura de Respuesta de Error
 ```json
 {
   "success": false,
-  "message": "Error message description"
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Mensaje de error legible para humanos."
+  },
+  "data": null
 }
 ```
-
-### Estados de Pago
-- `pending`: Pago pendiente (no se ha pagado nada)
-- `partial`: Pago parcial (se ha pagado algo pero no el total)
-- `completed`: Pago completado (se ha pagado el total)
-- `overpaid`: Sobrepago (se ha pagado más del total)
-
-### Flujo de Trabajo
-1. **Creación de Venta**: Se crea una venta y automáticamente se reduce el stock.
-2. **Pago Parcial**: El cliente puede realizar pagos parciales.
-3. **Seguimiento**: El sistema mantiene el estado actualizado del pago.
-4. **Historial**: Se mantiene un registro de todos los pagos realizados.
-
-### Validaciones Implementadas
-- Sales Order ID es requerido
-- Amount Paid debe ser mayor a 0
-- JWT Token válido es requerido
-- El usuario debe estar autenticado
-
-### Seguridad y Rendimiento
-- Autenticación JWT requerida
-- Validación de entrada de datos
-- Transacciones de base de datos para consistencia
-- Logging de operaciones
-- Índices en tablas principales
-- Manejo eficiente de JSON responses
-
-### Testing
-Para probar el endpoint:
-```bash
-curl -X POST http://localhost:8080/payment/process-partial \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "sales_order_id": "SALE-001",
-    "amount_paid": 50000.00,
-    "payment_method_id": 1,
-    "payment_reference": "TEST-001",
-    "notes": "Pago de prueba"
-  }'
-```
-
----
-
-## 📊 Modelos de Datos Principales
-
-### PaymentDetail
-
-```typescript
-interface PaymentDetail {
-  amount_paid: number;           // Monto pagado en esta transacción
-  outstanding_amount: number;    // Monto pendiente después del pago
-  total_paid_so_far: number;    // Total pagado hasta ahora
-  total_order_amount: number;   // Monto total de la orden
-  payment_status: 'partial' | 'complete' | 'overpaid';
-  order_fully_paid: boolean;    // Si la orden está completamente pagada
-}
-```
-
-### PurchasePaymentSummary
-
-```typescript
-interface PurchasePaymentSummary {
-  total_paid: number;
-  outstanding_amount: number;
-  payment_count: number;
-  last_payment_date?: string;
-  payment_status: 'unpaid' | 'partial' | 'complete' | 'overpaid';
-  is_fully_paid: boolean;
-}
-```
-
-## ⚠️ Manejo de Errores
 
 ### Códigos de Error Comunes
 
-| Código | Descripción |
-|--------|-------------|
-| `VALIDATION_FAILED` | Datos de entrada inválidos |
-| `SUPPLIER_NOT_FOUND` | Proveedor no existe |
-| `PRODUCT_NOT_FOUND` | Producto no existe |
-| `PAYMENT_METHOD_NOT_FOUND` | Método de pago no válido |
-| `CURRENCY_NOT_FOUND` | Divisa no válida |
-| `INSUFFICIENT_PERMISSIONS` | Usuario sin permisos |
-| `INVALID_AMOUNT` | Monto de pago inválido |
-| `PURCHASE_ORDER_NOT_FOUND` | Orden de compra no existe |
-| `ALREADY_CANCELLED` | Orden ya cancelada |
-| `PAYMENT_EXCEEDS_BALANCE` | Pago excede saldo pendiente |
-
-### Estructura de Error Estándar
-
-```json
-{
-  "success": false,
-  "message": "Human readable error message",
-  "error_code": "ERROR_CODE",
-  "details": "Additional technical details",
-  "timestamp": "2025-08-23T20:30:00Z"
-}
-```
-
-## 🔄 Flujo de Trabajo Recomendado
-
-### 1. Procesar Pagos (múltiples pagos permitidos)
-
-```bash
-POST /purchase/complete → {purchase_order_id} (función completa integrada)
-POST /purchase/payment/process (parcial)
-POST /purchase/payment/process (completar)
-```
-
-### 2. Monitoreo y Análisis
-
-```bash
-GET /purchase/payment/statistics (periódicamente)
-```
-
-## 📋 Notas para el Equipo Frontend
-
-1. **Validación de Campos**: Todos los endpoints incluyen validación del lado del servidor, pero se recomienda validación del lado cliente para mejor UX.
-
-2. **Montos Decimales**: Los campos `quantity` y todos los montos soportan decimales. Usar bibliotecas apropiadas para manejo de precisión decimal.
-
-3. **Estados de Pago**: El sistema maneja estados `partial`, `complete` y `overpaid` automáticamente.
-
-4. **Metadatos Flexibles**: El campo `metadata` acepta cualquier JSON válido para datos adicionales específicos del negocio.
-
-5. **Fechas**: Todas las fechas están en formato ISO 8601 (UTC).
-
-6. **IDs de Productos**: Los product_id son strings para máxima flexibilidad.
-
-7. **Consistencia con Sales**: La API sigue exactamente el mismo patrón que el sistema de ventas para facilitar el desarrollo.
-
-## 🔗 Endpoints Relacionados
-
-- **Proveedores**: `/supplier/*` para obtener información de proveedores
-- **Productos**: `/product/*` para validar productos
-- **Métodos de Pago**: `/payment-method/*` para opciones de pago
-- **Divisas**: `/currency/*` para información de divisas
-- **Usuarios**: `/user/*` para información de usuarios
+| Código de Error | HTTP Status | Causa | Solución / Prevención |
+|-----------------------------------------|-------------|------------------------------------------------|------------------------------------------------------------------------------------------------|
+| `PURCHASE_ORDER_NOT_FOUND` | 404 | El ID de la orden de compra no existe. | Verificar que el ID sea correcto o seleccionarlo de una lista de órdenes pendientes. |
+| `CASH_REGISTER_NOT_FOUND` | 404 | La caja registradora no existe o no está abierta. | Obtener la lista de cajas abiertas desde `GET /cash-registers/active` antes de realizar el pago. |
+| `PAYMENT_EXCEEDS_BALANCE` | 400 | El monto del pago es superior al saldo pendiente. | Validar en el frontend que el monto a pagar no supere el `outstanding_amount` de la orden. |
+| `INSUFFICIENT_FUNDS` | 400 | La caja no tiene saldo suficiente. | Consultar el saldo de la caja antes de procesar el pago. |
+| `INVALID_AMOUNT` | 400 | El monto es cero o negativo. | Validar en el frontend que el monto sea siempre un número positivo. |
+| `INSUFFICIENT_PERMISSIONS` | 403 | El usuario no tiene permisos para procesar pagos. | Asegurarse de que el usuario tenga el rol adecuado. |
 
 ---
 
-**Última actualización**: 23 de Agosto de 2025
-**Versión API**: 1.0
-**Patrón**: Siguiendo Sales Payment System
+## 🔄 Casos de Uso
+
+### Caso 1: Procesar un Pago Parcial
+
+**Escenario:** Un cliente desea realizar un pago inicial de Gs. 150.000 para una orden de compra de Gs. 225.000.
+
+**Request:**
+```json
+POST /purchase/payment/process
+{
+  "purchase_order_id": 42,
+  "amount_paid": 150000,
+  "payment_reference": "ADELANTO-OC-42",
+  "payment_notes": "Primer pago parcial de la orden #42",
+  "cash_register_id": 3
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "payment_id": 15,
+  "purchase_order_id": 42,
+  "payment_details": {
+    "amount_paid": 150000,
+    "outstanding_amount": 75000,
+    "total_paid_so_far": 150000,
+    "total_order_amount": 225000,
+    "payment_status": "partial",
+    "order_fully_paid": false
+  },
+  "message": "Payment processed successfully",
+  "processed_at": "2025-11-17T10:00:00Z",
+  "processed_by": "usuario_admin"
+}
+```
+
+**Resultado:**
+- ✅ Se registra el pago de Gs. 150.000.
+- ✅ El `outstanding_amount` de la orden se actualiza a Gs. 75.000.
+- ✅ El `payment_status` de la orden se mantiene como `partial`.
+- ✅ `order_fully_paid` es `false`.
+
+### Caso 2: Completar un Pago Parcial
+
+**Escenario:** El cliente regresa para pagar el saldo restante de Gs. 75.000 para la misma orden de compra #42.
+
+**Request:**
+```json
+POST /purchase/payment/process
+{
+  "purchase_order_id": 42,
+  "amount_paid": 75000,
+  "payment_reference": "SALDO-OC-42",
+  "payment_notes": "Pago final de la orden #42",
+  "cash_register_id": 3
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "payment_id": 16,
+  "purchase_order_id": 42,
+  "payment_details": {
+    "amount_paid": 75000,
+    "outstanding_amount": 0,
+    "total_paid_so_far": 225000,
+    "total_order_amount": 225000,
+    "payment_status": "complete",
+    "order_fully_paid": true
+  },
+  "message": "Payment processed successfully",
+  "processed_at": "2025-11-17T11:30:00Z",
+  "processed_by": "usuario_admin"
+}
+```
+
+**Resultado:**
+- ✅ Se registra el pago de Gs. 75.000.
+- ✅ El `outstanding_amount` de la orden se actualiza a Gs. 0.
+- ✅ El `payment_status` de la orden cambia a `complete`.
+- ✅ `order_fully_paid` es `true`.
+
+---
+
+## 🔄 Flujo de Trabajo Recomendado
+
+### 1. Procesar un Pago
+1.  **Seleccionar Orden**: El usuario elige una orden de compra con saldo pendiente.
+2.  **Obtener Datos de la Orden**: (Opcional) Hacer un `GET /purchase/order/{id}` para obtener el `outstanding_amount` y mostrarlo en la UI.
+3.  **Ingresar Monto**: El usuario ingresa el monto a pagar y selecciona una caja registradora.
+4.  **Enviar Pago**: Llamar a `POST /purchase/payment/process` con los datos.
+5.  **Actualizar UI**: Si el pago es exitoso, actualizar el estado de la orden en la UI con la información del objeto `payment_details`.
+
+### 2. Monitoreo y Análisis
+1.  **Seleccionar Rango**: El usuario define un rango de fechas o un proveedor para el análisis.
+2.  **Consultar Estadísticas**: Llamar a `GET /purchase/payment/statistics` con los parámetros de consulta.
+3.  **Mostrar Reporte**: Presentar los datos de `order_statistics` y `financial_summary` en un dashboard o reporte.
+
+---
+
+## 🎯 Recomendaciones de Implementación
+
+1.  **Validación en UI**: Aunque el backend valida todo, es crucial validar los montos y la selección de la caja en el frontend para una mejor experiencia de usuario y para prevenir errores innecesarios.
+2.  **Manejo de Decimales**: Todos los montos son manejados como enteros en el backend (guaraníes). Asegúrate de que el frontend no envíe valores decimales para los montos.
+3.  **Consistencia con Ventas**: Esta API sigue un patrón muy similar al sistema de pagos de ventas. Reutiliza componentes y lógica siempre que sea posible para acelerar el desarrollo.
+4.  **Feedback al Usuario**: Después de cada operación, muestra un mensaje claro (éxito o error) al usuario. Utiliza el campo `message` de la respuesta.

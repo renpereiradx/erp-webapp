@@ -1,0 +1,144 @@
+// =============================================================================
+// PRICE ADJUSTMENT LAYOUT - FLUENT DESIGN SYSTEM
+// =============================================================================
+// Layout con sistema de tabs para la sección de ajustes de precios
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// 1. CONTAINER
+// -----------------------------------------------------------------------------
+
+.price-adjustment-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  padding: $spacing-24 $spacing-16;
+  max-width: 1440px;
+  margin: 0 auto;
+
+  @media (min-width: 640px) {
+    padding: $spacing-24;
+  }
+
+  @media (min-width: 768px) {
+    padding: $spacing-32 $spacing-24;
+  }
+
+  @media (min-width: 1024px) {
+    padding: $spacing-32;
+  }
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 2. TABS NAVIGATION
+// -----------------------------------------------------------------------------
+
+.price-adjustment-layout__tabs {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  margin-bottom: $spacing-16;
+
+  @include mobile {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.price-adjustment-layout__tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-12 $spacing-20;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify($themes) {
+      color: themed('text-primary');
+      background-color: themed('state-hover-bg');
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid;
+    outline-offset: 2px;
+
+    @include themify($themes) {
+      outline-color: themed('state-focus-border');
+    }
+  }
+
+  @include mobile {
+    padding: $spacing-8 $spacing-16;
+    font-size: 13px;
+  }
+}
+
+.price-adjustment-layout__tab--active {
+  position: relative;
+
+  @include themify($themes) {
+    color: themed('action-primary');
+  }
+
+  // Subrayado azul solo en la tab activa
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+
+    @include themify($themes) {
+      background-color: themed('action-primary');
+    }
+  }
+
+  &:hover {
+    @include themify($themes) {
+      color: themed('action-primary');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 3. DESCRIPTION
+// -----------------------------------------------------------------------------
+
+.price-adjustment-layout__description {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 $spacing-24 0;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 4. CONTENT AREA
+// -----------------------------------------------------------------------------
+
+.price-adjustment-layout__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}

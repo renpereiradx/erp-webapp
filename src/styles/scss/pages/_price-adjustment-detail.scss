@@ -1,0 +1,691 @@
+// =============================================================================
+// PRICE ADJUSTMENT DETAIL PAGE - FLUENT DESIGN SYSTEM
+// =============================================================================
+// Página de Detalle y Ajuste de Precio de Producto
+// Siguiendo patrón MVP y Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// 1. PAGE CONTAINER
+// -----------------------------------------------------------------------------
+
+.price-adjustment-detail {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: $spacing-24;
+
+  @include mobile {
+    padding: $spacing-16;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 2. HEADER WITH BACK BUTTON
+// -----------------------------------------------------------------------------
+
+.price-adjustment-detail__header {
+  margin-bottom: $spacing-20;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-8;
+  padding: $spacing-8 $spacing-16;
+  margin-bottom: $spacing-16;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify($themes) {
+      background-color: themed('state-hover-bg');
+      color: themed('text-primary');
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid;
+    outline-offset: 2px;
+
+    @include themify($themes) {
+      outline-color: themed('state-focus-border');
+    }
+  }
+}
+
+.back-button__icon {
+  width: 20px;
+  height: 20px;
+}
+
+.back-button__text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.price-adjustment-detail__title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('text-primary');
+  }
+
+  @include mobile {
+    font-size: 22px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 3. CONTENT LAYOUT (TWO COLUMNS)
+// -----------------------------------------------------------------------------
+
+.price-adjustment-detail__content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: $spacing-20;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.price-adjustment-detail__left {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+}
+
+.price-adjustment-detail__right {
+  display: flex;
+  flex-direction: column;
+}
+
+// -----------------------------------------------------------------------------
+// 4. CURRENT PRICE CARD
+// -----------------------------------------------------------------------------
+
+.current-price-card {
+  padding: $spacing-16 $spacing-20;
+  border-radius: 8px;
+  border: 1px solid;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border-color: themed('border-default');
+  }
+
+  @include mobile {
+    padding: $spacing-12 $spacing-16;
+  }
+}
+
+.current-price-card__label {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 $spacing-8 0;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+}
+
+.current-price-card__value {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('action-primary');
+  }
+
+  @include mobile {
+    font-size: 32px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 5. ADJUSTMENT FORM CARD
+// -----------------------------------------------------------------------------
+
+.adjustment-form-card {
+  padding: $spacing-20;
+  border-radius: 8px;
+  border: 1px solid;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border-color: themed('border-default');
+  }
+
+  @include mobile {
+    padding: $spacing-16;
+  }
+}
+
+.adjustment-form-card__title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 $spacing-20 0;
+
+  @include themify($themes) {
+    color: themed('text-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 6. FORM ERROR MESSAGE
+// -----------------------------------------------------------------------------
+
+.form-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-16;
+  margin-bottom: $spacing-20;
+  border-radius: 8px;
+  border: 1px solid;
+
+  @include themify($themes) {
+    background-color: themed('error-bg');
+    border-color: themed('error');
+  }
+}
+
+.form-error__text {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('error-fg');
+  }
+}
+
+.form-error__close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+
+  @include themify($themes) {
+    color: themed('error-fg');
+  }
+
+  &:hover {
+    @include themify($themes) {
+      background-color: themed('error');
+      color: themed('text-inverted');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 7. FORM FIELDS
+// -----------------------------------------------------------------------------
+
+.adjustment-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+}
+
+.form-field__label {
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+
+  @include themify($themes) {
+    color: themed('text-primary');
+  }
+}
+
+.form-field__label-hint {
+  font-size: 11px;
+  font-weight: 400;
+
+  @include themify($themes) {
+    color: themed('text-tertiary');
+  }
+}
+
+.form-field__input,
+.form-field__select,
+.form-field__textarea {
+  width: 100%;
+  padding: $spacing-8 $spacing-12;
+  border-radius: 4px;
+  border: 1px solid;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  @include themify($themes) {
+    background-color: themed('bg-secondary');
+    color: themed('text-primary');
+    border-color: themed('border-default');
+  }
+
+  &::placeholder {
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &:hover {
+    @include themify($themes) {
+      border-color: themed('border-strong');
+    }
+  }
+
+  &:focus {
+    outline: none;
+
+    @include themify($themes) {
+      border-color: themed('action-primary');
+      box-shadow: 0 0 0 1px themed('action-primary');
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.form-field__input--error,
+.form-field__textarea--error {
+  @include themify($themes) {
+    border-color: themed('error');
+
+    &:focus {
+      border-color: themed('error');
+      box-shadow: 0 0 0 1px themed('error');
+    }
+  }
+}
+
+.form-field__textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-field__textarea--code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+}
+
+.form-field__error {
+  font-size: 12px;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('error-fg');
+  }
+}
+
+.form-field__char-count {
+  font-size: 11px;
+  margin: 0;
+  text-align: right;
+
+  @include themify($themes) {
+    color: themed('text-tertiary');
+  }
+}
+
+.form-field__readonly {
+  padding: $spacing-8 $spacing-12;
+  border-radius: 4px;
+  border: 1px solid;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+
+  @include themify($themes) {
+    background-color: themed('bg-tertiary');
+    border-color: themed('border-subtle');
+  }
+}
+
+.form-field__readonly-text {
+  font-size: 13px;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+}
+
+.form-field__select {
+  cursor: pointer;
+
+  option {
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      color: themed('text-primary');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 8. SUBMIT BUTTON
+// -----------------------------------------------------------------------------
+
+.submit-button {
+  width: 100%;
+  padding: $spacing-8 $spacing-20;
+  border-radius: 4px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+
+  @include themify($themes) {
+    background-color: themed('action-primary');
+    color: themed('text-inverted');
+  }
+
+  &:hover:not(:disabled) {
+    @include themify($themes) {
+      background-color: themed('action-primary-hover');
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify($themes) {
+      background-color: themed('action-primary-pressed');
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid;
+    outline-offset: 2px;
+
+    @include themify($themes) {
+      outline-color: themed('state-focus-border');
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 9. HISTORY CARD
+// -----------------------------------------------------------------------------
+
+.history-card {
+  padding: $spacing-20;
+  border-radius: 8px;
+  border: 1px solid;
+  height: 100%;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border-color: themed('border-default');
+  }
+
+  @include mobile {
+    padding: $spacing-16;
+  }
+}
+
+.history-card__title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 $spacing-20 0;
+
+  @include themify($themes) {
+    color: themed('text-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 10. HISTORY TABLE
+// -----------------------------------------------------------------------------
+
+.history-table-wrapper {
+  overflow-x: auto;
+}
+
+.history-table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+
+.history-table__head {
+  @include themify($themes) {
+    background-color: themed('bg-secondary');
+  }
+}
+
+.history-table__th {
+  padding: $spacing-16 $spacing-20;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+
+  @include mobile {
+    padding: $spacing-12 $spacing-16;
+    font-size: 11px;
+  }
+}
+
+.history-table__body {
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+  }
+}
+
+.history-table__row {
+  transition: background-color 0.2s ease;
+
+  @include themify($themes) {
+    border-bottom: 1px solid themed('border-subtle');
+  }
+
+  &:hover {
+    @include themify($themes) {
+      background-color: themed('state-hover-bg');
+    }
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.history-table__td {
+  padding: $spacing-16 $spacing-20;
+  font-size: 14px;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+
+  @include mobile {
+    padding: $spacing-12 $spacing-16;
+    font-size: 12px;
+  }
+}
+
+.history-table__empty {
+  padding: $spacing-64 $spacing-24;
+  text-align: center;
+}
+
+.history-empty-message {
+  font-size: 14px;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+}
+
+// Loading and error states
+.history-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-48;
+  gap: $spacing-16;
+
+  p {
+    font-size: 14px;
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+
+  @include themify($themes) {
+    border-color: themed('border-subtle');
+    border-top-color: themed('action-primary');
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.history-error {
+  padding: $spacing-24;
+  border-radius: 4px;
+  border: 1px solid;
+
+  @include themify($themes) {
+    background-color: themed('error-bg');
+    border-color: themed('error-border');
+  }
+}
+
+.history-error__text {
+  font-size: 14px;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('error-fg');
+  }
+}
+
+// Price change indicators
+.history-table__td--increase {
+  font-weight: 600;
+
+  @include themify($themes) {
+    color: #16a34a; // green-600
+  }
+}
+
+.history-table__td--decrease {
+  font-weight: 600;
+
+  @include themify($themes) {
+    color: #dc2626; // red-600
+  }
+}
+
+.change-percent {
+  font-size: 12px;
+  margin-left: $spacing-4;
+  opacity: 0.8;
+}
+
+.history-table__td--reason {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: help;
+}
+
+.history-table__td--actions {
+  text-align: center;
+
+  .btn {
+    padding: $spacing-4 $spacing-12;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 4px;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      border-color: themed('border-default');
+      color: themed('text-primary');
+    }
+
+    &:hover {
+      @include themify($themes) {
+        background-color: themed('action-primary');
+        border-color: themed('action-primary');
+        color: themed('text-inverted');
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid;
+      outline-offset: 2px;
+
+      @include themify($themes) {
+        outline-color: themed('state-focus-border');
+      }
+    }
+  }
+}

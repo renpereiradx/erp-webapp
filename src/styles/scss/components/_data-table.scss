@@ -1,0 +1,196 @@
+// =============================================================================
+// DATA TABLE COMPONENT
+// =============================================================================
+// A responsive, theme-aware table for displaying sets of data.
+// =============================================================================
+
+@use '../abstracts' as *;
+
+.data-table {
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
+  }
+  border-radius: $border-radius-large;
+  overflow: hidden;
+}
+
+.data-table__wrapper {
+  overflow-x: auto;
+  @include custom-scrollbar;
+}
+
+.data-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  thead {
+    @include themify {
+      background-color: themed('bg-secondary');
+      border-bottom: 1px solid themed('border-default');
+    }
+  }
+
+  th {
+    @include text-style($font-size-200, $font-weight-semibold);
+    @include themify {
+      color: themed('text-secondary');
+    }
+    padding: $spacing-12 $spacing-16;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  tbody {
+    @include themify {
+      border-color: themed('border-default');
+    }
+
+    tr {
+      @include transition(background-color);
+      @include themify {
+        border-bottom: 1px solid themed('border-subtle');
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        @include themify {
+          background-color: themed('surface-hover');
+        }
+      }
+    }
+  }
+
+  td {
+    @include text-style($font-size-300);
+    @include themify {
+      color: themed('text-primary');
+    }
+    padding: $spacing-12 $spacing-16;
+    vertical-align: middle;
+  }
+
+  .id-cell {
+    @include text-style($font-size-200, $font-weight-medium);
+    font-family: $font-family-monospace;
+    @include themify {
+      color: themed('action-primary') !important;
+    }
+  }
+}
+
+// =============================================================================
+// ACTION MENU (DROPDOWN)
+// =============================================================================
+// Menu desplegable de acciones para filas de tabla
+
+.action-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.action-menu__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  @include transition(all);
+
+  @include themify {
+    color: themed('text-secondary');
+    background-color: transparent;
+
+    &:hover {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+
+    &:active {
+      background-color: themed('surface-pressed');
+    }
+
+    &[aria-expanded='true'] {
+      background-color: themed('surface-selected');
+      color: themed('action-primary');
+    }
+  }
+}
+
+.action-menu__dropdown {
+  position: absolute;
+  right: 0;
+  z-index: 1000;
+  min-width: 160px;
+  padding: $spacing-4;
+  border-radius: $border-radius-medium;
+  box-shadow: $shadow-8;
+
+  // Por defecto se abre hacia abajo
+  top: calc(100% + 4px);
+
+  // Si está cerca del final de la tabla, se abre hacia arriba
+  .action-menu--bottom & {
+    bottom: calc(100% + 4px);
+    top: auto;
+  }
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-default');
+  }
+}
+
+.action-menu__item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  width: 100%;
+  padding: $spacing-8 $spacing-12;
+  border: none;
+  border-radius: $border-radius-small;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  @include text-style($font-size-300, $font-weight-regular);
+  @include transition(all);
+
+  @include themify {
+    color: themed('text-primary');
+
+    &:hover:not(:disabled) {
+      background-color: themed('surface-hover');
+    }
+
+    &:active:not(:disabled) {
+      background-color: themed('surface-pressed');
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &--danger {
+    @include themify {
+      color: themed('status-danger');
+
+      &:hover:not(:disabled) {
+        background-color: themed('surface-hover');
+      }
+    }
+  }
+}

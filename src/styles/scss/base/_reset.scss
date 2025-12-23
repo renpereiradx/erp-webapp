@@ -1,0 +1,265 @@
+// =============================================================================
+// BASE - RESET
+// =============================================================================
+// Modern CSS reset based on best practices
+// Ensures consistent baseline across browsers
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// 1. BOX SIZING
+// -----------------------------------------------------------------------------
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// -----------------------------------------------------------------------------
+// 2. ROOT STYLES
+// -----------------------------------------------------------------------------
+
+html {
+  font-size: 16px; // Base font size for rem calculations
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+
+  @media (prefers-reduced-motion: reduce) {
+    scroll-behavior: auto;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 3. BODY RESET
+// -----------------------------------------------------------------------------
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: $font-family-base;
+  font-size: $font-size-400;
+  line-height: $line-height-400;
+  font-weight: $font-weight-regular;
+
+  @include themify {
+    background-color: themed('bg-primary');
+    color: themed('text-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 4. HEADINGS
+// -----------------------------------------------------------------------------
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  padding: 0;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-200;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 5. TEXT ELEMENTS
+// -----------------------------------------------------------------------------
+
+p,
+span,
+label {
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+
+  @include themify {
+    color: themed('action-primary');
+  }
+
+  &:hover {
+    @include themify {
+      color: themed('action-primary-hover');
+    }
+  }
+}
+
+strong,
+b {
+  font-weight: $font-weight-bold;
+}
+
+em,
+i {
+  font-style: italic;
+}
+
+small {
+  font-size: $font-size-200;
+}
+
+// -----------------------------------------------------------------------------
+// 6. LISTS
+// -----------------------------------------------------------------------------
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// -----------------------------------------------------------------------------
+// 7. FORM ELEMENTS
+// -----------------------------------------------------------------------------
+
+button,
+input,
+select,
+textarea {
+  margin: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  user-select: none;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+input,
+select,
+textarea {
+  &::placeholder {
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 8. MEDIA ELEMENTS
+// -----------------------------------------------------------------------------
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+// -----------------------------------------------------------------------------
+// 9. TABLE
+// -----------------------------------------------------------------------------
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0;
+}
+
+// -----------------------------------------------------------------------------
+// 10. MISCELLANEOUS
+// -----------------------------------------------------------------------------
+
+hr {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  @include themify {
+    border-top: 1px solid themed('border-default');
+  }
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+// Remove default focus outline (will be replaced with custom styles)
+:focus {
+  outline: none;
+}
+
+// Add custom focus styles
+:focus-visible {
+  @include focus-visible;
+}
+
+// -----------------------------------------------------------------------------
+// 11. ACCESSIBILITY
+// -----------------------------------------------------------------------------
+
+// Screen reader only content
+.sr-only {
+  @include visually-hidden;
+}
+
+// Skip to main content link
+.skip-to-main {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  padding: $spacing-8 $spacing-16;
+  z-index: z-index(tooltip);
+
+  @include themify {
+    background-color: themed('action-primary');
+    color: themed('text-inverted');
+  }
+
+  &:focus {
+    top: 0;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 12. REDUCED MOTION
+// -----------------------------------------------------------------------------
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
