@@ -4,7 +4,11 @@ import { ArrowLeft, Search, Package, Send, RefreshCw } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import useInventoryStore from '@/store/useInventoryStore'
 import { productService } from '@/services/productService'
-import { REASON_OPTIONS, DEFAULT_REASONS } from '@/constants/inventoryDefaults'
+import {
+  REASON_OPTIONS,
+  DEFAULT_REASONS,
+  REASON_DETAIL_TEMPLATES,
+} from '@/constants/inventoryDefaults'
 
 const InventoryAdjustmentManualPage = () => {
   const { t } = useI18n()
@@ -16,7 +20,7 @@ const InventoryAdjustmentManualPage = () => {
     getManualAdjustmentHistory,
     loadingCreate,
     error: storeError,
-    clearError
+    clearError,
   } = useInventoryStore()
 
   // Estado local para productos (independiente de la página Products)
@@ -35,10 +39,8 @@ const InventoryAdjustmentManualPage = () => {
   const [formData, setFormData] = useState({
     quantityAdjustment: '',
     reasonCategory: 'PHYSICAL_COUNT',
-    details: '',
+    details: REASON_DETAIL_TEMPLATES['PHYSICAL_COUNT'],
     approvalLevel: 'operator',
-    operator: '',
-    location: ''
   })
   const [formErrors, setFormErrors] = useState({})
   const [successMessage, setSuccessMessage] = useState('')
@@ -53,11 +55,13 @@ const InventoryAdjustmentManualPage = () => {
 
       setLoadingProducts(true)
       try {
-        const results = await productService.searchProducts(productSearchTerm.trim())
+        const results = await productService.searchProducts(
+          productSearchTerm.trim()
+        )
         const productsArray = Array.isArray(results) ? results : [results]
         // Filtrar solo productos activos (un producto está activo si ninguno de estos campos es false)
-        const activeProducts = productsArray.filter(product =>
-          product.state !== false && product.is_active !== false
+        const activeProducts = productsArray.filter(
+          product => product.state !== false && product.is_active !== false
         )
         setLocalProducts(activeProducts)
       } catch (error) {
@@ -81,7 +85,7 @@ const InventoryAdjustmentManualPage = () => {
 
   // Atajo de teclado Ctrl+A para abrir modal de búsqueda
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = e => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
         e.preventDefault()
         setShowProductSearch(true)
@@ -92,60 +96,54 @@ const InventoryAdjustmentManualPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  const loadHistory = async (productId) => {
-    if (!productId) {
-      console.warn('loadHistory called without productId')
-      return
-    }
+  const loadHistory = async productId => {
+    if (!productId) return
 
     setLoadingHistory(true)
     try {
-      console.log('Loading history for product:', productId)
       const storeResponse = await getManualAdjustmentHistory(productId, 50, 0)
-      console.log('Store response:', storeResponse)
 
-      // El store devuelve { success: true, data: result }
-      // El servicio devuelve { count, history, limit, offset, product_id }
       if (storeResponse.success && storeResponse.data) {
         const apiData = storeResponse.data
-        console.log('API data:', apiData)
 
         if (apiData.history && Array.isArray(apiData.history)) {
-          console.log('Setting history from apiData.history:', apiData.history.length, 'items')
           setAdjustmentHistory(apiData.history)
         } else if (Array.isArray(apiData)) {
-          console.log('Setting history from array apiData:', apiData.length, 'items')
           setAdjustmentHistory(apiData)
         } else {
-          console.log('No valid history data in apiData, setting empty array')
           setAdjustmentHistory([])
         }
       } else {
-        console.log('Store response not successful or no data, setting empty array')
         setAdjustmentHistory([])
       }
-    } catch (error) {
-      console.error('Error loading history:', error)
+    } catch {
       setAdjustmentHistory([])
     } finally {
       setLoadingHistory(false)
     }
   }
 
-  const handleProductSelect = (product) => {
+  const handleProductSelect = product => {
     setSelectedProduct(product)
     setShowProductSearch(false)
     setProductSearchTerm('')
     setSuccessMessage('')
     setFormErrors({})
-    // Reset form but keep operator and location if already filled
-    setFormData(prev => ({
+    // Reset form con plantilla de texto para la categoría por defecto
+    setFormData({
       quantityAdjustment: '',
       reasonCategory: 'PHYSICAL_COUNT',
-      details: '',
+      details: REASON_DETAIL_TEMPLATES['PHYSICAL_COUNT'],
       approvalLevel: 'operator',
-      operator: prev.operator,
-      location: prev.location
+    })
+  }
+
+  // Handler para cambio de categoría de motivo - carga plantilla de texto automáticamente
+  const handleReasonCategoryChange = newCategory => {
+    setFormData(prev => ({
+      ...prev,
+      reasonCategory: newCategory,
+      details: REASON_DETAIL_TEMPLATES[newCategory] || '',
     }))
   }
 
@@ -160,14 +158,6 @@ const InventoryAdjustmentManualPage = () => {
       errors.quantityAdjustment = 'La cantidad no puede ser cero'
     }
 
-    if (!formData.operator || formData.operator.trim() === '') {
-      errors.operator = 'El operador es obligatorio'
-    }
-
-    if (!formData.location || formData.location.trim() === '') {
-      errors.location = 'La ubicación es obligatoria'
-    }
-
     if (!formData.details || formData.details.trim().length < 10) {
       errors.details = 'Los detalles deben tener al menos 10 caracteres'
     }
@@ -175,7 +165,7 @@ const InventoryAdjustmentManualPage = () => {
     return errors
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault()
 
     // Validar formulario
@@ -194,7 +184,9 @@ const InventoryAdjustmentManualPage = () => {
     const newQuantity = currentQuantity + adjustment
 
     if (newQuantity < 0) {
-      setFormErrors({ quantityAdjustment: 'La cantidad resultante no puede ser negativa' })
+      setFormErrors({
+        quantityAdjustment: 'La cantidad resultante no puede ser negativa',
+      })
       return
     }
 
@@ -205,8 +197,6 @@ const InventoryAdjustmentManualPage = () => {
       reason_category: formData.reasonCategory,
       approval_level: formData.approvalLevel,
       notes: formData.details,
-      operator: formData.operator,
-      location: formData.location
     }
 
     // Crear ajuste
@@ -214,7 +204,7 @@ const InventoryAdjustmentManualPage = () => {
       product_id: selectedProduct.product_id,
       new_quantity: newQuantity,
       reason: DEFAULT_REASONS.MANUAL_ADJUSTMENT[formData.reasonCategory],
-      metadata: metadata
+      metadata: metadata,
     }
 
     const result = await createManualAdjustment(adjustmentData)
@@ -223,19 +213,17 @@ const InventoryAdjustmentManualPage = () => {
       setSuccessMessage('Ajuste creado exitosamente')
       // Recargar historial
       await loadHistory(selectedProduct.product_id)
-      // Limpiar formulario pero mantener operador y ubicación
-      setFormData(prev => ({
+      // Limpiar formulario
+      setFormData({
         quantityAdjustment: '',
         reasonCategory: 'PHYSICAL_COUNT',
-        details: '',
+        details: REASON_DETAIL_TEMPLATES['PHYSICAL_COUNT'],
         approvalLevel: 'operator',
-        operator: prev.operator,
-        location: prev.location
-      }))
+      })
       // Actualizar stock del producto seleccionado
       setSelectedProduct(prev => ({
         ...prev,
-        stock_quantity: newQuantity
+        stock_quantity: newQuantity,
       }))
     } else {
       setFormErrors({ submit: result.error || 'Error al crear ajuste' })
@@ -246,10 +234,8 @@ const InventoryAdjustmentManualPage = () => {
     setFormData({
       quantityAdjustment: '',
       reasonCategory: 'PHYSICAL_COUNT',
-      details: '',
+      details: REASON_DETAIL_TEMPLATES['PHYSICAL_COUNT'],
       approvalLevel: 'operator',
-      operator: '',
-      location: ''
     })
     setFormErrors({})
     setSuccessMessage('')
@@ -259,14 +245,15 @@ const InventoryAdjustmentManualPage = () => {
   const filteredProducts = localProducts
 
   // Filtrar historial
-  const filteredHistory = adjustmentHistory.filter(item =>
-    !historyFilter ||
-    item.reason?.toLowerCase().includes(historyFilter.toLowerCase()) ||
-    item.user_id?.toLowerCase().includes(historyFilter.toLowerCase())
+  const filteredHistory = adjustmentHistory.filter(
+    item =>
+      !historyFilter ||
+      item.reason?.toLowerCase().includes(historyFilter.toLowerCase()) ||
+      item.user_id?.toLowerCase().includes(historyFilter.toLowerCase())
   )
 
   // Formatear fecha
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return 'N/A'
     const date = new Date(dateString)
     return new Intl.DateTimeFormat('es-ES', {
@@ -274,7 +261,7 @@ const InventoryAdjustmentManualPage = () => {
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     }).format(date)
   }
 
@@ -303,165 +290,142 @@ const InventoryAdjustmentManualPage = () => {
       <div className='inventory-adjustment-manual-page__content'>
         {/* Sección izquierda */}
         <div className='inventory-adjustment-manual-page__left'>
-          {/* Producto seleccionado */}
-          <div className='selected-product-card'>
-            <h2 className='selected-product-card__header'>Producto Seleccionado</h2>
+          {/* Producto seleccionado - Compacto */}
+          <div className='selected-product-card selected-product-card--compact'>
+            <span className='selected-product-card__label'>
+              Producto Seleccionado
+            </span>
             {selectedProduct ? (
               <div className='selected-product-card__content'>
-                <div className='selected-product-card__image'>
-                  {selectedProduct.image_url ? (
-                    <img src={selectedProduct.image_url} alt={selectedProduct.product_name} />
-                  ) : (
-                    <div className='selected-product-card__image-placeholder'>
-                      <Package size={24} strokeWidth={1.5} />
-                    </div>
-                  )}
-                </div>
                 <div className='selected-product-card__info'>
                   <p className='selected-product-card__sku'>
-                    {selectedProduct.product_id}
-                  </p>
-                  <h3 className='selected-product-card__name'>
+                    <strong>{selectedProduct.product_id}</strong> -{' '}
                     {selectedProduct.product_name}
-                  </h3>
-                  <p className='selected-product-card__stock'>
-                    Stock Actual: <strong>{selectedProduct.stock_quantity || 0}</strong> Unidades
                   </p>
+                  <p className='selected-product-card__stock'>
+                    Stock Actual:{' '}
+                    <strong>{selectedProduct.stock_quantity || 0}</strong>{' '}
+                    Unidades
+                  </p>
+                </div>
+                <div className='selected-product-card__image'>
+                  {selectedProduct.image_url ? (
+                    <img
+                      src={selectedProduct.image_url}
+                      alt={selectedProduct.product_name}
+                    />
+                  ) : (
+                    <div className='selected-product-card__image-placeholder'>
+                      <Package size={20} strokeWidth={1.5} />
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
               <p className='selected-product-card__empty'>
-                No hay producto seleccionado. Haz clic en "Buscar Producto" para seleccionar uno.
+                No hay producto seleccionado. Haz clic en "Buscar Producto" para
+                seleccionar uno.
               </p>
             )}
           </div>
 
-          {/* Formulario de ajuste */}
-          <div className='adjustment-form-card'>
+          {/* Formulario de ajuste - Layout compacto */}
+          <div className='adjustment-form-card adjustment-form-card--compact'>
             <h2 className='adjustment-form-card__header'>Nuevo Ajuste</h2>
-            <form onSubmit={handleSubmit} className='adjustment-form'>
-              {/* Cantidad a ajustar */}
-              <div className='form-field'>
-                <label className='form-field__label'>
-                  Cantidad a Ajustar
-                </label>
-                <input
-                  type='number'
-                  className={`form-field__input ${formErrors.quantityAdjustment ? 'form-field__input--error' : ''}`}
-                  placeholder='Ej: -10 o 25'
-                  value={formData.quantityAdjustment}
-                  onChange={(e) => setFormData(prev => ({ ...prev, quantityAdjustment: e.target.value }))}
-                  disabled={!selectedProduct}
-                  step='0.01'
-                />
-                {formErrors.quantityAdjustment && (
-                  <p className='form-field__error'>{formErrors.quantityAdjustment}</p>
-                )}
-              </div>
-
-              {/* Categoría del motivo */}
-              <div className='form-field'>
-                <label className='form-field__label'>
-                  Categoría del Motivo
-                </label>
-                <select
-                  className='form-field__select'
-                  value={formData.reasonCategory}
-                  onChange={(e) => setFormData(prev => ({ ...prev, reasonCategory: e.target.value }))}
-                  disabled={!selectedProduct}
-                >
-                  {REASON_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.icon} {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Operador */}
-              <div className='form-field'>
-                <label className='form-field__label'>
-                  Operador
-                </label>
-                <input
-                  type='text'
-                  className={`form-field__input ${formErrors.operator ? 'form-field__input--error' : ''}`}
-                  placeholder='Nombre del operador'
-                  value={formData.operator}
-                  onChange={(e) => setFormData(prev => ({ ...prev, operator: e.target.value }))}
-                  disabled={!selectedProduct}
-                />
-                {formErrors.operator && (
-                  <p className='form-field__error'>{formErrors.operator}</p>
-                )}
-              </div>
-
-              {/* Ubicación */}
-              <div className='form-field'>
-                <label className='form-field__label'>
-                  Ubicación
-                </label>
-                <input
-                  type='text'
-                  className={`form-field__input ${formErrors.location ? 'form-field__input--error' : ''}`}
-                  placeholder='Ubicación del conteo'
-                  value={formData.location}
-                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                  disabled={!selectedProduct}
-                />
-                {formErrors.location && (
-                  <p className='form-field__error'>{formErrors.location}</p>
-                )}
-              </div>
-
-              {/* Detalles / Justificación */}
-              <div className='form-field'>
-                <label className='form-field__label'>
-                  Detalles / Justificación
-                </label>
-                <textarea
-                  className={`form-field__textarea ${formErrors.details ? 'form-field__textarea--error' : ''}`}
-                  placeholder='Añadir un comentario detallado...'
-                  rows={3}
-                  value={formData.details}
-                  onChange={(e) => setFormData(prev => ({ ...prev, details: e.target.value }))}
-                  disabled={!selectedProduct}
-                />
-                {formErrors.details && (
-                  <p className='form-field__error'>{formErrors.details}</p>
-                )}
-              </div>
-
-              {/* Nivel de aprobación */}
-              <div className='form-field'>
-                <label className='form-field__label'>
-                  Nivel de Aprobación
-                </label>
-                <select
-                  className='form-field__select'
-                  value={formData.approvalLevel}
-                  onChange={(e) => setFormData(prev => ({ ...prev, approvalLevel: e.target.value }))}
-                  disabled={!selectedProduct}
-                >
-                  <option value='operator'>Nivel 1 - Operador</option>
-                  <option value='supervisor'>Nivel 2 - Supervisor</option>
-                  <option value='manager'>Nivel 3 - Manager</option>
-                  <option value='admin'>Nivel 4 - Admin</option>
-                </select>
-              </div>
-
-              {/* Información adicional */}
-              <div className='adjustment-form__metadata'>
-                <p><strong>Fuente:</strong> Manual</p>
-                <p><strong>Fecha/Hora:</strong> {new Date().toLocaleString('es-ES')}</p>
-                <p><strong>Operador:</strong> {formData.operator || 'No especificado'}</p>
-              </div>
-
-              {/* Mensajes */}
-              {successMessage && (
-                <div className='adjustment-form__success'>
-                  {successMessage}
+            <form
+              onSubmit={handleSubmit}
+              className='adjustment-form adjustment-form--compact'
+            >
+              {/* Fila 1: Cantidad a Ajustar + Categoría del Motivo */}
+              <div className='adjustment-form__row'>
+                <div className='form-field'>
+                  <label className='form-field__label'>
+                    Cantidad a Ajustar
+                  </label>
+                  <input
+                    type='number'
+                    className={`form-field__input ${
+                      formErrors.quantityAdjustment
+                        ? 'form-field__input--error'
+                        : ''
+                    }`}
+                    placeholder='Ej: -10 o 25'
+                    value={formData.quantityAdjustment}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        quantityAdjustment: e.target.value,
+                      }))
+                    }
+                    disabled={!selectedProduct}
+                    step='0.01'
+                  />
+                  {formErrors.quantityAdjustment && (
+                    <p className='form-field__error'>
+                      {formErrors.quantityAdjustment}
+                    </p>
+                  )}
                 </div>
+
+                <div className='form-field'>
+                  <label className='form-field__label'>
+                    Categoría del Motivo
+                  </label>
+                  <select
+                    className='form-field__select'
+                    value={formData.reasonCategory}
+                    onChange={e => handleReasonCategoryChange(e.target.value)}
+                    disabled={!selectedProduct}
+                  >
+                    {REASON_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.icon} {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Fila 2: Detalles/Justificación + Metadata */}
+              <div className='adjustment-form__row'>
+                <div className='form-field'>
+                  <label className='form-field__label'>
+                    Detalles / Justificación
+                  </label>
+                  <textarea
+                    className={`form-field__textarea ${
+                      formErrors.details ? 'form-field__textarea--error' : ''
+                    }`}
+                    placeholder='Añadir un comentario detallado...'
+                    rows={3}
+                    value={formData.details}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        details: e.target.value,
+                      }))
+                    }
+                    disabled={!selectedProduct}
+                  />
+                  {formErrors.details && (
+                    <p className='form-field__error'>{formErrors.details}</p>
+                  )}
+                </div>
+
+                <div className='adjustment-form__metadata'>
+                  <p>
+                    <strong>Fuente:</strong> Manual
+                  </p>
+                  <p>
+                    <strong>Fecha/Hora:</strong>{' '}
+                    {new Date().toLocaleString('es-ES')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Mensajes de error/éxito */}
+              {successMessage && (
+                <div className='adjustment-form__success'>{successMessage}</div>
               )}
               {(formErrors.submit || storeError) && (
                 <div className='adjustment-form__error'>
@@ -469,25 +433,50 @@ const InventoryAdjustmentManualPage = () => {
                 </div>
               )}
 
-              {/* Botones */}
-              <div className='adjustment-form__buttons'>
-                <button
-                  type='submit'
-                  className='btn btn--primary'
-                  disabled={!selectedProduct || loadingCreate}
-                >
-                  <Send size={18} strokeWidth={2} />
-                  <span>{loadingCreate ? 'Enviando...' : 'Enviar Ajuste'}</span>
-                </button>
-                <button
-                  type='button'
-                  className='btn btn--secondary'
-                  onClick={handleClear}
-                  disabled={!selectedProduct}
-                >
-                  <RefreshCw size={18} strokeWidth={2} />
-                  <span>Limpiar</span>
-                </button>
+              {/* Fila 3: Nivel de Aprobación + Botones */}
+              <div className='adjustment-form__row adjustment-form__row--actions'>
+                <div className='form-field'>
+                  <label className='form-field__label'>
+                    Nivel de Aprobación
+                  </label>
+                  <select
+                    className='form-field__select'
+                    value={formData.approvalLevel}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        approvalLevel: e.target.value,
+                      }))
+                    }
+                    disabled={!selectedProduct}
+                  >
+                    <option value='operator'>Nivel 1 - Operador</option>
+                    <option value='supervisor'>Nivel 2 - Supervisor</option>
+                    <option value='manager'>Nivel 3 - Manager</option>
+                    <option value='admin'>Nivel 4 - Admin</option>
+                  </select>
+                </div>
+
+                <div className='adjustment-form__buttons'>
+                  <button
+                    type='submit'
+                    className='btn btn--primary'
+                    disabled={!selectedProduct || loadingCreate}
+                  >
+                    <Send size={16} strokeWidth={2} />
+                    <span>
+                      {loadingCreate ? 'Enviando...' : 'Enviar Ajuste'}
+                    </span>
+                  </button>
+                  <button
+                    type='button'
+                    className='btn btn--secondary'
+                    onClick={handleClear}
+                    disabled={!selectedProduct}
+                  >
+                    <span>Limpiar</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -506,42 +495,52 @@ const InventoryAdjustmentManualPage = () => {
                 className='history-card__search-input'
                 placeholder='Filtrar por operador, motivo...'
                 value={historyFilter}
-                onChange={(e) => setHistoryFilter(e.target.value)}
+                onChange={e => setHistoryFilter(e.target.value)}
               />
             </div>
 
-            {/* Tabla de historial */}
+            {/* Tabla de historial - Simplificada */}
             {selectedProduct ? (
               loadingHistory ? (
                 <p className='history-card__loading'>Cargando historial...</p>
               ) : filteredHistory.length > 0 ? (
-                <div className='history-table'>
+                <div className='history-table history-table--compact'>
                   <table>
                     <thead>
                       <tr>
                         <th>Fecha</th>
-                        <th>Tipo</th>
                         <th>Operador</th>
-                        <th>Cambio</th>
+                        <th>Cantidad</th>
                         <th>Motivo</th>
                         <th>Aprobación</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredHistory.map((item, index) => (
-                        <tr key={item.adjustment_id || index}>
+                        <tr
+                          key={
+                            item.adjustment_id
+                              ? `adj-${item.adjustment_id}-${index}`
+                              : `adjustment-${item.product_id}-${item.adjustment_date}-${index}`
+                          }
+                        >
                           <td>{formatDate(item.adjustment_date)}</td>
                           <td>
-                            <span className={`history-table__type history-table__type--${item.adjustment_type}`}>
-                              {item.adjustment_type === 'stock' ? 'Stock' : 'Precio'}
-                            </span>
+                            {item.metadata?.operator || item.user_id || 'N/A'}
                           </td>
-                          <td>{item.metadata?.operator || item.user_id || 'N/A'}</td>
-                          <td className={item.value_change > 0 ? 'history-table__positive' : 'history-table__negative'}>
-                            {item.value_change > 0 ? '+' : ''}{item.value_change}
-                            {item.adjustment_type === 'price' && ' $'}
+                          <td
+                            className={
+                              item.value_change > 0
+                                ? 'history-table__positive'
+                                : 'history-table__negative'
+                            }
+                          >
+                            {item.value_change > 0 ? '+' : ''}
+                            {item.value_change}
                           </td>
-                          <td className='history-table__reason'>{item.reason}</td>
+                          <td className='history-table__reason'>
+                            {item.reason}
+                          </td>
                           <td>
                             <span className='history-table__badge'>
                               {item.metadata?.approval_level || 'N/A'}
@@ -554,7 +553,9 @@ const InventoryAdjustmentManualPage = () => {
                 </div>
               ) : (
                 <p className='history-card__empty'>
-                  {historyFilter ? 'No se encontraron resultados' : 'No hay ajustes registrados para este producto'}
+                  {historyFilter
+                    ? 'No se encontraron resultados'
+                    : 'No hay ajustes registrados para este producto'}
                 </p>
               )
             ) : (
@@ -569,7 +570,10 @@ const InventoryAdjustmentManualPage = () => {
       {/* Modal de búsqueda de producto */}
       {showProductSearch && (
         <div className='product-search-modal'>
-          <div className='product-search-modal__overlay' onClick={() => setShowProductSearch(false)} />
+          <div
+            className='product-search-modal__overlay'
+            onClick={() => setShowProductSearch(false)}
+          />
           <div className='product-search-modal__content'>
             <div className='product-search-modal__header'>
               <h2>Buscar Producto</h2>
@@ -588,7 +592,7 @@ const InventoryAdjustmentManualPage = () => {
                 className='product-search-modal__search-input'
                 placeholder='Buscar por nombre, SKU o ID...'
                 value={productSearchTerm}
-                onChange={(e) => setProductSearchTerm(e.target.value)}
+                onChange={e => setProductSearchTerm(e.target.value)}
                 autoFocus
               />
             </div>
@@ -603,15 +607,24 @@ const InventoryAdjustmentManualPage = () => {
                   >
                     <div className='product-search-item__image'>
                       {product.image_url ? (
-                        <img src={product.image_url} alt={product.product_name} />
+                        <img
+                          src={product.image_url}
+                          alt={product.product_name}
+                        />
                       ) : (
                         <Package size={24} strokeWidth={1.5} />
                       )}
                     </div>
                     <div className='product-search-item__info'>
-                      <p className='product-search-item__sku'>{product.product_id}</p>
-                      <h4 className='product-search-item__name'>{product.product_name}</h4>
-                      <p className='product-search-item__stock'>Stock: {product.stock_quantity || 0}</p>
+                      <p className='product-search-item__sku'>
+                        {product.product_id}
+                      </p>
+                      <h4 className='product-search-item__name'>
+                        {product.product_name}
+                      </h4>
+                      <p className='product-search-item__stock'>
+                        Stock: {product.stock_quantity || 0}
+                      </p>
                     </div>
                   </div>
                 ))

@@ -17,14 +17,14 @@ $spacing-xxxl: $spacing-48 !default;
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: $spacing-xxl;
+  padding: $spacing-l;
 
   // Header
   &__header {
     display: flex;
     align-items: center;
-    gap: $spacing-l;
-    margin-bottom: $spacing-xxl;
+    gap: $spacing-m;
+    margin-bottom: $spacing-l;
 
     .btn--icon {
       flex-shrink: 0;
@@ -35,17 +35,18 @@ $spacing-xxxl: $spacing-48 !default;
     @include heading-3;
     flex: 1;
     margin: 0;
+    font-size: $font-size-400;
 
     @include themify {
       color: themed('text-primary');
     }
   }
 
-  // Content Layout
+  // Content Layout - Compact for 1080p/720p
   &__content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: $spacing-xxl;
+    grid-template-columns: minmax(400px, 1fr) minmax(500px, 1.2fr);
+    gap: $spacing-l;
 
     @media (max-width: 1024px) {
       grid-template-columns: 1fr;
@@ -55,7 +56,7 @@ $spacing-xxxl: $spacing-48 !default;
   &__left {
     display: flex;
     flex-direction: column;
-    gap: $spacing-xxl;
+    gap: $spacing-m;
   }
 
   &__right {
@@ -69,13 +70,29 @@ $spacing-xxxl: $spacing-48 !default;
 // ============================================================================
 
 .selected-product-card {
-  padding: $spacing-l;
+  padding: $spacing-m;
   border-radius: $border-radius-large;
 
   @include themify {
     background-color: themed('bg-secondary');
     border: 1px solid themed('border-default');
     box-shadow: themed('shadow-card');
+  }
+
+  // Versión compacta
+  &--compact {
+    padding: $spacing-m $spacing-l;
+  }
+
+  &__label {
+    @include body;
+    font-size: $font-size-200;
+    display: block;
+    margin-bottom: $spacing-xs;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
   }
 
   &__header {
@@ -92,11 +109,12 @@ $spacing-xxxl: $spacing-48 !default;
     display: flex;
     gap: $spacing-m;
     align-items: center;
+    justify-content: space-between;
   }
 
   &__image {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     border-radius: $border-radius-medium;
     overflow: hidden;
     flex-shrink: 0;
@@ -135,7 +153,11 @@ $spacing-xxxl: $spacing-48 !default;
     margin: 0 0 $spacing-xs 0;
 
     @include themify {
-      color: themed('text-secondary');
+      color: themed('text-primary');
+    }
+
+    strong {
+      font-weight: $font-weight-semibold;
     }
   }
 
@@ -151,6 +173,7 @@ $spacing-xxxl: $spacing-48 !default;
 
   &__stock {
     @include body;
+    font-size: $font-size-200;
     margin: 0;
 
     @include themify {
@@ -169,7 +192,7 @@ $spacing-xxxl: $spacing-48 !default;
   &__empty {
     @include body;
     text-align: center;
-    padding: $spacing-l;
+    padding: $spacing-m;
     font-size: $font-size-200;
 
     @include themify {
@@ -183,7 +206,7 @@ $spacing-xxxl: $spacing-48 !default;
 // ============================================================================
 
 .adjustment-form-card {
-  padding: $spacing-xxl;
+  padding: $spacing-l;
   border-radius: $border-radius-large;
 
   @include themify {
@@ -192,9 +215,15 @@ $spacing-xxxl: $spacing-48 !default;
     box-shadow: themed('shadow-card');
   }
 
+  // Versión compacta
+  &--compact {
+    padding: $spacing-m $spacing-l;
+  }
+
   &__header {
     @include heading-4;
-    margin: 0 0 $spacing-l 0;
+    margin: 0 0 $spacing-m 0;
+    font-size: $font-size-300;
 
     @include themify {
       color: themed('text-primary');
@@ -205,11 +234,38 @@ $spacing-xxxl: $spacing-48 !default;
 .adjustment-form {
   display: flex;
   flex-direction: column;
-  gap: $spacing-l;
+  gap: $spacing-m;
+
+  // Versión compacta - layout en filas
+  &--compact {
+    gap: $spacing-s;
+  }
+
+  // Filas de campos en dos columnas
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-m;
+    align-items: start;
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+
+    // Fila de acciones (nivel de aprobación + botones)
+    &--actions {
+      align-items: end;
+      margin-top: $spacing-s;
+    }
+  }
 
   &__metadata {
-    padding: $spacing-m;
+    padding: $spacing-s $spacing-m;
     border-radius: $border-radius-medium;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 
     @include themify {
       background-color: themed('bg-tertiary');
@@ -218,8 +274,8 @@ $spacing-xxxl: $spacing-48 !default;
 
     p {
       @include body;
-    font-size: $font-size-200;
-      margin: $spacing-xs 0;
+      font-size: $font-size-200;
+      margin: 2px 0;
 
       @include themify {
         color: themed('text-secondary');
@@ -236,7 +292,7 @@ $spacing-xxxl: $spacing-48 !default;
   }
 
   &__success {
-    padding: $spacing-m;
+    padding: $spacing-s $spacing-m;
     border-radius: $border-radius-medium;
 
     @include themify {
@@ -247,7 +303,7 @@ $spacing-xxxl: $spacing-48 !default;
   }
 
   &__error {
-    padding: $spacing-m;
+    padding: $spacing-s $spacing-m;
     border-radius: $border-radius-medium;
 
     @include themify {
@@ -259,11 +315,12 @@ $spacing-xxxl: $spacing-48 !default;
 
   &__buttons {
     display: flex;
-    gap: $spacing-m;
-    margin-top: $spacing-s;
+    gap: $spacing-s;
+    align-items: center;
 
     .btn {
-      flex: 1;
+      padding: $spacing-s $spacing-m;
+      font-size: $font-size-200;
     }
   }
 }
@@ -272,10 +329,11 @@ $spacing-xxxl: $spacing-48 !default;
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: $spacing-xs;
+  gap: 4px;
 
   &__label {
     @include body;
+    font-size: $font-size-200;
     font-weight: $font-weight-semibold;
 
     @include themify {
@@ -289,6 +347,7 @@ $spacing-xxxl: $spacing-48 !default;
     padding: $spacing-s $spacing-m;
     border-radius: $border-radius-medium;
     @include body;
+    font-size: $font-size-200;
     transition: border-color $duration-fast ease;
 
     @include themify {
@@ -343,7 +402,7 @@ $spacing-xxxl: $spacing-48 !default;
 
   &__textarea {
     resize: vertical;
-    min-height: 80px;
+    min-height: 60px;
     font-family: $font-family-base;
   }
 
@@ -353,7 +412,7 @@ $spacing-xxxl: $spacing-48 !default;
 
   &__error {
     @include body;
-    font-size: $font-size-200;
+    font-size: $font-size-100;
 
     @include themify {
       color: themed('error');
@@ -366,7 +425,7 @@ $spacing-xxxl: $spacing-48 !default;
 // ============================================================================
 
 .history-card {
-  padding: $spacing-xxl;
+  padding: $spacing-l;
   border-radius: $border-radius-large;
   height: 100%;
   display: flex;
@@ -380,7 +439,8 @@ $spacing-xxxl: $spacing-48 !default;
 
   &__header {
     @include heading-4;
-    margin: 0 0 $spacing-l 0;
+    margin: 0 0 $spacing-m 0;
+    font-size: $font-size-300;
 
     @include themify {
       color: themed('text-primary');
@@ -389,7 +449,7 @@ $spacing-xxxl: $spacing-48 !default;
 
   &__search {
     position: relative;
-    margin-bottom: $spacing-l;
+    margin-bottom: $spacing-m;
   }
 
   &__search-icon {
@@ -408,6 +468,7 @@ $spacing-xxxl: $spacing-48 !default;
     padding: $spacing-s $spacing-m $spacing-s 40px;
     border-radius: $border-radius-medium;
     @include body;
+    font-size: $font-size-200;
 
     @include themify {
       background-color: themed('bg-primary');
@@ -435,7 +496,7 @@ $spacing-xxxl: $spacing-48 !default;
   &__empty {
     @include body;
     text-align: center;
-    padding: $spacing-xxl;
+    padding: $spacing-l;
 
     @include themify {
       color: themed('text-tertiary');
@@ -451,6 +512,18 @@ $spacing-xxxl: $spacing-48 !default;
   flex: 1;
   overflow-x: auto;
 
+  // Versión compacta
+  &--compact {
+    table {
+      font-size: $font-size-200;
+    }
+
+    thead th,
+    tbody td {
+      padding: $spacing-s;
+    }
+  }
+
   table {
     width: 100%;
     border-collapse: collapse;
@@ -463,8 +536,9 @@ $spacing-xxxl: $spacing-48 !default;
 
     th {
       @include body;
-    font-weight: $font-weight-semibold;
-      padding: $spacing-m;
+      font-size: $font-size-200;
+      font-weight: $font-weight-semibold;
+      padding: $spacing-s $spacing-m;
       text-align: left;
 
       @include themify {
@@ -487,7 +561,8 @@ $spacing-xxxl: $spacing-48 !default;
 
     td {
       @include body;
-      padding: $spacing-m;
+      font-size: $font-size-200;
+      padding: $spacing-s $spacing-m;
 
       @include themify {
         color: themed('text-secondary');
