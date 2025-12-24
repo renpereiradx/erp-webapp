@@ -84,6 +84,12 @@ export const common = {
   'common.total': 'Total',
   'common.subtotal': 'Subtotal',
 
+  // Filtros
+  'common.filters': 'Filtros',
+  'common.apply': 'Aplicar',
+  'common.clear': 'Limpiar',
+  'common.processing': 'Procesando...',
+
   // Badges
   'badge.low_stock': 'Bajo stock',
   'badge.low_stock.upper': 'BAJO STOCK',

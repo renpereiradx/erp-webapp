@@ -1,77 +1,128 @@
 /**
- * Toast simplificado para MVP - Sin hooks problemáticos
- * Versión básica que funciona sin dependencias de contexto
+ * Toast - Fluent Design 2 Style
+ * Notificaciones consistentes con el tema del sistema
  */
 
-import React, { useState, useEffect } from 'react';
-import { CheckCircle, AlertCircle, X, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react'
+import { CheckCircle, AlertCircle, X, Info } from 'lucide-react'
 
-const Toast = ({ 
-  message, 
+const Toast = ({
+  message,
   type = 'success',
   duration = 3000,
   onClose,
-  actions = []
+  actions = [],
 }) => {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(true)
+  const [isExiting, setIsExiting] = useState(false)
 
   useEffect(() => {
     if (duration > 0) {
       const timer = setTimeout(() => {
-        setIsVisible(false);
-        setTimeout(() => onClose && onClose(), 300);
-      }, duration);
+        setIsExiting(true)
+        setTimeout(() => {
+          setIsVisible(false)
+          onClose && onClose()
+        }, 300)
+      }, duration)
 
-      return () => clearTimeout(timer);
+      return () => clearTimeout(timer)
     }
-  }, [duration, onClose]);
+  }, [duration, onClose])
+
+  const handleClose = () => {
+    setIsExiting(true)
+    setTimeout(() => {
+      setIsVisible(false)
+      onClose && onClose()
+    }, 200)
+  }
 
   const getIcon = () => {
+    const iconProps = { size: 18, strokeWidth: 2 }
     switch (type) {
       case 'success':
-        return <CheckCircle className="w-5 h-5" />;
+        return <CheckCircle {...iconProps} />
       case 'error':
-        return <AlertCircle className="w-5 h-5" />;
+        return <AlertCircle {...iconProps} />
       case 'info':
       default:
-        return <Info className="w-5 h-5" />;
+        return <Info {...iconProps} />
     }
-  };
+  }
 
-  const getTypeClasses = () => {
+  const getStyles = () => {
+    const base = {
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: '12px',
+      padding: '12px 16px',
+      borderRadius: '8px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1)',
+      minWidth: '320px',
+      maxWidth: '480px',
+      fontSize: '14px',
+      lineHeight: '1.5',
+      opacity: isExiting ? 0 : 1,
+      transform: isExiting ? 'translateX(100%)' : 'translateX(0)',
+      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    }
+
     switch (type) {
       case 'success':
-        return 'bg-green-500 text-white';
+        return {
+          ...base,
+          backgroundColor: '#dff6dd',
+          border: '1px solid #107c10',
+          color: '#0e700e',
+        }
       case 'error':
-        return 'bg-red-500 text-white';
+        return {
+          ...base,
+          backgroundColor: '#fde7e9',
+          border: '1px solid #d13438',
+          color: '#a4262c',
+        }
       case 'info':
       default:
-        return 'bg-blue-500 text-white';
+        return {
+          ...base,
+          backgroundColor: '#f0f6ff',
+          border: '1px solid #0078d4',
+          color: '#0068b8',
+        }
     }
-  };
+  }
 
-  if (!isVisible) return null;
+  if (!isVisible) return null
 
   return (
-    <div
-      className={`flex items-center gap-3 p-3 rounded-md shadow-lg min-w-[280px] max-w-[420px] transition-all duration-300 ${getTypeClasses()}`}
-      style={{
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'translateX(0)' : 'translateX(100%)'
-      }}
-      role="status"
-      aria-live="polite"
-    >
-      {getIcon()}
-      <span className="flex-1">{message}</span>
+    <div style={getStyles()} role='alert' aria-live='polite'>
+      <span style={{ flexShrink: 0, marginTop: '2px' }}>{getIcon()}</span>
+      <span style={{ flex: 1, wordBreak: 'break-word' }}>{message}</span>
 
       {actions && actions.length > 0 && (
-        <div className="flex gap-2">
+        <div style={{ display: 'flex', gap: '8px', marginLeft: '8px' }}>
           {actions.map((action, i) => (
             <button
               key={i}
               onClick={() => action.onClick && action.onClick()}
-              className="bg-white/20 hover:bg-white/30 px-2 py-1 rounded text-sm transition-colors"
+              style={{
+                padding: '4px 8px',
+                borderRadius: '4px',
+                border: 'none',
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                color: 'inherit',
+                fontSize: '12px',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={e =>
+                (e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.15)')
+              }
+              onMouseLeave={e =>
+                (e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.1)')
+              }
             >
               {action.label}
             </button>
@@ -80,17 +131,35 @@ const Toast = ({
       )}
 
       <button
-        onClick={() => {
-          setIsVisible(false);
-          setTimeout(() => onClose && onClose(), 200);
+        onClick={handleClose}
+        style={{
+          flexShrink: 0,
+          padding: '4px',
+          borderRadius: '4px',
+          border: 'none',
+          backgroundColor: 'transparent',
+          color: 'inherit',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: 0.7,
+          transition: 'opacity 0.2s, background-color 0.2s',
         }}
-        className="hover:bg-white/20 p-1 rounded transition-colors"
-        aria-label="Close"
+        onMouseEnter={e => {
+          e.target.style.opacity = '1'
+          e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'
+        }}
+        onMouseLeave={e => {
+          e.target.style.opacity = '0.7'
+          e.target.style.backgroundColor = 'transparent'
+        }}
+        aria-label='Cerrar'
       >
-        <X className="w-4 h-4" />
+        <X size={16} />
       </button>
     </div>
-  );
-};
+  )
+}
 
-export default Toast;
+export default Toast

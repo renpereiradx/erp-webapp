@@ -79,6 +79,16 @@ export const common = {
   'common.total': 'Total',
   'common.subtotal': 'Subtotal',
 
+  // Filters
+  'common.filters': 'Filters',
+  'common.apply': 'Apply',
+  'common.clear': 'Clear',
+  'common.processing': 'Processing...',
+  'common.cancel': 'Cancel',
+  'common.save': 'Save',
+  'common.optional': 'Optional',
+  'common.home': 'Home',
+
   // Badges
   'badge.low_stock': 'Low stock',
   'badge.low_stock.upper': 'LOW STOCK',

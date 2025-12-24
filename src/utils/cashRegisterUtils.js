@@ -1,15 +1,15 @@
 /**
  * 💰 Utilidades para Cajas Registradoras
- * Incluye workarounds temporales mientras el backend se corrige
+ *
+ * NOTA: El backend ahora calcula current_balance automáticamente.
+ * Estas funciones se mantienen como utilidades de respaldo/validación.
  */
 
 /**
  * Calcula el balance actual de una caja basándose en sus movimientos
  *
- * ⚠️ WORKAROUND TEMPORAL: Mientras el backend no calcule current_balance correctamente
- *
- * El backend debería enviar `current_balance` calculado, pero actualmente devuelve 0.
- * Esta función calcula el balance en el frontend como solución temporal.
+ * ✅ El backend ahora envía current_balance calculado para cajas OPEN.
+ * Esta función se puede usar para validación o como fallback.
  *
  * @param {Object} cashRegister - Objeto de caja registradora del backend
  * @param {Array} movements - Array de movimientos de la caja
@@ -27,54 +27,48 @@
 export function calculateCashRegisterBalance(cashRegister, movements = []) {
   if (!cashRegister) return null
 
-  // Si el backend ya envía current_balance > 0, usarlo
-  // (cuando corrijan el bug, esta función se volverá transparente)
-  if (cashRegister.current_balance && cashRegister.current_balance > 0) {
-    console.log(
-      '✅ Backend envía current_balance correctamente:',
-      cashRegister.current_balance
-    )
+  // Si el backend ya envía current_balance (valor válido), usarlo directamente
+  if (
+    cashRegister.current_balance != null &&
+    cashRegister.current_balance > 0
+  ) {
     return cashRegister
   }
 
-  // Calcular balance basándose en movimientos
+  // Asegurar que movements es un array válido (protección contra null/undefined)
+  const safeMovements = Array.isArray(movements) ? movements : []
+
+  // Si el endpoint enriquecido v2.1 devuelve running_balance, usar el último movimiento
+  if (
+    safeMovements.length > 0 &&
+    typeof safeMovements[safeMovements.length - 1]?.running_balance === 'number'
+  ) {
+    const lastMovement = safeMovements[safeMovements.length - 1]
+    return {
+      ...cashRegister,
+      current_balance: lastMovement.running_balance,
+    }
+  }
+
+  // Calcular balance basándose en movimientos (fallback)
   const initialBalance = cashRegister.initial_balance || 0
 
-  const movementsSum = (movements || []).reduce((sum, movement) => {
+  const movementsSum = safeMovements.reduce((sum, movement) => {
     switch (movement.movement_type) {
       case 'INCOME':
         return sum + (movement.amount || 0)
       case 'EXPENSE':
         return sum - (movement.amount || 0)
       case 'ADJUSTMENT':
-        // Los ajustes pueden ser positivos o negativos según el backend
-        // Asumir que amount ya tiene el signo correcto
         return sum + (movement.amount || 0)
       default:
-        console.warn(
-          '⚠️ Tipo de movimiento desconocido:',
-          movement.movement_type
-        )
         return sum
     }
   }, 0)
 
-  const calculatedBalance = initialBalance + movementsSum
-
-  console.log('💰 Balance calculado en frontend (workaround):', {
-    cashRegisterId: cashRegister.id,
-    cashRegisterName: cashRegister.name,
-    initial: initialBalance,
-    movementsSum,
-    total: calculatedBalance,
-    movementCount: movements.length,
-    note: 'Este cálculo es temporal - el backend debe enviar current_balance',
-  })
-
   return {
     ...cashRegister,
-    current_balance: calculatedBalance,
-    _balance_calculated_on_frontend: true, // Flag para debugging
+    current_balance: initialBalance + movementsSum,
   }
 }
 

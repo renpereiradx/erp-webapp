@@ -7,7 +7,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { cashRegisterService } from '@/services/cashRegisterService'
-import { calculateCashRegisterBalance } from '@/utils/cashRegisterUtils'
 
 const initialState = {
   // Estado de caja registradora activa
@@ -59,7 +58,7 @@ export const useCashRegisterStore = create()(
 
       /**
        * Obtiene la caja registradora activa
-       * 🔧 WORKAROUND: Calcula current_balance si el backend no lo envía
+       * El backend ahora envía current_balance calculado correctamente
        */
       getActiveCashRegister: async () => {
         set({
@@ -71,43 +70,13 @@ export const useCashRegisterStore = create()(
           const activeCashRegister =
             await cashRegisterService.getActiveCashRegister()
 
-          // 🔧 WORKAROUND: Si no hay current_balance o es 0, calcularlo desde movimientos
-          if (
-            activeCashRegister &&
-            (!activeCashRegister.current_balance ||
-              activeCashRegister.current_balance === 0)
-          ) {
-            try {
-              console.log(
-                '⚠️ Backend no envía current_balance, calculando desde movimientos...'
-              )
-              const movements = await cashRegisterService.getMovements(
-                activeCashRegister.id
-              )
-              const cashRegisterWithBalance = calculateCashRegisterBalance(
-                activeCashRegister,
-                movements
-              )
-
-              set({
-                activeCashRegister: cashRegisterWithBalance,
-                movements, // También guardar movimientos
-                isActiveCashRegisterLoading: false,
-              })
-
-              return cashRegisterWithBalance
-            } catch (movementsError) {
-              console.warn(
-                'No se pudieron cargar movimientos para calcular balance:',
-                movementsError
-              )
-              // Si falla, usar la caja sin balance calculado
-              set({
-                activeCashRegister,
-                isActiveCashRegisterLoading: false,
-              })
-              return activeCashRegister
-            }
+          // El backend ahora calcula current_balance automáticamente
+          // Solo lo logueamos para debugging
+          if (activeCashRegister?.current_balance != null) {
+            console.log(
+              '✅ Backend envía current_balance:',
+              activeCashRegister.current_balance
+            )
           }
 
           set({

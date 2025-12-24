@@ -1,8 +1,8 @@
 // =============================================================================
 // CASH MOVEMENTS PAGE - Fluent Design System 2
 // =============================================================================
-// Estilos para la página de registro de movimientos de caja
-// Consistente con el sistema de diseño Fluent y la página de ventas
+// Estilos para la página de movimientos de caja
+// Incluye: listado de movimientos, filtros, diálogos y tabla
 // =============================================================================
 
 @use '../abstracts' as *;
@@ -29,70 +29,14 @@
   }
 
   // ---------------------------------------------------------------------------
-  // BREADCRUMB
-  // ---------------------------------------------------------------------------
-
-  &__breadcrumb {
-    margin-bottom: $spacing-4;
-
-    ol {
-      display: inline-flex;
-      align-items: center;
-      gap: $spacing-8;
-      font-size: $font-size-300;
-      flex-wrap: nowrap;
-      flex-direction: row;
-
-      @include themify {
-        color: themed('text-secondary');
-      }
-    }
-
-    li {
-      display: inline-flex;
-      align-items: center;
-
-      a {
-        text-decoration: none;
-        @include transition(color);
-
-        @include themify {
-          color: themed('text-secondary');
-
-          &:hover {
-            color: themed('action-primary');
-          }
-        }
-      }
-    }
-
-    // Separator styling
-    [data-slot='breadcrumb-separator'] {
-      margin: 0 $spacing-4;
-
-      @include themify {
-        color: themed('text-tertiary');
-      }
-    }
-
-    // Current page (last item)
-    [data-slot='breadcrumb-page'] {
-      font-weight: $font-weight-medium;
-
-      @include themify {
-        color: themed('text-primary');
-      }
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // HEADER
+  // HEADER - Mismo ancho que la card
   // ---------------------------------------------------------------------------
 
   &__header {
     display: flex;
     flex-direction: column;
     gap: $spacing-16;
+    max-width: 1200px;
 
     @media (min-width: 768px) {
       flex-direction: row;
@@ -126,6 +70,14 @@
     @include themify {
       color: themed('text-secondary');
     }
+
+    strong {
+      font-weight: $font-weight-semibold;
+
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -138,51 +90,50 @@
     flex-wrap: wrap;
   }
 
-  // Cancelar button - Secondary/Ghost style
-  &__btn-cancel {
+  &__btn-filter {
     font-size: $font-size-300;
     font-weight: $font-weight-medium;
     padding: $spacing-8 $spacing-16;
     border-radius: $border-radius-medium;
-    @include transition((background-color, color));
-
-    @include themify {
-      background-color: themed('bg-secondary') !important;
-      color: themed('text-primary') !important;
-      border: none !important;
-
-      &:hover {
-        background-color: themed('bg-tertiary') !important;
-      }
-    }
-  }
-
-  // Guardar y Nuevo button - Outline Primary
-  &__btn-save-new {
-    font-size: $font-size-300;
-    font-weight: $font-weight-medium;
-    padding: $spacing-8 $spacing-16;
-    border-radius: $border-radius-medium;
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
     @include transition((background-color, border-color, color));
-    box-shadow: $shadow-2;
 
     @include themify {
       background-color: themed('bg-primary') !important;
-      color: themed('action-primary') !important;
-      border: 1px solid themed('action-primary') !important;
+      color: themed('text-primary') !important;
+      border: 1px solid themed('border-default') !important;
 
       &:hover {
-        background-color: $brand-150 !important;
+        background-color: themed('bg-secondary') !important;
+        border-color: themed('border-strong') !important;
       }
+    }
+
+    &--active {
+      @include themify {
+        border-color: themed('action-primary') !important;
+        color: themed('action-primary') !important;
+      }
+    }
+
+    .filter-badge {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: $brand-100;
     }
   }
 
-  // Guardar button - Primary
-  &__btn-save {
+  &__btn-new {
     font-size: $font-size-300;
     font-weight: $font-weight-medium;
     padding: $spacing-8 $spacing-16;
     border-radius: $border-radius-medium;
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
     @include transition((background-color, box-shadow));
     box-shadow: $shadow-4;
 
@@ -198,13 +149,51 @@
   }
 
   // ---------------------------------------------------------------------------
-  // FORM CARD
+  // FILTERS PANEL
+  // ---------------------------------------------------------------------------
+
+  &__filters {
+    padding: $spacing-20;
+    border-radius: $border-radius-large;
+    max-width: 1200px;
+    @include elevation(2);
+
+    @include themify {
+      background-color: themed('surface-card');
+      border: 1px solid themed('border-subtle');
+    }
+  }
+
+  &__filters-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-16;
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &__filters-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-12;
+    margin-top: $spacing-16;
+    padding-top: $spacing-16;
+
+    @include themify {
+      border-top: 1px solid themed('border-subtle');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // CARD / TABLE CONTAINER
   // ---------------------------------------------------------------------------
 
   &__card {
-    padding: $spacing-32;
+    padding: $spacing-24;
     border-radius: $border-radius-large;
-    max-width: 896px;
+    max-width: 1200px;
     @include elevation(2);
 
     @include themify {
@@ -213,24 +202,421 @@
     }
 
     @include mobile {
-      padding: $spacing-20;
+      padding: $spacing-16;
+    }
+  }
+
+  &__table-wrapper {
+    overflow-x: auto;
+    margin: -$spacing-8;
+    padding: $spacing-8;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: $spacing-48 $spacing-24;
+
+    @include themify {
+      color: themed('text-tertiary');
     }
   }
 
   // ---------------------------------------------------------------------------
-  // FORM
+  // EMPTY STATE (No cash register)
   // ---------------------------------------------------------------------------
 
-  &__form {
+  &__empty-state {
     display: flex;
     flex-direction: column;
-    gap: $spacing-24;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: $spacing-64 $spacing-24;
+    gap: $spacing-16;
+
+    h2 {
+      font-size: $font-size-600;
+      font-weight: $font-weight-semibold;
+      margin: 0;
+
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+
+    p {
+      font-size: $font-size-300;
+      margin: 0;
+      max-width: 400px;
+
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
   }
 
-  // ---------------------------------------------------------------------------
-  // SEGMENTED CONTROL (Tabs style)
-  // ---------------------------------------------------------------------------
+  &__empty-icon {
+    width: 64px;
+    height: 64px;
 
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TABLE STYLES
+// -----------------------------------------------------------------------------
+
+.cash-movements-page {
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: $spacing-12 $spacing-16;
+    text-align: left;
+    white-space: nowrap;
+
+    &.text-right {
+      text-align: right;
+    }
+
+    &.text-center {
+      text-align: center;
+    }
+  }
+
+  th {
+    font-size: $font-size-200;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    @include themify {
+      color: themed('text-tertiary');
+      border-bottom: 1px solid themed('border-subtle');
+    }
+  }
+
+  td {
+    font-size: $font-size-300;
+
+    @include themify {
+      color: themed('text-primary');
+      border-bottom: 1px solid themed('border-subtle');
+    }
+  }
+
+  tr:hover td {
+    @include themify {
+      background-color: themed('bg-secondary');
+    }
+  }
+
+  tr.row--reversal td {
+    opacity: 0.6;
+    font-style: italic;
+  }
+
+  .text-success {
+    color: $success-100 !important;
+  }
+
+  .text-error {
+    color: $error-100 !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// MOVEMENT BADGES
+// -----------------------------------------------------------------------------
+
+.movement-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-4 $spacing-8;
+  border-radius: $border-radius-small;
+  font-size: $font-size-200;
+  font-weight: $font-weight-medium;
+
+  &--income {
+    background-color: rgba($success-100, 0.15) !important;
+    color: $success-100 !important;
+    border: none !important;
+  }
+
+  &--expense {
+    background-color: rgba($error-100, 0.15) !important;
+    color: $error-100 !important;
+    border: none !important;
+  }
+
+  &--adjustment {
+    background-color: rgba($warning-100, 0.15) !important;
+    color: $warning-100 !important;
+    border: none !important;
+  }
+
+  &--transfer {
+    @include themify {
+      background-color: themed('bg-tertiary') !important;
+      color: themed('text-secondary') !important;
+    }
+    border: none !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// MOVEMENT DETAILS
+// -----------------------------------------------------------------------------
+
+.movement-details {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+
+  &__sale {
+    font-size: $font-size-200;
+    font-weight: $font-weight-medium;
+    color: $brand-100;
+  }
+
+  &__purchase {
+    font-size: $font-size-200;
+    font-weight: $font-weight-medium;
+    color: #9333ea; // purple
+  }
+
+  &__client,
+  &__supplier {
+    font-size: $font-size-100;
+
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// VOID BUTTON
+// -----------------------------------------------------------------------------
+
+.btn-void {
+  padding: $spacing-4 $spacing-8;
+  border-radius: $border-radius-small;
+  @include transition((background-color, color));
+
+  @include themify {
+    color: themed('text-tertiary');
+
+    &:hover {
+      color: $error-100;
+      background-color: rgba($error-100, 0.1);
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FORM COMPONENTS
+// -----------------------------------------------------------------------------
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+
+  &__label {
+    font-size: $font-size-300;
+    line-height: $line-height-300;
+    font-weight: $font-weight-medium;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__label-optional {
+    font-size: $font-size-300;
+    line-height: $line-height-300;
+    font-weight: $font-weight-regular;
+
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__input-prefix {
+    position: absolute;
+    left: $spacing-12;
+    font-size: $font-size-300;
+    line-height: $line-height-300;
+    pointer-events: none;
+    z-index: 1;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+
+    &::after {
+      content: '\00a0';
+    }
+  }
+
+  &__input--with-prefix {
+    padding-left: calc(
+      #{$spacing-12} + #{$spacing-24} + #{$spacing-8}
+    ) !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// DIALOGS - Estilo mejorado
+// -----------------------------------------------------------------------------
+
+.cash-movements-dialog {
+  max-width: 500px;
+  padding: 0;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
+  }
+
+  // Dialog header styling
+  .radix-dialog__header,
+  [data-slot='dialog-header'] {
+    padding: $spacing-20 $spacing-24;
+    border-bottom: 1px solid transparent;
+
+    @include themify {
+      border-bottom-color: themed('border-subtle');
+      background-color: themed('bg-secondary');
+    }
+  }
+
+  .radix-dialog__title,
+  [data-slot='dialog-title'] {
+    font-size: $font-size-500;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $spacing-4;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  .radix-dialog__description,
+  [data-slot='dialog-description'] {
+    font-size: $font-size-300;
+    margin-top: $spacing-4;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  .dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-20;
+    padding: $spacing-24;
+  }
+
+  // Dialog footer styling
+  .radix-dialog__footer,
+  [data-slot='dialog-footer'] {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-12;
+    padding: $spacing-16 $spacing-24;
+    border-top: 1px solid transparent;
+
+    @include themify {
+      border-top-color: themed('border-subtle');
+      background-color: themed('bg-secondary');
+    }
+  }
+
+  // Void dialog specific styles
+  &--void {
+    .text-error {
+      color: $error-100;
+    }
+
+    .radix-dialog__header,
+    [data-slot='dialog-header'] {
+      @include themify {
+        background-color: rgba($error-100, 0.05);
+        border-bottom-color: rgba($error-100, 0.15);
+      }
+    }
+
+    // Form group within void dialog
+    > .form-group {
+      padding: $spacing-4 $spacing-24 $spacing-16;
+    }
+  }
+}
+
+.void-summary {
+  padding: $spacing-16;
+  border-radius: $border-radius-medium;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-12;
+  margin: $spacing-4 $spacing-24;
+
+  @include themify {
+    background-color: rgba($error-100, 0.05);
+    border: 1px solid rgba($error-100, 0.15);
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: $spacing-16;
+
+    > span:first-child {
+      font-size: $font-size-300;
+      font-weight: $font-weight-medium;
+
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+
+    > span:last-child,
+    > strong {
+      font-size: $font-size-300;
+
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+
+    > strong {
+      font-weight: $font-weight-semibold;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SEGMENTED CONTROL (dentro de diálogos)
+// -----------------------------------------------------------------------------
+
+.cash-movements-dialog {
   .segmented-control {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -274,204 +660,6 @@
         background-color: $brand-120 !important;
         color: $brand-30 !important;
       }
-    }
-  }
-}
-
-// -----------------------------------------------------------------------------
-// FORM COMPONENTS
-// -----------------------------------------------------------------------------
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-8;
-
-  &__label {
-    font-size: $font-size-300;
-    line-height: $line-height-300;
-    font-weight: $font-weight-medium;
-
-    @include themify {
-      color: themed('text-secondary');
-    }
-  }
-
-  &__label-optional {
-    font-size: $font-size-300;
-    line-height: $line-height-300;
-    font-weight: $font-weight-regular;
-
-    @include themify {
-      color: themed('text-tertiary');
-    }
-  }
-
-  &__segmented-control {
-    width: 100%;
-  }
-
-  // Input with prefix ($)
-  &__input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  &__input-prefix {
-    position: absolute;
-    left: $spacing-12;
-    font-size: $font-size-300;
-    line-height: $line-height-300;
-    pointer-events: none;
-    z-index: 1;
-
-    @include themify {
-      color: themed('text-secondary');
-    }
-
-    // Add spacing after the prefix
-    &::after {
-      content: '\00a0'; // non-breaking space
-    }
-  }
-
-  &__input--with-prefix {
-    padding-left: calc(
-      #{$spacing-12} + #{$spacing-24} + #{$spacing-8}
-    ) !important;
-  }
-}
-
-// Form Row (two columns)
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: $spacing-24;
-
-  @media (min-width: 768px) {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-// -----------------------------------------------------------------------------
-// SELECT COMPONENT STYLES
-// -----------------------------------------------------------------------------
-
-// Radix Select Trigger styling for this page
-.cash-movements-page {
-  // Target all Select triggers
-  [data-radix-select-trigger],
-  button[role='combobox'] {
-    width: 100%;
-    height: 48px;
-    padding: $spacing-12 $spacing-16;
-    border-radius: $border-radius-medium;
-    font-family: $font-family-base;
-    font-size: $font-size-300;
-    font-weight: $font-weight-regular;
-    line-height: $line-height-300;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    @include transition((border-color, box-shadow));
-
-    @include themify {
-      border: 1px solid themed('border-default');
-      background-color: themed('surface-input');
-      color: themed('text-primary');
-
-      &::placeholder {
-        color: themed('text-tertiary');
-      }
-
-      &:hover:not(:disabled) {
-        border-color: themed('border-strong');
-      }
-
-      &:focus,
-      &[data-state='open'] {
-        outline: none;
-        border-color: themed('action-primary');
-        box-shadow: 0 0 0 2px rgba($brand-100, 0.18);
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-    }
-
-    // Value text
-    span[data-radix-select-value] {
-      flex: 1;
-      text-align: left;
-    }
-
-    // Chevron icon
-    svg {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-      @include transition(transform);
-
-      @include themify {
-        color: themed('text-tertiary');
-      }
-    }
-
-    &[data-state='open'] svg {
-      transform: rotate(180deg);
-    }
-  }
-}
-
-// Select Content (dropdown) styling
-.cash-movements-page__select-content {
-  border-radius: $border-radius-medium !important;
-  overflow: hidden;
-  @include elevation(4);
-  background-color: #ffffff !important;
-
-  @include themify {
-    background-color: themed('surface-card') !important;
-    border: 1px solid themed('border-subtle') !important;
-  }
-
-  // Target the viewport inside
-  [data-radix-select-viewport] {
-    padding: $spacing-4;
-    background-color: #ffffff !important;
-
-    @include themify {
-      background-color: themed('surface-card') !important;
-    }
-  }
-}
-
-// Select Item styling
-.cash-movements-page__select-content [role='option'],
-[data-radix-select-item] {
-  padding: $spacing-12 $spacing-16;
-  font-size: $font-size-300;
-  cursor: pointer;
-  border-radius: $border-radius-small;
-  @include transition(background-color);
-  background-color: transparent;
-
-  @include themify {
-    color: themed('text-primary');
-
-    &:hover,
-    &[data-highlighted] {
-      background-color: themed('bg-secondary') !important;
-      outline: none;
-    }
-
-    &[data-state='checked'] {
-      background-color: $brand-150 !important;
-      color: $brand-30;
     }
   }
 }

@@ -1,7 +1,7 @@
 # 💰 Guía de Integración Frontend - API de Cajas Registradoras
 
-**Versión:** 2.1 (Movimientos Enriquecidos)  
-**Fecha:** 04 de Octubre de 2025
+**Versión:** 2.2 (Gestión Avanzada de Movimientos)
+**Fecha:** 23 de Diciembre de 2025
 
 ---
 
@@ -19,12 +19,34 @@ Sistema completo de gestión de cajas registradoras con integración obligatoria
 - ✅ **Reportes en tiempo real**: Estado financiero y movimientos por período
 - ✅ **Multi-usuario**: Cada usuario puede operar su propia caja
 - ✅ **Auditoría completa**: Trazabilidad de todos los movimientos
+- ✅ **Anulación de movimientos**: Reversión de movimientos con trazabilidad 🆕
+- ✅ **Filtros avanzados**: Búsqueda por tipo y rango de fechas 🆕
 
 ---
 
 ## ⚠️ Cambios Importantes
 
-### v2.1 (Octubre 2025) - Endpoint de Movimientos Enriquecido 🆕
+### v2.2 (Diciembre 2025) - Gestión Avanzada de Movimientos 🆕
+
+**Nuevas funcionalidades:**
+
+1. **Anulación de movimientos** - Nuevo endpoint para revertir movimientos:
+   - `POST /cash-movements/{id}/void` - Anula un movimiento creando una reversión automática
+   - Requiere razón obligatoria (mínimo 5 caracteres)
+   - Solo funciona con caja abierta
+   - No permite anular movimientos que ya son reversiones
+
+2. **Filtros en listado de movimientos** - Nuevo endpoint con filtros avanzados:
+   - `GET /cash-registers/{id}/movements/filter` - Movimientos con filtros
+   - Filtrar por tipo: `INCOME`, `EXPENSE`, `TRANSFER`, `ADJUSTMENT`
+   - Filtrar por rango de fechas: `date_from`, `date_to`
+   - Paginación: `limit` y `offset`
+
+3. **Tipos de movimiento ampliados**:
+   - Ahora soporta `TRANSFER` para transferencias entre cajas
+   - Ahora soporta `ADJUSTMENT` para ajustes manuales de balance
+
+### v2.1 (Octubre 2025) - Endpoint de Movimientos Enriquecido
 
 **Nuevo:** El endpoint `GET /cash-registers/{id}/movements` ahora retorna información completa y enriquecida:
 
@@ -342,17 +364,17 @@ El sistema valida:
 
 ### 1. Registrar Movimiento Manual
 
-**Endpoint:** `POST /cash-registers/{id}/movements`
+**Endpoint:** `POST /cash-movements/`
 
-Para registrar movimientos de efectivo manuales (ajustes, retiros, depósitos).
+Para registrar movimientos de efectivo manuales (ajustes, retiros, depósitos, transferencias).
 
 **Request Body:**
 ```json
 {
+  "cash_register_id": 6,
   "movement_type": "EXPENSE",
   "amount": 50000,
-  "concept": "Retiro para gastos menores",
-  "notes": "Autorizado por gerencia"
+  "concept": "Retiro para gastos menores"
 }
 ```
 
@@ -360,10 +382,10 @@ Para registrar movimientos de efectivo manuales (ajustes, retiros, depósitos).
 
 | Campo | Tipo | Requerido | Descripción |
 |-------|------|-----------|-------------|
-| `movement_type` | string | ✅ Sí | `INCOME` \| `EXPENSE` \| `ADJUSTMENT` |
+| `cash_register_id` | number | ✅ Sí | ID de la caja registradora |
+| `movement_type` | string | ✅ Sí | `INCOME` \| `EXPENSE` \| `TRANSFER` \| `ADJUSTMENT` |
 | `amount` | number | ✅ Sí | Monto del movimiento (debe ser > 0) |
 | `concept` | string | ✅ Sí | Concepto del movimiento |
-| `notes` | string | ❌ No | Notas adicionales |
 
 **Response (200 OK):**
 ```json
@@ -507,7 +529,8 @@ movements.forEach(movement => {
 |------|-------------|----------------|
 | `INCOME` | Ingreso de efectivo | Incrementa (+) |
 | `EXPENSE` | Egreso de efectivo | Decrementa (-) |
-| `ADJUSTMENT` | Ajuste manual | Puede incrementar o decrementar |
+| `TRANSFER` | Transferencia entre cajas | Depende de dirección |
+| `ADJUSTMENT` | Ajuste manual de balance | Puede incrementar o decrementar |
 
 ### 4. Movimientos Automáticos vs Manuales
 
@@ -520,6 +543,178 @@ movements.forEach(movement => {
 - ✅ No tienen `payment_id` ni `sales_order_id`
 - ✅ Concepto personalizado
 - ⚠️ Requieren autorización según reglas de negocio
+
+---
+
+### 5. Anular Movimiento 🆕
+
+**Endpoint:** `POST /cash-movements/{id}/void`
+
+**Estado:** ✅ **IMPLEMENTADO** (23/Dic/2025)
+
+**Descripción:**
+Anula un movimiento de efectivo creando automáticamente un movimiento de reversión. Esto mantiene la trazabilidad completa sin eliminar registros.
+
+**Request Body:**
+```json
+{
+  "reason": "Error en el registro del monto - cliente pagó menos"
+}
+```
+
+**Parámetros:**
+
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| `reason` | string | ✅ Sí | Razón de la anulación (mínimo 5 caracteres) |
+
+**Response (200 OK):**
+```json
+{
+  "original_movement_id": 15,
+  "reversal_movement_id": 16,
+  "original_type": "INCOME",
+  "original_amount": 50000,
+  "reversal_amount": 50000,
+  "reason": "Error en el registro del monto - cliente pagó menos",
+  "voided_at": "2025-12-23T10:30:00Z",
+  "voided_by": "2pmK5NPfHiRwZUkcd3d3cETC2JW"
+}
+```
+
+**Lógica de Reversión:**
+
+| Tipo Original | Tipo Reversión | Monto Reversión |
+|---------------|----------------|-----------------|
+| `INCOME` | `EXPENSE` | Mismo monto (positivo) |
+| `EXPENSE` | `INCOME` | Mismo monto (positivo) |
+| `ADJUSTMENT` | `ADJUSTMENT` | Monto invertido |
+| `TRANSFER` | `TRANSFER` | Monto invertido |
+
+**Errores Posibles:**
+
+| Error | HTTP Status | Descripción |
+|-------|-------------|-------------|
+| `Movement with ID X not found` | 400 | Movimiento no existe |
+| `Cannot void movement: cash register is closed` | 400 | La caja está cerrada |
+| `Cannot void a reversal movement` | 400 | No se puede anular una anulación |
+| `reason is required` | 400 | Falta la razón |
+| `reason must be at least 5 characters` | 400 | Razón muy corta |
+
+**Ejemplo de Uso:**
+
+```javascript
+const voidMovement = async (movementId, reason) => {
+  const response = await fetch(`/cash-movements/${movementId}/void`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ reason })
+  });
+
+  if (response.ok) {
+    const result = await response.json();
+    console.log(`Movimiento #${result.original_movement_id} anulado`);
+    console.log(`Reversión creada: #${result.reversal_movement_id}`);
+  }
+};
+```
+
+---
+
+### 6. Obtener Movimientos con Filtros 🆕
+
+**Endpoint:** `GET /cash-registers/{id}/movements/filter`
+
+**Estado:** ✅ **IMPLEMENTADO** (23/Dic/2025)
+
+**Descripción:**
+Obtiene movimientos de una caja con filtros opcionales por tipo de movimiento y rango de fechas.
+
+**Query Parameters:**
+
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `type` | string | ❌ No | Tipo de movimiento: `INCOME`, `EXPENSE`, `TRANSFER`, `ADJUSTMENT` |
+| `date_from` | string | ❌ No | Fecha desde (formato: `2025-12-01` o `2025-12-01T00:00:00`) |
+| `date_to` | string | ❌ No | Fecha hasta (formato: `2025-12-31` o `2025-12-31T23:59:59`) |
+| `limit` | number | ❌ No | Límite de resultados (default: 50, max: 200) |
+| `offset` | number | ❌ No | Offset para paginación (default: 0) |
+
+**Ejemplos de Llamadas:**
+
+```
+# Solo ingresos
+GET /cash-registers/6/movements/filter?type=INCOME
+
+# Egresos del mes de diciembre
+GET /cash-registers/6/movements/filter?type=EXPENSE&date_from=2025-12-01&date_to=2025-12-31
+
+# Todos los movimientos con paginación
+GET /cash-registers/6/movements/filter?limit=20&offset=0
+
+# Ajustes de la última semana
+GET /cash-registers/6/movements/filter?type=ADJUSTMENT&date_from=2025-12-16
+```
+
+**Response (200 OK):**
+```json
+[
+  {
+    "movement_id": 12,
+    "movement_type": "INCOME",
+    "amount": 20000,
+    "concept": "Efectivo recibido - SALE-1759353369-669",
+    "created_at": "2025-12-20T14:01:44.594198Z",
+    "running_balance": 470000,
+    "created_by": "2pmK5NPfHiRwZUkcd3d3cETC2JW",
+    "user_first_name": "Pedro",
+    "user_last_name": "Sanchez",
+    "user_full_name": "Pedro Sanchez",
+    "related_payment_id": 33,
+    "related_sale_id": "SALE-1759353369-669",
+    "related_purchase_id": null
+  }
+]
+```
+
+**Notas:**
+- La respuesta tiene la misma estructura que `GET /cash-registers/{id}/movements`
+- Los filtros son acumulativos (AND lógico)
+- Si no se especifican filtros, retorna todos los movimientos (con paginación)
+- El `running_balance` se calcula considerando TODOS los movimientos, no solo los filtrados
+
+**Ejemplo de Uso con Filtros:**
+
+```javascript
+const getFilteredMovements = async (cashRegisterId, filters = {}) => {
+  const params = new URLSearchParams();
+
+  if (filters.type) params.append('type', filters.type);
+  if (filters.dateFrom) params.append('date_from', filters.dateFrom);
+  if (filters.dateTo) params.append('date_to', filters.dateTo);
+  if (filters.limit) params.append('limit', filters.limit);
+  if (filters.offset) params.append('offset', filters.offset);
+
+  const url = `/cash-registers/${cashRegisterId}/movements/filter?${params}`;
+
+  const response = await fetch(url, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+
+  return response.json();
+};
+
+// Ejemplos de uso
+const incomes = await getFilteredMovements(6, { type: 'INCOME' });
+const thisMonth = await getFilteredMovements(6, {
+  dateFrom: '2025-12-01',
+  dateTo: '2025-12-31'
+});
+const paginated = await getFilteredMovements(6, { limit: 10, offset: 20 });
+```
 
 ---
 
@@ -753,7 +948,7 @@ if (response.requires_change) {
 
 ---
 
-**Última actualización:** 04 de Octubre de 2025  
-**Versión:** 2.1 (Movimientos Enriquecidos)  
-**Estado:** ✅ Production Ready  
+**Última actualización:** 23 de Diciembre de 2025
+**Versión:** 2.2 (Gestión Avanzada de Movimientos)
+**Estado:** ✅ Production Ready
 **Repositorio:** [github.com/renpereiradx/business_management](https://github.com/renpereiradx/business_management)

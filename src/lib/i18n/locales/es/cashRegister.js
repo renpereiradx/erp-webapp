@@ -6,7 +6,8 @@
 export const cashRegister = {
   // Títulos y secciones
   'cashRegister.title': 'Gestión de Cajas Registradoras',
-  'cashRegister.subtitle': 'Abre o cierra una caja para registrar los movimientos de efectivo.',
+  'cashRegister.subtitle':
+    'Abre o cierra una caja para registrar los movimientos de efectivo.',
   'cashRegister.tab.open': 'Abrir Caja',
   'cashRegister.tab.close': 'Cerrar Caja',
 
@@ -24,7 +25,8 @@ export const cashRegister = {
   'cashRegister.open.initialBalance': 'Saldo Inicial',
   'cashRegister.open.initialBalance.placeholder': '0.00',
   'cashRegister.open.openingNotes': 'Notas de Apertura',
-  'cashRegister.open.openingNotes.placeholder': 'Añadir una descripción o nota (opcional)',
+  'cashRegister.open.openingNotes.placeholder':
+    'Añadir una descripción o nota (opcional)',
   'cashRegister.open.action': 'Abrir Caja',
 
   // Formulario de Cierre
@@ -37,7 +39,8 @@ export const cashRegister = {
   'cashRegister.close.systemBalance': 'Saldo del Sistema',
   'cashRegister.close.difference': 'Diferencia',
   'cashRegister.close.closingNotes': 'Notas de Cierre',
-  'cashRegister.close.closingNotes.placeholder': 'Observaciones del cierre (opcional)',
+  'cashRegister.close.closingNotes.placeholder':
+    'Observaciones del cierre (opcional)',
   'cashRegister.close.action': 'Cerrar Caja',
   'cashRegister.close.summary': 'Resumen del Cierre',
   'cashRegister.close.totalSales': 'Total Ventas',
@@ -49,11 +52,13 @@ export const cashRegister = {
   'cashRegister.status.closed': 'Cerrada',
   'cashRegister.status.noActive': 'No hay caja activa',
   'cashRegister.empty.title': 'Sin cajas registradoras',
-  'cashRegister.empty.message': 'No hay cajas registradas. Abre una nueva caja para comenzar.',
+  'cashRegister.empty.message':
+    'No hay cajas registradas. Abre una nueva caja para comenzar.',
 
   // Errores
   'cashRegister.error.title': 'Error al cargar cajas',
-  'cashRegister.error.generic': 'Error al procesar la solicitud. Intente nuevamente.',
+  'cashRegister.error.generic':
+    'Error al procesar la solicitud. Intente nuevamente.',
   'cashRegister.error.opening': 'Error al abrir la caja registradora',
   'cashRegister.error.closing': 'Error al cerrar la caja registradora',
   'cashRegister.error.invalidBalance': 'El saldo inicial debe ser mayor a 0',
@@ -68,10 +73,17 @@ export const cashRegister = {
   // Campos comunes
   'cashRegister.field.cashier': 'Cajero',
   'cashRegister.field.register': 'Caja',
+  'cashRegister.field.name': 'Caja',
   'cashRegister.field.date': 'Fecha',
-  'cashRegister.field.balance': 'Saldo',
+  'cashRegister.field.balance': 'Saldo actual',
+  'cashRegister.field.openedAt': 'Abierta desde',
   'cashRegister.field.notes': 'Notas',
   'cashRegister.field.currency': '₲',
+
+  // Advertencias
+  'cashRegister.warning.alreadyOpen': 'Ya tienes una caja abierta',
+  'cashRegister.warning.closeFirst':
+    'Debes cerrar la caja actual antes de abrir una nueva.',
 
   // Loading states
   'cashRegister.loading': 'Cargando...',

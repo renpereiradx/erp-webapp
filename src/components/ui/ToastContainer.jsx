@@ -1,34 +1,62 @@
 /**
- * Container component for rendering multiple toast notifications
- * Handles positioning and stacking of toasts
+ * ToastContainer - Fluent Design 2 Style
+ * Contenedor de notificaciones posicionado dentro del layout principal
  */
 
-import React from 'react';
-import Toast from './Toast';
+import React from 'react'
+import Toast from './Toast'
 
-const ToastContainer = ({ toasts, onRemoveToast }) => {
-  if (!toasts || toasts.length === 0) return null;
+const ToastContainer = ({ toasts, onRemoveToast, position = 'top-right' }) => {
+  if (!toasts || toasts.length === 0) return null
+
+  const getPositionStyles = () => {
+    const base = {
+      position: 'fixed',
+      zIndex: 1000,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px',
+      pointerEvents: 'none',
+      padding: '16px',
+      maxHeight: 'calc(100vh - 100px)',
+      overflowY: 'auto',
+    }
+
+    switch (position) {
+      case 'top-left':
+        return { ...base, top: '70px', left: '16px' }
+      case 'top-center':
+        return {
+          ...base,
+          top: '70px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        }
+      case 'bottom-right':
+        return { ...base, bottom: '16px', right: '16px' }
+      case 'bottom-left':
+        return { ...base, bottom: '16px', left: '16px' }
+      case 'bottom-center':
+        return {
+          ...base,
+          bottom: '16px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        }
+      case 'top-right':
+      default:
+        return { ...base, top: '70px', right: '16px' }
+    }
+  }
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        zIndex: 9999,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        pointerEvents: 'none'
-      }}
-    >
-      {toasts.map((toast, index) => (
+    <div style={getPositionStyles()}>
+      {toasts.map(toast => (
         <div
           key={toast.id}
           style={{
             pointerEvents: 'auto',
-            transform: `translateY(${index * 6}px)`,
-            transition: 'transform 200ms ease'
+            animation: 'slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
           <Toast
@@ -40,8 +68,20 @@ const ToastContainer = ({ toasts, onRemoveToast }) => {
           />
         </div>
       ))}
+      <style>{`
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </div>
-  );
-};
+  )
+}
 
-export default ToastContainer;
+export default ToastContainer
