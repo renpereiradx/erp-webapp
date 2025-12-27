@@ -13,7 +13,6 @@
 import React, { useState, useEffect } from 'react'
 import { useI18n } from '@/lib/i18n'
 import { useCashRegisterStore } from '@/store/useCashRegisterStore'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -295,39 +294,10 @@ const NewCashRegister = () => {
         </p>
       </div>
 
-      {/* Tabs */}
+      {/* Content */}
       <div className='new-cash-register-page__tabs'>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className='new-cash-register-page__tabs-list'>
-            <button
-              type='button'
-              onClick={() => setActiveTab('open')}
-              className={`new-cash-register-page__tab-trigger ${
-                activeTab === 'open'
-                  ? 'new-cash-register-page__tab-trigger--active'
-                  : ''
-              }`}
-            >
-              {t('cashRegister.tab.open', 'Abrir Caja')}
-            </button>
-            <button
-              type='button'
-              onClick={() => setActiveTab('close')}
-              className={`new-cash-register-page__tab-trigger ${
-                activeTab === 'close'
-                  ? 'new-cash-register-page__tab-trigger--active'
-                  : ''
-              }`}
-            >
-              {t('cashRegister.tab.close', 'Cerrar Caja')}
-            </button>
-          </div>
-
-          {/* Open Cash Register Tab */}
-          <TabsContent
-            value='open'
-            className='new-cash-register-page__tab-content'
-          >
+        {activeTab === 'open' && (
+          <div className='new-cash-register-page__tab-content'>
             {/* Warning if there's already an active cash register */}
             {activeCashRegister && (
               <div
@@ -394,6 +364,23 @@ const NewCashRegister = () => {
                     'Debes cerrar la caja actual antes de abrir una nueva.'
                   )}
                 </p>
+                <div
+                  style={{
+                    marginTop: '12px',
+                    paddingLeft: '28px',
+                  }}
+                >
+                  <Button
+                    onClick={() => setActiveTab('close')}
+                    className='new-cash-register-page__form-button new-cash-register-page__form-button--primary'
+                    style={{
+                      fontSize: '14px',
+                      padding: '8px 16px',
+                    }}
+                  >
+                    {t('cashRegister.tab.close', 'Cerrar Caja')}
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -576,29 +563,28 @@ const NewCashRegister = () => {
                 </div>
               </div>
             </form>
-          </TabsContent>
+          </div>
+        )}
 
-          {/* Close Cash Register Tab */}
-          <TabsContent
-            value='close'
-            className='new-cash-register-page__tab-content'
-          >
+        {/* Close Cash Register View */}
+        {activeTab === 'close' && (
+          <div className='new-cash-register-page__tab-content'>
             {activeCashRegister ? (
               <>
                 <form
                   onSubmit={handleCloseSubmit}
                   className='new-cash-register-page__form'
                 >
-                  {/* Cashier (read-only) */}
+                  {/* Location (read-only) */}
                   <div className='new-cash-register-page__form-field'>
                     <label
-                      htmlFor='close-cashier'
+                      htmlFor='close-location'
                       className='new-cash-register-page__form-label'
                     >
-                      {t('cashRegister.close.cashier', 'Cajero')}
+                      {t('cashRegister.close.location', 'Ubicación')}
                     </label>
                     <Input
-                      id='close-cashier'
+                      id='close-location'
                       type='text'
                       value={activeCashRegister.location || ''}
                       disabled
@@ -764,6 +750,7 @@ const NewCashRegister = () => {
                             closingNotes: '',
                           })
                           setFormError('')
+                          setActiveTab('open')
                         }}
                         className='new-cash-register-page__form-button new-cash-register-page__form-button--secondary'
                       >
@@ -783,8 +770,8 @@ const NewCashRegister = () => {
                 )}
               />
             )}
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -20,9 +20,10 @@ export interface PurchaseOrderDetail {
   product_id: string;
   quantity: number;
   unit_price: number;
-  unit?: string;          // Default: 'unit' - NUEVO CAMPO
-  profit_pct?: number;    // Para cálculo de precio sugerido - NUEVO CAMPO
-  tax_rate_id?: number;   // Opcional
+  unit?: string;                    // Default: 'unit'
+  profit_pct?: number;              // Para cálculo de precio sugerido
+  explicit_sale_price?: number;     // API v1.0: Precio de venta explícito (entero, PYG)
+  tax_rate_id?: number;             // Opcional
 }
 
 export interface PurchaseOrderResponse {

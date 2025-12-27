@@ -662,4 +662,87 @@
       }
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // SELECT TRIGGER STYLING
+  // ---------------------------------------------------------------------------
+
+  button[role='combobox'] {
+    width: 100%;
+    padding: $spacing-12 $spacing-12;
+    font-size: $font-size-300;
+    border-radius: $border-radius-medium;
+    border: 1px solid;
+    @include transition((border-color, background-color, box-shadow));
+
+    @include themify {
+      background-color: themed('bg-primary');
+      border-color: themed('border-default');
+      color: themed('text-primary');
+
+      &:hover:not(:disabled) {
+        border-color: themed('border-strong');
+      }
+
+      &:focus-visible {
+        outline: 2px solid $brand-100;
+        outline-offset: 2px;
+        border-color: $brand-100;
+      }
+
+      &[data-placeholder] {
+        color: themed('text-tertiary');
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SELECT CONTENT (Portal - fuera del modal)
+// -----------------------------------------------------------------------------
+
+[data-radix-popper-content-wrapper] {
+  z-index: 10000 !important; // Por encima del modal (z-index: 50)
+
+  [role='listbox'] {
+    max-height: 280px;
+    overflow-y: auto;
+    padding: $spacing-4;
+    border-radius: $border-radius-medium;
+    box-shadow: $shadow-16;
+    border: 1px solid;
+    background-color: #ffffff !important;
+
+    @include themify {
+      background-color: themed('bg-primary') !important;
+      border-color: themed('border-subtle');
+    }
+
+    [role='option'] {
+      padding: $spacing-8 $spacing-12;
+      font-size: $font-size-300;
+      border-radius: $border-radius-small;
+      cursor: pointer;
+      @include transition((background-color, color));
+
+      @include themify {
+        color: themed('text-primary');
+
+        &:hover {
+          background-color: themed('bg-secondary');
+        }
+
+        &[data-highlighted] {
+          background-color: themed('bg-tertiary');
+          outline: none;
+        }
+
+        &[data-state='checked'] {
+          background-color: $brand-120;
+          color: $brand-30;
+          font-weight: $font-weight-medium;
+        }
+      }
+    }
+  }
 }

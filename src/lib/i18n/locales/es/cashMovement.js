@@ -38,10 +38,12 @@ export const cashMovement = {
   // Concepts
   'cashMovement.concept.deposit': 'Depósito de efectivo',
   'cashMovement.concept.reposition': 'Reposición de caja',
+  'cashMovement.concept.adjustmentPositive': '[Ajuste] Corrección de saldo',
   'cashMovement.concept.otherIncome': 'Otro ingreso',
   'cashMovement.concept.withdrawal': 'Retiro de efectivo',
   'cashMovement.concept.purchase': 'Compra de insumos',
   'cashMovement.concept.service': 'Pago de servicio',
+  'cashMovement.concept.adjustmentNegative': '[Ajuste] Corrección de saldo',
   'cashMovement.concept.otherExpense': 'Otro egreso',
   'cashMovement.concept.difference': 'Ajuste por diferencia',
   'cashMovement.concept.correction': 'Corrección de saldo',

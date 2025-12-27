@@ -15,7 +15,7 @@ const API_ENDPOINTS = {
   cashRegisterMovements: id => `/cash-registers/${id}/movements`,
   cashRegisterMovementsFilter: id => `/cash-registers/${id}/movements/filter`,
   cashRegisterSummary: id => `/cash-registers/${id}/summary`,
-  cashMovements: '/cash-movements',
+  cashMovements: '/cash-movements/',
   voidMovement: id => `/cash-movements/${id}/void`,
   paymentsSale: '/cash-registers/payments/sale',
   paymentsPurchase: '/cash-registers/payments/purchase',

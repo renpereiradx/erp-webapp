@@ -50,7 +50,6 @@ import { cashRegisterService } from '@/services/cashRegisterService'
 import {
   ArrowDownIcon,
   ArrowUpIcon,
-  RefreshCwIcon,
   PlusIcon,
   FilterIcon,
   BanIcon,
@@ -97,14 +96,13 @@ const CashMovements = () => {
     isSubmitting: false,
   })
 
-  // Movement types
+  // Movement types (API v2.3 - Solo INCOME y EXPENSE)
   const movementTypes = [
     { value: 'INCOME', label: t('cashMovement.type.income', 'Ingreso') },
     { value: 'EXPENSE', label: t('cashMovement.type.expense', 'Egreso') },
-    { value: 'ADJUSTMENT', label: t('cashMovement.type.adjustment', 'Ajuste') },
   ]
 
-  // Predefined concepts
+  // Predefined concepts (API v2.3 - Ajustes con prefijo [Ajuste])
   const concepts = {
     INCOME: [
       {
@@ -114,6 +112,13 @@ const CashMovements = () => {
       {
         id: 'reposition',
         name: t('cashMovement.concept.reposition', 'Reposición de caja'),
+      },
+      {
+        id: 'adjustment_positive',
+        name: t(
+          'cashMovement.concept.adjustmentPositive',
+          '[Ajuste] Corrección de saldo'
+        ),
       },
       {
         id: 'other_income',
@@ -134,18 +139,15 @@ const CashMovements = () => {
         name: t('cashMovement.concept.service', 'Pago de servicio'),
       },
       {
+        id: 'adjustment_negative',
+        name: t(
+          'cashMovement.concept.adjustmentNegative',
+          '[Ajuste] Corrección de saldo'
+        ),
+      },
+      {
         id: 'other_expense',
         name: t('cashMovement.concept.otherExpense', 'Otro egreso'),
-      },
-    ],
-    ADJUSTMENT: [
-      {
-        id: 'difference',
-        name: t('cashMovement.concept.difference', 'Ajuste por diferencia'),
-      },
-      {
-        id: 'correction',
-        name: t('cashMovement.concept.correction', 'Corrección de saldo'),
       },
     ],
   }
@@ -200,20 +202,8 @@ const CashMovements = () => {
         label: t('cashMovement.type.expense', 'Egreso'),
         className: 'movement-badge--expense',
       },
-      ADJUSTMENT: {
-        icon: <RefreshCwIcon className='w-4 h-4' />,
-        variant: 'secondary',
-        label: t('cashMovement.type.adjustment', 'Ajuste'),
-        className: 'movement-badge--adjustment',
-      },
-      TRANSFER: {
-        icon: <RefreshCwIcon className='w-4 h-4' />,
-        variant: 'outline',
-        label: t('cashMovement.type.transfer', 'Transferencia'),
-        className: 'movement-badge--transfer',
-      },
     }
-    return displays[type] || displays.ADJUSTMENT
+    return displays[type] || displays.INCOME
   }
 
   // Load active cash register
@@ -224,13 +214,13 @@ const CashMovements = () => {
       setActiveCashRegister(result)
     } catch (error) {
       console.error('Error loading active cash register:', error)
-      addToast({
-        type: 'error',
-        message: t(
+      addToast(
+        t(
           'cashMovement.error.loadingCashRegister',
           'Error al cargar la caja registradora'
         ),
-      })
+        'error'
+      )
     } finally {
       setIsLoadingCashRegister(false)
     }
@@ -264,13 +254,13 @@ const CashMovements = () => {
         setMovements(result || [])
       } catch (error) {
         console.error('Error loading movements:', error)
-        addToast({
-          type: 'error',
-          message: t(
+        addToast(
+          t(
             'cashMovement.error.loadingMovements',
             'Error al cargar los movimientos'
           ),
-        })
+          'error'
+        )
       } finally {
         setIsLoadingMovements(false)
       }
@@ -325,36 +315,36 @@ const CashMovements = () => {
   // Submit new movement
   const handleSubmitNewMovement = async () => {
     if (!activeCashRegister?.id) {
-      addToast({
-        type: 'error',
-        message: t(
+      addToast(
+        t(
           'cashMovement.error.noActiveCashRegister',
           'No hay caja registradora activa'
         ),
-      })
+        'error'
+      )
       return
     }
 
     const amount = parseFloat(parseFormattedNumber(newMovementForm.amount))
     if (!amount || amount <= 0) {
-      addToast({
-        type: 'error',
-        message: t(
+      addToast(
+        t(
           'cashMovement.error.invalidAmount',
           'El monto debe ser mayor a 0'
         ),
-      })
+        'error'
+      )
       return
     }
 
     if (!newMovementForm.concept) {
-      addToast({
-        type: 'error',
-        message: t(
+      addToast(
+        t(
           'cashMovement.error.noConcept',
           'Debe seleccionar un concepto'
         ),
-      })
+        'error'
+      )
       return
     }
 
@@ -374,10 +364,10 @@ const CashMovements = () => {
           (newMovementForm.notes ? ` - ${newMovementForm.notes}` : ''),
       })
 
-      addToast({
-        type: 'success',
-        message: t('cashMovement.success', 'Movimiento registrado con éxito'),
-      })
+      addToast(
+        t('cashMovement.success', 'Movimiento registrado con éxito'),
+        'success'
+      )
 
       // Reset form and close dialog
       setNewMovementForm({
@@ -392,12 +382,11 @@ const CashMovements = () => {
       loadMovements()
     } catch (error) {
       console.error('Error creating movement:', error)
-      addToast({
-        type: 'error',
-        message:
-          error.message ||
+      addToast(
+        error.message ||
           t('cashMovement.error.generic', 'Error al registrar el movimiento'),
-      })
+        'error'
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -420,13 +409,13 @@ const CashMovements = () => {
       !voidDialog.reason ||
       voidDialog.reason.length < 5
     ) {
-      addToast({
-        type: 'error',
-        message: t(
+      addToast(
+        t(
           'cashMovement.void.reasonRequired',
           'La razón debe tener al menos 5 caracteres'
         ),
-      })
+        'error'
+      )
       return
     }
 
@@ -437,13 +426,13 @@ const CashMovements = () => {
         voidDialog.reason
       )
 
-      addToast({
-        type: 'success',
-        message: t(
+      addToast(
+        t(
           'cashMovement.void.success',
           'Movimiento anulado correctamente'
         ),
-      })
+        'success'
+      )
 
       setVoidDialog({
         isOpen: false,
@@ -454,12 +443,11 @@ const CashMovements = () => {
       loadMovements()
     } catch (error) {
       console.error('Error voiding movement:', error)
-      addToast({
-        type: 'error',
-        message:
-          error.message ||
+      addToast(
+        error.message ||
           t('cashMovement.void.error', 'Error al anular el movimiento'),
-      })
+        'error'
+      )
       setVoidDialog(prev => ({ ...prev, isSubmitting: false }))
     }
   }
@@ -504,7 +492,7 @@ const CashMovements = () => {
 
   return (
     <div className='cash-movements-page'>
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
 
       {/* Header - mismo ancho que la card */}
       <div className='cash-movements-page__header'>
@@ -565,20 +553,11 @@ const CashMovements = () => {
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value=''>
-                    {t('cashMovement.filter.allTypes', 'Todos')}
-                  </SelectItem>
                   <SelectItem value='INCOME'>
                     {t('cashMovement.type.income', 'Ingreso')}
                   </SelectItem>
                   <SelectItem value='EXPENSE'>
                     {t('cashMovement.type.expense', 'Egreso')}
-                  </SelectItem>
-                  <SelectItem value='ADJUSTMENT'>
-                    {t('cashMovement.type.adjustment', 'Ajuste')}
-                  </SelectItem>
-                  <SelectItem value='TRANSFER'>
-                    {t('cashMovement.type.transfer', 'Transferencia')}
                   </SelectItem>
                 </SelectContent>
               </Select>

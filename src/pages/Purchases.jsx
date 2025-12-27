@@ -4,7 +4,7 @@
  * Basado en especificaciones de GUIA_MVP_DESARROLLO.md y FLUENT_DESIGN_SYSTEM.md
  */
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import {
   Search,
   Download,
@@ -89,6 +89,25 @@ const Purchases = () => {
   const [showViewModal, setShowViewModal] = useState(false)
   const [viewOrderData, setViewOrderData] = useState(null)
   const [_loadingDetails, setLoadingDetails] = useState(false)
+
+  // Filtrar productos del modal excluyendo los que ya están en la tabla de compras
+  // Esto se actualiza reactivamente cuando se agregan/eliminan productos
+  const filteredModalProducts = useMemo(() => {
+    if (!modalProductResults || modalProductResults.length === 0) {
+      return []
+    }
+
+    // Crear un Set con los IDs de productos ya agregados para búsqueda O(1)
+    const existingProductIds = new Set(
+      purchaseItems.map(item => item.product_id)
+    )
+
+    // Filtrar productos que ya están en la lista de compras
+    return modalProductResults.filter(product => {
+      const productId = product.id || product.product_id
+      return !existingProductIds.has(productId)
+    })
+  }, [modalProductResults, purchaseItems])
 
   // Cargar datos al montar y configurar fechas por defecto
   useEffect(() => {
@@ -324,7 +343,15 @@ const Purchases = () => {
 
         // Solo actualizar si no fue cancelado
         if (!isCancelled) {
-          setModalProductResults(Array.isArray(results) ? results : [])
+          const rawResults = Array.isArray(results) ? results : []
+
+          // Filtrar productos inactivos (eliminados lógicamente)
+          // Los productos con state === false no deben mostrarse
+          const activeProducts = rawResults.filter(
+            product => product.state !== false
+          )
+
+          setModalProductResults(activeProducts)
         }
       } catch (err) {
         if (!isCancelled) {
@@ -444,10 +471,17 @@ const Purchases = () => {
     setModalProfitPct(item.profit_pct)
     setModalTaxRateId(item.tax_rate_id || null)
 
-    // Calcular precio de venta desde el margen
-    const salePrice = item.unit_price * (1 + item.profit_pct / 100)
-    setModalSalePrice(salePrice)
-    setPricingMode('margin')
+    // Cargar modo de pricing y precio de venta guardados
+    if (item.pricing_mode === 'sale_price' && item.sale_price > 0) {
+      // Modo precio explícito: usar el precio guardado
+      setModalSalePrice(item.sale_price)
+      setPricingMode('sale_price')
+    } else {
+      // Modo margen: calcular precio de venta desde el margen
+      const salePrice = item.unit_price * (1 + item.profit_pct / 100)
+      setModalSalePrice(Math.round(salePrice))
+      setPricingMode('margin')
+    }
 
     setIsModalOpen(true)
   }
@@ -483,6 +517,8 @@ const Purchases = () => {
       quantity: Number(modalQuantity) || 1,
       unit_price: Number(modalUnitPrice) || 0,
       profit_pct: Number(modalProfitPct) || 30,
+      sale_price: Math.round(Number(modalSalePrice) || 0), // Precio redondeado a entero (PYG)
+      pricing_mode: pricingMode, // 'margin' o 'sale_price'
       unit: modalSelectedProduct.unit || 'unit',
       tax_rate_id: modalTaxRateId || null, // Usar el tax_rate_id seleccionado por el usuario
     }
@@ -539,19 +575,27 @@ const Purchases = () => {
       return
     }
 
-    // Preparar datos según PURCHASE_API.md
+    // Preparar datos según PURCHASE_API.md y PURCHASE_PRICING_INTEGRATION_GUIDE.md
     const orderData = {
       supplier_id: selectedSupplier.id,
       status: 'PENDING',
-      order_details: purchaseItems.map(item => ({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        unit: item.unit || 'unit',
-        profit_pct: item.profit_pct || 30,
-        tax_rate_id: item.tax_rate_id || null, // Usar tax_rate_id del producto
-        supplier_id: selectedSupplier.id, // Incluir supplier_id en cada detalle (workaround para backend)
-      })),
+      order_details: purchaseItems.map(item => {
+        const detail = {
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          unit: item.unit || 'unit',
+          profit_pct: item.profit_pct || 30,
+          tax_rate_id: item.tax_rate_id || null,
+          supplier_id: selectedSupplier.id,
+        }
+        // API v1.0: Si el usuario definió precio explícito, enviarlo
+        // El backend usará este precio directamente y ignorará profit_pct para el cálculo
+        if (item.pricing_mode === 'sale_price' && item.sale_price > 0) {
+          detail.explicit_sale_price = Math.round(item.sale_price)
+        }
+        return detail
+      }),
       auto_update_prices: true,
       default_profit_margin: 30.0,
       payment_method_id: paymentMethod ? parseInt(paymentMethod) : null,
@@ -1663,9 +1707,9 @@ const Purchases = () => {
                                 const trimmed = modalProductSearch.trim()
                                 if (
                                   trimmed.length >= 2 &&
-                                  modalProductResults.length > 0
+                                  filteredModalProducts.length > 0
                                 ) {
-                                  handleProductSelect(modalProductResults[0])
+                                  handleProductSelect(filteredModalProducts[0])
                                 }
                               }
                             }}
@@ -1698,10 +1742,10 @@ const Purchases = () => {
 
                       {/* Dropdown de resultados */}
                       {showProductDropdown &&
-                        modalProductResults.length > 0 &&
+                        filteredModalProducts.length > 0 &&
                         modalProductSearch.trim().length >= 2 && (
                           <div className='purchases__supplier-dropdown'>
-                            {modalProductResults.map(product => (
+                            {filteredModalProducts.map(product => (
                               <div
                                 key={product.id || product.product_id}
                                 className='purchases__supplier-item'
@@ -1726,7 +1770,7 @@ const Purchases = () => {
                       {/* Mensaje cuando no hay resultados */}
                       {!searchingProducts &&
                         modalProductSearch.trim().length >= 2 &&
-                        modalProductResults.length === 0 && (
+                        filteredModalProducts.length === 0 && (
                           <div className='purchases__supplier-loading'>
                             {t(
                               'purchases.modal.no_results',

@@ -70,15 +70,6 @@ export const useCashRegisterStore = create()(
           const activeCashRegister =
             await cashRegisterService.getActiveCashRegister()
 
-          // El backend ahora calcula current_balance automáticamente
-          // Solo lo logueamos para debugging
-          if (activeCashRegister?.current_balance != null) {
-            console.log(
-              '✅ Backend envía current_balance:',
-              activeCashRegister.current_balance
-            )
-          }
-
           set({
             activeCashRegister,
             isActiveCashRegisterLoading: false,

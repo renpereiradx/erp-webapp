@@ -36,25 +36,37 @@ class PurchaseService {
       const requestData = {
         supplier_id: parseInt(orderData.supplier_id),
         status: orderData.status || 'PENDING',
-        order_details: orderData.order_details.map(item => ({
-          product_id: String(item.product_id),
-          quantity: parseFloat(item.quantity),
-          unit_price: parseFloat(item.unit_price),
-          unit: String(item.unit || 'unit'),
-          profit_pct:
-            item.profit_pct !== null && item.profit_pct !== undefined
-              ? parseFloat(item.profit_pct)
-              : null,
-          tax_rate_id:
-            item.tax_rate_id !== null &&
-            item.tax_rate_id !== undefined &&
-            item.tax_rate_id !== ''
-              ? parseInt(item.tax_rate_id)
-              : null,
-          supplier_id: item.supplier_id
-            ? parseInt(item.supplier_id)
-            : parseInt(orderData.supplier_id), // Workaround: incluir supplier_id en cada detalle
-        })),
+        order_details: orderData.order_details.map(item => {
+          const detail = {
+            product_id: String(item.product_id),
+            quantity: parseFloat(item.quantity),
+            unit_price: parseFloat(item.unit_price),
+            unit: String(item.unit || 'unit'),
+            profit_pct:
+              item.profit_pct !== null && item.profit_pct !== undefined
+                ? parseFloat(item.profit_pct)
+                : null,
+            tax_rate_id:
+              item.tax_rate_id !== null &&
+              item.tax_rate_id !== undefined &&
+              item.tax_rate_id !== ''
+                ? parseInt(item.tax_rate_id)
+                : null,
+            supplier_id: item.supplier_id
+              ? parseInt(item.supplier_id)
+              : parseInt(orderData.supplier_id),
+          }
+          // API v1.0: Soporte para precio de venta explícito
+          // Si explicit_sale_price está presente, el backend lo usa directamente
+          // y ignora profit_pct para el cálculo del precio
+          if (
+            item.explicit_sale_price !== null &&
+            item.explicit_sale_price !== undefined
+          ) {
+            detail.explicit_sale_price = Math.round(item.explicit_sale_price)
+          }
+          return detail
+        }),
         auto_update_prices: Boolean(orderData.auto_update_prices !== false),
         default_profit_margin: parseFloat(
           orderData.default_profit_margin || 30.0

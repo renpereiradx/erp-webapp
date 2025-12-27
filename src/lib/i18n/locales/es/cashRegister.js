@@ -33,6 +33,7 @@ export const cashRegister = {
   'cashRegister.close.title': 'Cerrar Caja Registradora',
   'cashRegister.close.cashier': 'Cajero',
   'cashRegister.close.register': 'Caja',
+  'cashRegister.close.location': 'Ubicación',
   'cashRegister.close.closingDate': 'Fecha de Cierre',
   'cashRegister.close.finalBalance': 'Saldo Final',
   'cashRegister.close.finalBalance.placeholder': '0.00',

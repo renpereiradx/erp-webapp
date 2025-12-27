@@ -1,7 +1,7 @@
 # 💰 Guía de Integración Frontend - API de Cajas Registradoras
 
-**Versión:** 2.2 (Gestión Avanzada de Movimientos)
-**Fecha:** 23 de Diciembre de 2025
+**Versión:** 2.3 (Simplificación de Tipos de Movimiento)
+**Fecha:** 26 de Diciembre de 2025
 
 ---
 
@@ -26,25 +26,37 @@ Sistema completo de gestión de cajas registradoras con integración obligatoria
 
 ## ⚠️ Cambios Importantes
 
-### v2.2 (Diciembre 2025) - Gestión Avanzada de Movimientos 🆕
+### v2.3 (Diciembre 2025) - Simplificación de Tipos de Movimiento 🆕
 
-**Nuevas funcionalidades:**
+**Cambios importantes:**
 
-1. **Anulación de movimientos** - Nuevo endpoint para revertir movimientos:
+1. **Solo dos tipos de movimiento**: Se simplificó el sistema para usar únicamente `INCOME` y `EXPENSE`
+   - ❌ `TRANSFER` y `ADJUSTMENT` ya no están disponibles
+   - ✅ Para ajustes, usar `INCOME` (ajuste positivo) o `EXPENSE` (ajuste negativo) con prefijo `[Ajuste]` en el concepto
+   - Ejemplo: `{"movement_type": "INCOME", "concept": "[Ajuste] Diferencia encontrada en arqueo"}`
+
+2. **Cálculo de balance simplificado**:
+   - `INCOME` siempre suma al balance (+)
+   - `EXPENSE` siempre resta del balance (-)
+   - No hay ambigüedad en cómo afecta cada movimiento
+
+3. **Filtros actualizados**: Solo acepta `INCOME` y `EXPENSE` como tipos válidos
+
+### v2.2 (Diciembre 2025) - Gestión Avanzada de Movimientos
+
+**Funcionalidades añadidas:**
+
+1. **Anulación de movimientos** - Endpoint para revertir movimientos:
    - `POST /cash-movements/{id}/void` - Anula un movimiento creando una reversión automática
    - Requiere razón obligatoria (mínimo 5 caracteres)
    - Solo funciona con caja abierta
    - No permite anular movimientos que ya son reversiones
 
-2. **Filtros en listado de movimientos** - Nuevo endpoint con filtros avanzados:
+2. **Filtros en listado de movimientos** - Endpoint con filtros avanzados:
    - `GET /cash-registers/{id}/movements/filter` - Movimientos con filtros
-   - Filtrar por tipo: `INCOME`, `EXPENSE`, `TRANSFER`, `ADJUSTMENT`
+   - Filtrar por tipo: `INCOME`, `EXPENSE`
    - Filtrar por rango de fechas: `date_from`, `date_to`
    - Paginación: `limit` y `offset`
-
-3. **Tipos de movimiento ampliados**:
-   - Ahora soporta `TRANSFER` para transferencias entre cajas
-   - Ahora soporta `ADJUSTMENT` para ajustes manuales de balance
 
 ### v2.1 (Octubre 2025) - Endpoint de Movimientos Enriquecido
 
@@ -221,10 +233,15 @@ Authorization: Bearer <jwt_token>
   "closed_by": null,
   "closed_at": null,
   "initial_balance": 350000,
+  "current_balance": 515000,
   "final_balance": null,
   "notes": null
 }
 ```
+
+**Campos importantes:**
+- `current_balance`: Balance actual calculado dinámicamente (`initial_balance + Σ(INCOME) - Σ(EXPENSE)`)
+- Solo se incluye cuando `status = "OPEN"`
 
 **Response (204 No Content) - Sin caja activa:**
 ```
@@ -268,11 +285,29 @@ GET /cash-registers?status=CLOSED&limit=5
     "closed_by": "2pmK5NPfHiRwZUkcd3d3cETC2JW",
     "closed_at": "2025-10-02T12:34:07.123895Z",
     "initial_balance": 350000,
+    "current_balance": null,
     "final_balance": 350000,
     "notes": "prueba"
+  },
+  {
+    "id": 10,
+    "name": "Caja Activa",
+    "status": "OPEN",
+    "opened_by": "2pmK5NPfHiRwZUkcd3d3cETC2JW",
+    "opened_at": "2025-12-26T08:00:00Z",
+    "closed_by": null,
+    "closed_at": null,
+    "initial_balance": 100000,
+    "current_balance": 315000,
+    "final_balance": null,
+    "notes": null
   }
 ]
 ```
+
+**Notas sobre `current_balance`:**
+- Para cajas `OPEN`: Muestra el balance calculado en tiempo real
+- Para cajas `CLOSED`: Es `null` (usar `final_balance` en su lugar)
 
 **Response Sin Resultados:**
 ```json
@@ -366,7 +401,7 @@ El sistema valida:
 
 **Endpoint:** `POST /cash-movements/`
 
-Para registrar movimientos de efectivo manuales (ajustes, retiros, depósitos, transferencias).
+Para registrar movimientos de efectivo manuales (retiros, depósitos, ajustes).
 
 **Request Body:**
 ```json
@@ -383,9 +418,9 @@ Para registrar movimientos de efectivo manuales (ajustes, retiros, depósitos, t
 | Campo | Tipo | Requerido | Descripción |
 |-------|------|-----------|-------------|
 | `cash_register_id` | number | ✅ Sí | ID de la caja registradora |
-| `movement_type` | string | ✅ Sí | `INCOME` \| `EXPENSE` \| `TRANSFER` \| `ADJUSTMENT` |
+| `movement_type` | string | ✅ Sí | `INCOME` \| `EXPENSE` |
 | `amount` | number | ✅ Sí | Monto del movimiento (debe ser > 0) |
-| `concept` | string | ✅ Sí | Concepto del movimiento |
+| `concept` | string | ✅ Sí | Concepto del movimiento (para ajustes usar prefijo `[Ajuste]`) |
 
 **Response (200 OK):**
 ```json
@@ -470,7 +505,7 @@ Este endpoint retorna movimientos de caja con información enriquecida, incluyen
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
 | `movement_id` | number | ID único del movimiento |
-| `movement_type` | string | Tipo: `INCOME` \| `EXPENSE` \| `ADJUSTMENT` |
+| `movement_type` | string | Tipo: `INCOME` \| `EXPENSE` |
 | `amount` | number | Monto del movimiento |
 | `concept` | string | Concepto/descripción del movimiento |
 | `created_at` | string | Timestamp ISO 8601 |
@@ -529,8 +564,10 @@ movements.forEach(movement => {
 |------|-------------|----------------|
 | `INCOME` | Ingreso de efectivo | Incrementa (+) |
 | `EXPENSE` | Egreso de efectivo | Decrementa (-) |
-| `TRANSFER` | Transferencia entre cajas | Depende de dirección |
-| `ADJUSTMENT` | Ajuste manual de balance | Puede incrementar o decrementar |
+
+**Para ajustes manuales:**
+- Ajuste positivo → usar `INCOME` con concepto `[Ajuste] razón...`
+- Ajuste negativo → usar `EXPENSE` con concepto `[Ajuste] razón...`
 
 ### 4. Movimientos Automáticos vs Manuales
 
@@ -588,8 +625,6 @@ Anula un movimiento de efectivo creando automáticamente un movimiento de revers
 |---------------|----------------|-----------------|
 | `INCOME` | `EXPENSE` | Mismo monto (positivo) |
 | `EXPENSE` | `INCOME` | Mismo monto (positivo) |
-| `ADJUSTMENT` | `ADJUSTMENT` | Monto invertido |
-| `TRANSFER` | `TRANSFER` | Monto invertido |
 
 **Errores Posibles:**
 
@@ -637,7 +672,7 @@ Obtiene movimientos de una caja con filtros opcionales por tipo de movimiento y 
 
 | Parámetro | Tipo | Requerido | Descripción |
 |-----------|------|-----------|-------------|
-| `type` | string | ❌ No | Tipo de movimiento: `INCOME`, `EXPENSE`, `TRANSFER`, `ADJUSTMENT` |
+| `type` | string | ❌ No | Tipo de movimiento: `INCOME`, `EXPENSE` |
 | `date_from` | string | ❌ No | Fecha desde (formato: `2025-12-01` o `2025-12-01T00:00:00`) |
 | `date_to` | string | ❌ No | Fecha hasta (formato: `2025-12-31` o `2025-12-31T23:59:59`) |
 | `limit` | number | ❌ No | Límite de resultados (default: 50, max: 200) |
@@ -655,8 +690,8 @@ GET /cash-registers/6/movements/filter?type=EXPENSE&date_from=2025-12-01&date_to
 # Todos los movimientos con paginación
 GET /cash-registers/6/movements/filter?limit=20&offset=0
 
-# Ajustes de la última semana
-GET /cash-registers/6/movements/filter?type=ADJUSTMENT&date_from=2025-12-16
+# Movimientos de la última semana
+GET /cash-registers/6/movements/filter?date_from=2025-12-16
 ```
 
 **Response (200 OK):**
@@ -743,8 +778,7 @@ const paginated = await getFilteredMovements(6, { limit: 10, offset: 20 });
   "movement_counts": {
     "total_movements": 3,
     "income_movements": 2,
-    "expense_movements": 1,
-    "adjustment_movements": 0
+    "expense_movements": 1
   },
   "period_summary": {
     "start_time": "2025-10-02T08:00:00Z",
@@ -935,20 +969,20 @@ if (response.requires_change) {
 
 ---
 
-## � Recursos Adicionales
+## 📚 Recursos Adicionales
 
 **Documentación relacionada:**
 - [SALE_PAYMENT_PROCESSING_API.md](./SALE_PAYMENT_PROCESSING_API.md) - Documentación completa de pagos
 - [PAYMENT_REFACTORING_SUCCESS.md](../../PAYMENT_REFACTORING_SUCCESS.md) - Detalles técnicos de la refactorización
 
 **Base de datos:**
-- Tabla principal: `operations.cash_registers`
-- Movimientos: `operations.cash_movements`
+- Tabla principal: `transactions.cash_registers`
+- Movimientos: `transactions.cash_movements`
 - Pagos: `transactions.sale_payments`
 
 ---
 
-**Última actualización:** 23 de Diciembre de 2025
-**Versión:** 2.2 (Gestión Avanzada de Movimientos)
+**Última actualización:** 26 de Diciembre de 2025
+**Versión:** 2.3 (Simplificación de Tipos de Movimiento)
 **Estado:** ✅ Production Ready
 **Repositorio:** [github.com/renpereiradx/business_management](https://github.com/renpereiradx/business_management)
