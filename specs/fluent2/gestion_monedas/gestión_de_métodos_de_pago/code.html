@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gestión de Métodos de Pago - ERP</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1a2632",
+                        "surface-light": "#233648", 
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Fluent 2 scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3e5060;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4e6070;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white overflow-hidden h-screen flex">
+<!-- Sidebar -->
+<aside class="w-72 h-full flex flex-col bg-[#111a22] border-r border-[#233648] shrink-0 transition-all duration-300">
+<div class="p-6 pb-2">
+<div class="flex items-center gap-3 mb-8">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 shadow-lg relative" data-alt="ERP System Logo gradient abstract" style="background-image: linear-gradient(135deg, #137fec 0%, #0b4e92 100%);">
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[20px]">dataset</span>
+</div>
+</div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-bold leading-normal">Nexus ERP</h1>
+<p class="text-[#92adc9] text-xs font-normal">v4.2.0 • Admin</p>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#233648] transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#92adc9] group-hover:text-white transition-colors">dashboard</span>
+<p class="text-[#92adc9] group-hover:text-white text-sm font-medium transition-colors">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#233648] transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#92adc9] group-hover:text-white transition-colors">shopping_cart</span>
+<p class="text-[#92adc9] group-hover:text-white text-sm font-medium transition-colors">Ventas</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#233648] transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#92adc9] group-hover:text-white transition-colors">shopping_bag</span>
+<p class="text-[#92adc9] group-hover:text-white text-sm font-medium transition-colors">Compras</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#233648] transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#92adc9] group-hover:text-white transition-colors">account_balance_wallet</span>
+<p class="text-[#92adc9] group-hover:text-white text-sm font-medium transition-colors">Finanzas</p>
+</a>
+<div class="my-2 border-t border-[#233648]"></div>
+<div class="px-3 py-2">
+<p class="text-[#58738e] text-xs font-bold uppercase tracking-wider">Sistema</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#137fec]/10 border border-[#137fec]/20" href="#">
+<span class="material-symbols-outlined text-[#137fec]">settings</span>
+<p class="text-white text-sm font-bold">Configuración</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[#233648] transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#92adc9] group-hover:text-white transition-colors">group</span>
+<p class="text-[#92adc9] group-hover:text-white text-sm font-medium transition-colors">Usuarios</p>
+</a>
+</div>
+</div>
+<div class="mt-auto p-6 border-t border-[#233648]">
+<div class="flex items-center gap-3">
+<div class="size-9 rounded-full bg-cover bg-center border-2 border-[#233648]" data-alt="User profile picture placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAqx2BuOtbJeEYLj6oZRye5dUyeOqrV8lMyyPYfHDkaIq_vOWBc2SY7-myoHI-Qr30bnO2Yo28T_g1fYJDa_d5PaMYAWZQZ1SXaDXaifM8zJlA9uQxwuu02rgm87sZFT4YoQVcK5iQzf7dW7R1XfCfxpsTiO9O4ykJIe76VFMqrV9jhwAhWM_aooh2oXauyGUtKRfVqrnlVRul8rI8C1qcSw0WlAmMvAs7VUlJwGowMwrCul0oFmGweCJfGb_p9oGF28E1ldN2fe4I");'></div>
+<div class="flex flex-col">
+<p class="text-white text-sm font-medium">Carlos R.</p>
+<p class="text-[#92adc9] text-xs">Finanzas Lead</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative bg-background-light dark:bg-background-dark">
+<!-- Header Section -->
+<header class="flex-none px-8 py-6 pb-2">
+<!-- Breadcrumbs -->
+<nav class="flex flex-wrap gap-2 mb-4 items-center">
+<a class="text-[#92adc9] text-sm font-medium hover:text-white transition-colors" href="#">Inicio</a>
+<span class="material-symbols-outlined text-[#58738e] text-sm">chevron_right</span>
+<a class="text-[#92adc9] text-sm font-medium hover:text-white transition-colors" href="#">Finanzas</a>
+<span class="material-symbols-outlined text-[#58738e] text-sm">chevron_right</span>
+<a class="text-[#92adc9] text-sm font-medium hover:text-white transition-colors" href="#">Configuración</a>
+<span class="material-symbols-outlined text-[#58738e] text-sm">chevron_right</span>
+<span class="text-white text-sm font-bold bg-[#233648] px-2 py-0.5 rounded">Métodos de Pago</span>
+</nav>
+<!-- Page Heading -->
+<div class="flex flex-wrap justify-between items-end gap-6 mb-6">
+<div class="flex flex-col gap-1 max-w-2xl">
+<h1 class="text-white text-3xl font-bold tracking-tight">Gestión de Métodos de Pago</h1>
+<p class="text-[#92adc9] text-base font-normal">Configure los canales de cobro y pago, asigne cuentas contables y gestione la disponibilidad para los puntos de venta.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center h-10 px-4 rounded-lg border border-[#233648] hover:bg-[#233648] text-[#92adc9] hover:text-white text-sm font-medium transition-all gap-2">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                        Exportar
+                    </button>
+<button class="flex items-center justify-center h-10 px-4 rounded-lg bg-primary hover:bg-[#0f6bca] text-white text-sm font-bold shadow-lg shadow-blue-900/20 transition-all gap-2">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Nuevo Método
+                    </button>
+</div>
+</div>
+<!-- Toolbar (Search & Filter) -->
+<div class="flex flex-col lg:flex-row gap-4 justify-between items-center bg-[#1a2632] p-2 rounded-xl border border-[#233648]">
+<!-- Search -->
+<div class="w-full lg:w-96 relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-[#92adc9]">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-2.5 border-none rounded-lg leading-5 bg-[#233648] text-white placeholder-[#92adc9] focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm" placeholder="Buscar por código, descripción..." type="text"/>
+</div>
+<!-- Filters Chips -->
+<div class="flex gap-2 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0 scrollbar-hide">
+<button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#233648] border border-[#137fec] text-white text-sm font-medium whitespace-nowrap transition-all">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+                        Todos
+                    </button>
+<button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-transparent border border-transparent hover:bg-[#233648] text-[#92adc9] hover:text-white text-sm font-medium whitespace-nowrap transition-all">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+                        Efectivo
+                    </button>
+<button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-transparent border border-transparent hover:bg-[#233648] text-[#92adc9] hover:text-white text-sm font-medium whitespace-nowrap transition-all">
+<span class="material-symbols-outlined text-[18px]">credit_card</span>
+                        Tarjeta
+                    </button>
+<button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-transparent border border-transparent hover:bg-[#233648] text-[#92adc9] hover:text-white text-sm font-medium whitespace-nowrap transition-all">
+<span class="material-symbols-outlined text-[18px]">account_balance</span>
+                        Transferencia
+                    </button>
+</div>
+<button class="lg:hidden p-2 rounded-lg bg-[#233648] text-white">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</header>
+<!-- Data Grid Section -->
+<section class="flex-1 overflow-auto px-8 py-4">
+<div class="w-full inline-block align-middle">
+<div class="border border-[#233648] rounded-xl overflow-hidden bg-[#111a22]">
+<table class="min-w-full divide-y divide-[#233648]">
+<thead class="bg-[#1a2632]">
+<tr>
+<th class="px-6 py-4 text-left text-xs font-bold text-[#92adc9] uppercase tracking-wider w-16" scope="col">
+<input class="rounded border-[#58738e] bg-[#233648] text-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</th>
+<th class="px-6 py-4 text-left text-xs font-bold text-[#92adc9] uppercase tracking-wider cursor-pointer group hover:text-white" scope="col">
+<div class="flex items-center gap-1">
+                                        Código
+                                        <span class="material-symbols-outlined text-[16px] text-[#58738e] group-hover:text-primary">arrow_drop_down</span>
+</div>
+</th>
+<th class="px-6 py-4 text-left text-xs font-bold text-[#92adc9] uppercase tracking-wider cursor-pointer group hover:text-white" scope="col">
+<div class="flex items-center gap-1">
+                                        Descripción
+                                        <span class="material-symbols-outlined text-[16px] text-[#58738e] opacity-0 group-hover:opacity-100">swap_vert</span>
+</div>
+</th>
+<th class="px-6 py-4 text-left text-xs font-bold text-[#92adc9] uppercase tracking-wider" scope="col">
+                                    Tipo
+                                </th>
+<th class="px-6 py-4 text-left text-xs font-bold text-[#92adc9] uppercase tracking-wider" scope="col">
+                                    Cuenta Contable
+                                </th>
+<th class="px-6 py-4 text-center text-xs font-bold text-[#92adc9] uppercase tracking-wider" scope="col">
+                                    Estado
+                                </th>
+<th class="relative px-6 py-4" scope="col">
+<span class="sr-only">Acciones</span>
+</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#233648] bg-[#111a22]">
+<!-- Row 1 -->
+<tr class="group hover:bg-[#1a2632] transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<input class="rounded border-[#58738e] bg-[#233648] text-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-medium text-white font-mono bg-[#233648] px-2 py-1 rounded text-xs">EF-001</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-white">Caja General (Moneda Local)</span>
+<span class="text-xs text-[#58738e]">Predeterminado para ventas POS</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+<span class="material-symbols-outlined text-[14px]">payments</span>
+                                        Efectivo
+                                    </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#92adc9]">
+                                    1.01.01.001
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<span class="inline-flex items-center justify-center size-6 rounded-full bg-green-500/10 text-green-400">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<button class="text-[#58738e] hover:text-white transition-colors p-1 rounded-md hover:bg-[#233648]">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-[#1a2632] transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<input class="rounded border-[#58738e] bg-[#233648] text-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-medium text-white font-mono bg-[#233648] px-2 py-1 rounded text-xs">EF-USD</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-white">Caja Dólares</span>
+<span class="text-xs text-[#58738e]">Operaciones de cambio</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+<span class="material-symbols-outlined text-[14px]">payments</span>
+                                        Efectivo
+                                    </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#92adc9]">
+                                    1.01.01.002
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<span class="inline-flex items-center justify-center size-6 rounded-full bg-green-500/10 text-green-400">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<button class="text-[#58738e] hover:text-white transition-colors p-1 rounded-md hover:bg-[#233648]">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-[#1a2632] transition-colors bg-[#1a2632]/30">
+<td class="px-6 py-4 whitespace-nowrap">
+<input checked="" class="rounded border-[#58738e] bg-[#233648] text-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-medium text-white font-mono bg-[#233648] px-2 py-1 rounded text-xs">TC-VISA</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-white">Visa Crédito Corporativa</span>
+<span class="text-xs text-[#58738e]">Integración API v2</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+<span class="material-symbols-outlined text-[14px]">credit_card</span>
+                                        Tarjeta
+                                    </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#92adc9]">
+                                    1.01.02.005
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<span class="inline-flex items-center justify-center size-6 rounded-full bg-green-500/10 text-green-400">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<button class="text-[#58738e] hover:text-white transition-colors p-1 rounded-md hover:bg-[#233648]">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-[#1a2632] transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<input class="rounded border-[#58738e] bg-[#233648] text-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-medium text-white font-mono bg-[#233648] px-2 py-1 rounded text-xs">TC-AMEX</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-[#92adc9] italic line-through decoration-[#92adc9]">Amex Gold</span>
+<span class="text-xs text-[#58738e]">Descontinuado 2023</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+<span class="material-symbols-outlined text-[14px]">credit_card</span>
+                                        Tarjeta
+                                    </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#92adc9]">
+                                    1.01.02.008
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<span class="inline-flex items-center justify-center size-6 rounded-full bg-[#233648] text-[#58738e]">
+<span class="material-symbols-outlined text-[16px]">block</span>
+</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<button class="text-[#58738e] hover:text-white transition-colors p-1 rounded-md hover:bg-[#233648]">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="group hover:bg-[#1a2632] transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<input class="rounded border-[#58738e] bg-[#233648] text-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-medium text-white font-mono bg-[#233648] px-2 py-1 rounded text-xs">TR-SANT</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-white">Transferencia Santander</span>
+<span class="text-xs text-[#58738e]">Cuenta Corriente #9822</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
+<span class="material-symbols-outlined text-[14px]">account_balance</span>
+                                        Transferencia
+                                    </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#92adc9]">
+                                    1.01.03.001
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<span class="inline-flex items-center justify-center size-6 rounded-full bg-green-500/10 text-green-400">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<button class="text-[#58738e] hover:text-white transition-colors p-1 rounded-md hover:bg-[#233648]">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 6 -->
+<tr class="group hover:bg-[#1a2632] transition-colors">
+<td class="px-6 py-4 whitespace-nowrap">
+<input class="rounded border-[#58738e] bg-[#233648] text-primary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<span class="text-sm font-medium text-white font-mono bg-[#233648] px-2 py-1 rounded text-xs">TR-BBVA</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-white">Transferencia BBVA</span>
+<span class="text-xs text-[#58738e]">Cuenta de Ahorros</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
+<span class="material-symbols-outlined text-[14px]">account_balance</span>
+                                        Transferencia
+                                    </div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-sm text-[#92adc9]">
+                                    1.01.03.002
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-center">
+<span class="inline-flex items-center justify-center size-6 rounded-full bg-green-500/10 text-green-400">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</span>
+</td>
+<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+<button class="text-[#58738e] hover:text-white transition-colors p-1 rounded-md hover:bg-[#233648]">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Footer / Pagination -->
+<footer class="flex-none px-8 py-4 border-t border-[#233648] bg-[#111a22]">
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+<p class="text-sm text-[#92adc9]">
+                    Mostrando <span class="font-medium text-white">1</span> a <span class="font-medium text-white">6</span> de <span class="font-medium text-white">12</span> resultados
+                </p>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-lg border border-[#233648] bg-[#1a2632] text-[#58738e] hover:text-white hover:bg-[#233648] disabled:opacity-50 transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="px-3 py-1.5 rounded-lg bg-primary text-white text-sm font-bold">1</button>
+<button class="px-3 py-1.5 rounded-lg border border-[#233648] hover:bg-[#233648] text-[#92adc9] text-sm font-medium transition-colors">2</button>
+<button class="p-2 rounded-lg border border-[#233648] bg-[#1a2632] text-[#92adc9] hover:text-white hover:bg-[#233648] transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</footer>
+</main>
+</body></html>

@@ -117,7 +117,17 @@ const roundCurrency = value => {
 
 const ensureDate = value => {
   if (!value) return null
-  const date = new Date(value)
+
+  // Si es solo fecha (YYYY-MM-DD), agregar T00:00:00 para interpretarla como hora local
+  // new Date("2025-12-27") se interpreta como UTC, causando problemas de zona horaria
+  // new Date("2025-12-27T00:00:00") se interpreta como hora local
+  const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/
+  const normalizedValue =
+    typeof value === 'string' && dateOnlyPattern.test(value)
+      ? `${value}T00:00:00`
+      : value
+
+  const date = new Date(normalizedValue)
   if (Number.isNaN(date.getTime())) {
     const fallback = new Date(`${value}T00:00:00`)
     return Number.isNaN(fallback.getTime()) ? null : fallback
@@ -743,9 +753,17 @@ const fetchOrdersFromApi = async filters => {
     if (dateFrom || dateTo) {
       const start = dateFrom || dateTo
       const end = dateTo || dateFrom
+
+      // WORKAROUND: Agregar 1 día al endDate para asegurar inclusividad del último día
+      // La API trata end_date como exclusivo, por lo que sin este ajuste
+      // las compras del último día del rango no se incluyen
+      const adjustedEndDate = new Date(end)
+      adjustedEndDate.setDate(adjustedEndDate.getDate() + 1)
+      const endDateAdjusted = adjustedEndDate.toISOString().split('T')[0]
+
       const response = await purchaseService.getPurchasesByDateRange(
         start,
-        end,
+        endDateAdjusted,
         1,
         DEFAULT_FETCH_LIMIT,
         commonOptions
@@ -816,10 +834,19 @@ export const purchasePaymentsMvpService = {
       searchClassification.type === 'supplier-id' ||
       searchClassification.type === 'supplier-name'
 
-    // Crear filtros para el cliente, excluyendo 'search' si el API ya filtró por proveedor
-    const clientFilters = apiAlreadyFilteredBySupplier
-      ? { ...filters, search: '' } // Remover el filtro de búsqueda si el API ya lo aplicó
-      : filters
+    // Verificar si la API ya filtró por fecha
+    const apiAlreadyFilteredByDate = Boolean(filters.dateFrom || filters.dateTo)
+
+    // Crear filtros para el cliente, excluyendo filtros ya aplicados por la API
+    const clientFilters = {
+      ...filters,
+      // Remover el filtro de búsqueda si el API ya filtró por proveedor
+      search: apiAlreadyFilteredBySupplier ? '' : filters.search,
+      // Remover el filtro de fechas si el API ya filtró por fecha
+      // (la API ya aplicó el ajuste de +1 día para inclusividad)
+      dateFrom: apiAlreadyFilteredByDate ? '' : filters.dateFrom,
+      dateTo: apiAlreadyFilteredByDate ? '' : filters.dateTo,
+    }
 
     const filteredOrders = filterOrders(normalizedOrders, clientFilters)
     const { data, meta } = paginate(filteredOrders, page, pageSize)

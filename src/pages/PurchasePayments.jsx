@@ -140,6 +140,24 @@ const PurchasePaymentsPage = () => {
   const hasSearch = Boolean(filters.search?.trim())
   const hasDateRange = Boolean(filters.dateFrom || filters.dateTo)
 
+  // Cargar automáticamente los últimos 10 días al montar el componente
+  useEffect(() => {
+    const today = new Date()
+    const tenDaysAgo = new Date()
+    tenDaysAgo.setDate(today.getDate() - 10)
+
+    const formatDate = date => date.toISOString().split('T')[0]
+    const dateFrom = formatDate(tenDaysAgo)
+    const dateTo = formatDate(today)
+
+    updateFilters({ dateFrom, dateTo })
+    fetchOrders({
+      page: 1,
+      filters: { dateFrom, dateTo, search: '', orderId: '', status: 'all' },
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleInputChange = event => {
     const { name, value, type, checked } = event.target
     const nextValue = type === 'checkbox' ? checked : value
