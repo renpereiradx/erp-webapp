@@ -5,7 +5,7 @@
 // ===========================================================================
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Filter, Share, Plus, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { Search, Filter, Share, Plus, ChevronLeft, ChevronRight, MoreHorizontal, X, Calendar, RefreshCw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import useProductStore from '@/store/useProductStore';
 import DataState from '@/components/ui/DataState';
@@ -58,6 +58,11 @@ const Products = () => {
     currentPage,
     totalPages,
     fetchProducts,
+    fetchProductsPaginated,
+    fetchCategories,
+    categories,
+    filters,
+    setFilters,
     setCurrentPage,
     clearError,
   } = useProductStore();
@@ -67,28 +72,34 @@ const Products = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [viewMode, setViewMode] = useState('paginated'); // 'paginated' o 'search'
+  const [showFilters, setShowFilters] = useState(false);
+  const [localFilters, setLocalFilters] = useState({
+    category: 'all',
+    status: 'all',
+  });
 
   // Modal states
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // DESHABILITADO: No cargar productos automáticamente
-  // Los productos solo se cargarán cuando el usuario realice una búsqueda explícita
-  // useEffect(() => {
-  //   if (!searchTerm) {
-  //     fetchProducts();
-  //   }
-  // }, []);
+  // Cargar productos paginados y categorías al inicio
+  useEffect(() => {
+    fetchProductsPaginated(1, 10);
+    fetchCategories();
+  }, [fetchProductsPaginated, fetchCategories]);
 
   // Función de búsqueda con validación de mínimo 4 caracteres
   const performSearch = useCallback((term) => {
     const trimmedTerm = term.trim();
 
-    // Si el término está vacío, limpiar búsqueda pero no cargar productos
+    // Si el término está vacío, volver a modo paginado
     if (!trimmedTerm) {
       setIsSearching(false);
       setHasSearched(false);
+      setViewMode('paginated');
+      fetchProductsPaginated(1, 10);
       return;
     }
 
@@ -101,10 +112,11 @@ const Products = () => {
     // Realizar búsqueda
     setIsSearching(true);
     setHasSearched(true);
+    setViewMode('search');
     fetchProducts(1, 10, trimmedTerm).finally(() => {
       setIsSearching(false);
     });
-  }, [fetchProducts]);
+  }, [fetchProducts, fetchProductsPaginated]);
 
   // Debounce de 500ms para la búsqueda
   const debouncedSearch = useDebounce(performSearch, 500);
@@ -130,14 +142,65 @@ const Products = () => {
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
-      fetchProducts(currentPage - 1);
+      if (viewMode === 'search') {
+        fetchProducts(currentPage - 1, 10, searchTerm);
+      } else {
+        fetchProductsPaginated(currentPage - 1, 10);
+      }
     }
   };
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
-      fetchProducts(currentPage + 1);
+      if (viewMode === 'search') {
+        fetchProducts(currentPage + 1, 10, searchTerm);
+      } else {
+        fetchProductsPaginated(currentPage + 1, 10);
+      }
+    }
+  };
+
+  // Handler para aplicar filtros
+  const handleApplyFilters = () => {
+    setFilters(localFilters);
+    setShowFilters(false);
+    if (viewMode === 'paginated') {
+      fetchProductsPaginated(1, 10);
+    }
+  };
+
+  // Handler para limpiar filtros
+  const handleClearFilters = () => {
+    const clearedFilters = { category: 'all', status: 'all' };
+    setLocalFilters(clearedFilters);
+    setFilters(clearedFilters);
+    if (viewMode === 'paginated') {
+      fetchProductsPaginated(1, 10);
+    }
+  };
+
+  // Handler para refrescar datos
+  const handleRefresh = () => {
+    if (viewMode === 'search' && searchTerm) {
+      fetchProducts(currentPage, 10, searchTerm);
+    } else {
+      fetchProductsPaginated(currentPage, 10);
+    }
+  };
+
+  // Formatear fecha para mostrar
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+    } catch {
+      return '-';
     }
   };
 
@@ -183,7 +246,11 @@ const Products = () => {
     setIsFormModalOpen(false);
     setSelectedProduct(null);
     // Reload products after modal closes to get updated data
-    fetchProducts();
+    if (viewMode === 'search' && searchTerm) {
+      fetchProducts(currentPage, 10, searchTerm);
+    } else {
+      fetchProductsPaginated(currentPage, 10);
+    }
   };
 
   const handleOpenDetailsModal = (product) => {
@@ -280,11 +347,26 @@ const Products = () => {
         {/* Actions */}
         <div className="toolbar__actions">
           <button
-            className="btn--icon-only"
+            className={`btn--icon-only ${showFilters ? 'btn--active' : ''}`}
             aria-label={t('products.action.filter')}
             title={t('products.action.filter')}
+            onClick={() => setShowFilters(!showFilters)}
+            style={{
+              backgroundColor: showFilters ? 'var(--color-primary, #0078d4)' : undefined,
+              color: showFilters ? 'white' : undefined,
+            }}
           >
             <Filter className="btn__icon" aria-hidden="true" />
+          </button>
+
+          <button
+            className="btn--icon-only"
+            aria-label={t('products.action.refresh', 'Refrescar')}
+            title={t('products.action.refresh', 'Refrescar')}
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            <RefreshCw className={`btn__icon ${loading ? 'spin' : ''}`} aria-hidden="true" />
           </button>
 
           <button
@@ -304,6 +386,88 @@ const Products = () => {
           </button>
         </div>
       </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="filters-panel" style={{
+          backgroundColor: 'var(--surface-secondary, #f3f2f1)',
+          padding: '16px',
+          borderRadius: '4px',
+          marginBottom: '16px',
+          display: 'flex',
+          gap: '16px',
+          alignItems: 'flex-end',
+          flexWrap: 'wrap',
+        }}>
+          {/* Filtro por categoría */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#605e5c' }}>
+              {t('products.filter.category', 'Categoría')}
+            </label>
+            <select
+              className="input"
+              value={localFilters.category}
+              onChange={(e) => setLocalFilters(prev => ({ ...prev, category: e.target.value }))}
+              style={{ minWidth: '180px', padding: '8px 12px' }}
+            >
+              <option value="all">{t('products.filter.all_categories', 'Todas las categorías')}</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Filtro por estado */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: '#605e5c' }}>
+              {t('products.filter.status', 'Estado')}
+            </label>
+            <select
+              className="input"
+              value={localFilters.status}
+              onChange={(e) => setLocalFilters(prev => ({ ...prev, status: e.target.value }))}
+              style={{ minWidth: '150px', padding: '8px 12px' }}
+            >
+              <option value="all">{t('products.filter.all_statuses', 'Todos')}</option>
+              <option value="active">{t('products.state.active', 'Activo')}</option>
+              <option value="inactive">{t('products.state.inactive', 'Inactivo')}</option>
+            </select>
+          </div>
+
+          {/* Botones de acción */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              className="btn btn--primary"
+              onClick={handleApplyFilters}
+              style={{ padding: '8px 16px' }}
+            >
+              {t('products.filter.apply', 'Aplicar')}
+            </button>
+            <button
+              className="btn btn--secondary"
+              onClick={handleClearFilters}
+              style={{ padding: '8px 16px' }}
+            >
+              {t('products.filter.clear', 'Limpiar')}
+            </button>
+          </div>
+
+          {/* Indicador de modo actual */}
+          <div style={{ marginLeft: 'auto', fontSize: '12px', color: '#605e5c' }}>
+            {viewMode === 'search' ? (
+              <span>
+                🔍 {t('products.mode.search', 'Modo búsqueda')}: "{searchTerm}"
+              </span>
+            ) : (
+              <span>
+                📋 {t('products.mode.paginated', 'Mostrando productos recientes')}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Products Table */}
       <div className="products-table">
@@ -335,6 +499,18 @@ const Products = () => {
                 <th className="products-table__th" scope="col">
                   {t('products.table.financial_health')}
                 </th>
+                <th className="products-table__th" scope="col">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Calendar size={14} aria-hidden="true" />
+                    {t('products.table.created_at', 'Creado')}
+                  </div>
+                </th>
+                <th className="products-table__th" scope="col">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Calendar size={14} aria-hidden="true" />
+                    {t('products.table.updated_at', 'Actualizado')}
+                  </div>
+                </th>
                 <th className="products-table__th products-table__th--actions" scope="col">
                   <span className="sr-only">{t('products.table.actions')}</span>
                 </th>
@@ -342,13 +518,13 @@ const Products = () => {
             </thead>
             <tbody className="products-table__tbody">
               {/* Estado: Cargando */}
-              {loading && products.length === 0 && hasSearched ? (
+              {loading && products.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '48px 24px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                       <div className="spinner" style={{ width: '48px', height: '48px' }} />
                       <p style={{ fontSize: '14px', color: '#605e5c', margin: 0 }}>
-                        Buscando productos...
+                        {viewMode === 'search' ? 'Buscando productos...' : 'Cargando productos...'}
                       </p>
                     </div>
                   </td>
@@ -356,7 +532,7 @@ const Products = () => {
               ) : /* Estado: Error */
               error ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '48px 24px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                       <div style={{ fontSize: '48px', color: '#d13438' }}>⚠</div>
                       <div>
@@ -370,8 +546,10 @@ const Products = () => {
                           className="btn btn--primary"
                           onClick={() => {
                             clearError();
-                            if (searchTerm && searchTerm.length >= 4) {
+                            if (viewMode === 'search' && searchTerm && searchTerm.length >= 4) {
                               fetchProducts(1, 10, searchTerm);
+                            } else {
+                              fetchProductsPaginated(1, 10);
                             }
                           }}
                         >
@@ -381,35 +559,22 @@ const Products = () => {
                     </div>
                   </td>
                 </tr>
-              ) : /* Estado: Sin búsqueda inicial */
-              products.length === 0 && !hasSearched ? (
+              ) : /* Estado: Sin productos */
+              products.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '48px 24px' }}>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '48px 24px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                       <Search size={48} style={{ color: '#a19f9d', opacity: 0.5 }} />
                       <div>
                         <p style={{ fontSize: '16px', fontWeight: 600, color: '#323130', margin: '0 0 8px 0' }}>
-                          Busca productos para comenzar
-                        </p>
-                        <p style={{ fontSize: '14px', color: '#605e5c', margin: 0 }}>
-                          Escribe al menos 4 caracteres en el buscador para encontrar productos
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ) : /* Estado: Búsqueda sin resultados */
-              products.length === 0 && hasSearched ? (
-                <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '48px 24px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                      <div style={{ fontSize: '48px', color: '#a19f9d', opacity: 0.5 }}>📦</div>
-                      <div>
-                        <p style={{ fontSize: '16px', fontWeight: 600, color: '#323130', margin: '0 0 8px 0' }}>
-                          {t('products.empty.title')}
+                          {viewMode === 'search'
+                            ? t('products.empty.no_results', 'No se encontraron productos')
+                            : t('products.empty.title', 'No hay productos')}
                         </p>
                         <p style={{ fontSize: '14px', color: '#605e5c', margin: '0 0 16px 0' }}>
-                          No se encontraron productos con "{searchTerm}"
+                          {viewMode === 'search'
+                            ? `No se encontraron productos con "${searchTerm}"`
+                            : t('products.empty.description', 'Crea tu primer producto para comenzar')}
                         </p>
                         <button
                           className="btn btn--primary"
@@ -467,6 +632,12 @@ const Products = () => {
                         <div className={`health-indicator__dot health-indicator__dot--${healthInfo.level}`}></div>
                         <span className="health-indicator__text">{healthInfo.text}</span>
                       </div>
+                    </td>
+                    <td className="products-table__td" style={{ fontSize: '12px', color: '#605e5c' }}>
+                      {formatDate(product.created_at)}
+                    </td>
+                    <td className="products-table__td" style={{ fontSize: '12px', color: '#605e5c' }}>
+                      {formatDate(product.updated_at)}
                     </td>
                     <td className="products-table__td products-table__td--actions">
                       <button

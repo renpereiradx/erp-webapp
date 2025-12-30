@@ -1,7 +1,7 @@
 # 📦 API de Órdenes de Compra
 
-**Versión:** 2.1
-**Fecha:** 17 de Noviembre de 2025
+**Versión:** 2.4
+**Fecha:** 30 de Diciembre de 2025
 **Endpoint Base:** `http://localhost:5050`
 
 ---
@@ -21,6 +21,29 @@ Esta API gestiona el ciclo de vida completo de las órdenes de compra (Purchase 
 ---
 
 ## 📝 Historial de Cambios
+
+### v2.4 - 30 de Diciembre de 2025
+- ✅ **Fix: `sale_price` en Metadata de Detalles**: Corregido el problema donde `sale_price` retornaba 0 en los detalles de órdenes de compra.
+- ✅ **Estructura de Metadata Definida**: El backend ahora define y almacena la estructura exacta del metadata en `purchase_order_details`:
+  ```json
+  {
+    "unit": "string",
+    "profit_pct": "number",
+    "sale_price": "number",
+    "line_total": "number",
+    "tax_rate": "number"
+  }
+  ```
+- ✅ **Migración 000004**: Aplicada migración para actualizar registros existentes con `sale_price` calculado.
+- ✅ **Función `process_complete_purchase_order` v1.2**: Actualizada para incluir `sale_price` en el metadata al momento de crear los detalles.
+
+### v2.3 - 30 de Diciembre de 2025
+- ✅ **Estructura Unificada para TODOS los Endpoints de Consulta**: Todos los endpoints GET ahora devuelven la estructura `PurchaseWithFullDetails`, unificando la respuesta de la API.
+- ✅ **Endpoints Actualizados**:
+  - `GET /purchase/{id}` - Ahora devuelve `PurchaseWithFullDetails` (antes: `PurchaseWithDetails`)
+  - `GET /purchase/{id}/supplier/{supplier_name}` - Ahora devuelve `PurchaseWithFullDetails` (antes: `PurchaseWithDetails`)
+  - `GET /purchase/date_range/` - Ahora devuelve `[]*PurchaseWithFullDetails` (antes: `[]*PurchaseWithDetails`)
+- ✅ **Información Adicional Disponible**: Todos los endpoints ahora incluyen `payments`, `cost_info` y `metadata` en sus respuestas.
 
 ### v2.2 - 19 de Noviembre de 2025
 - ✅ **Respuesta Enriquecida para `GET /purchase/supplier_name/{supplier_name}`**: El endpoint ahora devuelve la estructura `PurchaseWithFullDetails`, que incluye resúmenes de pago e información de costos, igualando la respuesta de `GET /purchase/supplier_id/{supplier_id}`.
@@ -166,7 +189,30 @@ Crea una nueva orden de compra y la procesa. Esta operación crea registros de c
 
 ### 2. Consultar Órdenes de Compra
 
-#### 2.1. 🗂️ Por ID de Proveedor
+#### 2.1. 🆔 Por ID de Orden
+
+**Endpoint:** `GET /purchase/{id}`
+
+Obtiene una orden de compra específica por su ID, con información enriquecida que incluye detalles financieros y un resumen de pagos.
+
+**Parámetros de URL:**
+
+| Parámetro | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `id` | number | ✅ Sí | ID de la orden de compra. |
+
+**Response (200 OK):**
+*Retorna un objeto `PurchaseWithFullDetails` (ver sección "Modelos de Datos (JSON)").*
+
+*La estructura de la respuesta es idéntica a la de un elemento del array retornado por `GET /purchase/supplier_id/{supplier_id}`.*
+
+**Errores Posibles:**
+
+| Error | HTTP Status | Descripción |
+|---|---|---|
+| `sql: no rows in result set` | 500 Internal Server Error | La orden de compra con el ID dado no existe. |
+
+#### 2.2. 🗂️ Por ID de Proveedor
 
 **Endpoint:** `GET /purchase/supplier_id/{supplier_id}`
 
@@ -234,7 +280,7 @@ Obtiene todas las órdenes de compra para un proveedor específico, con informac
 ]
 ```
 
-#### 2.2. 🗂️ Por Nombre de Proveedor
+#### 2.3. 🗂️ Por Nombre de Proveedor
 
 **Endpoint:** `GET /purchase/supplier_name/{supplier_name}`
 
@@ -251,11 +297,11 @@ Obtiene todas las órdenes de compra para un proveedor específico por su nombre
 
 *La estructura de la respuesta es idéntica a la del endpoint `GET /purchase/supplier_id/{supplier_id}`.*
 
-#### 2.3. 📅 Por Rango de Fechas
+#### 2.4. 📅 Por Rango de Fechas
 
 **Endpoint:** `GET /purchase/date_range/`
 
-Obtiene órdenes de compra paginadas dentro de un rango de fechas.
+Obtiene órdenes de compra paginadas dentro de un rango de fechas, con información enriquecida que incluye detalles financieros y un resumen de pagos.
 
 **Query Parameters:**
 
@@ -267,13 +313,15 @@ Obtiene órdenes de compra paginadas dentro de un rango de fechas.
 | `page_size` | number | ✅ Sí | Cantidad de resultados por página. Máximo: 1000. |
 
 **Response (200 OK):**
-*Retorna un array de objetos `PurchaseOrderDetailsResponseItem` (ver sección "Modelos de Datos (JSON)").*
+*Retorna un array de objetos `PurchaseWithFullDetails` (ver sección "Modelos de Datos (JSON)").*
 
-#### 2.4. 🆔 Por ID de Orden y Nombre de Proveedor
+*La estructura de la respuesta es idéntica a la del endpoint `GET /purchase/supplier_id/{supplier_id}`.*
+
+#### 2.5. 🆔 Por ID de Orden y Nombre de Proveedor
 
 **Endpoint:** `GET /purchase/{id}/supplier/{supplier_name}`
 
-Obtiene una orden de compra específica, validando que pertenezca al proveedor indicado.
+Obtiene una orden de compra específica, validando que pertenezca al proveedor indicado. Devuelve información enriquecida que incluye detalles financieros y un resumen de pagos.
 
 **Parámetros de URL:**
 
@@ -283,36 +331,9 @@ Obtiene una orden de compra específica, validando que pertenezca al proveedor i
 | `supplier_name` | string | ✅ Sí | Nombre del proveedor a validar (URL-encoded). |
 
 **Response (200 OK):**
-*Retorna un objeto `PurchaseOrderDetailsResponseItem` (ver sección "Modelos de Datos (JSON)").*
-```json
-{
-  "purchase": {
-    "id": 3,
-    "order_date": "2025-05-22T22:01:47.933701Z",
-    "total_amount": 22245370,
-    "status": "COMPLETED",
-    "supplier_id": 12,
-    "supplier_name": "Suministros Varios 55",
-    "supplier_status": true,
-    "user_id": "2pmK5NPfHiRwZUkcd3d3cETC2JW",
-    "user_name": "Pedro Sanchez"
-  },
-  "details": [
-    {
-      "id": 21,
-      "purchase_id": 3,
-      "product_id": "GA4w4YlYpVP1LNji17o9FKbp8Dg",
-      "product_name": "Onion - Dried",
-      "quantity": 7,
-      "unit_price": 320000,
-      "subtotal": 2240000,
-      "exp_date": "2028-06-25T00:00:00Z",
-      "user_id": "2pmK5NPfHiRwZUkcd3d3cETC2JW",
-      "user_name": "Pedro Sanchez"
-    }
-  ]
-}
-```
+*Retorna un objeto `PurchaseWithFullDetails` (ver sección "Modelos de Datos (JSON)").*
+
+*La estructura de la respuesta es idéntica a la de un elemento del array retornado por `GET /purchase/supplier_id/{supplier_id}`.*
 
 **Errores Posibles:**
 
@@ -468,49 +489,29 @@ A continuación se presentan las estructuras de datos clave en formato JSON.
 }
 ```
 
-### PurchaseOrderDetailsResponseItem
+### PurchaseRiched
+
 ```json
 {
-  "purchase": {
-    "id": "number",
-    "order_date": "string (ISO 8601)",
-    "total_amount": "number",
-    "status": "string",
-    "supplier_id": "number",
-    "supplier_name": "string",
-    "supplier_status": "boolean",
-    "user_id": "string",
-    "user_name": "string"
-  },
-  "details": [
-    {
-      "id": "number",
-      "purchase_id": "number",
-      "product_id": "string",
-      "product_name": "string",
-      "quantity": "number",
-      "unit_price": "number",
-      "subtotal": "number",
-      "exp_date": "string (ISO 8601)",
-      "user_id": "string",
-      "user_name": "string",
-      "unit": "string",
-      "tax_rate": "number",
-      "profit_pct": "number",
-      "line_total": "number",
-      "sale_price": "number",
-      "metadata": {
-        "unit": "string",
-        "tax_rate": "number",
-        "line_total": "number",
-        "profit_pct": "number"
-      }
-    }
-  ]
+  "id": "number",
+  "order_date": "string (ISO 8601)",
+  "total_amount": "number",
+  "status": "string",
+  "supplier_id": "number",
+  "supplier_name": "string",
+  "supplier_status": "boolean",
+  "user_id": "string",
+  "user_name": "string",
+  "payment_method_id": "number | null",
+  "payment_method": "string",
+  "currency_id": "number | null",
+  "currency": "string",
+  "metadata": "object"
 }
 ```
 
 ### PurchaseWithFullDetails
+
 ```json
 {
   "purchase": "PurchaseRiched",
@@ -540,9 +541,30 @@ A continuación se presentan las estructuras de datos clave en formato JSON.
   "user_id": "string",
   "user_name": "string",
   "line_total": "number",
-  "metadata": "object"
+  "metadata": "PurchaseOrderDetailMetadata"
 }
 ```
+
+### PurchaseOrderDetailMetadata
+Estructura del metadata almacenado en cada detalle de orden de compra. Esta estructura es definida por el backend al procesar la orden.
+
+```json
+{
+  "unit": "string",
+  "profit_pct": "number",
+  "sale_price": "number",
+  "line_total": "number",
+  "tax_rate": "number"
+}
+```
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `unit` | string | Unidad de medida del producto (ej: `kg`, `unit`). |
+| `profit_pct` | number | Porcentaje de margen de ganancia aplicado. |
+| `sale_price` | number | Precio de venta calculado (redondeado para PYG). |
+| `line_total` | number | Total de la línea (quantity * unit_price). |
+| `tax_rate` | number | Tasa de impuesto aplicada (0.00 si no aplica). |
 
 ### PurchasePaymentSummary
 ```json

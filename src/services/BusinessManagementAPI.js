@@ -284,8 +284,19 @@ class BusinessManagementAPI {
   // ============================================================================
   // PRODUCTS
   // ============================================================================
-  // NOTA: Este sistema solo permite búsqueda explícita de productos.
-  // No hay endpoint para obtener TODOS los productos sin filtro.
+
+  /**
+   * Obtiene productos paginados ordenados por fecha de creación (más recientes primero)
+   * @param {number} page - Número de página (comienza en 1)
+   * @param {number} pageSize - Cantidad de productos por página
+   * @param {Object} options - Opciones adicionales
+   * @param {AbortSignal} options.signal - Signal para cancelar la petición
+   * @returns {Promise} Array de productos enriquecidos con timestamps
+   */
+  async getProductsPaginated(page = 1, pageSize = 10, options = {}) {
+    const { signal } = options
+    return this.makeRequest(`/products/${page}/${pageSize}`, { signal })
+  }
 
   // Crear producto
   async createProduct(productData) {

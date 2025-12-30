@@ -53,11 +53,20 @@ export const products = {
   // Filtros
   'products.filter.current_results_title': 'Filtrar Resultados Actuales',
   'products.filter.name_placeholder': 'Filtrar por nombre...',
+  'products.filter.category': 'Categoría',
   'products.filter.all_categories': 'Todas las categorías',
+  'products.filter.status': 'Estado',
   'products.filter.all_status': 'Todos los estados',
+  'products.filter.all_statuses': 'Todos',
   'products.filter.status.active': 'Activos',
   'products.filter.status.inactive': 'Inactivos',
   'products.filter.products_label': 'Productos',
+  'products.filter.apply': 'Aplicar',
+  'products.filter.clear': 'Limpiar',
+
+  // Modos de visualización
+  'products.mode.search': 'Modo búsqueda',
+  'products.mode.paginated': 'Mostrando productos recientes',
 
   // Estadísticas
   'products.stats.products': 'Productos',
@@ -82,11 +91,14 @@ export const products = {
   'products.action.filter': 'Filtrar',
   'products.action.export': 'Exportar',
   'products.action.new_product': 'Nuevo Producto',
+  'products.action.refresh': 'Refrescar',
   'products.table.product_name': 'Nombre del Producto',
   'products.table.category': 'Categoría',
   'products.table.stock': 'Stock',
   'products.table.state': 'Estado',
   'products.table.financial_health': 'Salud Financiera',
+  'products.table.created_at': 'Creado',
+  'products.table.updated_at': 'Actualizado',
   'products.table.actions': 'Acciones',
   'products.state.active': 'Activo',
   'products.state.inactive': 'Inactivo',
@@ -96,8 +108,10 @@ export const products = {
   'products.stock.low': '{quantity} (Bajo)',
   'products.pagination.showing': 'Mostrando {start} a {end} de {total} resultados',
   'products.pagination.page_of': '{current} / {total}',
-  'products.empty.title': 'Sin productos',
+  'products.empty.title': 'No hay productos',
   'products.empty.message': 'No hay productos registrados en el sistema',
+  'products.empty.description': 'Crea tu primer producto para comenzar',
+  'products.empty.no_results': 'No se encontraron productos',
   'products.error.title': 'Error al cargar productos',
 
   // Modal Crear/Editar Producto

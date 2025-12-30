@@ -351,6 +351,159 @@ const useProductStore = create()(
         return categoryCacheService.getCacheInfo()
       },
 
+      /**
+       * Obtiene productos paginados desde el endpoint de paginación
+       * Ordenados por fecha de creación (más recientes primero)
+       * @param {number} page - Número de página (comienza en 1)
+       * @param {number} pageSize - Cantidad de productos por página
+       * @param {Object} options - Opciones adicionales
+       * @returns {Promise} Resultado con datos y total
+       */
+      fetchProductsPaginated: async (page = 1, pageSize = 10, options = {}) => {
+        const correlationId = `fetch_paginated_${Date.now()}_${Math.random()
+          .toString(36)
+          .slice(2, 8)}`
+
+        const state = get()
+        const currentPage = page || state.currentPage
+        const currentPageSize = pageSize || state.pageSize
+
+        // Abort previous request
+        try {
+          if (get().fetchAbortController) {
+            get().fetchAbortController.abort()
+          }
+          if (!options.signal && typeof AbortController !== 'undefined') {
+            const ac = new AbortController()
+            set({ fetchAbortController: ac })
+            options.signal = ac.signal
+          }
+        } catch {}
+
+        set({ loading: true, error: null })
+        const t = telemetry.startTimer('products.fetchPaginated')
+
+        try {
+          // Short-circuit if circuit open
+          if (get()._circuitOpen()) {
+            const stateNow = get()
+            const openUntil = stateNow.circuit?.openUntil || 0
+            if (openUntil && Date.now() >= openUntil) {
+              try {
+                if (stateNow.circuitTimeoutId)
+                  clearTimeout(stateNow.circuitTimeoutId)
+              } catch (e) {}
+              get()._closeCircuit('cooldown-fetchProductsPaginated')
+            } else {
+              set({ loading: false })
+              return { data: [], total: 0, circuitOpen: true }
+            }
+          }
+
+          const response = await get()._withRetry(
+            () => productService.getProductsPaginated(currentPage, currentPageSize, options),
+            { telemetryKey: 'products.fetchPaginated' }
+          )
+
+          const products = Array.isArray(response) ? response : []
+          const totalCount = products.length
+
+          // Aplicar filtros locales si están definidos
+          let filteredProducts = products
+          const { filters } = get()
+
+          // Filtrar por categoría
+          if (filters.category && filters.category !== 'all') {
+            filteredProducts = filteredProducts.filter(p => {
+              const categoryId = p.category?.id || p.id_category
+              return String(categoryId) === String(filters.category)
+            })
+          }
+
+          // Filtrar por estado
+          if (filters.status && filters.status !== 'all') {
+            filteredProducts = filteredProducts.filter(p => {
+              const isActive = p.state !== false && p.is_active !== false
+              return filters.status === 'active' ? isActive : !isActive
+            })
+          }
+
+          // Normalizar productos
+          const byId = Object.fromEntries(
+            filteredProducts.map(p => [p.product_id || p.id, p])
+          )
+
+          set({
+            products: filteredProducts,
+            productsById: byId,
+            totalProducts: totalCount,
+            totalPages: Math.max(1, Math.ceil(totalCount / currentPageSize)),
+            currentPage: currentPage,
+            pageSize: currentPageSize,
+            loading: false,
+            lastSearchTerm: '',
+            error: null,
+          })
+
+          telemetry.endTimer(t, { total: totalCount, filtered: filteredProducts.length })
+          telemetry.record('products.fetchPaginated.success', {
+            page: currentPage,
+            pageSize: currentPageSize,
+            total: totalCount,
+            correlationId,
+          })
+
+          get()._recordSuccess()
+          return { data: filteredProducts, total: totalCount }
+        } catch (error) {
+          if (!(error?.name === 'AbortError')) {
+            try {
+              get()._recordFailure()
+            } catch (e) {}
+          }
+
+          if (error?.name === 'AbortError') {
+            telemetry.record('products.fetchPaginated.abort')
+            return { data: [], total: 0, aborted: true }
+          }
+
+          const norm = toApiError(
+            error,
+            'Error al cargar productos paginados',
+            correlationId
+          )
+          const code =
+            norm.code || (isConnectionError(error) ? 'NETWORK' : null)
+          const hintKey = code ? get()._mapErrorCodeToHintKey(code) : null
+
+          let errorMessage = norm.message || 'Error al cargar productos'
+          if (isConnectionError(error)) {
+            errorMessage = getConnectionErrorMessage(error)
+          }
+
+          set({
+            products: [],
+            productsById: {},
+            totalProducts: 0,
+            totalPages: 0,
+            loading: false,
+            error: errorMessage,
+            lastErrorCode: code,
+            lastErrorHintKey: hintKey,
+          })
+
+          telemetry.record('products.fetchPaginated.error', {
+            code: norm.code,
+            message: norm.message,
+            correlationId,
+          })
+
+          return { error: errorMessage, data: [], total: 0 }
+        } finally {
+          set({ fetchAbortController: null })
+        }
+      },
+
       fetchProducts: async (
         page = null,
         pageSize = null,

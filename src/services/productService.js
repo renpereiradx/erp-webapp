@@ -57,10 +57,24 @@ const retryWithBackoff = async (fn, maxRetries = 2, baseDelay = 1000) => {
 export const productService = {
   // =================== PRODUCTOS ===================
 
-  // Obtener productos paginados
-  // MÉTODO ELIMINADO: getProducts()
-  // Este sistema solo permite búsqueda explícita de productos.
-  // Usa searchProducts() o searchProductsFinancial() en su lugar.
+  /**
+   * Obtiene productos paginados ordenados por fecha de creación (más recientes primero)
+   * @param {number} page - Número de página (comienza en 1)
+   * @param {number} pageSize - Cantidad de productos por página
+   * @param {Object} options - Opciones adicionales
+   * @param {AbortSignal} options.signal - Signal para cancelar la petición
+   * @returns {Promise<Product[]>} Array de productos enriquecidos con timestamps
+   */
+  getProductsPaginated: async (page = 1, pageSize = 10, options = {}) => {
+    try {
+      return await retryWithBackoff(async () => {
+        return await apiClient.getProductsPaginated(page, pageSize, options)
+      })
+    } catch (error) {
+      if (error?.name === 'AbortError') throw error
+      throw toApiError(error, 'Error al obtener productos paginados')
+    }
+  },
 
   // Obtener un producto por ID
   /**
