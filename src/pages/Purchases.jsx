@@ -451,7 +451,13 @@ const Purchases = () => {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [activeTab, isModalOpen, matchesShortcut, selectedSupplier, purchaseItems.length])
+  }, [
+    activeTab,
+    isModalOpen,
+    matchesShortcut,
+    selectedSupplier,
+    purchaseItems.length,
+  ])
 
   // Handlers
   const handleSupplierSelect = supplier => {

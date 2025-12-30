@@ -457,6 +457,7 @@ class PurchaseService {
   }
 
   // Procesar metadata de detalles de compra según la nueva especificación
+  // API v2.4: El metadata contiene sale_price calculado por el backend
   processDetailsMetadata(details) {
     if (!Array.isArray(details)) {
       return details
@@ -464,66 +465,54 @@ class PurchaseService {
 
     return details.map(detail => {
       let processedDetail = { ...detail }
+      let metadata = detail.metadata
 
-      // Parse metadata JSON si está disponible
-      if (detail.metadata) {
+      // Parsear metadata si es string
+      if (metadata && typeof metadata === 'string') {
         try {
-          const metadata =
-            typeof detail.metadata === 'string'
-              ? JSON.parse(detail.metadata)
-              : detail.metadata
-
-          // Agregar campos del metadata según la documentación API mejorada
-          processedDetail = {
-            ...processedDetail,
-            unit: metadata.unit || detail.unit || 'unit',
-            tax_rate: parseFloat(metadata.tax_rate || detail.tax_rate || 0),
-            profit_pct: parseFloat(
-              metadata.profit_pct || detail.profit_pct || 30
-            ),
-            line_total: parseFloat(
-              metadata.line_total ||
-                detail.line_total ||
-                detail.quantity * detail.unit_price
-            ),
-            // Calcular precio de venta dinámicamente según la documentación
-            sale_price: this.calculateSalePrice(
-              detail.unit_price,
-              metadata.profit_pct || detail.profit_pct
-            ),
-            metadata: metadata,
-          }
+          metadata = JSON.parse(metadata)
+          processedDetail.metadata = metadata
         } catch (error) {
           console.warn('Error parsing metadata for detail:', detail.id, error)
-          // Fallback con valores por defecto si el parsing falla
-          processedDetail = {
-            ...processedDetail,
-            unit: detail.unit || 'unit',
-            tax_rate: detail.tax_rate || 0,
-            profit_pct: detail.profit_pct || 30,
-            line_total:
-              detail.line_total || detail.quantity * detail.unit_price,
-            sale_price: this.calculateSalePrice(detail.unit_price, 30),
-          }
-        }
-      } else {
-        // Si no hay metadata, agregar campos con valores por defecto
-        processedDetail = {
-          ...processedDetail,
-          unit: detail.unit || 'unit',
-          tax_rate: parseFloat(detail.tax_rate || 0),
-          profit_pct: parseFloat(detail.profit_pct || 30),
-          line_total: parseFloat(
-            detail.line_total || detail.quantity * detail.unit_price
-          ),
-          sale_price: this.calculateSalePrice(
-            detail.unit_price,
-            detail.profit_pct || 30
-          ),
+          metadata = {}
         }
       }
 
-      return processedDetail
+      // Asegurar que metadata es un objeto
+      metadata = metadata || {}
+
+      // Obtener valores numéricos
+      const unitPrice = parseFloat(detail.unit_price || 0)
+      const quantity = parseFloat(detail.quantity || 0)
+
+      // API v2.4: sale_price viene en el metadata (PurchaseOrderDetailMetadata)
+      // Prioridad: 1) detail.sale_price, 2) metadata.sale_price, 3) calcular con profit_pct
+      const detailSalePrice = parseFloat(detail.sale_price || 0)
+      const metadataSalePrice = parseFloat(metadata.sale_price || 0)
+      const profitPct = parseFloat(
+        detail.profit_pct || metadata.profit_pct || 0
+      )
+
+      let finalSalePrice = 0
+      if (detailSalePrice > 0) {
+        finalSalePrice = detailSalePrice
+      } else if (metadataSalePrice > 0) {
+        finalSalePrice = metadataSalePrice
+      } else if (profitPct > 0) {
+        // Fallback: calcular con redondeo para PYG
+        finalSalePrice = Math.round(unitPrice * (1 + profitPct / 100))
+      }
+
+      return {
+        ...processedDetail,
+        unit: detail.unit || metadata.unit || 'unit',
+        tax_rate: parseFloat(detail.tax_rate || metadata.tax_rate || 0),
+        profit_pct: profitPct,
+        line_total: parseFloat(
+          detail.line_total || metadata.line_total || quantity * unitPrice
+        ),
+        sale_price: finalSalePrice,
+      }
     })
   }
 
