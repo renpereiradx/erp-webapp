@@ -59,11 +59,12 @@ class PurchaseService {
           // API v1.0: Soporte para precio de venta explícito
           // Si explicit_sale_price está presente, el backend lo usa directamente
           // y ignora profit_pct para el cálculo del precio
+          // Se envía el valor tal cual sin ningún cálculo previo
           if (
             item.explicit_sale_price !== null &&
             item.explicit_sale_price !== undefined
           ) {
-            detail.explicit_sale_price = Math.round(item.explicit_sale_price)
+            detail.explicit_sale_price = item.explicit_sale_price
           }
           return detail
         }),

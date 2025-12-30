@@ -523,7 +523,7 @@ const Purchases = () => {
     } else {
       // Modo margen: calcular precio de venta desde el margen
       const salePrice = item.unit_price * (1 + item.profit_pct / 100)
-      setModalSalePrice(Math.round(salePrice))
+      setModalSalePrice(salePrice)
       setPricingMode('margin')
     }
 
@@ -585,7 +585,7 @@ const Purchases = () => {
       quantity: Number(modalQuantity) || 1,
       unit_price: Number(modalUnitPrice) || 0,
       profit_pct: Number(modalProfitPct) || 30,
-      sale_price: Math.round(Number(modalSalePrice) || 0), // Precio redondeado a entero (PYG)
+      sale_price: Number(modalSalePrice) || 0, // Valor tal cual, sin redondeo previo
       pricing_mode: pricingMode, // 'margin' o 'sale_price'
       unit: modalSelectedProduct.unit || 'unit',
       tax_rate_id: modalTaxRateId || null, // Usar el tax_rate_id seleccionado por el usuario
@@ -657,10 +657,10 @@ const Purchases = () => {
           tax_rate_id: item.tax_rate_id || null,
           supplier_id: selectedSupplier.id,
         }
-        // API v1.0: Si el usuario definió precio explícito, enviarlo
+        // API v1.0: Si el usuario definió precio explícito, enviarlo tal cual
         // El backend usará este precio directamente y ignorará profit_pct para el cálculo
         if (item.pricing_mode === 'sale_price' && item.sale_price > 0) {
-          detail.explicit_sale_price = Math.round(item.sale_price)
+          detail.explicit_sale_price = item.sale_price
         }
         return detail
       }),
