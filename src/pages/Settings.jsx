@@ -8,6 +8,7 @@ import React from 'react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Moon, Sun } from 'lucide-react';
+import KeyboardShortcuts from '@/components/ui/KeyboardShortcuts';
 import '@/styles/scss/pages/_settings.scss';
 
 const SettingsPage = () => {
@@ -65,6 +66,9 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Keyboard Shortcuts Card */}
+      <KeyboardShortcuts />
 
       {/* Language Settings Card */}
       <div className="settings-card">

@@ -1,0 +1,157 @@
+/**
+ * Estilos para el componente KeyboardShortcuts
+ * Sigue el patrón BEM y Fluent Design System 2
+ */
+
+.keyboard-shortcuts {
+  background: var(--surface-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-primary);
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px;
+    border-bottom: 1px solid var(--border-secondary);
+  }
+
+  &__header-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    color: var(--accent-primary);
+    margin-top: 2px;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+  }
+
+  &__description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  &__categories {
+    padding: 16px 20px;
+  }
+
+  &__category {
+    &:not(:last-child) {
+      margin-bottom: 24px;
+    }
+  }
+
+  &__category-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-secondary);
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background: var(--surface-secondary);
+    }
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    flex: 1;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+    padding: 4px 10px;
+    font-family: var(--font-mono, 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--surface-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+    &--editing {
+      background: var(--accent-surface);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+  }
+
+  &__footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-secondary);
+    background: var(--surface-secondary);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+
+  &__hint {
+    font-size: 0.8125rem;
+    color: var(--text-tertiary);
+    margin: 0;
+    text-align: center;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+// Botón pequeño para acciones inline
+.btn--sm {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  gap: 4px;
+}
+
+.btn--icon.btn--sm {
+  padding: 4px;
+  width: 28px;
+  height: 28px;
+}

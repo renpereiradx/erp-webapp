@@ -18,6 +18,7 @@ import {
 import DataState from '@/components/ui/DataState'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import { useI18n } from '@/lib/i18n'
+import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 import supplierService from '@/services/supplierService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
 import { CurrencyService } from '@/services/currencyService'
@@ -66,8 +67,8 @@ const Purchases = () => {
   const [modalSelectedProduct, setModalSelectedProduct] = useState(null)
   const [searchingProducts, setSearchingProducts] = useState(false)
   const [showProductDropdown, setShowProductDropdown] = useState(false)
-  const [modalQuantity, setModalQuantity] = useState(1)
-  const [modalUnitPrice, setModalUnitPrice] = useState(0)
+  const [modalQuantity, setModalQuantity] = useState('')
+  const [modalUnitPrice, setModalUnitPrice] = useState('')
   const [modalProfitPct, setModalProfitPct] = useState(30)
   const [modalSalePrice, setModalSalePrice] = useState(0) // Precio de venta final
   const [pricingMode, setPricingMode] = useState('margin') // 'margin' o 'sale_price'
@@ -156,6 +157,18 @@ const Purchases = () => {
       try {
         const methods = await PaymentMethodService.getAll()
         setPaymentMethods(methods || [])
+
+        // Establecer CASH como método de pago por defecto
+        if (methods && methods.length > 0) {
+          const cashMethod = methods.find(
+            method =>
+              method.method_code?.toUpperCase() === 'CASH' ||
+              method.description?.toLowerCase().includes('efectivo')
+          )
+          if (cashMethod) {
+            setPaymentMethod(String(cashMethod.id))
+          }
+        }
       } catch (err) {
         console.error('Error loading payment methods:', err)
         // Si falla, dejamos el array vacío
@@ -378,42 +391,67 @@ const Purchases = () => {
   useEffect(() => {
     if (pricingMode === 'margin') {
       // Calcular precio de venta: costo * (1 + margen/100)
-      const calculatedSalePrice = modalUnitPrice * (1 + modalProfitPct / 100)
+      const unitPrice = Number(modalUnitPrice) || 0
+      const calculatedSalePrice = unitPrice * (1 + modalProfitPct / 100)
       setModalSalePrice(calculatedSalePrice)
     }
   }, [modalUnitPrice, modalProfitPct, pricingMode])
 
   // Sincronizar margen cuando cambia el precio de venta (modo precio de venta)
   useEffect(() => {
-    if (pricingMode === 'sale_price' && modalUnitPrice > 0) {
+    const unitPrice = Number(modalUnitPrice) || 0
+    if (pricingMode === 'sale_price' && unitPrice > 0) {
       // Calcular margen: ((precio_venta - costo) / costo) * 100
-      const calculatedMargin =
-        ((modalSalePrice - modalUnitPrice) / modalUnitPrice) * 100
+      const calculatedMargin = ((modalSalePrice - unitPrice) / unitPrice) * 100
       setModalProfitPct(Math.max(0, calculatedMargin)) // No permitir márgenes negativos
     }
   }, [modalSalePrice, modalUnitPrice, pricingMode])
 
+  // Obtener funciones del store de atajos de teclado
+  const { matchesShortcut } = useKeyboardShortcutsStore()
+
   // Atajos de teclado
   useEffect(() => {
     const handleKeyDown = event => {
-      // Ctrl+A para abrir modal de agregar producto
+      // Ctrl+A para abrir modal de agregar producto (solo en tab nueva-compra)
       if (
-        (event.ctrlKey || event.metaKey) &&
-        event.key === 'a' &&
+        matchesShortcut('purchases.addProduct', event) &&
         activeTab === 'nueva-compra'
       ) {
         event.preventDefault()
         setIsModalOpen(true)
+        return
       }
+
+      // Ctrl+G para guardar/procesar compra (solo en tab nueva-compra)
+      if (
+        matchesShortcut('purchases.processPurchase', event) &&
+        activeTab === 'nueva-compra' &&
+        selectedSupplier &&
+        purchaseItems.length > 0
+      ) {
+        event.preventDefault()
+        handleSavePurchase()
+        return
+      }
+
+      // Ctrl+Shift+H para ver historial de compras
+      if (matchesShortcut('purchases.viewHistory', event)) {
+        event.preventDefault()
+        setActiveTab('historial')
+        return
+      }
+
       // ESC para cerrar modal
-      if (event.key === 'Escape' && isModalOpen) {
+      if (matchesShortcut('general.closeModal', event) && isModalOpen) {
         setIsModalOpen(false)
+        return
       }
     }
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [activeTab, isModalOpen])
+  }, [activeTab, isModalOpen, matchesShortcut, selectedSupplier, purchaseItems.length])
 
   // Handlers
   const handleSupplierSelect = supplier => {
@@ -451,7 +489,7 @@ const Purchases = () => {
     setModalSelectedProduct(null)
     setModalProductSearch('')
     setModalProductResults([])
-    setModalUnitPrice(0)
+    setModalUnitPrice('')
   }
 
   const handleEditItem = item => {
@@ -489,6 +527,30 @@ const Purchases = () => {
   const handleConfirmAddProduct = () => {
     if (!modalSelectedProduct) {
       setIsModalOpen(false)
+      return
+    }
+
+    // Validar cantidad y precio unitario
+    const quantity = Number(modalQuantity)
+    const unitPrice = Number(modalUnitPrice)
+
+    if (!modalQuantity || quantity <= 0) {
+      alert(
+        t(
+          'purchases.form.errors.quantity_required',
+          'La cantidad debe ser mayor a 0'
+        )
+      )
+      return
+    }
+
+    if (!modalUnitPrice || unitPrice <= 0) {
+      alert(
+        t(
+          'purchases.form.errors.price_required',
+          'El precio unitario debe ser mayor a 0'
+        )
+      )
       return
     }
 
@@ -541,8 +603,8 @@ const Purchases = () => {
 
     // Reset modal state
     setEditingItemId(null)
-    setModalQuantity(1)
-    setModalUnitPrice(0)
+    setModalQuantity('')
+    setModalUnitPrice('')
     setModalProfitPct(30)
     setModalSalePrice(0)
     setPricingMode('margin')
@@ -1817,6 +1879,10 @@ const Purchases = () => {
                       className='input'
                       value={modalQuantity}
                       onChange={e => setModalQuantity(e.target.value)}
+                      placeholder={t(
+                        'purchases.modal.quantity_placeholder',
+                        'Ej: 10'
+                      )}
                     />
                     <span className='sales-modal__field-note'>
                       {t(
@@ -1844,10 +1910,11 @@ const Purchases = () => {
                         step='0.01'
                         className='input sales-modal__input'
                         value={modalUnitPrice}
-                        onChange={e =>
-                          setModalUnitPrice(Number(e.target.value))
-                        }
-                        placeholder='0.00'
+                        onChange={e => setModalUnitPrice(e.target.value)}
+                        placeholder={t(
+                          'purchases.modal.unit_price_placeholder',
+                          'Ej: 15000'
+                        )}
                       />
                       <span className='sales-modal__input-affix'>
                         {paymentCurrency}

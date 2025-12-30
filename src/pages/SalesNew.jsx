@@ -21,6 +21,7 @@ import { PaymentMethodService } from '@/services/paymentMethodService'
 import { CurrencyService } from '@/services/currencyService'
 import { productService } from '@/services/productService'
 import apiService from '@/services/api'
+import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 
 const STATUS_STYLES = {
   completed: { label: 'Completada', badge: 'badge--subtle-success' },
@@ -372,6 +373,51 @@ const SalesNew = () => {
       }
     }
   }, [showClientDropdown, showProductDropdown])
+
+  // Obtener funciones del store de atajos de teclado
+  const { matchesShortcut } = useKeyboardShortcutsStore()
+
+  // Atajos de teclado para ventas
+  useEffect(() => {
+    const handleKeyDown = event => {
+      // Ctrl+A para abrir modal de agregar producto (solo en tab new-sale)
+      if (
+        matchesShortcut('sales.addProduct', event) &&
+        activeTab === 'new-sale'
+      ) {
+        event.preventDefault()
+        handleOpenModal()
+        return
+      }
+
+      // Ctrl+G para guardar/procesar venta (solo en tab new-sale con items)
+      if (
+        matchesShortcut('sales.processSale', event) &&
+        activeTab === 'new-sale' &&
+        items.length > 0
+      ) {
+        event.preventDefault()
+        handleSaveSale()
+        return
+      }
+
+      // Ctrl+Shift+H para ver historial de ventas
+      if (matchesShortcut('sales.viewHistory', event)) {
+        event.preventDefault()
+        setActiveTab('history')
+        return
+      }
+
+      // ESC para cerrar modal
+      if (matchesShortcut('general.closeModal', event) && isModalOpen) {
+        setIsModalOpen(false)
+        return
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [activeTab, isModalOpen, matchesShortcut, items.length])
 
   const subtotal = useMemo(
     () => items.reduce((acc, item) => acc + item.price * item.quantity, 0),
@@ -1181,20 +1227,11 @@ const SalesNew = () => {
                 </div>
                 <div className='card__content'>
                   <div className='sales-new__search-row'>
-                    <div className='search-box'>
-                      <Search className='search-box__icon' aria-hidden='true' />
-                      <input
-                        type='search'
-                        className='input search-box__input'
-                        placeholder='Buscar productos para agregar...'
-                        value={searchTerm}
-                        onChange={event => setSearchTerm(event.target.value)}
-                      />
-                    </div>
                     <button
                       type='button'
                       className='btn btn--primary'
                       onClick={handleOpenModal}
+                      title='Ctrl+A'
                     >
                       <Plus size={16} aria-hidden='true' />
                       Agregar Producto
