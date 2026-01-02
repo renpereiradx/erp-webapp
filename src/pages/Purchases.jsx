@@ -69,9 +69,10 @@ const Purchases = () => {
   const [showProductDropdown, setShowProductDropdown] = useState(false)
   const [modalQuantity, setModalQuantity] = useState('')
   const [modalUnitPrice, setModalUnitPrice] = useState('')
-  const [modalProfitPct, setModalProfitPct] = useState(30)
-  const [modalSalePrice, setModalSalePrice] = useState(0) // Precio de venta final
-  const [pricingMode, setPricingMode] = useState('margin') // 'margin' o 'sale_price'
+  // Sistema de pricing unificado: solo UN valor es la fuente de verdad según el modo
+  const [modalProfitPct, setModalProfitPct] = useState(30)      // Fuente de verdad en modo 'margin'
+  const [modalSalePrice, setModalSalePrice] = useState(0)       // Fuente de verdad en modo 'sale_price'
+  const [pricingMode, setPricingMode] = useState('margin')      // 'margin' o 'sale_price'
   const [modalTaxRateId, setModalTaxRateId] = useState(null) // Tax rate seleccionado
   const [taxRates, setTaxRates] = useState([]) // Lista de tasas disponibles
   const [loadingTaxRates, setLoadingTaxRates] = useState(false)
@@ -387,25 +388,34 @@ const Purchases = () => {
     }
   }, [modalProductSearch])
 
-  // Sincronizar precio de venta cuando cambia el margen o precio unitario (modo margen)
-  useEffect(() => {
-    if (pricingMode === 'margin') {
-      // Calcular precio de venta: costo * (1 + margen/100)
-      const unitPrice = Number(modalUnitPrice) || 0
-      const calculatedSalePrice = unitPrice * (1 + modalProfitPct / 100)
-      setModalSalePrice(calculatedSalePrice)
-    }
-  }, [modalUnitPrice, modalProfitPct, pricingMode])
+  // ============================================================================
+  // SISTEMA DE PRICING: Valores derivados (sin useEffect bidireccionales)
+  // ============================================================================
+  // Principio: El valor que el usuario edita es la FUENTE DE VERDAD.
+  // El otro valor se CALCULA, no se almacena como estado reactivo.
+  // Esto elimina ciclos de actualización y hace el código predecible.
 
-  // Sincronizar margen cuando cambia el precio de venta (modo precio de venta)
-  useEffect(() => {
+  // Precio de venta efectivo: calculado si modo=margin, directo si modo=sale_price
+  const effectiveSalePrice = useMemo(() => {
+    const unitPrice = Number(modalUnitPrice) || 0
+    if (pricingMode === 'margin') {
+      // Calcular desde margen: costo * (1 + margen/100)
+      return unitPrice * (1 + modalProfitPct / 100)
+    }
+    // En modo sale_price, usar el valor ingresado directamente
+    return modalSalePrice
+  }, [pricingMode, modalUnitPrice, modalProfitPct, modalSalePrice])
+
+  // Margen efectivo: calculado si modo=sale_price, directo si modo=margin
+  const effectiveProfitPct = useMemo(() => {
     const unitPrice = Number(modalUnitPrice) || 0
     if (pricingMode === 'sale_price' && unitPrice > 0) {
-      // Calcular margen: ((precio_venta - costo) / costo) * 100
-      const calculatedMargin = ((modalSalePrice - unitPrice) / unitPrice) * 100
-      setModalProfitPct(Math.max(0, calculatedMargin)) // No permitir márgenes negativos
+      // Calcular desde precio: ((precio - costo) / costo) * 100
+      return Math.max(0, ((modalSalePrice - unitPrice) / unitPrice) * 100)
     }
-  }, [modalSalePrice, modalUnitPrice, pricingMode])
+    // En modo margin, usar el valor ingresado directamente
+    return modalProfitPct
+  }, [pricingMode, modalUnitPrice, modalSalePrice, modalProfitPct])
 
   // Obtener funciones del store de atajos de teclado
   const { matchesShortcut } = useKeyboardShortcutsStore()
@@ -584,8 +594,9 @@ const Purchases = () => {
       sku: modalSelectedProduct.sku || modalSelectedProduct.product_sku || '-',
       quantity: Number(modalQuantity) || 1,
       unit_price: Number(modalUnitPrice) || 0,
-      profit_pct: Number(modalProfitPct) || 30,
-      sale_price: Number(modalSalePrice) || 0, // Valor tal cual, sin redondeo previo
+      // Usar valores EFECTIVOS (calculados o directos según el modo)
+      profit_pct: effectiveProfitPct,
+      sale_price: effectiveSalePrice,
       pricing_mode: pricingMode, // 'margin' o 'sale_price'
       unit: modalSelectedProduct.unit || 'unit',
       tax_rate_id: modalTaxRateId || null, // Usar el tax_rate_id seleccionado por el usuario
@@ -2013,9 +2024,7 @@ const Purchases = () => {
                         step='1'
                         className='input'
                         value={modalProfitPct}
-                        onChange={e =>
-                          setModalProfitPct(Number(e.target.value))
-                        }
+                        onChange={e => setModalProfitPct(Number(e.target.value))}
                         placeholder='30'
                       />
                       <span className='sales-modal__field-note'>
@@ -2023,6 +2032,8 @@ const Purchases = () => {
                           'purchases.modal.profit_note',
                           'Porcentaje de ganancia sobre el costo'
                         )}
+                        {' → '}
+                        <strong>{t('purchases.modal.sale_price_result', 'Precio venta')}: {formatCurrency(effectiveSalePrice)}</strong>
                       </span>
                     </label>
                   ) : (
@@ -2041,13 +2052,11 @@ const Purchases = () => {
                           id='modal-sale-price'
                           type='number'
                           min='0'
-                          step='0.01'
+                          step='1'
                           className='input sales-modal__input'
                           value={modalSalePrice}
-                          onChange={e =>
-                            setModalSalePrice(Number(e.target.value))
-                          }
-                          placeholder='0.00'
+                          onChange={e => setModalSalePrice(Number(e.target.value))}
+                          placeholder='0'
                         />
                         <span className='sales-modal__input-affix'>
                           {paymentCurrency}
@@ -2056,8 +2065,10 @@ const Purchases = () => {
                       <span className='sales-modal__field-note'>
                         {t(
                           'purchases.modal.sale_price_note',
-                          'El margen se calculará automáticamente'
+                          'Precio exacto que se usará'
                         )}
+                        {' → '}
+                        <strong>{t('purchases.modal.margin_result', 'Margen')}: {effectiveProfitPct.toFixed(1)}%</strong>
                       </span>
                     </label>
                   )}
@@ -2092,8 +2103,8 @@ const Purchases = () => {
                       </span>
                       <span className='sales-modal__value'>
                         {pricingMode === 'margin'
-                          ? formatCurrency(modalSalePrice || 0)
-                          : `${modalProfitPct.toFixed(2)}%`}
+                          ? formatCurrency(effectiveSalePrice || 0)
+                          : `${effectiveProfitPct.toFixed(2)}%`}
                       </span>
                     </div>
                     <div className='sales-modal__info-item'>
@@ -2118,7 +2129,7 @@ const Purchases = () => {
                       </span>
                       <span className='sales-modal__value sales-modal__value--highlight'>
                         {formatCurrency(
-                          (modalQuantity || 0) * (modalSalePrice || 0)
+                          (modalQuantity || 0) * effectiveSalePrice
                         )}
                       </span>
                     </div>

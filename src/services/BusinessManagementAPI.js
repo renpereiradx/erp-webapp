@@ -295,7 +295,7 @@ class BusinessManagementAPI {
    */
   async getProductsPaginated(page = 1, pageSize = 10, options = {}) {
     const { signal } = options
-    return this.makeRequest(`/products/${page}/${pageSize}`, { signal })
+    return this.makeRequest(`/products/list/${page}/${pageSize}`, { signal })
   }
 
   // Crear producto
