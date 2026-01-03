@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Search, Package, Send, RefreshCw } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
@@ -44,6 +44,11 @@ const InventoryAdjustmentManualPage = () => {
   })
   const [formErrors, setFormErrors] = useState({})
   const [successMessage, setSuccessMessage] = useState('')
+  const [highlightedIndex, setHighlightedIndex] = useState(-1) // Índice del item resaltado
+
+  // Refs para el dropdown
+  const productSearchInputRef = useRef(null)
+  const productDropdownRef = useRef(null)
 
   // Búsqueda de productos con debounce
   useEffect(() => {
@@ -75,6 +80,21 @@ const InventoryAdjustmentManualPage = () => {
     const timeoutId = setTimeout(searchProducts, 300)
     return () => clearTimeout(timeoutId)
   }, [productSearchTerm])
+
+  // Scroll automático al item resaltado cuando se navega con teclado
+  useEffect(() => {
+    if (highlightedIndex >= 0 && productDropdownRef.current) {
+      const highlightedElement = productDropdownRef.current.querySelector(
+        `#inventory-product-option-${highlightedIndex}`
+      )
+      if (highlightedElement) {
+        highlightedElement.scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth',
+        })
+      }
+    }
+  }, [highlightedIndex])
 
   // Cargar historial cuando se selecciona un producto
   useEffect(() => {
@@ -588,22 +608,86 @@ const InventoryAdjustmentManualPage = () => {
             <div className='product-search-modal__search'>
               <Search className='product-search-modal__search-icon' size={20} />
               <input
+                ref={productSearchInputRef}
                 type='text'
                 className='product-search-modal__search-input'
                 placeholder='Buscar por nombre, SKU o ID...'
                 value={productSearchTerm}
                 onChange={e => setProductSearchTerm(e.target.value)}
+                onKeyDown={e => {
+                  const itemCount = filteredProducts.length
+                  if (itemCount === 0) return
+
+                  switch (e.key) {
+                    case 'ArrowDown':
+                      e.preventDefault()
+                      setHighlightedIndex(prev =>
+                        prev < itemCount - 1 ? prev + 1 : 0
+                      )
+                      break
+                    case 'ArrowUp':
+                      e.preventDefault()
+                      setHighlightedIndex(prev =>
+                        prev > 0 ? prev - 1 : itemCount - 1
+                      )
+                      break
+                    case 'Enter':
+                      e.preventDefault()
+                      if (
+                        highlightedIndex >= 0 &&
+                        highlightedIndex < itemCount
+                      ) {
+                        handleProductSelect(filteredProducts[highlightedIndex])
+                      } else if (itemCount > 0) {
+                        handleProductSelect(filteredProducts[0])
+                      }
+                      break
+                    case 'Escape':
+                      e.preventDefault()
+                      setShowProductSearch(false)
+                      setHighlightedIndex(-1)
+                      break
+                    case 'Tab':
+                      setShowProductSearch(false)
+                      setHighlightedIndex(-1)
+                      break
+                  }
+                }}
+                role='combobox'
+                aria-expanded={filteredProducts.length > 0}
+                aria-haspopup='listbox'
+                aria-controls='inventory-product-listbox'
+                aria-activedescendant={
+                  highlightedIndex >= 0
+                    ? `inventory-product-option-${highlightedIndex}`
+                    : undefined
+                }
                 autoFocus
               />
             </div>
 
-            <div className='product-search-modal__results'>
+            <div
+              className='product-search-modal__results'
+              ref={productDropdownRef}
+              role='listbox'
+              id='inventory-product-listbox'
+              aria-label='Productos encontrados'
+            >
               {filteredProducts.length > 0 ? (
-                filteredProducts.map(product => (
+                filteredProducts.map((product, index) => (
                   <div
                     key={product.product_id}
-                    className='product-search-item'
+                    id={`inventory-product-option-${index}`}
+                    className={`product-search-item ${
+                      highlightedIndex === index
+                        ? 'product-search-item--highlighted'
+                        : ''
+                    }`}
                     onClick={() => handleProductSelect(product)}
+                    onMouseEnter={() => setHighlightedIndex(index)}
+                    onMouseLeave={() => setHighlightedIndex(-1)}
+                    role='option'
+                    aria-selected={highlightedIndex === index}
                   >
                     <div className='product-search-item__image'>
                       {product.image_url ? (

@@ -767,21 +767,39 @@ $spacing-xxxl: $spacing-48 !default;
   padding: $spacing-m;
   border-radius: $border-radius-medium;
   cursor: pointer;
-  transition: background-color $duration-fast ease;
+  transition: background-color $duration-fast ease,
+    border-color $duration-fast ease, border-left-color $duration-fast ease;
 
   @include themify {
     border: 1px solid themed('border-default');
+    border-left: 3px solid transparent;
   }
 
   &:hover {
     @include themify {
       background-color: themed('state-hover-overlay');
       border-color: themed('border-strong');
+      border-left-color: themed('accent-primary');
     }
   }
 
   &:not(:last-child) {
     margin-bottom: $spacing-s;
+  }
+
+  // Estado resaltado por navegación con teclado
+  &--highlighted {
+    @include themify {
+      background-color: themed('accent-light');
+      border-color: themed('accent-primary');
+      border-left-color: themed('accent-primary');
+    }
+
+    .product-search-item__name {
+      @include themify {
+        color: themed('accent-primary');
+      }
+    }
   }
 
   &__image {
@@ -834,6 +852,7 @@ $spacing-xxxl: $spacing-48 !default;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: color $duration-fast ease;
 
     @include themify {
       color: themed('text-primary');

@@ -1059,15 +1059,17 @@
     justify-content: space-between;
     padding: $spacing-12 $spacing-16;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-left-color 0.2s ease;
     border-bottom: 1px solid;
+    border-left: 3px solid transparent;
 
     @include themify($themes) {
-      border-color: themed('border-default');
+      border-bottom-color: themed('border-default');
       color: themed('text-primary');
 
       &:hover {
         background-color: themed('bg-tertiary');
+        border-left-color: themed('accent-primary');
       }
 
       &:active {
@@ -1079,12 +1081,27 @@
       border-bottom: none;
     }
 
+    // Estado resaltado por navegación con teclado
+    &--highlighted {
+      @include themify($themes) {
+        background-color: themed('accent-light');
+        border-left-color: themed('accent-primary');
+      }
+
+      .inventory-management__search-dropdown-item-name {
+        @include themify($themes) {
+          color: themed('accent-primary');
+        }
+      }
+    }
+
     &--loading,
     &--empty {
       cursor: default;
       text-align: center;
       justify-content: center;
       padding: $spacing-20;
+      border-left: none;
 
       @include themify($themes) {
         color: themed('text-tertiary');
@@ -1093,6 +1110,7 @@
       &:hover {
         @include themify($themes) {
           background-color: transparent;
+          border-left-color: transparent;
         }
       }
     }

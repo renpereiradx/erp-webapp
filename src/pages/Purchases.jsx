@@ -67,17 +67,19 @@ const Purchases = () => {
   const [modalSelectedProduct, setModalSelectedProduct] = useState(null)
   const [searchingProducts, setSearchingProducts] = useState(false)
   const [showProductDropdown, setShowProductDropdown] = useState(false)
+  const [highlightedIndex, setHighlightedIndex] = useState(-1) // Índice del item resaltado en dropdown
   const [modalQuantity, setModalQuantity] = useState('')
   const [modalUnitPrice, setModalUnitPrice] = useState('')
   // Sistema de pricing unificado: solo UN valor es la fuente de verdad según el modo
-  const [modalProfitPct, setModalProfitPct] = useState(30)      // Fuente de verdad en modo 'margin'
-  const [modalSalePrice, setModalSalePrice] = useState(0)       // Fuente de verdad en modo 'sale_price'
-  const [pricingMode, setPricingMode] = useState('margin')      // 'margin' o 'sale_price'
+  const [modalProfitPct, setModalProfitPct] = useState(30) // Fuente de verdad en modo 'margin'
+  const [modalSalePrice, setModalSalePrice] = useState(0) // Fuente de verdad en modo 'sale_price'
+  const [pricingMode, setPricingMode] = useState('margin') // 'margin' o 'sale_price'
   const [modalTaxRateId, setModalTaxRateId] = useState(null) // Tax rate seleccionado
   const [taxRates, setTaxRates] = useState([]) // Lista de tasas disponibles
   const [loadingTaxRates, setLoadingTaxRates] = useState(false)
   const [purchaseItems, setPurchaseItems] = useState([])
   const modalProductSearchRef = useRef(null)
+  const productDropdownRef = useRef(null)
 
   // Estados para el menú de acciones de la tabla
   const [openActionMenu, setOpenActionMenu] = useState(null)
@@ -317,6 +319,7 @@ const Purchases = () => {
         !modalProductSearchRef.current.contains(event.target)
       ) {
         setShowProductDropdown(false)
+        setHighlightedIndex(-1) // Reset al cerrar dropdown
       }
       // Para el menú de acciones, verificar si se hizo clic fuera de cualquier action-menu
       const clickedInsideActionMenu = event.target.closest('.action-menu')
@@ -387,6 +390,21 @@ const Purchases = () => {
       clearTimeout(timeoutId)
     }
   }, [modalProductSearch])
+
+  // Scroll automático al item resaltado cuando se navega con teclado
+  useEffect(() => {
+    if (highlightedIndex >= 0 && productDropdownRef.current) {
+      const highlightedElement = productDropdownRef.current.querySelector(
+        `#product-option-${highlightedIndex}`
+      )
+      if (highlightedElement) {
+        highlightedElement.scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth',
+        })
+      }
+    }
+  }, [highlightedIndex])
 
   // ============================================================================
   // SISTEMA DE PRICING: Valores derivados (sin useEffect bidireccionales)
@@ -1777,27 +1795,76 @@ const Purchases = () => {
                               'Buscar producto...'
                             )}
                             value={modalProductSearch}
-                            onChange={e =>
+                            onChange={e => {
                               setModalProductSearch(e.target.value)
-                            }
+                              setHighlightedIndex(-1) // Reset al escribir
+                            }}
+                            onFocus={() => {
+                              if (filteredModalProducts.length > 0) {
+                                setShowProductDropdown(true)
+                              }
+                            }}
                             onKeyDown={e => {
+                              const itemCount = filteredModalProducts.length
+
+                              if (e.key === 'ArrowDown') {
+                                e.preventDefault()
+                                if (!showProductDropdown && itemCount > 0) {
+                                  setShowProductDropdown(true)
+                                  setHighlightedIndex(0)
+                                } else if (itemCount > 0) {
+                                  setHighlightedIndex(prev =>
+                                    prev < itemCount - 1 ? prev + 1 : 0
+                                  )
+                                }
+                              }
+                              if (e.key === 'ArrowUp') {
+                                e.preventDefault()
+                                if (itemCount > 0) {
+                                  setHighlightedIndex(prev =>
+                                    prev > 0 ? prev - 1 : itemCount - 1
+                                  )
+                                }
+                              }
                               if (e.key === 'Enter') {
                                 e.preventDefault()
                                 const trimmed = modalProductSearch.trim()
-                                if (
-                                  trimmed.length >= 2 &&
-                                  filteredModalProducts.length > 0
-                                ) {
-                                  handleProductSelect(filteredModalProducts[0])
+                                if (trimmed.length >= 2 && itemCount > 0) {
+                                  // Si hay un item resaltado, seleccionarlo; si no, el primero
+                                  const indexToSelect =
+                                    highlightedIndex >= 0 ? highlightedIndex : 0
+                                  handleProductSelect(
+                                    filteredModalProducts[indexToSelect]
+                                  )
+                                  setHighlightedIndex(-1)
                                 }
                               }
+                              if (e.key === 'Escape') {
+                                e.preventDefault()
+                                setShowProductDropdown(false)
+                                setHighlightedIndex(-1)
+                              }
+                              if (e.key === 'Tab') {
+                                setShowProductDropdown(false)
+                                setHighlightedIndex(-1)
+                              }
                             }}
+                            role='combobox'
+                            aria-expanded={showProductDropdown}
+                            aria-haspopup='listbox'
+                            aria-controls='product-search-listbox'
+                            aria-activedescendant={
+                              highlightedIndex >= 0
+                                ? `product-option-${highlightedIndex}`
+                                : undefined
+                            }
                             aria-label={t(
                               'purchases.modal.product_placeholder',
                               'Buscar producto...'
                             )}
                             aria-describedby='product-search-helper'
                             autoFocus
+                            autoComplete='off'
                           />
                           {modalProductSearch && (
                             <button
@@ -1823,26 +1890,60 @@ const Purchases = () => {
                       {showProductDropdown &&
                         filteredModalProducts.length > 0 &&
                         modalProductSearch.trim().length >= 2 && (
-                          <div className='purchases__supplier-dropdown'>
-                            {filteredModalProducts.map(product => (
-                              <div
-                                key={product.id || product.product_id}
-                                className='purchases__supplier-item'
-                                onClick={() => handleProductSelect(product)}
-                              >
-                                <div className='purchases__supplier-item-name'>
-                                  {product.name || product.product_name}
+                          <div
+                            className='purchases__product-dropdown'
+                            ref={productDropdownRef}
+                            role='listbox'
+                            id='product-search-listbox'
+                            aria-label={t(
+                              'purchases.modal.product_results',
+                              'Resultados de productos'
+                            )}
+                          >
+                            {filteredModalProducts.map((product, index) => {
+                              const isHighlighted = index === highlightedIndex
+                              const productId = product.id || product.product_id
+                              return (
+                                <div
+                                  key={productId}
+                                  id={`product-option-${index}`}
+                                  role='option'
+                                  aria-selected={isHighlighted}
+                                  className={`purchases__product-dropdown-item${
+                                    isHighlighted
+                                      ? ' purchases__product-dropdown-item--highlighted'
+                                      : ''
+                                  }`}
+                                  onClick={() => {
+                                    handleProductSelect(product)
+                                    setHighlightedIndex(-1)
+                                  }}
+                                  onMouseEnter={() =>
+                                    setHighlightedIndex(index)
+                                  }
+                                  onMouseLeave={() => setHighlightedIndex(-1)}
+                                >
+                                  <div className='purchases__product-dropdown-item-info'>
+                                    <div className='purchases__product-dropdown-item-name'>
+                                      {product.name || product.product_name}
+                                    </div>
+                                    <div className='purchases__product-dropdown-item-meta'>
+                                      SKU:{' '}
+                                      {product.sku ||
+                                        product.product_sku ||
+                                        '-'}
+                                    </div>
+                                  </div>
+                                  <div className='purchases__product-dropdown-item-price'>
+                                    {formatCurrency(
+                                      product.cost_price ||
+                                        product.unit_cost ||
+                                        0
+                                    )}
+                                  </div>
                                 </div>
-                                <div className='purchases__supplier-item-email'>
-                                  SKU:{' '}
-                                  {product.sku || product.product_sku || '-'} |
-                                  Costo:{' '}
-                                  {formatCurrency(
-                                    product.cost_price || product.unit_cost || 0
-                                  )}
-                                </div>
-                              </div>
-                            ))}
+                              )
+                            })}
                           </div>
                         )}
 
@@ -1850,11 +1951,13 @@ const Purchases = () => {
                       {!searchingProducts &&
                         modalProductSearch.trim().length >= 2 &&
                         filteredModalProducts.length === 0 && (
-                          <div className='purchases__supplier-loading'>
-                            {t(
-                              'purchases.modal.no_results',
-                              'No se encontraron productos'
-                            )}
+                          <div className='purchases__product-dropdown purchases__product-dropdown--empty'>
+                            <div className='purchases__product-dropdown-empty'>
+                              {t(
+                                'purchases.modal.no_results',
+                                'No se encontraron productos'
+                              )}
+                            </div>
                           </div>
                         )}
                     </div>
@@ -2024,7 +2127,9 @@ const Purchases = () => {
                         step='1'
                         className='input'
                         value={modalProfitPct}
-                        onChange={e => setModalProfitPct(Number(e.target.value))}
+                        onChange={e =>
+                          setModalProfitPct(Number(e.target.value))
+                        }
                         placeholder='30'
                       />
                       <span className='sales-modal__field-note'>
@@ -2033,7 +2138,13 @@ const Purchases = () => {
                           'Porcentaje de ganancia sobre el costo'
                         )}
                         {' → '}
-                        <strong>{t('purchases.modal.sale_price_result', 'Precio venta')}: {formatCurrency(effectiveSalePrice)}</strong>
+                        <strong>
+                          {t(
+                            'purchases.modal.sale_price_result',
+                            'Precio venta'
+                          )}
+                          : {formatCurrency(effectiveSalePrice)}
+                        </strong>
                       </span>
                     </label>
                   ) : (
@@ -2055,7 +2166,9 @@ const Purchases = () => {
                           step='1'
                           className='input sales-modal__input'
                           value={modalSalePrice}
-                          onChange={e => setModalSalePrice(Number(e.target.value))}
+                          onChange={e =>
+                            setModalSalePrice(Number(e.target.value))
+                          }
                           placeholder='0'
                         />
                         <span className='sales-modal__input-affix'>
@@ -2068,7 +2181,10 @@ const Purchases = () => {
                           'Precio exacto que se usará'
                         )}
                         {' → '}
-                        <strong>{t('purchases.modal.margin_result', 'Margen')}: {effectiveProfitPct.toFixed(1)}%</strong>
+                        <strong>
+                          {t('purchases.modal.margin_result', 'Margen')}:{' '}
+                          {effectiveProfitPct.toFixed(1)}%
+                        </strong>
                       </span>
                     </label>
                   )}

@@ -218,6 +218,7 @@ const SalesNew = () => {
   const [modalSearchResults, setModalSearchResults] = useState([])
   const [isSearchingProducts, setIsSearchingProducts] = useState(false)
   const [showProductDropdown, setShowProductDropdown] = useState(false)
+  const [highlightedIndex, setHighlightedIndex] = useState(-1) // Índice del item resaltado en dropdown
 
   // Client status state
   const [pendingReservations, setPendingReservations] = useState([])
@@ -331,6 +332,21 @@ const SalesNew = () => {
     return () => clearTimeout(delayDebounceFn)
   }, [productSearchTerm, selectedModalProduct])
 
+  // Scroll automático al item resaltado cuando se navega con teclado
+  useEffect(() => {
+    if (highlightedIndex >= 0 && productDropdownRef.current) {
+      const highlightedElement = productDropdownRef.current.querySelector(
+        `#sales-product-option-${highlightedIndex}`
+      )
+      if (highlightedElement) {
+        highlightedElement.scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth',
+        })
+      }
+    }
+  }, [highlightedIndex])
+
   // Establecer producto inicial en modal cuando carguen productos
   useEffect(() => {
     if (products.length > 0 && !selectedModalProduct) {
@@ -363,6 +379,7 @@ const SalesNew = () => {
         !productSearchContainerRef.current.contains(event.target)
       ) {
         setShowProductDropdown(false)
+        setHighlightedIndex(-1) // Reset al cerrar dropdown
       }
     }
 
@@ -1006,9 +1023,9 @@ const SalesNew = () => {
           // Producto normal duplicado: preguntar si quiere sumar cantidad
           const shouldMerge = window.confirm(
             `El producto "${modalDisplay.name}" ya está en el carrito.\n\n` +
-            `Cantidad actual: ${existingItem.quantity}\n` +
-            `Nueva cantidad: ${parsedModalQuantity}\n\n` +
-            `¿Deseas sumar las cantidades?`
+              `Cantidad actual: ${existingItem.quantity}\n` +
+              `Nueva cantidad: ${parsedModalQuantity}\n\n` +
+              `¿Deseas sumar las cantidades?`
           )
 
           if (shouldMerge) {
@@ -1106,7 +1123,9 @@ const SalesNew = () => {
 
         if (response && response.success) {
           alert(
-            `Venta actualizada exitosamente. ${response.items_added || newItems.length} producto(s) agregado(s).`
+            `Venta actualizada exitosamente. ${
+              response.items_added || newItems.length
+            } producto(s) agregado(s).`
           )
 
           // Limpiar carrito y estado de venta pendiente
@@ -2630,30 +2649,66 @@ const SalesNew = () => {
                         onChange={event => {
                           setProductSearchTerm(event.target.value)
                           setShowProductDropdown(true)
+                          setHighlightedIndex(-1) // Reset al escribir
                         }}
-                        onFocus={() => setShowProductDropdown(true)}
+                        onFocus={() => {
+                          if (modalSearchResults.length > 0) {
+                            setShowProductDropdown(true)
+                          }
+                        }}
                         onKeyDown={e => {
+                          const itemCount = modalSearchResults.length
+
                           if (e.key === 'ArrowDown') {
                             e.preventDefault()
-                            setShowProductDropdown(true)
-                            setTimeout(() => {
-                              const firstBtn =
-                                productDropdownRef.current?.querySelector(
-                                  'button'
-                                )
-                              if (firstBtn) firstBtn.focus()
-                            }, 0)
+                            if (!showProductDropdown && itemCount > 0) {
+                              setShowProductDropdown(true)
+                              setHighlightedIndex(0)
+                            } else if (itemCount > 0) {
+                              setHighlightedIndex(prev =>
+                                prev < itemCount - 1 ? prev + 1 : 0
+                              )
+                            }
+                          }
+                          if (e.key === 'ArrowUp') {
+                            e.preventDefault()
+                            if (itemCount > 0) {
+                              setHighlightedIndex(prev =>
+                                prev > 0 ? prev - 1 : itemCount - 1
+                              )
+                            }
                           }
                           if (e.key === 'Enter') {
                             e.preventDefault()
-                            if (
-                              showProductDropdown &&
-                              modalSearchResults.length > 0
-                            ) {
-                              handleSelectProduct(modalSearchResults[0])
+                            if (showProductDropdown && itemCount > 0) {
+                              // Si hay un item resaltado, seleccionarlo; si no, el primero
+                              const indexToSelect =
+                                highlightedIndex >= 0 ? highlightedIndex : 0
+                              handleSelectProduct(
+                                modalSearchResults[indexToSelect]
+                              )
+                              setHighlightedIndex(-1)
                             }
                           }
+                          if (e.key === 'Escape') {
+                            e.preventDefault()
+                            setShowProductDropdown(false)
+                            setHighlightedIndex(-1)
+                          }
+                          if (e.key === 'Tab') {
+                            setShowProductDropdown(false)
+                            setHighlightedIndex(-1)
+                          }
                         }}
+                        role='combobox'
+                        aria-expanded={showProductDropdown}
+                        aria-haspopup='listbox'
+                        aria-controls='sales-product-search-listbox'
+                        aria-activedescendant={
+                          highlightedIndex >= 0
+                            ? `sales-product-option-${highlightedIndex}`
+                            : undefined
+                        }
                         placeholder='Buscar por nombre, ID o código de barras...'
                         disabled={false}
                         autoComplete='off'
@@ -2661,28 +2716,17 @@ const SalesNew = () => {
                       {showProductDropdown && (
                         <div
                           ref={productDropdownRef}
-                          style={{
-                            position: 'absolute',
-                            top: '100%',
-                            left: 0,
-                            right: 0,
-                            marginTop: '4px',
-                            backgroundColor: 'white',
-                            border: '1px solid var(--color-border-default)',
-                            borderRadius: '6px',
-                            boxShadow:
-                              '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                            maxHeight: '240px',
-                            overflowY: 'auto',
-                            zIndex: 1000,
-                          }}
+                          className='sales-product-dropdown'
+                          role='listbox'
+                          id='sales-product-search-listbox'
+                          aria-label='Resultados de productos'
                         >
                           {isSearchingProducts ? (
-                            <div style={{ padding: '12px 16px' }}>
+                            <div className='sales-product-dropdown__message'>
                               Buscando...
                             </div>
                           ) : modalSearchResults.length === 0 ? (
-                            <div style={{ padding: '12px 16px' }}>
+                            <div className='sales-product-dropdown__message'>
                               {productSearchTerm.length < 3
                                 ? 'Escribe al menos 3 caracteres'
                                 : 'No se encontraron productos'}
@@ -2690,60 +2734,39 @@ const SalesNew = () => {
                           ) : (
                             modalSearchResults.map((product, index) => {
                               const display = getProductDisplay(product)
+                              const isHighlighted = index === highlightedIndex
                               return (
-                                <button
+                                <div
                                   key={`${display.id}-${index}`}
-                                  type='button'
-                                  className='product-dropdown-item'
-                                  onClick={() => handleSelectProduct(product)}
-                                  onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault()
-                                      handleSelectProduct(product)
-                                    }
-                                    if (e.key === 'ArrowDown') {
-                                      e.preventDefault()
-                                      const next =
-                                        e.currentTarget.nextElementSibling
-                                      if (next) next.focus()
-                                    }
-                                    if (e.key === 'ArrowUp') {
-                                      e.preventDefault()
-                                      const prev =
-                                        e.currentTarget.previousElementSibling
-                                      if (prev) prev.focus()
-                                      else {
-                                        const input =
-                                          productSearchContainerRef.current?.querySelector(
-                                            'input'
-                                          )
-                                        if (input) input.focus()
-                                      }
-                                    }
-                                    if (e.key === 'Escape') {
-                                      setShowProductDropdown(false)
-                                      const input =
-                                        productSearchContainerRef.current?.querySelector(
-                                          'input'
-                                        )
-                                      if (input) input.focus()
-                                    }
+                                  id={`sales-product-option-${index}`}
+                                  role='option'
+                                  aria-selected={isHighlighted}
+                                  className={`sales-product-dropdown__item${
+                                    isHighlighted
+                                      ? ' sales-product-dropdown__item--highlighted'
+                                      : ''
+                                  }`}
+                                  onClick={() => {
+                                    handleSelectProduct(product)
+                                    setHighlightedIndex(-1)
                                   }}
+                                  onMouseEnter={() =>
+                                    setHighlightedIndex(index)
+                                  }
+                                  onMouseLeave={() => setHighlightedIndex(-1)}
                                 >
-                                  <div className='product-dropdown-item__info'>
-                                    <div className='product-dropdown-item__name'>
+                                  <div className='sales-product-dropdown__item-info'>
+                                    <div className='sales-product-dropdown__item-name'>
                                       {display.name}
                                     </div>
-                                    <div className='product-dropdown-item__meta'>
+                                    <div className='sales-product-dropdown__item-meta'>
                                       ID: {display.id}
                                     </div>
                                   </div>
-                                  <div className='product-dropdown-item__price-block'>
-                                    <div className='product-dropdown-item__price'>
-                                      {formatCurrency(display.price, 'PYG')}
-                                    </div>
+                                  <div className='sales-product-dropdown__item-price'>
+                                    {formatCurrency(display.price, 'PYG')}
                                   </div>
-                                </button>
+                                </div>
                               )
                             })
                           )}

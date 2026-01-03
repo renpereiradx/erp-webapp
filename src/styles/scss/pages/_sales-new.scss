@@ -691,3 +691,160 @@
     }
   }
 }
+
+// =============================================================================
+// SALES PRODUCT SEARCH DROPDOWN - FLUENT 2 DESIGN
+// =============================================================================
+// Dropdown de búsqueda de productos con navegación por teclado
+// Basado en Fluent Design System 2 tokens y estados
+
+.sales-product-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: $spacing-4;
+  border-radius: $border-radius-medium;
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 1000;
+  animation: salesSlideDown $duration-fast ease-out;
+
+  @include themify {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+    box-shadow: $shadow-16;
+  }
+
+  // Scrollbar personalizado
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    @include themify {
+      background-color: themed('border-subtle');
+    }
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    @include themify {
+      background-color: themed('border-default');
+    }
+  }
+
+  &__message {
+    padding: $spacing-12 $spacing-16;
+    font-size: $font-size-300;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-12 $spacing-16;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    @include transition(all, $duration-fast);
+
+    @include themify {
+      border-bottom: 1px solid themed('border-subtle');
+      color: themed('text-primary');
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    // Estado hover
+    &:hover {
+      @include themify {
+        background-color: themed('surface-hover');
+      }
+    }
+
+    // Estado highlighted (navegación por teclado)
+    &--highlighted {
+      @include themify {
+        background-color: themed('accent-light');
+        border-left-color: themed('accent-primary');
+      }
+
+      .sales-product-dropdown__item-name {
+        @include themify {
+          color: themed('accent-primary');
+        }
+      }
+    }
+
+    // Focus visible para accesibilidad
+    &:focus-visible {
+      outline: none;
+      @include themify {
+        background-color: themed('accent-light');
+        box-shadow: inset 0 0 0 2px themed('accent-primary');
+      }
+    }
+  }
+
+  &__item-info {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__item-name {
+    font-weight: $font-weight-medium;
+    font-size: $font-size-300;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    @include transition(color, $duration-fast);
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__item-meta {
+    font-size: $font-size-200;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__item-price {
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-300;
+    text-align: right;
+    white-space: nowrap;
+    margin-left: $spacing-12;
+
+    @include themify {
+      color: themed('accent-primary');
+    }
+  }
+}
+
+// Animación de entrada del dropdown
+@keyframes salesSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
