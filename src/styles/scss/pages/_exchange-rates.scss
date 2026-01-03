@@ -1,0 +1,670 @@
+// ===========================================================================
+// Exchange Rates Page - Fluent Design System 2 + BEM
+// Basado en: specs/fluent2/payment_dashboard_summary/exchange_rates_(table_with_filters)
+// ===========================================================================
+
+@use '../abstracts' as *;
+
+.exchange-rates-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: $spacing-24;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+
+  @media (max-width: 640px) {
+    padding: $spacing-16;
+  }
+
+  // Header
+  // =========================================================================
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: $spacing-16;
+    padding-bottom: $spacing-20;
+    margin-bottom: $spacing-24;
+
+    @include themify($themes) {
+      border-bottom: 1px solid themed('border-subtle');
+    }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  &__header-content {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__title {
+    font-size: $font-size-800;
+    font-weight: $font-weight-bold;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__subtitle {
+    font-size: $font-size-300;
+    font-weight: $font-weight-regular;
+    line-height: 1.5;
+    max-width: 600px;
+    margin: 0;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__header-actions {
+    display: flex;
+    gap: $spacing-12;
+    flex-shrink: 0;
+
+    @media (max-width: 768px) {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
+  // Filter Toolbar
+  // =========================================================================
+  &__toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+    margin-bottom: $spacing-24;
+    padding: $spacing-16;
+    border-radius: $border-radius-large;
+    box-shadow: $shadow-4;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      border: 1px solid themed('border-subtle');
+    }
+
+    @media (min-width: 1024px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+  }
+
+  &__filters {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+    flex: 1;
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+  }
+
+  // Search Input
+  &__search {
+    position: relative;
+    flex: 1;
+    max-width: 320px;
+    min-width: 200px;
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: $spacing-12;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 20px;
+    height: 20px;
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__search-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 $spacing-12 0 $spacing-40;
+    border-radius: $border-radius-medium;
+    font-size: $font-size-300;
+    transition: border-color $duration-fast $ease-ease-in-out,
+      box-shadow $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      border: 1px solid themed('border-default');
+      color: themed('text-primary');
+
+      &::placeholder {
+        color: themed('text-tertiary');
+      }
+
+      &:focus {
+        outline: none;
+        border-color: $brand-60;
+        box-shadow: 0 0 0 1px $brand-60;
+      }
+    }
+  }
+
+  // Date Range Input
+  &__date-range {
+    position: relative;
+    width: 200px;
+  }
+
+  &__date-icon {
+    position: absolute;
+    right: $spacing-12;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 20px;
+    height: 20px;
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__date-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 $spacing-40 0 $spacing-12;
+    border-radius: $border-radius-medium;
+    font-size: $font-size-300;
+    cursor: pointer;
+    transition: border-color $duration-fast $ease-ease-in-out,
+      box-shadow $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      border: 1px solid themed('border-default');
+      color: themed('text-primary');
+
+      &::placeholder {
+        color: themed('text-tertiary');
+      }
+
+      &:focus {
+        outline: none;
+        border-color: $brand-60;
+        box-shadow: 0 0 0 1px $brand-60;
+      }
+    }
+  }
+
+  // Currency Selects
+  &__currency-filters {
+    display: flex;
+    gap: $spacing-8;
+  }
+
+  &__select-wrapper {
+    position: relative;
+    min-width: 140px;
+  }
+
+  &__select {
+    appearance: none;
+    width: 100%;
+    height: 40px;
+    padding: 0 $spacing-32 0 $spacing-12;
+    border-radius: $border-radius-medium;
+    font-size: $font-size-300;
+    cursor: pointer;
+    transition: border-color $duration-fast $ease-ease-in-out,
+      box-shadow $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      border: 1px solid themed('border-default');
+      color: themed('text-primary');
+
+      &:focus {
+        outline: none;
+        border-color: $brand-60;
+        box-shadow: 0 0 0 1px $brand-60;
+      }
+    }
+  }
+
+  &__select-icon {
+    position: absolute;
+    right: $spacing-8;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 20px;
+    height: 20px;
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
+  // View Toggle
+  &__view-toggle {
+    display: flex;
+    padding: $spacing-4;
+    border-radius: $border-radius-medium;
+    flex-shrink: 0;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+    }
+  }
+
+  &__toggle-btn {
+    padding: $spacing-8 $spacing-16;
+    border-radius: $border-radius-small;
+    font-size: $font-size-200;
+    font-weight: $font-weight-medium;
+    border: none;
+    cursor: pointer;
+    transition: all $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      background-color: transparent;
+      color: themed('text-secondary');
+
+      &:hover:not(&--active) {
+        color: themed('text-primary');
+      }
+
+      &--active {
+        background-color: themed('bg-primary');
+        color: themed('text-primary');
+        box-shadow: $shadow-4;
+      }
+    }
+  }
+
+  // Table Container
+  // =========================================================================
+  &__table-container {
+    overflow: hidden;
+    border-radius: $border-radius-large;
+    box-shadow: $shadow-4;
+    display: flex;
+    flex-direction: column;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+      border: 1px solid themed('border-subtle');
+    }
+  }
+
+  &__table-scroll {
+    overflow-x: auto;
+  }
+}
+
+// Exchange Rates Table
+// =============================================================================
+.exchange-rates-table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+
+  &__head {
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+    }
+  }
+
+  &__header-row {
+    @include themify($themes) {
+      border-bottom: 1px solid themed('border-subtle');
+    }
+  }
+
+  &__th {
+    padding: $spacing-12 $spacing-24;
+    font-size: $font-size-100;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+
+    &--right {
+      text-align: right;
+    }
+
+    &--center {
+      text-align: center;
+    }
+  }
+
+  &__body {
+    @include themify($themes) {
+      & > tr {
+        border-bottom: 1px solid themed('border-subtle');
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+  }
+
+  &__row {
+    transition: background-color $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      &:hover {
+        background-color: themed('state-hover');
+      }
+    }
+  }
+
+  &__td {
+    padding: $spacing-12 $spacing-24;
+    font-size: $font-size-300;
+    white-space: nowrap;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+
+    &--right {
+      text-align: right;
+    }
+
+    &--center {
+      text-align: center;
+    }
+
+    &--mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        monospace;
+
+      @include themify($themes) {
+        color: themed('text-secondary');
+      }
+    }
+
+    &--muted {
+      @include themify($themes) {
+        color: themed('text-secondary');
+      }
+    }
+  }
+}
+
+// Currency Pair Cell
+// =============================================================================
+.currency-pair {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+
+  &__flags {
+    display: flex;
+    overflow: hidden;
+  }
+
+  &__flag {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: $font-weight-bold;
+
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      border: 2px solid themed('bg-primary');
+    }
+
+    &:not(:first-child) {
+      margin-left: -8px;
+    }
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__code {
+    font-weight: $font-weight-semibold;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__name {
+    font-size: $font-size-100;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+}
+
+// Source Badge
+// =============================================================================
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-4 $spacing-8;
+  border-radius: $border-radius-small;
+  font-size: $font-size-100;
+  font-weight: $font-weight-medium;
+
+  &--central-bank {
+    @include themify($themes) {
+      background-color: rgba($brand-60, 0.1);
+      color: $brand-60;
+      border: 1px solid rgba($brand-60, 0.2);
+    }
+  }
+
+  &--forex-api,
+  &--manual,
+  &--system {
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      color: themed('text-secondary');
+      border: 1px solid themed('border-subtle');
+    }
+  }
+}
+
+// Status Indicator
+// =============================================================================
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin: 0 auto;
+
+  &--active {
+    background-color: #10b981;
+  }
+
+  &--inactive {
+    @include themify($themes) {
+      background-color: themed('text-disabled');
+    }
+  }
+}
+
+// Actions Button
+// =============================================================================
+.action-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: $border-radius-small;
+  cursor: pointer;
+  transition: all $duration-fast $ease-ease-in-out;
+  margin-left: auto;
+
+  @include themify($themes) {
+    background-color: transparent;
+    color: themed('text-tertiary');
+
+    &:hover {
+      background-color: themed('state-hover');
+      color: $brand-60;
+    }
+  }
+}
+
+// Pagination Footer
+// =============================================================================
+.exchange-rates-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-16 $spacing-24;
+
+  @include themify($themes) {
+    border-top: 1px solid themed('border-subtle');
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: $spacing-16;
+  }
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__select {
+    appearance: none;
+    border: none;
+    background: transparent;
+    font-size: $font-size-200;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    padding-right: $spacing-16;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__count {
+    margin-left: $spacing-16;
+  }
+
+  &__controls {
+    display: flex;
+    gap: $spacing-4;
+  }
+
+  &__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: $border-radius-small;
+    cursor: pointer;
+    transition: all $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      background-color: transparent;
+      color: themed('text-secondary');
+
+      &:hover:not(:disabled) {
+        background-color: themed('state-hover');
+        color: themed('text-primary');
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// Buttons
+// =============================================================================
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-8;
+  height: 40px;
+  padding: 0 $spacing-16;
+  border-radius: $border-radius-medium;
+  font-size: $font-size-300;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $duration-fast $ease-ease-in-out;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+    color: themed('text-secondary');
+
+    &:hover {
+      background-color: themed('state-hover');
+      color: themed('text-primary');
+    }
+  }
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-8;
+  height: 40px;
+  padding: 0 $spacing-16;
+  border-radius: $border-radius-medium;
+  font-size: $font-size-300;
+  font-weight: $font-weight-medium;
+  border: none;
+  cursor: pointer;
+  transition: all $duration-fast $ease-ease-in-out;
+  background-color: $brand-60;
+  color: white;
+  box-shadow: 0 2px 4px rgba($brand-60, 0.3);
+
+  &:hover {
+    background-color: $brand-70;
+  }
+
+  &:active {
+    background-color: $brand-80;
+  }
+}

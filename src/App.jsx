@@ -46,6 +46,7 @@ import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
 import PaymentDocumentation from '@/pages/PaymentDocumentation'
 import PaymentManagement from '@/pages/PaymentManagement'
 import Currencies from '@/pages/Currencies'
+import ExchangeRates from '@/pages/ExchangeRates'
 import Login from '@/pages/Login'
 import Settings from '@/pages/Settings'
 // import ProductDetailTest from '@/components/ProductDetailTest';
@@ -224,6 +225,10 @@ function AppContent() {
                       <Route
                         path='/configuracion/monedas'
                         element={<Currencies />}
+                      />
+                      <Route
+                        path='/configuracion/tipos-cambio'
+                        element={<ExchangeRates />}
                       />
                       {/* <Route path="/test-products" element={<ProductDetailTest />} /> */}
                       {/* <Route path="/debug-products" element={<ProductComparisonDebug />} /> */}

@@ -202,22 +202,36 @@ class ExchangeRateService {
 
   /**
    * Obtiene la lista de tipos de cambio más recientes para todas las monedas
+   * Nueva API: GET /exchange-rates?latest=true
    * @returns {Promise<import('../types/payment.js').ExchangeRateEnriched[]>}
    */
   static async getLatestAll() {
     try {
-      const response = await apiClient.makeRequest('/exchange-rate/latest')
+      // Nueva API unificada: /exchange-rates?latest=true
+      const response = await apiClient.makeRequest(
+        '/exchange-rates?latest=true'
+      )
       const payload = response.data || response
       return this.normalizeExchangeRateList(payload)
     } catch (error) {
       console.error('Error fetching latest exchange rates:', error)
-      throw new Error('Error al obtener los tipos de cambio más recientes')
+      // Fallback al endpoint legacy si el nuevo no está disponible
+      try {
+        const fallbackResponse = await apiClient.makeRequest(
+          '/exchange-rate/latest'
+        )
+        const payload = fallbackResponse.data || fallbackResponse
+        return this.normalizeExchangeRateList(payload)
+      } catch {
+        throw new Error('Error al obtener los tipos de cambio más recientes')
+      }
     }
   }
 
   /**
    * Obtiene todos los tipos de cambio, opcionalmente filtrando por moneda o fecha
-   * @param {{ currency_id?: number, date?: string, start_date?: string, end_date?: string }} [query]
+   * Nueva API: GET /exchange-rates con query params
+   * @param {{ currency_id?: number, code?: string, date?: string, from?: string, to?: string, page?: number, page_size?: number }} [query]
    * @returns {Promise<import('../types/payment.js').ExchangeRateEnriched[]>}
    */
   static async getAll(query = {}) {
@@ -228,21 +242,43 @@ class ExchangeRateService {
         params.append('currency_id', String(query.currency_id))
       }
 
+      // Nuevo param: code (filtrar por código de moneda)
+      if (query.code && typeof query.code === 'string') {
+        params.append('code', query.code.trim().toUpperCase())
+      }
+
       if (query.date && this.isValidDateFormat(query.date)) {
         params.append('date', query.date)
       }
 
-      if (query.start_date && this.isValidDateFormat(query.start_date)) {
-        params.append('start_date', query.start_date)
+      // Nuevos params: from/to para rango de fechas (reemplazan start_date/end_date)
+      if (query.from && this.isValidDateFormat(query.from)) {
+        params.append('from', query.from)
+      } else if (query.start_date && this.isValidDateFormat(query.start_date)) {
+        // Compatibilidad con params legacy
+        params.append('from', query.start_date)
       }
 
-      if (query.end_date && this.isValidDateFormat(query.end_date)) {
-        params.append('end_date', query.end_date)
+      if (query.to && this.isValidDateFormat(query.to)) {
+        params.append('to', query.to)
+      } else if (query.end_date && this.isValidDateFormat(query.end_date)) {
+        // Compatibilidad con params legacy
+        params.append('to', query.end_date)
       }
 
+      // Paginación
+      if (query.page && query.page > 0) {
+        params.append('page', String(query.page))
+      }
+
+      if (query.page_size && query.page_size > 0) {
+        params.append('page_size', String(Math.min(query.page_size, 100)))
+      }
+
+      // Nueva API unificada: /exchange-rates
       const endpoint = params.toString()
-        ? `/exchange-rate?${params.toString()}`
-        : '/exchange-rate'
+        ? `/exchange-rates?${params.toString()}`
+        : '/exchange-rates'
 
       const response = await apiClient.makeRequest(endpoint)
       const payload = response.data || response
@@ -312,6 +348,7 @@ class ExchangeRateService {
 
   /**
    * Obtiene un tipo de cambio por ID
+   * Nueva API: GET /exchange-rates?id=1
    * @param {number} id - Exchange rate ID
    * @returns {Promise<import('../types/payment.js').ExchangeRateEnriched>}
    */
@@ -321,9 +358,13 @@ class ExchangeRateService {
         throw new Error('ID de tipo de cambio inválido')
       }
 
-      const response = await apiClient.makeRequest(`/exchange-rate/${id}`)
+      // Nueva API unificada: /exchange-rates?id=X
+      const response = await apiClient.makeRequest(`/exchange-rates?id=${id}`)
       const payload = response.data || response
-      const normalized = this.normalizeExchangeRate(payload)
+
+      // La API puede devolver un array o un objeto individual
+      const rateData = Array.isArray(payload) ? payload[0] : payload
+      const normalized = this.normalizeExchangeRate(rateData)
 
       if (!normalized) {
         throw new Error('Respuesta de tipo de cambio inválida')
@@ -338,6 +379,7 @@ class ExchangeRateService {
 
   /**
    * Obtiene el tipo de cambio de una moneda en una fecha específica
+   * Nueva API: GET /exchange-rates?currency_id=X&date=YYYY-MM-DD
    * @param {import('../types/payment.js').ExchangeRateQuery} query - Query parameters
    * @returns {Promise<import('../types/payment.js').ExchangeRate>}
    */
@@ -356,6 +398,8 @@ class ExchangeRateService {
       }
 
       const params = new URLSearchParams()
+      params.append('currency_id', String(query.currency_id))
+
       if (query.date) {
         // Validar formato de fecha YYYY-MM-DD
         if (!/^\d{4}-\d{2}-\d{2}$/.test(query.date)) {
@@ -364,32 +408,34 @@ class ExchangeRateService {
         params.append('date', query.date)
       }
 
-      const url = `/exchange-rate/currency/${query.currency_id}`
-      const fullUrl = params.toString() ? `${url}?${params.toString()}` : url
-      requestEndpoint = fullUrl
+      // Nueva API unificada: /exchange-rates?currency_id=X&date=Y
+      requestEndpoint = url
 
-      const response = await apiClient.makeRequest(fullUrl)
+      const response = await apiClient.makeRequest(url)
       const data = response.data || response
 
       let normalized
-      if (typeof data === 'string') {
+      // La API puede devolver un array o un objeto individual
+      const rateData = Array.isArray(data) ? data[0] : data
+
+      if (typeof rateData === 'string') {
         try {
-          const parsed = JSON.parse(data)
+          const parsed = JSON.parse(rateData)
           normalized = this.normalizeExchangeRate(parsed)
         } catch (parseError) {
           console.warn(
             'Could not parse exchange rate response as JSON:',
-            data,
+            rateData,
             parseError
           )
           normalized = this.normalizeExchangeRate({
             currency_id: query.currency_id,
-            rate_to_base: Number.parseFloat(data),
+            rate_to_base: Number.parseFloat(rateData),
             date: query.date,
           })
         }
       } else {
-        normalized = this.normalizeExchangeRate(data)
+        normalized = this.normalizeExchangeRate(rateData)
       }
 
       if (query?.currency_id) {
@@ -402,7 +448,7 @@ class ExchangeRateService {
       return normalized
     } catch (error) {
       console.error('Error fetching exchange rate:', error)
-      const endpoint = `/exchange-rate/currency/${query?.currency_id}`
+      const endpoint = `/exchange-rates?currency_id=${query?.currency_id}`
       logExchangeRateFetchFailure({
         currencyId: query?.currency_id,
         date: query?.date,
@@ -489,6 +535,7 @@ class ExchangeRateService {
 
   /**
    * Crea un nuevo tipo de cambio
+   * Nueva API: POST /exchange-rates
    * @param {{ currency_id: number, rate_to_base: number, date: string, source?: string }} data
    * @returns {Promise<import('../types/payment.js').ExchangeRateEnriched>}
    */
@@ -496,7 +543,8 @@ class ExchangeRateService {
     let payload
     try {
       payload = this.preparePayload(data)
-      const response = await apiClient.makeRequest('/exchange-rate', {
+      // Nueva API unificada: POST /exchange-rates
+      const response = await apiClient.makeRequest('/exchange-rates', {
         method: 'POST',
         body: JSON.stringify(payload),
       })
@@ -513,7 +561,7 @@ class ExchangeRateService {
         paymentApiDebug.record({
           service: 'ExchangeRateService',
           operation: 'create',
-          endpoint: '/exchange-rate',
+          endpoint: '/exchange-rates',
           method: 'POST',
           error,
           requestBody: payload,
@@ -534,6 +582,7 @@ class ExchangeRateService {
 
   /**
    * Actualiza un tipo de cambio existente
+   * Nueva API: PUT /exchange-rates/{id}
    * @param {number} id - Exchange rate ID
    * @param {{ currency_id: number, rate_to_base: number, date: string, source?: string }} data
    * @returns {Promise<import('../types/payment.js').ExchangeRateEnriched>}
@@ -546,7 +595,8 @@ class ExchangeRateService {
       }
 
       payload = this.preparePayload(data)
-      const response = await apiClient.makeRequest(`/exchange-rate/${id}`, {
+      // Nueva API unificada: PUT /exchange-rates/{id}
+      const response = await apiClient.makeRequest(`/exchange-rates/${id}`, {
         method: 'PUT',
         body: JSON.stringify(payload),
       })
@@ -563,7 +613,7 @@ class ExchangeRateService {
         paymentApiDebug.record({
           service: 'ExchangeRateService',
           operation: 'update',
-          endpoint: `/exchange-rate/${id}`,
+          endpoint: `/exchange-rates/${id}`,
           method: 'PUT',
           error,
           requestBody: payload,
@@ -584,6 +634,7 @@ class ExchangeRateService {
 
   /**
    * Elimina un tipo de cambio
+   * Nueva API: DELETE /exchange-rates/{id}
    * @param {number} id - Exchange rate ID
    * @returns {Promise<void>}
    */
@@ -593,7 +644,8 @@ class ExchangeRateService {
         throw new Error('ID de tipo de cambio inválido')
       }
 
-      await apiClient.makeRequest(`/exchange-rate/${id}`, {
+      // Nueva API unificada: DELETE /exchange-rates/{id}
+      await apiClient.makeRequest(`/exchange-rates/${id}`, {
         method: 'DELETE',
       })
     } catch (error) {

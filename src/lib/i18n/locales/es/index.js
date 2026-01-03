@@ -23,6 +23,7 @@ import { availableSlots } from './availableSlots.js'
 import { cashRegister } from './cashRegister.js'
 import { cashMovement } from './cashMovement.js'
 import { currencies } from './currencies.js'
+import { exchangeRates } from './exchangeRates.js'
 
 /**
  * Diccionario completo de traducciones en español
@@ -48,5 +49,6 @@ export const es = {
   ...cashRegister,
   ...cashMovement,
   ...currencies,
+  ...exchangeRates,
   ...other,
 }

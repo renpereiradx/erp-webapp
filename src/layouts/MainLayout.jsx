@@ -191,6 +191,11 @@ const MainLayout = ({ children }) => {
             icon: Coins,
           },
           {
+            name: 'Tipos de Cambio',
+            href: '/configuracion/tipos-cambio',
+            icon: SlidersHorizontal,
+          },
+          {
             name: 'Métodos de Pago',
             href: '/configuracion/metodos-pago',
             icon: CreditCard,

@@ -48,6 +48,9 @@ export const common = {
   'action.create': 'Crear',
   'action.update': 'Actualizar',
   'action.saving': 'Guardando...',
+  'action.deleting': 'Eliminando...',
+  'action.more': 'Más opciones',
+  'action.retry': 'Reintentar',
   'action.select_all': 'Seleccionar todos',
   'action.select_item': 'Seleccionar item',
   'action.delete_product': 'Eliminar producto',
@@ -128,14 +131,18 @@ export const common = {
   'settings.language.description': 'Selecciona el idioma de la interfaz.',
   'settings.language.coming_soon': 'Próximamente: Opciones de idioma.',
   'settings.notifications.title': 'Notificaciones',
-  'settings.notifications.description': 'Gestiona tus preferencias de notificaciones.',
-  'settings.notifications.coming_soon': 'Próximamente: Ajustes de notificaciones.',
+  'settings.notifications.description':
+    'Gestiona tus preferencias de notificaciones.',
+  'settings.notifications.coming_soon':
+    'Próximamente: Ajustes de notificaciones.',
   'settings.shortcuts.title': 'Atajos de Teclado',
-  'settings.shortcuts.description': 'Personaliza los atajos de teclado para navegar más rápido.',
+  'settings.shortcuts.description':
+    'Personaliza los atajos de teclado para navegar más rápido.',
   'settings.shortcuts.reset_all': 'Restaurar todos',
   'settings.shortcuts.reset': 'Restaurar',
   'settings.shortcuts.press_keys': 'Presiona las teclas...',
-  'settings.shortcuts.hint': 'Haz clic en el icono de editar y presiona la combinación de teclas deseada.',
+  'settings.shortcuts.hint':
+    'Haz clic en el icono de editar y presiona la combinación de teclas deseada.',
   'settings.shortcuts.category.purchases': 'Compras',
   'settings.shortcuts.category.sales': 'Ventas',
   'settings.shortcuts.category.general': 'General',

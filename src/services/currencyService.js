@@ -56,7 +56,12 @@ class CurrencyService {
       // Alias legacy para mantener compatibilidad con componentes existentes
       name: currencyName,
       symbol: payload.symbol || payload.currency_symbol || '',
-      is_base_currency: Boolean(payload.is_base_currency),
+      // Soportar ambos formatos: is_base (nuevo) e is_base_currency (legacy)
+      is_base_currency: Boolean(payload.is_base || payload.is_base_currency),
+      is_base: Boolean(payload.is_base || payload.is_base_currency),
+      // Nuevos campos de la API PAYMENT_CONFIG_API
+      decimal_places:
+        typeof payload.decimal_places === 'number' ? payload.decimal_places : 2,
     }
   }
 
@@ -107,7 +112,7 @@ class CurrencyService {
   }
 
   /**
-   * Obtiene una moneda por ID
+   * Obtiene una moneda por ID usando la API unificada con query params
    * @param {number} id - Currency ID
    * @returns {Promise<import('../types/payment.js').Currency>}
    */
@@ -117,18 +122,27 @@ class CurrencyService {
         throw new Error('ID de moneda inválido')
       }
 
-      const response = await apiClient.makeRequest(`/currencies/${id}`)
-      const currency = response.data || response
+      // Nueva API unificada: GET /currencies?id=1
+      const response = await apiClient.makeRequest(`/currencies?id=${id}`)
+      const payload = response.data || response
+
+      // La API puede devolver un array o un objeto individual
+      const currency = Array.isArray(payload) ? payload[0] : payload
+
+      if (!currency) {
+        throw new Error('Moneda no encontrada')
+      }
+
       return this.normalizeCurrency(currency)
     } catch (error) {
       console.error(`Error fetching currency ${id}:`, error)
-      logPaymentFailure('getById', `/currencies/${id}`, error)
+      logPaymentFailure('getById', `/currencies?id=${id}`, error)
       throw new Error('Error al obtener la moneda')
     }
   }
 
   /**
-   * Obtiene una moneda por código
+   * Obtiene una moneda por código usando la API unificada con query params
    * @param {string} code - Currency code (e.g., "USD", "PYG")
    * @returns {Promise<import('../types/payment.js').Currency>}
    */
@@ -138,16 +152,26 @@ class CurrencyService {
         throw new Error('Código de moneda inválido')
       }
 
+      const normalizedCode = code.trim().toUpperCase()
+      // Nueva API unificada: GET /currencies?code=USD
       const response = await apiClient.makeRequest(
-        `/currencies/code/${code.trim().toUpperCase()}`
+        `/currencies?code=${normalizedCode}`
       )
-      const currency = response.data || response
+      const payload = response.data || response
+
+      // La API puede devolver un array o un objeto individual
+      const currency = Array.isArray(payload) ? payload[0] : payload
+
+      if (!currency) {
+        throw new Error('Moneda no encontrada')
+      }
+
       return this.normalizeCurrency(currency)
     } catch (error) {
       console.error(`Error fetching currency ${code}:`, error)
       logPaymentFailure(
         'getByCode',
-        `/currencies/code/${code.trim().toUpperCase()}`,
+        `/currencies?code=${code.trim().toUpperCase()}`,
         error
       )
       throw new Error('Error al obtener la moneda')
@@ -169,13 +193,36 @@ class CurrencyService {
   }
 
   /**
+   * Obtiene todas las monedas con datos adicionales (enriched)
+   * Incluye symbol, decimal_places, is_base
+   * @returns {Promise<import('../types/payment.js').Currency[]>}
+   */
+  static async getAllEnriched() {
+    try {
+      // Nueva API: GET /currencies?enriched=true
+      const response = await apiClient.makeRequest('/currencies?enriched=true')
+      return this.normalizeCurrencyList(response)
+    } catch (error) {
+      console.error('Error fetching enriched currencies:', error)
+      logPaymentFailure('getAllEnriched', '/currencies?enriched=true', error, {
+        note: 'Listado de monedas con datos enriquecidos',
+      })
+      // Fallback al método normal si enriched no está disponible
+      return this.getAll()
+    }
+  }
+
+  /**
    * Obtiene todas las monedas excepto la moneda base (PYG)
    * @returns {Promise<import('../types/payment.js').Currency[]>}
    */
   static async getAllExceptBase() {
     try {
       const currencies = await this.getAll()
-      return currencies.filter(currency => !currency.is_base_currency)
+      // Soportar ambos campos: is_base (nuevo) e is_base_currency (legacy)
+      return currencies.filter(
+        currency => !currency.is_base && !currency.is_base_currency
+      )
     } catch (error) {
       console.error('Error fetching non-base currencies:', error)
       logPaymentFailure('getAllExceptBase', '/currencies', error, {
@@ -217,8 +264,9 @@ class CurrencyService {
   static async getBaseCurrency() {
     try {
       const currencies = await this.getAll()
+      // Soportar ambos campos: is_base (nuevo) e is_base_currency (legacy)
       const baseCurrency = currencies.find(
-        currency => currency.is_base_currency
+        currency => currency.is_base || currency.is_base_currency
       )
 
       if (baseCurrency) {
