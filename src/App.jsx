@@ -45,6 +45,7 @@ import SalesOrderDetail from '@/pages/SalesOrderDetail'
 import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
 import PaymentDocumentation from '@/pages/PaymentDocumentation'
 import PaymentManagement from '@/pages/PaymentManagement'
+import Currencies from '@/pages/Currencies'
 import Login from '@/pages/Login'
 import Settings from '@/pages/Settings'
 // import ProductDetailTest from '@/components/ProductDetailTest';
@@ -216,7 +217,14 @@ function AppContent() {
                         element={<PaymentManagement />}
                       />
 
+                      {/* Configuración */}
                       <Route path='/configuracion' element={<Settings />} />
+
+                      {/* Configuración Financiera */}
+                      <Route
+                        path='/configuracion/monedas'
+                        element={<Currencies />}
+                      />
                       {/* <Route path="/test-products" element={<ProductDetailTest />} /> */}
                       {/* <Route path="/debug-products" element={<ProductComparisonDebug />} /> */}
                       <Route

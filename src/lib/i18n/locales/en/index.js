@@ -6,6 +6,7 @@
 import { common } from './common.js'
 import { products } from './products.js'
 import { purchases } from './purchases.js'
+import { currencies } from './currencies.js'
 import { es } from '../es/index.js'
 
 /**
@@ -24,6 +25,7 @@ export const en = {
   ...common,
   ...products,
   ...purchases,
+  ...currencies,
   // TODO: Add English translations for new modules:
   // - clients
   // - suppliers

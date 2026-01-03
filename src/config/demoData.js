@@ -1968,3 +1968,225 @@ export const getDemoTaxRates = async () => {
     source: 'demo',
   }
 }
+
+// =============================================================================
+// CURRENCIES DEMO DATA
+// =============================================================================
+
+export const DEMO_CONFIG_CURRENCIES = {
+  enabled: true, // Enable/disable demo mode
+  fallbackOnError: true, // Use demo data when API fails
+  useRealAPI: false, // Toggle real API calls
+  simulateDelay: true, // Simulate network delay
+  delayMs: 400, // Delay in milliseconds
+}
+
+export const DEMO_CURRENCIES_DATA = [
+  {
+    id: 1,
+    currency_code: 'PYG',
+    currency_name: 'Guaraní Paraguayo',
+    name: 'Guaraní Paraguayo',
+    symbol: '₲',
+    decimal_places: 0,
+    is_base_currency: true,
+    is_enabled: true,
+    flag_emoji: '🇵🇾',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 2,
+    currency_code: 'USD',
+    currency_name: 'Dólar Estadounidense',
+    name: 'Dólar Estadounidense',
+    symbol: '$',
+    decimal_places: 2,
+    is_base_currency: false,
+    is_enabled: true,
+    flag_emoji: '🇺🇸',
+    exchange_rate: 7350.0,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2025-12-15T09:30:00Z',
+  },
+  {
+    id: 3,
+    currency_code: 'EUR',
+    currency_name: 'Euro',
+    name: 'Euro',
+    symbol: '€',
+    decimal_places: 2,
+    is_base_currency: false,
+    is_enabled: true,
+    flag_emoji: '🇪🇺',
+    exchange_rate: 7850.0,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2025-12-15T09:30:00Z',
+  },
+  {
+    id: 4,
+    currency_code: 'BRL',
+    currency_name: 'Real Brasileño',
+    name: 'Real Brasileño',
+    symbol: 'R$',
+    decimal_places: 2,
+    is_base_currency: false,
+    is_enabled: true,
+    flag_emoji: '🇧🇷',
+    exchange_rate: 1450.0,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2025-12-15T09:30:00Z',
+  },
+  {
+    id: 5,
+    currency_code: 'ARS',
+    currency_name: 'Peso Argentino',
+    name: 'Peso Argentino',
+    symbol: '$',
+    decimal_places: 2,
+    is_base_currency: false,
+    is_enabled: true,
+    flag_emoji: '🇦🇷',
+    exchange_rate: 7.2,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2025-12-15T09:30:00Z',
+  },
+  {
+    id: 6,
+    currency_code: 'GBP',
+    currency_name: 'Libra Esterlina',
+    name: 'Libra Esterlina',
+    symbol: '£',
+    decimal_places: 2,
+    is_base_currency: false,
+    is_enabled: true,
+    flag_emoji: '🇬🇧',
+    exchange_rate: 9250.0,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2025-12-15T09:30:00Z',
+  },
+  {
+    id: 7,
+    currency_code: 'JPY',
+    currency_name: 'Yen Japonés',
+    name: 'Yen Japonés',
+    symbol: '¥',
+    decimal_places: 0,
+    is_base_currency: false,
+    is_enabled: false,
+    flag_emoji: '🇯🇵',
+    exchange_rate: 48.5,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2025-12-15T09:30:00Z',
+  },
+  {
+    id: 8,
+    currency_code: 'MXN',
+    currency_name: 'Peso Mexicano',
+    name: 'Peso Mexicano',
+    symbol: '$',
+    decimal_places: 2,
+    is_base_currency: false,
+    is_enabled: false,
+    flag_emoji: '🇲🇽',
+    exchange_rate: 420.0,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2025-12-15T09:30:00Z',
+  },
+]
+
+// In-memory currencies store for demo CRUD operations
+let demoCurrenciesStore = [...DEMO_CURRENCIES_DATA]
+let demoCurrencyIdCounter = DEMO_CURRENCIES_DATA.length + 1
+
+/**
+ * Get demo currencies
+ * @returns {Array} - Demo currencies list
+ */
+export const getDemoCurrencies = () => {
+  return [...demoCurrenciesStore]
+}
+
+/**
+ * Create demo currency
+ * @param {Object} currencyData - Currency data to create
+ * @returns {Object} - Created currency
+ */
+export const createDemoCurrency = currencyData => {
+  const newCurrency = {
+    id: demoCurrencyIdCounter++,
+    currency_code: currencyData.currency_code?.toUpperCase() || '',
+    currency_name: currencyData.currency_name || currencyData.name || '',
+    name: currencyData.currency_name || currencyData.name || '',
+    symbol: currencyData.symbol || '',
+    decimal_places: currencyData.decimal_places ?? 2,
+    is_base_currency: false,
+    is_enabled: currencyData.is_enabled ?? true,
+    flag_emoji: currencyData.flag_emoji || '🏳️',
+    exchange_rate: currencyData.exchange_rate || 1,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+  demoCurrenciesStore.push(newCurrency)
+  return newCurrency
+}
+
+/**
+ * Update demo currency
+ * @param {number} id - Currency ID
+ * @param {Object} currencyData - Updated currency data
+ * @returns {Object} - Updated currency
+ */
+export const updateDemoCurrency = (id, currencyData) => {
+  const index = demoCurrenciesStore.findIndex(c => c.id === id)
+  if (index === -1) {
+    throw new Error('Moneda no encontrada')
+  }
+
+  const updated = {
+    ...demoCurrenciesStore[index],
+    ...currencyData,
+    currency_code:
+      currencyData.currency_code?.toUpperCase() ||
+      demoCurrenciesStore[index].currency_code,
+    updated_at: new Date().toISOString(),
+  }
+
+  // Sync name fields
+  if (currencyData.currency_name) {
+    updated.name = currencyData.currency_name
+  } else if (currencyData.name) {
+    updated.currency_name = currencyData.name
+  }
+
+  demoCurrenciesStore[index] = updated
+  return updated
+}
+
+/**
+ * Delete demo currency
+ * @param {number} id - Currency ID
+ * @returns {boolean} - Success status
+ */
+export const deleteDemoCurrency = id => {
+  const index = demoCurrenciesStore.findIndex(c => c.id === id)
+  if (index === -1) {
+    throw new Error('Moneda no encontrada')
+  }
+
+  // Prevent deleting base currency
+  if (demoCurrenciesStore[index].is_base_currency) {
+    throw new Error('No se puede eliminar la moneda base del sistema')
+  }
+
+  demoCurrenciesStore.splice(index, 1)
+  return true
+}
+
+/**
+ * Reset demo currencies to initial state
+ */
+export const resetDemoCurrencies = () => {
+  demoCurrenciesStore = [...DEMO_CURRENCIES_DATA]
+  demoCurrencyIdCounter = DEMO_CURRENCIES_DATA.length + 1
+}

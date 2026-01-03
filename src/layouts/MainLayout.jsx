@@ -180,6 +180,23 @@ const MainLayout = ({ children }) => {
         ],
       },
       { name: 'Reportes', href: '/reportes', icon: BarChart3 },
+      {
+        name: 'Config. Financiera',
+        href: '#',
+        icon: Coins,
+        children: [
+          {
+            name: 'Monedas',
+            href: '/configuracion/monedas',
+            icon: Coins,
+          },
+          {
+            name: 'Métodos de Pago',
+            href: '/configuracion/metodos-pago',
+            icon: CreditCard,
+          },
+        ],
+      },
     ],
     []
   )
