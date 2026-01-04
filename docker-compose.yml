@@ -2,8 +2,10 @@ name: erp
 
 services:
   # =========================================
-  # FRONTEND - React + Nginx
+  # FRONTEND - React + Nginx (V2 - Enero 2026)
   # =========================================
+  # Incluye: Sistema SCSS, i18n, nuevos módulos de pagos,
+  # inventario mejorado, sistema de monedas
   erp-system:
     image: erp-frontend:latest
     build:
@@ -19,6 +21,7 @@ services:
       # Las variables de entorno se toman de .env.production
       # durante el build, no en runtime
       - NODE_ENV=production
+      - TZ=America/Asuncion  # Ajustar según tu zona horaria
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -31,15 +34,17 @@ services:
       # Opcional: logs de Nginx
       - ./logs/nginx:/var/log/nginx
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
   # =========================================
-  # BACKEND - API
+  # BACKEND - API (V2 - Enero 2026)
   # =========================================
+  # Incluye actualizaciones importantes de pagos, inventario,
+  # y nuevas funcionalidades
   backend:
     image: erp-backend:latest  # Imagen pre-construida del backend
     container_name: erp-backend
@@ -48,6 +53,7 @@ services:
     environment:
       - PORT=:5050
       - JWT_SECRET=pwdUltraSecreta
+      - TZ=America/Asuncion  # Ajustar según tu zona horaria
       # Conexión a PostgreSQL en Windows host
       # host.docker.internal apunta al host de Windows desde el contenedor
       - DATABASE_URL=host=host.docker.internal port=5432 user=dev_user password=aDmin404942 dbname=erp_db sslmode=disable
