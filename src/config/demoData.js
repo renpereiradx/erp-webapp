@@ -1974,10 +1974,10 @@ export const getDemoTaxRates = async () => {
 // =============================================================================
 
 export const DEMO_CONFIG_CURRENCIES = {
-  enabled: true, // Enable/disable demo mode
+  enabled: false, // Disabled - use real API
   fallbackOnError: true, // Use demo data when API fails
-  useRealAPI: false, // Toggle real API calls
-  simulateDelay: true, // Simulate network delay
+  useRealAPI: true, // Toggle real API calls
+  simulateDelay: false, // Simulate network delay
   delayMs: 400, // Delay in milliseconds
 }
 

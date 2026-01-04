@@ -72,16 +72,40 @@ const useCurrencyStore = create()(
             return demoCurrencies
           }
 
-          const data = await CurrencyService.getAll()
-          set({ currencies: data, loading: false })
+          // Fetch currencies from API
+          const data = await CurrencyService.getAllEnriched()
+
+          // Fetch exchange rates and merge them
+          let enrichedCurrencies = data
+          try {
+            const { apiClient } = await import('@/services/api.js')
+            const ratesResponse = await apiClient.makeRequest('/exchange-rates?latest=true')
+            const rates = ratesResponse?.data || ratesResponse || []
+
+            if (Array.isArray(rates) && rates.length > 0) {
+              enrichedCurrencies = data.map(currency => {
+                const rate = rates.find(r => r.currency_id === currency.id || r.currency_code === currency.currency_code)
+                return {
+                  ...currency,
+                  exchange_rate: rate?.rate_to_base || currency.exchange_rate || null,
+                  updated_at: rate?.date || currency.updated_at || null,
+                }
+              })
+            }
+          } catch (rateError) {
+            console.warn('[CurrencyStore] Could not fetch exchange rates:', rateError)
+            // Continue with currencies without rates
+          }
+
+          set({ currencies: enrichedCurrencies, loading: false })
 
           telemetry.record('feature.currencies.load', {
             duration: Date.now() - startTime,
-            count: data.length,
+            count: enrichedCurrencies.length,
             source: 'api',
           })
 
-          return data
+          return enrichedCurrencies
         } catch (error) {
           console.error('[CurrencyStore] Error fetching currencies:', error)
 

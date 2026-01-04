@@ -1,9 +1,13 @@
 // ===========================================================================
 // Currencies Page - Fluent Design System 2 + BEM
+// Matches: specs/fluent2/payment_dashboard_summary/currency_&_payment_method_configuration/screen.png
 // ===========================================================================
 
 @use '../abstracts' as *;
 
+// =============================================================================
+// Page Container
+// =============================================================================
 .currencies-page {
   display: flex;
   flex-direction: column;
@@ -12,94 +16,250 @@
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+  gap: $spacing-24;
 
   @media (max-width: 640px) {
     padding: $spacing-16;
   }
+}
 
-  // Header
-  // =========================================================================
-  &__header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: $spacing-16;
-    margin-bottom: $spacing-32;
+// =============================================================================
+// Page Header
+// =============================================================================
+.currencies-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: $spacing-16;
 
-    @media (max-width: 768px) {
-      flex-direction: column;
-      align-items: stretch;
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.currencies-page__header-content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+}
+
+.currencies-page__title {
+  font-size: $font-size-800;
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('text-primary');
+  }
+}
+
+.currencies-page__subtitle {
+  font-size: $font-size-300;
+  font-weight: $font-weight-regular;
+  line-height: 1.5;
+  max-width: 500px;
+  margin: 0;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+}
+
+// =============================================================================
+// Base Currency Widget
+// =============================================================================
+.base-currency-widget {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  padding: $spacing-8 $spacing-16;
+  border-radius: $border-radius-medium;
+  flex-shrink: 0;
+
+  @include themify($themes) {
+    background-color: themed('bg-secondary');
+    border: 1px solid themed('border-subtle');
+  }
+
+  &__label {
+    font-size: 10px;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+
+    @include themify($themes) {
+      color: themed('text-tertiary');
     }
   }
 
-  &__header-content {
+  &__value {
     display: flex;
-    flex-direction: column;
-    gap: $spacing-8;
+    align-items: baseline;
+    gap: $spacing-4;
   }
 
-  &__title {
-    font-size: $font-size-900;
+  &__code {
+    font-size: $font-size-400;
     font-weight: $font-weight-bold;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-    margin: 0;
 
     @include themify($themes) {
       color: themed('text-primary');
     }
   }
 
-  &__subtitle {
+  &__symbol {
     font-size: $font-size-300;
-    font-weight: $font-weight-regular;
-    line-height: 1.5;
-    max-width: 600px;
-    margin: 0;
 
     @include themify($themes) {
       color: themed('text-secondary');
     }
   }
 
-  &__header-actions {
-    display: flex;
-    gap: $spacing-12;
-    flex-shrink: 0;
+  &__change {
+    padding: $spacing-4 $spacing-12;
+    font-size: $font-size-200;
+    font-weight: $font-weight-semibold;
+    border: none;
+    border-radius: $border-radius-small;
+    cursor: pointer;
+    transition: all $duration-fast $ease-ease-in-out;
+    color: $brand-60;
+    background-color: transparent;
 
-    @media (max-width: 768px) {
-      width: 100%;
-      justify-content: flex-end;
+    &:hover {
+      background-color: rgba($brand-60, 0.1);
+    }
+  }
+}
+
+// =============================================================================
+// Main Card Container
+// =============================================================================
+.currencies-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: $border-radius-large;
+  overflow: hidden;
+
+  @include themify($themes) {
+    background-color: themed('bg-primary');
+    border: 1px solid themed('border-default');
+    box-shadow: $shadow-2;
+  }
+}
+
+// =============================================================================
+// Tabs
+// =============================================================================
+.currencies-tabs {
+  display: flex;
+  gap: $spacing-32;
+  padding: 0 $spacing-24;
+
+  @include themify($themes) {
+    border-bottom: 1px solid themed('border-subtle');
+  }
+}
+
+.currencies-tabs__tab {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  padding: $spacing-16 $spacing-4;
+  font-size: $font-size-300;
+  font-weight: $font-weight-semibold;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: all $duration-fast $ease-ease-in-out;
+
+  @include themify($themes) {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify($themes) {
+      color: themed('text-primary');
     }
   }
 
-  // Toolbar
-  // =========================================================================
-  &__toolbar {
+  &--active {
+    border-bottom-color: $brand-60;
+    color: $brand-60;
+
+    &:hover {
+      color: $brand-60;
+    }
+  }
+}
+
+// =============================================================================
+// Toolbar
+// =============================================================================
+.currencies-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: $spacing-16;
+  padding: $spacing-12 $spacing-24;
+
+  @include themify($themes) {
+    border-bottom: 1px solid themed('border-subtle');
+  }
+
+  &__left {
     display: flex;
-    flex-direction: column;
-    gap: $spacing-16;
-    margin-bottom: $spacing-24;
-    padding: $spacing-12;
-    border-radius: $border-radius-large;
+    align-items: center;
+    gap: $spacing-8;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+  }
+
+  &__divider {
+    width: 1px;
+    height: 24px;
+    margin: 0 $spacing-4;
 
     @include themify($themes) {
-      background-color: themed('bg-secondary');
-      border: 1px solid themed('border-subtle');
+      background-color: themed('border-default');
     }
+  }
 
-    @media (min-width: 768px) {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
+  &__icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: $border-radius-small;
+    background: transparent;
+    cursor: pointer;
+    transition: all $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+
+      &:hover {
+        background-color: themed('state-hover');
+        color: themed('text-primary');
+      }
     }
   }
 
   &__search {
     position: relative;
-    flex: 1;
-    max-width: 400px;
+    width: 240px;
   }
 
   &__search-icon {
@@ -116,14 +276,14 @@
 
   &__search-input {
     width: 100%;
-    height: 40px;
-    padding: 0 $spacing-12 0 $spacing-40;
-    border-radius: $border-radius-medium;
+    height: 36px;
+    padding: 0 $spacing-12 0 $spacing-36;
+    border-radius: $border-radius-small;
     font-size: $font-size-300;
     transition: border-color $duration-fast $ease-ease-in-out;
 
     @include themify($themes) {
-      background-color: themed('bg-primary');
+      background-color: themed('bg-secondary');
       border: 1px solid themed('border-default');
       color: themed('text-primary');
 
@@ -134,131 +294,53 @@
       &:focus {
         outline: none;
         border-color: $brand-60;
-        box-shadow: 0 0 0 1px $brand-60;
       }
-    }
-  }
-
-  &__filters {
-    display: flex;
-    gap: $spacing-8;
-    flex-wrap: wrap;
-  }
-
-  // Table Container
-  // =========================================================================
-  &__table-container {
-    overflow-x: auto;
-    border-radius: $border-radius-large;
-    margin-bottom: $spacing-16;
-
-    @include themify($themes) {
-      background-color: themed('bg-primary');
-      border: 1px solid themed('border-default');
-    }
-  }
-
-  // Footer
-  // =========================================================================
-  &__footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  &__results {
-    font-size: $font-size-200;
-
-    @include themify($themes) {
-      color: themed('text-secondary');
     }
   }
 }
 
-// Filter Chips
 // =============================================================================
-.filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-8;
-  height: 32px;
-  padding: 0 $spacing-16;
-  border-radius: 9999px;
-  font-size: $font-size-200;
-  font-weight: $font-weight-medium;
-  cursor: pointer;
-  transition: all $duration-fast $ease-ease-in-out;
-  border: 1px solid transparent;
-
-  @include themify($themes) {
-    background-color: transparent;
-    color: themed('text-secondary');
-
-    &:hover {
-      background-color: themed('state-hover');
-      border-color: themed('border-subtle');
-    }
-  }
-
-  &--active {
-    @include themify($themes) {
-      background-color: rgba($brand-60, 0.15);
-      color: $brand-60;
-      border-color: rgba($brand-60, 0.3);
-
-      .filter-chip__count {
-        background-color: $brand-60;
-        color: $neutral-white;
-      }
-    }
-  }
-
-  &__count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 $spacing-4;
-    border-radius: 9999px;
-    font-size: 10px;
-    font-weight: $font-weight-bold;
-
-    @include themify($themes) {
-      background-color: themed('bg-tertiary');
-      color: themed('text-primary');
-    }
-  }
+// Table Wrapper
+// =============================================================================
+.currencies-table-wrapper {
+  overflow-x: auto;
 }
 
-// Currencies Table
+// =============================================================================
+// Table
 // =============================================================================
 .currencies-table {
   width: 100%;
   border-collapse: collapse;
 
-  &__header {
+  &__head {
     @include themify($themes) {
       background-color: themed('bg-secondary');
-      border-bottom: 1px solid themed('border-default');
     }
   }
 
   &__th {
-    padding: $spacing-16 $spacing-24;
+    padding: $spacing-12 $spacing-16;
     text-align: left;
     font-size: 11px;
     font-weight: $font-weight-bold;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    white-space: nowrap;
 
     @include themify($themes) {
       color: themed('text-secondary');
+      border-bottom: 1px solid themed('border-subtle');
+    }
+
+    &--checkbox {
+      width: 48px;
+      padding-left: $spacing-24;
     }
 
     &--actions {
       text-align: right;
-      width: 100px;
+      padding-right: $spacing-24;
     }
   }
 
@@ -285,30 +367,57 @@
 
     &--base {
       @include themify($themes) {
-        background-color: rgba($brand-60, 0.05);
-        border-left: 3px solid $brand-60;
+        background-color: rgba($brand-60, 0.04);
+      }
+
+      &:hover {
+        @include themify($themes) {
+          background-color: rgba($brand-60, 0.08);
+        }
       }
     }
   }
 
   &__td {
-    padding: $spacing-16 $spacing-24;
+    padding: $spacing-12 $spacing-16;
     font-size: $font-size-300;
+    vertical-align: middle;
 
     @include themify($themes) {
       color: themed('text-primary');
     }
 
-    &--code {
-      font-weight: $font-weight-semibold;
+    &--checkbox {
+      width: 48px;
+      padding-left: $spacing-24;
+    }
+
+    &--name {
+      @include themify($themes) {
+        color: themed('text-secondary');
+      }
     }
 
     &--symbol {
       font-family: $font-family-monospace;
     }
 
+    &--rate {
+      font-family: $font-family-monospace;
+      color: $brand-60;
+    }
+
+    &--date {
+      font-size: $font-size-200;
+
+      @include themify($themes) {
+        color: themed('text-tertiary');
+      }
+    }
+
     &--actions {
       text-align: right;
+      padding-right: $spacing-24;
     }
   }
 
@@ -318,14 +427,34 @@
     gap: $spacing-12;
   }
 
-  &__code {
-    font-weight: $font-weight-semibold;
+  &__flag {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+    overflow: hidden;
+
+    @include themify($themes) {
+      background-color: themed('bg-tertiary');
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   }
 
-  &__symbol {
-    @include themify($themes) {
-      color: themed('text-secondary');
-    }
+  &__flag-emoji {
+    font-size: 16px;
+  }
+
+  &__code {
+    font-weight: $font-weight-bold;
+    font-size: $font-size-300;
   }
 
   &__base-badge {
@@ -336,22 +465,43 @@
     font-size: 10px;
     font-weight: $font-weight-bold;
     text-transform: uppercase;
-
-    @include themify($themes) {
-      background-color: rgba($brand-60, 0.15);
-      color: $brand-60;
-    }
+    letter-spacing: 0.03em;
+    background-color: #f59e0b;
+    color: #ffffff;
   }
 
   &__actions {
     display: flex;
     justify-content: flex-end;
-    gap: $spacing-8;
+    align-items: center;
+    gap: $spacing-4;
     opacity: 0;
     transition: opacity $duration-fast $ease-ease-in-out;
 
     .currencies-table__row:hover & {
       opacity: 1;
+    }
+  }
+
+  &__action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: $border-radius-small;
+    background: transparent;
+    cursor: pointer;
+    transition: all $duration-fast $ease-ease-in-out;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+
+      &:hover {
+        background-color: themed('state-hover');
+        color: themed('text-primary');
+      }
     }
   }
 
@@ -365,34 +515,14 @@
   }
 }
 
-// Currency Flag
 // =============================================================================
-.currency-flag {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  flex-shrink: 0;
-
-  @include themify($themes) {
-    background-color: themed('bg-tertiary');
-  }
-
-  &__emoji {
-    font-size: 14px;
-    line-height: 1;
-  }
-}
-
 // Status Badge
 // =============================================================================
 .status-badge {
   display: inline-flex;
   align-items: center;
   gap: $spacing-8;
-  padding: $spacing-4 $spacing-12;
+  padding: $spacing-4 $spacing-8;
   border-radius: 9999px;
   font-size: $font-size-200;
   font-weight: $font-weight-medium;
@@ -403,18 +533,20 @@
     border-radius: 50%;
   }
 
-  &--enabled {
-    @include themify($themes) {
-      background-color: rgba($success-40, 0.1);
-      color: $success-40;
+  &__text {
+    line-height: 1;
+  }
 
-      .status-badge__dot {
-        background-color: $success-40;
-      }
+  &--active {
+    background-color: rgba($success-40, 0.12);
+    color: $success-40;
+
+    .status-badge__dot {
+      background-color: $success-40;
     }
   }
 
-  &--disabled {
+  &--inactive {
     @include themify($themes) {
       background-color: themed('bg-tertiary');
       color: themed('text-tertiary');
@@ -426,401 +558,118 @@
   }
 }
 
-// Action Buttons
 // =============================================================================
-.action-btn {
-  display: inline-flex;
+// Pagination
+// =============================================================================
+.currencies-pagination {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: $border-radius-small;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: all $duration-fast $ease-ease-in-out;
+  padding: $spacing-12 $spacing-24;
 
   @include themify($themes) {
-    color: themed('text-secondary');
+    border-top: 1px solid themed('border-subtle');
+  }
 
-    &:hover {
-      background-color: themed('state-hover');
-      color: $brand-60;
+  &__info {
+    font-size: $font-size-200;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+
+    strong {
+      font-weight: $font-weight-semibold;
+
+      @include themify($themes) {
+        color: themed('text-primary');
+      }
     }
   }
 
-  &--danger {
+  &__buttons {
+    display: flex;
+    gap: $spacing-8;
+  }
+
+  &__btn {
+    padding: $spacing-4 $spacing-12;
+    font-size: $font-size-200;
+    font-weight: $font-weight-medium;
+    border-radius: $border-radius-small;
+    cursor: pointer;
+    transition: all $duration-fast $ease-ease-in-out;
+
     @include themify($themes) {
-      &:hover {
-        background-color: rgba($error-40, 0.1);
-        color: $error-40;
+      background-color: themed('bg-primary');
+      border: 1px solid themed('border-default');
+      color: themed('text-primary');
+
+      &:hover:not(:disabled) {
+        background-color: themed('state-hover');
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
     }
   }
 }
 
-// Modal Styles
 // =============================================================================
-.modal-overlay {
+// Drawer Overlay
+// =============================================================================
+.drawer-overlay {
   position: fixed;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: $spacing-16;
   z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.4);
+  animation: fadeIn $duration-fast $ease-ease-in-out;
 }
 
-.modal {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 520px;
-  max-height: 90vh;
-  border-radius: $border-radius-large;
-  overflow: hidden;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 400px;
+  max-width: 100%;
+  z-index: 1001;
+  animation: slideInRight $duration-normal $ease-decelerate;
 
   @include themify($themes) {
     background-color: themed('bg-primary');
     box-shadow: $shadow-64;
-  }
-
-  &--sm {
-    max-width: 400px;
-  }
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: $spacing-20 $spacing-24;
-
-    @include themify($themes) {
-      border-bottom: 1px solid themed('border-default');
-    }
-  }
-
-  &__title {
-    font-size: $font-size-500;
-    font-weight: $font-weight-bold;
-    margin: 0;
-
-    @include themify($themes) {
-      color: themed('text-primary');
-    }
-  }
-
-  &__close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: $border-radius-small;
-    background: transparent;
-    cursor: pointer;
-    transition: background-color $duration-fast $ease-ease-in-out;
-
-    @include themify($themes) {
-      color: themed('text-secondary');
-
-      &:hover {
-        background-color: themed('state-hover');
-      }
-    }
-  }
-
-  &__body {
-    flex: 1;
-    overflow-y: auto;
-    padding: $spacing-24;
-  }
-
-  &__footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: $spacing-12;
-    padding: $spacing-16 $spacing-24;
-
-    @include themify($themes) {
-      border-top: 1px solid themed('border-default');
-    }
-  }
-}
-
-// Currency Modal Specific
-// =============================================================================
-.currency-modal {
-  &__summary {
-    display: flex;
-    align-items: center;
-    gap: $spacing-12;
-    padding: $spacing-16;
-    border-radius: $border-radius-medium;
-    margin-bottom: $spacing-24;
-
-    @include themify($themes) {
-      background-color: themed('bg-secondary');
-      border: 1px solid themed('border-subtle');
-    }
-
-    .currency-flag {
-      width: 48px;
-      height: 48px;
-
-      &__emoji {
-        font-size: 24px;
-      }
-    }
-  }
-
-  &__summary-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-2;
-  }
-
-  &__summary-code {
-    font-size: $font-size-400;
-    font-weight: $font-weight-bold;
-
-    @include themify($themes) {
-      color: themed('text-primary');
-    }
-  }
-
-  &__summary-name {
-    font-size: $font-size-200;
-
-    @include themify($themes) {
-      color: themed('text-secondary');
-    }
-  }
-}
-
-// Form Elements
-// =============================================================================
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: $spacing-20;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-8;
-
-  &--half {
-    grid-column: span 1;
-  }
-
-  &--full {
-    grid-column: span 2;
-  }
-}
-
-.form-label {
-  font-size: 11px;
-  font-weight: $font-weight-semibold;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-
-  @include themify($themes) {
-    color: themed('text-secondary');
-  }
-}
-
-.form-input {
-  width: 100%;
-  height: 40px;
-  padding: 0 $spacing-12;
-  border-radius: $border-radius-small;
-  font-size: $font-size-300;
-  transition: border-color $duration-fast $ease-ease-in-out;
-
-  @include themify($themes) {
-    background-color: themed('bg-secondary');
-    border: 1px solid themed('border-default');
-    color: themed('text-primary');
-
-    &::placeholder {
-      color: themed('text-tertiary');
-    }
-
-    &:focus {
-      outline: none;
-      border-color: $brand-60;
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    &--error {
-      border-color: $error-40;
-    }
-  }
-}
-
-.form-error {
-  font-size: $font-size-100;
-  color: $error-40;
-}
-
-.form-hint {
-  font-size: $font-size-100;
-
-  @include themify($themes) {
-    color: themed('text-tertiary');
-  }
-}
-
-.form-checkbox {
-  display: flex;
-  align-items: center;
-  gap: $spacing-12;
-  cursor: pointer;
-
-  input[type='checkbox'] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-  }
-
-  &__label {
-    font-size: $font-size-300;
-
-    @include themify($themes) {
-      color: themed('text-primary');
-    }
-  }
-}
-
-// Alert
-// =============================================================================
-.alert {
-  display: flex;
-  align-items: flex-start;
-  gap: $spacing-12;
-  padding: $spacing-12 $spacing-16;
-  border-radius: $border-radius-medium;
-  margin-top: $spacing-16;
-
-  p {
-    margin: 0;
-    font-size: $font-size-200;
-    line-height: 1.5;
-  }
-
-  &--info {
-    background-color: rgba($brand-60, 0.1);
-    color: $brand-70;
-
-    @include themify($themes) {
-      @if themed('mode') == 'dark' {
-        color: $brand-90;
-      }
-    }
-  }
-
-  &--error {
-    background-color: rgba($error-40, 0.1);
-    color: $error-40;
-  }
-}
-
-// Buttons (if not already defined globally)
-// =============================================================================
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-8;
-  height: 40px;
-  padding: 0 $spacing-16;
-  border-radius: $border-radius-medium;
-  font-size: $font-size-300;
-  font-weight: $font-weight-semibold;
-  cursor: pointer;
-  transition: all $duration-fast $ease-ease-in-out;
-  border: none;
-
-  &--primary {
-    background-color: $brand-60;
-    color: $neutral-white;
-
-    &:hover {
-      background-color: $brand-50;
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  }
-
-  &--secondary {
-    @include themify($themes) {
-      background-color: themed('bg-secondary');
-      border: 1px solid themed('border-default');
-      color: themed('text-primary');
-
-      &:hover {
-        background-color: themed('state-hover');
-      }
-    }
-  }
-
-  &--danger {
-    background-color: $error-40;
-    color: $neutral-white;
-
-    &:hover {
-      background-color: $error-30;
-    }
-  }
-}
-
-// ===========================================================================
-// Currency Detail Side Panel (Sheet)
-// ===========================================================================
-.currency-detail-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 400px;
-  max-width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  z-index: $z-index-modal;
-  box-shadow: $shadow-64;
-  animation: slideInRight 0.2s ease-out;
-
-  @include themify($themes) {
-    background-color: themed('bg-secondary');
     border-left: 1px solid themed('border-default');
   }
+}
 
-  @media (max-width: 640px) {
-    width: 100%;
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
   }
+  to {
+    transform: translateX(0);
+  }
+}
 
-  @keyframes slideInRight {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
+// =============================================================================
+// Currency Detail Panel (Drawer Content)
+// =============================================================================
+.currency-detail-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 
   &__header {
     display: flex;
@@ -883,23 +732,8 @@
     border-radius: $border-radius-large;
 
     @include themify($themes) {
-      background-color: themed('bg-primary');
+      background-color: themed('bg-secondary');
       border: 1px solid themed('border-default');
-    }
-  }
-
-  &__summary-flag {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    font-size: 24px;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
-
-    @include themify($themes) {
-      background-color: themed('bg-tertiary');
     }
   }
 
@@ -927,59 +761,10 @@
     }
   }
 
-  &__summary-status {
-    display: inline-flex;
-    align-items: center;
-    padding: $spacing-4 $spacing-8;
-    border-radius: $border-radius-small;
-    font-size: $font-size-100;
-    font-weight: $font-weight-bold;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    flex-shrink: 0;
-
-    &--active {
-      background-color: rgba($success-50, 0.2);
-      color: $success-50;
-      border: 1px solid rgba($success-50, 0.3);
-    }
-
-    &--inactive {
-      @include themify($themes) {
-        background-color: themed('bg-tertiary');
-        color: themed('text-secondary');
-        border: 1px solid themed('border-default');
-      }
-    }
-  }
-
   &__form {
     display: flex;
     flex-direction: column;
     gap: $spacing-20;
-  }
-
-  &__alert {
-    display: flex;
-    align-items: flex-start;
-    gap: $spacing-12;
-    padding: $spacing-12;
-    border-radius: $border-radius-medium;
-    background-color: rgba($info-40, 0.1);
-    border: 1px solid rgba($info-40, 0.2);
-  }
-
-  &__alert-icon {
-    color: $info-40;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
-  &__alert-text {
-    font-size: $font-size-200;
-    line-height: 1.5;
-    margin: 0;
-    color: rgba($info-40, 0.9);
   }
 
   &__footer {
@@ -998,47 +783,205 @@
   }
 }
 
-// Form enhancements for detail panel
-.form-row {
+// =============================================================================
+// Currency Flag (in drawer)
+// =============================================================================
+.currency-flag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  @include themify($themes) {
+    background-color: themed('bg-tertiary');
+  }
+
+  &__emoji {
+    font-size: 24px;
+    line-height: 1;
+  }
+}
+
+// =============================================================================
+// Form Elements
+// =============================================================================
+.form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: $spacing-16;
 }
 
-.form-input-wrapper {
-  position: relative;
+.form-group {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: $spacing-8;
 }
 
-.form-input-prefix {
-  position: absolute;
-  left: $spacing-12;
-  font-size: $font-size-300;
-  pointer-events: none;
+.form-label {
+  font-size: 11px;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 
   @include themify($themes) {
     color: themed('text-secondary');
   }
 }
 
-.form-input--with-prefix {
-  padding-left: $spacing-28;
+.form-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 $spacing-12;
+  border-radius: $border-radius-small;
+  font-size: $font-size-300;
+  transition: border-color $duration-fast $ease-ease-in-out;
+
+  @include themify($themes) {
+    background-color: themed('bg-secondary');
+    border: 1px solid themed('border-default');
+    color: themed('text-primary');
+
+    &::placeholder {
+      color: themed('text-tertiary');
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $brand-60;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
 }
 
 .form-hint {
   font-size: $font-size-100;
-  margin: $spacing-8 0 0;
+  margin-top: $spacing-4;
 
   @include themify($themes) {
     color: themed('text-tertiary');
   }
 }
 
-// Selected row style
-.currencies-table__row--selected {
+.form-static {
+  padding: $spacing-8 $spacing-12;
+  font-size: $font-size-300;
+  font-weight: 500;
+  border-radius: $border-radius-medium;
+  
   @include themify($themes) {
-    background-color: rgba($brand-60, 0.08) !important;
-    border-left: 3px solid $brand-60;
+    background-color: themed('bg-tertiary');
+    color: themed('text-primary');
   }
+}
+
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: $brand-60;
+  }
+
+  &__label {
+    font-size: $font-size-300;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+}
+
+// =============================================================================
+// Alert
+// =============================================================================
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-12;
+  padding: $spacing-12 $spacing-16;
+  border-radius: $border-radius-medium;
+
+  p {
+    margin: 0;
+    font-size: $font-size-200;
+    line-height: 1.5;
+  }
+
+  &--info {
+    background-color: rgba($brand-60, 0.1);
+    color: $brand-70;
+    border: 1px solid rgba($brand-60, 0.2);
+  }
+}
+
+// =============================================================================
+// Button Styles
+// =============================================================================
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-8;
+  height: 36px;
+  padding: 0 $spacing-16;
+  border-radius: $border-radius-small;
+  font-size: $font-size-300;
+  font-weight: $font-weight-semibold;
+  cursor: pointer;
+  transition: all $duration-fast $ease-ease-in-out;
+  border: none;
+  white-space: nowrap;
+
+  &--primary {
+    background-color: $brand-60;
+    color: $neutral-white;
+
+    &:hover {
+      background-color: darken($brand-60, 8%);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &--secondary {
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      border: 1px solid themed('border-default');
+      color: themed('text-primary');
+
+      &:hover {
+        background-color: themed('state-hover');
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// =============================================================================
+// Fluent Checkbox
+// =============================================================================
+.fluent-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: $brand-60;
 }

@@ -56,12 +56,18 @@ class CurrencyService {
       // Alias legacy para mantener compatibilidad con componentes existentes
       name: currencyName,
       symbol: payload.symbol || payload.currency_symbol || '',
-      // Soportar ambos formatos: is_base (nuevo) e is_base_currency (legacy)
+      // Soportar ambos formatos: is_base (API) e is_base_currency (legacy)
       is_base_currency: Boolean(payload.is_base || payload.is_base_currency),
       is_base: Boolean(payload.is_base || payload.is_base_currency),
-      // Nuevos campos de la API PAYMENT_CONFIG_API
+      // Campo de la API
       decimal_places:
         typeof payload.decimal_places === 'number' ? payload.decimal_places : 2,
+      // Campos UI-only que pueden o no venir de la respuesta
+      is_enabled: payload.is_enabled !== undefined ? payload.is_enabled : true,
+      flag_emoji: payload.flag_emoji || '',
+      // Exchange rate viene de /exchange-rates, no de /currencies
+      exchange_rate: payload.exchange_rate || payload.rate_to_base || null,
+      updated_at: payload.updated_at || payload.date || null,
     }
   }
 
@@ -419,28 +425,17 @@ class CurrencyService {
     const rawName = data.currency_name ?? data.name ?? data.description ?? ''
     const normalizedName = typeof rawName === 'string' ? rawName.trim() : ''
 
+    // Payload según PAYMENT_CONFIG_API.md
     const payload = {
       currency_code: trimmedCode,
-      currency_name: normalizedName,
       name: normalizedName,
-      description: normalizedName,
-      symbol: data.symbol?.trim() || '',
-      is_base_currency: Boolean(data.is_base_currency),
+      symbol: (data.symbol || '').trim(),
+      decimal_places: typeof data.decimal_places === 'number' ? data.decimal_places : 2,
     }
 
-    // Mantener compatibilidad: no enviar campos vacíos innecesarios
-    if (!payload.currency_name) {
-      delete payload.currency_name
-      delete payload.name
-      delete payload.description
-    }
-
-    if (!payload.symbol) {
-      delete payload.symbol
-    }
-
-    if (!payload.is_base_currency) {
-      delete payload.is_base_currency
+    // Solo enviar is_base si es true
+    if (data.is_base || data.is_base_currency) {
+      payload.is_base = true
     }
 
     return payload

@@ -155,11 +155,6 @@ const MainLayout = ({ children }) => {
             href: '/pagos/documentacion',
             icon: BookOpen,
           },
-          {
-            name: 'Gestión de Pagos',
-            href: '/pagos/gestion',
-            icon: SlidersHorizontal,
-          },
         ],
       },
       {

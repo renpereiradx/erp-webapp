@@ -1,54 +1,160 @@
 // ===========================================================================
-// Currencies Page - MVP Implementation
-// Patrón: Fluent Design System 2 + BEM + Zustand
-// Basado en: docs/GUIA_MVP_DESARROLLO.md
+// Currencies Page - Fluent Design System 2 + BEM
+// Logic: useCurrencyStore
+// Design: Fluent 2 (specs/fluent2)
+// i18n implemented (ES/EN support)
 // ===========================================================================
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Search,
   Plus,
-  Edit2,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
+  RefreshCw,
   Download,
+  Edit2,
+  MoreVertical,
   X,
-  Check,
-  AlertCircle,
+  Settings,
+  CreditCard,
+  Coins,
   Info,
 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import useCurrencyStore from '@/store/useCurrencyStore'
-import DataState from '@/components/ui/DataState'
 import '@/styles/scss/pages/_currencies.scss'
 
-// Currency Flag Component
-const CurrencyFlag = ({ emoji, code }) => (
-  <div className='currency-flag' title={code}>
-    <span className='currency-flag__emoji'>{emoji || '🏳️'}</span>
-  </div>
-)
+// --- Components ---
 
-// Status Badge Component
-const StatusBadge = ({ enabled }) => {
+// Map for flag images if ISO code is known, otherwise fallback to emoji
+const getFlagUrl = (code) => {
+  if (!code) return null;
+  const mapping = {
+    'USD': 'us',
+    'EUR': 'eu',
+    'GBP': 'gb',
+    'JPY': 'jp',
+    'CAD': 'ca',
+    'AUD': 'au',
+    'PYG': 'py',
+    'BRL': 'br',
+    'ARS': 'ar',
+    'MXN': 'mx',
+    'CLP': 'cl',
+    'COP': 'co',
+    'PEN': 'pe',
+    'UYU': 'uy',
+    'CNY': 'cn',
+  };
+  const countryCode = mapping[code.toUpperCase()];
+  if (countryCode) {
+    return `https://flagcdn.com/w40/${countryCode}.png`;
+  }
+  return null;
+}
+
+import { PaymentMethodService } from '@/services/paymentMethodService'
+
+// Payment Methods Tab Component
+const PaymentMethodsTab = ({ searchTerm }) => {
   const { t } = useI18n()
+  const [methods, setMethods] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchMethods()
+  }, [])
+
+  const fetchMethods = async () => {
+    setLoading(true)
+    try {
+      const data = await PaymentMethodService.getAll()
+      setMethods(data)
+    } catch (error) {
+      console.error('Error fetching payment methods:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredMethods = methods.filter(method => {
+    if (!searchTerm) return true
+    const term = searchTerm.toLowerCase()
+    return (
+      method.method_code.toLowerCase().includes(term) ||
+      method.description.toLowerCase().includes(term)
+    )
+  })
+
   return (
-    <span
-      className={`status-badge status-badge--${
-        enabled ? 'enabled' : 'disabled'
-      }`}
-    >
-      <span className='status-badge__dot' />
-      {enabled
-        ? t('currencies.status.enabled', 'Habilitada')
-        : t('currencies.status.disabled', 'Deshabilitada')}
-    </span>
+    <>
+      <table className='currencies-table'>
+        <thead className='currencies-table__head'>
+          <tr>
+            <th className='currencies-table__th'>{t('currencies.table.code')}</th>
+            <th className='currencies-table__th'>{t('currencies.table.name')}</th>
+            <th className='currencies-table__th'>{t('currencies.payment_methods.table.type')}</th>
+            <th className='currencies-table__th'>{t('currencies.table.status')}</th>
+            <th className='currencies-table__th currencies-table__th--actions'>{t('currencies.table.actions')}</th>
+          </tr>
+        </thead>
+        <tbody className='currencies-table__body'>
+          {loading ? (
+            <tr>
+              <td colSpan='5' className='currencies-table__empty'>{t('common.loading')}</td>
+            </tr>
+          ) : filteredMethods.length === 0 ? (
+            <tr>
+              <td colSpan='5' className='currencies-table__empty'>{t('currencies.empty.search')}</td>
+            </tr>
+          ) : (
+            filteredMethods.map(method => (
+              <tr key={method.id} className='currencies-table__row'>
+                <td className='currencies-table__td'>
+                  <span className='currencies-table__code'>{method.method_code}</span>
+                </td>
+                <td className='currencies-table__td currencies-table__td--name'>
+                  {method.description}
+                </td>
+                <td className='currencies-table__td'>
+                  {PaymentMethodService.requiresAdditionalInfo(method) 
+                    ? t('currencies.payment_methods.type.complex') 
+                    : t('currencies.payment_methods.type.simple')}
+                </td>
+                <td className='currencies-table__td'>
+                  <span className={`status-badge ${method.is_active ? 'status-badge--active' : 'status-badge--inactive'}`}>
+                    <span className='status-badge__dot'></span>
+                    <span className='status-badge__text'>
+                      {method.is_active ? t('currencies.status.active') : t('currencies.status.inactive')}
+                    </span>
+                  </span>
+                </td>
+                <td className='currencies-table__td currencies-table__td--actions'>
+                  <button className='currencies-table__action-btn' disabled title={t('currencies.payment_methods.action.edit_disabled')}>
+                    <Edit2 size={16} />
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+      
+      {/* Pagination - Placeholder for now */}
+      <div className='currencies-pagination'>
+        <span className='currencies-pagination__info'>
+          {t('currencies.results', { count: filteredMethods.length, total: filteredMethods.length })}
+        </span>
+        <div className='currencies-pagination__buttons'>
+          <button className='currencies-pagination__btn' disabled>{t('common.pagination.previous')}</button>
+          <button className='currencies-pagination__btn' disabled>{t('common.pagination.next')}</button>
+        </div>
+      </div>
+    </>
   )
 }
 
-// Currency Form Modal
-const CurrencyFormModal = ({ isOpen, onClose, currency, onSave }) => {
+// Drawer (Slide-over) Component for Add/Edit
+const CurrencyDrawer = ({ isOpen, onClose, currency, onSave, baseCurrency }) => {
   const { t } = useI18n()
   const [formData, setFormData] = useState({
     currency_code: '',
@@ -59,7 +165,6 @@ const CurrencyFormModal = ({ isOpen, onClose, currency, onSave }) => {
     flag_emoji: '🏳️',
     exchange_rate: 1,
   })
-  const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -84,677 +189,231 @@ const CurrencyFormModal = ({ isOpen, onClose, currency, onSave }) => {
         exchange_rate: 1,
       })
     }
-    setErrors({})
   }, [currency, isOpen])
 
-  const validateForm = () => {
-    const newErrors = {}
-
-    if (!formData.currency_code.trim()) {
-      newErrors.currency_code = t(
-        'currencies.validation.code_required',
-        'El código ISO es requerido'
-      )
-    } else if (formData.currency_code.length !== 3) {
-      newErrors.currency_code = t(
-        'currencies.validation.code_length',
-        'El código debe tener 3 caracteres'
-      )
-    }
-
-    if (!formData.currency_name.trim()) {
-      newErrors.currency_name = t(
-        'currencies.validation.name_required',
-        'El nombre es requerido'
-      )
-    }
-
-    if (!formData.symbol.trim()) {
-      newErrors.symbol = t(
-        'currencies.validation.symbol_required',
-        'El símbolo es requerido'
-      )
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   const handleSubmit = async e => {
     e.preventDefault()
-
-    if (!validateForm()) return
-
     setSaving(true)
     try {
       await onSave(formData)
       onClose()
     } catch (error) {
-      setErrors({
-        submit: error.message || t('currencies.error.save', 'Error al guardar'),
-      })
+      console.error('Failed to save currency', error)
     } finally {
       setSaving(false)
     }
   }
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }))
-    }
-  }
-
   if (!isOpen) return null
 
-  return (
-    <div className='modal-overlay' onClick={onClose}>
-      <div className='modal currency-modal' onClick={e => e.stopPropagation()}>
-        <div className='modal__header'>
-          <h2 className='modal__title'>
-            {currency
-              ? t('currencies.modal.edit_title', 'Editar Moneda')
-              : t('currencies.modal.create_title', 'Nueva Moneda')}
-          </h2>
-          <button
-            type='button'
-            className='modal__close'
-            onClick={onClose}
-            aria-label={t('action.close', 'Cerrar')}
-          >
-            <X size={20} />
-          </button>
-        </div>
+  const lastUpdate =
+    currency && currency.updated_at
+      ? new Date(currency.updated_at).toLocaleString()
+      : t('currencies.detail.no_update')
 
-        <form onSubmit={handleSubmit} className='modal__body'>
-          {/* Summary Card (Edit Mode) */}
-          {currency && (
-            <div className='currency-modal__summary'>
-              <CurrencyFlag
-                emoji={formData.flag_emoji}
-                code={formData.currency_code}
-              />
-              <div className='currency-modal__summary-info'>
-                <span className='currency-modal__summary-code'>
-                  {formData.currency_code}
-                </span>
-                <span className='currency-modal__summary-name'>
-                  {formData.currency_name}
-                </span>
-              </div>
-              <StatusBadge enabled={formData.is_enabled} />
-            </div>
-          )}
-
-          {/* Form Fields */}
-          <div className='form-grid'>
-            <div className='form-group'>
-              <label className='form-label' htmlFor='currency_code'>
-                {t('currencies.field.code', 'Código ISO')}
-              </label>
-              <input
-                id='currency_code'
-                type='text'
-                className={`form-input ${
-                  errors.currency_code ? 'form-input--error' : ''
-                }`}
-                value={formData.currency_code}
-                onChange={e =>
-                  handleChange('currency_code', e.target.value.toUpperCase())
-                }
-                maxLength={3}
-                placeholder='USD'
-                disabled={currency?.is_base_currency}
-              />
-              {errors.currency_code && (
-                <span className='form-error'>{errors.currency_code}</span>
-              )}
-            </div>
-
-            <div className='form-group'>
-              <label className='form-label' htmlFor='currency_name'>
-                {t('currencies.field.name', 'Nombre')}
-              </label>
-              <input
-                id='currency_name'
-                type='text'
-                className={`form-input ${
-                  errors.currency_name ? 'form-input--error' : ''
-                }`}
-                value={formData.currency_name}
-                onChange={e => handleChange('currency_name', e.target.value)}
-                placeholder={t(
-                  'currencies.placeholder.name',
-                  'Dólar Estadounidense'
-                )}
-              />
-              {errors.currency_name && (
-                <span className='form-error'>{errors.currency_name}</span>
-              )}
-            </div>
-
-            <div className='form-group form-group--half'>
-              <label className='form-label' htmlFor='symbol'>
-                {t('currencies.field.symbol', 'Símbolo')}
-              </label>
-              <input
-                id='symbol'
-                type='text'
-                className={`form-input ${
-                  errors.symbol ? 'form-input--error' : ''
-                }`}
-                value={formData.symbol}
-                onChange={e => handleChange('symbol', e.target.value)}
-                maxLength={5}
-                placeholder='$'
-              />
-              {errors.symbol && (
-                <span className='form-error'>{errors.symbol}</span>
-              )}
-            </div>
-
-            <div className='form-group form-group--half'>
-              <label className='form-label' htmlFor='decimal_places'>
-                {t('currencies.field.decimals', 'Decimales')}
-              </label>
-              <input
-                id='decimal_places'
-                type='number'
-                className='form-input'
-                value={formData.decimal_places}
-                onChange={e =>
-                  handleChange(
-                    'decimal_places',
-                    parseInt(e.target.value, 10) || 0
-                  )
-                }
-                min={0}
-                max={8}
-              />
-            </div>
-
-            <div className='form-group form-group--half'>
-              <label className='form-label' htmlFor='flag_emoji'>
-                {t('currencies.field.flag', 'Bandera (emoji)')}
-              </label>
-              <input
-                id='flag_emoji'
-                type='text'
-                className='form-input'
-                value={formData.flag_emoji}
-                onChange={e => handleChange('flag_emoji', e.target.value)}
-                placeholder='🇺🇸'
-              />
-            </div>
-
-            <div className='form-group form-group--half'>
-              <label className='form-label' htmlFor='exchange_rate'>
-                {t('currencies.field.exchange_rate', 'Tasa de Cambio')}
-              </label>
-              <input
-                id='exchange_rate'
-                type='number'
-                className='form-input'
-                value={formData.exchange_rate}
-                onChange={e =>
-                  handleChange('exchange_rate', parseFloat(e.target.value) || 0)
-                }
-                step='0.0001'
-                min={0}
-                disabled={currency?.is_base_currency}
-              />
-              <span className='form-hint'>
-                {t(
-                  'currencies.hint.exchange_rate',
-                  'Equivalente en moneda base'
-                )}
-              </span>
-            </div>
-
-            <div className='form-group form-group--full'>
-              <label className='form-checkbox'>
-                <input
-                  type='checkbox'
-                  checked={formData.is_enabled}
-                  onChange={e => handleChange('is_enabled', e.target.checked)}
-                  disabled={currency?.is_base_currency}
-                />
-                <span className='form-checkbox__label'>
-                  {t(
-                    'currencies.field.enabled',
-                    'Moneda habilitada para transacciones'
-                  )}
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Warning for base currency */}
-          {currency?.is_base_currency && (
-            <div className='alert alert--info'>
-              <AlertCircle size={18} />
-              <p>
-                {t(
-                  'currencies.warning.base_currency',
-                  'Esta es la moneda base del sistema. Algunos campos no pueden modificarse.'
-                )}
-              </p>
-            </div>
-          )}
-
-          {/* Submit Error */}
-          {errors.submit && (
-            <div className='alert alert--error'>
-              <AlertCircle size={18} />
-              <p>{errors.submit}</p>
-            </div>
-          )}
-        </form>
-
-        <div className='modal__footer'>
-          <button
-            type='button'
-            className='btn btn--secondary'
-            onClick={onClose}
-            disabled={saving}
-          >
-            {t('action.cancel', 'Cancelar')}
-          </button>
-          <button
-            type='submit'
-            className='btn btn--primary'
-            onClick={handleSubmit}
-            disabled={saving}
-          >
-            {saving
-              ? t('action.saving', 'Guardando...')
-              : t('action.save', 'Guardar Cambios')}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Delete Confirmation Modal
-const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, currencyName }) => {
-  const { t } = useI18n()
-
-  if (!isOpen) return null
-
-  return (
-    <div className='modal-overlay' onClick={onClose}>
-      <div className='modal modal--sm' onClick={e => e.stopPropagation()}>
-        <div className='modal__header'>
-          <h2 className='modal__title'>
-            {t('currencies.modal.delete_title', 'Eliminar Moneda')}
-          </h2>
-          <button
-            type='button'
-            className='modal__close'
-            onClick={onClose}
-            aria-label={t('action.close', 'Cerrar')}
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className='modal__body'>
-          <p>
-            {t(
-              'currencies.modal.delete_confirm',
-              '¿Estás seguro de que deseas eliminar la moneda "{name}"? Esta acción no se puede deshacer.'
-            ).replace('{name}', currencyName)}
-          </p>
-        </div>
-
-        <div className='modal__footer'>
-          <button
-            type='button'
-            className='btn btn--secondary'
-            onClick={onClose}
-          >
-            {t('action.cancel', 'Cancelar')}
-          </button>
-          <button type='button' className='btn btn--danger' onClick={onConfirm}>
-            {t('action.delete', 'Eliminar')}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Currency Detail Side Panel (Sheet)
-const CurrencyDetailPanel = ({ currency, isOpen, onClose, onSave }) => {
-  const { t } = useI18n()
-  const [formData, setFormData] = useState({
-    currency_code: '',
-    currency_name: '',
-    symbol: '',
-    decimal_places: 2,
-    is_enabled: true,
-    flag_emoji: '🏳️',
-    exchange_rate: 1,
-  })
-  const [saving, setSaving] = useState(false)
-  const [hasChanges, setHasChanges] = useState(false)
-
-  useEffect(() => {
-    if (currency) {
-      setFormData({
-        currency_code: currency.currency_code || '',
-        currency_name: currency.currency_name || currency.name || '',
-        symbol: currency.symbol || '',
-        decimal_places: currency.decimal_places ?? 2,
-        is_enabled: currency.is_enabled !== false,
-        flag_emoji: currency.flag_emoji || '🏳️',
-        exchange_rate: currency.exchange_rate || 1,
-      })
-      setHasChanges(false)
-    }
-  }, [currency])
-
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    setHasChanges(true)
-  }
-
-  const handleSubmit = async e => {
-    e.preventDefault()
-    setSaving(true)
-    try {
-      await onSave(formData)
-      setHasChanges(false)
-    } catch (error) {
-      // Error handled in parent
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  if (!isOpen || !currency) return null
-
-  const lastUpdate = currency.updated_at
-    ? new Date(currency.updated_at).toLocaleString('es-ES', {
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : t('currencies.detail.no_update', 'Sin actualización')
+  const flagUrl = getFlagUrl(formData.currency_code);
 
   return (
     <div className='currency-detail-panel'>
-      {/* Panel Header */}
       <div className='currency-detail-panel__header'>
         <h3 className='currency-detail-panel__title'>
-          {t('currencies.detail.title', 'Detalles de Moneda')}
+          {currency ? t('currencies.modal.edit_title') : t('currencies.modal.create_title')}
         </h3>
         <button
           type='button'
           className='currency-detail-panel__close'
           onClick={onClose}
-          aria-label={t('action.close', 'Cerrar')}
+          aria-label={t('action.close')}
         >
           <X size={20} />
         </button>
       </div>
 
-      {/* Panel Content */}
       <div className='currency-detail-panel__content'>
-        {/* Summary Card */}
         <div className='currency-detail-panel__summary'>
-          <div className='currency-detail-panel__summary-flag'>
-            {currency.flag_emoji || '🏳️'}
+          <div className='currency-flag'>
+            {flagUrl ? (
+               <img src={flagUrl} alt={formData.currency_code} style={{ width: '32px', height: '24px', borderRadius: '4px', objectFit: 'cover' }} />
+            ) : (
+               <span className='currency-flag__emoji'>{formData.flag_emoji || '🏳️'}</span>
+            )}
           </div>
           <div className='currency-detail-panel__summary-info'>
             <h4 className='currency-detail-panel__summary-code'>
-              {currency.currency_code}
+              {formData.currency_code || 'NEW'}
             </h4>
             <p className='currency-detail-panel__summary-name'>
-              {currency.currency_name || currency.name}
+              {formData.currency_name || t('currencies.placeholder.name')}
             </p>
           </div>
-          <span
-            className={`currency-detail-panel__summary-status currency-detail-panel__summary-status--${
-              currency.is_enabled !== false ? 'active' : 'inactive'
-            }`}
-          >
-            {currency.is_enabled !== false
-              ? t('currencies.status.active', 'Activa')
-              : t('currencies.status.inactive', 'Inactiva')}
-          </span>
         </div>
 
-        {/* Edit Form */}
         <form className='currency-detail-panel__form' onSubmit={handleSubmit}>
+          {/* Nombre de la moneda */}
           <div className='form-group'>
-            <label className='form-label' htmlFor='detail_currency_code'>
-              {t('currencies.field.code', 'Código ISO')}
+            <label className='form-label' htmlFor='currency_name'>
+              {t('currencies.field.name')}
             </label>
             <input
-              id='detail_currency_code'
-              type='text'
-              className='form-input'
-              value={formData.currency_code}
-              onChange={e =>
-                handleChange('currency_code', e.target.value.toUpperCase())
-              }
-              maxLength={3}
-              disabled={currency.is_base_currency}
-            />
-          </div>
-
-          <div className='form-group'>
-            <label className='form-label' htmlFor='detail_currency_name'>
-              {t('currencies.field.name', 'Nombre')}
-            </label>
-            <input
-              id='detail_currency_name'
+              id='currency_name'
               type='text'
               className='form-input'
               value={formData.currency_name}
               onChange={e => handleChange('currency_name', e.target.value)}
+              placeholder={t('currencies.placeholder.name')}
+              required
             />
           </div>
 
-          <div className='form-row'>
+          {/* Código ISO y Símbolo en una fila */}
+          <div className='form-grid'>
             <div className='form-group'>
-              <label className='form-label' htmlFor='detail_symbol'>
-                {t('currencies.field.symbol', 'Símbolo')}
+              <label className='form-label' htmlFor='currency_code'>
+                {t('currencies.field.code')}
               </label>
               <input
-                id='detail_symbol'
+                id='currency_code'
+                type='text'
+                className='form-input'
+                value={formData.currency_code}
+                onChange={e =>
+                  handleChange('currency_code', e.target.value.toUpperCase())
+                }
+                maxLength={3}
+                placeholder='EUR'
+                disabled={currency?.is_base_currency || !!currency?.id}
+                required
+              />
+            </div>
+            <div className='form-group'>
+              <label className='form-label' htmlFor='symbol'>
+                {t('currencies.field.symbol')}
+              </label>
+              <input
+                id='symbol'
                 type='text'
                 className='form-input'
                 value={formData.symbol}
                 onChange={e => handleChange('symbol', e.target.value)}
+                placeholder='$'
                 maxLength={5}
               />
             </div>
-
-            <div className='form-group'>
-              <label className='form-label' htmlFor='detail_decimal_places'>
-                {t('currencies.field.decimals', 'Decimales')}
-              </label>
-              <input
-                id='detail_decimal_places'
-                type='number'
-                className='form-input'
-                value={formData.decimal_places}
-                onChange={e =>
-                  handleChange('decimal_places', parseInt(e.target.value) || 0)
-                }
-                min={0}
-                max={8}
-              />
-            </div>
           </div>
 
+          {/* Decimales */}
           <div className='form-group'>
-            <label className='form-label' htmlFor='detail_exchange_rate'>
-              {t('currencies.field.exchange_rate', 'Tasa de Cambio (Base PYG)')}
+            <label className='form-label' htmlFor='decimal_places'>
+              {t('currencies.field.decimals')}
             </label>
-            <div className='form-input-wrapper'>
-              <span className='form-input-prefix'>
-                {currency.symbol || '$'}
-              </span>
-              <input
-                id='detail_exchange_rate'
-                type='text'
-                className='form-input form-input--with-prefix'
-                value={formData.exchange_rate}
-                onChange={e =>
-                  handleChange('exchange_rate', parseFloat(e.target.value) || 0)
-                }
-              />
-            </div>
+            <input
+              id='decimal_places'
+              type='number'
+              className='form-input'
+              min={0}
+              max={4}
+              value={formData.decimal_places}
+              onChange={e =>
+                handleChange('decimal_places', parseInt(e.target.value) || 0)
+              }
+            />
             <p className='form-hint'>
-              {t('currencies.detail.last_update', 'Última actualización:')}{' '}
-              {lastUpdate}
+              Cantidad de decimales a usar al mostrar montos (0-4)
             </p>
           </div>
 
-          {/* Info Alert */}
-          <div className='currency-detail-panel__alert'>
-            <Info size={18} className='currency-detail-panel__alert-icon' />
-            <p className='currency-detail-panel__alert-text'>
-              {t(
-                'currencies.detail.warning',
-                'Modificar el código ISO puede afectar reportes históricos. Asegúrese de que este cambio sea estrictamente necesario.'
-              )}
-            </p>
-          </div>
+          {/* Tasa de cambio - Solo informativo, viene de /exchange-rates */}
+          {currency && !currency.is_base_currency && (
+            <div className='form-group'>
+              <label className='form-label'>
+                {t('currencies.field.exchange_rate')}
+              </label>
+              <div className='form-static'>
+                {currency.exchange_rate 
+                  ? Number(currency.exchange_rate).toLocaleString('es-PY')
+                  : 'N/A'
+                }
+              </div>
+              <p className='form-hint'>
+                Base: 1 {baseCurrency?.currency_code || 'PYG'} • {t('currencies.detail.last_update')} {lastUpdate}
+              </p>
+            </div>
+          )}
+
+          {currency?.is_base_currency && (
+             <div className='alert alert--info'>
+               <Info size={16} />
+               <p>{t('currencies.warning.base_currency')}</p>
+             </div>
+          )}
+
         </form>
       </div>
 
-      {/* Panel Footer */}
       <div className='currency-detail-panel__footer'>
-        <button type='button' className='btn btn--secondary' onClick={onClose}>
-          {t('action.cancel', 'Cancelar')}
-        </button>
         <button
           type='button'
           className='btn btn--primary'
           onClick={handleSubmit}
-          disabled={saving || !hasChanges}
+          disabled={saving}
         >
-          {saving
-            ? t('action.saving', 'Guardando...')
-            : t('action.save', 'Guardar Cambios')}
+          {saving ? t('action.saving') : t('action.save')}
+        </button>
+        <button
+            type='button' 
+            className='btn btn--secondary' 
+            onClick={onClose}
+        >
+          {t('action.cancel')}
         </button>
       </div>
     </div>
   )
 }
 
-// Main Currencies Page Component
+// Main Page Component
 const CurrenciesPage = () => {
   const { t } = useI18n()
-
-  // Store
   const {
     currencies,
     loading,
-    error,
     searchTerm,
-    filter,
-    selectedCurrency,
-    setSearchTerm,
-    setFilter,
-    setSelectedCurrency,
-    clearSelectedCurrency,
     fetchCurrencies,
     createCurrency,
     updateCurrency,
-    deleteCurrency,
+    setSearchTerm,
     getFilteredCurrencies,
-    clearError,
   } = useCurrencyStore()
 
-  // Local state
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [currencyToDelete, setCurrencyToDelete] = useState(null)
-  const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false)
-  const [detailCurrency, setDetailCurrency] = useState(null)
-
-  // Derived state
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [selectedCurrency, setSelectedCurrency] = useState(null)
+  const [activeTab, setActiveTab] = useState('currencies')
   const filteredCurrencies = getFilteredCurrencies()
+  
+  // Find base currency from list
+  const baseCurrency = currencies.find(c => c.is_base_currency)
 
-  // Stats
-  const stats = {
-    total: currencies.length,
-    enabled: currencies.filter(c => c.is_enabled !== false).length,
-    disabled: currencies.filter(c => c.is_enabled === false).length,
-  }
-
-  // Fetch currencies on mount
   useEffect(() => {
     fetchCurrencies()
   }, [fetchCurrencies])
 
-  // Handlers
-  const handleSearchChange = e => {
-    setSearchTerm(e.target.value)
+  const handleOpenCreate = () => {
+    setSelectedCurrency(null)
+    setDrawerOpen(true)
   }
 
-  const handleFilterChange = newFilter => {
-    setFilter(newFilter)
-  }
-
-  const handleCreate = () => {
-    clearSelectedCurrency()
-    setIsFormModalOpen(true)
-  }
-
-  const handleEdit = currency => {
+  const handleOpenEdit = currency => {
     setSelectedCurrency(currency)
-    setIsFormModalOpen(true)
+    setDrawerOpen(true)
   }
 
-  const handleDelete = currency => {
-    setCurrencyToDelete(currency)
-    setIsDeleteModalOpen(true)
-  }
-
-  const handleConfirmDelete = async () => {
-    if (currencyToDelete) {
-      try {
-        await deleteCurrency(currencyToDelete.id)
-        setIsDeleteModalOpen(false)
-        setCurrencyToDelete(null)
-        // Close detail panel if the deleted currency was being viewed
-        if (detailCurrency?.id === currencyToDelete.id) {
-          setIsDetailPanelOpen(false)
-          setDetailCurrency(null)
-        }
-      } catch (error) {
-        // Error handled in store
-      }
-    }
-  }
-
-  const handleRowClick = currency => {
-    setDetailCurrency(currency)
-    setIsDetailPanelOpen(true)
-  }
-
-  const handleCloseDetailPanel = () => {
-    setIsDetailPanelOpen(false)
-    setDetailCurrency(null)
-  }
-
-  const handleSaveFromPanel = async formData => {
-    if (detailCurrency) {
-      await updateCurrency(detailCurrency.id, formData)
-      // Refresh detail currency with updated data
-      const updated = currencies.find(c => c.id === detailCurrency.id)
-      if (updated) {
-        setDetailCurrency({ ...updated, ...formData })
-      }
-    }
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false)
+    setSelectedCurrency(null)
   }
 
   const handleSave = async formData => {
@@ -765,29 +424,16 @@ const CurrenciesPage = () => {
     }
   }
 
-  const handleCloseFormModal = () => {
-    setIsFormModalOpen(false)
-    clearSelectedCurrency()
-  }
-
   const handleExport = () => {
-    // MVP: Simple CSV export
     const csvContent = [
-      [
-        'Código',
-        'Nombre',
-        'Símbolo',
-        'Decimales',
-        'Estado',
-        'Tasa de Cambio',
-      ].join(','),
+      [t('currencies.table.code'), t('currencies.table.name'), t('currencies.table.symbol'), t('currencies.field.decimals'), t('currencies.table.status'), t('currencies.table.exchange_rate')].join(','),
       ...filteredCurrencies.map(c =>
         [
           c.currency_code,
           `"${c.currency_name || c.name}"`,
           c.symbol,
           c.decimal_places,
-          c.is_enabled !== false ? 'Habilitada' : 'Deshabilitada',
+          c.is_enabled !== false ? t('currencies.status.enabled') : t('currencies.status.disabled'),
           c.exchange_rate || '',
         ].join(',')
       ),
@@ -799,267 +445,278 @@ const CurrenciesPage = () => {
     link.href = url
     link.download = `monedas_${new Date().toISOString().split('T')[0]}.csv`
     link.click()
-    URL.revokeObjectURL(url)
   }
 
-  // Render loading state
-  if (loading && currencies.length === 0) {
-    return (
-      <div className='currencies-page'>
-        <DataState variant='loading' skeletonVariant='list' />
-      </div>
-    )
+  // Format date correctly
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-'
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('es-PY')
   }
 
-  // Render error state
-  if (error && currencies.length === 0) {
-    return (
-      <div className='currencies-page'>
-        <DataState
-          variant='error'
-          title={t('currencies.error.title', 'Error')}
-          message={error}
-          onRetry={fetchCurrencies}
-        />
-      </div>
-    )
+  // Format currency values according to their decimal places and locale
+  const formatCurrencyValue = (value, currency) => {
+    if (value === null || value === undefined) return '-'
+    
+    // If we're displaying a rate where the base is PYG, follow the user's rule (0 decimals)
+    // Otherwise use the currency's own decimal preference or 4 for rates
+    let decimals = 4
+    if (baseCurrency?.currency_code === 'PYG') {
+      decimals = 0
+    } else if (currency?.decimal_places !== undefined) {
+      decimals = currency.decimal_places
+    }
+    
+    return Number(value).toLocaleString('es-PY', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    })
   }
 
   return (
     <div className='currencies-page'>
-      {/* Header */}
+      {/* Page Header */}
       <div className='currencies-page__header'>
         <div className='currencies-page__header-content'>
           <h1 className='currencies-page__title'>
-            {t('currencies.title', 'Gestión de Monedas')}
+            {t('currencies.page.title')}
           </h1>
           <p className='currencies-page__subtitle'>
-            {t(
-              'currencies.subtitle',
-              'Administre el catálogo de divisas habilitadas para las transacciones del sistema ERP.'
-            )}
+            {t('currencies.page.subtitle')}
           </p>
         </div>
-
-        <div className='currencies-page__header-actions'>
-          <button
-            className='btn btn--secondary'
-            onClick={handleExport}
-            aria-label={t('action.export', 'Exportar')}
-          >
-            <Download size={18} />
-            <span>{t('action.export', 'Exportar')}</span>
-          </button>
-          <button
-            className='btn btn--primary'
-            onClick={handleCreate}
-            aria-label={t('currencies.action.create', 'Nueva Moneda')}
-          >
-            <Plus size={18} />
-            <span>{t('currencies.action.create', 'Nueva Moneda')}</span>
-          </button>
+        
+        {/* Base Currency Widget */}
+        <div className='base-currency-widget'>
+          <span className='base-currency-widget__label'>{t('currencies.widget.base_currency')}</span>
+          <div className='base-currency-widget__value'>
+            <span className='base-currency-widget__code'>{baseCurrency?.currency_code || 'PYG'}</span>
+            <span className='base-currency-widget__symbol'>({baseCurrency?.symbol || 'Gs'})</span>
+          </div>
+          <button className='base-currency-widget__change'>{t('currencies.widget.change')}</button>
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className='currencies-page__toolbar'>
-        {/* Search */}
-        <div className='currencies-page__search'>
-          <Search className='currencies-page__search-icon' size={20} />
-          <input
-            type='text'
-            className='currencies-page__search-input'
-            placeholder={t(
-              'currencies.search.placeholder',
-              'Buscar por código ISO o nombre...'
-            )}
-            value={searchTerm}
-            onChange={handleSearchChange}
-            aria-label={t('currencies.search.label', 'Buscar monedas')}
-          />
-        </div>
-
-        {/* Filter Chips */}
-        <div className='currencies-page__filters'>
-          <button
-            className={`filter-chip ${
-              filter === 'all' ? 'filter-chip--active' : ''
-            }`}
-            onClick={() => handleFilterChange('all')}
+      {/* Main Card Container */}
+      <div className='currencies-card'>
+        {/* Tabs */}
+        <div className='currencies-tabs'>
+          <button 
+            className={`currencies-tabs__tab ${activeTab === 'currencies' ? 'currencies-tabs__tab--active' : ''}`}
+            onClick={() => setActiveTab('currencies')}
           >
-            <span>{t('currencies.filter.all', 'Todas')}</span>
-            <span className='filter-chip__count'>{stats.total}</span>
+            <Coins size={18} />
+            <span>{t('currencies.tabs.currencies')}</span>
           </button>
-          <button
-            className={`filter-chip ${
-              filter === 'enabled' ? 'filter-chip--active' : ''
-            }`}
-            onClick={() => handleFilterChange('enabled')}
+          <button 
+            className={`currencies-tabs__tab ${activeTab === 'payment-methods' ? 'currencies-tabs__tab--active' : ''}`}
+            onClick={() => setActiveTab('payment-methods')}
           >
-            <span>{t('currencies.filter.enabled', 'Habilitadas')}</span>
-            <span className='filter-chip__count'>{stats.enabled}</span>
+            <CreditCard size={18} />
+            <span>{t('currencies.tabs.payment_methods')}</span>
           </button>
-          <button
-            className={`filter-chip ${
-              filter === 'disabled' ? 'filter-chip--active' : ''
-            }`}
-            onClick={() => handleFilterChange('disabled')}
+          <button 
+            className={`currencies-tabs__tab ${activeTab === 'settings' ? 'currencies-tabs__tab--active' : ''}`}
+            onClick={() => setActiveTab('settings')}
           >
-            <span>{t('currencies.filter.disabled', 'Deshabilitadas')}</span>
-            <span className='filter-chip__count'>{stats.disabled}</span>
+            <Settings size={18} />
+            <span>{t('currencies.tabs.settings')}</span>
           </button>
         </div>
-      </div>
 
-      {/* Data Table */}
-      <div className='currencies-page__table-container'>
-        <table className='currencies-table'>
-          <thead className='currencies-table__header'>
-            <tr>
-              <th className='currencies-table__th'>
-                {t('currencies.table.code', 'Código ISO')}
-              </th>
-              <th className='currencies-table__th'>
-                {t('currencies.table.name', 'Nombre')}
-              </th>
-              <th className='currencies-table__th'>
-                {t('currencies.table.symbol', 'Símbolo')}
-              </th>
-              <th className='currencies-table__th'>
-                {t('currencies.table.status', 'Estado')}
-              </th>
-              <th className='currencies-table__th currencies-table__th--actions'>
-                {t('currencies.table.actions', 'Acciones')}
-              </th>
-            </tr>
-          </thead>
+        {/* Toolbar */}
+        <div className='currencies-toolbar'>
+          <div className='currencies-toolbar__left'>
+            <button className='btn btn--primary' onClick={handleOpenCreate}>
+              <Plus size={18} />
+              <span>{t('currencies.action.create')}</span>
+            </button>
+            <div className='currencies-toolbar__divider'></div>
+            <button className='currencies-toolbar__icon-btn' onClick={fetchCurrencies} title={t('currencies.action.refresh')}>
+              <RefreshCw size={18} />
+            </button>
+            <button className='currencies-toolbar__icon-btn' onClick={handleExport} title={t('currencies.action.export')}>
+              <Download size={18} />
+            </button>
+          </div>
 
-          <tbody className='currencies-table__body'>
-            {filteredCurrencies.length === 0 ? (
-              <tr>
-                <td colSpan='5' className='currencies-table__empty'>
-                  {searchTerm
-                    ? t(
-                        'currencies.empty.search',
-                        'No se encontraron monedas con ese criterio'
-                      )
-                    : t(
-                        'currencies.empty.message',
-                        'No hay monedas configuradas'
-                      )}
-                </td>
-              </tr>
-            ) : (
-              filteredCurrencies.map(currency => (
-                <tr
-                  key={currency.id}
-                  className={`currencies-table__row ${
-                    currency.is_base_currency
-                      ? 'currencies-table__row--base'
-                      : ''
-                  } ${
-                    detailCurrency?.id === currency.id
-                      ? 'currencies-table__row--selected'
-                      : ''
-                  }`}
-                  onClick={() => handleRowClick(currency)}
-                >
-                  <td className='currencies-table__td currencies-table__td--code'>
-                    <div className='currencies-table__code-cell'>
-                      <CurrencyFlag
-                        emoji={currency.flag_emoji}
-                        code={currency.currency_code}
-                      />
-                      <span className='currencies-table__code'>
-                        {currency.currency_code}
-                      </span>
-                      {currency.is_base_currency && (
-                        <span className='currencies-table__base-badge'>
-                          {t('currencies.badge.base', 'Base')}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className='currencies-table__td'>
-                    {currency.currency_name || currency.name}
-                  </td>
-                  <td className='currencies-table__td currencies-table__td--symbol'>
-                    <span className='currencies-table__symbol'>
-                      {currency.symbol}
-                    </span>
-                  </td>
-                  <td className='currencies-table__td'>
-                    <StatusBadge enabled={currency.is_enabled !== false} />
-                  </td>
-                  <td className='currencies-table__td currencies-table__td--actions'>
-                    <div className='currencies-table__actions'>
-                      <button
-                        className='action-btn'
-                        onClick={e => {
-                          e.stopPropagation()
-                          handleEdit(currency)
-                        }}
-                        aria-label={t('action.edit', 'Editar')}
-                        title={t('action.edit', 'Editar')}
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      {!currency.is_base_currency && (
-                        <button
-                          className='action-btn action-btn--danger'
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleDelete(currency)
-                          }}
-                          aria-label={t('action.delete', 'Eliminar')}
-                          title={t('action.delete', 'Eliminar')}
+          <div className='currencies-toolbar__right'>
+            <div className='currencies-toolbar__search'>
+              <Search size={16} className='currencies-toolbar__search-icon' />
+              <input
+                type='text'
+                className='currencies-toolbar__search-input'
+                placeholder={t('currencies.search.placeholder')}
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className='currencies-table-wrapper'>
+          {activeTab === 'currencies' && (
+            <>
+              {/* Currencies Table */}
+              <table className='currencies-table'>
+                <thead className='currencies-table__head'>
+                  <tr>
+                    <th className='currencies-table__th currencies-table__th--checkbox'>
+                      <input type='checkbox' className='fluent-checkbox' />
+                    </th>
+                    <th className='currencies-table__th'>{t('currencies.table.code')}</th>
+                    <th className='currencies-table__th'>{t('currencies.table.name')}</th>
+                    <th className='currencies-table__th'>{t('currencies.table.symbol')}</th>
+                    <th className='currencies-table__th'>{t('currencies.table.exchange_rate')}</th>
+                    <th className='currencies-table__th'>{t('currencies.table.status')}</th>
+                    <th className='currencies-table__th'>{t('currencies.table.last_updated')}</th>
+                    <th className='currencies-table__th currencies-table__th--actions'>{t('currencies.table.actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className='currencies-table__body'>
+                  {loading ? (
+                    <tr>
+                      <td colSpan='8' className='currencies-table__empty'>{t('common.loading')}</td>
+                    </tr>
+                  ) : filteredCurrencies.length === 0 ? (
+                    <tr>
+                      <td colSpan='8' className='currencies-table__empty'>{t('currencies.empty.search')}</td>
+                    </tr>
+                  ) : (
+                    filteredCurrencies.map(currency => {
+                      const flagUrl = getFlagUrl(currency.currency_code);
+                      return (
+                        <tr 
+                          key={currency.id} 
+                          className={`currencies-table__row ${currency.is_base_currency ? 'currencies-table__row--base' : ''}`}
                         >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
+                          <td className='currencies-table__td currencies-table__td--checkbox'>
+                            <input type='checkbox' className='fluent-checkbox' />
+                          </td>
+                          <td className='currencies-table__td'>
+                            <div className='currencies-table__code-cell'>
+                              <div className='currencies-table__flag'>
+                                {flagUrl ? (
+                                  <img src={flagUrl} alt={currency.currency_code} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                ) : (
+                                  <span className='currencies-table__flag-emoji'>{currency.flag_emoji || '🏳️'}</span>
+                                )}
+                              </div>
+                              <span className='currencies-table__code'>{currency.currency_code}</span>
+                              {currency.is_base_currency && (
+                                <span className='currencies-table__base-badge'>{t('currencies.badge.base')}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className='currencies-table__td currencies-table__td--name'>
+                            {currency.currency_name || currency.name}
+                          </td>
+                          <td className='currencies-table__td currencies-table__td--symbol'>
+                            {currency.symbol}
+                          </td>
+                          <td className='currencies-table__td currencies-table__td--rate'>
+                            {currency.is_base_currency ? 'N/A' : formatCurrencyValue(currency.exchange_rate, currency)}
+                          </td>
+                          <td className='currencies-table__td'>
+                            <span className={`status-badge ${currency.is_enabled !== false ? 'status-badge--active' : 'status-badge--inactive'}`}>
+                              <span className='status-badge__dot'></span>
+                              <span className='status-badge__text'>
+                                {currency.is_enabled !== false ? t('currencies.status.active') : t('currencies.status.inactive')}
+                              </span>
+                            </span>
+                          </td>
+                          <td className='currencies-table__td currencies-table__td--date'>
+                            {formatDate(currency.updated_at)}
+                          </td>
+                          <td className='currencies-table__td currencies-table__td--actions'>
+                            <div className='currencies-table__actions'>
+                              <button 
+                                className='currencies-table__action-btn' 
+                                onClick={() => handleOpenEdit(currency)} 
+                                title={t('currencies.action.edit')}
+                              >
+                                <Edit2 size={16} />
+                              </button>
+                              <button className='currencies-table__action-btn' title={t('action.more')}>
+                                <MoreVertical size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+
+              {/* Pagination */}
+              <div className='currencies-pagination'>
+                <span className='currencies-pagination__info'>
+                  {t('currencies.results', { count: filteredCurrencies.length, total: filteredCurrencies.length })}
+                </span>
+                <div className='currencies-pagination__buttons'>
+                  <button className='currencies-pagination__btn' disabled>{t('common.pagination.previous')}</button>
+                  <button className='currencies-pagination__btn' disabled>{t('common.pagination.next')}</button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'payment-methods' && (
+            <PaymentMethodsTab searchTerm={searchTerm} />
+          )}
+
+          {activeTab === 'settings' && (
+             <div className='settings-tab'>
+               <div className='settings-section'>
+                 <h3 className='settings-section__title'>{t('currencies.settings.general.title')}</h3>
+                 <p className='settings-section__desc'>{t('currencies.settings.general.description')}</p>
+                 
+                 <div className='settings-form'>
+                    <div className='form-group'>
+                      <label className='form-label'>{t('currencies.settings.field.number_format')}</label>
+                      <select className='form-select' disabled>
+                        <option>{t('currencies.settings.field.number_format.es_py')}</option>
+                        <option>{t('currencies.settings.field.number_format.en_us')}</option>
+                      </select>
+                      <p className='form-hint'>{t('currencies.settings.hint.number_format')}</p>
                     </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+
+                    <div className='form-group'>
+                       <label className='form-checkbox'>
+                         <input type='checkbox' checked readOnly />
+                         <span className='form-checkbox__label'>{t('currencies.settings.field.show_symbols')}</span>
+                       </label>
+                    </div>
+
+                    <div className='form-group'>
+                       <label className='form-checkbox'>
+                         <input type='checkbox' disabled />
+                         <span className='form-checkbox__label'>{t('currencies.settings.field.auto_update')}</span>
+                       </label>
+                    </div>
+                 </div>
+               </div>
+             </div>
+          )}
+        </div>
       </div>
 
-      {/* Results count */}
-      <div className='currencies-page__footer'>
-        <span className='currencies-page__results'>
-          {t('currencies.results', 'Mostrando {count} de {total} resultados')
-            .replace('{count}', filteredCurrencies.length)
-            .replace('{total}', currencies.length)}
-        </span>
-      </div>
-
-      {/* Detail Side Panel */}
-      <CurrencyDetailPanel
-        currency={detailCurrency}
-        isOpen={isDetailPanelOpen}
-        onClose={handleCloseDetailPanel}
-        onSave={handleSaveFromPanel}
-      />
-
-      {/* Form Modal */}
-      <CurrencyFormModal
-        isOpen={isFormModalOpen}
-        onClose={handleCloseFormModal}
-        currency={selectedCurrency}
-        onSave={handleSave}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleConfirmDelete}
-        currencyName={
-          currencyToDelete?.currency_name || currencyToDelete?.name || ''
-        }
-      />
+      {/* Drawer Overlay & Panel */}
+      {drawerOpen && (
+        <div className='drawer-overlay' onClick={handleCloseDrawer}>
+          <div className='drawer-panel' onClick={e => e.stopPropagation()}>
+            <CurrencyDrawer
+              isOpen={drawerOpen}
+              onClose={handleCloseDrawer}
+              currency={selectedCurrency}
+              onSave={handleSave}
+              baseCurrency={baseCurrency}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

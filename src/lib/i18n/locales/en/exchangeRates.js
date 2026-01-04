@@ -22,6 +22,7 @@ export const exchangeRates = {
   'exchangeRates.filter.fromCurrency': 'From Currency',
   'exchangeRates.filter.toCurrency': 'To Currency',
   'exchangeRates.filter.dateRange': 'Date Range',
+  'exchangeRates.placeholder.source': 'Enter source (e.g. Central Bank)',
 
   // View modes
   'exchangeRates.view.latest': 'Latest',

@@ -5,15 +5,16 @@
 
 export const currencies = {
   // Titles and subtitles
-  'currencies.title': 'Currency Management',
-  'currencies.subtitle':
-    'Manage the catalog of currencies enabled for ERP system transactions.',
+  'currencies.page.title': 'Currency & Payment Configuration',
+  'currencies.page.subtitle':
+    'Manage active currencies, configure exchange rates against your base currency, and control payment gateways.',
 
   // Actions
-  'currencies.action.create': 'New Currency',
+  'currencies.action.create': 'Add New Currency',
   'currencies.action.edit': 'Edit Currency',
   'currencies.action.delete': 'Delete Currency',
   'currencies.action.export': 'Export',
+  'currencies.action.refresh': 'Refresh Data',
 
   // Search and filters
   'currencies.search.placeholder': 'Search by ISO code or name...',
@@ -23,17 +24,29 @@ export const currencies = {
   'currencies.filter.disabled': 'Disabled',
 
   // Table
-  'currencies.table.code': 'ISO Code',
-  'currencies.table.name': 'Name',
-  'currencies.table.symbol': 'Symbol',
-  'currencies.table.status': 'Status',
-  'currencies.table.actions': 'Actions',
-  'currencies.table.exchange_rate': 'Exchange Rate',
+  'currencies.table.code': 'ISO CODE',
+  'currencies.table.name': 'NAME',
+  'currencies.table.symbol': 'SYMBOL',
+  'currencies.table.status': 'STATUS',
+  'currencies.table.actions': 'ACTIONS',
+  'currencies.table.exchange_rate': 'EXCHANGE RATE',
+  'currencies.table.last_updated': 'LAST UPDATED',
 
   // Status
   'currencies.status.enabled': 'Enabled',
   'currencies.status.disabled': 'Disabled',
-  'currencies.badge.base': 'Base',
+  'currencies.status.active': 'Active',
+  'currencies.status.inactive': 'Inactive',
+  'currencies.badge.base': 'BASE',
+
+  // Base currency widget
+  'currencies.widget.base_currency': 'BASE CURRENCY',
+  'currencies.widget.change': 'Change',
+
+  // Tabs
+  'currencies.tabs.currencies': 'Currencies',
+  'currencies.tabs.payment_methods': 'Payment Methods',
+  'currencies.tabs.settings': 'Settings',
 
   // Form fields
   'currencies.field.code': 'ISO Code',
@@ -85,4 +98,20 @@ export const currencies = {
   'nav.financial_config': 'Financial Settings',
   'nav.currencies': 'Currencies',
   'nav.payment_methods': 'Payment Methods',
+
+  // Payment Methods Tab
+  'currencies.payment_methods.table.type': 'TYPE',
+  'currencies.payment_methods.type.simple': 'Simple',
+  'currencies.payment_methods.type.complex': 'Complex (Extra info)',
+  'currencies.payment_methods.action.edit_disabled': 'Editing disabled',
+
+  // Settings Tab
+  'currencies.settings.general.title': 'General Configuration',
+  'currencies.settings.general.description': 'General options for payment and currency management.',
+  'currencies.settings.field.number_format': 'Number format',
+  'currencies.settings.field.number_format.es_py': 'Spanish (Paraguay) - 1.234.567',
+  'currencies.settings.field.number_format.en_us': 'English (US) - 1,234,567.00',
+  'currencies.settings.hint.number_format': 'The visual format of amounts in the application.',
+  'currencies.settings.field.show_symbols': 'Show currency symbols',
+  'currencies.settings.field.auto_update': 'Automatic rate update (Coming Soon)',
 }

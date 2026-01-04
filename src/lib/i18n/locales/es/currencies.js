@@ -5,15 +5,16 @@
 
 export const currencies = {
   // Títulos y subtítulos
-  'currencies.title': 'Gestión de Monedas',
-  'currencies.subtitle':
-    'Administre el catálogo de divisas habilitadas para las transacciones del sistema ERP.',
+  'currencies.page.title': 'Configuración de Moneda y Pagos',
+  'currencies.page.subtitle':
+    'Administre monedas activas, configure tasas de cambio contra su moneda base y controle las pasarelas de pago.',
 
   // Acciones
-  'currencies.action.create': 'Nueva Moneda',
+  'currencies.action.create': 'Agregar Nueva Moneda',
   'currencies.action.edit': 'Editar Moneda',
   'currencies.action.delete': 'Eliminar Moneda',
   'currencies.action.export': 'Exportar',
+  'currencies.action.refresh': 'Actualizar Datos',
 
   // Búsqueda y filtros
   'currencies.search.placeholder': 'Buscar por código ISO o nombre...',
@@ -23,19 +24,29 @@ export const currencies = {
   'currencies.filter.disabled': 'Deshabilitadas',
 
   // Tabla
-  'currencies.table.code': 'Código ISO',
-  'currencies.table.name': 'Nombre',
-  'currencies.table.symbol': 'Símbolo',
-  'currencies.table.status': 'Estado',
-  'currencies.table.actions': 'Acciones',
-  'currencies.table.exchange_rate': 'Tasa de Cambio',
+  'currencies.table.code': 'CÓDIGO ISO',
+  'currencies.table.name': 'NOMBRE',
+  'currencies.table.symbol': 'SÍMBOLO',
+  'currencies.table.status': 'ESTADO',
+  'currencies.table.actions': 'ACCIONES',
+  'currencies.table.exchange_rate': 'TASA DE CAMBIO',
+  'currencies.table.last_updated': 'ÚLT. ACTUALIZACIÓN',
 
   // Estados
   'currencies.status.enabled': 'Habilitada',
   'currencies.status.disabled': 'Deshabilitada',
-  'currencies.status.active': 'Activa',
-  'currencies.status.inactive': 'Inactiva',
-  'currencies.badge.base': 'Base',
+  'currencies.status.active': 'Activo',
+  'currencies.status.inactive': 'Inactivo',
+  'currencies.badge.base': 'BASE',
+
+  // Widget de moneda base
+  'currencies.widget.base_currency': 'MONEDA BASE',
+  'currencies.widget.change': 'Cambiar',
+
+  // Tabs
+  'currencies.tabs.currencies': 'Monedas',
+  'currencies.tabs.payment_methods': 'Métodos de Pago',
+  'currencies.tabs.settings': 'Configuración',
 
   // Campos del formulario
   'currencies.field.code': 'Código ISO',
@@ -94,4 +105,20 @@ export const currencies = {
   'nav.financial_config': 'Config. Financiera',
   'nav.currencies': 'Monedas',
   'nav.payment_methods': 'Métodos de Pago',
+
+  // Métodos de Pago Tab
+  'currencies.payment_methods.table.type': 'TIPO',
+  'currencies.payment_methods.type.simple': 'Simple',
+  'currencies.payment_methods.type.complex': 'Complejo (Info extra)',
+  'currencies.payment_methods.action.edit_disabled': 'Edición deshabilitada',
+
+  // Configuración Tab
+  'currencies.settings.general.title': 'Configuración General',
+  'currencies.settings.general.description': 'Opciones generales para la gestión de pagos y monedas.',
+  'currencies.settings.field.number_format': 'Formato de números',
+  'currencies.settings.field.number_format.es_py': 'Español (Paraguay) - 1.234.567',
+  'currencies.settings.field.number_format.en_us': 'Inglés (US) - 1,234,567.00',
+  'currencies.settings.hint.number_format': 'El formato visual de los montos en la aplicación.',
+  'currencies.settings.field.show_symbols': 'Mostrar símbolos de moneda',
+  'currencies.settings.field.auto_update': 'Actualización automática de tasas (Próximamente)',
 }

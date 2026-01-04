@@ -119,7 +119,7 @@ const ExchangeRateFormModal = ({
     currency_id: '',
     rate: '',
     effective_date: new Date().toISOString().split('T')[0],
-    source: 'manual',
+    source: '',
   })
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
@@ -133,14 +133,14 @@ const ExchangeRateFormModal = ({
           rate.effective_date?.split('T')[0] ||
           rate.date ||
           new Date().toISOString().split('T')[0],
-        source: rate.source || 'manual',
+        source: rate.source || '',
       })
     } else {
       setFormData({
         currency_id: '',
         rate: '',
         effective_date: new Date().toISOString().split('T')[0],
-        source: 'manual',
+        source: '',
       })
     }
     setErrors({})
@@ -175,8 +175,10 @@ const ExchangeRateFormModal = ({
     setSaving(true)
     try {
       await onSave({
-        ...formData,
-        rate: parseFloat(formData.rate),
+        currency_id: formData.currency_id,
+        rate_to_base: parseFloat(formData.rate),
+        date: formData.effective_date,
+        source: formData.source,
       })
       onClose()
     } catch (error) {
@@ -286,25 +288,15 @@ const ExchangeRateFormModal = ({
               <label className='form-label' htmlFor='source'>
                 {t('exchangeRates.field.source', 'Fuente')}
               </label>
-              <select
+              <input
                 id='source'
+                type='text'
                 className='form-input'
                 value={formData.source}
                 onChange={e => handleChange('source', e.target.value)}
-              >
-                <option value='manual'>
-                  {t('exchangeRates.source.manual', 'Manual')}
-                </option>
-                <option value='central-bank'>
-                  {t('exchangeRates.source.centralBank', 'Banco Central')}
-                </option>
-                <option value='forex-api'>
-                  {t('exchangeRates.source.forexApi', 'Forex API')}
-                </option>
-                <option value='system'>
-                  {t('exchangeRates.source.system', 'Sistema')}
-                </option>
-              </select>
+                placeholder={t('exchangeRates.placeholder.source', 'Ingrese la fuente (ej. Banco Central)')}
+                required
+              />
             </div>
           </div>
 

@@ -44,7 +44,6 @@ import SalePayment from '@/pages/SalePayment'
 import SalesOrderDetail from '@/pages/SalesOrderDetail'
 import SalesPaymentHistory from '@/pages/SalesPaymentHistory'
 import PaymentDocumentation from '@/pages/PaymentDocumentation'
-import PaymentManagement from '@/pages/PaymentManagement'
 import Currencies from '@/pages/Currencies'
 import ExchangeRates from '@/pages/ExchangeRates'
 import Login from '@/pages/Login'
@@ -212,10 +211,6 @@ function AppContent() {
                       <Route
                         path='/pagos/documentacion'
                         element={<PaymentDocumentation />}
-                      />
-                      <Route
-                        path='/pagos/gestion'
-                        element={<PaymentManagement />}
                       />
 
                       {/* Configuración */}
