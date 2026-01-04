@@ -150,11 +150,6 @@ const MainLayout = ({ children }) => {
             href: '/cobros-ventas',
             icon: CreditCard,
           },
-          {
-            name: 'Documentación de Pagos',
-            href: '/pagos/documentacion',
-            icon: BookOpen,
-          },
         ],
       },
       {
@@ -189,11 +184,6 @@ const MainLayout = ({ children }) => {
             name: 'Tipos de Cambio',
             href: '/configuracion/tipos-cambio',
             icon: SlidersHorizontal,
-          },
-          {
-            name: 'Métodos de Pago',
-            href: '/configuracion/metodos-pago',
-            icon: CreditCard,
           },
         ],
       },
