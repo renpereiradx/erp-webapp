@@ -46,7 +46,10 @@ services:
   # Incluye actualizaciones importantes de pagos, inventario,
   # y nuevas funcionalidades
   backend:
-    image: erp-backend:latest  # Imagen pre-construida del backend
+    image: erp-backend:latest
+    build:
+      context: ../business_management
+      dockerfile: Dockerfile
     container_name: erp-backend
     ports:
       - "5050:5050"
