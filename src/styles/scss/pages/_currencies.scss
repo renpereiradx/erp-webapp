@@ -4,6 +4,7 @@
 // ===========================================================================
 
 @use '../abstracts' as *;
+@use 'sass:color';
 
 // =============================================================================
 // Page Container
@@ -949,7 +950,7 @@
     color: $neutral-white;
 
     &:hover {
-      background-color: darken($brand-60, 8%);
+      background-color: color.adjust($brand-60, $lightness: -8%);
     }
 
     &:disabled {

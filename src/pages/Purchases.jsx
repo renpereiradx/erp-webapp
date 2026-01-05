@@ -842,11 +842,12 @@ const Purchases = () => {
   }
 
   // Formatear moneda
-  const formatCurrency = amount => {
+  const formatCurrency = (amount, currencyCode) => {
+    const currency = currencyCode || paymentCurrency || 'PYG'
     return new Intl.NumberFormat('es-PY', {
       style: 'currency',
-      currency: 'PYG',
-      minimumFractionDigits: 0,
+      currency: currency,
+      minimumFractionDigits: currency === 'PYG' ? 0 : 2,
     }).format(amount || 0)
   }
 
@@ -1613,7 +1614,7 @@ const Purchases = () => {
                         <td>{formatDate(order.order_date)}</td>
                         <td>{order.supplier_name || '-'}</td>
                         <td className='text-right'>
-                          {formatCurrency(order.total_amount)}
+                          {formatCurrency(order.total_amount, order.currency)}
                         </td>
                         <td className='text-center'>
                           <span className={getStatusBadgeClass(order.status)}>
@@ -1722,7 +1723,7 @@ const Purchases = () => {
                 <p className='sales-modal__subtitle'>
                   {t(
                     'purchases.modal.subtitle',
-                    'Seleccione un artículo del catálogo, ajuste la cantidad y configure un descuento antes de añadirlo a la orden.'
+                    'Seleccione un artículo del catálogo, ajuste la cantidad y configure el margen de ganancia antes de añadirlo a la orden.'
                   )}
                 </p>
               </div>

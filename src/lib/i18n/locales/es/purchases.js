@@ -141,6 +141,7 @@ export const purchases = {
   'purchases.modal.line_total': 'Total venta (cant. x precio venta)',
   'purchases.modal.search_min_chars': 'Escribe al menos 2 caracteres para buscar',
   'purchases.modal.no_results': 'No se encontraron productos',
+  'purchases.modal.product_results': 'Resultados de productos',
 
   // Método de pricing en modal
   'purchases.modal.pricing_mode': 'Método de Precio',
@@ -149,7 +150,9 @@ export const purchases = {
   'purchases.modal.sale_price': 'Precio de Venta Final',
   'purchases.modal.sale_price_note': 'El margen se calculará automáticamente',
   'purchases.modal.calculated_margin': 'Margen calculado',
+  'purchases.modal.margin_result': 'Margen',
   'purchases.modal.calculated_sale_price': 'Precio de venta calculado',
+  'purchases.modal.sale_price_result': 'Precio venta',
 
   // Tasa de impuesto en modal
   'purchases.modal.tax_rate': 'Tasa de Impuesto',
