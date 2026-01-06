@@ -2,6 +2,7 @@
 # Uso: .\docker-run.ps1
 
 Write-Host "Iniciando contenedor del Frontend..." -ForegroundColor Cyan
+Set-Location "$PSScriptRoot/.."
 Write-Host "Imagen: erp-frontend:latest" -ForegroundColor Yellow
 Write-Host "Contenedor: erp-system" -ForegroundColor Yellow
 Write-Host ""

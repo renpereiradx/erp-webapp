@@ -11,6 +11,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+Set-Location "$PSScriptRoot/.."
 
 # Colores para output
 function Write-Step {

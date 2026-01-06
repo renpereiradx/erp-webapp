@@ -7,7 +7,7 @@ echo "======================================================"
 if ! pgrep -f "vite" > /dev/null; then
     echo "❌ Servidor no está ejecutándose"
     echo "🚀 Iniciando servidor..."
-    cd /home/darthrpm/dev/web-project/erp-webapp
+    cd "$(dirname "$0")/.."
     pnpm dev &
     sleep 3
 fi

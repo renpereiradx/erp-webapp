@@ -7,6 +7,7 @@
 set -e  # Salir si hay algún error
 
 echo "🚀 Iniciando proceso de build y deploy..."
+cd "$(dirname "$0")/.."
 echo ""
 
 # Colores para output
@@ -19,8 +20,8 @@ NC='\033[0m' # No Color
 # 1. Validar configuración
 # =========================================
 echo "📋 Paso 1: Validando configuración..."
-if [ -f "./validate-config.sh" ]; then
-    bash ./validate-config.sh
+if [ -f "./scripts/validate-config.sh" ]; then
+    bash ./scripts/validate-config.sh
     if [ $? -ne 0 ]; then
         echo -e "${RED}❌ Validación fallida. Corrige los errores antes de continuar.${NC}"
         exit 1

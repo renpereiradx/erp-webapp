@@ -2,6 +2,7 @@
 
 echo "🔥 SOLUCIÓN NUCLEAR PARA ERRORES DE HOOKS - React 19"
 echo "=================================================="
+cd "$(dirname "$0")/.."
 
 # Función para mostrar estado
 show_status() {

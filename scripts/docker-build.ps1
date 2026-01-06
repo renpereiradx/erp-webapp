@@ -1,5 +1,6 @@
 # Script para construir la imagen Docker del Frontend
 # Uso: .\docker-build.ps1
+Set-Location "$PSScriptRoot/.."
 
 Write-Host "Construyendo imagen Docker del Frontend..." -ForegroundColor Cyan
 Write-Host "Nombre de imagen: erp-frontend:latest" -ForegroundColor Yellow

@@ -10,6 +10,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+Set-Location "$PSScriptRoot/.."
 
 # Banner
 Clear-Host

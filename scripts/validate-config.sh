@@ -6,6 +6,7 @@
 # Valida que la configuración de variables de entorno sea correcta
 
 echo "🔍 Validando configuración de entorno..."
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 echo ""
 
 # Colores
@@ -120,10 +121,10 @@ else
     ERRORS=$((ERRORS + 1))
 fi
 
-if [ -d "docs/development" ]; then
-    echo -e "${GREEN}✓${NC} Carpeta docs/development existe"
+if [ -d "docs/deployment" ]; then
+    echo -e "${GREEN}✓${NC} Carpeta docs/deployment existe"
 else
-    echo -e "${YELLOW}⚠${NC} Carpeta docs/development no encontrada"
+    echo -e "${YELLOW}⚠${NC} Carpeta docs/deployment no encontrada"
     WARNINGS=$((WARNINGS + 1))
 fi
 

@@ -2,6 +2,7 @@
 # Script de Verificación Pre-Despliegue
 # ==========================================
 # Verifica que todo esté listo antes de desplegar
+Set-Location "$PSScriptRoot/.."
 
 Write-Host @"
 ╔═══════════════════════════════════════════════════════════╗

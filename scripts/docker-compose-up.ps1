@@ -1,5 +1,6 @@
 # Script para iniciar el stack completo con Docker Compose
 # Uso: .\docker-compose-up.ps1
+Set-Location "$PSScriptRoot/.."
 
 Write-Host "Iniciando stack completo con Docker Compose..." -ForegroundColor Cyan
 Write-Host ""
