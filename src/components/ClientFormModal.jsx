@@ -158,14 +158,17 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
         {/* Header */}
         <div className="dialog__header">
           <h2 className="dialog__title">
-            {isEditMode ? 'Edit Client' : 'New Client'}
+            {isEditMode 
+              ? t('clients.modal.title.edit', 'Editar Cliente') 
+              : t('clients.modal.title.create', 'Nuevo Cliente')
+            }
           </h2>
           <button
             type="button"
             className="dialog__close"
             onClick={handleClose}
             disabled={isSubmitting}
-            aria-label="Close"
+            aria-label={t('action.close', 'Cerrar')}
           >
             <X size={20} />
           </button>
@@ -178,7 +181,7 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
             {/* Nombre */}
             <div className="form-field">
               <label htmlFor="name" className="form-field__label">
-                Name <span className="form-field__required">*</span>
+                {t('clients.modal.field.name', 'Nombre')} <span className="form-field__required">*</span>
               </label>
               <input
                 id="name"
@@ -188,7 +191,7 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
                 value={formData.name}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                placeholder="Enter first name"
+                placeholder={t('clients.modal.placeholder.name', 'Ingrese el nombre')}
               />
               {errors.name && (
                 <span className="form-field__error">{errors.name}</span>
@@ -198,7 +201,7 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
             {/* Apellido */}
             <div className="form-field">
               <label htmlFor="last_name" className="form-field__label">
-                Last Name <span className="form-field__required">*</span>
+                {t('clients.modal.field.last_name', 'Apellido')} <span className="form-field__required">*</span>
               </label>
               <input
                 id="last_name"
@@ -208,7 +211,7 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
                 value={formData.last_name}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                placeholder="Enter last name"
+                placeholder={t('clients.modal.placeholder.last_name', 'Ingrese el apellido')}
               />
               {errors.last_name && (
                 <span className="form-field__error">{errors.last_name}</span>
@@ -219,7 +222,7 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
           {/* Documento */}
           <div className="form-field">
             <label htmlFor="document_id" className="form-field__label">
-              Document ID <span className="form-field__required">*</span>
+              {t('clients.modal.field.document', 'Documento de Identidad')} <span className="form-field__required">*</span>
             </label>
             <input
               id="document_id"
@@ -229,7 +232,7 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
               value={formData.document_id}
               onChange={handleChange}
               disabled={isSubmitting}
-              placeholder="Enter document ID"
+              placeholder={t('clients.modal.placeholder.document', 'CI, RUC, etc.')}
             />
             {errors.document_id && (
               <span className="form-field__error">{errors.document_id}</span>
@@ -239,7 +242,7 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
           {/* Contacto */}
           <div className="form-field">
             <label htmlFor="contact" className="form-field__label">
-              Contact
+              {t('clients.modal.field.contact', 'Contacto')}
             </label>
             <input
               id="contact"
@@ -249,7 +252,7 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
               value={formData.contact}
               onChange={handleChange}
               disabled={isSubmitting}
-              placeholder="Enter phone number or email"
+              placeholder={t('clients.modal.placeholder.contact', 'Teléfono, email, etc.')}
             />
           </div>
 
@@ -268,14 +271,17 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
               onClick={handleClose}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('action.cancel', 'Cancelar')}
             </button>
             <button
               type="submit"
               className="btn btn--primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : 'Save'}
+              {isSubmitting 
+                ? t('action.saving', 'Guardando...') 
+                : t('action.save', 'Guardar')
+              }
             </button>
           </div>
         </form>

@@ -57,10 +57,14 @@ export const clients = {
   'client.modal.create': 'CREAR CLIENTE',
   'client.modal.edit_subtitle': 'Modifica la información del cliente',
   'client.modal.create_subtitle': 'Ingresa los datos del nuevo cliente',
-
-  // Formulario de cliente
+  'clients.modal.title.details': 'Detalles del Cliente',
   'clients.modal.title.create': 'Nuevo Cliente',
   'clients.modal.title.edit': 'Editar Cliente',
+  'clients.modal.field.id': 'ID',
+  'clients.modal.field.status': 'Estado',
+  'clients.modal.field.created_by': 'Creado Por (ID Usuario)',
+  'clients.modal.field.created_at': 'Fecha de Creación',
+
   'clients.modal.field.name': 'Nombre',
   'clients.modal.field.last_name': 'Apellido',
   'clients.modal.field.document': 'Documento de Identidad',
