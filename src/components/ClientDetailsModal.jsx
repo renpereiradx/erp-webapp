@@ -88,7 +88,7 @@ export default function ClientDetailsModal({ isOpen, onClose, client }) {
               <div className="client-details__field">
                 <span className="client-details__label">Contact</span>
                 <span className="client-details__value">
-                  {client.contact?.email || client.contact?.phone || client.contact?.raw || client.contact || '-'}
+                  {client.contact?.email || client.contact?.phone || client.contact?.raw || '-'}
                 </span>
               </div>
             </div>

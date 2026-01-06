@@ -30,7 +30,6 @@ import ProductAdjustments from '@/pages/ProductAdjustments'
 import InventoryAdjustments from '@/pages/InventoryAdjustments'
 import InventoryAdjustmentManual from '@/pages/InventoryAdjustmentManual'
 import InventoryManagement from '@/pages/InventoryManagement'
-import Reports from '@/pages/Reports'
 // ISOLATED IMPORTS - Pages temporarily disabled for refactoring
 // import BookingSales from '@/pages/BookingSales';
 import Purchases from '@/pages/Purchases'
@@ -126,7 +125,6 @@ function AppContent() {
                       <Route path='/clientes' element={<Clients />} />
                       <Route path='/proveedores' element={<Suppliers />} />
                       <Route path='/ventas' element={<SalesNew />} />
-                      <Route path='/reportes' element={<Reports />} />
                       <Route
                         path='/gestion-reservas'
                         element={<ReservationsAndSchedules />}

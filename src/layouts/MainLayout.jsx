@@ -169,7 +169,6 @@ const MainLayout = ({ children }) => {
           },
         ],
       },
-      { name: 'Reportes', href: '/reportes', icon: BarChart3 },
       {
         name: 'Config. Financiera',
         href: '#',

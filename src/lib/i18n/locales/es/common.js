@@ -54,9 +54,11 @@ export const common = {
   'action.select_all': 'Seleccionar todos',
   'action.select_item': 'Seleccionar item',
   'action.delete_product': 'Eliminar producto',
+  'action.open_menu': 'Abrir menú de acciones',
 
   // Modales
   'modal.cancel': 'Cancelar',
+  'modal.processing': 'Procesando...',
 
   // Estados comunes
   'status.active': 'Activo',
