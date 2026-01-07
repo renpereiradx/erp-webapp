@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Top Products Overview</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1e2832",
+                        "border-dark": "#2a3642",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for better Fluent feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white transition-colors duration-200">
+<div class="relative flex h-screen w-full overflow-hidden">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col w-[260px] h-full border-r border-[#f0f2f4] dark:border-border-dark bg-white dark:bg-surface-dark flex-shrink-0 z-20">
+<div class="flex flex-col h-full justify-between p-4">
+<div class="flex flex-col gap-4">
+<div class="flex gap-3 items-center px-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 shadow-sm" data-alt="Abstract blue geometric logo for Exec Dash" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAaDXdAV4DZvHg3FnynvSkOsbnItTuKjRccqFT-zxjQsgt7wI1qSD4Jx_iudzMOcRh9mfrUr2JYCV6vasXv_3lmQXwvukV2NhLx0br48mpvV1kWIXtfp0yuY8V8JCKgz5Jp44VrBagsZ9_R2luU75N7YpZunJHs-KkMGF3ilTOpHzixBHAu-CHx2pR1l_CYsxjIC1eQeABuubwqkDOkXXQfqkkGIjANmL7w-nlpDCmjX7w8dsIDcAWeU9lp0gmgjtda-SbgAKgn8g");'></div>
+<div class="flex flex-col">
+<h1 class="text-[#111418] dark:text-white text-base font-bold leading-normal">Exec Dash</h1>
+<p class="text-[#617589] dark:text-gray-400 text-sm font-normal leading-normal">Admin View</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2 mt-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#111418] dark:text-gray-200 hover:bg-[#f0f2f4] dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#617589] group-hover:text-primary dark:text-gray-400 dark:group-hover:text-primary">dashboard</span>
+<p class="text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary dark:text-primary" href="#">
+<span class="material-symbols-outlined fill-current">label</span>
+<p class="text-sm font-medium leading-normal">Products</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#111418] dark:text-gray-200 hover:bg-[#f0f2f4] dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#617589] group-hover:text-primary dark:text-gray-400 dark:group-hover:text-primary">shopping_bag</span>
+<p class="text-sm font-medium leading-normal">Orders</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#111418] dark:text-gray-200 hover:bg-[#f0f2f4] dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#617589] group-hover:text-primary dark:text-gray-400 dark:group-hover:text-primary">group</span>
+<p class="text-sm font-medium leading-normal">Customers</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#111418] dark:text-gray-200 hover:bg-[#f0f2f4] dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#617589] group-hover:text-primary dark:text-gray-400 dark:group-hover:text-primary">description</span>
+<p class="text-sm font-medium leading-normal">Reports</p>
+</a>
+</nav>
+</div>
+<div class="px-3 py-2">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#111418] dark:text-gray-200 hover:bg-[#f0f2f4] dark:hover:bg-white/5 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#617589] group-hover:text-primary dark:text-gray-400 dark:group-hover:text-primary">settings</span>
+<p class="text-sm font-medium leading-normal">Settings</p>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-full relative overflow-y-auto bg-background-light dark:bg-background-dark">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-10 flex items-center justify-between whitespace-nowrap border-b border-[#f0f2f4] dark:border-border-dark bg-white dark:bg-surface-dark px-6 py-3 shadow-sm">
+<div class="flex items-center gap-8 w-full">
+<!-- Mobile Menu Toggle (Visible on small screens) -->
+<button class="md:hidden p-2 text-gray-500 hover:text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex items-center gap-4 text-[#111418] dark:text-white">
+<!-- Breadcrumb or simple title if needed, removed SVG for cleaner look based on prompt request to reuse but clean up -->
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">Executive Dashboard</h2>
+</div>
+<label class="flex flex-col min-w-40 !h-10 max-w-96 flex-1 md:flex-none">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full group focus-within:ring-2 focus-within:ring-primary/50 transition-shadow">
+<div class="text-[#617589] dark:text-gray-400 flex border-none bg-[#f0f2f4] dark:bg-black/20 items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+</div>
+<input class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-[#111418] dark:text-white focus:outline-0 border-none bg-[#f0f2f4] dark:bg-black/20 h-full placeholder:text-[#617589] dark:placeholder:text-gray-500 px-4 pl-2 text-base font-normal leading-normal" placeholder="Search products, orders, or alerts..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex items-center justify-end gap-4 md:gap-8 ml-4">
+<div class="flex gap-2">
+<button class="flex items-center justify-center overflow-hidden rounded-lg size-10 hover:bg-[#f0f2f4] dark:hover:bg-white/5 text-[#111418] dark:text-white transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">notifications</span>
+</button>
+<button class="flex items-center justify-center overflow-hidden rounded-lg size-10 hover:bg-[#f0f2f4] dark:hover:bg-white/5 text-[#111418] dark:text-white transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">help</span>
+</button>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-white dark:ring-surface-dark cursor-pointer" data-alt="User profile picture of an executive smiling" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAK5LLbD8xod87Y4Pd3zMkZMwBMVB6b0eoxRuOT9o7BzmMcpBxfmevT_NGILdJhgyKGLxo7wjtSg-BhQVoUyrWUdQZF7ecjnnYyO6hX0fKwhp4GKAR1tRJw68GWCVA7EFxlPi4CnqkF8iA6MPS3_Ulbn_d6diMfaVt2GHlP2P0dnE8g_Eo9OpAaKJNZqdoKWcB5476Rf0vRqQ0r6YgVRrE3oXUEavn744bfwz1cYciDglXzRrsFTxqFYMai-9ScEmXqSwaAlABKGg");'></div>
+</div>
+</header>
+<div class="flex-1 px-4 md:px-8 py-6 w-full max-w-[1400px] mx-auto">
+<!-- Page Heading -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+<div class="flex flex-col gap-1">
+<h1 class="text-[#111418] dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Top Products Performance</h1>
+<p class="text-[#617589] dark:text-gray-400 text-base font-normal leading-normal">Last 30 Days | Overview of top performing SKUs</p>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg h-10 px-4 bg-white dark:bg-surface-dark border border-[#dbe0e6] dark:border-border-dark text-[#111418] dark:text-white text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                        Customize View
+                    </button>
+</div>
+</div>
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+<!-- Card 1 -->
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-surface-dark border border-[#dbe0e6] dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start">
+<p class="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Total Revenue</p>
+<span class="material-symbols-outlined text-green-600 bg-green-100 dark:bg-green-900/30 rounded-full p-1" style="font-size: 16px;">trending_up</span>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-[#111418] dark:text-white tracking-tight text-3xl font-bold leading-tight">$1.2M</p>
+<span class="text-[#078838] text-sm font-medium bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded">+12% vs prev</span>
+</div>
+<div class="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full mt-2 overflow-hidden">
+<div class="bg-primary h-1.5 rounded-full" style="width: 75%"></div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-surface-dark border border-[#dbe0e6] dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start">
+<p class="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Top Performer</p>
+<span class="material-symbols-outlined text-primary bg-blue-100 dark:bg-blue-900/30 rounded-full p-1" style="font-size: 16px;">emoji_events</span>
+</div>
+<p class="text-[#111418] dark:text-white tracking-tight text-3xl font-bold leading-tight truncate">Headphones X2</p>
+<p class="text-[#617589] dark:text-gray-400 text-sm">Electronics • 1,240 Units Sold</p>
+</div>
+<!-- Card 3 -->
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-surface-dark border border-[#dbe0e6] dark:border-border-dark shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start">
+<p class="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Inventory Alerts</p>
+<span class="material-symbols-outlined text-orange-600 bg-orange-100 dark:bg-orange-900/30 rounded-full p-1" style="font-size: 16px;">warning</span>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-[#111418] dark:text-white tracking-tight text-3xl font-bold leading-tight">3 Products</p>
+<span class="text-orange-600 text-sm font-medium">Low Stock</span>
+</div>
+<p class="text-[#617589] dark:text-gray-400 text-sm">Requires immediate reordering</p>
+</div>
+</div>
+<!-- ToolBar & Table Container -->
+<div class="flex flex-col bg-white dark:bg-surface-dark rounded-xl border border-[#dbe0e6] dark:border-border-dark shadow-sm overflow-hidden">
+<!-- Toolbar -->
+<div class="flex flex-wrap justify-between gap-4 p-4 border-b border-[#f0f2f4] dark:border-border-dark">
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-3 py-2 text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-white/5 rounded-lg transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">filter_list</span>
+<span class="text-sm font-medium">Filter</span>
+</button>
+<button class="flex items-center gap-2 px-3 py-2 text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-white/5 rounded-lg transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">view_column</span>
+<span class="text-sm font-medium">Columns</span>
+</button>
+<button class="flex items-center gap-2 px-3 py-2 text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-white/5 rounded-lg transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">sort</span>
+<span class="text-sm font-medium">Sort</span>
+</button>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-3 py-2 text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-white/5 rounded-lg transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">share</span>
+</button>
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-9 bg-primary hover:bg-blue-600 text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] px-4 shadow-sm transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">download</span>
+<span class="truncate">Export to Excel</span>
+</button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-gray-50 dark:bg-black/20 border-b border-[#f0f2f4] dark:border-border-dark">
+<th class="p-4 w-12">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 bg-white dark:bg-surface-dark dark:border-gray-600" type="checkbox"/>
+</th>
+<th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product Name</th>
+<th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+<th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Price</th>
+<th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Units Sold</th>
+<th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Revenue</th>
+<th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+<th class="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Trend (7d)</th>
+<th class="p-4 w-12"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#f0f2f4] dark:divide-border-dark">
+<!-- Row 1 -->
+<tr class="group hover:bg-[#f0f2f4]/50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+<td class="p-4">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 bg-white dark:bg-surface-dark dark:border-gray-600" type="checkbox"/>
+</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-md bg-gray-100 dark:bg-gray-700 bg-cover bg-center border border-gray-200 dark:border-gray-600 flex-shrink-0" data-alt="Black over-ear wireless headphones" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCL-S47jt_maMKv64KbwPPnOeCm5fg5qeWGdrmiXBng-dv18LKLfE3rf5S9Z50niPHhsnw80zhtHiYK59QuE9r07rj-CXXCIvm5zyGE2fc1MJ00MIx_v_P2yKfHVIZo3dPGeT67XJ2pWsPL1miUzxQRW5HNVz9xz9VVZ7VrlcmSzPdv3u0aTwSAyTVCfAJLVGNSk562RteVhTNOf7gMnZ2OUKas0_rJmapI6CC7wlo3vX58S8wa7bXdRVAQFQwVMl2vV84WeXmF6w');"></div>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-[#111418] dark:text-white group-hover:text-primary transition-colors">Wireless Headphones X2</span>
+<span class="text-xs text-gray-500 dark:text-gray-400">SKU-10294</span>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                        Electronics
+                                    </span>
+</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">$299.00</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">1,240</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-bold text-right font-mono">$370,760</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="h-2 w-2 rounded-full bg-green-500"></div>
+<span class="text-sm text-[#111418] dark:text-white">In Stock</span>
+</div>
+</td>
+<td class="p-4 text-center">
+<div class="flex justify-center items-center h-8">
+<!-- Simulated Sparkline SVG -->
+<svg fill="none" height="20" stroke="#137fec" stroke-width="2" viewbox="0 0 60 20" width="60">
+<path d="M0 15 L10 12 L20 18 L30 8 L40 10 L50 5 L60 2" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+</td>
+<td class="p-4 text-right">
+<button class="text-gray-400 hover:text-[#111418] dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 20px;">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-[#f0f2f4]/50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+<td class="p-4">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 bg-white dark:bg-surface-dark dark:border-gray-600" type="checkbox"/>
+</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-md bg-gray-100 dark:bg-gray-700 bg-cover bg-center border border-gray-200 dark:border-gray-600 flex-shrink-0" data-alt="Modern ergonomic office chair" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAQz45HYjNX01-4N6I4pRd6Eq2U7lbvJTiHSc3PH-G3XHecGWWS1S1jNGCzAODjVSl66DFnDI-9w_dhtyei422aO9sCBsWJ01-iiw9T3Mx79RK-dBPnM8sq-D1ZiMK1nffRlYlAoOPryjBAnRZIp_taPEJtp9A53Ab1Lztv3z5IRoJKg20esTKk1D_L9C_LRdsA6rxBpqchmCpws0LpmWL0X9HbM4zmUI9rPNWhfBmPuP1_BIoyPkIdWrQfcUN4OspSj4iNaBBVqg');"></div>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-[#111418] dark:text-white group-hover:text-primary transition-colors">Ergo Chair Pro</span>
+<span class="text-xs text-gray-500 dark:text-gray-400">SKU-45001</span>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                                        Furniture
+                                    </span>
+</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">$450.00</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">850</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-bold text-right font-mono">$382,500</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="h-2 w-2 rounded-full bg-orange-500 animate-pulse"></div>
+<span class="text-sm text-orange-600 dark:text-orange-400 font-medium">Low Stock</span>
+</div>
+</td>
+<td class="p-4 text-center">
+<div class="flex justify-center items-center h-8">
+<svg fill="none" height="20" stroke="#6b7280" stroke-width="2" viewbox="0 0 60 20" width="60">
+<path d="M0 10 L10 10 L20 10 L30 10 L40 10 L50 10 L60 10" stroke-dasharray="2 2"></path>
+</svg>
+</div>
+</td>
+<td class="p-4 text-right">
+<button class="text-gray-400 hover:text-[#111418] dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 20px;">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-[#f0f2f4]/50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+<td class="p-4">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 bg-white dark:bg-surface-dark dark:border-gray-600" type="checkbox"/>
+</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-md bg-gray-100 dark:bg-gray-700 bg-cover bg-center border border-gray-200 dark:border-gray-600 flex-shrink-0" data-alt="Minimalist mechanical keyboard" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAwiLo09D3KbKIsLu0M0a-Sle401Is3iA0E405vliLyv30c6G9ezYCMRIQVKRMlWpJJ6DbQT4NYRUBd-5bO21DQBUKIghuDF86wT0Xji49--_AfZOIc-J0fr-dlcmYtVIpqP0yPyQbhb5qc_7SfYswKMogqeCm4f8av8pQfWM0OG_P4beg4o_Mdsg5wFmeExIkDhk_ni59D8cMG7jziPU1l8wt_cQT5IPiSeP5HeITV-ZmN7ExQ6zggEpgO2Y0OX3xOv1bwZ-fANQ');"></div>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-[#111418] dark:text-white group-hover:text-primary transition-colors">Mechanical Keychron</span>
+<span class="text-xs text-gray-500 dark:text-gray-400">SKU-88321</span>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                        Accessories
+                                    </span>
+</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">$149.00</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">2,100</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-bold text-right font-mono">$312,900</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="h-2 w-2 rounded-full bg-green-500"></div>
+<span class="text-sm text-[#111418] dark:text-white">In Stock</span>
+</div>
+</td>
+<td class="p-4 text-center">
+<div class="flex justify-center items-center h-8">
+<svg fill="none" height="20" stroke="#137fec" stroke-width="2" viewbox="0 0 60 20" width="60">
+<path d="M0 18 L10 15 L20 12 L30 14 L40 8 L50 6 L60 2" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+</td>
+<td class="p-4 text-right">
+<button class="text-gray-400 hover:text-[#111418] dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 20px;">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="group hover:bg-[#f0f2f4]/50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+<td class="p-4">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 bg-white dark:bg-surface-dark dark:border-gray-600" type="checkbox"/>
+</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-md bg-gray-100 dark:bg-gray-700 bg-cover bg-center border border-gray-200 dark:border-gray-600 flex-shrink-0" data-alt="White smart home hub device" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB3s_7zV-jIJMOQ2KDsfmBh4R5Arfg5VnoGVmbhBux7DSNxdPiZ8dpeZgqiBBtwMqlhNqJosl92h4Dtqpdj8E5UR3cp1J_w2Z7621anWcUoD0B11ehw6JWNqNhAW0FyBEYxHzg4dILH4D8EVoF9g4dQY-CpRFrLAqAaViBHj80fVSrL_AytYRyPyn4yWB3oYkn0tR-qyr62UeavoWxKJvQSgh-Y8SqJleUY3nYkSKvXe8TkBACXdpjH9y1ja1xU7BvtOPo2sIg6Ew');"></div>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-[#111418] dark:text-white group-hover:text-primary transition-colors">Smart Hub Mini</span>
+<span class="text-xs text-gray-500 dark:text-gray-400">SKU-77221</span>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                        Electronics
+                                    </span>
+</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">$49.00</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">5,400</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-bold text-right font-mono">$264,600</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="h-2 w-2 rounded-full bg-red-500"></div>
+<span class="text-sm text-red-600 dark:text-red-400 font-medium">Out of Stock</span>
+</div>
+</td>
+<td class="p-4 text-center">
+<div class="flex justify-center items-center h-8">
+<svg fill="none" height="20" stroke="#ef4444" stroke-width="2" viewbox="0 0 60 20" width="60">
+<path d="M0 5 L10 8 L20 6 L30 10 L40 12 L50 15 L60 18" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+</td>
+<td class="p-4 text-right">
+<button class="text-gray-400 hover:text-[#111418] dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 20px;">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="group hover:bg-[#f0f2f4]/50 dark:hover:bg-white/5 transition-colors cursor-pointer border-none">
+<td class="p-4">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 bg-white dark:bg-surface-dark dark:border-gray-600" type="checkbox"/>
+</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-md bg-gray-100 dark:bg-gray-700 bg-cover bg-center border border-gray-200 dark:border-gray-600 flex-shrink-0" data-alt="High resolution 4k monitor" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDcMdKfESzndydHDTv7_J9zIr7jrml5PpPPionZtQ2SshKrlJVCUpsYl_gOFKd6PsGCjyQOr_-u0wcyMFs-O5Ex1CLrue4j8imZOAo687BPCsAC1AowwNG2ttHQBN0JIwAgNB_bM5r039o_Qub1iIqLKWOG6y6tO0Y7b2yG6Exnv_itUrd-bHEkxFKc5blSaGPv-33YBags4IrBGiUsiZKzTbcEeEs-h7YVPKo53ovDzzmoIDtDJL6foTcA1A_KXq1Olj8emORZQA');"></div>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-[#111418] dark:text-white group-hover:text-primary transition-colors">UltraView 4K Monitor</span>
+<span class="text-xs text-gray-500 dark:text-gray-400">SKU-30022</span>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                        Electronics
+                                    </span>
+</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">$599.00</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">320</td>
+<td class="p-4 text-sm text-[#111418] dark:text-white font-bold text-right font-mono">$191,680</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<div class="h-2 w-2 rounded-full bg-green-500"></div>
+<span class="text-sm text-[#111418] dark:text-white">In Stock</span>
+</div>
+</td>
+<td class="p-4 text-center">
+<div class="flex justify-center items-center h-8">
+<svg fill="none" height="20" stroke="#137fec" stroke-width="2" viewbox="0 0 60 20" width="60">
+<path d="M0 12 L10 12 L20 15 L30 10 L40 8 L50 6 L60 4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+</td>
+<td class="p-4 text-right">
+<button class="text-gray-400 hover:text-[#111418] dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 20px;">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between px-4 py-3 border-t border-[#f0f2f4] dark:border-border-dark bg-gray-50 dark:bg-surface-dark">
+<div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+<span>Showing 1 to 5 of 58 results</span>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1 rounded-md border border-[#dbe0e6] dark:border-border-dark bg-white dark:bg-surface-dark text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-50" disabled="">Previous</button>
+<button class="px-3 py-1 rounded-md border border-[#dbe0e6] dark:border-border-dark bg-white dark:bg-surface-dark text-sm text-[#111418] dark:text-white hover:bg-gray-50 dark:hover:bg-white/5">Next</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+    // Simple script to demonstrate checkbox interaction logic (visual only)
+    const mainCheckbox = document.querySelector('thead input[type="checkbox"]');
+    const rowCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+    
+    if(mainCheckbox) {
+        mainCheckbox.addEventListener('change', (e) => {
+            rowCheckboxes.forEach(cb => cb.checked = e.target.checked);
+        });
+    }
+</script>
+</body></html>

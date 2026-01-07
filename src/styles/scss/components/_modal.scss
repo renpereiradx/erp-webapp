@@ -329,3 +329,94 @@ body.modal-open {
     border: 1px solid themed('error-primary');
   }
 }
+
+// -----------------------------------------------------------------------------
+// DIALOG CONFIRMATION VARIANTS
+// -----------------------------------------------------------------------------
+
+.dialog--centered {
+  text-align: center;
+
+  .dialog__content {
+    text-align: center;
+  }
+}
+
+.dialog__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto $spacing-16;
+  border-radius: $border-radius-circular;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    color: themed('text-secondary');
+  }
+
+  svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  &--danger {
+    @include themify {
+      background-color: themed('error-background');
+      color: themed('state-error');
+    }
+  }
+
+  &--warning {
+    @include themify {
+      background-color: themed('warning-background');
+      color: themed('state-warning');
+    }
+  }
+
+  &--success {
+    @include themify {
+      background-color: themed('success-background');
+      color: themed('state-success');
+    }
+  }
+
+  &--info {
+    @include themify {
+      background-color: alpha-color(themed('action-primary'), 0.12);
+      color: themed('action-primary');
+    }
+  }
+}
+
+.dialog__title--centered {
+  text-align: center;
+  margin-bottom: $spacing-8;
+}
+
+.dialog__description {
+  @include body;
+  margin: 0;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &--centered {
+    text-align: center;
+  }
+}
+
+.dialog__footer--centered {
+  justify-content: center;
+}
+
+.dialog__footer--single {
+  justify-content: center;
+
+  .btn {
+    min-width: 120px;
+  }
+}
+

@@ -2,23 +2,70 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Input component using Fluent Design System 2 SCSS classes.
+ * 
+ * Variants:
+ * - outlined (default): Standard outlined input
+ * - filled: Stronger background color
+ * - underlined: Minimal style with bottom border only
+ * 
+ * States:
+ * - error: Red border for validation errors
+ * - success: Green border for success state
+ * - warning: Yellow border for warnings
+ * 
+ * Sizes:
+ * - sm: Small (24px height)
+ * - default/md: Medium (32px height)  
+ * - lg: Large (40px height)
+ */
+
+const variantClasses = {
+  outlined: "",
+  filled: "input--filled",
+  underlined: "input--underlined",
+}
+
+const stateClasses = {
+  error: "input--error",
+  success: "input--success",
+  warning: "input--warning",
+}
+
+const sizeClasses = {
+  sm: "input--small",
+  default: "",
+  md: "",
+  lg: "input--large",
+}
+
 function Input({
   className,
   type,
+  variant = "outlined",
+  state,
+  size = "default",
   ...props
 }) {
+  const variantClass = variantClasses[variant] || ""
+  const stateClass = state ? stateClasses[state] : ""
+  const sizeClass = sizeClasses[size] || ""
+
   return (
     <input
       type={type}
       data-slot="input"
       className={cn(
-        "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+        "input",
+        variantClass,
+        stateClass,
+        sizeClass,
         className
       )}
-      {...props} />
-  );
+      {...props}
+    />
+  )
 }
 
 export { Input }

@@ -1,0 +1,228 @@
+// =============================================================================
+// TREE VIEW COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE TREE
+// -----------------------------------------------------------------------------
+
+.tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tree--nested {
+  padding-left: $spacing-24;
+}
+
+// -----------------------------------------------------------------------------
+// TREE ITEM
+// -----------------------------------------------------------------------------
+
+.tree-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-item__content {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+  padding: $spacing-4 $spacing-8;
+  border-radius: $border-radius-small;
+  cursor: pointer;
+  user-select: none;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &:focus-visible {
+    @include themify {
+      outline: 2px solid themed('action-primary');
+      outline-offset: -2px;
+    }
+  }
+}
+
+.tree-item--selected > .tree-item__content {
+  @include themify {
+    background-color: themed('action-subtle');
+    color: themed('action-primary');
+  }
+}
+
+.tree-item--disabled > .tree-item__content {
+  cursor: not-allowed;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+// -----------------------------------------------------------------------------
+// TREE ITEM PARTS
+// -----------------------------------------------------------------------------
+
+.tree-item__expand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  @include transition(transform, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.tree-item--expanded > .tree-item__content .tree-item__expand-icon {
+  transform: rotate(90deg);
+}
+
+// Placeholder for leaf nodes (no children)
+.tree-item__expand-icon--placeholder {
+  visibility: hidden;
+}
+
+.tree-item__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.tree-item__label {
+  @include body;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-item__aside {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  margin-left: auto;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TREE ITEM CHILDREN
+// -----------------------------------------------------------------------------
+
+.tree-item__children {
+  display: none;
+}
+
+.tree-item--expanded > .tree-item__children {
+  display: block;
+}
+
+// Lines connecting items (optional)
+.tree--with-lines .tree-item__children {
+  position: relative;
+  margin-left: 10px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 8px;
+    width: 1px;
+
+    @include themify {
+      background-color: themed('border-subtle');
+    }
+  }
+}
+
+.tree--with-lines .tree--nested .tree-item__content::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  width: 14px;
+  height: 1px;
+
+  @include themify {
+    background-color: themed('border-subtle');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TREE SIZES
+// -----------------------------------------------------------------------------
+
+.tree--small {
+  .tree-item__content {
+    padding: $spacing-2 $spacing-4;
+  }
+
+  .tree-item__label {
+    @include body-small;
+  }
+
+  .tree-item__expand-icon,
+  .tree-item__icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .tree--nested {
+    padding-left: $spacing-16;
+  }
+}
+
+.tree--large {
+  .tree-item__content {
+    padding: $spacing-8 $spacing-12;
+  }
+
+  .tree-item__label {
+    @include body-large;
+  }
+
+  .tree-item__expand-icon,
+  .tree-item__icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .tree--nested {
+    padding-left: $spacing-32;
+  }
+}

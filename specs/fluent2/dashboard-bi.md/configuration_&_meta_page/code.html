@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Configuration &amp; Metadata - Executive Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .material-symbols-outlined.fill { font-variation-settings: 'FILL' 1; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white antialiased overflow-hidden">
+<div class="flex h-screen w-full flex-col">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#e5e7eb] dark:border-gray-800 bg-white dark:bg-[#111418] px-6 py-3 z-20">
+<div class="flex items-center gap-4 text-[#111418] dark:text-white">
+<div class="size-8 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined !text-3xl">dashboard</span>
+</div>
+<h2 class="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Executive Dashboard</h2>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full bg-[#f0f2f4] dark:bg-gray-800">
+<div class="text-[#617589] dark:text-gray-400 flex border-none items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-white focus:outline-0 focus:ring-0 border-none bg-transparent focus:border-none h-full placeholder:text-[#617589] dark:placeholder:text-gray-500 px-3 rounded-l-none border-l-0 text-sm font-normal leading-normal" placeholder="Search settings..." value=""/>
+</div>
+</label>
+<div class="flex gap-2">
+<button class="flex items-center justify-center overflow-hidden rounded-lg h-10 w-10 hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111418] dark:text-white transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="flex items-center justify-center overflow-hidden rounded-lg h-10 w-10 hover:bg-[#f0f2f4] dark:hover:bg-gray-800 text-[#111418] dark:text-white transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-gray-900"></span>
+</button>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all" data-alt="User profile picture showing a smiling executive" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB6zp8ZJNKJMvklnK0hFgTya65AlekS3AkVYwDFl1Lt8R-d_2-uW_1XVXO8r6Ge9uVt858CgvohskBVEVfWIfPuqVahUM1pGA0LioPZO197920aMCadbWjcmpGFzcWvIVYeH1Nz2Y1-NKHaIxnjL9rDSaBCSNJfswvAWyIyaLYOpj5M31R_9Vo_6inbd2xrSw7w9lI3I-x-wXNVibv3GgfSJnViZRvr6KYUoZBCldzS2V7AMBvs9xBX-VylYKCQmBPC5mvpS8bw_A");'></div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- Side Navigation -->
+<aside class="hidden lg:flex w-64 flex-col border-r border-[#e5e7eb] dark:border-gray-800 bg-white dark:bg-[#111418] p-4 gap-4">
+<div class="flex items-center gap-3 p-2 rounded-lg bg-background-light dark:bg-gray-800/50 mb-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Company logo abstract geometric shape" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAzITNEVLTwyAg2ttL63woxgJonFqJu1j5HCJ3cDLUf2rNjCJpApzH6e4sBDMoIcFySm_og641bHBcY5VFrliKEsmyNr8zQ8jEUaZWa9Wr-tp4x9KUMVUFNL0AvTO2YTJ4w5X6Ae5VoQ4QvsPVbmxU2rOJBpXBDfJi9Z-fv1jSXGSIRZ9Kw1e9EkV8jhqH8wt3y37HHIBUkWQsJnrgbtLozJcrh4W1_Fxlz7_YKXVwYFgCwEgI_rD0gGPXBBCvFTOjxQUpGoUmGIQ");'></div>
+<div class="flex flex-col">
+<h1 class="text-[#111418] dark:text-white text-sm font-bold leading-normal">Admin Console</h1>
+<p class="text-[#617589] dark:text-gray-400 text-xs font-normal leading-normal">Executive View</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#111418] dark:text-gray-200 hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#617589] group-hover:text-[#111418] dark:text-gray-400 dark:group-hover:text-white transition-colors">home</span>
+<span class="text-sm font-medium leading-normal">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#111418] dark:text-gray-200 hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#617589] group-hover:text-[#111418] dark:text-gray-400 dark:group-hover:text-white transition-colors">show_chart</span>
+<span class="text-sm font-medium leading-normal">Trends</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#111418] dark:text-gray-200 hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#617589] group-hover:text-[#111418] dark:text-gray-400 dark:group-hover:text-white transition-colors">notifications</span>
+<span class="text-sm font-medium leading-normal">Alerts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#111418] dark:text-gray-200 hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-[#617589] group-hover:text-[#111418] dark:text-gray-400 dark:group-hover:text-white transition-colors">history</span>
+<span class="text-sm font-medium leading-normal">Activity</span>
+</a>
+<div class="h-px bg-gray-200 dark:bg-gray-800 my-2 mx-3"></div>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:text-blue-400" href="#">
+<span class="material-symbols-outlined fill">settings</span>
+<span class="text-sm font-bold leading-normal">Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6 md:p-10">
+<div class="max-w-5xl mx-auto flex flex-col gap-8">
+<!-- Breadcrumbs & Heading -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-2 text-sm">
+<a class="text-[#617589] dark:text-gray-400 font-medium hover:text-primary transition-colors" href="#">Dashboard</a>
+<span class="text-[#617589] dark:text-gray-600">/</span>
+<span class="text-[#111418] dark:text-white font-medium">Configuration</span>
+</div>
+<div class="flex flex-wrap justify-between items-end gap-4">
+<div class="flex flex-col gap-2">
+<h1 class="text-[#111418] dark:text-white text-3xl md:text-4xl font-bold tracking-tight">Configuration &amp; Metadata</h1>
+<p class="text-[#617589] dark:text-gray-400 text-base font-normal max-w-2xl">Manage data synchronization settings, view system health, and configure cache policies.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-[#111418] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-lg">help</span>
+                                    Documentation
+                                </button>
+</div>
+</div>
+</div>
+<!-- Status Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Card 1 -->
+<div class="flex flex-col justify-between rounded-xl bg-white dark:bg-[#111418] p-6 border border-[#e5e7eb] dark:border-gray-800 shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-primary">schedule</span>
+</div>
+<div class="flex flex-col gap-1 z-10">
+<p class="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Last Generated</p>
+<div class="flex items-center gap-2 mt-2">
+<p class="text-[#111418] dark:text-white text-xl font-bold font-mono">14:30:05 UTC</p>
+</div>
+<p class="text-xs text-green-600 dark:text-green-400 font-medium mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                                    Updated 5 mins ago
+                                </p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="flex flex-col justify-between rounded-xl bg-white dark:bg-[#111418] p-6 border border-[#e5e7eb] dark:border-gray-800 shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-green-500">database</span>
+</div>
+<div class="flex flex-col gap-1 z-10">
+<p class="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Cache Status</p>
+<div class="flex items-center gap-2 mt-2">
+<p class="text-[#111418] dark:text-white text-xl font-bold">Active</p>
+<span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-xs font-medium text-green-800 dark:text-green-300 ring-1 ring-inset ring-green-600/20">
+                                        Hit Rate 98%
+                                    </span>
+</div>
+<p class="text-xs text-[#617589] dark:text-gray-500 font-medium mt-1">
+                                    Expires in 15m 30s
+                                </p>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="flex flex-col justify-between rounded-xl bg-white dark:bg-[#111418] p-6 border border-[#e5e7eb] dark:border-gray-800 shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-blue-500">sync</span>
+</div>
+<div class="flex flex-col gap-1 z-10">
+<p class="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Next Scheduled Sync</p>
+<div class="flex items-center gap-2 mt-2">
+<p class="text-[#111418] dark:text-white text-xl font-bold">In 15 minutes</p>
+</div>
+<p class="text-xs text-[#617589] dark:text-gray-500 font-medium mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">event_repeat</span>
+                                    Recurring: Hourly
+                                </p>
+</div>
+</div>
+</div>
+<!-- Layout: Actions and System Info -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Actions Panel -->
+<div class="lg:col-span-2 flex flex-col gap-6">
+<div class="rounded-xl bg-white dark:bg-[#111418] border border-[#e5e7eb] dark:border-gray-800 shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-[#e5e7eb] dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/20">
+<h3 class="text-base font-bold text-[#111418] dark:text-white">Data Controls</h3>
+<span class="material-symbols-outlined text-gray-400">tune</span>
+</div>
+<div class="p-6">
+<div class="flex flex-col gap-6">
+<!-- Control Item -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-dashed border-gray-200 dark:border-gray-700">
+<div class="flex gap-4">
+<div class="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg h-fit text-primary">
+<span class="material-symbols-outlined">refresh</span>
+</div>
+<div>
+<p class="text-[#111418] dark:text-white font-medium">Manual Refresh</p>
+<p class="text-[#617589] dark:text-gray-400 text-sm mt-0.5">Force pull fresh data from SQL-Main-01. This may take up to 30s.</p>
+</div>
+</div>
+<button class="bg-primary hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors whitespace-nowrap flex items-center justify-center gap-2">
+                                                Refresh Data Now
+                                            </button>
+</div>
+<!-- Control Item -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-dashed border-gray-200 dark:border-gray-700">
+<div class="flex gap-4">
+<div class="bg-orange-50 dark:bg-orange-900/20 p-2 rounded-lg h-fit text-orange-600 dark:text-orange-400">
+<span class="material-symbols-outlined">delete_sweep</span>
+</div>
+<div>
+<p class="text-[#111418] dark:text-white font-medium">Clear Cache</p>
+<p class="text-[#617589] dark:text-gray-400 text-sm mt-0.5">Remove all cached items immediately. The next load will be slower.</p>
+</div>
+</div>
+<button class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-[#111418] dark:text-white border border-gray-300 dark:border-gray-600 font-medium py-2 px-4 rounded-lg shadow-sm transition-colors whitespace-nowrap">
+                                                Purge Cache
+                                            </button>
+</div>
+<!-- Control Item -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="flex gap-4">
+<div class="bg-purple-50 dark:bg-purple-900/20 p-2 rounded-lg h-fit text-purple-600 dark:text-purple-400">
+<span class="material-symbols-outlined">autorenew</span>
+</div>
+<div>
+<p class="text-[#111418] dark:text-white font-medium">Auto-Refresh</p>
+<p class="text-[#617589] dark:text-gray-400 text-sm mt-0.5">Automatically update data every hour.</p>
+</div>
+</div>
+<div class="flex items-center">
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+<span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Enabled</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- System Info Panel -->
+<div class="lg:col-span-1">
+<div class="rounded-xl bg-white dark:bg-[#111418] border border-[#e5e7eb] dark:border-gray-800 shadow-sm overflow-hidden h-full">
+<div class="px-6 py-4 border-b border-[#e5e7eb] dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/20">
+<h3 class="text-base font-bold text-[#111418] dark:text-white">System Details</h3>
+<span class="material-symbols-outlined text-gray-400">info</span>
+</div>
+<div class="p-0">
+<table class="w-full text-sm text-left">
+<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4 text-[#617589] dark:text-gray-400 font-medium">App Version</td>
+<td class="px-6 py-4 text-[#111418] dark:text-white text-right font-mono">v2.4.1</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4 text-[#617589] dark:text-gray-400 font-medium">Environment</td>
+<td class="px-6 py-4 text-right">
+<span class="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-700/10">Production</span>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4 text-[#617589] dark:text-gray-400 font-medium">Data Source</td>
+<td class="px-6 py-4 text-[#111418] dark:text-white text-right font-mono">SQL-Main-01</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4 text-[#617589] dark:text-gray-400 font-medium">Region</td>
+<td class="px-6 py-4 text-[#111418] dark:text-white text-right">US-East-1</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4 text-[#617589] dark:text-gray-400 font-medium">API Latency</td>
+<td class="px-6 py-4 text-[#111418] dark:text-white text-right font-mono text-green-600 dark:text-green-400">45ms</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<td class="px-6 py-4 text-[#617589] dark:text-gray-400 font-medium">Last Error</td>
+<td class="px-6 py-4 text-[#617589] dark:text-gray-500 text-right text-xs italic">None (7 days)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="bg-gray-50 dark:bg-gray-800/40 px-6 py-4 border-t border-[#e5e7eb] dark:border-gray-800">
+<button class="text-primary hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium flex items-center justify-center w-full gap-2 transition-colors">
+                                        View Full System Logs
+                                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Note -->
+<div class="flex items-center justify-center mt-4">
+<p class="text-xs text-[#617589] dark:text-gray-500">
+                            Dashboard Configuration ID: <span class="font-mono">cfg_8829_x99</span> • Last modified by Admin
+                        </p>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

@@ -25,3 +25,19 @@
 @use 'segmented-control';
 @use 'template-metadata-selector';
 @use 'register-sale-payment-modal';
+
+// New Fluent 2 components
+@use 'switch';
+@use 'radio';
+@use 'slider';
+@use 'toggle';
+@use 'textarea';
+@use 'breadcrumb';
+@use 'tabs';
+@use 'accordion';
+@use 'skeleton';
+@use 'avatar';
+@use 'progress';
+@use 'toast';
+@use 'popover';
+@use 'tree';

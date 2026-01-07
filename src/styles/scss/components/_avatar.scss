@@ -1,0 +1,313 @@
+// =============================================================================
+// AVATAR & PERSONA COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE AVATAR
+// -----------------------------------------------------------------------------
+
+.avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: $border-radius-circular;
+  overflow: hidden;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+
+  @include themify {
+    background-color: themed('action-primary');
+    color: themed('text-inverted');
+  }
+}
+
+.avatar__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar__initials {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.avatar__icon {
+  width: 24px;
+  height: 24px;
+}
+
+// -----------------------------------------------------------------------------
+// AVATAR SIZES
+// -----------------------------------------------------------------------------
+
+.avatar--16 {
+  width: 16px;
+  height: 16px;
+
+  .avatar__initials {
+    font-size: 8px;
+  }
+
+  .avatar__icon {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+.avatar--20 {
+  width: 20px;
+  height: 20px;
+
+  .avatar__initials {
+    font-size: 10px;
+  }
+
+  .avatar__icon {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.avatar--24 {
+  width: 24px;
+  height: 24px;
+
+  .avatar__initials {
+    font-size: 10px;
+  }
+
+  .avatar__icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.avatar--32 {
+  width: 32px;
+  height: 32px;
+
+  .avatar__initials {
+    font-size: 12px;
+  }
+
+  .avatar__icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.avatar--48 {
+  width: 48px;
+  height: 48px;
+
+  .avatar__initials {
+    font-size: 16px;
+  }
+
+  .avatar__icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.avatar--56 {
+  width: 56px;
+  height: 56px;
+
+  .avatar__initials {
+    font-size: 20px;
+  }
+
+  .avatar__icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.avatar--72 {
+  width: 72px;
+  height: 72px;
+
+  .avatar__initials {
+    font-size: 24px;
+  }
+
+  .avatar__icon {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.avatar--96 {
+  width: 96px;
+  height: 96px;
+
+  .avatar__initials {
+    font-size: 32px;
+  }
+
+  .avatar__icon {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// AVATAR COLORS
+// -----------------------------------------------------------------------------
+
+@each $name, $color in (
+  'neutral': #808080,
+  'brand': #0078D4,
+  'colorful-1': #CD6F6F,
+  'colorful-2': #6F7ACD,
+  'colorful-3': #6FCD8A,
+  'colorful-4': #CD9B6F,
+  'colorful-5': #8A6FCD,
+  'colorful-6': #6FBFCD
+) {
+  .avatar--#{$name} {
+    background-color: $color;
+    color: white;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// AVATAR BADGE (Status indicator)
+// -----------------------------------------------------------------------------
+
+.avatar__badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: $border-radius-circular;
+  border: 2px solid;
+
+  @include themify {
+    border-color: themed('bg-primary');
+  }
+}
+
+.avatar__badge--available {
+  @include themify {
+    background-color: themed('state-success');
+  }
+}
+
+.avatar__badge--busy {
+  @include themify {
+    background-color: themed('state-error');
+  }
+}
+
+.avatar__badge--away {
+  @include themify {
+    background-color: themed('state-warning');
+  }
+}
+
+.avatar__badge--offline {
+  @include themify {
+    background-color: themed('text-tertiary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// AVATAR GROUP
+// -----------------------------------------------------------------------------
+
+.avatar-group {
+  display: inline-flex;
+  flex-direction: row-reverse;
+}
+
+.avatar-group .avatar {
+  box-sizing: content-box;
+  border: 2px solid;
+  margin-left: -8px;
+
+  @include themify {
+    border-color: themed('bg-primary');
+  }
+
+  &:last-child {
+    margin-left: 0;
+  }
+}
+
+.avatar-group__overflow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -8px;
+  box-sizing: content-box;
+  border: 2px solid;
+  border-radius: $border-radius-circular;
+  font-size: 12px;
+  font-weight: $font-weight-medium;
+
+  @include themify {
+    background-color: themed('bg-tertiary');
+    color: themed('text-secondary');
+    border-color: themed('bg-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// PERSONA (Avatar + Text)
+// -----------------------------------------------------------------------------
+
+.persona {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-12;
+}
+
+.persona__details {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.persona__name {
+  @include body;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.persona__secondary {
+  @include body-small;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.persona__tertiary {
+  @include caption;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+}

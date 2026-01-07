@@ -1,0 +1,187 @@
+// =============================================================================
+// POPOVER COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE POPOVER
+// -----------------------------------------------------------------------------
+
+.popover {
+  position: relative;
+  display: inline-block;
+}
+
+.popover__trigger {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.popover__content {
+  position: absolute;
+  z-index: $z-index-popover;
+  min-width: 200px;
+  max-width: 350px;
+  padding: $spacing-12;
+  border-radius: $border-radius-medium;
+  @include elevation(8);
+  animation: popover-fade-in $duration-fast ease-out;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
+    color: themed('text-primary');
+  }
+}
+
+@keyframes popover-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// POPOVER POSITIONS
+// -----------------------------------------------------------------------------
+
+.popover__content--top {
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.popover__content--bottom {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.popover__content--left {
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.popover__content--right {
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+// -----------------------------------------------------------------------------
+// POPOVER ARROW
+// -----------------------------------------------------------------------------
+
+.popover__arrow {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  transform: rotate(45deg);
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
+  }
+}
+
+.popover__content--top .popover__arrow {
+  bottom: -6px;
+  left: 50%;
+  margin-left: -6px;
+  border-top: none;
+  border-left: none;
+}
+
+.popover__content--bottom .popover__arrow {
+  top: -6px;
+  left: 50%;
+  margin-left: -6px;
+  border-bottom: none;
+  border-right: none;
+}
+
+.popover__content--left .popover__arrow {
+  right: -6px;
+  top: 50%;
+  margin-top: -6px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.popover__content--right .popover__arrow {
+  left: -6px;
+  top: 50%;
+  margin-top: -6px;
+  border-right: none;
+  border-top: none;
+}
+
+// -----------------------------------------------------------------------------
+// POPOVER HEADER AND BODY
+// -----------------------------------------------------------------------------
+
+.popover__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-8;
+  padding-bottom: $spacing-8;
+
+  @include themify {
+    border-bottom: 1px solid themed('border-subtle');
+  }
+}
+
+.popover__title {
+  @include body;
+  font-weight: $font-weight-semibold;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.popover__close {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: $border-radius-small;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.popover__body {
+  @include body-small;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}

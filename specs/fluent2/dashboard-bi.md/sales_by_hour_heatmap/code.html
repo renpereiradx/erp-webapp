@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Executive Sales Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for better aesthetics in the dashboard */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111418] dark:text-white overflow-hidden">
+<div class="flex h-screen w-full flex-row overflow-hidden">
+<!-- Side Navigation -->
+<aside class="w-64 flex-shrink-0 border-r border-[#f0f2f4] dark:border-gray-800 bg-white dark:bg-[#1a2632] flex flex-col justify-between p-4 hidden md:flex">
+<div class="flex flex-col gap-4">
+<div class="flex gap-3 items-center mb-4 px-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8" data-alt="Acme Corp Logo Abstract" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDzgYDBoKokY63bnbWIwmYDYxi23o9M48jPunvvaLFGGFccZKyFC9PR3iSm6stbmRmw_nglbcbnLjJMkXQtcO1cuw09wWed_qtFA0B-TDJJJkZS_4I5B43yOXM-VEsCYUf_dwKwTenfbYrbrvBWGrCgfmKnmPBIVkWT5xZxxWeKfZ7wDErtM38e5JD65D90WJOyoBV3HSqnm8szhwLOuO-LQY2dYKYgm7Yi6E-jaPCsyWb_OEcRxXSp-Jrg8qUyf_DA7n2-dVyybA");'></div>
+<h1 class="text-[#111418] dark:text-white text-lg font-bold leading-normal">Acme Corp</h1>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#617589] dark:text-gray-400 hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">grid_view</span>
+<p class="text-sm font-medium leading-normal">Overview</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-xl fill-1">monitoring</span>
+<p class="text-sm font-bold leading-normal">Sales Heatmap</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#617589] dark:text-gray-400 hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">inventory_2</span>
+<p class="text-sm font-medium leading-normal">Inventory</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#617589] dark:text-gray-400 hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">description</span>
+<p class="text-sm font-medium leading-normal">Reports</p>
+</a>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#617589] dark:text-gray-400 hover:bg-[#f0f2f4] dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+<p class="text-sm font-medium leading-normal">Settings</p>
+</a>
+<div class="flex items-center gap-3 px-3 py-3 mt-2 border-t border-[#f0f2f4] dark:border-gray-800">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8" data-alt="User Avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBbk34ux1_1jkVvZfOE7y3CQ7E4Hu-giK-Nks2vzfZ4eahcpPXe0dUL70AEnULr8gbMY6Rjnoj0C9bcl2VmWmC_DwOMc-HotJ6GpEEhWw9LRChhNAuEczgsKpfTRnfEahUmRDQNwRaHE-mNPbgrgn1bAt9X5RQuoRhVsFglJV4DsJezp_h-WAKocoKiZYtAkYK0a-RuC2OOns1s35SMfmBio2tJEJVCcSrEVAgXBgrxlZLo3WjUDymJSyGWmuR5Ky6aJdf2i0LdGQ");'></div>
+<div class="flex flex-col">
+<p class="text-sm font-bold text-[#111418] dark:text-white">John Doe</p>
+<p class="text-xs text-[#617589] dark:text-gray-500">Executive VP</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full relative overflow-hidden">
+<!-- Top Header -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#f0f2f4] dark:border-gray-800 bg-white dark:bg-[#1a2632] px-6 py-3 flex-shrink-0 z-10">
+<div class="flex items-center gap-4">
+<button class="md:hidden p-2 text-gray-500">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="text-[#111418] dark:text-white text-lg font-bold leading-tight">Executive Dashboard</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex relative">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-[#617589]">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="bg-[#f0f2f4] dark:bg-gray-800 border-none text-sm rounded-lg block w-64 pl-10 p-2.5 focus:ring-1 focus:ring-primary placeholder-[#617589] dark:text-white" placeholder="Search data..." type="text"/>
+</div>
+<button class="flex items-center justify-center rounded-lg size-10 bg-[#f0f2f4] dark:bg-gray-800 text-[#111418] dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors relative">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+</button>
+</div>
+</header>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+<div class="max-w-[1440px] mx-auto flex flex-col gap-6">
+<!-- Page Heading & Context -->
+<div class="flex flex-wrap justify-between items-end gap-4">
+<div class="flex flex-col gap-1">
+<h1 class="text-[#111418] dark:text-white text-3xl font-black tracking-tight">Sales by Hour Heatmap</h1>
+<p class="text-[#617589] dark:text-gray-400 text-base">Visualizing peak trading times and sales intensity across all branches.</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm font-medium text-gray-500">Last updated: Just now</span>
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+<span class="material-symbols-outlined text-lg">download</span>
+                                Export Report
+                            </button>
+</div>
+</div>
+<!-- KPI Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Card 1 -->
+<div class="bg-white dark:bg-[#1a2632] p-5 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<p class="text-[#617589] dark:text-gray-400 text-sm font-medium">Total Revenue</p>
+<span class="material-symbols-outlined text-primary bg-primary/10 p-1 rounded text-lg">payments</span>
+</div>
+<p class="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">$124,500</p>
+<div class="flex items-center gap-1 mt-1 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+<span class="material-symbols-outlined text-base">trending_up</span>
+<span>+12.5%</span>
+<span class="text-gray-400 ml-1 font-normal">vs last week</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white dark:bg-[#1a2632] p-5 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<p class="text-[#617589] dark:text-gray-400 text-sm font-medium">Busiest Hour</p>
+<span class="material-symbols-outlined text-orange-500 bg-orange-100 dark:bg-orange-500/20 p-1 rounded text-lg">schedule</span>
+</div>
+<p class="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">Fri 6 PM</p>
+<div class="flex items-center gap-1 mt-1 text-[#617589] dark:text-gray-400 text-sm font-medium">
+<span>Peak volume:</span>
+<span class="text-[#111418] dark:text-white font-bold">428 txns</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-white dark:bg-[#1a2632] p-5 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<p class="text-[#617589] dark:text-gray-400 text-sm font-medium">Avg Transaction</p>
+<span class="material-symbols-outlined text-purple-500 bg-purple-100 dark:bg-purple-500/20 p-1 rounded text-lg">receipt_long</span>
+</div>
+<p class="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">$45.20</p>
+<div class="flex items-center gap-1 mt-1 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+<span class="material-symbols-outlined text-base">trending_up</span>
+<span>+2.5%</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-white dark:bg-[#1a2632] p-5 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-2">
+<p class="text-[#617589] dark:text-gray-400 text-sm font-medium">Active Stores</p>
+<span class="material-symbols-outlined text-blue-500 bg-blue-100 dark:bg-blue-500/20 p-1 rounded text-lg">storefront</span>
+</div>
+<p class="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">14/15</p>
+<div class="flex items-center gap-1 mt-1 text-rose-600 dark:text-rose-400 text-sm font-medium">
+<span class="material-symbols-outlined text-base">warning</span>
+<span>1 Offline (NY-04)</span>
+</div>
+</div>
+</div>
+<!-- Main Dashboard Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+<!-- Heatmap Section (Span 9) -->
+<div class="xl:col-span-9 flex flex-col gap-4">
+<!-- Heatmap Controls -->
+<div class="bg-white dark:bg-[#1a2632] p-4 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center bg-[#f0f2f4] dark:bg-gray-800 rounded-lg p-1">
+<button class="p-1 hover:bg-white dark:hover:bg-gray-700 rounded shadow-sm transition-all text-[#617589] hover:text-primary">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<span class="px-4 text-sm font-bold text-[#111418] dark:text-white">Oct 23 - Oct 29, 2023</span>
+<button class="p-1 hover:bg-white dark:hover:bg-gray-700 rounded shadow-sm transition-all text-[#617589] hover:text-primary">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative">
+<select class="appearance-none bg-[#f0f2f4] dark:bg-gray-800 border-none text-[#111418] dark:text-white text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 pr-8 cursor-pointer font-medium">
+<option>All Locations</option>
+<option>New York</option>
+<option>London</option>
+<option>Tokyo</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#617589]">
+<span class="material-symbols-outlined text-lg">expand_more</span>
+</div>
+</div>
+<div class="relative">
+<select class="appearance-none bg-[#f0f2f4] dark:bg-gray-800 border-none text-[#111418] dark:text-white text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 pr-8 cursor-pointer font-medium">
+<option>All Categories</option>
+<option>Electronics</option>
+<option>Home Goods</option>
+<option>Clothing</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#617589]">
+<span class="material-symbols-outlined text-lg">expand_more</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Heatmap Visualization -->
+<div class="bg-white dark:bg-[#1a2632] p-6 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm overflow-x-auto">
+<div class="min-w-[800px]">
+<!-- Legend -->
+<div class="flex justify-end items-center gap-2 mb-4 text-xs font-medium text-[#617589] dark:text-gray-400">
+<span>Low Intensity</span>
+<div class="h-2 w-24 rounded-full bg-gradient-to-r from-blue-50 to-[#137fec] dark:from-blue-900/20 dark:to-[#137fec]"></div>
+<span>High Intensity</span>
+</div>
+<!-- Grid -->
+<div class="grid grid-cols-[auto_repeat(14,_minmax(0,_1fr))] gap-1">
+<!-- Header Row -->
+<div class="h-8"></div> <!-- Empty corner -->
+<!-- Hours -->
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">8AM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">9AM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">10AM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">11AM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">12PM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">1PM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">2PM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">3PM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">4PM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">5PM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">6PM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">7PM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">8PM</div>
+<div class="text-center text-xs font-medium text-[#617589] dark:text-gray-400">9PM</div>
+<!-- Monday -->
+<div class="flex items-center text-xs font-bold text-[#111418] dark:text-white pr-2 h-10">Mon</div>
+<div class="bg-primary/5 dark:bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/10 dark:bg-primary/20 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/20 dark:bg-primary/30 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/30 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/70 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/20 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/5 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<!-- Tuesday -->
+<div class="flex items-center text-xs font-bold text-[#111418] dark:text-white pr-2 h-10">Tue</div>
+<div class="bg-primary/5 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/30 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/30 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/20 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/5 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<!-- Wednesday -->
+<div class="flex items-center text-xs font-bold text-[#111418] dark:text-white pr-2 h-10">Wed</div>
+<div class="bg-primary/5 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/20 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/70 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/70 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/30 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/5 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<!-- Thursday -->
+<div class="flex items-center text-xs font-bold text-[#111418] dark:text-white pr-2 h-10">Thu</div>
+<div class="bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/30 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/70 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/80 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/90 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/70 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/20 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<!-- Friday -->
+<div class="flex items-center text-xs font-bold text-[#111418] dark:text-white pr-2 h-10">Fri</div>
+<div class="bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/30 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/80 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/70 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/80 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary rounded h-10 group relative hover:border-2 hover:border-white shadow-lg cursor-pointer transition-all text-white flex items-center justify-center text-sm font-black transform hover:scale-105 z-10">
+                                            Peak
+                                            <!-- Tooltip -->
+<div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-[#1a2632] dark:bg-white text-white dark:text-[#1a2632] p-3 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-xs font-normal">
+<div class="font-bold border-b border-gray-600 dark:border-gray-300 pb-1 mb-1">Friday 5 PM - 6 PM</div>
+<div class="flex justify-between"><span>Revenue:</span> <span class="font-bold">$12,450</span></div>
+<div class="flex justify-between"><span>Transactions:</span> <span class="font-bold">428</span></div>
+<div class="flex justify-between text-emerald-400 dark:text-emerald-600"><span>WoW:</span> <span class="font-bold">+15%</span></div>
+</div>
+</div>
+<div class="bg-primary/90 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/70 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/30 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<!-- Saturday -->
+<div class="flex items-center text-xs font-bold text-[#111418] dark:text-white pr-2 h-10">Sat</div>
+<div class="bg-primary/5 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/20 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/80 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/90 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/80 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$$</div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/30 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/20 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/5 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<!-- Sunday -->
+<div class="flex items-center text-xs font-bold text-[#111418] dark:text-white pr-2 h-10">Sun</div>
+<div class="bg-primary/5 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/20 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/60 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all text-white flex items-center justify-center text-xs font-bold">$$</div>
+<div class="bg-primary/50 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/40 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/30 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/20 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/10 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/5 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/5 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+<div class="bg-primary/5 rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Panel (Span 3) -->
+<div class="xl:col-span-3 flex flex-col gap-6">
+<!-- Activity Feed -->
+<div class="bg-white dark:bg-[#1a2632] rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm flex flex-col h-full">
+<div class="p-4 border-b border-[#f0f2f4] dark:border-gray-700 flex justify-between items-center">
+<h3 class="font-bold text-[#111418] dark:text-white">Recent Activity</h3>
+<button class="text-primary text-sm font-medium hover:underline">View All</button>
+</div>
+<div class="p-4 flex flex-col gap-5 overflow-y-auto max-h-[500px]">
+<!-- Item 1 -->
+<div class="flex gap-3">
+<div class="size-8 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-sm">trending_down</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-medium text-[#111418] dark:text-white leading-snug">Unexpected sales dip detected in New York branch.</p>
+<p class="text-xs text-[#617589] dark:text-gray-500">25 mins ago</p>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex gap-3">
+<div class="size-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-sm">flag</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-medium text-[#111418] dark:text-white leading-snug">Target reached for Q3: Sales exceeded $1.2M.</p>
+<p class="text-xs text-[#617589] dark:text-gray-500">2 hours ago</p>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex gap-3">
+<div class="size-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-sm">person_add</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-medium text-[#111418] dark:text-white leading-snug">New Store Manager assigned to Tokyo Downtown.</p>
+<p class="text-xs text-[#617589] dark:text-gray-500">5 hours ago</p>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="flex gap-3">
+<div class="size-8 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-sm">inventory</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-medium text-[#111418] dark:text-white leading-snug">Inventory Restock initiated for Electronics category.</p>
+<p class="text-xs text-[#617589] dark:text-gray-500">Yesterday</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Mini Map Widget -->
+<div class="bg-white dark:bg-[#1a2632] rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm overflow-hidden flex flex-col">
+<div class="p-4 border-b border-[#f0f2f4] dark:border-gray-700">
+<h3 class="font-bold text-[#111418] dark:text-white">Active Regions</h3>
+</div>
+<div class="h-48 bg-gray-100 relative group">
+<div class="bg-center bg-no-repeat w-full h-full bg-cover opacity-80" data-alt="World Map showing active regions" data-location="Global" style='background-image: url("https://placeholder.pics/svg/300");'></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<button class="px-4 py-2 bg-white dark:bg-gray-800 text-sm font-bold rounded shadow hover:scale-105 transition-transform">View Full Map</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Executive Dashboard Summary</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                    boxShadow: {
+                        'fluent': '0 2px 4px rgba(0,0,0,0.02), 0 4px 10px rgba(0,0,0,0.04)',
+                        'fluent-hover': '0 4px 12px rgba(0,0,0,0.08), 0 8px 16px rgba(0,0,0,0.04)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white min-h-screen flex flex-col font-display">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-[#e5e7eb] dark:border-slate-800 bg-white dark:bg-[#111418] px-6 py-3 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="size-8 flex items-center justify-center text-primary bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined">dashboard</span>
+</div>
+<h2 class="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Executive Dashboard</h2>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<!-- Search -->
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64 relative group">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full border border-transparent group-focus-within:border-primary/50 transition-colors">
+<div class="text-[#617589] flex bg-[#f0f2f4] dark:bg-slate-800 items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg rounded-l-none text-[#111418] dark:text-white focus:outline-0 focus:ring-0 border-none bg-[#f0f2f4] dark:bg-slate-800 focus:border-none h-full placeholder:text-[#617589] px-4 pl-2 text-sm font-normal leading-normal" placeholder="Search data..."/>
+</div>
+</label>
+<!-- Actions -->
+<div class="flex gap-2">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-[#f0f2f4] dark:hover:bg-slate-800 text-[#111418] dark:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-[#f0f2f4] dark:hover:bg-slate-800 text-[#111418] dark:text-white transition-colors relative">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#111418]"></span>
+</button>
+</div>
+<!-- Profile -->
+<div class="flex items-center gap-3 pl-2 border-l border-[#e5e7eb] dark:border-slate-800">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 border border-[#e5e7eb] dark:border-slate-700" data-alt="Executive user profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDJ__MTMFzWXwxE-a_adCk91fp_epAvOmhwNnZt5mErYhgZn88FC48lwAiW8HWwgp3A1P7FKG4O7NQaV4nAhjxe51y10dOHh8RoE7HMSHF_QOVhHEaZJC-iH6jHDu5ZM9k3vbW9VxDTz1q8fXIIy1gKkJzrAEsILE9Snb0vHVO_xGhp5wxaHg5GKHQus7TB2HZVEDzfBlCFuUEQwOpNaw9YJpNGxOkDjZzglnPrQkk8Sg0i9JeZyNEPZTzR9JUv4sLI3CJa5L9BlA");'></div>
+<div class="hidden lg:flex flex-col">
+<span class="text-sm font-bold leading-tight">Alex Morgan</span>
+<span class="text-xs text-[#617589]">CEO</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Page Heading & Filters -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+<div class="flex flex-col gap-1">
+<h1 class="text-[#111418] dark:text-white text-3xl font-extrabold leading-tight tracking-tight">Executive Summary</h1>
+<p class="text-[#617589] dark:text-slate-400 text-sm font-medium">Real-time overview of key performance indicators</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-[#dbe0e6] dark:border-slate-700 rounded-lg text-sm font-semibold text-[#111418] dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+<span>Last 30 Days</span>
+<span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-sm hover:bg-blue-600 transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span class="hidden sm:inline">Export Report</span>
+</button>
+</div>
+</div>
+<!-- KPI Cards Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+<!-- Total Sales -->
+<div class="flex flex-col gap-4 rounded-xl p-6 bg-white dark:bg-slate-800 border border-[#e5e7eb] dark:border-slate-700 shadow-fluent hover:shadow-fluent-hover transition-shadow">
+<div class="flex items-start justify-between">
+<div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-primary">
+<span class="material-symbols-outlined filled-icon">attach_money</span>
+</div>
+<span class="flex items-center gap-1 text-[#078838] bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded text-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+                        12%
+                    </span>
+</div>
+<div>
+<p class="text-[#617589] dark:text-slate-400 text-sm font-medium mb-1">Total Sales</p>
+<p class="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">$124,500</p>
+</div>
+</div>
+<!-- Purchases -->
+<div class="flex flex-col gap-4 rounded-xl p-6 bg-white dark:bg-slate-800 border border-[#e5e7eb] dark:border-slate-700 shadow-fluent hover:shadow-fluent-hover transition-shadow">
+<div class="flex items-start justify-between">
+<div class="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-orange-600">
+<span class="material-symbols-outlined filled-icon">shopping_cart</span>
+</div>
+<span class="flex items-center gap-1 text-[#e73908] bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded text-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">trending_down</span>
+                        5%
+                    </span>
+</div>
+<div>
+<p class="text-[#617589] dark:text-slate-400 text-sm font-medium mb-1">Purchases</p>
+<p class="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">$45,200</p>
+</div>
+</div>
+<!-- Net Profit -->
+<div class="flex flex-col gap-4 rounded-xl p-6 bg-white dark:bg-slate-800 border border-[#e5e7eb] dark:border-slate-700 shadow-fluent hover:shadow-fluent-hover transition-shadow">
+<div class="flex items-start justify-between">
+<div class="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600">
+<span class="material-symbols-outlined filled-icon">show_chart</span>
+</div>
+<span class="flex items-center gap-1 text-[#078838] bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded text-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+                        18%
+                    </span>
+</div>
+<div>
+<p class="text-[#617589] dark:text-slate-400 text-sm font-medium mb-1">Net Profit</p>
+<p class="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">$79,300</p>
+</div>
+</div>
+<!-- Daily Transactions -->
+<div class="flex flex-col gap-4 rounded-xl p-6 bg-white dark:bg-slate-800 border border-[#e5e7eb] dark:border-slate-700 shadow-fluent hover:shadow-fluent-hover transition-shadow">
+<div class="flex items-start justify-between">
+<div class="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-purple-600">
+<span class="material-symbols-outlined filled-icon">receipt_long</span>
+</div>
+<span class="flex items-center gap-1 text-[#078838] bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded text-xs font-bold">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+                        2%
+                    </span>
+</div>
+<div>
+<p class="text-[#617589] dark:text-slate-400 text-sm font-medium mb-1">Daily Transactions</p>
+<p class="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">1,204</p>
+</div>
+</div>
+</div>
+<!-- Main Chart & Operations Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+<!-- Revenue vs Expenses Chart (Spans 2 columns on large screens) -->
+<div class="lg:col-span-2 rounded-xl bg-white dark:bg-slate-800 border border-[#e5e7eb] dark:border-slate-700 shadow-fluent p-6">
+<div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+<div>
+<h3 class="text-[#111418] dark:text-white text-lg font-bold">Revenue vs Expenses</h3>
+<p class="text-[#617589] dark:text-slate-400 text-sm">Performance over time</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-primary"></span>
+<span class="text-xs font-medium text-[#617589] dark:text-slate-400">Revenue</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-[#cbd5e1]"></span>
+<span class="text-xs font-medium text-[#617589] dark:text-slate-400">Expenses</span>
+</div>
+</div>
+</div>
+<!-- Chart Container -->
+<div class="relative w-full aspect-[2/1] min-h-[300px]">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 800 300">
+<!-- Grid Lines -->
+<g class="stroke-slate-100 dark:stroke-slate-700" stroke-dasharray="4 4" stroke-width="1">
+<line x1="0" x2="800" y1="250" y2="250"></line>
+<line x1="0" x2="800" y1="190" y2="190"></line>
+<line x1="0" x2="800" y1="130" y2="130"></line>
+<line x1="0" x2="800" y1="70" y2="70"></line>
+</g>
+<!-- Revenue Area Gradient Definition -->
+<defs>
+<lineargradient id="revenueGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#137fec" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#137fec" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<!-- Revenue Path -->
+<path d="M0,220 Q100,200 200,150 T400,100 T600,80 T800,40 V300 H0 Z" fill="url(#revenueGradient)"></path>
+<path d="M0,220 Q100,200 200,150 T400,100 T600,80 T800,40" fill="none" stroke="#137fec" stroke-linecap="round" stroke-width="3"></path>
+<!-- Expenses Path -->
+<path d="M0,260 Q120,250 240,220 T480,200 T720,180 T800,170" fill="none" stroke="#cbd5e1" stroke-dasharray="6 6" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<!-- X-Axis Labels -->
+<div class="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-[#617589] dark:text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-700">
+<span>Jan 1</span>
+<span>Jan 5</span>
+<span>Jan 10</span>
+<span>Jan 15</span>
+<span>Jan 20</span>
+<span>Jan 25</span>
+<span>Jan 30</span>
+</div>
+</div>
+</div>
+<!-- Operations Stack (Inventory & Cash) -->
+<div class="flex flex-col gap-6">
+<!-- Inventory Card -->
+<div class="flex-1 rounded-xl bg-white dark:bg-slate-800 border border-[#e5e7eb] dark:border-slate-700 shadow-fluent p-6 relative overflow-hidden group">
+<div class="absolute right-0 top-0 w-24 h-24 bg-orange-50 dark:bg-orange-900/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+<div class="relative z-10">
+<div class="flex items-center gap-3 mb-4">
+<div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600">
+<span class="material-symbols-outlined filled-icon">inventory_2</span>
+</div>
+<h4 class="text-base font-bold text-[#111418] dark:text-white">Inventory</h4>
+</div>
+<p class="text-sm text-[#617589] dark:text-slate-400">Total Valuation</p>
+<p class="text-2xl font-bold text-[#111418] dark:text-white mb-4">$500,000</p>
+<div class="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-lg">
+<span class="material-symbols-outlined text-red-600 text-[20px]">warning</span>
+<span class="text-sm font-semibold text-red-700 dark:text-red-400">5 Items Low Stock</span>
+</div>
+</div>
+</div>
+<!-- Cash Card -->
+<div class="flex-1 rounded-xl bg-white dark:bg-slate-800 border border-[#e5e7eb] dark:border-slate-700 shadow-fluent p-6 relative overflow-hidden group">
+<div class="absolute right-0 top-0 w-24 h-24 bg-green-50 dark:bg-green-900/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+<div class="relative z-10">
+<div class="flex items-center gap-3 mb-4">
+<div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg text-green-600">
+<span class="material-symbols-outlined filled-icon">point_of_sale</span>
+</div>
+<h4 class="text-base font-bold text-[#111418] dark:text-white">Cash Register</h4>
+</div>
+<p class="text-sm text-[#617589] dark:text-slate-400">Current Balance</p>
+<p class="text-2xl font-bold text-[#111418] dark:text-white">$4,250</p>
+<div class="mt-4 w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
+<div class="bg-green-500 h-full rounded-full" style="width: 75%"></div>
+</div>
+<p class="text-xs text-[#617589] dark:text-slate-500 mt-2 text-right">Target: $5,500</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Row: Receivables/Payables & Activity -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<!-- Receivables vs Payables -->
+<div class="rounded-xl bg-white dark:bg-slate-800 border border-[#e5e7eb] dark:border-slate-700 shadow-fluent p-6">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-[#111418] dark:text-white text-lg font-bold">Finance Overview</h3>
+<button class="text-primary text-sm font-semibold hover:underline">View Report</button>
+</div>
+<div class="space-y-6">
+<!-- Receivables -->
+<div>
+<div class="flex justify-between items-end mb-2">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-[#617589] dark:text-slate-400">Receivables</span>
+<span class="text-xl font-bold text-[#111418] dark:text-white">$20,000</span>
+</div>
+<span class="text-sm font-medium text-[#078838]">+8.5%</span>
+</div>
+<div class="w-full bg-[#f0f2f4] dark:bg-slate-700 rounded-full h-3">
+<div class="bg-blue-500 h-full rounded-full" style="width: 65%"></div>
+</div>
+</div>
+<!-- Payables -->
+<div>
+<div class="flex justify-between items-end mb-2">
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-[#617589] dark:text-slate-400">Payables</span>
+<span class="text-xl font-bold text-[#111418] dark:text-white">$12,000</span>
+</div>
+<span class="text-sm font-medium text-[#617589] dark:text-slate-500">Normal</span>
+</div>
+<div class="w-full bg-[#f0f2f4] dark:bg-slate-700 rounded-full h-3">
+<div class="bg-orange-400 h-full rounded-full" style="width: 40%"></div>
+</div>
+</div>
+</div>
+<div class="mt-6 pt-6 border-t border-slate-100 dark:border-slate-700 flex gap-8">
+<div class="flex-1">
+<p class="text-xs text-[#617589] dark:text-slate-500 uppercase tracking-wider font-semibold mb-1">Net Cashflow</p>
+<p class="text-lg font-bold text-[#111418] dark:text-white">+$8,000</p>
+</div>
+<div class="flex-1">
+<p class="text-xs text-[#617589] dark:text-slate-500 uppercase tracking-wider font-semibold mb-1">Overdue Invoices</p>
+<p class="text-lg font-bold text-red-600">3</p>
+</div>
+</div>
+</div>
+<!-- Recent Activity / Alerts -->
+<div class="rounded-xl bg-white dark:bg-slate-800 border border-[#e5e7eb] dark:border-slate-700 shadow-fluent p-0 overflow-hidden">
+<div class="p-6 border-b border-[#e5e7eb] dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800">
+<h3 class="text-[#111418] dark:text-white text-lg font-bold">Recent Alerts &amp; Activity</h3>
+<div class="flex gap-2">
+<span class="size-2 rounded-full bg-red-500 animate-pulse"></span>
+<span class="text-xs font-medium text-[#617589]">Live</span>
+</div>
+</div>
+<div class="max-h-[300px] overflow-y-auto">
+<!-- Item 1: High Priority -->
+<div class="flex gap-4 p-4 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group">
+<div class="mt-1 flex-shrink-0">
+<div class="size-8 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">error</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-sm font-bold text-[#111418] dark:text-white group-hover:text-primary transition-colors">Stock Alert: Item #4922</p>
+<span class="text-xs text-[#617589]">2m ago</span>
+</div>
+<p class="text-sm text-[#617589] dark:text-slate-400 mt-0.5">Inventory level dropped below threshold (5 units).</p>
+</div>
+</div>
+<!-- Item 2: Success -->
+<div class="flex gap-4 p-4 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group">
+<div class="mt-1 flex-shrink-0">
+<div class="size-8 rounded-full bg-green-100 dark:bg-green-900/20 text-green-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-sm font-bold text-[#111418] dark:text-white group-hover:text-primary transition-colors">Large Order #1024 Approved</p>
+<span class="text-xs text-[#617589]">45m ago</span>
+</div>
+<p class="text-sm text-[#617589] dark:text-slate-400 mt-0.5">Order value $12,500 approved by Finance Dept.</p>
+</div>
+</div>
+<!-- Item 3: Info -->
+<div class="flex gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group">
+<div class="mt-1 flex-shrink-0">
+<div class="size-8 rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">info</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-sm font-bold text-[#111418] dark:text-white group-hover:text-primary transition-colors">System Maintenance</p>
+<span class="text-xs text-[#617589]">2h ago</span>
+</div>
+<p class="text-sm text-[#617589] dark:text-slate-400 mt-0.5">Scheduled downtime for Saturday 2:00 AM EST.</p>
+</div>
+</div>
+</div>
+<div class="p-3 bg-slate-50 dark:bg-slate-800 border-t border-[#e5e7eb] dark:border-slate-700 text-center">
+<button class="text-primary text-xs font-bold uppercase tracking-wider hover:underline">View All Notifications</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

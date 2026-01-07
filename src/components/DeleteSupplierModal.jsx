@@ -1,23 +1,62 @@
-import React from 'react';
-// useTheme removido para MVP - sin hooks problemáticos
-import { X, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
+import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 
+/**
+ * DeleteSupplierModal Component
+ * 
+ * Confirmation modal for deleting a supplier.
+ * Uses Fluent Design System 2 SCSS classes.
+ * 
+ * @param {Object} props
+ * @param {boolean} props.isOpen - Controls modal visibility
+ * @param {Function} props.onClose - Callback when modal closes
+ * @param {Object} props.supplier - Supplier to delete
+ * @param {Function} props.onConfirm - Callback when delete is confirmed
+ * @param {boolean} props.loading - Loading state for delete operation
+ */
 const DeleteSupplierModal = ({ isOpen, onClose, supplier, onConfirm, loading }) => {
+  const { t } = useI18n();
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-card p-6 rounded-lg w-full max-w-md text-center border border-border">
-        <div className="flex justify-center mb-4">
-            <AlertTriangle className="w-16 h-16 text-destructive" />
+    <div className="dialog-overlay" onClick={onClose}>
+      <div className="dialog dialog--small dialog--centered" onClick={(e) => e.stopPropagation()}>
+        {/* Icon */}
+        <div className="dialog__icon dialog__icon--danger">
+          <AlertTriangle size={48} />
         </div>
-        <h2 className="text-2xl font-bold mb-4">¿Estás seguro?</h2>
-        <p className="mb-6">Estás a punto de eliminar al proveedor "{supplier?.name}". Esta acción no se puede deshacer.</p>
-        <div className="flex justify-center space-x-4">
-          <Button onClick={onClose} variant="secondary" disabled={loading}>Cancelar</Button>
-          <Button onClick={() => onConfirm(supplier)} variant="destructive" disabled={loading}>
-            {loading ? 'Eliminando...' : 'Eliminar'}
+
+        {/* Content */}
+        <div className="dialog__content">
+          <h2 className="dialog__title dialog__title--centered">
+            {t('common.confirm.delete.title', '¿Estás seguro?')}
+          </h2>
+          <p className="dialog__description dialog__description--centered">
+            {t('suppliers.modal.delete.message', 'Estás a punto de eliminar al proveedor "{name}". Esta acción no se puede deshacer.', { name: supplier?.name || '' })}
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="dialog__footer dialog__footer--centered">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={loading}
+          >
+            {t('action.cancel', 'Cancelar')}
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => onConfirm(supplier)}
+            disabled={loading}
+            loading={loading}
+          >
+            {loading 
+              ? t('action.deleting', 'Eliminando...') 
+              : t('action.delete', 'Eliminar')
+            }
           </Button>
         </div>
       </div>

@@ -1,0 +1,153 @@
+// =============================================================================
+// BREADCRUMB COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE BREADCRUMB
+// -----------------------------------------------------------------------------
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-4;
+}
+
+.breadcrumb__list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-4;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-4;
+}
+
+.breadcrumb__link {
+  @include body-small;
+  text-decoration: none;
+  border-radius: $border-radius-small;
+  padding: $spacing-4 $spacing-8;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    text-decoration: underline;
+
+    @include themify {
+      color: themed('action-primary');
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &:focus-visible {
+    @include themify {
+      outline: 2px solid themed('action-primary');
+      outline-offset: 2px;
+    }
+  }
+}
+
+.breadcrumb__separator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.breadcrumb__current {
+  @include body-small;
+  font-weight: $font-weight-semibold;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BREADCRUMB WITH OVERFLOW
+// -----------------------------------------------------------------------------
+
+.breadcrumb__ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-4 $spacing-8;
+  border-radius: $border-radius-small;
+  cursor: pointer;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+      color: themed('text-primary');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SIZES
+// -----------------------------------------------------------------------------
+
+.breadcrumb--small {
+  .breadcrumb__link,
+  .breadcrumb__current {
+    @include caption;
+    padding: $spacing-2 $spacing-4;
+  }
+
+  .breadcrumb__separator {
+    width: 12px;
+    height: 12px;
+
+    svg {
+      width: 10px;
+      height: 10px;
+    }
+  }
+}
+
+.breadcrumb--large {
+  .breadcrumb__link,
+  .breadcrumb__current {
+    @include body;
+    padding: $spacing-8 $spacing-12;
+  }
+
+  .breadcrumb__separator {
+    width: 20px;
+    height: 20px;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}

@@ -1,0 +1,171 @@
+// =============================================================================
+// SWITCH COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE SWITCH
+// -----------------------------------------------------------------------------
+
+.switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-8;
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch__track {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  border-radius: 10px;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    background-color: themed('action-secondary');
+    border: 1px solid themed('border-default');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('action-secondary-hover');
+    }
+  }
+}
+
+.switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: $border-radius-circular;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    background-color: themed('text-secondary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CHECKED STATE
+// -----------------------------------------------------------------------------
+
+.switch--checked {
+  .switch__track {
+    @include themify {
+      background-color: themed('action-primary');
+      border-color: themed('action-primary');
+    }
+
+    &:hover {
+      @include themify {
+        background-color: themed('action-primary-hover');
+      }
+    }
+  }
+
+  .switch__thumb {
+    left: calc(100% - 16px);
+
+    @include themify {
+      background-color: themed('text-inverted');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// DISABLED STATE
+// -----------------------------------------------------------------------------
+
+.switch--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+
+  .switch__track,
+  .switch__thumb {
+    pointer-events: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SIZES
+// -----------------------------------------------------------------------------
+
+.switch--small {
+  .switch__track {
+    width: 32px;
+    height: 16px;
+  }
+
+  .switch__thumb {
+    width: 10px;
+    height: 10px;
+  }
+
+  &.switch--checked .switch__thumb {
+    left: calc(100% - 12px);
+  }
+}
+
+.switch--large {
+  .switch__track {
+    width: 48px;
+    height: 24px;
+  }
+
+  .switch__thumb {
+    width: 18px;
+    height: 18px;
+  }
+
+  &.switch--checked .switch__thumb {
+    left: calc(100% - 20px);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// LABEL
+// -----------------------------------------------------------------------------
+
+.switch__label {
+  @include body;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  .switch--disabled & {
+    @include themify {
+      color: themed('text-disabled');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+
+.switch__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+
+  &:focus-visible + .switch__track {
+    @include themify {
+      outline: 2px solid themed('action-primary');
+      outline-offset: 2px;
+    }
+  }
+}

@@ -1,0 +1,184 @@
+// =============================================================================
+// RADIO GROUP COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// RADIO GROUP CONTAINER
+// -----------------------------------------------------------------------------
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+}
+
+.radio-group--horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: $spacing-16;
+}
+
+// -----------------------------------------------------------------------------
+// RADIO ITEM
+// -----------------------------------------------------------------------------
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-8;
+  cursor: pointer;
+  user-select: none;
+}
+
+.radio__indicator {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: $border-radius-circular;
+  flex-shrink: 0;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    background-color: themed('surface-input');
+    border: 2px solid themed('border-default');
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: $border-radius-circular;
+    transform: translate(-50%, -50%);
+    @include transition(all, $duration-fast);
+
+    @include themify {
+      background-color: themed('text-inverted');
+    }
+  }
+}
+
+.radio__label {
+  @include body;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// STATES
+// -----------------------------------------------------------------------------
+
+// Hover
+.radio:hover:not(.radio--disabled) {
+  .radio__indicator {
+    @include themify {
+      border-color: themed('border-strong');
+    }
+  }
+}
+
+// Checked
+.radio--checked {
+  .radio__indicator {
+    @include themify {
+      background-color: themed('action-primary');
+      border-color: themed('action-primary');
+    }
+
+    &::after {
+      width: 8px;
+      height: 8px;
+    }
+  }
+
+  &:hover:not(.radio--disabled) {
+    .radio__indicator {
+      @include themify {
+        background-color: themed('action-primary-hover');
+        border-color: themed('action-primary-hover');
+      }
+    }
+  }
+}
+
+// Disabled
+.radio--disabled {
+  cursor: not-allowed;
+
+  .radio__indicator {
+    opacity: 0.5;
+  }
+
+  .radio__label {
+    @include themify {
+      color: themed('text-disabled');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SIZES
+// -----------------------------------------------------------------------------
+
+.radio--small {
+  .radio__indicator {
+    width: 16px;
+    height: 16px;
+  }
+
+  &.radio--checked .radio__indicator::after {
+    width: 6px;
+    height: 6px;
+  }
+
+  .radio__label {
+    @include body-small;
+  }
+}
+
+.radio--large {
+  .radio__indicator {
+    width: 24px;
+    height: 24px;
+  }
+
+  &.radio--checked .radio__indicator::after {
+    width: 10px;
+    height: 10px;
+  }
+
+  .radio__label {
+    @include body-large;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCESSIBILITY
+// -----------------------------------------------------------------------------
+
+.radio__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+
+  &:focus-visible + .radio__indicator {
+    @include themify {
+      outline: 2px solid themed('action-primary');
+      outline-offset: 2px;
+    }
+  }
+}

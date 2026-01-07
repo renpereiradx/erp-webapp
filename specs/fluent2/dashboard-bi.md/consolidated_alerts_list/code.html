@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Consolidated Alerts List - Executive Dashboard</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1b2631",
+                        "border-light": "#e5e7eb",
+                        "border-dark": "#374151",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    boxShadow: {
+                        'fluent': '0 2px 4px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.04)',
+                        'fluent-hover': '0 4px 12px rgba(0,0,0,0.08), 0 8px 16px rgba(0,0,0,0.08)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Hide scrollbar for clean horizontal scroll areas */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white transition-colors duration-200">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark px-6 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4">
+<div class="size-8 text-primary flex items-center justify-center rounded-lg bg-primary/10">
+<span class="material-symbols-outlined text-[24px]">dashboard</span>
+</div>
+<h2 class="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Executive Dashboard</h2>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-[#617589] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Overview</a>
+<a class="text-primary text-sm font-bold leading-normal border-b-2 border-primary pb-0.5" href="#">Alerts</a>
+<a class="text-[#617589] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Trends</a>
+<a class="text-[#617589] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium leading-normal transition-colors" href="#">Reports</a>
+</div>
+</div>
+<div class="flex flex-1 justify-end gap-4 items-center">
+<div class="hidden sm:flex relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#617589]">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="h-9 w-64 rounded-full border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark px-10 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:text-white" placeholder="Global Search..."/>
+</div>
+<button class="flex items-center justify-center size-9 rounded-full bg-background-light dark:bg-background-dark hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-[#111418] dark:text-white relative">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border border-white dark:border-surface-dark"></span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 border border-border-light" data-alt="User profile picture placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCBWPewFT8CXAsyvTAz9jSXqyPjJiow32qk8f5o3a5lqVbOBqrdVGq0gOcvmTGcQEgdUqMQh9e11SqmHxZRPJH8SYkx3wuIfrE--8AnhEMeAGBfx6gENeSMZggW85DMtyqU5jkXj75PSvkrIw5avi5QP-11loivKvCcMaMtcuYlusf6GbJ1NCsP17V5FB4rr4F6LliIEdaMYJqZeoHYKNhOi3_c5jTDk4iubEoiXJ9qX8e2ckT1spAt9GzQ1huCD__spI6vRz1kJA");'></div>
+</div>
+</header>
+<!-- Main Content Layout -->
+<main class="flex-1 px-4 sm:px-8 py-8 w-full max-w-[1200px] mx-auto flex flex-col gap-6">
+<!-- Page Heading & Actions -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+<div>
+<h1 class="text-3xl font-bold tracking-tight text-[#111418] dark:text-white mb-1">Consolidated Alerts</h1>
+<p class="text-[#617589] dark:text-gray-400 text-sm">Real-time monitoring of critical system events. Last updated: Just now</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 h-9 px-4 rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-[#111418] dark:text-white text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+                        Mark All Read
+                    </button>
+<button class="flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-white text-sm font-medium hover:bg-blue-600 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+                        Refresh Data
+                    </button>
+</div>
+</div>
+<!-- KPI Summary Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Total Alerts -->
+<div class="flex flex-col p-4 rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-fluent">
+<div class="flex items-center justify-between mb-2">
+<span class="text-sm font-medium text-[#617589] dark:text-gray-400">Total Active</span>
+<span class="material-symbols-outlined text-[#617589] text-[20px]">list_alt</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-[#111418] dark:text-white">24</span>
+<span class="text-xs font-medium text-green-600 flex items-center">
+<span class="material-symbols-outlined text-[14px]">trending_down</span>
+                            12%
+                        </span>
+</div>
+</div>
+<!-- Critical -->
+<div class="flex flex-col p-4 rounded-lg bg-surface-light dark:bg-surface-dark border-l-4 border-l-red-500 border-y border-r border-border-light dark:border-border-dark shadow-fluent">
+<div class="flex items-center justify-between mb-2">
+<span class="text-sm font-medium text-red-600">Critical</span>
+<span class="material-symbols-outlined text-red-600 text-[20px] fill-current">error</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-[#111418] dark:text-white">3</span>
+<span class="text-xs text-[#617589] dark:text-gray-400">Needs attention</span>
+</div>
+</div>
+<!-- Warnings -->
+<div class="flex flex-col p-4 rounded-lg bg-surface-light dark:bg-surface-dark border-l-4 border-l-orange-500 border-y border-r border-border-light dark:border-border-dark shadow-fluent">
+<div class="flex items-center justify-between mb-2">
+<span class="text-sm font-medium text-orange-600">Warnings</span>
+<span class="material-symbols-outlined text-orange-600 text-[20px]">warning</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-[#111418] dark:text-white">8</span>
+<span class="text-xs font-medium text-red-500 flex items-center">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+                             +2
+                        </span>
+</div>
+</div>
+<!-- Info -->
+<div class="flex flex-col p-4 rounded-lg bg-surface-light dark:bg-surface-dark border-l-4 border-l-blue-500 border-y border-r border-border-light dark:border-border-dark shadow-fluent">
+<div class="flex items-center justify-between mb-2">
+<span class="text-sm font-medium text-blue-600">Information</span>
+<span class="material-symbols-outlined text-blue-600 text-[20px]">info</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-bold text-[#111418] dark:text-white">13</span>
+<span class="text-xs text-[#617589] dark:text-gray-400">Routine logs</span>
+</div>
+</div>
+</div>
+<!-- Filters & Toolbar -->
+<div class="flex flex-col md:flex-row gap-4 justify-between items-center bg-surface-light dark:bg-surface-dark p-2 rounded-lg border border-border-light dark:border-border-dark shadow-sm">
+<!-- Left: Search and Chips -->
+<div class="flex flex-1 w-full md:w-auto items-center gap-3 overflow-x-auto no-scrollbar py-1 px-1">
+<div class="relative min-w-[200px]">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#617589]">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="h-9 w-full rounded-md border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark pl-9 pr-3 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:text-white placeholder:text-[#617589]" placeholder="Filter alerts..."/>
+</div>
+<div class="h-6 w-px bg-border-light dark:border-border-dark mx-1 shrink-0"></div>
+<button class="flex shrink-0 h-8 items-center gap-2 rounded-full bg-primary/10 px-3 text-xs font-medium text-primary border border-primary/20">
+                        Status: Open
+                        <span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+<button class="flex shrink-0 h-8 items-center gap-2 rounded-full bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark hover:bg-gray-100 dark:hover:bg-gray-700 px-3 text-xs font-medium text-[#111418] dark:text-white transition-colors">
+                        Severity
+                        <span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+<button class="flex shrink-0 h-8 items-center gap-2 rounded-full bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark hover:bg-gray-100 dark:hover:bg-gray-700 px-3 text-xs font-medium text-[#111418] dark:text-white transition-colors">
+                        Category
+                        <span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+</div>
+<!-- Right: View Options -->
+<div class="flex items-center gap-2 shrink-0">
+<span class="text-xs text-[#617589] font-medium hidden sm:block mr-2">Sort by: Severity (High to Low)</span>
+<button class="p-2 text-[#617589] hover:text-primary rounded-md hover:bg-background-light transition-colors">
+<span class="material-symbols-outlined text-[20px]">sort</span>
+</button>
+<button class="p-2 text-[#617589] hover:text-primary rounded-md hover:bg-background-light transition-colors">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</button>
+</div>
+</div>
+<!-- Alerts List Container -->
+<div class="flex flex-col gap-3">
+<!-- Alert Item 1: CRITICAL & EXPANDED -->
+<div class="group relative flex flex-col rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-fluent ring-1 ring-primary/20">
+<!-- Color Strip Indicator -->
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-red-500 rounded-l-lg z-10"></div>
+<!-- Header / Summary Row -->
+<div class="flex flex-col sm:flex-row items-start sm:items-center p-4 pl-6 gap-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+<!-- Icon & Title -->
+<div class="flex items-center gap-4 flex-1">
+<div class="size-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0 text-red-600">
+<span class="material-symbols-outlined">dns</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-base font-bold text-[#111418] dark:text-white leading-tight">High Latency on DB-Cluster-04</h3>
+<span class="text-sm text-[#617589] dark:text-gray-400">ID: #ALT-2024-892 • Infrastructure</span>
+</div>
+</div>
+<!-- Meta Tags -->
+<div class="flex flex-wrap items-center gap-3 mt-2 sm:mt-0">
+<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-900/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-300 ring-1 ring-inset ring-red-600/10">Critical</span>
+<div class="flex items-center gap-1 text-xs text-[#617589]">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+                                12 mins ago
+                            </div>
+<div class="size-8 rounded-full bg-cover bg-center border border-white shadow-sm ml-2 hidden sm:block" data-alt="Assignee Avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBdKPZNhvYNDlBfhuyuFoXKZb92sb9ChiM-Rdm_-i5D6w0FcLPerMfdRRrsNaE81bXS9i7rbNA7I6LYfvjcLT1LJjzZRkvSXx_2s2OelVaWjr_i5-RiULiqPlQzD6J8mYdpHHzE3ZhTvB72caS2QS2QnT5MlGkbXiRyROxMsn3DF3eObYrgaQMIYSIgsr1XxgY3gxfDdZic-ZfS1Zl6tCvZxCEpBlmf2aSvtPcJE2Ws5BwGb0yQU913djUVBc0cknDhMFjmkrbSyQ");'></div>
+<button class="p-1 text-[#617589] hover:text-[#111418] dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined rotate-180 transition-transform">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Expanded Detail View -->
+<div class="flex flex-col gap-6 border-t border-border-light dark:border-border-dark bg-background-light/50 dark:bg-background-dark/30 p-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Details Text -->
+<div class="lg:col-span-2 space-y-3">
+<h4 class="text-sm font-semibold text-[#111418] dark:text-white uppercase tracking-wider">Issue Description</h4>
+<p class="text-sm text-[#617589] dark:text-gray-300 leading-relaxed">
+                                    Database query latency has exceeded the critical threshold of 500ms for the last 15 minutes. 
+                                    Automated diagnostics indicate a potential deadlock in the payment processing queue. 
+                                    <span class="font-medium text-[#111418] dark:text-white">Requires immediate investigation to prevent transaction failures.</span>
+</p>
+<div class="flex gap-4 pt-2">
+<div class="flex flex-col gap-1">
+<span class="text-xs text-[#617589]">Error Code</span>
+<span class="text-sm font-mono bg-white dark:bg-black/20 px-2 py-0.5 rounded border border-border-light dark:border-border-dark">ERR_TIMEOUT_504</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-xs text-[#617589]">Affected Users</span>
+<span class="text-sm font-medium">~1,240 sessions</span>
+</div>
+</div>
+</div>
+<!-- Mini Chart / Visual -->
+<div class="lg:col-span-1 flex flex-col justify-end bg-white dark:bg-surface-dark rounded-lg p-4 border border-border-light dark:border-border-dark shadow-sm h-full">
+<div class="flex justify-between items-center mb-4">
+<span class="text-xs font-semibold text-[#617589]">Latency (ms) - Last 1h</span>
+<span class="text-xs font-bold text-red-600">842ms Peak</span>
+</div>
+<div class="flex items-end justify-between gap-1 h-24 w-full">
+<div class="w-full bg-blue-100 dark:bg-blue-900/20 rounded-t-sm h-[20%]"></div>
+<div class="w-full bg-blue-100 dark:bg-blue-900/20 rounded-t-sm h-[25%]"></div>
+<div class="w-full bg-blue-100 dark:bg-blue-900/20 rounded-t-sm h-[22%]"></div>
+<div class="w-full bg-blue-200 dark:bg-blue-800/30 rounded-t-sm h-[35%]"></div>
+<div class="w-full bg-blue-300 dark:bg-blue-700/40 rounded-t-sm h-[45%]"></div>
+<div class="w-full bg-orange-300 dark:bg-orange-600/50 rounded-t-sm h-[60%]"></div>
+<div class="w-full bg-red-400 dark:bg-red-500/80 rounded-t-sm h-[85%]"></div>
+<div class="w-full bg-red-500 dark:bg-red-500 rounded-t-sm h-[95%]"></div>
+<div class="w-full bg-red-500 dark:bg-red-500 rounded-t-sm h-[90%]"></div>
+<div class="w-full bg-red-400 dark:bg-red-500/80 rounded-t-sm h-[80%]"></div>
+</div>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="flex flex-wrap items-center justify-end gap-3 pt-2 border-t border-border-light dark:border-border-dark mt-2">
+<button class="flex items-center gap-2 h-9 px-4 rounded-lg text-[#617589] hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+<span class="material-symbols-outlined text-[18px]">notifications_off</span>
+                                Mute Alert
+                            </button>
+<button class="flex items-center gap-2 h-9 px-4 rounded-lg bg-white dark:bg-surface-dark border border-border-light dark:border-border-dark text-[#111418] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm font-medium shadow-sm">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+                                View Logs
+                            </button>
+<button class="flex items-center gap-2 h-9 px-6 rounded-lg bg-primary text-white hover:bg-blue-600 transition-colors text-sm font-bold shadow-md">
+                                Investigate
+                                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Alert Item 2: WARNING & COLLAPSED -->
+<div class="group relative flex flex-col rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-fluent hover:shadow-fluent-hover transition-all duration-200">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-orange-500 rounded-l-lg z-10"></div>
+<div class="flex flex-col sm:flex-row items-start sm:items-center p-4 pl-6 gap-4 cursor-pointer">
+<div class="flex items-center gap-4 flex-1">
+<div class="size-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center shrink-0 text-orange-600">
+<span class="material-symbols-outlined">attach_money</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-base font-bold text-[#111418] dark:text-white leading-tight">Q3 Budget Threshold Approaching</h3>
+<span class="text-sm text-[#617589] dark:text-gray-400">ID: #ALT-2024-890 • Finance</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-3 mt-2 sm:mt-0">
+<span class="inline-flex items-center rounded-md bg-orange-50 dark:bg-orange-900/20 px-2 py-1 text-xs font-medium text-orange-700 dark:text-orange-300 ring-1 ring-inset ring-orange-600/20">Warning</span>
+<div class="flex items-center gap-1 text-xs text-[#617589]">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+                                2h ago
+                            </div>
+<div class="size-8 rounded-full bg-cover bg-center border border-white shadow-sm ml-2 hidden sm:block" data-alt="Assignee Avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAFv460LJcbG7I-nlwFCvffY7BRZbT8gvY9wqnzr5uYM4k6kpiHHUVMr7A09Pxo7FPl5QgsVRqlykbGqlMDnxcAFRfQwwh7wQGa5glrBOowhKCuwyWbKhKiszSR2GgYs7vhmhnGIpyCBqXJxoCMbEhDf-9GhC_22jt2jgcntdU2kYqYiUjE20oUcP3gpT7mFmKRC6v5EuhT17tUqiMSb7k0XwX_jJXewkW2NMb5WTt4MC80EUmhcOeIw_4DRD5ZuaqRsYYkbqi40g");'></div>
+<button class="p-1 text-[#617589] hover:text-[#111418] dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined transition-transform">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Alert Item 3: INFO & COLLAPSED -->
+<div class="group relative flex flex-col rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-fluent hover:shadow-fluent-hover transition-all duration-200">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500 rounded-l-lg z-10"></div>
+<div class="flex flex-col sm:flex-row items-start sm:items-center p-4 pl-6 gap-4 cursor-pointer">
+<div class="flex items-center gap-4 flex-1">
+<div class="size-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 text-blue-600">
+<span class="material-symbols-outlined">group_add</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-base font-bold text-[#111418] dark:text-white leading-tight">New Enterprise Accounts Onboarded</h3>
+<span class="text-sm text-[#617589] dark:text-gray-400">ID: #ALT-2024-885 • Sales Ops</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-3 mt-2 sm:mt-0">
+<span class="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/20 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-700/10">Info</span>
+<div class="flex items-center gap-1 text-xs text-[#617589]">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+                                Yesterday
+                            </div>
+<!-- Unassigned Avatar Placeholder -->
+<div class="size-8 rounded-full bg-gray-100 dark:bg-gray-700 border border-white border-dashed flex items-center justify-center ml-2 hidden sm:flex">
+<span class="material-symbols-outlined text-gray-400 text-[16px]">person</span>
+</div>
+<button class="p-1 text-[#617589] hover:text-[#111418] dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined transition-transform">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Alert Item 4: CRITICAL & COLLAPSED -->
+<div class="group relative flex flex-col rounded-lg bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-fluent hover:shadow-fluent-hover transition-all duration-200">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-red-500 rounded-l-lg z-10"></div>
+<div class="flex flex-col sm:flex-row items-start sm:items-center p-4 pl-6 gap-4 cursor-pointer">
+<div class="flex items-center gap-4 flex-1">
+<div class="size-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0 text-red-600">
+<span class="material-symbols-outlined">security</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-base font-bold text-[#111418] dark:text-white leading-tight">Unauthorized Access Attempt Blocked</h3>
+<span class="text-sm text-[#617589] dark:text-gray-400">ID: #ALT-2024-881 • Security</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-3 mt-2 sm:mt-0">
+<span class="inline-flex items-center rounded-md bg-red-50 dark:bg-red-900/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-300 ring-1 ring-inset ring-red-600/10">Critical</span>
+<div class="flex items-center gap-1 text-xs text-[#617589]">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+                                Yesterday
+                            </div>
+<div class="size-8 rounded-full bg-cover bg-center border border-white shadow-sm ml-2 hidden sm:block" data-alt="Assignee Avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBqwprQHA8gs2pzOmNfm7rSKZH7bo-oF_yG61TTZRFhS36RV863ZoUAY3SBCy096rWQh6fC2AmqCZIOATuEZZEBbnxcCXremisCkIgRVdjPacnZExDuD0oew7Q67r15ZcqQT4KFQEsqYdKEnTK4PS2JdAlLBd5O1VKZ0_MgQ0KZUSm4q9JDeNx7TKGHozQc9R0-gP1TtqkPu7xaxmrH_n4_b-ST5hNXVvGz1m7HluPqSDR8ze8zrU1WkW18OThXgSnnD2DOnPOITA");'></div>
+<button class="p-1 text-[#617589] hover:text-[#111418] dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined transition-transform">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination / Load More -->
+<div class="flex justify-center pt-4">
+<button class="text-sm font-medium text-[#617589] hover:text-primary transition-colors flex items-center gap-2">
+                    Show older alerts
+                    <span class="material-symbols-outlined text-[18px]">keyboard_arrow_down</span>
+</button>
+</div>
+</main>
+</div>
+</body></html>

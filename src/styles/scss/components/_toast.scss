@@ -1,0 +1,286 @@
+// =============================================================================
+// TOAST / MESSAGE BAR COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// TOAST CONTAINER
+// -----------------------------------------------------------------------------
+
+.toast-container {
+  position: fixed;
+  z-index: $z-index-toast;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+  max-width: 420px;
+  width: 100%;
+  padding: $spacing-16;
+  pointer-events: none;
+}
+
+// Positions
+.toast-container--top-right {
+  top: 0;
+  right: 0;
+}
+
+.toast-container--top-left {
+  top: 0;
+  left: 0;
+}
+
+.toast-container--top-center {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.toast-container--bottom-right {
+  bottom: 0;
+  right: 0;
+}
+
+.toast-container--bottom-left {
+  bottom: 0;
+  left: 0;
+}
+
+.toast-container--bottom-center {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+// -----------------------------------------------------------------------------
+// TOAST ITEM
+// -----------------------------------------------------------------------------
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-12;
+  padding: $spacing-12 $spacing-16;
+  border-radius: $border-radius-medium;
+  pointer-events: auto;
+  @include elevation(8);
+  animation: toast-slide-in $duration-normal ease-out;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
+    color: themed('text-primary');
+  }
+}
+
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TOAST VARIANTS
+// -----------------------------------------------------------------------------
+
+.toast--info {
+  @include themify {
+    border-left: 4px solid themed('state-info');
+  }
+
+  .toast__icon {
+    @include themify {
+      color: themed('state-info');
+    }
+  }
+}
+
+.toast--success {
+  @include themify {
+    border-left: 4px solid themed('state-success');
+  }
+
+  .toast__icon {
+    @include themify {
+      color: themed('state-success');
+    }
+  }
+}
+
+.toast--warning {
+  @include themify {
+    border-left: 4px solid themed('state-warning');
+  }
+
+  .toast__icon {
+    @include themify {
+      color: themed('state-warning');
+    }
+  }
+}
+
+.toast--error {
+  @include themify {
+    border-left: 4px solid themed('state-error');
+  }
+
+  .toast__icon {
+    @include themify {
+      color: themed('state-error');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TOAST PARTS
+// -----------------------------------------------------------------------------
+
+.toast__icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+
+.toast__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.toast__title {
+  @include body;
+  font-weight: $font-weight-semibold;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.toast__message {
+  @include body-small;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.toast__close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: $border-radius-small;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.toast__actions {
+  display: flex;
+  gap: $spacing-8;
+  margin-top: $spacing-8;
+}
+
+// -----------------------------------------------------------------------------
+// MESSAGE BAR (Inline variant)
+// -----------------------------------------------------------------------------
+
+.message-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-12;
+  padding: $spacing-12 $spacing-16;
+  border-radius: $border-radius-medium;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    color: themed('text-primary');
+  }
+}
+
+.message-bar--info {
+  @include themify {
+    background-color: alpha-color(themed('state-info'), 0.12);
+    border-left: 4px solid themed('state-info');
+  }
+}
+
+.message-bar--success {
+  @include themify {
+    background-color: themed('success-background');
+    border-left: 4px solid themed('state-success');
+  }
+}
+
+.message-bar--warning {
+  @include themify {
+    background-color: themed('warning-background');
+    border-left: 4px solid themed('state-warning');
+  }
+}
+
+.message-bar--error {
+  @include themify {
+    background-color: themed('error-background');
+    border-left: 4px solid themed('state-error');
+  }
+}
+
+.message-bar__icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.message-bar__content {
+  flex: 1;
+}
+
+.message-bar__dismiss {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: $spacing-4;
+  border-radius: $border-radius-small;
+  @include transition(background-color, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+}

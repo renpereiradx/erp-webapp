@@ -1,0 +1,211 @@
+// =============================================================================
+// PROGRESS BAR COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE PROGRESS BAR
+// -----------------------------------------------------------------------------
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+  width: 100%;
+}
+
+.progress__track {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+
+  @include themify {
+    background-color: themed('bg-tertiary');
+  }
+}
+
+.progress__fill {
+  height: 100%;
+  border-radius: 2px;
+  @include transition(width, $duration-normal);
+
+  @include themify {
+    background-color: themed('action-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// PROGRESS VARIANTS
+// -----------------------------------------------------------------------------
+
+.progress--success {
+  .progress__fill {
+    @include themify {
+      background-color: themed('state-success');
+    }
+  }
+}
+
+.progress--warning {
+  .progress__fill {
+    @include themify {
+      background-color: themed('state-warning');
+    }
+  }
+}
+
+.progress--error {
+  .progress__fill {
+    @include themify {
+      background-color: themed('state-error');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// INDETERMINATE STATE
+// -----------------------------------------------------------------------------
+
+.progress--indeterminate {
+  .progress__fill {
+    position: absolute;
+    width: 35%;
+    animation: progress-indeterminate 1.5s infinite ease-in-out;
+  }
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    left: -35%;
+  }
+
+  100% {
+    left: 100%;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SIZES
+// -----------------------------------------------------------------------------
+
+.progress--thin {
+  .progress__track {
+    height: 2px;
+  }
+}
+
+.progress--thick {
+  .progress__track {
+    height: 8px;
+    border-radius: 4px;
+  }
+
+  .progress__fill {
+    border-radius: 4px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// WITH LABEL
+// -----------------------------------------------------------------------------
+
+.progress__label {
+  @include body-small;
+  white-space: nowrap;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+.progress__value {
+  @include body-small;
+  font-weight: $font-weight-semibold;
+  white-space: nowrap;
+  min-width: 36px;
+  text-align: right;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CIRCULAR PROGRESS (SPINNER)
+// -----------------------------------------------------------------------------
+
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner__svg {
+  animation: spinner-rotate 1.4s linear infinite;
+}
+
+.spinner__track {
+  stroke-linecap: round;
+
+  @include themify {
+    stroke: themed('bg-tertiary');
+  }
+}
+
+.spinner__fill {
+  stroke-linecap: round;
+  animation: spinner-dash 1.4s ease-in-out infinite;
+
+  @include themify {
+    stroke: themed('action-primary');
+  }
+}
+
+@keyframes spinner-rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinner-dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+// Spinner sizes
+.spinner--small {
+  width: 16px;
+  height: 16px;
+}
+
+.spinner--medium {
+  width: 24px;
+  height: 24px;
+}
+
+.spinner--large {
+  width: 32px;
+  height: 32px;
+}
+
+.spinner--xlarge {
+  width: 48px;
+  height: 48px;
+}

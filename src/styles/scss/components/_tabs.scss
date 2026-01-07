@@ -1,0 +1,188 @@
+// =============================================================================
+// TABS COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// TAB LIST
+// -----------------------------------------------------------------------------
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+}
+
+.tab-list {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid;
+
+  @include themify {
+    border-bottom-color: themed('border-subtle');
+  }
+}
+
+.tab-list--vertical {
+  flex-direction: column;
+  border-bottom: none;
+  border-right: 1px solid;
+
+  @include themify {
+    border-right-color: themed('border-subtle');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TAB TRIGGER
+// -----------------------------------------------------------------------------
+
+.tab-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-8;
+  padding: $spacing-12 $spacing-16;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  @include body;
+  font-weight: $font-weight-medium;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    opacity: 0;
+    @include transition(opacity, $duration-fast);
+
+    @include themify {
+      background-color: themed('action-primary');
+    }
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      color: themed('text-primary');
+      background-color: themed('surface-hover');
+    }
+  }
+
+  @include focus-visible;
+}
+
+// Active state
+.tab-trigger--active {
+  @include themify {
+    color: themed('action-primary');
+  }
+
+  &::after {
+    opacity: 1;
+  }
+}
+
+// Disabled state
+.tab-trigger--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+// Vertical tabs
+.tab-list--vertical .tab-trigger {
+  justify-content: flex-start;
+  width: 100%;
+
+  &::after {
+    bottom: 0;
+    top: 0;
+    left: auto;
+    right: -1px;
+    width: 2px;
+    height: auto;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TAB CONTENT
+// -----------------------------------------------------------------------------
+
+.tab-content {
+  @include body;
+
+  @include themify {
+    color: themed('text-primary');
+  }
+}
+
+.tab-panel {
+  &:focus-visible {
+    @include themify {
+      outline: 2px solid themed('action-primary');
+      outline-offset: 2px;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TAB SIZES
+// -----------------------------------------------------------------------------
+
+.tab-list--small {
+  .tab-trigger {
+    @include body-small;
+    padding: $spacing-8 $spacing-12;
+  }
+}
+
+.tab-list--large {
+  .tab-trigger {
+    @include body-large;
+    padding: $spacing-16 $spacing-20;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TAB VARIANTS
+// -----------------------------------------------------------------------------
+
+// Pill tabs (no underline, background on active)
+.tab-list--pill {
+  border-bottom: none;
+  gap: $spacing-4;
+  padding: $spacing-4;
+  border-radius: $border-radius-medium;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+  }
+
+  .tab-trigger {
+    border-radius: $border-radius-small;
+
+    &::after {
+      display: none;
+    }
+
+    &.tab-trigger--active {
+      @include themify {
+        background-color: themed('bg-primary');
+        color: themed('text-primary');
+        box-shadow: $shadow-2;
+      }
+    }
+  }
+}

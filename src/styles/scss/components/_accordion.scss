@@ -1,0 +1,168 @@
+// =============================================================================
+// ACCORDION COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// ACCORDION CONTAINER
+// -----------------------------------------------------------------------------
+
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+// -----------------------------------------------------------------------------
+// ACCORDION ITEM
+// -----------------------------------------------------------------------------
+
+.accordion-item {
+  border-radius: $border-radius-medium;
+  overflow: hidden;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-subtle');
+  }
+
+  &:not(:last-child) {
+    margin-bottom: $spacing-4;
+  }
+}
+
+// Borderless variant
+.accordion--borderless .accordion-item {
+  border: none;
+  border-radius: 0;
+
+  @include themify {
+    background-color: transparent;
+    border-bottom: 1px solid themed('border-subtle');
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCORDION TRIGGER
+// -----------------------------------------------------------------------------
+
+.accordion-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: $spacing-16;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  @include body;
+  font-weight: $font-weight-semibold;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    color: themed('text-primary');
+  }
+
+  &:hover {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  @include focus-visible;
+}
+
+.accordion-trigger__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  @include transition(transform, $duration-fast);
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Expanded state
+.accordion-item--expanded {
+  .accordion-trigger__icon {
+    transform: rotate(180deg);
+  }
+}
+
+// Disabled state
+.accordion-item--disabled {
+  opacity: 0.5;
+
+  .accordion-trigger {
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ACCORDION CONTENT
+// -----------------------------------------------------------------------------
+
+.accordion-content {
+  overflow: hidden;
+  @include transition(height, $duration-fast);
+}
+
+.accordion-content__inner {
+  padding: 0 $spacing-16 $spacing-16;
+  @include body;
+
+  @include themify {
+    color: themed('text-secondary');
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SIZES
+// -----------------------------------------------------------------------------
+
+.accordion--small {
+  .accordion-trigger {
+    @include body-small;
+    padding: $spacing-12;
+  }
+
+  .accordion-content__inner {
+    padding: 0 $spacing-12 $spacing-12;
+  }
+}
+
+.accordion--large {
+  .accordion-trigger {
+    @include body-large;
+    padding: $spacing-20;
+  }
+
+  .accordion-content__inner {
+    padding: 0 $spacing-20 $spacing-20;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// SINGLE EXPAND MODE
+// -----------------------------------------------------------------------------
+
+// Applied via JS - only one item can be expanded at a time
+// No additional SCSS needed

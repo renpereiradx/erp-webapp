@@ -1,0 +1,140 @@
+// =============================================================================
+// TOGGLE COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Similar to Button but with pressed/unpressed states
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// -----------------------------------------------------------------------------
+// BASE TOGGLE
+// -----------------------------------------------------------------------------
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-8;
+  padding: $spacing-8 $spacing-12;
+  border-radius: $border-radius-medium;
+  cursor: pointer;
+  user-select: none;
+  @include transition(all, $duration-fast);
+
+  @include themify {
+    background-color: transparent;
+    color: themed('text-primary');
+    border: 1px solid themed('border-default');
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      background-color: themed('surface-hover');
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: themed('surface-pressed');
+    }
+  }
+
+  @include focus-visible;
+}
+
+// -----------------------------------------------------------------------------
+// PRESSED STATE
+// -----------------------------------------------------------------------------
+
+.toggle--pressed {
+  @include themify {
+    background-color: themed('action-primary');
+    color: themed('text-inverted');
+    border-color: themed('action-primary');
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      background-color: themed('action-primary-hover');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// DISABLED STATE
+// -----------------------------------------------------------------------------
+
+.toggle--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+// -----------------------------------------------------------------------------
+// SIZES
+// -----------------------------------------------------------------------------
+
+.toggle--small {
+  padding: $spacing-4 $spacing-8;
+  font-size: $font-size-200;
+}
+
+.toggle--large {
+  padding: $spacing-12 $spacing-16;
+  font-size: $font-size-400;
+}
+
+// -----------------------------------------------------------------------------
+// TOGGLE GROUP
+// -----------------------------------------------------------------------------
+
+.toggle-group {
+  display: inline-flex;
+  gap: 0;
+
+  .toggle {
+    border-radius: 0;
+
+    &:first-child {
+      border-top-left-radius: $border-radius-medium;
+      border-bottom-left-radius: $border-radius-medium;
+    }
+
+    &:last-child {
+      border-top-right-radius: $border-radius-medium;
+      border-bottom-right-radius: $border-radius-medium;
+    }
+
+    &:not(:last-child) {
+      border-right: none;
+    }
+  }
+}
+
+.toggle-group--vertical {
+  flex-direction: column;
+
+  .toggle {
+    &:first-child {
+      border-radius: 0;
+      border-top-left-radius: $border-radius-medium;
+      border-top-right-radius: $border-radius-medium;
+    }
+
+    &:last-child {
+      border-radius: 0;
+      border-bottom-left-radius: $border-radius-medium;
+      border-bottom-right-radius: $border-radius-medium;
+    }
+
+    &:not(:last-child) {
+      border-right: 1px solid;
+      border-bottom: none;
+
+      @include themify {
+        border-right-color: themed('border-default');
+      }
+    }
+  }
+}

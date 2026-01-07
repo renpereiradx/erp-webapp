@@ -1,0 +1,67 @@
+// =============================================================================
+// TEXTAREA COMPONENT
+// =============================================================================
+// Based on Microsoft Fluent Design System 2
+// Note: Basic .textarea styles exist in _input.scss, this extends them
+// =============================================================================
+
+@use '../abstracts' as *;
+
+// The base .textarea class is defined in _input.scss
+// This file provides additional variants and extensions
+
+// -----------------------------------------------------------------------------
+// TEXTAREA SIZES
+// -----------------------------------------------------------------------------
+
+.textarea--small {
+  min-height: 60px;
+  padding: $spacing-4 $spacing-8;
+  font-size: $font-size-200;
+}
+
+.textarea--medium {
+  // Default size (defined in _input.scss)
+}
+
+.textarea--large {
+  min-height: 120px;
+  padding: $spacing-12 $spacing-16;
+  font-size: $font-size-400;
+}
+
+// -----------------------------------------------------------------------------
+// TEXTAREA WITH CHARACTER COUNT
+// -----------------------------------------------------------------------------
+
+.textarea-wrapper {
+  position: relative;
+}
+
+.textarea-wrapper__count {
+  position: absolute;
+  bottom: $spacing-8;
+  right: $spacing-12;
+  @include caption;
+
+  @include themify {
+    color: themed('text-tertiary');
+  }
+
+  &--warning {
+    @include themify {
+      color: themed('state-warning');
+    }
+  }
+
+  &--error {
+    @include themify {
+      color: themed('state-error');
+    }
+  }
+}
+
+// When count is present, add padding to textarea
+.textarea--with-count {
+  padding-bottom: $spacing-24;
+}
