@@ -147,6 +147,33 @@
   }
 }
 
+// Text Button (Ghost with primary color)
+.btn--text {
+  @include themify {
+    background-color: transparent;
+    color: themed('action-primary');
+  }
+
+  &:hover:not(:disabled) {
+    @include themify {
+      background-color: themed('surface-hover');
+      color: themed('action-primary-hover');
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include themify {
+      background-color: themed('surface-pressed');
+      color: themed('action-primary-pressed');
+    }
+  }
+}
+
+// Outline Button (Alias for Secondary)
+.btn--outline {
+  @extend .btn--secondary;
+}
+
 // Subtle Button (Soft background)
 .btn--subtle {
   @include themify {
