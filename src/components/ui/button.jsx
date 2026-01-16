@@ -41,7 +41,8 @@ const variantClasses = {
   success: "btn--success",
   warning: "btn--warning",
   outline: "btn--secondary",
-  link: "btn--ghost", // Link uses ghost base with additional text styles
+  link: "btn--ghost",
+  filter: "btn--filter",
 }
 
 const sizeClasses = {

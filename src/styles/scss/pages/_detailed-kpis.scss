@@ -1,0 +1,94 @@
+// =============================================================================
+// DETAILED KPIS DASHBOARD PAGE
+// =============================================================================
+// Specific styles for /dashboard/kpis
+// =============================================================================
+
+@use '../abstracts' as *;
+
+.dashboard.detailed-kpis {
+  
+  // ---------------------------------------------------------------------------
+  // Grid Layouts
+  // ---------------------------------------------------------------------------
+  
+  .dashboard__detailed-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-24;
+    margin-bottom: $spacing-32;
+
+    @include respond-to(lg) {
+      grid-template-columns: repeat(12, 1fr);
+      align-items: start;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Specific Components
+  // ---------------------------------------------------------------------------
+
+  // Inventory Donut Container fix
+  .chart-card__container--donut {
+    height: 220px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: $spacing-16 0;
+  }
+
+  // Regional Performance Map
+  .regional-map {
+    position: relative;
+    border-radius: $border-radius-large;
+    overflow: hidden;
+    background-color: var(--bg-tertiary);
+    
+    &__bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0.5;
+    }
+    
+    &__marker {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 10;
+      
+      &:hover .regional-map__tooltip {
+        display: block;
+      }
+    }
+    
+    &__dot {
+      width: 12px;
+      height: 12px;
+      background-color: var(--action-primary);
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+    
+    &__tooltip {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: $spacing-8;
+      padding: $spacing-8;
+      background-color: var(--bg-elevated);
+      border-radius: $border-radius-medium;
+      @include elevation(8);
+      white-space: nowrap;
+      font-size: $font-size-100;
+      z-index: 20;
+
+      p { margin: 0; font-weight: bold; }
+      .growth { color: var(--state-success); }
+    }
+  }
+}

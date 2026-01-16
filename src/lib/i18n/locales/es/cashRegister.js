@@ -8,6 +8,7 @@ export const cashRegister = {
   'cashRegister.title': 'Gestión de Cajas Registradoras',
   'cashRegister.subtitle':
     'Abre o cierra una caja para registrar los movimientos de efectivo.',
+  'cashRegister.openClose': 'Apertura y Cierre',
   'cashRegister.tab.open': 'Abrir Caja',
   'cashRegister.tab.close': 'Cerrar Caja',
 

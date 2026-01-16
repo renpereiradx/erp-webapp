@@ -2,8 +2,6 @@
    GLOBAL STYLES - ERP Web Application
    ============================================================================= */
 
-/* Fluent 2 Design System Utilities */
-@import './styles/fluent-utilities.css';
 
 /* Fix badge visibility issues for Material and Fluent themes */
 .erp-navbar-actions {

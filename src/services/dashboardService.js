@@ -34,7 +34,11 @@ export const dashboardService = {
     const startTime = Date.now();
     try {
       const endpoint = `${API_PREFIX}/summary?period=${period}`;
-      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
+      // 🔧 FIX: Override Authorization header to send raw token (without Bearer) as per user report
+      const token = apiService.getToken();
+      const headers = token ? { Authorization: token } : {};
+      
+      const result = await _fetchWithRetry(async () => apiService.get(endpoint, { headers }));
       telemetry.record('dashboard.service.summary', { duration: Date.now() - startTime, period });
       return result;
     } catch (error) {
@@ -56,7 +60,11 @@ export const dashboardService = {
       if (category) queryParams.append('category', category);
       
       const endpoint = `${API_PREFIX}/alerts?${queryParams.toString()}`;
-      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
+      // 🔧 FIX: Override Authorization header to send raw token (without Bearer) as per user report
+      const token = apiService.getToken();
+      const headers = token ? { Authorization: token } : {};
+      
+      const result = await _fetchWithRetry(async () => apiService.get(endpoint, { headers }));
       telemetry.record('dashboard.service.alerts', { duration: Date.now() - startTime });
       return result;
     } catch (error) {
@@ -73,7 +81,11 @@ export const dashboardService = {
     const startTime = Date.now();
     try {
       const endpoint = `${API_PREFIX}/recent-activity?limit=${limit}`;
-      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
+      // 🔧 FIX: Override Authorization header to send raw token (without Bearer) as per user report
+      const token = apiService.getToken();
+      const headers = token ? { Authorization: token } : {};
+      
+      const result = await _fetchWithRetry(async () => apiService.get(endpoint, { headers }));
       telemetry.record('dashboard.service.activity', { duration: Date.now() - startTime, limit });
       return result;
     } catch (error) {

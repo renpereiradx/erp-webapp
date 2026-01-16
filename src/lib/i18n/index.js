@@ -57,22 +57,36 @@ export const setI18nLang = (lang) => {
  * @param {Object} vars - Variables para interpolación (opcional)
  * @returns {string} - Texto traducido
  */
-export const tRaw = (key, vars) => {
+export const tRaw = (key, defaultValue, vars) => {
+  // Manejar caso donde no se pasa defaultValue
+  if (typeof defaultValue === 'object') {
+    vars = defaultValue
+    defaultValue = key
+  }
+  
   const dict = DICTIONARY[currentLang]
-  let template = (dict && dict[key]) || key
+  
+  // 1. Intentar acceso directo
+  let template = (dict && dict[key])
 
-  // Si no se encuentra la traducción, mostrar warning en desarrollo
-  if (template === key && process.env.NODE_ENV === 'development') {
-    console.warn(`[i18n] Traducción no encontrada: "${key}" (idioma: ${currentLang})`)
+  // 2. Intentar acceso anidado
+  if (!template && key.includes('.')) {
+    template = key.split('.').reduce((obj, i) => (obj ? obj[i] : null), dict)
   }
 
-  // Interpolación de variables
+  // 3. Fallback
+  template = template || defaultValue || key
+
+  // Interpolación de variables ({var} o {{var}})
   if (vars && typeof vars === 'object') {
-    template = String(template).replace(/\{(\w+)\}/g, (_, varKey) =>
-      Object.prototype.hasOwnProperty.call(vars, varKey)
-        ? String(vars[varKey])
-        : `{${varKey}}`
-    )
+    const patterns = [/\{(\w+)\}/g, /\{\{(\w+)\}\}/g];
+    patterns.forEach(pattern => {
+      template = String(template).replace(pattern, (_, varKey) =>
+        Object.prototype.hasOwnProperty.call(vars, varKey)
+          ? String(vars[varKey])
+          : `{${varKey}}`
+      )
+    });
   }
 
   return template
@@ -114,22 +128,41 @@ export function useI18n() {
 
     // Función de traducción
     const t = useCallback(
-      (key, vars) => {
-        const dict = DICTIONARY[lang]
-        let template = (dict && dict[key]) || key
+      (key, defaultValue, vars) => {
+        // Manejar caso donde no se pasa defaultValue
+        if (typeof defaultValue === 'object') {
+          vars = defaultValue
+          defaultValue = key
+        }
 
-        // Warning en desarrollo si no se encuentra la traducción
+        const dict = DICTIONARY[lang]
+        
+        // 1. Intentar acceso directo
+        let template = (dict && dict[key])
+
+        // 2. Intentar acceso anidado
+        if (!template && key.includes('.')) {
+          template = key.split('.').reduce((obj, i) => (obj ? obj[i] : null), dict)
+        }
+
+        // 3. Fallback
+        template = template || defaultValue || key
+
+        // Warning en desarrollo
         if (template === key && process.env.NODE_ENV === 'development') {
           console.warn(`[i18n] Traducción no encontrada: "${key}" (idioma: ${lang})`)
         }
 
-        // Interpolación de variables
+        // Interpolación de variables ({var} o {{var}})
         if (vars && typeof vars === 'object') {
-          template = String(template).replace(/\{(\w+)\}/g, (_, varKey) =>
-            Object.prototype.hasOwnProperty.call(vars, varKey)
-              ? String(vars[varKey])
-              : `{${varKey}}`
-          )
+          const patterns = [/\{(\w+)\}/g, /\{\{(\w+)\}\}/g];
+          patterns.forEach(pattern => {
+            template = String(template).replace(pattern, (_, varKey) =>
+              Object.prototype.hasOwnProperty.call(vars, varKey)
+                ? String(vars[varKey])
+                : `{${varKey}}`
+            )
+          });
         }
 
         return template

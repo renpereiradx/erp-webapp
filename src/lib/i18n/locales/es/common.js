@@ -55,6 +55,7 @@ export const common = {
   'action.select_item': 'Seleccionar item',
   'action.delete_product': 'Eliminar producto',
   'action.open_menu': 'Abrir menú de acciones',
+  'action.logout': 'Cerrar Sesión',
 
   // Modales
   'modal.cancel': 'Cancelar',
@@ -88,6 +89,10 @@ export const common = {
   'common.selected': 'Seleccionado',
   'common.total': 'Total',
   'common.subtotal': 'Subtotal',
+  'common.user': 'Usuario',
+  'common.normal': 'Normal',
+  'common.payments': 'Pagos',
+  'common.financeConfig': 'Configuración Financiera',
 
   // Filtros
   'common.filters': 'Filtros',

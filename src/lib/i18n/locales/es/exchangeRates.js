@@ -5,6 +5,7 @@
 
 export const exchangeRates = {
   // Títulos y subtítulos
+  'exchangeRates.navbarLabel': 'Tipos de Cambio',
   'exchangeRates.title': 'Tipos de Cambio',
   'exchangeRates.subtitle':
     'Visualice y administre las tasas de cambio diarias y pares de divisas.',

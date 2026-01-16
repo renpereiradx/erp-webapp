@@ -78,6 +78,8 @@ export const common = {
   'common.selected': 'Selected',
   'common.total': 'Total',
   'common.subtotal': 'Subtotal',
+  'common.user': 'User',
+  'common.normal': 'Normal',
 
   // Filters
   'common.filters': 'Filters',

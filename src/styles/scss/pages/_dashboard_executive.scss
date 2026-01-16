@@ -1,0 +1,319 @@
+
+// =============================================================================
+// EXECUTIVE DASHBOARD STYLES (Strict Spec Implementation)
+// =============================================================================
+
+// Spec Colors (Tailwind mappings)
+$bg-light: #f6f7f8;
+$fluent-shadow: 0 2px 4px rgba(0,0,0,0.02), 0 4px 10px rgba(0,0,0,0.04);
+$fluent-shadow-hover: 0 4px 12px rgba(0,0,0,0.08), 0 8px 16px rgba(0,0,0,0.04);
+
+// Backgrounds
+$blue-50: #eff6ff; $blue-100: #dbeafe; $blue-600: #2563eb;
+$green-50: #f0fdf4; $green-100: #dcfce7; $green-600: #16a34a;
+$orange-50: #fff7ed; $orange-100: #ffedd5; $orange-600: #ea580c;
+$red-50: #fef2f2; $red-100: #fee2e2; $red-600: #dc2626;
+$purple-50: #faf5ff; $purple-100: #f3e8ff; $purple-600: #9333ea;
+$slate-50: #f8fafc; $slate-100: #f1f5f9; $slate-400: #94a3b8; $slate-500: #64748b;
+
+.executive-dashboard {
+  background-color: $bg-light;
+  flex: 1;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: $spacing-24 $spacing-32;
+  font-family: 'Inter', sans-serif;
+
+  // Global Card Style
+  .kpi-card, .chart-card, .operation-card, .finance-card, .alerts-card {
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: $border-radius-large; // 0.75rem / 12px
+      box-shadow: $fluent-shadow;
+      transition: box-shadow 0.2s ease;
+      
+      &:hover {
+          box-shadow: $fluent-shadow-hover;
+      }
+  }
+
+  // Grids
+  .dashboard__kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: $spacing-24;
+    margin-bottom: $spacing-32;
+  }
+
+  .dashboard__main-grid-exec {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-24;
+    margin-bottom: $spacing-32;
+    @media (min-width: $breakpoint-lg) { grid-template-columns: 2fr 1fr; }
+  }
+
+  .dashboard__bottom-grid-exec {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-24;
+    @media (min-width: $breakpoint-lg) { grid-template-columns: 1fr 1fr; }
+  }
+
+
+  // 1. Top KPI Cards
+  // ---------------------------------------------------------------------------
+  .kpi-card {
+      padding: $spacing-24;
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-16;
+
+      &__header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+      }
+
+      &__icon-wrapper {
+          width: 40px;
+          height: 40px;
+          border-radius: $border-radius-medium; // 8px
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          
+          &--blue { background-color: $blue-50; color: $primary; }
+          &--orange { background-color: $orange-50; color: $orange-600; }
+          &--green { background-color: $green-50; color: $green-600; }
+          &--purple { background-color: $purple-50; color: $purple-600; }
+      }
+
+      &__trend {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 2px 6px;
+          border-radius: 4px;
+          @include text-xs-bold;
+          
+          &--up { background-color: $green-50; color: $green-600; }
+          &--down { background-color: $red-50; color: $red-600; }
+      }
+
+      &__content {
+          .kpi-card__label {
+             @include text-sm-medium;
+             color: $slate-500;
+             margin-bottom: 4px;
+          }
+          .kpi-card__value {
+              @include text-2xl-bold;
+              color: $neutral-900;
+              letter-spacing: -0.025em;
+          }
+      }
+  }
+
+  // 2. Charts
+  // ---------------------------------------------------------------------------
+  .chart-card {
+      padding: $spacing-24;
+      
+      &__header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: $spacing-24;
+      }
+      
+      &__title { @include text-lg-bold; color: $neutral-900; }
+      &__subtitle { @include text-sm; color: $slate-500; }
+      
+      .chart-legend {
+          display: flex;
+          gap: $spacing-12;
+          
+          .legend-item {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              @include text-xs-medium;
+              color: $slate-500;
+              
+              .dot {
+                  width: 12px; height: 12px; border-radius: 50%;
+                  &--blue { background-color: $primary; }
+                  &--gray { background-color: #cbd5e1; }
+              }
+          }
+      }
+  }
+
+  // 3. Operations Stack
+  // ---------------------------------------------------------------------------
+  .operations-stack {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-24;
+  }
+
+  .operation-card {
+      position: relative;
+      overflow: hidden;
+      padding: $spacing-24;
+      
+      // Corner Decoration (Quarter Circle)
+      .card-decoration {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 96px;
+          height: 96px;
+          border-bottom-left-radius: 9999px; // Rounded corner
+          transition: transform 0.3s ease;
+          
+          &--orange { background-color: $orange-50; }
+          &--green { background-color: $green-50; }
+      }
+      
+      &:hover .card-decoration {
+          transform: scale(1.1);
+      }
+
+      &__content {
+          position: relative;
+          z-index: 10;
+      }
+
+      // Specific Icon Styles for Ops
+      .kpi-card__icon-wrapper {
+          &--orange-light { background-color: $orange-100; color: $orange-600; }
+          &--green-light { background-color: $green-100; color: $green-600; }
+          margin-bottom: $spacing-16;
+      }
+      
+      .operation-card__title {
+          @include text-base-bold;
+          display: inline-block;
+          margin-left: $spacing-12;
+          vertical-align: middle;
+      }
+
+      .alert-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          border-radius: $border-radius-medium;
+          margin-top: $spacing-16;
+          background-color: $red-50;
+          border: 1px solid $red-100;
+          color: $red-600;
+          @include text-sm-semibold;
+      }
+      
+      .progress-bar-container {
+          background-color: $slate-100;
+          margin-top: $spacing-16;
+          border-radius: 9999px;
+          height: 6px;
+          width: 100%;
+          overflow: hidden;
+          
+          .progress-bar {
+              background-color: $green-600;
+              height: 100%;
+          }
+      }
+  }
+
+  // 4. Finance Overview
+  // ---------------------------------------------------------------------------
+  .finance-card {
+      padding: $spacing-24;
+      
+      .finance-item {
+          margin-bottom: $spacing-24;
+          
+          &__header {
+              display: flex; justify-content: space-between; align-items: flex-end;
+              margin-bottom: $spacing-8;
+          }
+          &__label { @include text-sm-semibold; color: $slate-500; }
+          &__value { @include text-xl-bold; color: $neutral-900; }
+          
+          .progress-track {
+              height: 12px;
+              background-color: $bg-light;
+              border-radius: 9999px;
+          }
+          .progress-fill {
+              height: 100%; border-radius: 9999px;
+              &--blue { background-color: #3b82f6; }
+              &--orange { background-color: #fb923c; }
+          }
+      }
+      
+      .finance-footer {
+          border-top: 1px solid $slate-100;
+          padding-top: $spacing-24;
+          display: flex;
+          gap: $spacing-32;
+      }
+  }
+
+  // 5. Alerts
+  // ---------------------------------------------------------------------------
+  .alerts-card {
+      padding: 0; // Handled internally
+      
+      .alerts-header {
+          padding: $spacing-24;
+          border-bottom: 1px solid $e200;
+          background-color: rgba($slate-50, 0.5);
+          display: flex; justify-content: space-between; align-items: center;
+          
+          .live-indicator {
+              display: flex; align-items: center; gap: 8px;
+              @include text-xs-medium; color: $slate-500;
+              
+              .pulse-dot {
+                  width: 8px; height: 8px; background-color: $red-600; border-radius: 50%;
+              }
+          }
+      }
+      
+      .alert-item {
+          display: flex; gap: $spacing-16;
+          padding: $spacing-16 $spacing-24;
+          border-bottom: 1px solid $slate-100;
+          transition: background-color 0.15s ease;
+          cursor: pointer;
+          
+          &:hover { background-color: $slate-50; }
+          
+          .alert-icon-box {
+              width: 32px; height: 32px; border-radius: 50%;
+              display: flex; align-items: center; justify-content: center;
+              flex-shrink: 0;
+              
+              &--red { background-color: $red-100; color: $red-600; }
+              &--green { background-color: $green-100; color: $green-600; }
+              &--blue { background-color: $blue-100; color: $blue-600; }
+          }
+          
+          .alert-title { @include text-sm-bold; color: $neutral-900; }
+          .alert-time { @include text-xs; color: $slate-500; }
+          .alert-desc { @include text-sm; color: $slate-500; margin-top: 2px; }
+      }
+      
+      .alerts-footer {
+          padding: $spacing-12;
+          background-color: $slate-50;
+          border-top: 1px solid $e200;
+          text-align: center;
+      }
+  }
+}

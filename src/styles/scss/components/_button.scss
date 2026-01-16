@@ -11,7 +11,14 @@
 // BASE BUTTON
 // -----------------------------------------------------------------------------
 
-.btn {
+// -----------------------------------------------------------------------------
+// BASE BUTTON
+// -----------------------------------------------------------------------------
+
+// Increasing specificity to override potential 2px resets from other libraries
+.btn,
+button.btn,
+a.btn {
   // Base structure
   display: inline-flex;
   align-items: center;
@@ -33,7 +40,7 @@
 
   // Visual
   border: 1px solid transparent;
-  border-radius: $border-radius-medium;
+  border-radius: $border-radius-xlarge;
   cursor: pointer;
   user-select: none;
 
@@ -91,38 +98,42 @@
     background-color: themed('action-primary');
     color: themed('text-inverted');
   }
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
   &:hover:not(:disabled) {
     @include themify {
       background-color: themed('action-primary-hover');
     }
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 
   &:active:not(:disabled) {
     @include themify {
       background-color: themed('action-primary-pressed');
     }
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 
 // Secondary Button (Outlined)
 .btn--secondary {
   @include themify {
-    background-color: transparent;
+    background-color: themed('bg-primary');
     border-color: themed('border-default');
     color: themed('text-primary');
   }
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
   &:hover:not(:disabled) {
     @include themify {
-      background-color: themed('surface-hover');
+      background-color: themed('bg-hover');
       border-color: themed('border-strong');
     }
   }
 
   &:active:not(:disabled) {
     @include themify {
-      background-color: themed('surface-pressed');
+      background-color: themed('bg-active');
     }
   }
 }
@@ -279,6 +290,24 @@
   }
 }
 
+// Filter Button (Pill shaped, elevated)
+.btn--filter {
+  @extend .btn--secondary;
+  border-radius: 999px;
+  padding: 6px $spacing-12;
+  font-weight: $font-weight-medium;
+
+  @include respond-to(sm) {
+    padding: 6px $spacing-16;
+  }
+
+  svg {
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+}
+
 // -----------------------------------------------------------------------------
 // BUTTON SIZES
 // -----------------------------------------------------------------------------
@@ -290,9 +319,7 @@
   gap: $spacing-4;
 }
 
-.btn--medium {
-  // Default size (already defined in base)
-}
+// .btn--medium is the default size (defined in base)
 
 .btn--large {
   min-height: 40px;

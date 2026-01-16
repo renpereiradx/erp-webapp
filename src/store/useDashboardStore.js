@@ -35,17 +35,43 @@ const useDashboardStore = create()(
              // But the instruction was to INTEGRATE REAL API.
           }
           
-          // Cargar datos de la API real en paralelo
-          const [summaryRes, alertsRes, activityRes] = await Promise.all([
+          // Cargar datos de la API real en paralelo de forma resiliente
+          const results = await Promise.allSettled([
              dashboardService.getSummary(),
              dashboardService.getAlerts(),
              dashboardService.getRecentActivity()
           ]);
 
+          const [summaryRes, alertsRes, activityRes] = results;
+
+          // El resumen es crítico, si falla, lanzamos el error
+          if (summaryRes.status === 'rejected') {
+            throw summaryRes.reason;
+          }
+
+          // Alertas y actividad son opcionales/secundarios, si fallan usamos defaults
+          const summaryData = summaryRes.value.data;
+          
+          const alertsData = alertsRes.status === 'fulfilled' 
+            ? alertsRes.value.data.alerts 
+            : [];
+            
+          if (alertsRes.status === 'rejected') {
+            console.warn('⚠️ Dashboard: Falló la carga de alertas:', alertsRes.reason.message);
+          }
+
+          const activitiesData = activityRes.status === 'fulfilled' 
+            ? activityRes.value.data.activities 
+            : [];
+
+          if (activityRes.status === 'rejected') {
+            console.warn('⚠️ Dashboard: Falló la carga de actividad reciente:', activityRes.reason.message);
+          }
+
           set({
-            summary: summaryRes.data,
-            alerts: alertsRes.data.alerts,
-            activities: activityRes.data.activities,
+            summary: summaryData,
+            alerts: alertsData,
+            activities: activitiesData,
             loading: false
           });
           

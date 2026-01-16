@@ -24,6 +24,7 @@ import { cashRegister } from './cashRegister.js'
 import { cashMovement } from './cashMovement.js'
 import { currencies } from './currencies.js'
 import { exchangeRates } from './exchangeRates.js'
+import { dashboard } from './dashboard.js'
 
 /**
  * Diccionario completo de traducciones en español
@@ -50,5 +51,6 @@ export const es = {
   ...cashMovement,
   ...currencies,
   ...exchangeRates,
+  ...dashboard,
   ...other,
 }

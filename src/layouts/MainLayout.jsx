@@ -8,6 +8,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/lib/i18n'
 import {
   LayoutDashboard,
   Package,
@@ -84,6 +85,7 @@ const MainLayout = ({ children }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const { t } = useI18n()
 
   // Formateo de números para tipos de cambio
   const rateFormatter = useMemo(
@@ -123,71 +125,71 @@ const MainLayout = ({ children }) => {
   // Configuración de navegación
   const navigation = useMemo(
     () => [
-      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { name: 'Productos', href: '/productos', icon: Package },
-      { name: 'Clientes', href: '/clientes', icon: Users },
-      { name: 'Proveedores', href: '/proveedores', icon: Truck },
+      { name: t('common.home', 'Dashboard'), href: '/dashboard', icon: LayoutDashboard },
+      { name: t('products.title', 'Productos'), href: '/productos', icon: Package },
+      { name: t('clients.title', 'Clientes'), href: '/clientes', icon: Users },
+      { name: t('suppliers.title', 'Proveedores'), href: '/proveedores', icon: Truck },
       {
-        name: 'Ajustes de Producto',
+        name: t('productAdjustments.title', 'Ajustes de Producto'),
         href: '/ajustes-producto',
         icon: SlidersHorizontal,
       },
-      { name: 'Compras', href: '/compras', icon: ShoppingBag },
-      { name: 'Ventas', href: '/ventas', icon: ShoppingCart },
-      { name: 'Gestión Reservas', href: '/gestion-reservas', icon: Calendar },
+      { name: t('purchases.title', 'Compras'), href: '/compras', icon: ShoppingBag },
+      { name: t('sales.title', 'Ventas'), href: '/ventas', icon: ShoppingCart },
+      { name: t('reservations.title', 'Gestión Reservas'), href: '/gestion-reservas', icon: Calendar },
       {
-        name: 'Pagos',
+        name: t('common.payments', 'Pagos'),
         href: '#',
         icon: DollarSign,
         children: [
           {
-            name: 'Pagos Compras',
+            name: t('purchasePaymentsMvp.title', 'Pagos Compras'),
             href: '/pagos-compras',
             icon: CircleDollarSign,
           },
           {
-            name: 'Cobros Ventas',
+            name: t('sales.payments', 'Cobros Ventas'),
             href: '/cobros-ventas',
             icon: CreditCard,
           },
         ],
       },
       {
-        name: 'Registro de Caja',
+        name: t('cashRegister.title', 'Registro de Caja'),
         href: '#',
         icon: DollarSign,
         children: [
           {
-            name: 'Apertura y Cierre',
+            name: t('cashRegister.openClose', 'Apertura y Cierre'),
             href: '/caja-registradora',
             icon: DollarSign,
           },
           {
-            name: 'Registro Manual',
+            name: t('cashMovement.title', 'Registro Manual'),
             href: '/movimientos-caja',
             icon: DollarSign,
           },
         ],
       },
       {
-        name: 'Config. Financiera',
+        name: t('common.financeConfig', 'Config. Financiera'),
         href: '#',
         icon: Coins,
         children: [
           {
-            name: 'Monedas',
+            name: t('currencies.title', 'Monedas'),
             href: '/configuracion/monedas',
             icon: Coins,
           },
           {
-            name: 'Tipos de Cambio',
+            name: t('exchangeRates.title', 'Tipos de Cambio'),
             href: '/configuracion/tipos-cambio',
             icon: SlidersHorizontal,
           },
         ],
       },
     ],
-    []
+    [t]
   )
 
   // Detectar tamaño de pantalla
@@ -514,7 +516,7 @@ const MainLayout = ({ children }) => {
           <div className='navbar__content'>
             {/* Exchange Rates */}
             <div className='navbar__rates'>
-              <span className='navbar__rates-label'>Tipos de cambio</span>
+              <span className='navbar__rates-label'>{t('exchangeRates.navbarLabel', 'Tipos de cambio')}</span>
               <div className='navbar__rates-list'>
                 {navbarRatesLoading ? (
                   <Loader2
@@ -582,7 +584,7 @@ const MainLayout = ({ children }) => {
                 aria-label='Abrir ajustes'
               >
                 <Settings className='navbar__settings-icon' />
-                <span className='navbar__settings-text'>Ajustes</span>
+                <span className='navbar__settings-text'>{t('settings.title', 'Ajustes')}</span>
               </button>
 
               {showUserMenu &&
@@ -612,18 +614,18 @@ const MainLayout = ({ children }) => {
                     <div className='user-menu__body'>
                       <Link
                         to='/configuracion'
-                        className='user-menu__item'
+                         className='user-menu__item'
                         onClick={() => setShowUserMenu(false)}
                       >
                         <Settings className='user-menu__item-icon' />
-                        Configuración
+                        {t('settings.title', 'Configuración')}
                       </Link>
                       <button
                         onClick={handleLogout}
                         className='user-menu__item user-menu__item--danger'
                       >
                         <LogOut className='user-menu__item-icon' />
-                        Cerrar Sesión
+                        {t('action.logout', 'Cerrar Sesión')}
                       </button>
                     </div>
                   </div>,
