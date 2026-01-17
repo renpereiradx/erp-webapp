@@ -17,12 +17,25 @@ const useDashboardStore = create()(
     (set) => ({
       // Estado de las métricas
       summary: null,
+      kpis: null,
       alerts: [],
       activities: [],
       
       // Estados de carga y error
       loading: false,
       error: null,
+
+      // Acción para cargar los KPIs detallados
+      fetchKPIData: async (period = 'month') => {
+        set({ loading: true, error: null });
+        try {
+          const response = await dashboardService.getKPIs(period);
+          set({ kpis: response.data, loading: false });
+        } catch (error) {
+          console.error('❌ Dashboard: Error loading KPIs:', error.message);
+          set({ error: error.message, loading: false });
+        }
+      },
 
       // Acción para cargar todos los datos del dashboard
       fetchDashboardData: async () => {

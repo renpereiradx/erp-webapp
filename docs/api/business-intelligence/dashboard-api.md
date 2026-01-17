@@ -2,6 +2,8 @@
 
 API para obtener métricas ejecutivas y KPIs del negocio en tiempo real.
 
+> **Nota (2026-01-16):** Esta documentación ha sido actualizada para reflejar con precisión los esquemas de base de datos, nombres de columnas y parámetros reales de la API. Se han corregido inconsistencias entre la documentación y la implementación actual del código.
+
 ## Endpoints
 
 ### 1. Resumen Ejecutivo
@@ -141,8 +143,7 @@ Obtiene tendencias comparativas entre períodos.
 
 | Parámetro | Tipo | Requerido | Descripción |
 |-----------|------|-----------|-------------|
-| `period` | string | No | Período actual. Default: `month` |
-| `compare_with` | string | No | Período de comparación. Default: `previous` |
+| `period` | string | No | Período actual. Default: `month`. Se compara automáticamente con el período anterior. |
 
 #### Response
 
@@ -188,14 +189,11 @@ Obtiene tendencias comparativas entre períodos.
   },
   "metadata": {
     "generated_at": "2025-01-15T10:30:00Z",
-    "current_period": {
-      "start": "2025-01-01",
-      "end": "2025-01-31"
-    },
-    "previous_period": {
-      "start": "2024-12-01",
-      "end": "2024-12-31"
-    }
+    "period": "month",
+    "period_start": "2025-01-01",
+    "period_end": "2025-01-31",
+    "previous_start": "2024-12-01",
+    "previous_end": "2024-12-31"
   }
 }
 ```
@@ -571,5 +569,81 @@ curl -X GET "http://localhost:8080/dashboard/alerts?severity=critical" \
 
 ---
 
-**Estado:** En desarrollo
-**Última actualización:** 2026-01-02
+## Notas Técnicas
+
+### Correcciones de Esquemas de Base de Datos (2026-01-16)
+
+Se actualizaron todas las consultas SQL en `repository/dashboard.go` para incluir los esquemas correctos de PostgreSQL y nombres de columnas precisos:
+
+#### Cambios en Referencias de Tablas
+
+| Referencia Anterior | Referencia Actualizada |
+|---------------------|------------------------|
+| `sales_orders` | `transactions.sales_orders` |
+| `purchase_orders` | `transactions.purchase_orders` |
+| `sale_payments` | `transactions.sale_payments` |
+| `sales_order_details` | `transactions.sales_order_details` |
+| `budget_orders` | `transactions.budget_orders` |
+| `reserves` | `transactions.reserves` |
+| `cash_registers` | `transactions.cash_registers` |
+| `cash_movements` | `transactions.cash_movements` |
+| `products` | `products.products` |
+| `stock` | `products.stock` |
+| `prices` (antes `pricing`) | `products.prices` |
+| `clients` | `clients.clients` |
+| `suppliers` | `clients.suppliers` |
+| `users` | `users.users` |
+| `categories` | `public.categories` |
+
+#### Correcciones de Nombres de Columnas
+
+| Tabla | Columna Anterior | Columna Correcta |
+|-------|------------------|------------------|
+| `transactions.sales_orders` | `created_at` | `sale_date` |
+| `transactions.purchase_orders` | `created_at` | `order_date` |
+| `transactions.purchase_orders` | `purchase_date` | `order_date` |
+| `transactions.sales_orders` | `user_id` | `id_user` |
+| `transactions.purchase_orders` | `user_id` | `id_user` |
+| `transactions.sale_payments` | `id` | `payment_id` |
+| `clients.clients` | `first_name`, `last_name` | `name`, `last_name` |
+| `products.products` | `is_active` | `state` |
+| `products.products` | `category_id` | `id_category` |
+| `products.stock` | `product_id` | `id_product` |
+| `products.prices` | `product_id` | `id_product` |
+| `products.prices` | `sale_price` | `selling_price` |
+| `transactions.cash_registers` | `current_balance` | Se calcula dinámicamente sumando `initial_balance` + movimientos |
+
+#### Mejora en Cálculo de Balance de Caja
+
+El balance actual de cajas registradoras ahora se calcula dinámicamente usando un CTE:
+
+```sql
+WITH cash_balances AS (
+    SELECT
+        cr.id,
+        cr.status,
+        cr.initial_balance,
+        COALESCE(
+            cr.initial_balance + (
+                SELECT COALESCE(SUM(
+                    CASE
+                        WHEN cm.movement_type = 'INCOME' THEN cm.amount
+                        WHEN cm.movement_type = 'EXPENSE' THEN -cm.amount
+                        ELSE 0
+                    END
+                ), 0)
+                FROM transactions.cash_movements cm
+                WHERE cm.cash_register_id = cr.id
+            ),
+            cr.initial_balance
+        ) as current_balance
+    FROM transactions.cash_registers cr
+)
+```
+
+Esto permite obtener el balance real de las cajas abiertas sin necesidad de una columna `current_balance` en la tabla.
+
+---
+
+**Estado:** En producción
+**Última actualización:** 2026-01-16

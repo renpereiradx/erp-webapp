@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
+
+import React, { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../lib/i18n';
 import useDashboardStore from '../store/useDashboardStore';
 import {
@@ -12,12 +13,14 @@ import {
   Download,
   Share2,
   Clock,
-  MoreHorizontal,
   ChevronDown,
   AlertTriangle,
   CheckCircle2,
   Plus,
-  Minus
+  Minus,
+  RefreshCcw,
+  Percent,
+  BarChart3
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import {
@@ -37,13 +40,18 @@ import {
  */
 const DetailedKPIs = () => {
   const { t } = useI18n();
-  const { summary, fetchDashboardData, loading } = useDashboardStore();
+  const [period, setPeriod] = useState('month');
+  const { summary, kpis, alerts, activities, fetchDashboardData, fetchKPIData, loading, error } = useDashboardStore();
 
   useEffect(() => {
+    // Load summary and alerts/activity for context
     fetchDashboardData();
-  }, [fetchDashboardData]);
+    // Load specific KPIs
+    fetchKPIData(period);
+  }, [fetchDashboardData, fetchKPIData, period]);
 
   // Mock Data for "Revenue vs Budget" (Year to Date)
+  // This could later be replaced by /dashboard/trends or similar if needed
   const revenueData = useMemo(() => [
     { name: 'Jan', actual: 45000, budget: 50000 },
     { name: 'Feb', actual: 52000, budget: 48000 },
@@ -64,25 +72,58 @@ const DetailedKPIs = () => {
     { name: 'Others', value: 10, color: '#cbd5e1' },
   ], []);
 
-  // Helper for currency
   const formatCurrency = (val) => {
-    if (val >= 1000000) return `$${(val / 1000000).toFixed(1)}M`;
-    if (val >= 1000) return `$${(val / 1000).toFixed(0)}k`;
-    return `$${val}`;
+    if (val === undefined || val === null) return '-';
+    if (val >= 1000000) return `Gs. ${(val / 1000000).toFixed(1)}M`;
+    if (val >= 1000) return `Gs. ${(val / 1000).toFixed(0)}k`;
+    return `Gs. ${val}`;
+  };
+
+  const getTimeAgo = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    if (diffInMinutes < 1) return t('dashboard.activity.now', 'ahora');
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h`;
+    return date.toLocaleDateString();
   };
 
   const lastUpdated = "Hoy, 9:41 AM";
   const vsLast30Days = t('dashboard.dashboard.kpi.vsPrevious30Days', 'vs. últimos 30 días');
 
-  if (loading && !summary) {
+  if (loading && !kpis && !summary) {
     return (
-      <div className="dashboard">
-        <div className="dashboard__loading">
-          <p>{t('dashboard.dashboard.loading')}</p>
-        </div>
+      <div className="dashboard dashboard--loading">
+        <RefreshCcw className="animate-spin text-primary" size={48} />
+        <p className="text-lg font-medium text-tertiary">{t('dashboard.loading', 'Cargando indicadores...')}</p>
       </div>
     );
   }
+
+  if (error && !kpis) {
+    return (
+      <div className="dashboard dashboard--error">
+          <div className="p-4 bg-red-100 rounded-full text-red-600 mb-4">
+            <AlertTriangle size={48} />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">{t('dashboard.error.title', 'Error al cargar los KPIs')}</h2>
+          <p className="text-tertiary mb-6">{error}</p>
+          <Button variant="primary" onClick={() => fetchKPIData(period)}>
+            {t('common.retry', 'Reintentar')}
+          </Button>
+      </div>
+    );
+  }
+
+  // KPI Mappings
+  const revenueTotal = summary?.sales?.total || 0;
+  const netMargin = kpis?.financial_kpis?.net_margin || 0;
+  const newCustomers = kpis?.customer_kpis?.new_customers || 0;
+  const inventoryValue = summary?.inventory?.total_value || 0;
+  const stockLevel = 75; // Still mock or calculate if possible
 
   return (
     <div className="dashboard detailed-kpis">
@@ -114,24 +155,27 @@ const DetailedKPIs = () => {
       <div className="dashboard__filters" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px', alignItems: 'center' }}>
         <Button variant="filter">
           <Calendar size={18} />
-          {t('common.period', 'Periodo')}: {t('common.thisQuarter', 'Este Trimestre')}
+          {t('common.period', 'Periodo')}: {t(`common.${period}`, period)}
           <ChevronDown size={18} />
         </Button>
-        <Button variant="filter">
-          {t('common.region', 'Región')}: Global
-          <ChevronDown size={18} />
-        </Button>
-        <Button variant="filter">
-          {t('common.dept', 'Depto')}: {t('common.all', 'Todos')}
-          <ChevronDown size={18} />
-        </Button>
-        <Button variant="filter">
-          {t('common.currency', 'Moneda')}: USD
-          <ChevronDown size={18} />
-        </Button>
-        <Button variant="ghost" size="sm" style={{ marginLeft: 'auto', color: 'var(--action-primary)', fontWeight: 500 }}>
-          {t('common.clearFilters', 'Limpiar filtros')}
-        </Button>
+        {/* Period Selector (Simple) */}
+        <div className="flex bg-paper rounded-lg p-1 border border-subtle">
+            {['today', 'week', 'month', 'year'].map(p => (
+                <button 
+                  key={p} 
+                  onClick={() => setPeriod(p)}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold transition-all ${period === p ? 'bg-primary text-white' : 'hover:bg-hover'}`}
+                >
+                    {t(`common.${p}`, p)}
+                </button>
+            ))}
+        </div>
+        
+        <div className="ml-auto flex gap-2">
+            <Button variant="ghost" size="sm" style={{ color: 'var(--action-primary)', fontWeight: 500 }}>
+              {t('common.clearFilters', 'Limpiar filtros')}
+            </Button>
+        </div>
       </div>
 
       {/* 2. KPI Summary Cards */}
@@ -144,7 +188,7 @@ const DetailedKPIs = () => {
           <div className="kpi-card__header">
             <div>
               <p className="kpi-card__label">{t('dashboard.dashboard.kpi.revenue', 'Ingresos Totales')}</p>
-              <h3 className="kpi-card__value">{formatCurrency(4200000)}</h3>
+              <h3 className="kpi-card__value">{formatCurrency(revenueTotal)}</h3>
             </div>
             <span className="kpi-card__trend kpi-card__trend--up">
               <TrendingUp size={14} />
@@ -159,15 +203,15 @@ const DetailedKPIs = () => {
           <p className="kpi-card__footer-text">{vsLast30Days}</p>
         </div>
 
-        {/* Profit Card */}
+        {/* Profit Card (Net Margin) */}
         <div className="card kpi-card">
            <div className="kpi-card__background-icon icon-purple">
-             <Activity />
+             <Percent />
           </div>
           <div className="kpi-card__header">
             <div>
-              <p className="kpi-card__label">{t('dashboard.dashboard.kpi.netProfit', 'Utilidad Neta')}</p>
-              <h3 className="kpi-card__value">{formatCurrency(842000)}</h3>
+              <p className="kpi-card__label">{t('dashboard.dashboard.kpi.netProfit', 'Margen Neto')}</p>
+              <h3 className="kpi-card__value">{netMargin}%</h3>
             </div>
             <span className="kpi-card__trend kpi-card__trend--up">
               <TrendingUp size={14} />
@@ -197,7 +241,7 @@ const DetailedKPIs = () => {
           <div className="kpi-card__header">
             <div>
               <p className="kpi-card__label">{t('dashboard.dashboard.kpi.newCustomers', 'Nuevos Clientes')}</p>
-              <h3 className="kpi-card__value">1,204</h3>
+              <h3 className="kpi-card__value">{newCustomers.toLocaleString()}</h3>
             </div>
             <span className="kpi-card__trend kpi-card__trend--down">
               <TrendingDown size={14} />
@@ -220,7 +264,7 @@ const DetailedKPIs = () => {
           <div className="kpi-card__header">
             <div>
               <p className="kpi-card__label">{t('dashboard.dashboard.kpi.inventoryValue', 'Valor de Inventario')}</p>
-              <h3 className="kpi-card__value">{formatCurrency(1400000)}</h3>
+              <h3 className="kpi-card__value">{formatCurrency(inventoryValue)}</h3>
             </div>
             <span className="kpi-card__trend kpi-card__trend--up" style={{ backgroundColor: '#ecfdf5', color: '#059669' }}>
               <CheckCircle2 size={14} />
@@ -230,12 +274,12 @@ const DetailedKPIs = () => {
           <div className="kpi-card__visual-container" style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch' }}>
             <div className="progress progress--thick">
                  <div className="progress__track">
-                    <div className="progress__fill" style={{width: '75%', backgroundColor: '#fb923c'}}></div>
+                    <div className="progress__fill" style={{width: `${stockLevel}%`, backgroundColor: '#fb923c'}}></div>
                  </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
               <span>Stock Level</span>
-              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>75%</span>
+              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{stockLevel}%</span>
             </div>
           </div>
           <p className="kpi-card__footer-text" style={{visibility: 'hidden'}}>-</p>
@@ -284,7 +328,7 @@ const DetailedKPIs = () => {
                 <h3 className="card__title" style={{ fontSize: '18px', fontWeight: 700 }}>{t('dashboard.dashboard.inventoryByCategory', 'Inventario por Cat.')}</h3>
              </div>
              <Button variant="ghost" size="icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-ellipsis" aria-hidden="true"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                <BarChart3 size={20} />
              </Button>
 
           </div>
@@ -292,7 +336,7 @@ const DetailedKPIs = () => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={inventoryData}
+                   data={inventoryData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -312,7 +356,7 @@ const DetailedKPIs = () => {
               position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', 
               textAlign: 'center', pointerEvents: 'none' 
             }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold' }}>4,520</div>
+              <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{(summary?.inventory?.total_products || 4520).toLocaleString()}</div>
               <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t('dashboard.dashboard.inventory.title', 'Artículos')}</div>
             </div>
           </div>
@@ -335,40 +379,35 @@ const DetailedKPIs = () => {
         {/* Recent Alerts List (6 cols) */}
         <div className="card col-span-6">
           <div className="card__header">
-            <h3 className="card__title" style={{ fontSize: '18px', fontWeight: 700 }}>{t('dashboard.dashboard.activity.title', 'Alertas y Actividad Reciente')}</h3>
+            <h3 className="card__title" style={{ fontSize: '18px', fontWeight: 700 }}>{t('dashboard.dashboard.activity.title', 'Alertas de Impacto')}</h3>
             <Button variant="ghost" size="sm" style={{ color: 'var(--action-primary)' }}>
               {t('dashboard.dashboard.activity.viewAll', 'Ver Todas')}
             </Button>
           </div>
           <div className="activity-list">
-             <div className="activity-item activity-item--error">
-               <div className="activity-item__icon"><AlertTriangle size={20} /></div>
-               <div className="activity-item__content">
-                 <p className="activity-item__title">Low Stock Warning: Warehouse B</p>
-                 <p className="activity-item__desc">Item SKU-492 is below safety stock levels (5 units remaining).</p>
-               </div>
-               <span className="activity-item__time">2m ago</span>
-             </div>
-             <div className="activity-item activity-item--warning">
-               <div className="activity-item__icon"><TrendingDown size={20} /></div>
-               <div className="activity-item__content">
-                 <p className="activity-item__title">Conversion Rate Drop</p>
-                 <p className="activity-item__desc">Significant drop detected in EMEA region checkout flow.</p>
-               </div>
-               <span className="activity-item__time">1h ago</span>
-             </div>
-             <div className="activity-item activity-item--success">
-               <div className="activity-item__icon"><CheckCircle2 size={20} /></div>
-               <div className="activity-item__content">
-                 <p className="activity-item__title">Monthly Export Completed</p>
-                 <p className="activity-item__desc">The automated finance report has been generated successfully.</p>
-               </div>
-               <span className="activity-item__time">3h ago</span>
-             </div>
+             {/* Map Real Alerts */}
+             {alerts.slice(0, 3).map((alert) => (
+                <div key={alert.id} className={`activity-item activity-item--${alert.severity === 'critical' ? 'error' : alert.severity === 'warning' ? 'warning' : 'info'}`}>
+                    <div className="activity-item__icon">
+                        {alert.severity === 'critical' ? <AlertTriangle size={20} /> : alert.severity === 'warning' ? <TrendingDown size={20} /> : <CheckCircle2 size={20} />}
+                    </div>
+                    <div className="activity-item__content">
+                        <p className="activity-item__title">{alert.title}</p>
+                        <p className="activity-item__desc">{alert.message}</p>
+                    </div>
+                    <span className="activity-item__time">{getTimeAgo(alert.created_at)}</span>
+                </div>
+             ))}
+             
+             {alerts.length === 0 && (
+                <div className="p-8 text-center text-tertiary">
+                    {t('dashboard.dashboard.activity.noActivity', 'Sin alertas críticas.')}
+                </div>
+             )}
           </div>
         </div>
 
-        {/* Regional Performance Map (6 cols) */}
+        {/* Regional Performance Map (6 cols) - Mostly Visual/Marketing for now */}
         <div className="card col-span-6">
           <div className="card__header">
             <h3 className="card__title" style={{ fontSize: '18px', fontWeight: 700 }}>{t('dashboard.dashboard.regional.title', 'Rendimiento Regional')}</h3>
@@ -384,16 +423,16 @@ const DetailedKPIs = () => {
           <div className="regional-map" style={{ height: '280px' }}>
             <div className="regional-map__bg" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80')" }}></div>
             <div className="regional-map__marker" style={{ top: '35%', left: '25%' }}>
-              <div className="regional-map__dot" style={{ boxShadow: '0 0 0 4px rgba(19, 127, 236, 0.2)' }}></div>
+              <div className="regional-map__dot" style={{ boxShadow: '0 0 0 4px rgba(13, 110, 253, 0.2)' }}></div>
               <div className="regional-map__tooltip">
-                <p>North America</p>
+                <p>Norte</p>
                 <p className="growth">+12% {t('dashboard.dashboard.regional.growth', 'Crecimiento')}</p>
               </div>
             </div>
              <div className="regional-map__marker" style={{ top: '45%', left: '50%' }}>
               <div className="regional-map__dot" style={{ backgroundColor: '#8764b8' }}></div>
               <div className="regional-map__tooltip">
-                <p>Europe</p>
+                <p>Central</p>
                 <p>{t('dashboard.dashboard.regional.stable', 'Estable')}</p>
               </div>
             </div>

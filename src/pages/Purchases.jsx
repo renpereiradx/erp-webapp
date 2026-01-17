@@ -1239,12 +1239,8 @@ const Purchases = () => {
                       <span>{orderTotals.itemCount}</span>
                     </div>
                     <div className='purchases__summary-row'>
-                      <span>{t('purchases.form.subtotal', 'Subtotal')}</span>
+                      <span>{t('purchases.form.subtotal_incl_tax', 'Subtotal (IVA incluido)')}</span>
                       <span>{formatCurrency(orderTotals.subtotal)}</span>
-                    </div>
-                    <div className='purchases__summary-row'>
-                      <span>{t('purchases.form.taxes', 'Impuestos')}</span>
-                      <span>{formatCurrency(0)}</span>
                     </div>
                     <div className='purchases__summary-divider'></div>
                     <div className='purchases__summary-row purchases__summary-total'>

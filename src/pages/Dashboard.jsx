@@ -17,7 +17,9 @@ import {
   CheckCircle2,
   Calendar,
   Download,
-  ArrowRight
+  ArrowRight,
+  RefreshCcw,
+  Clock
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import {
@@ -36,13 +38,14 @@ import {
 const Dashboard = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { summary, loading, fetchDashboardData } = useDashboardStore();
+  const { summary, alerts, activities, loading, error, fetchDashboardData } = useDashboardStore();
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
   // Mock Data for "Revenue vs Expenses" Area Chart
+  // In a future step, this could also be fetched from /dashboard/trends or similar
   const revenueExpensesData = useMemo(() => [
     { name: 'Jan 1', revenue: 4000, expenses: 2400 },
     { name: 'Jan 5', revenue: 3000, expenses: 1398 },
@@ -54,12 +57,63 @@ const Dashboard = () => {
   ], []);
 
   const formatCurrency = (val) => {
-    return new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(val);
+    if (val === undefined || val === null) return '-';
+    return new Intl.NumberFormat('es-PY', { 
+      style: 'currency', 
+      currency: 'PYG', 
+      maximumFractionDigits: 0 
+    }).format(val);
   };
 
-  const totalSales = summary?.sales?.total || 124500;
-  const netProfit = summary?.profit?.gross || 79300;
-  
+  const getTimeAgo = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return t('dashboard.activity.now', 'ahora');
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h`;
+    return date.toLocaleDateString();
+  };
+
+  if (loading && !summary) {
+    return (
+      <div className="dashboard dashboard--loading">
+          <RefreshCcw className="animate-spin text-primary" size={48} />
+          <p className="text-lg font-medium text-tertiary">{t('dashboard.loading', 'Cargando dashboard...')}</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="dashboard dashboard--error">
+          <div className="p-4 bg-red-100 rounded-full text-red-600 mb-4">
+            <AlertTriangle size={48} />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">{t('dashboard.error.title', 'Error al cargar el Dashboard')}</h2>
+          <p className="text-tertiary mb-6">{error}</p>
+          <Button variant="primary" onClick={() => fetchDashboardData()}>
+            {t('common.retry', 'Reintentar')}
+          </Button>
+      </div>
+    );
+  }
+
+  // Data mapping from Summary
+  const salesTotal = summary?.sales?.total || 0;
+  const salesCount = summary?.sales?.count || 0;
+  const purchasesTotal = summary?.purchases?.total || 0;
+  const grossProfit = summary?.profit?.gross || 0;
+  const inventoryValue = summary?.inventory?.total_value || 0;
+  const lowStockCount = summary?.inventory?.low_stock_count || 0;
+  const cashBalance = summary?.cash_registers?.total_balance || 0;
+  const receivablesTotal = summary?.receivables?.total_pending || 0;
+  const receivablesOverdue = summary?.receivables?.overdue_count || 0;
+  const payablesTotal = summary?.payables?.total_pending || 0;
+
   return (
     <div className="dashboard">
       {/* 1. Header */}
@@ -89,6 +143,7 @@ const Dashboard = () => {
                    <div className="kpi-card__icon kpi-card__icon--blue">
                        <DollarSign size={24} />
                    </div>
+                   {/* Trend data would come from /dashboard/trends, using placeholder for now */}
                    <div className="kpi-card__trend kpi-card__trend--up">
                        <TrendingUp size={14} />
                        <span>12%</span>
@@ -96,7 +151,7 @@ const Dashboard = () => {
                </div>
                <div>
                    <p className="kpi-card__label">{t('dashboard.kpi.totalSales', 'Ventas Totales')}</p>
-                   <h3 className="kpi-card__value">{formatCurrency(totalSales)}</h3>
+                   <h3 className="kpi-card__value">{formatCurrency(salesTotal)}</h3>
                </div>
            </div>
 
@@ -113,7 +168,7 @@ const Dashboard = () => {
                </div>
                <div>
                    <p className="kpi-card__label">{t('dashboard.kpi.purchases', 'Compras')}</p>
-                   <h3 className="kpi-card__value">{formatCurrency(45200)}</h3>
+                   <h3 className="kpi-card__value">{formatCurrency(purchasesTotal)}</h3>
                </div>
            </div>
 
@@ -129,8 +184,8 @@ const Dashboard = () => {
                    </div>
                </div>
                <div>
-                   <p className="kpi-card__label">{t('dashboard.kpi.netProfit', 'Ganancia Neta')}</p>
-                   <h3 className="kpi-card__value">{formatCurrency(netProfit)}</h3>
+                   <p className="kpi-card__label">{t('dashboard.kpi.netProfit', 'Ganancia Bruta')}</p>
+                   <h3 className="kpi-card__value">{formatCurrency(grossProfit)}</h3>
                </div>
            </div>
 
@@ -147,7 +202,7 @@ const Dashboard = () => {
                </div>
                 <div>
                    <p className="kpi-card__label">{t('dashboard.kpi.dailyTransactions', 'Transacciones Diarias')}</p>
-                   <h3 className="kpi-card__value">1,204</h3>
+                   <h3 className="kpi-card__value">{salesCount.toLocaleString()}</h3>
                </div>
            </div>
        </div>
@@ -159,16 +214,16 @@ const Dashboard = () => {
                <div className="chart-card__header">
                    <div>
                        <h3 className="card__title">{t('dashboard.charts.revVsExp', 'Ingresos vs Gastos')}</h3>
-                       <p className="card__subtitle">Rendimiento en el tiempo</p>
+                       <p className="card__subtitle">{t('dashboard.charts.revenueVsExpenses.subtitle', 'Rendimiento en el tiempo')}</p>
                    </div>
                    <div className="chart-card__legend">
                        <div className="chart-card__legend-item">
                            <span className="dot" style={{backgroundColor: '#137fec'}}></span>
-                           <span className="label">Ingresos</span>
+                           <span className="label">{t('dashboard.revenue', 'Ingresos')}</span>
                        </div>
                        <div className="chart-card__legend-item">
                            <span className="dot" style={{backgroundColor: '#cbd5e1'}}></span>
-                           <span className="label">Gastos</span>
+                           <span className="label">{t('dashboard.expenses', 'Gastos')}</span>
                        </div>
                    </div>
                </div>
@@ -194,7 +249,9 @@ const Dashboard = () => {
                                    borderRadius: '8px', 
                                    border: '1px solid var(--border-subtle)',
                                    boxShadow: 'var(--shadow-8)',
-                                   fontSize: '12px'
+                                   fontSize: '12px',
+                                   backgroundColor: 'var(--bg-paper)',
+                                   color: 'var(--text-primary)'
                                }}
                             />
                             <Area 
@@ -233,12 +290,12 @@ const Dashboard = () => {
                             </div>
                             <h4 className="operation-card__title">{t('dashboard.kpi.inventory', 'Inventario')}</h4>
                         </div>
-                        <p className="kpi-card__label">Valuación Total</p>
-                        <h3 className="kpi-card__value">$500,000</h3>
+                        <p className="kpi-card__label">{t('dashboard.operations.inventory.valuation', 'Valuación Total')}</p>
+                        <h3 className="kpi-card__value">{formatCurrency(inventoryValue)}</h3>
                         
-                        <div className="operation-card__alert">
+                        <div className={`operation-card__alert ${lowStockCount > 0 ? 'operation-card__alert--warning' : ''}`}>
                             <AlertTriangle size={18} />
-                            <span>5 Productos con Stock Bajo</span>
+                            <span>{t('dashboard.operations.inventory.lowStock', '{count} Artículos con bajo stock', { count: lowStockCount }).replace('{count}', lowStockCount)}</span>
                         </div>
                     </div>
                </div>
@@ -253,13 +310,15 @@ const Dashboard = () => {
                             </div>
                             <h4 className="operation-card__title">{t('dashboard.kpi.cashRegister', 'Caja Registradora')}</h4>
                         </div>
-                        <p className="kpi-card__label">Saldo Actual</p>
-                        <h3 className="kpi-card__value">$4,250</h3>
+                        <p className="kpi-card__label">{t('dashboard.operations.cashRegister.balance', 'Saldo Actual')}</p>
+                        <h3 className="kpi-card__value">{formatCurrency(cashBalance)}</h3>
                         
                         <div className="progress" style={{marginTop: '1.5rem', height: '6px', borderRadius: '3px', backgroundColor: 'var(--bg-tertiary)', overflow: 'hidden'}}>
                             <div style={{width: '75%', height: '100%', backgroundColor: '#10b981', borderRadius: '3px'}}></div>
                         </div>
-                         <p style={{marginTop: '0.75rem', fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'right', fontWeight: 600}}>Objetivo: $5,500</p>
+                         <p style={{marginTop: '0.75rem', fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'right', fontWeight: 600}}>
+                             {t('dashboard.operations.cashRegister.target', 'Meta')}: {formatCurrency(5500000)}
+                         </p>
                     </div>
                </div>
            </div>
@@ -271,7 +330,7 @@ const Dashboard = () => {
            <div className="card finance-card">
                <div className="card__header" style={{ marginBottom: '1.5rem', justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
                    <h3 className="card__title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('dashboard.finance.title', 'Resumen Financiero')}</h3>
-                   <Button variant="ghost" size="sm" className="text-primary font-bold">{t('dashboard.actions.viewReport', 'Ver Informe')}</Button>
+                   <Button variant="ghost" size="sm" className="text-primary font-bold">{t('dashboard.actions.viewReport', 'Ver Reporte')}</Button>
                </div>
                
                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -279,8 +338,8 @@ const Dashboard = () => {
                    <div className="finance-group">
                        <div className="finance-group__header">
                            <div className="flex flex-col">
-                               <p className="finance-group__label">Cuentas por Cobrar</p>
-                               <h4 className="finance-group__value">{formatCurrency(20000)}</h4>
+                               <p className="finance-group__label">{t('dashboard.finance.receivables', 'Cuentas por Cobrar')}</p>
+                               <h4 className="finance-group__value">{formatCurrency(receivablesTotal)}</h4>
                            </div>
                            <span className="finance-group__trend finance-group__trend--positive">+8.5%</span>
                        </div>
@@ -292,8 +351,8 @@ const Dashboard = () => {
                    <div className="finance-group">
                        <div className="finance-group__header">
                            <div className="flex flex-col">
-                               <p className="finance-group__label">Cuentas por Pagar</p>
-                               <h4 className="finance-group__value">{formatCurrency(12000)}</h4>
+                               <p className="finance-group__label">{t('dashboard.finance.payables', 'Cuentas por Pagar')}</p>
+                               <h4 className="finance-group__value">{formatCurrency(payablesTotal)}</h4>
                            </div>
                            <span className="finance-group__trend finance-group__trend--neutral">Normal</span>
                        </div>
@@ -305,12 +364,20 @@ const Dashboard = () => {
 
                <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '2rem' }}>
                    <div style={{ flex: 1 }}>
-                       <p className="finance-group__label" style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)'}}>Flujo de Caja Neto</p>
-                       <p className="finance-group__value" style={{fontSize: '1.125rem', marginTop: '4px'}}>+{formatCurrency(8000)}</p>
+                       <p className="finance-group__label" style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)'}}>
+                           {t('dashboard.finance.netCashflow', 'Flujo de Caja Neto')}
+                       </p>
+                       <p className="finance-group__value" style={{fontSize: '1.125rem', marginTop: '4px'}}>
+                           {salesTotal - purchasesTotal > 0 ? '+' : ''}{formatCurrency(salesTotal - purchasesTotal)}
+                       </p>
                    </div>
                     <div style={{ flex: 1 }}>
-                       <p className="finance-group__label" style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)'}}>Facturas Vencidas</p>
-                       <p className="finance-group__value" style={{fontSize: '1.125rem', color: '#dc2626', marginTop: '4px'}}>3</p>
+                       <p className="finance-group__label" style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)'}}>
+                           {t('dashboard.finance.overdueInvoices', 'Facturas Vencidas')}
+                       </p>
+                       <p className="finance-group__value" style={{fontSize: '1.125rem', color: receivablesOverdue > 0 ? '#dc2626' : 'inherit', marginTop: '4px'}}>
+                           {receivablesOverdue}
+                       </p>
                    </div>
                </div>
            </div>
@@ -318,56 +385,56 @@ const Dashboard = () => {
            {/* Recent Alerts & Activity */}
            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                <div className="card__header" style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-subtle)' }}>
-                   <h3 className="card__title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('dashboard.recentAlerts', 'Alertas y Actividad Reciente')}</h3>
+                   <h3 className="card__title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('dashboard.activity.title', 'Alertas y Actividad Reciente')}</h3>
                    <div className="badge-group">
                        <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#dc2626', display: 'inline-block' }} className="animate-pulse"></span>
-                       <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Live</span>
+                       <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>{t('dashboard.activity.live', 'Live')}</span>
                    </div>
                </div>
                <div className="activity-list">
-                   {/* Alert 1 */}
-                   <div className="activity-item">
-                       <div className="activity-item__icon activity-item__icon--error">
-                           <AlertTriangle size={18} />
-                       </div>
-                       <div className="activity-item__content">
-                           <div className="activity-item__header">
-                               <p className="activity-item__title">Alerta de Stock: Item #4922</p>
-                               <span className="activity-item__time">hace 2m</span>
+                   {/* Map Alerts */}
+                   {alerts.slice(0, 3).map((alert) => (
+                       <div key={alert.id} className="activity-item">
+                           <div className={`activity-item__icon activity-item__icon--${alert.severity === 'critical' ? 'error' : alert.severity === 'warning' ? 'warning' : 'info'}`}>
+                               {alert.severity === 'critical' ? <AlertTriangle size={18} /> : alert.severity === 'warning' ? <AlertTriangle size={18} /> : <Info size={18} />}
                            </div>
-                           <p className="activity-item__desc">El nivel de inventario cayó por debajo del umbral (5 unidades).</p>
-                       </div>
-                   </div>
-                   {/* Alert 2 */}
-                    <div className="activity-item">
-                       <div className="activity-item__icon activity-item__icon--success">
-                           <CheckCircle2 size={18} />
-                       </div>
-                       <div className="activity-item__content">
-                           <div className="activity-item__header">
-                               <p className="activity-item__title">Orden Grande #1024 Aprobada</p>
-                               <span className="activity-item__time">hace 45m</span>
+                           <div className="activity-item__content">
+                               <div className="activity-item__header">
+                                   <p className="activity-item__title">{alert.title}</p>
+                                   <span className="activity-item__time">{getTimeAgo(alert.created_at)}</span>
+                               </div>
+                               <p className="activity-item__desc">{alert.message}</p>
                            </div>
-                           <p className="activity-item__desc">Orden por valor de $12,500 aprobada por el Depto. de Finanzas.</p>
                        </div>
-                   </div>
-                    {/* Alert 3 */}
-                    <div className="activity-item">
-                       <div className="activity-item__icon activity-item__icon--info">
-                           <Info size={18} />
-                       </div>
-                       <div className="activity-item__content">
-                           <div className="activity-item__header">
-                               <p className="activity-item__title">Mantenimiento del Sistema</p>
-                               <span className="activity-item__time">hace 2h</span>
+                   ))}
+
+                   {/* Map Recent Activities if few alerts */}
+                   {alerts.length < 3 && activities.slice(0, 3 - alerts.length).map((activity) => (
+                       <div key={activity.id} className="activity-item">
+                           <div className={`activity-item__icon activity-item__icon--${activity.type === 'sale' ? 'success' : 'info'}`}>
+                               {activity.type === 'sale' ? <CheckCircle2 size={18} /> : <Activity size={18} />}
                            </div>
-                           <p className="activity-item__desc">Tiempo de inactividad programado para el sábado 2:00 AM.</p>
+                           <div className="activity-item__content">
+                               <div className="activity-item__header">
+                                   <p className="activity-item__title">{activity.description}</p>
+                                   <span className="activity-item__time">{getTimeAgo(activity.timestamp)}</span>
+                               </div>
+                               <p className="activity-item__desc">
+                                   {activity.user} {activity.amount ? `- ${formatCurrency(activity.amount)}` : ''}
+                               </p>
+                           </div>
                        </div>
-                   </div>
+                   ))}
+
+                   {alerts.length === 0 && activities.length === 0 && (
+                       <div className="p-8 text-center text-tertiary">
+                           {t('dashboard.activity.noActivity', 'Sin actividad reciente.')}
+                       </div>
+                   )}
                </div>
                 <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-subtle)', borderTop: '1px solid var(--border-subtle)', textAlign: 'center' }}>
                     <button className="text-primary font-bold text-xs uppercase tracking-wider hover:underline" onClick={() => navigate('/dashboard/kpis')}>
-                         {t('dashboard.actions.viewDetails', 'Ver Todas las Notificaciones')} 
+                         {t('dashboard.activity.viewAll', 'Ver Todas las Notificaciones')} 
                     </button>
                 </div>
            </div>

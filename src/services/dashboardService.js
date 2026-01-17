@@ -74,6 +74,26 @@ export const dashboardService = {
   },
 
   /**
+   * Get business KPIs
+   * @param {string} period - 'today', 'week', 'month', 'year'
+   */
+  async getKPIs(period = 'month') {
+    const startTime = Date.now();
+    try {
+      const endpoint = `${API_PREFIX}/kpis?period=${period}`;
+      const token = apiService.getToken();
+      const headers = token ? { Authorization: token } : {};
+      
+      const result = await _fetchWithRetry(async () => apiService.get(endpoint, { headers }));
+      telemetry.record('dashboard.service.kpis', { duration: Date.now() - startTime, period });
+      return result;
+    } catch (error) {
+      telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getKPIs' });
+      throw error;
+    }
+  },
+
+  /**
    * Get recent activity
    * @param {number} limit - default 20
    */
