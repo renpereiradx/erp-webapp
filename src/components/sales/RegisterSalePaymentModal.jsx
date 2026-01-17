@@ -33,6 +33,19 @@ import '@/styles/scss/components/_register-sale-payment-modal.scss'
 const CASH_REGISTER_NONE_VALUE = '__none__'
 
 /**
+ * Normaliza el saldo pendiente para que coincida con el valor mostrado al usuario.
+ * Para PYG (guaraníes): redondea a entero (sin decimales).
+ * Esto asegura que la validación use el mismo valor que se muestra al usuario.
+ */
+const getNormalizedBalanceDue = balanceDue => {
+  if (balanceDue === null || balanceDue === undefined) return null
+  const raw = Number(balanceDue)
+  if (!Number.isFinite(raw)) return null
+  // PYG siempre sin decimales
+  return Math.round(raw)
+}
+
+/**
  * Modal para registrar pagos de órdenes de venta
  * Siguiendo el patrón MVP y Fluent Design System
  *
@@ -160,7 +173,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
       const numericToApply = Number.parseFloat(
         parseNumberWithDots(amountToApply)
       )
-      const balanceDue = Number(sale.balance_due || 0)
+      const balanceDue = getNormalizedBalanceDue(sale.balance_due)
 
       if (!Number.isFinite(numericToApply)) {
         errors.amountToApply = 'Monto inválido'
@@ -175,7 +188,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
         errors.amountToApply =
           'No puedes aplicar más dinero del que has recibido'
         errors.hasErrors = true
-      } else if (numericToApply > balanceDue) {
+      } else if (balanceDue !== null && numericToApply > balanceDue) {
         errors.amountToApply = 'No puedes pagar más de lo que debes'
         errors.hasErrors = true
       }
@@ -292,7 +305,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     }
 
     // Calcular monto a aplicar = MIN(monto_recibido, balance_pendiente)
-    const balanceDue = Number(sale.balance_due || 0)
+    const balanceDue = getNormalizedBalanceDue(sale.balance_due) || 0
     const autoAmountToApply = Math.min(numericReceived, balanceDue)
 
     // Si el usuario editó manualmente, verificar si el monto recibido cambió
@@ -426,11 +439,8 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     }
 
     // Validar que amount_to_apply no exceda balance_due
-    if (
-      sale.balance_due !== null &&
-      sale.balance_due !== undefined &&
-      numericAmountToApply - Number(sale.balance_due) > 0.009
-    ) {
+    const normalizedBalanceDue = getNormalizedBalanceDue(sale.balance_due)
+    if (normalizedBalanceDue !== null && numericAmountToApply > normalizedBalanceDue) {
       setAmountToApplyError(
         t('sales.registerPaymentModal.amountToApply.errorExceeded')
       )

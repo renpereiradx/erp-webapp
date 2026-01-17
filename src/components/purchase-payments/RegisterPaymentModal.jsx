@@ -34,6 +34,23 @@ import { calculateCashRegisterBalance } from '@/utils/cashRegisterUtils'
 const DEFAULT_CURRENCY_CODE = 'PYG'
 const CASH_REGISTER_NONE_VALUE = '__none__'
 
+/**
+ * Normaliza el saldo pendiente según la moneda para que coincida con el valor mostrado.
+ * Para PYG: redondea a entero (sin decimales).
+ * Para otras monedas: redondea a 2 decimales.
+ * Esto asegura que la validación use el mismo valor que se muestra al usuario.
+ */
+const getNormalizedPendingAmount = (pendingAmount, currencyCode) => {
+  if (pendingAmount === null || pendingAmount === undefined) return null
+  const raw = Number(pendingAmount)
+  if (!Number.isFinite(raw)) return null
+  const code = (currencyCode || DEFAULT_CURRENCY_CODE).toUpperCase()
+  if (code === 'PYG') {
+    return Math.round(raw)
+  }
+  return Math.round(raw * 100) / 100
+}
+
 const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
   const { t, lang } = useI18n()
 
@@ -116,11 +133,11 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
       return false
     }
     const numericAmount = Number.parseFloat(amount)
-    const pending = Number(order.pendingAmount)
-    if (!Number.isFinite(numericAmount) || !Number.isFinite(pending)) {
+    const pending = getNormalizedPendingAmount(order.pendingAmount, order.currency)
+    if (!Number.isFinite(numericAmount) || pending === null) {
       return false
     }
-    return numericAmount - pending > 0.009
+    return numericAmount > pending
   }, [amount, order])
 
   const disableForm = !order
@@ -495,11 +512,8 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
       return
     }
 
-    if (
-      order.pendingAmount !== null &&
-      order.pendingAmount !== undefined &&
-      numericAmount - Number(order.pendingAmount) > 0.009
-    ) {
+    const normalizedPending = getNormalizedPendingAmount(order.pendingAmount, order.currency)
+    if (normalizedPending !== null && numericAmount > normalizedPending) {
       setAmountError(
         t('purchasePaymentsMvp.registerModal.amount.errorExceeded')
       )
