@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>User Detailed Profile View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#137fec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#1a1f23",
+            },
+            fontFamily: {
+              "display": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white font-display">
+<div class="flex h-full min-h-screen flex-col">
+<!-- Top Nav Bar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#dbe0e6] dark:border-[#333b43] bg-white dark:bg-[#23292e] px-10 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-primary">
+<div class="size-6">
+<svg fill="currentColor" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z"></path>
+</svg>
+</div>
+<h2 class="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Admin Console</h2>
+</div>
+<nav class="flex items-center gap-9">
+<a class="text-[#111418] dark:text-white text-sm font-medium border-b-2 border-primary pb-1" href="#">Users</a>
+<a class="text-[#617589] dark:text-[#a0aab4] text-sm font-medium" href="#">Groups</a>
+<a class="text-[#617589] dark:text-[#a0aab4] text-sm font-medium" href="#">Roles</a>
+<a class="text-[#617589] dark:text-[#a0aab4] text-sm font-medium" href="#">Security</a>
+<a class="text-[#617589] dark:text-[#a0aab4] text-sm font-medium" href="#">Reports</a>
+</nav>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<label class="flex flex-col min-w-40 !h-9 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-[#617589] flex border-none bg-background-light dark:bg-[#1a1f23] items-center justify-center pl-3 rounded-l-lg">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 border-none bg-background-light dark:bg-[#1a1f23] rounded-r-lg text-sm placeholder:text-[#617589] focus:ring-0" placeholder="Search users..."/>
+</div>
+</label>
+<span class="material-symbols-outlined text-[#617589] cursor-pointer">notifications</span>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8 border border-[#dbe0e6] dark:border-[#333b43]" data-alt="Admin user avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBYooNJjK_QBzcdgbsWnvKrK0BAxaI9NcdtAj9rmpvlwsFF_1LCsw-iUo_axhfNKKddYPklt5TPmRxkYzCGiVJTi91osuac8lY_63FRDUE6P2MWT8lRIDpXueshx-79LuByFrHXLr9lEJ4O3U64Ci9mL90GTR6kSQBj3qM0MUDMP7Gbp5v0nwYOvhtMj6aV95Hf8bigqDk4fGy8ETDMIwZTF21nfHyyYiId6HTpkzwybiBtX5kJ2tB6gE09EBPNGI_vXUflkkaSdQ");'></div>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto">
+<div class="max-w-[1280px] mx-auto px-6 py-8">
+<!-- Breadcrumbs -->
+<div class="flex flex-wrap gap-2 items-center mb-6">
+<a class="text-[#617589] text-sm font-medium hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[18px]">group</span> Users
+                </a>
+<span class="text-[#617589] text-sm font-medium">/</span>
+<span class="text-[#111418] dark:text-white text-sm font-semibold">Caleb Jenkins</span>
+</div>
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8 border-b border-[#dbe0e6] dark:border-[#333b43] pb-8">
+<div class="flex gap-6 items-center">
+<div class="relative">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-24 border-4 border-white dark:border-[#23292e] shadow-sm" data-alt="Caleb Jenkins profile photo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuByUG1GXA4Fteawryn8QEa80rFZ1QVu6eMZojxHF5a5mBr-x0JmwQD5g7xSBS8gQx6E4tkAx0uFnDWlB1lR8FkPRqfXN8iGCDkTjKjzFwLMe02C0SdXOF4VETZXBTWM3QFJe9J7zgfBWYyA--zyzIovvFEVsTIVdGNU9yhLRSxKJUhnnYzcpvNWhmCVle9_lcpplI-Hdh9iZ1aGR1BIg4ngbC26GAmhx49kvmlDnX1OnF7dRzzLfyq_E107gks3yi5W9SQjhHWmLg");'></div>
+<div class="absolute bottom-1 right-1 size-5 bg-[#3AA757] rounded-full border-2 border-white dark:border-[#23292e]"></div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3">
+<h1 class="text-[#111418] dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Caleb Jenkins</h1>
+<span class="bg-[#3AA757]/10 text-[#3AA757] text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Active</span>
+</div>
+<p class="text-[#617589] dark:text-[#a0aab4] text-base font-normal">Senior Systems Architect • Seattle, WA • Joined Jan 2022</p>
+<div class="flex gap-4 mt-2">
+<span class="text-sm text-[#617589] flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">mail</span> caleb.jenkins@acme.corp</span>
+<span class="text-sm text-[#617589] flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">phone</span> +1 (555) 012-3456</span>
+</div>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 rounded-lg h-10 px-4 bg-[#f0f2f4] dark:bg-[#2c343a] text-[#111418] dark:text-white text-sm font-bold hover:bg-[#e4e6e8] transition-colors">
+<span class="material-symbols-outlined text-[20px]">password</span>
+<span>Reset Password</span>
+</button>
+<button class="flex items-center gap-2 rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+<span>Edit Profile</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-[#f0f2f4] dark:bg-[#2c343a] text-[#111418] dark:text-white">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left Sidebar: Metadata & Stats -->
+<div class="lg:col-span-1 flex flex-col gap-6">
+<!-- Status & Key Info Card -->
+<div class="bg-white dark:bg-[#23292e] rounded-xl border border-[#dbe0e6] dark:border-[#333b43] p-6 shadow-sm">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">info</span> User Summary
+                        </h3>
+<div class="space-y-4">
+<div class="flex flex-col gap-1 border-b border-[#f0f2f4] dark:border-[#333b43] pb-3">
+<span class="text-xs font-semibold text-[#617589] uppercase">Employee ID</span>
+<span class="text-base font-medium">EMP-88294</span>
+</div>
+<div class="flex flex-col gap-1 border-b border-[#f0f2f4] dark:border-[#333b43] pb-3">
+<span class="text-xs font-semibold text-[#617589] uppercase">Department</span>
+<span class="text-base font-medium">Core Engineering</span>
+</div>
+<div class="flex flex-col gap-1 border-b border-[#f0f2f4] dark:border-[#333b43] pb-3">
+<span class="text-xs font-semibold text-[#617589] uppercase">Reports To</span>
+<div class="flex items-center gap-2 mt-1">
+<div class="size-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">SH</div>
+<span class="text-base font-medium">Sarah Henderson</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-xs font-semibold text-[#617589] uppercase">Last Login</span>
+<span class="text-base font-medium">2 hours ago (from Seattle, WA)</span>
+</div>
+</div>
+</div>
+<!-- Quick Actions Card -->
+<div class="bg-white dark:bg-[#23292e] rounded-xl border border-[#dbe0e6] dark:border-[#333b43] p-6 shadow-sm">
+<h3 class="text-lg font-bold mb-4">Quick Management</h3>
+<div class="flex flex-col gap-2">
+<button class="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium rounded-lg text-left hover:bg-background-light dark:hover:bg-[#2c343a] transition-colors">
+<span class="material-symbols-outlined text-[#617589]">visibility</span> Impersonate User
+                            </button>
+<button class="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium rounded-lg text-left hover:bg-background-light dark:hover:bg-[#2c343a] transition-colors">
+<span class="material-symbols-outlined text-[#617589]">history_edu</span> Export Audit Log
+                            </button>
+<button class="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium rounded-lg text-left hover:bg-background-light dark:hover:bg-[#2c343a] transition-colors">
+<span class="material-symbols-outlined text-[#617589]">block</span> Deactivate Account
+                            </button>
+<button class="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium rounded-lg text-left text-[#E84D4D] hover:bg-[#E84D4D]/10 transition-colors">
+<span class="material-symbols-outlined">delete_forever</span> Delete User
+                            </button>
+</div>
+</div>
+</div>
+<!-- Right Column: Roles, Sessions, History -->
+<div class="lg:col-span-2 flex flex-col gap-8">
+<!-- Roles & Permissions -->
+<div class="bg-white dark:bg-[#23292e] rounded-xl border border-[#dbe0e6] dark:border-[#333b43] shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-[#dbe0e6] dark:border-[#333b43] flex justify-between items-center">
+<h3 class="text-lg font-bold">Assigned Roles &amp; Permissions</h3>
+<button class="text-primary text-sm font-bold hover:underline">Manage Roles</button>
+</div>
+<div class="p-6">
+<div class="flex flex-wrap gap-4">
+<div class="flex-1 min-w-[240px] p-4 rounded-lg bg-background-light dark:bg-[#1a1f23] border border-[#dbe0e6] dark:border-[#333b43]">
+<div class="flex justify-between items-start mb-2">
+<span class="px-2 py-1 bg-primary text-white text-[10px] font-bold rounded uppercase">System Admin</span>
+<span class="material-symbols-outlined text-[#617589] text-[18px]">verified_user</span>
+</div>
+<p class="text-sm font-semibold mb-1">Full Instance Access</p>
+<p class="text-xs text-[#617589]">Ability to manage all users, security settings, and global configurations.</p>
+</div>
+<div class="flex-1 min-w-[240px] p-4 rounded-lg bg-background-light dark:bg-[#1a1f23] border border-[#dbe0e6] dark:border-[#333b43]">
+<div class="flex justify-between items-start mb-2">
+<span class="px-2 py-1 bg-[#617589] text-white text-[10px] font-bold rounded uppercase">Billing Editor</span>
+<span class="material-symbols-outlined text-[#617589] text-[18px]">payments</span>
+</div>
+<p class="text-sm font-semibold mb-1">Financial Operations</p>
+<p class="text-xs text-[#617589]">Can view and modify subscription plans and payment methods.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Active Sessions -->
+<div class="bg-white dark:bg-[#23292e] rounded-xl border border-[#dbe0e6] dark:border-[#333b43] shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-[#dbe0e6] dark:border-[#333b43] flex justify-between items-center bg-[#fcfdfe] dark:bg-[#272d33]">
+<h3 class="text-lg font-bold">Active Security Sessions</h3>
+<button class="text-[#E84D4D] text-sm font-bold hover:underline">Sign out of all devices</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-background-light dark:bg-[#1a1f23] text-[#617589] text-[11px] font-bold uppercase tracking-wider">
+<th class="px-6 py-3 border-b border-[#dbe0e6] dark:border-[#333b43]">Browser / OS</th>
+<th class="px-6 py-3 border-b border-[#dbe0e6] dark:border-[#333b43]">Location</th>
+<th class="px-6 py-3 border-b border-[#dbe0e6] dark:border-[#333b43]">IP Address</th>
+<th class="px-6 py-3 border-b border-[#dbe0e6] dark:border-[#333b43] text-right">Action</th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<tr class="hover:bg-background-light/50 dark:hover:bg-[#2c343a] transition-colors">
+<td class="px-6 py-4 border-b border-[#f0f2f4] dark:border-[#333b43]">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#1380ec]">desktop_windows</span>
+<div class="flex flex-col">
+<span class="font-semibold text-[#111418] dark:text-white">Chrome on Windows</span>
+<span class="text-xs text-[#3AA757] font-medium">Current Session</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 border-b border-[#f0f2f4] dark:border-[#333b43] text-[#617589]">Seattle, USA</td>
+<td class="px-6 py-4 border-b border-[#f0f2f4] dark:border-[#333b43] font-mono text-xs">192.168.1.104</td>
+<td class="px-6 py-4 border-b border-[#f0f2f4] dark:border-[#333b43] text-right">
+<button class="text-[#617589] hover:text-[#E84D4D] transition-colors"><span class="material-symbols-outlined">logout</span></button>
+</td>
+</tr>
+<tr class="hover:bg-background-light/50 dark:hover:bg-[#2c343a] transition-colors">
+<td class="px-6 py-4 border-b border-[#f0f2f4] dark:border-[#333b43]">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#617589]">smartphone</span>
+<div class="flex flex-col">
+<span class="font-semibold text-[#111418] dark:text-white">Safari on iPhone 15</span>
+<span class="text-xs text-[#617589]">Last active 4 hours ago</span>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 border-b border-[#f0f2f4] dark:border-[#333b43] text-[#617589]">Bellevue, USA</td>
+<td class="px-6 py-4 border-b border-[#f0f2f4] dark:border-[#333b43] font-mono text-xs">74.125.22.101</td>
+<td class="px-6 py-4 border-b border-[#f0f2f4] dark:border-[#333b43] text-right">
+<button class="text-[#E84D4D] text-xs font-bold bg-[#E84D4D]/10 px-3 py-1.5 rounded-lg hover:bg-[#E84D4D]/20">Revoke</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Login History -->
+<div class="bg-white dark:bg-[#23292e] rounded-xl border border-[#dbe0e6] dark:border-[#333b43] shadow-sm">
+<div class="px-6 py-4 border-b border-[#dbe0e6] dark:border-[#333b43] flex justify-between items-center">
+<h3 class="text-lg font-bold">Recent Login History</h3>
+<button class="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
+                                View Full Audit <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<div class="divide-y divide-[#f0f2f4] dark:divide-[#333b43]">
+<div class="px-6 py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-8 rounded-full bg-[#3AA757]/10 text-[#3AA757] flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold">Successful Login</span>
+<span class="text-xs text-[#617589]">March 24, 2024 at 10:14 AM</span>
+</div>
+</div>
+<span class="text-xs font-mono bg-background-light dark:bg-[#1a1f23] px-2 py-1 rounded text-[#617589]">192.168.1.104</span>
+</div>
+<div class="px-6 py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-8 rounded-full bg-[#E84D4D]/10 text-[#E84D4D] flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">error</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold">Failed Login Attempt</span>
+<span class="text-xs text-[#617589]">March 23, 2024 at 11:45 PM (Incorrect Password)</span>
+</div>
+</div>
+<span class="text-xs font-mono bg-background-light dark:bg-[#1a1f23] px-2 py-1 rounded text-[#617589]">203.0.113.42</span>
+</div>
+<div class="px-6 py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-8 rounded-full bg-[#3AA757]/10 text-[#3AA757] flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold">Successful Login</span>
+<span class="text-xs text-[#617589]">March 22, 2024 at 09:02 AM</span>
+</div>
+</div>
+<span class="text-xs font-mono bg-background-light dark:bg-[#1a1f23] px-2 py-1 rounded text-[#617589]">192.168.1.104</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Role Assignment &amp; Permissions Panel</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1c65c7",
+                        "background-light": "#ffffff",
+                        "background-dark": "#1c1f22",
+                        "surface-light": "#f5f7f8",
+                        "surface-dark": "#2a2d31",
+                        "error": "#cc3333",
+                        "success": "#28a745"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .fluent-scrollbar::-webkit-scrollbar { width: 4px; }
+        .fluent-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .fluent-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        .dark .fluent-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; }
+        .role-card-checked { border: 2px solid #1c65c7; background-color: rgba(28, 101, 199, 0.04); }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111417] dark:text-gray-100 antialiased h-screen overflow-hidden">
+<!-- Main Layout Container (Simulating a Background Admin View) -->
+<div class="flex h-full w-full">
+<!-- Left Sidebar Navigation -->
+<aside class="w-64 border-r border-gray-200 dark:border-gray-800 flex flex-col bg-background-light dark:bg-background-dark">
+<div class="p-6">
+<div class="flex items-center gap-3 text-primary mb-8">
+<span class="material-symbols-outlined text-3xl">shield_person</span>
+<span class="font-bold text-lg tracking-tight">GuardRail Admin</span>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-surface-light dark:hover:bg-surface-dark transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">User Management</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-surface-light dark:hover:bg-surface-dark transition-colors" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="text-sm font-medium">Roles &amp; Policies</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-surface-light dark:hover:bg-surface-dark transition-colors" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="text-sm font-medium">Audit Logs</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6 border-t border-gray-100 dark:border-gray-800">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">account_circle</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-bold">Admin User</span>
+<span class="text-[10px] text-gray-500 uppercase tracking-wider">Super Admin</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content (Blurred/Overlayed) -->
+<main class="flex-1 overflow-auto bg-[#fafafa] dark:bg-[#16181a] p-8">
+<div class="max-w-5xl mx-auto opacity-50 pointer-events-none">
+<h1 class="text-3xl font-black tracking-tight mb-8">User Directory</h1>
+<div class="bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
+<table class="w-full text-left">
+<thead class="bg-gray-50 dark:bg-surface-dark text-xs uppercase text-gray-500 font-bold">
+<tr>
+<th class="px-6 py-4">User</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4">Current Roles</th>
+<th class="px-6 py-4">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+<tr>
+<td class="px-6 py-4">John Doe</td>
+<td class="px-6 py-4">Active</td>
+<td class="px-6 py-4">Administrator</td>
+<td class="px-6 py-4">Edit</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- Right Drawer (Role Assignment Panel) -->
+<div class="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-40"></div>
+<aside class="fixed right-0 top-0 h-full w-[440px] bg-background-light dark:bg-background-dark z-50 shadow-2xl flex flex-col animate-slide-in">
+<!-- Panel Header -->
+<div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+<div>
+<h2 class="text-xl font-bold tracking-tight">Manage Roles</h2>
+<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Edit system-wide permissions for user access.</p>
+</div>
+<button class="p-2 hover:bg-gray-100 dark:hover:bg-surface-dark rounded-full transition-colors">
+<span class="material-symbols-outlined text-gray-500">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto fluent-scrollbar">
+<!-- Profile Summary Section -->
+<div class="p-6 bg-surface-light/50 dark:bg-surface-dark/30 border-b border-gray-100 dark:border-gray-800">
+<div class="flex items-center gap-4">
+<div class="size-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-2xl overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="User profile avatar showing John Doe" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvfBQBfqRZ3TwQwGFb1U2OQQoKjJbOooQtEXzScJqbLPq4UnnDwicUBb5IEbnOUyYayXDZqA2ooe3b7Ddmgi2lYbchN0s0QjzMRSlRT4NsXke3kzeDzuRd0M3eTaCR8vzNqyrEgnftdppPBpAsgSgkX_9jHIXG9bMRr_giy9bqcDP4jIxVQl_urGUNsry8ZET8dcC_a-pghTlRFwHNMm25fRYn4JV1LHY1XYK_IuTrTEUAXdErZpnk_qIvGkaEeqpRPZRVigmT5A"/>
+</div>
+<div class="flex flex-col">
+<h3 class="font-bold text-lg leading-tight">John Doe</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400">john.doe@company.com</p>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="size-2 bg-success rounded-full"></span>
+<span class="text-[10px] font-bold text-success uppercase">Last active 2h ago</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Roles Content -->
+<div class="p-6 space-y-8">
+<!-- Search Roles -->
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-light dark:bg-surface-dark border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-gray-400" placeholder="Search available roles..." type="text"/>
+</div>
+<!-- Selected Roles Section -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Active Roles</h4>
+<span class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">1 Required</span>
+</div>
+<div class="space-y-3">
+<!-- Locked Role (Last Role Protection) -->
+<div class="relative group">
+<div class="flex items-start gap-4 p-4 rounded-xl border-2 border-primary/30 bg-primary/5 cursor-not-allowed opacity-80">
+<div class="mt-1">
+<div class="size-5 rounded border-2 border-primary bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-[16px] font-bold">lock</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-bold text-sm">Organization Admin</span>
+<span class="material-symbols-outlined text-error text-lg" title="Cannot remove last role">info</span>
+</div>
+<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">Full system access, billing management, and user provisioning.</p>
+</div>
+</div>
+<!-- Tooltip simulation -->
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-error text-white text-[10px] font-bold px-3 py-1.5 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none uppercase tracking-wider">
+                                    CANNOT_REMOVE_LAST_ROLE
+                                </div>
+</div>
+</div>
+</section>
+<!-- Available Roles Section -->
+<section>
+<h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Available Roles</h4>
+<div class="space-y-3">
+<!-- Role Card 1 -->
+<label class="flex items-start gap-4 p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-surface-light/30 dark:bg-surface-dark/20 hover:border-primary/40 hover:bg-white dark:hover:bg-surface-dark transition-all cursor-pointer group">
+<input class="mt-1 size-5 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary focus:ring-offset-0 transition-all" type="checkbox"/>
+<div class="flex-1">
+<span class="font-bold text-sm group-hover:text-primary transition-colors">Security Manager</span>
+<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">Access to audit logs, security policies, and incident reports.</p>
+</div>
+</label>
+<!-- Role Card 2 -->
+<label class="flex items-start gap-4 p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-surface-light/30 dark:bg-surface-dark/20 hover:border-primary/40 hover:bg-white dark:hover:bg-surface-dark transition-all cursor-pointer group">
+<input class="mt-1 size-5 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary focus:ring-offset-0 transition-all" type="checkbox"/>
+<div class="flex-1">
+<span class="font-bold text-sm group-hover:text-primary transition-colors">Billing Contributor</span>
+<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">View invoices, manage payment methods, and export usage reports.</p>
+</div>
+</label>
+<!-- Role Card 3 -->
+<label class="flex items-start gap-4 p-4 rounded-xl border border-gray-100 dark:border-gray-800 bg-surface-light/30 dark:bg-surface-dark/20 hover:border-primary/40 hover:bg-white dark:hover:bg-surface-dark transition-all cursor-pointer group">
+<input class="mt-1 size-5 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary focus:ring-offset-0 transition-all" type="checkbox"/>
+<div class="flex-1">
+<span class="font-bold text-sm group-hover:text-primary transition-colors">Content Editor</span>
+<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">Draft and publish content across shared workspaces.</p>
+</div>
+</label>
+</div>
+</section>
+<!-- Permission Summary -->
+<div class="p-4 rounded-lg bg-primary/5 border border-primary/10">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-lg">visibility</span>
+<span class="text-xs font-bold text-primary uppercase">Permission Preview</span>
+</div>
+<ul class="text-[11px] text-gray-600 dark:text-gray-400 space-y-1 list-disc pl-4 leading-tight">
+<li>Manage organization-level configurations</li>
+<li>Invite and deactivate team members</li>
+<li>Configure security and SSO providers</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Panel Footer -->
+<div class="p-6 border-t border-gray-100 dark:border-gray-800 flex items-center gap-3 bg-white dark:bg-background-dark">
+<button class="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">check_circle</span>
+<span>Save Changes</span>
+</button>
+<button class="px-6 h-11 bg-surface-light dark:bg-surface-dark hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold rounded-lg transition-all">
+                    Cancel
+                </button>
+</div>
+</aside>
+</div>
+<!-- Success Toast (Hidden by default, for demonstration) -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-background-dark text-white px-5 py-3 rounded-xl shadow-2xl border border-gray-700 z-[60] opacity-0 translate-y-4 pointer-events-none">
+<span class="material-symbols-outlined text-success">check_circle</span>
+<span class="text-sm font-medium">Changes applied successfully.</span>
+<button class="ml-4 text-[10px] font-black uppercase tracking-widest text-primary">Undo</button>
+</div>
+</body></html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Profile &amp; Security Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f7f7f7",
+                        "background-dark": "#1a1a1a",
+                        "success": "#2BA84A"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .sidebar-item-active {
+            background-color: #f0f2f4;
+            border-left: 4px solid #137fec;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#111418] dark:text-gray-100 min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 dark:border-gray-800 bg-white dark:bg-zinc-900 px-6 py-3">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-primary">
+<div class="size-8 flex items-center justify-center bg-primary rounded-lg text-white">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+</div>
+<h2 class="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-tight">Admin Portal</h2>
+</div>
+<div class="hidden md:flex flex-col min-w-80 h-10">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full bg-[#f0f2f4] dark:bg-zinc-800">
+<div class="text-[#617589] flex items-center justify-center pl-4">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="w-full bg-transparent border-none focus:ring-0 text-sm placeholder:text-[#617589] px-3" placeholder="Search settings, users, or logs..."/>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-[#f0f2f4] dark:bg-zinc-800 text-[#111418] dark:text-white">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-[#f0f2f4] dark:bg-zinc-800 text-[#111418] dark:text-white">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-gray-200 dark:bg-zinc-700 mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary/20" data-alt="User avatar of Alex Morgan" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBTyzvNKRPQjlgJf8qq_PgunMxchCtESWNM0hVSE2WYMcOnCDjO3uADYJkL5v4iWLJNJuBWmKk1WQg_-dN8sE2gUC7m-KSBggqTB6SCr4xBL71PRiP7JN7E1NFwD8tYve1Ura6gdI6pnorUMWIlOg-vwRNVEMun1bYaODwZzE0H2Ji-K2BTF90qQTR29tRyEM_L2526K4J3NZZGCylrgs89xZhvv5KOkGCe8NtziO_rkOhdFsincqQijA9Xbc-we9Wua6x7-PYbag");'></div>
+</div>
+</div>
+</header>
+<div class="max-w-[1440px] mx-auto flex gap-6 p-6">
+<!-- Side Navigation -->
+<aside class="w-64 flex-shrink-0 hidden lg:flex flex-col gap-6">
+<div class="bg-white dark:bg-zinc-900 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-zinc-800 h-fit">
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800" href="#">
+<span class="material-symbols-outlined text-[20px]">person</span>
+<span>Personal Info</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors sidebar-item-active bg-[#f0f2f4] dark:bg-zinc-800 text-primary" href="#">
+<span class="material-symbols-outlined text-[20px] fill-1" style="font-variation-settings: 'FILL' 1">shield</span>
+<span>Security Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800" href="#">
+<span class="material-symbols-outlined text-[20px]">history</span>
+<span>Login History</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span>Preferences</span>
+</a>
+<div class="my-3 border-t border-gray-100 dark:border-zinc-800"></div>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span>Sign Out</span>
+</a>
+</div>
+</div>
+<!-- Help Card -->
+<div class="bg-primary/5 dark:bg-primary/10 rounded-xl p-5 border border-primary/10">
+<p class="text-sm font-bold text-primary mb-2">Need help?</p>
+<p class="text-xs text-[#617589] dark:text-gray-400 mb-4 leading-relaxed">Check our security guidelines to keep your account safe.</p>
+<button class="w-full py-2 bg-white dark:bg-zinc-800 border border-primary/20 text-primary text-xs font-bold rounded-lg hover:bg-primary/5 transition-colors">
+                    View Documentation
+                </button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col gap-6">
+<!-- Page Heading -->
+<div class="flex flex-col gap-1 px-2">
+<h1 class="text-3xl font-black tracking-tight dark:text-white">My Profile &amp; Security Settings</h1>
+<p class="text-[#617589] dark:text-gray-400">Manage your personal information, security credentials, and active device sessions.</p>
+</div>
+<!-- Profile Header Card -->
+<section class="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-zinc-800">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="flex items-center gap-6">
+<div class="relative group">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-2xl size-28 shadow-lg border-4 border-white dark:border-zinc-800" data-alt="User avatar of Alex Morgan" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBSwfIaw5G90-tsAI_PeXfhcA2Z7zLyxC8_Pzw_j6HGVHE8G-8Asjyn4qsIJRyMxDQoVVLJAPbFTSQxt1Waw3Muya0NgeWdbs36ns-xoiG00qheiHtU3_JU61CRTY0jrv4_nuJ3f8yNvf3sAGc-Y089pN1z8hQToQuo-YiAhqN-vOZgs_uMZMsX0HvVj6cHfuHJz8hTsy7n6uUdIZtmTH26fOGhAAq8ZEI77ZyxR5c7pPMpSAiMWiASDZVIRFF4B5O49AC3oHUGaQ");'></div>
+<button class="absolute -bottom-2 -right-2 bg-white dark:bg-zinc-700 p-2 rounded-full shadow-md border border-gray-100 dark:border-zinc-600 hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-sm">photo_camera</span>
+</button>
+</div>
+<div class="flex flex-col">
+<h3 class="text-2xl font-bold dark:text-white">Alex Morgan</h3>
+<p class="text-[#617589] dark:text-gray-400 text-sm">alex.morgan@company.com</p>
+<div class="flex gap-2 mt-2">
+<span class="bg-primary/10 text-primary text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Global Administrator</span>
+<span class="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Active Account</span>
+</div>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 md:flex-none px-4 h-10 bg-primary text-white text-sm font-bold rounded-lg hover:bg-blue-600 transition-colors">
+                            Update Profile
+                        </button>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+<!-- Personal Info Card -->
+<section class="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-zinc-800">
+<h2 class="text-lg font-bold mb-6 flex items-center gap-2 dark:text-white">
+<span class="material-symbols-outlined text-primary">contact_page</span>
+                        Personal Information
+                    </h2>
+<div class="space-y-4">
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-[#617589] dark:text-gray-400 uppercase tracking-tight">First Name</label>
+<input class="w-full bg-[#f0f2f4] dark:bg-zinc-800 border-none rounded-lg text-sm px-4 h-11 focus:ring-2 focus:ring-primary" type="text" value="Alex"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-[#617589] dark:text-gray-400 uppercase tracking-tight">Last Name</label>
+<input class="w-full bg-[#f0f2f4] dark:bg-zinc-800 border-none rounded-lg text-sm px-4 h-11 focus:ring-2 focus:ring-primary" type="text" value="Morgan"/>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-[#617589] dark:text-gray-400 uppercase tracking-tight">Email Address</label>
+<input class="w-full bg-[#f0f2f4]/50 dark:bg-zinc-800/50 border-none rounded-lg text-sm px-4 h-11 text-gray-500 cursor-not-allowed" disabled="" type="email" value="alex.morgan@company.com"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-[#617589] dark:text-gray-400 uppercase tracking-tight">Phone Number</label>
+<input class="w-full bg-[#f0f2f4] dark:bg-zinc-800 border-none rounded-lg text-sm px-4 h-11 focus:ring-2 focus:ring-primary" type="tel" value="+1 (555) 012-3456"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-[#617589] dark:text-gray-400 uppercase tracking-tight">Department</label>
+<select class="w-full bg-[#f0f2f4] dark:bg-zinc-800 border-none rounded-lg text-sm px-4 h-11 focus:ring-2 focus:ring-primary">
+<option>Executive Management</option>
+<option>Engineering</option>
+<option>Product Design</option>
+</select>
+</div>
+</div>
+</section>
+<!-- Security & Password Card -->
+<section class="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-zinc-800">
+<h2 class="text-lg font-bold mb-6 flex items-center gap-2 dark:text-white">
+<span class="material-symbols-outlined text-primary">lock</span>
+                        Security Settings
+                    </h2>
+<div class="space-y-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-[#617589] dark:text-gray-400 uppercase tracking-tight">Current Password</label>
+<input class="w-full bg-[#f0f2f4] dark:bg-zinc-800 border-none rounded-lg text-sm px-4 h-11 focus:ring-2 focus:ring-primary" placeholder="••••••••••••" type="password"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-[#617589] dark:text-gray-400 uppercase tracking-tight">New Password</label>
+<input class="w-full bg-[#f0f2f4] dark:bg-zinc-800 border-none rounded-lg text-sm px-4 h-11 focus:ring-2 focus:ring-primary" placeholder="Min. 12 characters" type="password"/>
+<div class="flex gap-1 mt-2">
+<div class="h-1 flex-1 bg-success rounded-full"></div>
+<div class="h-1 flex-1 bg-success rounded-full"></div>
+<div class="h-1 flex-1 bg-success rounded-full"></div>
+<div class="h-1 flex-1 bg-gray-200 dark:bg-zinc-700 rounded-full"></div>
+</div>
+<p class="text-[10px] text-success font-bold mt-1 uppercase tracking-wider">Strong Password</p>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-[#617589] dark:text-gray-400 uppercase tracking-tight">Confirm New Password</label>
+<input class="w-full bg-[#f0f2f4] dark:bg-zinc-800 border-none rounded-lg text-sm px-4 h-11 focus:ring-2 focus:ring-primary" type="password"/>
+</div>
+<div class="p-4 bg-primary/5 dark:bg-primary/10 rounded-lg mt-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">vibration</span>
+<div>
+<p class="text-sm font-bold dark:text-white">Two-Factor Auth</p>
+<p class="text-xs text-[#617589] dark:text-gray-400">Authenticator App enabled</p>
+</div>
+</div>
+<button class="text-primary text-xs font-bold hover:underline">Manage</button>
+</div>
+<button class="w-full mt-2 h-11 bg-primary text-white text-sm font-bold rounded-lg hover:bg-blue-600 transition-colors">
+                            Update Password
+                        </button>
+</div>
+</section>
+</div>
+<!-- Session Management -->
+<section class="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-zinc-800">
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-lg font-bold flex items-center gap-2 dark:text-white">
+<span class="material-symbols-outlined text-primary">devices</span>
+                        Active Sessions
+                    </h2>
+<button class="text-red-500 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-900/10 px-3 py-1.5 rounded-lg transition-colors">
+                        Sign out of all other sessions
+                    </button>
+</div>
+<div class="space-y-0 divide-y divide-gray-100 dark:divide-zinc-800">
+<!-- Current Session -->
+<div class="py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-10 flex items-center justify-center bg-green-100 dark:bg-green-900/20 text-green-600 rounded-full">
+<span class="material-symbols-outlined">laptop_mac</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<p class="text-sm font-bold dark:text-white">Chrome on macOS Monterey</p>
+<span class="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">Current</span>
+</div>
+<p class="text-xs text-[#617589] dark:text-gray-400">San Francisco, USA • 192.168.1.1</p>
+</div>
+</div>
+</div>
+<!-- Other Session -->
+<div class="py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-10 flex items-center justify-center bg-gray-100 dark:bg-zinc-800 text-[#617589] rounded-full">
+<span class="material-symbols-outlined">smartphone</span>
+</div>
+<div>
+<p class="text-sm font-bold dark:text-white">Safari on iPhone 15 Pro</p>
+<p class="text-xs text-[#617589] dark:text-gray-400">San Francisco, USA • 2 hours ago</p>
+</div>
+</div>
+<button class="text-[#617589] dark:text-gray-400 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Other Session -->
+<div class="py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-10 flex items-center justify-center bg-gray-100 dark:bg-zinc-800 text-[#617589] rounded-full">
+<span class="material-symbols-outlined">desktop_windows</span>
+</div>
+<div>
+<p class="text-sm font-bold dark:text-white">Firefox on Windows 11</p>
+<p class="text-xs text-[#617589] dark:text-gray-400">Seattle, USA • 3 days ago</p>
+</div>
+</div>
+<button class="text-[#617589] dark:text-gray-400 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Toast Success Notification (Simulated) -->
+<div class="fixed bottom-6 right-6 flex items-center gap-3 bg-zinc-900 text-white px-5 py-3 rounded-xl shadow-2xl border border-white/10">
+<span class="material-symbols-outlined text-success">check_circle</span>
+<span class="text-sm font-medium">Changes saved successfully</span>
+<button class="ml-4 opacity-50 hover:opacity-100">
+<span class="material-symbols-outlined text-sm">close</span>
+</button>
+</div>
+</body></html>
