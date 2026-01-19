@@ -1,0 +1,435 @@
+// =============================================================================
+// USER MANAGEMENT COMPONENT
+// =============================================================================
+// Specific styles for the User Management List page
+// =============================================================================
+
+@use '../abstracts' as *;
+
+.user-management {
+  // Page container
+  min-height: 100vh;
+  display: flex;
+  font-family: $font-family-base;
+
+  @include themify {
+    background-color: themed('bg-secondary');
+    color: themed('text-primary');
+  }
+
+  // Sidebar specific overrides
+  &__sidebar {
+    width: 16rem;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    
+    @include themify {
+      border-right: 1px solid themed('border-subtle');
+      background-color: themed('surface-card');
+    }
+  }
+
+  &__sidebar-header {
+    padding: $spacing-24;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-32;
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+  }
+
+  &__brand-logo {
+    width: 2.5rem; // 40px
+    height: 2.5rem;
+    border-radius: $border-radius-xlarge;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    
+    @include themify {
+      background-color: themed('action-primary');
+    }
+  }
+
+  &__brand-text {
+    display: flex;
+    flex-direction: column;
+    
+    h1 {
+      font-size: $font-size-400;
+      font-weight: $font-weight-bold;
+      line-height: 1;
+    }
+
+    p {
+      font-size: $font-size-200;
+      font-weight: $font-weight-regular;
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+  }
+
+  &__sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+    padding: $spacing-8 $spacing-12;
+    border-radius: $border-radius-xlarge;
+    text-decoration: none;
+    @include transition(all);
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+
+    &:hover {
+      @include themify {
+        background-color: themed('surface-hover');
+      }
+    }
+
+    &--active {
+      @include themify {
+        background-color: alpha-color(themed('action-primary'), 0.1);
+        color: themed('action-primary');
+      }
+    }
+  }
+
+  &__sidebar-footer {
+    margin-top: auto;
+    padding: $spacing-16;
+    @include themify {
+      border-top: 1px solid themed('border-subtle');
+    }
+  }
+
+  &__user-profile {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+    padding: $spacing-8;
+  }
+
+  &__user-profile-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+
+    p:first-child {
+      @include text-style($font-size-300, $font-weight-semibold);
+      @include truncate;
+    }
+
+    p:last-child {
+      @include text-style($font-size-100);
+      @include themify {
+        color: themed('text-secondary');
+      }
+      @include truncate;
+    }
+  }
+
+  // Main Content Area
+  &__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__header {
+    display: flex;
+    height: 4rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 $spacing-32;
+    position: sticky;
+    top: 0;
+    z-index: $z-index-sticky;
+
+    @include themify {
+      border-bottom: 1px solid themed('border-subtle');
+      background-color: themed('surface-card');
+    }
+  }
+
+  &__header-title {
+    display: flex;
+    align-items: center;
+    gap: $spacing-16;
+    
+    h2 {
+      @include text-style($font-size-600, $font-weight-bold);
+      line-height: 1.25;
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+  }
+
+  &__header-actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-16;
+  }
+
+  &__header-buttons {
+    display: flex;
+    gap: $spacing-8;
+  }
+
+  &__search-bar {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    padding: $spacing-4 $spacing-12;
+    border-radius: $border-radius-xlarge;
+    border: 1px solid transparent;
+    @include transition(all);
+
+    @include themify {
+      background-color: themed('bg-secondary');
+    }
+
+    &:focus-within {
+      @include themify {
+        border-color: alpha-color(themed('action-primary'), 0.5);
+      }
+    }
+
+    input {
+      background: transparent;
+      border: none;
+      font-size: $font-size-300;
+      width: 16rem;
+      padding: 0;
+      outline: none;
+
+      @include themify {
+        color: themed('text-primary');
+        
+        &::placeholder {
+          color: themed('text-secondary');
+        }
+      }
+    }
+  }
+
+  &__toolbar {
+    padding: $spacing-16 $spacing-32;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    @include themify {
+      background-color: themed('surface-card');
+      border-bottom: 1px solid themed('border-subtle');
+    }
+  }
+
+  &__filter-group {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+  }
+
+  &__action-group {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+  }
+
+  &__selection-bar {
+    margin: $spacing-16 $spacing-32 0;
+    padding: $spacing-12 $spacing-16;
+    border-radius: $border-radius-xlarge;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: fade-in $duration-normal ease-in-out;
+
+    @include themify {
+      background-color: alpha-color(themed('action-primary'), 0.05);
+      border: 1px solid alpha-color(themed('action-primary'), 0.2);
+    }
+  }
+
+  &__selection-actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-16;
+  }
+
+  &__selection-buttons {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+  }
+
+  &__grid-container {
+    padding: $spacing-16 $spacing-32;
+    flex: 1;
+    overflow: auto;
+  }
+
+  &__grid-card {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    @include elevation(2);
+
+    @include themify {
+      background-color: themed('surface-card');
+      border: 1px solid themed('border-subtle');
+    }
+  }
+
+  // Table Cell styles
+  &__user-cell {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+  }
+  
+  &__user-info {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  &__user-name {
+    @include text-style($font-size-300, $font-weight-semibold);
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+  
+  &__user-email {
+    @include text-style($font-size-200);
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    @include text-style($font-size-300, $font-weight-medium);
+    
+    &--active {
+      @include themify {
+        color: themed('text-primary');
+      }
+      &::before {
+        content: '';
+        display: block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        @include themify {
+          background-color: themed('state-success');
+        }
+      }
+    }
+    
+    &--inactive {
+      @include themify {
+        color: themed('text-disabled');
+      }
+      &::before {
+        content: '';
+        display: block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        @include themify {
+          background-color: themed('text-disabled');
+        }
+      }
+    }
+  }
+
+  &__checkbox {
+    width: 16px;
+    height: 16px;
+    border-radius: $border-radius-small;
+    cursor: pointer;
+    
+    @include themify {
+      border: 1px solid themed('border-default');
+    }
+    
+    &:checked {
+      @include themify {
+        background-color: themed('action-primary');
+        border-color: themed('action-primary');
+      }
+    }
+    
+    &:focus {
+      outline: none;
+      @include themify {
+        border-color: themed('action-primary');
+      }
+    }
+  }
+
+  &__pagination {
+    padding: $spacing-16 $spacing-24;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    @include themify {
+      background-color: themed('surface-card');
+      border-top: 1px solid themed('border-subtle');
+    }
+  }
+  
+  &__pagination-info {
+    display: flex;
+    align-items: center;
+    gap: $spacing-16;
+  }
+  
+  &__pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: $spacing-4;
+  }
+
+  &__rows-select {
+    font-size: $font-size-300;
+    border: none;
+    background: transparent;
+    font-weight: $font-weight-semibold;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -345,6 +345,10 @@ a.btn {
   }
 }
 
+.btn--icon-only {
+  @extend .btn--square;
+}
+
 .btn--circular {
   border-radius: $border-radius-circular;
 }

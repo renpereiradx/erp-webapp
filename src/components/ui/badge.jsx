@@ -4,23 +4,47 @@ import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils"
 
+// Map variants to SCSS classes from _badge.scss
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
+  "badge",
   {
     variants: {
       variant: {
-        default:
-          "border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
-        destructive:
-          "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
-        outline:
-          "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        default: "badge--primary", // Default maps to primary
+        primary: "badge--primary",
+        secondary: "badge--secondary",
+        destructive: "badge--error", // Mapping destructive to error for consistency
+        outline: "badge--ghost", // Mapping outline to ghost
+        success: "badge--success",
+        warning: "badge--warning",
+        error: "badge--error",
+        info: "badge--info",
+        "subtle-primary": "badge--subtle-primary",
+        "subtle-success": "badge--subtle-success",
+        "subtle-warning": "badge--subtle-warning",
+        "subtle-error": "badge--subtle-error",
+        "subtle-info": "badge--subtle-info",
+        ghost: "badge--ghost",
       },
+      size: {
+        default: "badge--medium",
+        sm: "badge--small",
+        lg: "badge--large",
+      },
+      shape: {
+        default: "",
+        pill: "badge--pill",
+        square: "badge--square",
+        circular: "badge--circular",
+      },
+      dot: {
+        true: "badge--dot",
+      }
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
+      shape: "default",
     },
   }
 )
@@ -28,6 +52,9 @@ const badgeVariants = cva(
 function Badge({
   className,
   variant,
+  size,
+  shape,
+  dot,
   asChild = false,
   ...props
 }) {
@@ -36,7 +63,7 @@ function Badge({
   return (
     <Comp
       data-slot="badge"
-      className={cn(badgeVariants({ variant }), className)}
+      className={cn(badgeVariants({ variant, size, shape, dot }), className)}
       {...props} />
   );
 }

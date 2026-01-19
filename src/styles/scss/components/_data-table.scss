@@ -62,6 +62,13 @@
           background-color: themed('surface-hover');
         }
       }
+
+      &.fluent-grid-selected,
+      &[aria-selected='true'] {
+        @include themify {
+          background-color: alpha-color(themed('action-primary'), 0.08) !important;
+        }
+      }
     }
   }
 
