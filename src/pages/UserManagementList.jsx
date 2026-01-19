@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,7 +21,73 @@ const AVATAR_URLS = {
   jessica: "https://lh3.googleusercontent.com/aida-public/AB6AXuC7wEIgOpBOOwNOToirg1-g8DzqTcpsua0ERaxAr4nv7ygNbeyz8a5F9SB5gDP0N7WF4gIvDXMI_ntz6P5AeiivjTHyD2TPxxHFrJy6dj0hXoZxUDJTGot7zVPlUTbc3cfniaALm_9sPXJGRiuVVKdgfA5ilEUwzDSYhQReLPs1bgGc1oLEmpvjnPi9CD07f3r_rhb0T9DpqI9pD08SmGmp52SF1fxXXQX46TgeIH1Q4rnwdwihvB6IrYXpOa38BUV1fRIB8PW3Sg",
 };
 
+const MOCK_USERS = [
+  {
+    id: 1,
+    name: "Sarah Johnson",
+    email: "sarah.j@company.com",
+    avatar: AVATAR_URLS.sarah,
+    initials: "SJ",
+    role: "Admin",
+    status: "Active",
+    lastActive: "2 mins ago",
+    selected: true
+  },
+  {
+    id: 2,
+    name: "Marcus Smith",
+    email: "m.smith@company.com",
+    avatar: AVATAR_URLS.marcus,
+    initials: "MS",
+    role: "Editor",
+    status: "Active",
+    lastActive: "1 hour ago",
+    selected: true
+  },
+  {
+    id: 3,
+    name: "Elena Rodriguez",
+    email: "e.rodriguez@company.com",
+    avatar: AVATAR_URLS.elena,
+    initials: "ER",
+    role: "Viewer",
+    status: "Inactive",
+    lastActive: "Dec 12, 2023",
+    selected: true
+  },
+  {
+    id: 4,
+    name: "David Kim",
+    email: "david.k@company.com",
+    avatar: AVATAR_URLS.david,
+    initials: "DK",
+    role: "Editor",
+    status: "Active",
+    lastActive: "Just now",
+    selected: false
+  },
+  {
+    id: 5,
+    name: "Jessica Lee",
+    email: "jessica.lee@company.com",
+    avatar: AVATAR_URLS.jessica,
+    initials: "JL",
+    role: "Viewer",
+    status: "Active",
+    lastActive: "Yesterday",
+    selected: false
+  }
+];
+
 export default function UserManagementList() {
+  const [users, setUsers] = useState(MOCK_USERS);
+
+  const toggleSelect = (id) => {
+    setUsers(users.map(u => u.id === id ? { ...u, selected: !u.selected } : u));
+  };
+
+  const selectedCount = users.filter(u => u.selected).length;
+
   return (
     <div className="user-management">
       {/* Side Navigation */}
@@ -133,26 +199,28 @@ export default function UserManagementList() {
         </div>
 
         {/* Selected Actions Bar */}
-        <div className="user-management__selection-bar">
-          <div className="user-management__selection-actions">
-            <span className="text-sm font-semibold text-primary">3 users selected</span>
-            <div className="h-4 w-px bg-primary opacity-20"></div>
-            <div className="user-management__selection-buttons">
-              <Button variant="secondary" size="sm">
-                <span className="material-symbols-outlined text-base">check</span> Activate
-              </Button>
-              <Button variant="secondary" size="sm">
-                <span className="material-symbols-outlined text-base">block</span> Deactivate
-              </Button>
-              <Button variant="destructive" size="sm">
-                <span className="material-symbols-outlined text-base">delete</span> Delete
-              </Button>
+        {selectedCount > 0 && (
+          <div className="user-management__selection-bar">
+            <div className="user-management__selection-actions">
+              <span className="text-sm font-semibold text-primary">{selectedCount} users selected</span>
+              <div className="h-4 w-px bg-primary opacity-20"></div>
+              <div className="user-management__selection-buttons">
+                <Button variant="secondary" size="sm">
+                  <span className="material-symbols-outlined text-base">check</span> Activate
+                </Button>
+                <Button variant="secondary" size="sm">
+                  <span className="material-symbols-outlined text-base">block</span> Deactivate
+                </Button>
+                <Button variant="destructive" size="sm">
+                  <span className="material-symbols-outlined text-base">delete</span> Delete
+                </Button>
+              </div>
             </div>
+            <button className="text-secondary hover:text-primary border-none bg-transparent cursor-pointer" onClick={() => setUsers(users.map(u => ({...u, selected: false})))}>
+              <span className="material-symbols-outlined text-xl">close</span>
+            </button>
           </div>
-          <button className="text-secondary hover:text-primary border-none bg-transparent cursor-pointer">
-            <span className="material-symbols-outlined text-xl">close</span>
-          </button>
-        </div>
+        )}
 
         {/* Data Grid */}
         <div className="user-management__grid-container">
@@ -161,7 +229,12 @@ export default function UserManagementList() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12 text-center h-auto">
-                    <input className="user-management__checkbox" type="checkbox" />
+                    <input 
+                      className="user-management__checkbox" 
+                      type="checkbox" 
+                      checked={selectedCount === users.length}
+                      onChange={(e) => setUsers(users.map(u => ({...u, selected: e.target.checked})))}
+                    />
                   </TableHead>
                   <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">User</TableHead>
                   <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">Role</TableHead>
@@ -171,170 +244,50 @@ export default function UserManagementList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {/* Row 1: Selected State */}
-                <TableRow className="fluent-grid-selected" aria-selected="true">
-                  <TableCell className="text-center">
-                    <input checked readOnly className="user-management__checkbox" type="checkbox" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="user-management__user-cell">
-                      <Avatar size={32}>
-                        <AvatarImage src={AVATAR_URLS.sarah} alt="Sarah Johnson" />
-                        <AvatarFallback>SJ</AvatarFallback>
-                      </Avatar>
-                      <div className="user-management__user-info">
-                        <p className="user-management__user-name">Sarah Johnson</p>
-                        <p className="user-management__user-email">sarah.j@company.com</p>
+                {users.map((user) => (
+                  <TableRow 
+                    key={user.id} 
+                    className={user.selected ? "fluent-grid-selected" : ""} 
+                    aria-selected={user.selected}
+                  >
+                    <TableCell className="text-center">
+                      <input 
+                        className="user-management__checkbox" 
+                        type="checkbox" 
+                        checked={user.selected}
+                        onChange={() => toggleSelect(user.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="user-management__user-cell">
+                        <Avatar size={32}>
+                          <AvatarImage src={user.avatar} alt={user.name} />
+                          <AvatarFallback>{user.initials}</AvatarFallback>
+                        </Avatar>
+                        <div className="user-management__user-info">
+                          <p className="user-management__user-name">{user.name}</p>
+                          <p className="user-management__user-email">{user.email}</p>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="subtle-info">Admin</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="user-management__status user-management__status--active">
-                      Active
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-secondary">2 mins ago</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="size-8">
-                      <span className="material-symbols-outlined text-secondary">more_vert</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-
-                {/* Row 2 */}
-                <TableRow className="fluent-grid-selected" aria-selected="true">
-                  <TableCell className="text-center">
-                    <input checked readOnly className="user-management__checkbox" type="checkbox" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="user-management__user-cell">
-                      <Avatar size={32}>
-                        <AvatarImage src={AVATAR_URLS.marcus} alt="Marcus Smith" />
-                        <AvatarFallback>MS</AvatarFallback>
-                      </Avatar>
-                      <div className="user-management__user-info">
-                        <p className="user-management__user-name">Marcus Smith</p>
-                        <p className="user-management__user-email">m.smith@company.com</p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={user.role === "Admin" ? "subtle-info" : "subtle-primary"}>
+                        {user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className={`user-management__status ${user.status === 'Active' ? 'user-management__status--active' : 'user-management__status--inactive'}`}>
+                        {user.status}
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="subtle-primary">Editor</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="user-management__status user-management__status--active">
-                      Active
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-secondary">1 hour ago</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="size-8">
-                      <span className="material-symbols-outlined text-secondary">more_vert</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-
-                {/* Row 3 */}
-                <TableRow className="fluent-grid-selected" aria-selected="true">
-                  <TableCell className="text-center">
-                    <input checked readOnly className="user-management__checkbox" type="checkbox" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="user-management__user-cell">
-                       <Avatar size={32}>
-                        <AvatarImage src={AVATAR_URLS.elena} alt="Elena Rodriguez" />
-                        <AvatarFallback>ER</AvatarFallback>
-                      </Avatar>
-                      <div className="user-management__user-info">
-                        <p className="user-management__user-name">Elena Rodriguez</p>
-                        <p className="user-management__user-email">e.rodriguez@company.com</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="subtle-primary">Viewer</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="user-management__status user-management__status--inactive">
-                      Inactive
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-secondary">Dec 12, 2023</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="size-8">
-                      <span className="material-symbols-outlined text-secondary">more_vert</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-
-                {/* Row 4 */}
-                <TableRow>
-                  <TableCell className="text-center">
-                    <input className="user-management__checkbox" type="checkbox" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="user-management__user-cell">
-                       <Avatar size={32}>
-                        <AvatarImage src={AVATAR_URLS.david} alt="David Kim" />
-                        <AvatarFallback>DK</AvatarFallback>
-                      </Avatar>
-                      <div className="user-management__user-info">
-                        <p className="user-management__user-name">David Kim</p>
-                        <p className="user-management__user-email">david.k@company.com</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="subtle-primary">Editor</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="user-management__status user-management__status--active">
-                      Active
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-secondary">Just now</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="size-8">
-                      <span className="material-symbols-outlined text-secondary">more_vert</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-
-                {/* Row 5 */}
-                <TableRow>
-                  <TableCell className="text-center">
-                    <input className="user-management__checkbox" type="checkbox" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="user-management__user-cell">
-                       <Avatar size={32}>
-                        <AvatarImage src={AVATAR_URLS.jessica} alt="Jessica Lee" />
-                        <AvatarFallback>JL</AvatarFallback>
-                      </Avatar>
-                      <div className="user-management__user-info">
-                        <p className="user-management__user-name">Jessica Lee</p>
-                        <p className="user-management__user-email">jessica.lee@company.com</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="subtle-primary">Viewer</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="user-management__status user-management__status--active">
-                      Active
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-secondary">Yesterday</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="size-8">
-                      <span className="material-symbols-outlined text-secondary">more_vert</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    <TableCell className="text-sm text-secondary">{user.lastActive}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" className="size-8">
+                        <span className="material-symbols-outlined text-secondary">more_vert</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
