@@ -43,4 +43,8 @@
 @use 'tree';
 
 // Page specific styles
-@use 'user-management';
+@forward 'user-management';
+@forward 'user-profile';
+@forward 'user-form-modal';
+@forward 'users/roles/role-sidebar';
+@forward 'divider';

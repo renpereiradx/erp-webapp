@@ -10,6 +10,8 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
+import { useTranslation } from 'react-i18next';
+import { CreateUserModal } from '@/components/users/CreateUserModal';
 
 // URLs de imágenes del ejemplo
 const AVATAR_URLS = {
@@ -80,13 +82,30 @@ const MOCK_USERS = [
 ];
 
 export default function UserManagementList() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState(MOCK_USERS);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const toggleSelect = (id) => {
     setUsers(users.map(u => u.id === id ? { ...u, selected: !u.selected } : u));
   };
 
   const selectedCount = users.filter(u => u.selected).length;
+
+  const handleCreateUser = (userData) => {
+    const newUser = {
+      id: users.length + 1,
+      name: `${userData.firstName} ${userData.lastName}`,
+      email: userData.email,
+      avatar: null, // No avatar for new user initially
+      initials: `${userData.firstName[0]}${userData.lastName[0]}`.toUpperCase(),
+      role: userData.role,
+      status: "Active",
+      lastActive: "Just now",
+      selected: false
+    };
+    setUsers([...users, newUser]);
+  };
 
   return (
     <div className="user-management">
@@ -146,21 +165,21 @@ export default function UserManagementList() {
         {/* Top Nav Bar */}
         <header className="user-management__header">
           <div className="user-management__header-title">
-            <h2>Users</h2>
-            <Badge variant="secondary" className="border-none">1,240 Total</Badge>
+            <h2>{t('users.users.title')}</h2>
+            <Badge variant="secondary" className="border-none">1,240 {t('users.users.total')}</Badge>
           </div>
           <div className="user-management__header-actions">
             <div className="user-management__search-bar">
               <span className="material-symbols-outlined text-secondary text-xl">search</span>
-              <input placeholder="Search users, emails, ID..." type="text" />
+              <input placeholder={t('users.users.searchPlaceholder')} type="text" />
             </div>
             <div className="user-management__header-buttons">
               <Button variant="ghost" size="icon">
                 <span className="material-symbols-outlined">notifications</span>
               </Button>
-              <Button variant="primary">
+              <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
                 <span className="material-symbols-outlined text-lg">person_add</span>
-                <span>Add User</span>
+                <span>{t('users.users.addUser')}</span>
               </Button>
             </div>
           </div>
@@ -171,26 +190,26 @@ export default function UserManagementList() {
           <div className="user-management__filter-group">
             <Button variant="outline" className="h-auto">
               <span className="material-symbols-outlined text-lg">filter_list</span>
-              <span>Role: All</span>
+              <span>{t('users.users.filterRole')}</span>
               <span className="material-symbols-outlined text-sm">expand_more</span>
             </Button>
             <Button variant="outline" className="h-auto">
               <span className="material-symbols-outlined text-lg">check_circle</span>
-              <span>Status: Active</span>
+              <span>{t('users.users.filterStatus')}</span>
               <span className="material-symbols-outlined text-sm text-primary">expand_more</span>
             </Button>
             <Button variant="outline" className="h-auto">
               <span className="material-symbols-outlined text-lg">calendar_today</span>
-              <span>Last Active</span>
+              <span>{t('users.users.filterLastActive')}</span>
               <span className="material-symbols-outlined text-sm">expand_more</span>
             </Button>
             <div className="h-6 w-px bg-subtle mx-2"></div>
-            <Button variant="text" className="h-auto px-0">Clear all</Button>
+            <Button variant="text" className="h-auto px-0">{t('users.users.clearAll')}</Button>
           </div>
           <div className="user-management__action-group">
             <Button variant="ghost" className="h-auto">
               <span className="material-symbols-outlined text-lg">download</span>
-              <span>Export</span>
+              <span>{t('users.users.export')}</span>
             </Button>
             <Button variant="ghost" size="icon" className="h-auto w-auto">
               <span className="material-symbols-outlined text-lg">more_horiz</span>
@@ -202,17 +221,17 @@ export default function UserManagementList() {
         {selectedCount > 0 && (
           <div className="user-management__selection-bar">
             <div className="user-management__selection-actions">
-              <span className="text-sm font-semibold text-primary">{selectedCount} users selected</span>
+              <span className="text-sm font-semibold text-primary">{t('users.users.selectedUsers', { count: selectedCount })}</span>
               <div className="h-4 w-px bg-primary opacity-20"></div>
               <div className="user-management__selection-buttons">
                 <Button variant="secondary" size="sm">
-                  <span className="material-symbols-outlined text-base">check</span> Activate
+                  <span className="material-symbols-outlined text-base">check</span> {t('users.users.activate')}
                 </Button>
                 <Button variant="secondary" size="sm">
-                  <span className="material-symbols-outlined text-base">block</span> Deactivate
+                  <span className="material-symbols-outlined text-base">block</span> {t('users.users.deactivate')}
                 </Button>
                 <Button variant="destructive" size="sm">
-                  <span className="material-symbols-outlined text-base">delete</span> Delete
+                  <span className="material-symbols-outlined text-base">delete</span> {t('users.users.delete')}
                 </Button>
               </div>
             </div>
@@ -236,10 +255,10 @@ export default function UserManagementList() {
                       onChange={(e) => setUsers(users.map(u => ({...u, selected: e.target.checked})))}
                     />
                   </TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">User</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">Role</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">Status</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">Last Active</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.users.table.user')}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.users.table.role')}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.users.table.status')}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.users.table.lastActive')}</TableHead>
                   <TableHead className="w-20 h-auto"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -277,7 +296,7 @@ export default function UserManagementList() {
                     </TableCell>
                     <TableCell>
                       <div className={`user-management__status ${user.status === 'Active' ? 'user-management__status--active' : 'user-management__status--inactive'}`}>
-                        {user.status}
+                        {user.status === 'Active' ? t('users.status.active') : t('users.status.inactive')}
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-secondary">{user.lastActive}</TableCell>
@@ -295,9 +314,9 @@ export default function UserManagementList() {
           {/* Footer / Pagination */}
           <div className="user-management__pagination">
             <div className="user-management__pagination-info">
-              <span className="text-sm text-secondary">Showing <span className="font-semibold text-primary">1-25</span> of 1,240 users</span>
+              <span className="text-sm text-secondary">{t('users.users.showing')} <span className="font-semibold text-primary">1-25</span> {t('users.users.of')} 1,240 {t('users.users.total').toLowerCase()}</span>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-secondary">Rows per page:</span>
+                <span className="text-sm text-secondary">{t('users.users.rowsPerPage')}</span>
                 <select className="user-management__rows-select">
                   <option>25</option>
                   <option>50</option>
@@ -329,6 +348,13 @@ export default function UserManagementList() {
           </div>
         </div>
       </main>
+
+      {/* Create User Modal */}
+      <CreateUserModal 
+        open={isCreateModalOpen} 
+        onOpenChange={setIsCreateModalOpen} 
+        onSubmit={handleCreateUser}
+      />
     </div>
   );
 }

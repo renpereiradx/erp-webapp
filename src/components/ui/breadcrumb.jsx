@@ -5,9 +5,10 @@ import { ChevronRight, MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 function Breadcrumb({
+  className,
   ...props
 }) {
-  return <nav aria-label="breadcrumb" data-slot="breadcrumb" {...props} />;
+  return <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn("breadcrumb", className)} {...props} />;
 }
 
 function BreadcrumbList({
@@ -18,7 +19,7 @@ function BreadcrumbList({
     <ol
       data-slot="breadcrumb-list"
       className={cn(
-        "text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words sm:gap-2.5",
+        "breadcrumb__list",
         className
       )}
       {...props} />
@@ -32,7 +33,7 @@ function BreadcrumbItem({
   return (
     <li
       data-slot="breadcrumb-item"
-      className={cn("inline-flex items-center gap-1.5", className)}
+      className={cn("breadcrumb__item", className)}
       {...props} />
   );
 }
@@ -47,7 +48,7 @@ function BreadcrumbLink({
   return (
     <Comp
       data-slot="breadcrumb-link"
-      className={cn("hover:text-foreground transition-colors", className)}
+      className={cn("breadcrumb__link", className)}
       {...props} />
   );
 }
@@ -62,7 +63,7 @@ function BreadcrumbPage({
       role="link"
       aria-disabled="true"
       aria-current="page"
-      className={cn("text-foreground font-normal", className)}
+      className={cn("breadcrumb__current", className)}
       {...props} />
   );
 }
@@ -77,9 +78,9 @@ function BreadcrumbSeparator({
       data-slot="breadcrumb-separator"
       role="presentation"
       aria-hidden="true"
-      className={cn("[&>svg]:size-3.5", className)}
+      className={cn("breadcrumb__separator", className)}
       {...props}>
-      {children ?? <ChevronRight />}
+      {children ?? <ChevronRight className="size-3.5" />}
     </li>
   );
 }
@@ -93,7 +94,7 @@ function BreadcrumbEllipsis({
       data-slot="breadcrumb-ellipsis"
       role="presentation"
       aria-hidden="true"
-      className={cn("flex size-9 items-center justify-center", className)}
+      className={cn("breadcrumb__ellipsis", className)}
       {...props}>
       <MoreHorizontal className="size-4" />
       <span className="sr-only">More</span>

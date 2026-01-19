@@ -1,0 +1,385 @@
+@use '../abstracts' as *;
+
+.user-profile {
+  min-height: 100vh;
+  @include themify {
+    background-color: themed('bg-primary');
+    color: themed('text-primary');
+  }
+
+  &__container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: $spacing-32 $spacing-24;
+  }
+
+  &__breadcrumb-container {
+    margin-bottom: $spacing-24;
+  }
+
+  // --- HEADER SECTION ---
+  &__header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: $spacing-24;
+    padding-bottom: $spacing-32;
+    margin-bottom: $spacing-32;
+    @include themify {
+      border-bottom: 1px solid themed('border-subtle');
+    }
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      align-items: flex-end;
+    }
+  }
+
+  &__header-left {
+    display: flex;
+    align-items: center;
+    gap: $spacing-24;
+  }
+
+  &__avatar-wrapper {
+    position: relative;
+    
+    .avatar {
+      border: 4px solid;
+      @include themify {
+        border-color: themed('bg-primary');
+      }
+      @include elevation(1);
+    }
+  }
+
+  &__status-indicator {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: $border-radius-circular;
+    border: 2px solid;
+    @include themify {
+      background-color: themed('state-success');
+      border-color: themed('bg-primary');
+    }
+  }
+
+  &__header-info {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__name-row {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+
+    h1 {
+      @include text-style($font-size-900, $font-weight-black);
+      letter-spacing: -0.02em;
+      margin: 0;
+    }
+  }
+
+  &__subtitle {
+    @include body;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__contact-row {
+    display: flex;
+    gap: $spacing-16;
+    margin-top: $spacing-8;
+  }
+
+  &__contact-item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-4;
+    @include body-small;
+    @include themify {
+      color: themed('text-secondary');
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &__header-actions {
+    display: flex;
+    gap: $spacing-12;
+  }
+
+  // --- GRID LAYOUT ---
+  &__grid {
+    display: grid;
+    grid-template-cols: 1fr;
+    gap: $spacing-32;
+
+    @media (min-width: 1024px) {
+      grid-template-cols: 1fr 2fr;
+    }
+  }
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-32;
+  }
+
+  // --- SUMMARY CARD ---
+  &__info-list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+  }
+
+  &__info-item {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+    padding-bottom: $spacing-12;
+    @include themify {
+      border-bottom: 1px solid themed('border-subtle');
+    }
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+  }
+
+  &__info-label {
+    @include caption;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__info-value {
+    @include body;
+    font-weight: $font-weight-medium;
+
+    &--persona {
+      display: flex;
+      align-items: center;
+      gap: $spacing-8;
+      margin-top: $spacing-4;
+    }
+  }
+
+  &__reports-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: $border-radius-circular;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    @include caption;
+    font-weight: $font-weight-bold;
+    @include themify {
+      background-color: alpha-color(themed('action-primary'), 0.2);
+      color: themed('action-primary');
+    }
+  }
+
+  // --- QUICK ACTIONS ---
+  &__action-list {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+  }
+
+  &__quick-action-btn {
+    justify-content: flex-start !important;
+    height: auto !important;
+    padding: $spacing-12 $spacing-16 !important;
+    @include body;
+    font-weight: $font-weight-medium;
+
+    svg {
+      margin-right: $spacing-12;
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+
+    &--destructive {
+      @include themify {
+        color: themed('state-error') !important;
+      }
+      svg {
+        @include themify {
+          color: themed('state-error');
+        }
+      }
+    }
+  }
+
+  // --- ROLES PANEL ---
+  &__roles-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-16;
+  }
+
+  &__role-card {
+    flex: 1;
+    min-width: 240px;
+    padding: $spacing-16;
+    border-radius: $border-radius-medium;
+    border: 1px solid;
+    @include themify {
+      background-color: themed('bg-secondary');
+      border-color: themed('border-subtle');
+    }
+  }
+
+  &__role-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $spacing-8;
+
+    svg {
+      @include themify {
+        color: themed('text-tertiary');
+      }
+    }
+  }
+
+  &__role-name {
+    @include body;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $spacing-4;
+  }
+
+  &__role-description {
+    @include body-small;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  // --- SESSIONS & HISTORY ---
+  &__session-info {
+    display: flex;
+    flex-direction: column;
+
+    .font-semibold {
+      @include body;
+      font-weight: $font-weight-semibold;
+    }
+
+    .text-success {
+      @include caption;
+      font-weight: $font-weight-medium;
+      @include themify {
+        color: themed('state-success');
+      }
+    }
+
+    .text-muted {
+      @include caption;
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+  }
+
+  &__history-list {
+    display: flex;
+    flex-direction: column;
+    @include themify {
+      border-top: 1px solid themed('border-subtle');
+    }
+  }
+
+  &__history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-16 $spacing-24;
+    @include themify {
+      border-bottom: 1px solid themed('border-subtle');
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__history-left {
+    display: flex;
+    align-items: center;
+    gap: $spacing-16;
+  }
+
+  &__history-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: $border-radius-circular;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &--success {
+      @include themify {
+        background-color: alpha-color(themed('state-success'), 0.1);
+        color: themed('state-success');
+      }
+    }
+
+    &--error {
+      @include themify {
+        background-color: alpha-color(themed('state-error'), 0.1);
+        color: themed('state-error');
+      }
+    }
+  }
+
+  &__history-details {
+    display: flex;
+    flex-direction: column;
+
+    .title {
+      @include body;
+      font-weight: $font-weight-bold;
+    }
+
+    .date {
+      @include caption;
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+  }
+
+  &__ip-badge {
+    @include caption;
+    font-family: $font-family-mono;
+    padding: $spacing-4 $spacing-8;
+    border-radius: $border-radius-small;
+    @include themify {
+      background-color: themed('bg-secondary');
+      color: themed('text-secondary');
+    }
+  }
+}

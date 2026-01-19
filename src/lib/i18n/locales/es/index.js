@@ -25,6 +25,7 @@ import { cashMovement } from './cashMovement.js'
 import { currencies } from './currencies.js'
 import { exchangeRates } from './exchangeRates.js'
 import { dashboard } from './dashboard.js'
+import { users } from './users.js'
 
 /**
  * Diccionario completo de traducciones en español
@@ -52,5 +53,6 @@ export const es = {
   ...currencies,
   ...exchangeRates,
   ...dashboard,
+  ...users,
   ...other,
 }

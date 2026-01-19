@@ -48,6 +48,7 @@ import ExchangeRates from '@/pages/ExchangeRates'
 import Login from '@/pages/Login'
 import Settings from '@/pages/Settings'
 import UserManagementList from '@/pages/UserManagementList'
+import UserDetailedProfile from '@/pages/UserDetailedProfile'
 // import ProductDetailTest from '@/components/ProductDetailTest';
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
@@ -212,6 +213,7 @@ function AppContent() {
                       {/* Configuración */}
                       <Route path='/configuracion' element={<Settings />} />
                       <Route path='/usuarios' element={<UserManagementList />} />
+                      <Route path='/usuarios/:id' element={<UserDetailedProfile />} />
 
                       {/* Configuración Financiera */}
                       <Route
