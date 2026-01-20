@@ -6,283 +6,181 @@
 
 @use '../abstracts' as *;
 
-.user-form-modal {
-  // Overrides for DialogContent when used as user form
-  &__content {
-    background-color: white; // Default light theme bg
-    border-radius: $border-radius-large;
-    border: 1px solid themed('border-subtle');
-    overflow: hidden;
-    
-    @include themify {
-      background-color: themed('surface-card'); // Use theme variable
-      border-color: themed('border-subtle');
-    }
+.user-form {
+  @include themify {
+    background-color: themed('surface-card');
+    color: themed('text-primary');
   }
+  border-radius: $border-radius-xlarge;
+  overflow: hidden;
 
   &__header {
-    padding: $spacing-32; // 2rem / 32px
-    border-bottom: 1px solid themed('border-subtle');
-    
+    padding: $spacing-8 $spacing-24; // Even more compact
     @include themify {
-      border-color: themed('border-subtle');
+      border-bottom: 1px solid themed('border-subtle');
     }
   }
 
   &__title {
-    @include text-style($font-size-600, $font-weight-bold); // 3xl
-    line-height: 1.25;
-    margin-bottom: $spacing-8;
-    
+    @include text-style($font-size-400, $font-weight-bold); // Smaller title
+    margin: 0;
     @include themify {
       color: themed('text-primary');
     }
   }
 
-  &__description {
-    @include text-style($font-size-300, $font-weight-regular); // base
-    
-    @include themify {
-      color: themed('text-secondary');
-    }
-  }
-
-  &__form {
-    padding: $spacing-32;
+  &__body {
+    padding: $spacing-16 $spacing-24;
     display: flex;
     flex-direction: column;
-    gap: $spacing-32; // space-y-8
+    gap: $spacing-16; // Smaller gap
+    overflow-y: auto;
+    max-height: 60vh; // Shorter modal
+    @include custom-scrollbar;
   }
 
   &__section {
     display: flex;
     flex-direction: column;
-    gap: $spacing-24; // gap-6 for grid/flex inside section
+    gap: $spacing-12;
   }
 
   &__section-header {
     display: flex;
     align-items: center;
     gap: $spacing-8;
-    margin-bottom: $spacing-24; // mb-6
-    
-    // Icon color from theme
-    .material-symbols-outlined {
-      font-size: 1.25rem; // xl
-      @include themify {
-        color: themed('action-primary');
-      }
+  }
+
+  &__section-icon {
+    font-size: 1rem !important; // Smaller icons
+    @include themify {
+      color: themed('action-primary');
     }
   }
 
   &__section-title {
-    @include text-style($font-size-400, $font-weight-bold); // lg
-    
+    @include text-style($font-size-200, $font-weight-bold);
+    margin: 0;
     @include themify {
       color: themed('text-primary');
     }
   }
 
-  &__row {
+  &__grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: $spacing-24; // gap-6
+    gap: $spacing-12; // Smaller gap
 
-    @include breakpoint('md') {
+    @include respond-to(md) {
       grid-template-columns: 1fr 1fr;
     }
   }
 
-  &__field-group {
+  &__field {
     display: flex;
     flex-direction: column;
-    gap: $spacing-8; // gap-2
+    gap: $spacing-2; // Minimal gap
   }
 
-  &__label-row {
+  &__label-wrapper {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
 
   &__label {
-    @include text-style($font-size-200, $font-weight-semibold); // sm
-    
+    @include text-style($font-size-200, $font-weight-semibold);
     @include themify {
-      color: themed('text-secondary'); // Default label color in design seems closer to secondary/gray
-    }
-  }
-
-  &__available-badge {
-    @include text-style($font-size-100, $font-weight-medium); // xs
-    display: flex;
-    align-items: center;
-    gap: $spacing-4;
-    
-    @include themify {
-      color: themed('state-success');
-    }
-
-    .material-symbols-outlined {
-      font-size: 0.75rem; // xs
-    }
-  }
-
-  &__show-password {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    @include text-style($font-size-100, $font-weight-semibold); // xs
-    
-    @include themify {
-      color: themed('action-primary');
-    }
-
-    &:hover {
-      text-decoration: underline;
+      color: themed('text-primary');
     }
   }
 
   &__input {
-    // Custom input styles specific to this form to match design precisely if base input differs
-    width: 100%;
-    border-radius: $border-radius-medium; // lg in tailwind ~0.5rem
-    height: 3rem; // h-12
-    padding: 0 $spacing-16; // px-4
-    
-    &:focus {
-      outline: none;
-      // focus styles handled by base input usually, but can override here
+    height: 2rem !important; // 32px
+    border-radius: $border-radius-medium !important;
+    font-size: $font-size-200 !important;
+    padding: 0 $spacing-8 !important;
+    @include transition(all);
+
+    @include themify {
+      background-color: themed('bg-primary');
+      border: 1px solid themed('border-default');
     }
 
-    &--valid {
+    &:focus {
       @include themify {
-        border-color: themed('state-success');
+        border-color: themed('action-primary') !important;
+        box-shadow: 0 0 0 1px themed('action-primary') !important;
       }
     }
   }
 
-  &__strength-meter {
-    margin-top: $spacing-8; // mt-2
+  &__select-trigger {
+    width: 100% !important;
+    height: 2rem !important; // 32px
+    border-radius: $border-radius-medium !important;
+    padding: 0 $spacing-8 !important;
+    font-size: $font-size-200 !important;
+    
+    @include themify {
+      background-color: themed('bg-primary');
+      border: 1px solid themed('border-default');
+      color: themed('text-primary');
+    }
+  }
+
+  &__status-badge {
+    @include text-style($font-size-100, $font-weight-medium);
+    display: flex;
+    align-items: center;
+    gap: $spacing-2;
+    &--success { @include themify { color: themed('state-success'); } }
+    .material-symbols-outlined { font-size: 0.75rem !important; }
+  }
+
+  &__strength {
+    margin-top: $spacing-2;
     display: flex;
     flex-direction: column;
-    gap: $spacing-8; // space-y-2
+    gap: $spacing-2;
   }
 
-  &__strength-bar-bg {
-    height: 0.375rem; // h-1.5
+  &__strength-bar {
+    height: 3px;
     width: 100%;
-    border-radius: 9999px; // full
+    border-radius: 2px;
+    @include themify { background-color: themed('bg-secondary'); }
     overflow: hidden;
-    
-    @include themify {
-      background-color: themed('border-default'); // gray-200
-    }
   }
 
-  &__strength-bar-fill {
+  &__strength-fill {
     height: 100%;
-    border-radius: 9999px;
-    @include transition(all);
-    
-    &--weak {
-      width: 25%;
-      @include themify {
-        background-color: themed('state-warning');
-      }
-    }
-    
-    &--strong {
-      width: 75%;
-      @include themify {
-        background-color: themed('state-success');
-      }
-    }
-  }
-
-  &__strength-text {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    
-    p {
-      @include text-style($font-size-100, $font-weight-medium); // xs
-      @include themify {
-        color: themed('text-secondary');
-      }
-    }
-
-    .strong {
-      text-transform: uppercase;
-      font-weight: $font-weight-bold;
-      @include themify {
-        color: themed('state-success');
-      }
-    }
-    
-    .weak {
-      text-transform: uppercase;
-      font-weight: $font-weight-bold;
-      @include themify {
-        color: themed('state-warning');
-      }
-    }
-  }
-
-  &__helper-text {
-    @include text-style($font-size-100, $font-weight-regular); // xs
-    margin-top: $spacing-4;
-    
-    @include themify {
-      color: themed('text-secondary');
-    }
+    &--weak { @include themify { background-color: themed('state-error'); } }
+    &--medium { @include themify { background-color: themed('state-warning'); } }
+    &--strong { @include themify { background-color: themed('state-success'); } }
   }
 
   &__footer {
+    padding: $spacing-8 $spacing-24;
+    @include themify { border-top: 1px solid themed('border-subtle'); }
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: $spacing-16;
-    padding: $spacing-32; // pt-8 (in design it was pt-8 border-t, here applied to footer container)
-    border-top: 1px solid themed('border-subtle');
-    
-    @include themify {
-      border-color: themed('border-subtle');
-    }
+    gap: $spacing-8;
   }
 
-  &__help-footer {
-    display: flex;
-    justify-content: center;
-    gap: $spacing-24;
-    padding: $spacing-16;
-    
+  &__cancel-btn {
+    height: 1.75rem !important; // ~28px
+    padding: 0 $spacing-12 !important;
+    @include text-style($font-size-200, $font-weight-semibold);
+  }
+
+  &__submit-btn {
+    height: 1.75rem !important; // ~28px
+    padding: 0 $spacing-16 !important;
+    @include text-style($font-size-200, $font-weight-bold);
     @include themify {
-      background-color: themed('bg-secondary'); // gray-50
-    }
-
-    a {
-      @include text-style($font-size-100, $font-weight-regular); // xs
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: $spacing-4;
-      @include transition(colors);
-      
-      @include themify {
-        color: themed('text-tertiary'); // gray-400
-      }
-
-      &:hover {
-        @include themify {
-          color: themed('action-primary');
-        }
-      }
-
-      .material-symbols-outlined {
-        font-size: 0.875rem; // 14px
-      }
+      background-color: themed('action-primary') !important;
     }
   }
 }

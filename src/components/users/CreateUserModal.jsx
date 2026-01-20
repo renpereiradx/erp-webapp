@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/lib/i18n';
 import {
   Dialog,
   DialogContent,
@@ -26,9 +26,11 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export function CreateUserModal({ open, onOpenChange, onSubmit }) {
-  const { t } = useTranslation();
+  const { t } = useI18n();
+  const [showPassword, setShowPassword] = useState(false);
   
   const form = useForm({
     defaultValues: {
@@ -46,41 +48,52 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
     form.reset();
   };
 
+  const getPasswordStrength = (password) => {
+    if (!password) return 0;
+    let strength = 0;
+    if (password.length >= 8) strength += 25;
+    if (password.length >= 12) strength += 25;
+    if (/[A-Z]/.test(password)) strength += 25;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 25;
+    return strength;
+  };
+
+  const passwordValue = form.watch('password');
+  const strength = getPasswordStrength(passwordValue);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="user-form-modal__content sm:max-w-[800px] p-0">
-        <DialogHeader className="user-form-modal__header">
-          <DialogTitle className="user-form-modal__title">
+      <DialogContent className="user-form sm:max-w-[900px] p-0 overflow-hidden border-none shadow-64">
+        <DialogHeader className="user-form__header">
+          <DialogTitle className="user-form__title">
             {t('users.form.createTitle')}
           </DialogTitle>
-          <DialogDescription className="user-form-modal__description">
-            {t('users.form.createDescription')}
-          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="user-form-modal__form">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="user-form__body">
             {/* Personal Info Section */}
-            <div className="user-form-modal__section">
-              <div className="user-form-modal__section-header">
-                <span className="material-symbols-outlined">person</span>
-                <h3 className="user-form-modal__section-title">
+            <div className="user-form__section">
+              <div className="user-form__section-header">
+                <span className="material-symbols-outlined user-form__section-icon">person</span>
+                <h3 className="user-form__section-title">
                   {t('users.form.personalInfo')}
                 </h3>
               </div>
-              <div className="user-form-modal__row">
+              <div className="user-form__grid">
                 <FormField
                   control={form.control}
                   name="firstName"
                   render={({ field }) => (
-                    <FormItem className="user-form-modal__field-group">
-                      <FormLabel className="user-form-modal__label">
+                    <FormItem className="user-form__field">
+                      <FormLabel className="user-form__label">
                         {t('users.form.firstName')}
                       </FormLabel>
                       <FormControl>
                         <Input 
                           placeholder={t('users.form.firstNamePlaceholder')} 
-                          className="user-form-modal__input"
+                          className="user-form__input"
+                          autoComplete="off"
                           {...field} 
                         />
                       </FormControl>
@@ -92,14 +105,15 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
                   control={form.control}
                   name="lastName"
                   render={({ field }) => (
-                    <FormItem className="user-form-modal__field-group">
-                      <FormLabel className="user-form-modal__label">
+                    <FormItem className="user-form__field">
+                      <FormLabel className="user-form__label">
                         {t('users.form.lastName')}
                       </FormLabel>
                       <FormControl>
                         <Input 
                           placeholder={t('users.form.lastNamePlaceholder')} 
-                          className="user-form-modal__input"
+                          className="user-form__input"
+                          autoComplete="off"
                           {...field} 
                         />
                       </FormControl>
@@ -111,25 +125,25 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
             </div>
 
             {/* Credentials Section */}
-            <div className="user-form-modal__section">
-              <div className="user-form-modal__section-header">
-                <span className="material-symbols-outlined">lock_open</span>
-                <h3 className="user-form-modal__section-title">
+            <div className="user-form__section">
+              <div className="user-form__section-header">
+                <span className="material-symbols-outlined user-form__section-icon">lock_open</span>
+                <h3 className="user-form__section-title">
                   {t('users.form.credentials')}
                 </h3>
               </div>
-              <div className="user-form-modal__section">
+              <div className="user-form__grid">
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
-                    <FormItem className="user-form-modal__field-group">
-                      <div className="user-form-modal__label-row">
-                        <FormLabel className="user-form-modal__label">
+                    <FormItem className="user-form__field">
+                      <div className="user-form__label-wrapper">
+                        <FormLabel className="user-form__label">
                           {t('users.form.email')}
                         </FormLabel>
                         {field.value && field.value.includes('@') && (
-                          <span className="user-form-modal__available-badge">
+                          <span className="user-form__status-badge user-form__status-badge--success">
                             <span className="material-symbols-outlined">check_circle</span> 
                             {t('users.form.emailAvailable')}
                           </span>
@@ -139,7 +153,11 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
                         <Input 
                           type="email"
                           placeholder={t('users.form.emailPlaceholder')} 
-                          className={`user-form-modal__input ${field.value && field.value.includes('@') ? 'user-form-modal__input--valid' : ''}`}
+                          className={cn(
+                            "user-form__input",
+                            field.value && field.value.includes('@') && "user-form__input--success"
+                          )}
+                          autoComplete="off"
                           {...field} 
                         />
                       </FormControl>
@@ -152,42 +170,52 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
                   control={form.control}
                   name="password"
                   render={({ field }) => (
-                    <FormItem className="user-form-modal__field-group">
-                      <div className="user-form-modal__label-row">
-                        <FormLabel className="user-form-modal__label">
+                    <FormItem className="user-form__field">
+                      <div className="user-form__label-wrapper">
+                        <FormLabel className="user-form__label">
                           {t('users.form.password')}
                         </FormLabel>
-                        <button type="button" className="user-form-modal__show-password">
-                          {t('users.form.showPassword')}
+                        <button 
+                          type="button" 
+                          className="user-form__link-btn"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? t('users.form.hidePassword') : t('users.form.showPassword')}
                         </button>
                       </div>
                       <FormControl>
                         <Input 
-                          type="password"
-                          className="user-form-modal__input"
+                          type={showPassword ? "text" : "password"}
+                          className="user-form__input"
+                          autoComplete="new-password"
                           {...field} 
                         />
                       </FormControl>
+                      
                       {/* Strength Meter */}
-                      {field.value && (
-                        <div className="user-form-modal__strength-meter">
-                          <div className="user-form-modal__strength-bar-bg">
-                            <div 
-                              className={`user-form-modal__strength-bar-fill ${
-                                field.value.length > 8 ? 'user-form-modal__strength-bar-fill--strong' : 'user-form-modal__strength-bar-fill--weak'
-                              }`}
-                            ></div>
-                          </div>
-                          <div className="user-form-modal__strength-text">
-                            <p>
-                              {t('users.form.strength')} <span className={field.value.length > 8 ? 'strong' : 'weak'}>
-                                {field.value.length > 8 ? t('users.form.strengthStrong') : 'Weak'}
-                              </span>
-                            </p>
-                            <p>{t('users.form.strengthMessage')}</p>
-                          </div>
+                      <div className="user-form__strength">
+                        <div className="user-form__strength-bar">
+                          <div 
+                            className={cn(
+                              "user-form__strength-fill",
+                              strength <= 25 ? "user-form__strength-fill--weak" : 
+                              strength <= 75 ? "user-form__strength-fill--medium" : "user-form__strength-fill--strong"
+                            )}
+                            style={{ width: `${strength}%` }}
+                          />
                         </div>
-                      )}
+                        <div className="user-form__strength-info">
+                          <p className="user-form__strength-text">
+                            {t('users.form.strength')} <span className={cn(
+                              "user-form__strength-label",
+                              strength <= 25 ? "text-error" : strength <= 75 ? "text-warning" : "text-success"
+                            )}>
+                              {strength <= 25 ? t('users.form.strengthWeak') : strength <= 75 ? t('users.form.strengthMedium') : t('users.form.strengthStrong')}
+                            </span>
+                          </p>
+                          <p className="user-form__strength-hint">{t('users.form.strengthMessage')}</p>
+                        </div>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -196,10 +224,10 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
             </div>
 
             {/* Role Selection */}
-            <div className="user-form-modal__section">
-              <div className="user-form-modal__section-header">
-                <span className="material-symbols-outlined">shield_person</span>
-                <h3 className="user-form-modal__section-title">
+            <div className="user-form__section">
+              <div className="user-form__section-header">
+                <span className="material-symbols-outlined user-form__section-icon">shield_person</span>
+                <h3 className="user-form__section-title">
                   {t('users.form.accessControl')}
                 </h3>
               </div>
@@ -207,13 +235,13 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
                 control={form.control}
                 name="role"
                 render={({ field }) => (
-                  <FormItem className="user-form-modal__field-group">
-                    <FormLabel className="user-form-modal__label">
+                  <FormItem className="user-form__field">
+                    <FormLabel className="user-form__label">
                       {t('users.form.role')}
                     </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="user-form-modal__input">
+                        <SelectTrigger className="user-form__select-trigger">
                           <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                       </FormControl>
@@ -224,7 +252,7 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
                         <SelectItem value="Billing Manager">{t('users.roles.billingManager')}</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="user-form-modal__helper-text">
+                    <p className="user-form__hint">
                       {t('users.form.roleHelp')}
                     </p>
                     <FormMessage />
@@ -233,34 +261,24 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
               />
             </div>
 
-            <DialogFooter className="user-form-modal__footer">
+            <DialogFooter className="user-form__footer">
               <Button 
                 type="button" 
                 variant="ghost" 
                 onClick={() => onOpenChange(false)}
-                className="px-6 h-11"
+                className="user-form__cancel-btn"
               >
                 {t('users.form.discard')}
               </Button>
               <Button 
                 type="submit" 
-                className="px-8 h-11"
+                className="user-form__submit-btn"
               >
                 {t('users.form.createButton')}
               </Button>
             </DialogFooter>
           </form>
         </Form>
-        
-        {/* Subtle Help Footer */}
-        <div className="user-form-modal__help-footer">
-          <a href="#">
-            <span className="material-symbols-outlined">help</span> {t('users.form.helpCenter')}
-          </a>
-          <a href="#">
-            <span className="material-symbols-outlined">policy</span> {t('users.form.permissionGuidelines')}
-          </a>
-        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 
 export function RoleAssignmentSidebar({ open, onClose, user, onSave }) {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   // Mock initial roles state
   const [roles, setRoles] = useState([

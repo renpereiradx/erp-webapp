@@ -18,133 +18,7 @@
   }
 
   // Sidebar specific overrides
-  &__sidebar {
-    width: 16rem;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    position: sticky;
-    top: 0;
-    
-    @include themify {
-      border-right: 1px solid themed('border-subtle');
-      background-color: themed('surface-card');
-    }
-  }
 
-  &__sidebar-header {
-    padding: $spacing-24;
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-32;
-  }
-
-  &__brand {
-    display: flex;
-    align-items: center;
-    gap: $spacing-12;
-  }
-
-  &__brand-logo {
-    width: 2.5rem; // 40px
-    height: 2.5rem;
-    border-radius: $border-radius-xlarge;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    
-    @include themify {
-      background-color: themed('action-primary');
-    }
-  }
-
-  &__brand-text {
-    display: flex;
-    flex-direction: column;
-    
-    h1 {
-      font-size: $font-size-400;
-      font-weight: $font-weight-bold;
-      line-height: 1;
-    }
-
-    p {
-      font-size: $font-size-200;
-      font-weight: $font-weight-regular;
-      @include themify {
-        color: themed('text-secondary');
-      }
-    }
-  }
-
-  &__sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-4;
-  }
-
-  &__sidebar-link {
-    display: flex;
-    align-items: center;
-    gap: $spacing-12;
-    padding: $spacing-8 $spacing-12;
-    border-radius: $border-radius-xlarge;
-    text-decoration: none;
-    @include transition(all);
-
-    @include themify {
-      color: themed('text-secondary');
-    }
-
-    &:hover {
-      @include themify {
-        background-color: themed('surface-hover');
-      }
-    }
-
-    &--active {
-      @include themify {
-        background-color: alpha-color(themed('action-primary'), 0.1);
-        color: themed('action-primary');
-      }
-    }
-  }
-
-  &__sidebar-footer {
-    margin-top: auto;
-    padding: $spacing-16;
-    @include themify {
-      border-top: 1px solid themed('border-subtle');
-    }
-  }
-
-  &__user-profile {
-    display: flex;
-    align-items: center;
-    gap: $spacing-12;
-    padding: $spacing-8;
-  }
-
-  &__user-profile-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-
-    p:first-child {
-      @include text-style($font-size-300, $font-weight-semibold);
-      @include truncate;
-    }
-
-    p:last-child {
-      @include text-style($font-size-100);
-      @include themify {
-        color: themed('text-secondary');
-      }
-      @include truncate;
-    }
-  }
 
   // Main Content Area
   &__content {
@@ -154,9 +28,9 @@
     min-width: 0;
   }
 
-  &__header {
+  &__header-row {
     display: flex;
-    height: 4rem;
+    height: 4.5rem; // Slightly taller for more breath
     align-items: center;
     justify-content: space-between;
     padding: 0 $spacing-32;
@@ -166,8 +40,9 @@
 
     @include themify {
       border-bottom: 1px solid themed('border-subtle');
-      background-color: themed('surface-card');
+      background-color: alpha-color(themed('surface-card'), 0.95);
     }
+    backdrop-filter: blur(8px);
   }
 
   &__header-title {
@@ -193,14 +68,18 @@
   &__header-buttons {
     display: flex;
     gap: $spacing-8;
+
+    .btn {
+      border: 0 !important;
+    }
   }
 
   &__search-bar {
     display: flex;
     align-items: center;
-    gap: $spacing-8;
-    padding: $spacing-4 $spacing-12;
-    border-radius: $border-radius-xlarge;
+    gap: $spacing-12;
+    padding: $spacing-8 $spacing-16;
+    border-radius: $border-radius-large;
     border: 1px solid transparent;
     @include transition(all);
 
@@ -210,23 +89,26 @@
 
     &:focus-within {
       @include themify {
-        border-color: alpha-color(themed('action-primary'), 0.5);
+        background-color: themed('surface-card');
+        border-color: themed('action-primary');
+        box-shadow: 0 0 0 3px alpha-color(themed('action-primary'), 0.1);
       }
     }
 
     input {
       background: transparent;
       border: none;
-      font-size: $font-size-300;
-      width: 16rem;
+      font-size: $font-size-200;
+      width: 20rem; // wider per spec w-64 is approx 16rem, using 20 for more space
       padding: 0;
       outline: none;
+      font-weight: $font-weight-medium;
 
       @include themify {
         color: themed('text-primary');
         
         &::placeholder {
-          color: themed('text-secondary');
+          color: themed('text-tertiary');
         }
       }
     }
@@ -242,18 +124,45 @@
       background-color: themed('surface-card');
       border-bottom: 1px solid themed('border-subtle');
     }
+
+    // Custom styles for filter buttons within toolbar
+    @include themify {
+      .btn--secondary {
+        border-color: themed('border-subtle');
+        background-color: themed('bg-primary');
+        color: themed('text-primary');
+        font-weight: $font-weight-medium;
+
+        &:hover {
+          background-color: themed('bg-hover');
+        }
+      }
+    }
   }
 
   &__filter-group {
     display: flex;
     align-items: center;
     gap: $spacing-12;
+
+    // Filters have subtle borders in Fluent 2
+    .btn--secondary {
+       border: 1px solid;
+       @include themify {
+         border-color: themed('border-subtle');
+       }
+    }
   }
 
   &__action-group {
     display: flex;
     align-items: center;
     gap: $spacing-8;
+
+    // Secondary actions like Export or More Options should NOT have borders
+    .btn {
+      border: 0 !important;
+    }
   }
 
   &__selection-bar {
@@ -284,9 +193,10 @@
   }
 
   &__grid-container {
-    padding: $spacing-16 $spacing-32;
+    padding: $spacing-24 $spacing-32;
     flex: 1;
     overflow: auto;
+    @include custom-scrollbar;
   }
 
   &__grid-card {
@@ -301,6 +211,27 @@
   }
 
   // Table Cell styles
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  thead {
+    @include themify {
+      background-color: themed('bg-secondary');
+    }
+    
+    @include themify {
+      th {
+        @include text-style($font-size-200, $font-weight-bold);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid themed('border-subtle');
+        color: themed('text-secondary');
+      }
+    }
+  }
+
   &__user-cell {
     display: flex;
     align-items: center;
@@ -425,6 +356,19 @@
 
     @include themify {
       color: themed('text-primary');
+    }
+  }
+
+  // Row selection and hover effects (matches fluent spec)
+  .fluent-grid-selected {
+    @include themify {
+      background-color: alpha-color(themed('action-primary'), 0.08) !important;
+    }
+  }
+
+  tr:hover {
+    @include themify {
+      background-color: alpha-color(themed('action-primary'), 0.04) !important;
     }
   }
 }

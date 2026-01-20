@@ -42,6 +42,7 @@ const variantClasses = {
   warning: "btn--warning",
   outline: "btn--secondary",
   link: "btn--ghost",
+  text: "btn--text",
   filter: "btn--filter",
 }
 

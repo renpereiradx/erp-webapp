@@ -10,7 +10,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { useTranslation } from 'react-i18next';
+import { useI18n } from '@/lib/i18n';
 import { CreateUserModal } from '@/components/users/CreateUserModal';
 
 // URLs de imágenes del ejemplo
@@ -82,7 +82,7 @@ const MOCK_USERS = [
 ];
 
 export default function UserManagementList() {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [users, setUsers] = useState(MOCK_USERS);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -109,107 +109,56 @@ export default function UserManagementList() {
 
   return (
     <div className="user-management">
-      {/* Side Navigation */}
-      <aside className="user-management__sidebar">
-        <div className="user-management__sidebar-header">
-          <div className="user-management__brand">
-            <div className="user-management__brand-logo">
-              <span className="material-symbols-outlined">shield</span>
-            </div>
-            <div className="user-management__brand-text">
-              <h1>Admin Panel</h1>
-              <p>Enterprise Console</p>
-            </div>
-          </div>
-          <nav className="user-management__sidebar-nav">
-            <a className="user-management__sidebar-link" href="#">
-              <span className="material-symbols-outlined">dashboard</span>
-              <span className="text-sm font-medium">Dashboard</span>
-            </a>
-            <a className="user-management__sidebar-link user-management__sidebar-link--active" href="#">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>group</span>
-              <span className="text-sm font-semibold">User Management</span>
-            </a>
-            <a className="user-management__sidebar-link" href="#">
-              <span className="material-symbols-outlined">security</span>
-              <span className="text-sm font-medium">Roles & Permissions</span>
-            </a>
-            <a className="user-management__sidebar-link" href="#">
-              <span className="material-symbols-outlined">analytics</span>
-              <span className="text-sm font-medium">Activity Logs</span>
-            </a>
-            <div className="my-4 border-t border-subtle"></div>
-            <a className="user-management__sidebar-link" href="#">
-              <span className="material-symbols-outlined">settings</span>
-              <span className="text-sm font-medium">Settings</span>
-            </a>
-          </nav>
-        </div>
-        <div className="user-management__sidebar-footer">
-          <div className="user-management__user-profile">
-            <Avatar size={32}>
-              <AvatarImage src={AVATAR_URLS.alex} alt="Admin user profile picture" />
-              <AvatarFallback>AC</AvatarFallback>
-            </Avatar>
-            <div className="user-management__user-profile-info">
-              <p>Alex Chen</p>
-              <p>Global Admin</p>
-            </div>
-            <span className="material-symbols-outlined text-secondary text-sm cursor-pointer">more_vert</span>
-          </div>
-        </div>
-      </aside>
-
       {/* Main Content */}
-      <main className="user-management__content">
-        {/* Top Nav Bar */}
-        <header className="user-management__header">
+      <div className="user-management__content">
+        {/* Header Content moved here */}
+        <div className="user-management__header-row">
           <div className="user-management__header-title">
-            <h2>{t('users.users.title')}</h2>
-            <Badge variant="secondary" className="border-none">1,240 {t('users.users.total')}</Badge>
+            <h2>{t('users.title')}</h2>
+            <Badge variant="secondary" style={{ border: 'none' }}>1,240 {t('users.total')}</Badge>
           </div>
           <div className="user-management__header-actions">
             <div className="user-management__search-bar">
               <span className="material-symbols-outlined text-secondary text-xl">search</span>
-              <input placeholder={t('users.users.searchPlaceholder')} type="text" />
+              <input placeholder={t('users.searchPlaceholder')} type="text" />
             </div>
             <div className="user-management__header-buttons">
-              <Button variant="ghost" size="icon">
+              <Button variant="subtle" size="icon">
                 <span className="material-symbols-outlined">notifications</span>
               </Button>
-              <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+              <Button variant="primary" size="lg" onClick={() => setIsCreateModalOpen(true)}>
                 <span className="material-symbols-outlined text-lg">person_add</span>
-                <span>{t('users.users.addUser')}</span>
+                <span>{t('users.addUser')}</span>
               </Button>
             </div>
           </div>
-        </header>
+        </div>
 
         {/* Command Bar / Toolbar */}
         <div className="user-management__toolbar">
           <div className="user-management__filter-group">
             <Button variant="outline" className="h-auto">
               <span className="material-symbols-outlined text-lg">filter_list</span>
-              <span>{t('users.users.filterRole')}</span>
+              <span>{t('users.filterRole')}</span>
               <span className="material-symbols-outlined text-sm">expand_more</span>
             </Button>
             <Button variant="outline" className="h-auto">
               <span className="material-symbols-outlined text-lg">check_circle</span>
-              <span>{t('users.users.filterStatus')}</span>
+              <span>{t('users.filterStatus')}</span>
               <span className="material-symbols-outlined text-sm text-primary">expand_more</span>
             </Button>
             <Button variant="outline" className="h-auto">
               <span className="material-symbols-outlined text-lg">calendar_today</span>
-              <span>{t('users.users.filterLastActive')}</span>
+              <span>{t('users.filterLastActive')}</span>
               <span className="material-symbols-outlined text-sm">expand_more</span>
             </Button>
             <div className="h-6 w-px bg-subtle mx-2"></div>
-            <Button variant="text" className="h-auto px-0">{t('users.users.clearAll')}</Button>
+            <Button variant="text" className="h-auto px-0 font-bold hover:underline">{t('users.clearAll')}</Button>
           </div>
           <div className="user-management__action-group">
             <Button variant="ghost" className="h-auto">
               <span className="material-symbols-outlined text-lg">download</span>
-              <span>{t('users.users.export')}</span>
+              <span>{t('users.export')}</span>
             </Button>
             <Button variant="ghost" size="icon" className="h-auto w-auto">
               <span className="material-symbols-outlined text-lg">more_horiz</span>
@@ -221,17 +170,17 @@ export default function UserManagementList() {
         {selectedCount > 0 && (
           <div className="user-management__selection-bar">
             <div className="user-management__selection-actions">
-              <span className="text-sm font-semibold text-primary">{t('users.users.selectedUsers', { count: selectedCount })}</span>
+              <span className="text-sm font-semibold text-primary">{t('users.selectedUsers', { count: selectedCount })}</span>
               <div className="h-4 w-px bg-primary opacity-20"></div>
               <div className="user-management__selection-buttons">
                 <Button variant="secondary" size="sm">
-                  <span className="material-symbols-outlined text-base">check</span> {t('users.users.activate')}
+                  <span className="material-symbols-outlined text-base">check</span> {t('users.activate')}
                 </Button>
                 <Button variant="secondary" size="sm">
-                  <span className="material-symbols-outlined text-base">block</span> {t('users.users.deactivate')}
+                  <span className="material-symbols-outlined text-base">block</span> {t('users.deactivate')}
                 </Button>
                 <Button variant="destructive" size="sm">
-                  <span className="material-symbols-outlined text-base">delete</span> {t('users.users.delete')}
+                  <span className="material-symbols-outlined text-base">delete</span> {t('users.delete')}
                 </Button>
               </div>
             </div>
@@ -255,10 +204,10 @@ export default function UserManagementList() {
                       onChange={(e) => setUsers(users.map(u => ({...u, selected: e.target.checked})))}
                     />
                   </TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.users.table.user')}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.users.table.role')}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.users.table.status')}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.users.table.lastActive')}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.table.user')}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.table.role')}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.table.status')}</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.table.lastActive')}</TableHead>
                   <TableHead className="w-20 h-auto"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -280,7 +229,7 @@ export default function UserManagementList() {
                     <TableCell>
                       <div className="user-management__user-cell">
                         <Avatar size={32}>
-                          <AvatarImage src={user.avatar} alt={user.name} />
+                          <AvatarImage src={user.avatar} />
                           <AvatarFallback>{user.initials}</AvatarFallback>
                         </Avatar>
                         <div className="user-management__user-info">
@@ -314,9 +263,9 @@ export default function UserManagementList() {
           {/* Footer / Pagination */}
           <div className="user-management__pagination">
             <div className="user-management__pagination-info">
-              <span className="text-sm text-secondary">{t('users.users.showing')} <span className="font-semibold text-primary">1-25</span> {t('users.users.of')} 1,240 {t('users.users.total').toLowerCase()}</span>
+              <span className="text-sm text-secondary">{t('users.showing')} <span className="font-semibold text-primary">1-25</span> {t('users.of')} 1,240 {t('users.total').toLowerCase()}</span>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-secondary">{t('users.users.rowsPerPage')}</span>
+                <span className="text-sm text-secondary">{t('users.rowsPerPage')}</span>
                 <select className="user-management__rows-select">
                   <option>25</option>
                   <option>50</option>
@@ -327,6 +276,7 @@ export default function UserManagementList() {
             <div className="user-management__pagination-controls">
               <Button variant="ghost" size="icon" className="size-9 text-secondary">
                 <span className="material-symbols-outlined">first_page</span>
+                
               </Button>
               <Button variant="ghost" size="icon" className="size-9 text-secondary">
                 <span className="material-symbols-outlined">chevron_left</span>
@@ -347,7 +297,7 @@ export default function UserManagementList() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Create User Modal */}
       <CreateUserModal 

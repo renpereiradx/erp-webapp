@@ -46,6 +46,8 @@ export const users = {
       hidePassword: "Ocultar Contraseña",
       strength: "Fortaleza:",
       strengthStrong: "Fuerte",
+      strengthMedium: "Media",
+      strengthWeak: "Débil",
       strengthMessage: "Al menos 12 caracteres, incluyendo símbolos.",
       accessControl: "Control de Acceso",
       role: "Rol Asignado",
