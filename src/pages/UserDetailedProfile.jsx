@@ -1,4 +1,5 @@
 import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -46,6 +47,19 @@ import {
 } from 'lucide-react';
 
 const UserDetailedProfile = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  // Mock data fetching based on ID (In a real app, this would be an API call)
+  const userData = {
+    id,
+    name: id === '1' ? 'Sarah Johnson' : id === '2' ? 'Marcus Smith' : 'Caleb Jenkins',
+    initials: id === '1' ? 'SJ' : id === '2' ? 'MS' : 'CJ',
+    email: id === '1' ? 'sarah.j@company.com' : id === '2' ? 'm.smith@company.com' : 'caleb.jenkins@acme.corp',
+    role: id === '1' ? 'Admin' : 'Senior Systems Architect',
+    status: 'Activo'
+  };
+
   return (
     <div className="user-profile">
       <main className="user-profile__content">
@@ -59,7 +73,7 @@ const UserDetailedProfile = () => {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Caleb Jenkins</BreadcrumbPage>
+                  <BreadcrumbPage>{userData.name}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -70,20 +84,18 @@ const UserDetailedProfile = () => {
             <div className="user-profile__header-left">
               <div className="user-profile__avatar-wrapper">
                 <Avatar size={96}>
-                  <AvatarImage src="https://lh3.googleusercontent.com/aida-public/AB6AXuByUG1GXA4Fteawryn8QEa80rFZ1QVu6eMZojxHF5a5mBr-x0JmwQD5g7xSBS8gQx6E4tkAx0uFnDWlB1lR8FkPRqfXN8iGCDkTjKjzFwLMe02C0SdXOF4VETZXBTWM3QFJe9J7zgfBWYyA--zyzIovvFEVsTIVdGNU9yhLRSxKJUhnnYzcpvNWhmCVle9_lcpplI-Hdh9iZ1aGR1BIg4ngbC26GAmhx49kvmlDnX1OnF7dRzzLfyq_E107gks3yi5W9SQjhHWmLg" alt="Caleb Jenkins" />
-                  <AvatarFallback>CJ</AvatarFallback>
+                  <AvatarFallback>{userData.initials}</AvatarFallback>
                 </Avatar>
                 <div className="user-profile__status-indicator" />
               </div>
               <div className="user-profile__header-info">
                 <div className="user-profile__name-row">
-                  <h1>Caleb Jenkins</h1>
-                  <Badge variant="subtle-success" shape="pill">ACTIVO</Badge>
+                  <h1>{userData.name}</h1>
+                  <Badge variant="subtle-success" shape="pill">{userData.status}</Badge>
                 </div>
-                <p className="user-profile__subtitle">Senior Systems Architect • Seattle, WA • Miembro desde Ene 2022</p>
                 <div className="user-profile__contact-row">
                   <span className="user-profile__contact-item">
-                    <Mail /> caleb.jenkins@acme.corp
+                    <Mail /> {userData.email}
                   </span>
                   <span className="user-profile__contact-item">
                     <Phone /> +1 (555) 012-3456

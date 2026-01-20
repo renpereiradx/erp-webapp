@@ -14,6 +14,11 @@ export const users = {
     activate: "Activar",
     deactivate: "Desactivar",
     delete: "Eliminar",
+    actions: {
+      view: "Ver",
+      edit: "Editar",
+      delete: "Eliminar"
+    },
     rowsPerPage: "Filas por página:",
     showing: "Mostrando",
     of: "de",

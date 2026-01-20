@@ -11,7 +11,15 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { useI18n } from '@/lib/i18n';
+import { useNavigate } from 'react-router-dom';
 import { CreateUserModal } from '@/components/users/CreateUserModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 // URLs de imágenes del ejemplo
 const AVATAR_URLS = {
@@ -83,6 +91,7 @@ const MOCK_USERS = [
 
 export default function UserManagementList() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [users, setUsers] = useState(MOCK_USERS);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -250,9 +259,28 @@ export default function UserManagementList() {
                     </TableCell>
                     <TableCell className="text-sm text-secondary">{user.lastActive}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="size-8">
-                        <span className="material-symbols-outlined text-secondary">more_vert</span>
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="size-8">
+                            <span className="material-symbols-outlined text-secondary">more_vert</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem onClick={() => navigate(`/usuarios/${user.id}`)}>
+                            <span className="material-symbols-outlined mr-2 text-sm">visibility</span>
+                            {t('users.actions.view')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <span className="material-symbols-outlined mr-2 text-sm">edit</span>
+                            {t('users.actions.edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-destructive focus:text-destructive">
+                            <span className="material-symbols-outlined mr-2 text-sm">delete</span>
+                            {t('users.actions.delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
