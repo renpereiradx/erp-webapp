@@ -17,19 +17,16 @@ describe('Inventory Service', () => {
 
   describe('getInventories', () => {
     it('should fetch inventories successfully', async () => {
-      const mockResponse = {
-        inventories: [
-          { id: 1, user_id: 'test-user', check_date: '2025-09-06T10:00:00Z', state: true }
-        ],
-        pagination: { total: 1, page: 1, pageSize: 10 }
-      };
+      const mockData = [
+        { id: 1, user_id: 'test-user', check_date: '2025-09-06T10:00:00Z', state: true }
+      ];
       
-      apiClient.get.mockResolvedValue(mockResponse);
+      apiClient.get.mockResolvedValue(mockData);
       
       const result = await inventoryService.getInventories(1, 10);
       
-      expect(result).toEqual(mockResponse);
-      expect(apiClient.get).toHaveBeenCalledWith('/inventory?page=1&page_size=10');
+      expect(result).toEqual({ success: true, data: mockData });
+      expect(apiClient.get).toHaveBeenCalledWith('/inventory/1/10');
     });
 
     it('should handle API error', async () => {
@@ -42,8 +39,8 @@ describe('Inventory Service', () => {
   describe('getInventoryDetails', () => {
     it('should fetch inventory details successfully', async () => {
       const mockResponse = {
-        inventory: { id: 1, user_id: 'test-user', state: true },
-        items: [
+        Inventory: { id: 1, user_id: 'test-user', state: true },
+        Items: [
           { id: 1, product_id: 'PROD_001', quantity_checked: 100, previous_quantity: 90 }
         ]
       };
@@ -52,7 +49,13 @@ describe('Inventory Service', () => {
       
       const result = await inventoryService.getInventoryDetails(1);
       
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual({
+        success: true,
+        data: {
+          inventory: mockResponse.Inventory,
+          items: mockResponse.Items,
+        },
+      });
       expect(apiClient.get).toHaveBeenCalledWith('/inventory/1');
     });
   });
@@ -60,44 +63,36 @@ describe('Inventory Service', () => {
   describe('createInventory', () => {
     it('should create inventory successfully', async () => {
       const inventoryData = {
-        check_date: '2025-09-06T10:00:00Z',
-        details: [
+        items: [
           { product_id: 'PROD_001', quantity_checked: 100 }
-        ]
+        ],
+        metadata: { notes: 'Test inventory' }
       };
       
-      const mockResponse = {
-        success: true,
+      const mockApiResponse = {
         inventory_id: 22,
         message: 'Inventory created successfully'
       };
       
-      apiClient.post.mockResolvedValue(mockResponse);
+      apiClient.post.mockResolvedValue(mockApiResponse);
       
       const result = await inventoryService.createInventory(inventoryData);
       
-      expect(result).toEqual(mockResponse);
-      expect(apiClient.post).toHaveBeenCalledWith('/inventory', {
-        action: 'insert',
-        check_date: inventoryData.check_date,
-        details: inventoryData.details
+      expect(result.success).toBe(true);
+      expect(result.inventory_id).toBe(22);
+      expect(apiClient.post).toHaveBeenCalledWith('/inventory/', {
+        items: inventoryData.items,
+        metadata: inventoryData.metadata
       });
     });
 
-    it('should use current timestamp when no check_date provided', async () => {
-      const inventoryData = {
-        details: [{ product_id: 'PROD_001', quantity_checked: 100 }]
-      };
+    it('should handle missing products error', async () => {
+      const inventoryData = { items: [] };
       
-      const mockResponse = { success: true, inventory_id: 22 };
-      apiClient.post.mockResolvedValue(mockResponse);
+      const result = await inventoryService.createInventory(inventoryData);
       
-      await inventoryService.createInventory(inventoryData);
-      
-      const callArgs = apiClient.post.mock.calls[0][1];
-      expect(callArgs.action).toBe('insert');
-      expect(callArgs.check_date).toBeDefined();
-      expect(callArgs.details).toEqual(inventoryData.details);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Se requiere al menos un producto en el inventario');
     });
   });
 
@@ -114,7 +109,7 @@ describe('Inventory Service', () => {
       const result = await inventoryService.invalidateInventory(22);
       
       expect(result).toEqual(mockResponse);
-      expect(apiClient.post).toHaveBeenCalledWith('/inventory/invalidate', {
+      expect(apiClient.post).toHaveBeenCalledWith('/api/inventory/invalidate', {
         action: 'invalidate',
         id_inventory: 22
       });
@@ -139,7 +134,7 @@ describe('Inventory Service', () => {
       const result = await inventoryService.getProductTransactionHistory('PROD_001', 20, 0);
       
       expect(result).toEqual(mockTransactions);
-      expect(apiClient.get).toHaveBeenCalledWith('/stock-transactions/product/PROD_001?limit=20&offset=0');
+      expect(apiClient.get).toHaveBeenCalledWith('/api/stock-transaction/history/PROD_001?limit=20&offset=0');
     });
   });
 
@@ -163,7 +158,7 @@ describe('Inventory Service', () => {
       const result = await inventoryService.createStockTransaction(transactionData);
       
       expect(result).toEqual(mockResponse);
-      expect(apiClient.post).toHaveBeenCalledWith('/stock-transactions', transactionData);
+      expect(apiClient.post).toHaveBeenCalledWith('/api/stock-transaction', transactionData);
     });
   });
 
@@ -180,7 +175,7 @@ describe('Inventory Service', () => {
       const result = await inventoryService.getTransactionTypes();
       
       expect(result).toEqual(mockTypes);
-      expect(apiClient.get).toHaveBeenCalledWith('/stock-transactions/types');
+      expect(apiClient.get).toHaveBeenCalledWith('/api/stock-transaction/types');
     });
   });
 
@@ -193,16 +188,17 @@ describe('Inventory Service', () => {
       };
       
       const mockResponse = {
-        success: true,
-        adjustment_id: 456
+        id: 456,
+        product_id: 'PROD_001',
+        new_quantity: 75
       };
       
       apiClient.post.mockResolvedValue(mockResponse);
       
       const result = await inventoryService.createManualAdjustment(adjustmentData);
       
-      expect(result).toEqual(mockResponse);
-      expect(apiClient.post).toHaveBeenCalledWith('/inventory/manual-adjustment', adjustmentData);
+      expect(result).toEqual({ success: true, data: mockResponse });
+      expect(apiClient.post).toHaveBeenCalledWith('/manual_adjustment/', adjustmentData);
     });
   });
 
@@ -222,7 +218,7 @@ describe('Inventory Service', () => {
       const result = await inventoryService.validateStockConsistency();
       
       expect(result).toEqual(mockValidation);
-      expect(apiClient.get).toHaveBeenCalledWith('/stock-transactions/validate-consistency');
+      expect(apiClient.get).toHaveBeenCalledWith('/api/stock-transaction/validate-consistency');
     });
 
     it('should validate specific product stock', async () => {
@@ -241,7 +237,7 @@ describe('Inventory Service', () => {
       const result = await inventoryService.validateStockConsistency('PROD_001');
       
       expect(result).toEqual(mockValidation);
-      expect(apiClient.get).toHaveBeenCalledWith('/stock-transactions/validate-consistency?product_id=PROD_001');
+      expect(apiClient.get).toHaveBeenCalledWith('/api/stock-transaction/validate-consistency?product_id=PROD_001');
     });
   });
 

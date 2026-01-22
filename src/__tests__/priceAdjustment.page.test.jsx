@@ -5,7 +5,7 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import PriceAdjustmentsPage from '../pages/PriceAdjustments';
+import PriceAdjustmentsPage from '../pages/PriceAdjustmentHistory';
 
 // Mock del store
 const mockStore = {

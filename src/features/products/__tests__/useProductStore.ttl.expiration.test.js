@@ -29,7 +29,7 @@ describe('TTL expiration behaviour', () => {
       .mockResolvedValueOnce(secondData);
 
     // initial fetch page 1
-    await store.fetchProducts(1, 10, '');
+    await store.fetchProductsPaginated(1, 10);
     const s1 = useProductStore.getState();
     expect(s1.products[0]).toBeDefined();
     expect(s1.products[0].name).toBe('Prod X1');
@@ -57,7 +57,7 @@ describe('TTL expiration behaviour', () => {
     const firstSearch = [ { id: 'S1', name: 'abc-one' } ];
     const secondSearch = [ { id: 'S1', name: 'abc-one' }, { id: 'S2', name: 'abc-two' } ];
 
-    const spy = vi.spyOn(productService, 'searchProducts')
+    const spy = vi.spyOn(productService, 'searchProductsFinancial')
       .mockResolvedValueOnce(firstSearch)
       .mockResolvedValueOnce(secondSearch);
 

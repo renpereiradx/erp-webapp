@@ -76,6 +76,13 @@ export const productService = {
     }
   },
 
+  /**
+   * Alias para getProductsPaginated para compatibilidad con stores y tests
+   */
+  getProducts: async (page = 1, pageSize = 10, options = {}) => {
+    return await productService.getProductsPaginated(page, pageSize, options)
+  },
+
   // Obtener un producto por ID
   /**
    * @param {string} productId

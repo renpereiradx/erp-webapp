@@ -10,7 +10,9 @@ vi.mock('@/services/productService', async (orig) => {
     productService: {
       ...mod.productService,
       getProducts: vi.fn(),
+      getProductsPaginated: vi.fn(),
       searchProducts: vi.fn(),
+      searchProductsFinancial: vi.fn(),
       updateProduct: vi.fn(async (id, data) => ({ id, ...data })),
       validateProductData: () => {},
     }
@@ -31,19 +33,22 @@ describe('Circuit breaker & prefetch', () => {
   });
 
   test('opens circuit after threshold of failures on fetchProducts', async () => {
-    productService.getProducts.mockImplementation(fail);
+    productService.getProductsPaginated.mockImplementation(fail);
     const threshold = useProductStore.getState().circuit.threshold; // 4
 
     for (let i = 0; i < threshold; i++) {
       try { // each call should throw
         // need act to update state properly
-        await act(async () => { await useProductStore.getState().fetchProducts(1, 10); });
+        await act(async () => { await useProductStore.getState().fetchProductsPaginated(1, 10); });
       } catch {}
     }
     // Next call should short-circuit and NOT invoke service again
-    const prevCalls = productService.getProducts.mock.calls.length;
-    const res = await act(async () => await useProductStore.getState().fetchProducts(1, 10));
-    expect(productService.getProducts.mock.calls.length).toBe(prevCalls); // no extra
+    const prevCalls = productService.getProductsPaginated.mock.calls.length;
+    let res;
+    await act(async () => {
+      res = await useProductStore.getState().fetchProductsPaginated(1, 10);
+    });
+    expect(productService.getProductsPaginated.mock.calls.length).toBe(prevCalls); // no extra
     expect(res.circuitOpen).toBe(true);
     const circuit = useProductStore.getState().circuit;
     expect(circuit.failures).toBeGreaterThanOrEqual(threshold);
@@ -54,37 +59,43 @@ describe('Circuit breaker & prefetch', () => {
     vi.useFakeTimers();
     // Enable fast retries in store for deterministic test behavior with fake timers
     useProductStore.getState().setTestingFastRetries(true);
-    productService.getProducts.mockImplementation(fail);
+    productService.getProductsPaginated.mockImplementation(fail);
     const { circuit: { threshold, cooldownMs } } = useProductStore.getState();
     for (let i = 0; i < threshold; i++) {
-      try { await act(async () => { await useProductStore.getState().fetchProducts(1, 10); }); } catch {}
+      try { await act(async () => { await useProductStore.getState().fetchProductsPaginated(1, 10); }); } catch {}
     }
     // Now advance time beyond cooldown
     vi.advanceTimersByTime(cooldownMs + 10);
     // Provide a success response
-    productService.getProducts.mockImplementation(async () => ([{ id: 'X1', name: 'Prod X1' }]));
-    await act(async () => { await useProductStore.getState().fetchProducts(1, 10); });
+    productService.getProductsPaginated.mockImplementation(async () => ([{ id: 'X1', name: 'Prod X1' }]));
+    await act(async () => { await useProductStore.getState().fetchProductsPaginated(1, 10); });
     const circuit = useProductStore.getState().circuit;
     expect(circuit.failures).toBe(0);
     expect(useProductStore.getState().products.length).toBe(1);
   });
 
   test('search uses circuit breaker similarly', async () => {
-    productService.searchProducts.mockImplementation(fail);
+    productService.searchProductsFinancial.mockImplementation(fail);
     const threshold = useProductStore.getState().circuit.threshold;
     for (let i = 0; i < threshold; i++) {
       await useProductStore.getState().searchProducts('abc');
     }
-    const prev = productService.searchProducts.mock.calls.length;
-    const res = await useProductStore.getState().searchProducts('abc');
-    expect(productService.searchProducts.mock.calls.length).toBe(prev);
+    const prev = productService.searchProductsFinancial.mock.calls.length;
+    let res;
+    await act(async () => {
+      res = await useProductStore.getState().searchProducts('abc');
+    });
+    expect(productService.searchProductsFinancial.mock.calls.length).toBe(prev);
     expect(res.circuitOpen).toBe(true);
   });
 
   test('prefetchNextPage stores next page in cache', async () => {
     // Seed initial current page data
+    productService.getProductsPaginated.mockImplementation(async (page, size) => Array.from({ length: size }, (_, i) => ({ id: `P${page}-${i}`, name: `Prod ${page}-${i}` })));
+    // Also mock getProducts for prefetch call
     productService.getProducts.mockImplementation(async (page, size) => Array.from({ length: size }, (_, i) => ({ id: `P${page}-${i}`, name: `Prod ${page}-${i}` })));
-    await act(async () => { await useProductStore.getState().fetchProducts(1, 5); });
+    
+    await act(async () => { await useProductStore.getState().fetchProductsPaginated(1, 5); });
     const state1 = useProductStore.getState();
     expect(state1.pageCache[1]).toBeTruthy();
     // set totalPages artificially

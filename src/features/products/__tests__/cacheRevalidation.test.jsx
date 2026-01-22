@@ -9,7 +9,9 @@ vi.mock('@/services/productService', async (orig) => {
     productService: {
       ...mod.productService,
       getProducts: vi.fn(async (page, size) => Array.from({ length: size }, (_, i) => ({ id: `P${page}-${i}`, name: `Prod ${page}-${i}` }))),
-      searchProducts: vi.fn(async (term) => [{ id: 'S1', name: term }])
+      getProductsPaginated: vi.fn(async (page, size) => Array.from({ length: size }, (_, i) => ({ id: `P${page}-${i}`, name: `Prod ${page}-${i}` }))),
+      searchProducts: vi.fn(async (term) => [{ id: 'S1', name: term }]),
+      searchProductsFinancial: vi.fn(async (term) => [{ id: 'S1', name: term }])
     }
   };
 });
@@ -25,14 +27,14 @@ describe('Cache revalidation & trimming', () => {
   test('page cache revalidates in background when half TTL passed', async () => {
     const store = useProductStore.getState();
     // fetch page 1
-    await act(async () => { await store.fetchProducts(1, 5); });
+    await act(async () => { await store.fetchProductsPaginated(1, 5); });
     // artificially age cache
     const aged = { ...useProductStore.getState().pageCache };
     aged[1].ts = Date.now() - (useProductStore.getState().pageCacheTTL * 0.75);
     useProductStore.setState({ pageCache: aged });
     // fetch again to trigger background revalidation
-    await act(async () => { await store.fetchProducts(1, 5); });
-    expect(productService.getProducts).toHaveBeenCalled();
+    await act(async () => { await store.fetchProductsPaginated(1, 5); });
+    expect(productService.getProductsPaginated).toHaveBeenCalled();
   });
 
   test('search cache auto revalidates when stale (half TTL)', async () => {
@@ -43,7 +45,9 @@ describe('Cache revalidation & trimming', () => {
     aged[key].ts = Date.now() - (useProductStore.getState().cacheTTL * 0.75);
     useProductStore.setState({ searchCache: aged });
     await act(async () => { await store.searchProducts('term'); });
-    expect(productService.searchProducts).toHaveBeenCalledTimes(2);
+    // Allow background revalidation promise to start/finish
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(productService.searchProductsFinancial).toHaveBeenCalledTimes(2);
   });
 
   test('page cache trimming removes old entries beyond limit', async () => {
@@ -55,7 +59,7 @@ describe('Cache revalidation & trimming', () => {
     }
     useProductStore.setState({ pageCache });
     // trigger a fetch to invoke trimming logic
-    await act(async () => { await store.fetchProducts(1, 5); });
+    await act(async () => { await store.fetchProductsPaginated(1, 5); });
     expect(Object.keys(useProductStore.getState().pageCache).length).toBeLessThanOrEqual(20);
   });
 

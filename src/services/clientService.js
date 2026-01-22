@@ -72,6 +72,18 @@ export const clientService = {
     }
   },
 
+  async getAll(page = 1, pageSize = 10) {
+    const startTime = Date.now();
+    try {
+      const result = await _fetchWithRetry(async () => apiService.getClients({ page, pageSize }));
+      telemetry.record('client.service.getAll', { duration: Date.now() - startTime, page, pageSize });
+      return result;
+    } catch (error) {
+      telemetry.record('client.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getAll' });
+      throw error;
+    }
+  },
+
   async create(data) {
     const startTime = Date.now();
     

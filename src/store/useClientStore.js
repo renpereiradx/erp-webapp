@@ -35,6 +35,26 @@ const useClientStore = create()(
         set({ searchTerm: term })
       },
 
+      fetchClients: async (page = 1, pageSize = 10) => {
+        set({ loading: true, error: null })
+        try {
+          const response = await clientService.getAll(page, pageSize)
+          const clients = response.clients || response.data || (Array.isArray(response) ? response : [])
+          const total = response.total || response.totalClients || clients.length
+          
+          set({ 
+            clients, 
+            totalClients: total,
+            totalPages: Math.ceil(total / pageSize),
+            loading: false 
+          })
+          return clients
+        } catch (e) {
+          set({ error: e.message || 'Error al cargar clientes', loading: false })
+          throw e
+        }
+      },
+
       // Búsqueda avanzada por nombre o ID
       searchClients: async term => {
         const trimmed = (term || '').trim()

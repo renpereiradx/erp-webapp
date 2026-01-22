@@ -440,9 +440,29 @@ const useProductStore = create()(
             totalPages: Math.max(1, Math.ceil(totalCount / currentPageSize)),
             currentPage: currentPage,
             pageSize: currentPageSize,
+            pageCache: {
+              ...get().pageCache,
+              [currentPage]: { ts: Date.now(), products: filteredProducts }
+            },
             loading: false,
             lastSearchTerm: '',
             error: null,
+          })
+
+          // Trim pageCache si excede 20 entradas
+          set(s => {
+            const keys = Object.keys(s.pageCache)
+            if (keys.length <= 20) return {}
+            const sorted = keys
+              .map(k => ({ k, ts: s.pageCache[k].ts }))
+              .sort((a, b) => a.ts - b.ts)
+            const toRemove = sorted.slice(0, keys.length - 20)
+            if (!toRemove.length) return {}
+            const clone = { ...s.pageCache }
+            toRemove.forEach(r => {
+              delete clone[r.k]
+            })
+            return { pageCache: clone }
           })
 
           telemetry.endTimer(t, { total: totalCount, filtered: filteredProducts.length })

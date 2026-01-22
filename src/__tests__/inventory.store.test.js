@@ -21,7 +21,7 @@ describe('Inventory Store', () => {
         state: true 
       }
     ];
-    inventoryService.getInventories.mockResolvedValue({ inventories: mockData });
+    inventoryService.getInventories.mockResolvedValue({ success: true, data: mockData });
     
     await useInventoryStore.getState().fetchInventories();
     
@@ -44,30 +44,34 @@ describe('Inventory Store', () => {
 
   it('should create inventory successfully', async () => {
     const inventoryData = {
-      check_date: '2025-09-06T10:00:00Z',
-      details: [
+      items: [
         { product_id: 'PROD_001', quantity_checked: 100 }
       ]
     };
-    const mockResponse = { 
-      success: true, 
+    const apiResult = { 
       inventory_id: 22,
       message: 'Inventory created successfully'
     };
+    const mockServiceResponse = {
+      success: true,
+      data: apiResult,
+      message: apiResult.message,
+      inventory_id: apiResult.inventory_id
+    };
     
-    inventoryService.createInventory.mockResolvedValue(mockResponse);
-    inventoryService.getInventories.mockResolvedValue({ inventories: [] });
+    inventoryService.createInventory.mockResolvedValue(mockServiceResponse);
+    inventoryService.getInventories.mockResolvedValue({ success: true, data: [] });
     
     const result = await useInventoryStore.getState().createInventory(inventoryData);
     
     expect(result.success).toBe(true);
-    expect(result.data).toEqual(mockResponse);
+    expect(result.data).toEqual(apiResult);
     expect(inventoryService.createInventory).toHaveBeenCalledWith(inventoryData);
   });
 
   it('should handle create inventory error', async () => {
     const inventoryData = {
-      details: [{ product_id: 'PROD_001', quantity_checked: 100 }]
+      items: [{ product_id: 'PROD_001', quantity_checked: 100 }]
     };
     
     inventoryService.createInventory.mockRejectedValue(new Error('Validation error'));
@@ -86,7 +90,7 @@ describe('Inventory Store', () => {
     };
     
     inventoryService.invalidateInventory.mockResolvedValue(mockResponse);
-    inventoryService.getInventories.mockResolvedValue({ inventories: [] });
+    inventoryService.getInventories.mockResolvedValue({ success: true, data: [] });
     
     const result = await useInventoryStore.getState().invalidateInventory(inventoryId);
     
@@ -127,7 +131,6 @@ describe('Inventory Store', () => {
     };
     
     const mockResponse = {
-      success: true,
       id: 123,
       message: 'Transaction created successfully'
     };
@@ -148,18 +151,23 @@ describe('Inventory Store', () => {
       reason: 'Damaged products removed'
     };
     
-    const mockResponse = {
-      success: true,
-      adjustment_id: 456,
-      message: 'Manual adjustment created successfully'
+    const mockApiResponse = {
+      id: 456,
+      product_id: 'PROD_001',
+      new_quantity: 75
     };
     
-    inventoryService.createManualAdjustment.mockResolvedValue(mockResponse);
+    const mockServiceResponse = {
+        success: true,
+        data: mockApiResponse
+    };
+    
+    inventoryService.createManualAdjustment.mockResolvedValue(mockServiceResponse);
     
     const result = await useInventoryStore.getState().createManualAdjustment(adjustmentData);
     
     expect(result.success).toBe(true);
-    expect(result.data).toEqual(mockResponse);
+    expect(result.data).toEqual(mockServiceResponse);
     expect(inventoryService.createManualAdjustment).toHaveBeenCalledWith(adjustmentData);
   });
 
