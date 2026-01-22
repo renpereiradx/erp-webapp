@@ -65,7 +65,7 @@ const DetailRow = ({ label, value, type = 'text' }) => {
             {value ? 'Activo' : 'Inactivo'}
           </Badge>
         )
-      case 'stock_status':
+      case 'stock_status': {
         const statusConfig = {
           in_stock: { variant: 'default', text: 'En Stock', icon: CheckCircle },
           out_of_stock: {
@@ -103,6 +103,7 @@ const DetailRow = ({ label, value, type = 'text' }) => {
             {config.text}
           </Badge>
         )
+      }
       case 'price':
         return value === 'N/A' ? (
           <span className='text-muted-foreground italic'>No configurado</span>

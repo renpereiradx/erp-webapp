@@ -17,7 +17,7 @@
   }
 
   &__title {
-    @include h2;
+    @include heading-2;
     margin: 0;
     
     @include themify {
@@ -40,7 +40,7 @@
     grid-template-columns: 1fr;
     gap: $spacing-24;
 
-    @include breakpoint-up(xl) {
+    @include respond-to(xl) {
       grid-template-columns: 1fr 1fr;
     }
   }
@@ -51,7 +51,7 @@
     flex-direction: column;
     gap: $spacing-24;
     
-    @include breakpoint-up(md) {
+    @include respond-to(md) {
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
@@ -103,7 +103,7 @@
   }
 
   &__name {
-    @include h3;
+    @include heading-3;
     margin: 0;
     
     @include themify {

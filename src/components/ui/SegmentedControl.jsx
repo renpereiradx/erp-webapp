@@ -58,7 +58,7 @@ const SegmentedControl = ({
     const optionsCount = options.length;
 
     switch (event.key) {
-      case 'ArrowLeft':
+      case 'ArrowLeft': {
         event.preventDefault();
         if (index > 0) {
           const prevOption = options[index - 1];
@@ -70,8 +70,9 @@ const SegmentedControl = ({
           if (prevButton) prevButton.focus();
         }
         break;
+      }
 
-      case 'ArrowRight':
+      case 'ArrowRight': {
         event.preventDefault();
         if (index < optionsCount - 1) {
           const nextOption = options[index + 1];
@@ -83,8 +84,9 @@ const SegmentedControl = ({
           if (nextButton) nextButton.focus();
         }
         break;
+      }
 
-      case 'Home':
+      case 'Home': {
         event.preventDefault();
         onChange(options[0].value);
         const firstButton = containerRef.current.querySelector(
@@ -92,8 +94,9 @@ const SegmentedControl = ({
         );
         if (firstButton) firstButton.focus();
         break;
+      }
 
-      case 'End':
+      case 'End': {
         event.preventDefault();
         onChange(options[optionsCount - 1].value);
         const lastButton = containerRef.current.querySelector(
@@ -101,6 +104,7 @@ const SegmentedControl = ({
         );
         if (lastButton) lastButton.focus();
         break;
+      }
 
       default:
         break;
