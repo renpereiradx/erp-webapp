@@ -125,7 +125,7 @@ const toDateInputValue = date => {
 }
 
 const getProductDisplay = product => {
-  if (!product) return { name: '', id: '', price: 0, sku: '' }
+  if (!product) return { name: '', id: '', price: 0, sku: '', stock: 0 }
   return {
     name: product.name || product.product_name || '',
     id: product.id || product.product_id || '',
@@ -135,6 +135,7 @@ const getProductDisplay = product => {
       product.unit_prices?.[0]?.price_per_unit ||
       0,
     sku: product.sku || product.barcode || product.code || '',
+    stock: product.stock_quantity || product.stock || product.quantity || 0,
   }
 }
 
@@ -2764,7 +2765,20 @@ const SalesNew = () => {
                                     </div>
                                   </div>
                                   <div className='sales-product-dropdown__item-price'>
-                                    {formatCurrency(display.price, 'PYG')}
+                                    <div>{formatCurrency(display.price, 'PYG')}</div>
+                                    <div
+                                      style={{
+                                        fontSize: '0.75rem',
+                                        color:
+                                          display.stock > 0
+                                            ? '#16a34a'
+                                            : '#dc2626',
+                                        marginTop: '2px',
+                                        fontWeight: 500,
+                                      }}
+                                    >
+                                      Disponible: {display.stock}
+                                    </div>
                                   </div>
                                 </div>
                               )

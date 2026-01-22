@@ -1753,11 +1753,11 @@ const Purchases = () => {
                     </span>
                   </div>
                   <div className='sales-modal__info-item'>
-                    <span className='sales-modal__label'>SKU</span>
+                    <span className='sales-modal__label'>ID</span>
                     <span className='sales-modal__value'>
                       {modalSelectedProduct
-                        ? modalSelectedProduct.sku ||
-                          modalSelectedProduct.product_sku ||
+                        ? modalSelectedProduct.id ||
+                          modalSelectedProduct.product_id ||
                           '—'
                         : '—'}
                     </span>
@@ -1925,18 +1925,35 @@ const Purchases = () => {
                                       {product.name || product.product_name}
                                     </div>
                                     <div className='purchases__product-dropdown-item-meta'>
-                                      SKU:{' '}
-                                      {product.sku ||
-                                        product.product_sku ||
-                                        '-'}
+                                      ID: {product.id || product.product_id || '-'}
                                     </div>
                                   </div>
                                   <div className='purchases__product-dropdown-item-price'>
-                                    {formatCurrency(
-                                      product.cost_price ||
-                                        product.unit_cost ||
-                                        0
-                                    )}
+                                    <div>
+                                      {formatCurrency(
+                                        product.cost_price ||
+                                          product.unit_cost ||
+                                          0
+                                      )}
+                                    </div>
+                                    <div
+                                      style={{
+                                        fontSize: '0.75rem',
+                                        color:
+                                          (product.stock ||
+                                            product.stock_quantity ||
+                                            0) > 0
+                                            ? '#16a34a'
+                                            : '#dc2626',
+                                        marginTop: '2px',
+                                        fontWeight: 500,
+                                      }}
+                                    >
+                                      Disponible:{' '}
+                                      {product.stock ||
+                                        product.stock_quantity ||
+                                        0}
+                                    </div>
                                   </div>
                                 </div>
                               )
