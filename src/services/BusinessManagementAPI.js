@@ -223,7 +223,18 @@ class BusinessManagementAPI {
   }
 
   handleUnauthorized() {
+    // Limpiar token local
     localStorage.removeItem('authToken')
+
+    // 🔧 FIX: Emitir evento para que el AuthContext pueda actualizar su estado
+    // Esto asegura que la UI se actualice correctamente cuando el token expira
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('api:unauthorized', {
+          detail: { message: 'Token expirado o inválido' },
+        })
+      )
+    }
   }
 
   // ============================================================================
@@ -232,30 +243,26 @@ class BusinessManagementAPI {
 
   async signup(email, password) {
     // 🔧 skipAuth: true para evitar enviar Authorization header en signup
+    // 🔧 FIX: NO guardar el token aquí - se guarda en AuthContext/authService
+    // para evitar race conditions y tener un único punto de control
     const response = await this.makeRequest('/signup', {
       method: 'POST',
       skipAuth: true,
       body: JSON.stringify({ email, password }),
     })
 
-    if (response.token) {
-      localStorage.setItem('authToken', response.token)
-    }
-
     return response
   }
 
   async login(email, password) {
     // 🔧 skipAuth: true para evitar enviar Authorization header en login
+    // 🔧 FIX: NO guardar el token aquí - se guarda en AuthContext/authService
+    // para evitar race conditions y tener un único punto de control
     const response = await this.makeRequest('/login', {
       method: 'POST',
       skipAuth: true,
       body: JSON.stringify({ email, password }),
     })
-
-    if (response.token) {
-      localStorage.setItem('authToken', response.token)
-    }
 
     return response
   }

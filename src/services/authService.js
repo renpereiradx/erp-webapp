@@ -90,19 +90,19 @@ const authService = {
 
   // Mantener otros métodos si existen y son necesarios
   logout: async () => {
-    // Para demo, simplemente limpiar token local
+    // 🔧 FIX: El token se limpia en AuthContext, no aquí
+    // Solo intentar notificar al servidor del logout
     const currentToken = apiService.getToken();
     if (currentToken === 'demo-jwt-token-12345') {
-      apiService.clearToken();
       return { success: true, message: 'Demo logout successful' };
     }
-    
-    // Para API real, usar logout normal
+
+    // Para API real, intentar logout en el servidor
     try {
       return await apiService.logout();
     } catch (error) {
-      // Si falla el logout de API, al menos limpiar token local
-      apiService.clearToken();
+      // Si falla el logout de API, está OK - el token se limpia en AuthContext
+      console.warn('Server logout failed:', error);
       return { success: true, message: 'Logged out locally' };
     }
   },
