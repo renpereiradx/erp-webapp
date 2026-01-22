@@ -177,7 +177,7 @@ export const sales = {
   'sales.detail.paymentHistory': 'Historial de Pagos',
   'sales.detail.paymentDate': 'Fecha',
   'sales.detail.paymentUser': 'Usuario',
-  'sales.detail.paymentMethod': 'Método',
+  'sales.detail.paymentMethodShort': 'Método',
   'sales.detail.paymentAmount': 'Monto',
   'sales.detail.paymentChange': 'Vuelto',
   'sales.detail.paymentStatus': 'Estado',

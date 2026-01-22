@@ -174,7 +174,6 @@ export const purchases = {
   'purchases.todo.valid_items': 'Verify quantities',
 
   // Initial empty state
-  'purchases.empty.title': 'Start a purchase',
   'purchases.empty.description': 'Select a supplier and start adding products to create a new purchase order.',
   'purchases.empty.action': 'Select Supplier',
 
