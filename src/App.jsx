@@ -49,6 +49,7 @@ import Login from '@/pages/Login'
 import Settings from '@/pages/Settings'
 import UserManagementList from '@/pages/UserManagementList'
 import UserDetailedProfile from '@/pages/UserDetailedProfile'
+import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity'
 // import ProductDetailTest from '@/components/ProductDetailTest';
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
@@ -212,6 +213,7 @@ function AppContent() {
 
                       {/* Configuración */}
                       <Route path='/configuracion' element={<Settings />} />
+                      <Route path='/perfil' element={<MyProfileAndSecurity />} />
                       <Route path='/usuarios' element={<UserManagementList />} />
                       <Route path='/usuarios/:id' element={<UserDetailedProfile />} />
 

@@ -610,17 +610,17 @@ const MainLayout = ({ children }) => {
                     }}
                   >
                     <div className='user-menu__header'>
-                      <div className='user-menu__avatar'>
+                      <Link to='/perfil' className='user-menu__avatar' onClick={() => setShowUserMenu(false)}>
                         <User className='user-menu__avatar-icon' />
-                      </div>
-                      <div className='user-menu__info'>
+                      </Link>
+                      <Link to='/perfil' className='user-menu__info' onClick={() => setShowUserMenu(false)} style={{ textDecoration: 'none' }}>
                         <p className='user-menu__name'>
                           {user?.name || 'Usuario Demo'}
                         </p>
                         <p className='user-menu__email'>
                           {user?.email || user?.username || 'demo@erp.com'}
                         </p>
-                      </div>
+                      </Link>
                     </div>
                     <div className='user-menu__body'>
                       <Link
