@@ -17,7 +17,7 @@
  * }
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { es } from './locales/es/index.js'
 import { en } from './locales/en/index.js'
 
@@ -102,93 +102,77 @@ export const tRaw = (key, defaultValue, vars) => {
  * console.log(t('products.no_results_for', { term: 'Nike' })) // "No hay productos que coincidan con Nike"
  */
 export function useI18n() {
-  try {
-    // Intenta inicializar desde localStorage
+  const [lang, setLangState] = useState(currentLang)
+
+  // Sincronizar con localStorage en el montaje inicial si es necesario
+  useEffect(() => {
     if (typeof localStorage !== 'undefined') {
       const savedLang = localStorage.getItem('i18n_lang')
       if (savedLang && DICTIONARY[savedLang] && savedLang !== currentLang) {
         currentLang = savedLang
+        setLangState(savedLang)
       }
     }
+  }, [])
 
-    const [lang, setLangState] = useState(currentLang)
-
-    // Función para cambiar el idioma
-    const setLang = useCallback((newLang) => {
-      if (DICTIONARY[newLang]) {
-        currentLang = newLang
-        setLangState(newLang)
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('i18n_lang', newLang)
-        }
-      } else {
-        console.warn(`[i18n] Idioma no soportado: ${newLang}`)
+  // Función para cambiar el idioma
+  const setLang = useCallback((newLang) => {
+    if (DICTIONARY[newLang]) {
+      currentLang = newLang
+      setLangState(newLang)
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('i18n_lang', newLang)
       }
-    }, [])
-
-    // Función de traducción
-    const t = useCallback(
-      (key, defaultValue, vars) => {
-        // Manejar caso donde no se pasa defaultValue
-        if (typeof defaultValue === 'object') {
-          vars = defaultValue
-          defaultValue = key
-        }
-
-        const dict = DICTIONARY[lang]
-        
-        // 1. Intentar acceso directo
-        let template = (dict && dict[key])
-
-        // 2. Intentar acceso anidado
-        if (!template && key.includes('.')) {
-          template = key.split('.').reduce((obj, i) => (obj ? obj[i] : null), dict)
-        }
-
-        // 3. Fallback
-        template = template || defaultValue || key
-
-        // Warning en desarrollo
-        if (template === key && process.env.NODE_ENV === 'development') {
-          console.warn(`[i18n] Traducción no encontrada: "${key}" (idioma: ${lang})`)
-        }
-
-        // Interpolación de variables ({var} o {{var}})
-        if (vars && typeof vars === 'object') {
-          const patterns = [/\{(\w+)\}/g, /\{\{(\w+)\}\}/g];
-          patterns.forEach(pattern => {
-            template = String(template).replace(pattern, (_, varKey) =>
-              Object.prototype.hasOwnProperty.call(vars, varKey)
-                ? String(vars[varKey])
-                : `{${varKey}}`
-            )
-          });
-        }
-
-        return template
-      },
-      [lang]
-    )
-
-    return { t, lang, setLang }
-  } catch (error) {
-    // Fallback para compatibilidad con React 19
-    console.warn('[i18n] Usando fallback por error en hooks:', error)
-
-    const lang = currentLang
-    const setLang = (newLang) => {
-      if (DICTIONARY[newLang]) {
-        currentLang = newLang
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('i18n_lang', newLang)
-        }
-      }
+    } else {
+      console.warn(`[i18n] Idioma no soportado: ${newLang}`)
     }
+  }, [])
 
-    const t = (key, vars) => tRaw(key, vars)
+  // Función de traducción
+  const t = useCallback(
+    (key, defaultValue, vars) => {
+      // Manejar caso donde no se pasa defaultValue
+      if (typeof defaultValue === 'object') {
+        vars = defaultValue
+        defaultValue = key
+      }
 
-    return { t, lang, setLang }
-  }
+      const dict = DICTIONARY[lang]
+      
+      // 1. Intentar acceso directo
+      let template = (dict && dict[key])
+
+      // 2. Intentar acceso anidado
+      if (!template && key.includes('.')) {
+        template = key.split('.').reduce((obj, i) => (obj ? obj[i] : null), dict)
+      }
+
+      // 3. Fallback
+      template = template || defaultValue || key
+
+      // Warning en desarrollo
+      if (template === key && process.env.NODE_ENV === 'development') {
+        console.warn(`[i18n] Traducción no encontrada: "${key}" (idioma: ${lang})`)
+      }
+
+      // Interpolación de variables ({var} o {{var}})
+      if (vars && typeof vars === 'object') {
+        const patterns = [/\{(\w+)\}/g, /\{\{(\w+)\}\}/g];
+        patterns.forEach(pattern => {
+          template = String(template).replace(pattern, (_, varKey) =>
+            Object.prototype.hasOwnProperty.call(vars, varKey)
+              ? String(vars[varKey])
+              : `{${varKey}}`
+          )
+        });
+      }
+
+      return template
+    },
+    [lang]
+  )
+
+  return { t, lang, setLang }
 }
 
 /**

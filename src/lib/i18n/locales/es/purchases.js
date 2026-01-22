@@ -184,7 +184,6 @@ export const purchases = {
   'purchases.todo.valid_items': 'Verificar cantidades',
 
   // Estado vacío inicial
-  'purchases.empty.title': 'Comienza una compra',
   'purchases.empty.description': 'Selecciona un proveedor y comienza a agregar productos para crear una nueva orden de compra.',
   'purchases.empty.action': 'Seleccionar Proveedor',
 

@@ -53,7 +53,7 @@ export const sales = {
   'sales.new.client.address': 'Dirección',
 
   // Pago
-  'sales.payment.title': 'Procesamiento de Pago',
+  'sales.payment.processing_title': 'Procesamiento de Pago',
   'sales.payment.method': 'Método de Pago',
   'sales.payment.amount_paid': 'Monto Pagado',
   'sales.payment.change': 'Cambio:',

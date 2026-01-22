@@ -48,7 +48,6 @@ export const products = {
   'products.pagination.prev': 'Anterior',
   'products.pagination.next': 'Siguiente',
   'products.pagination.last': 'Última',
-  'products.pagination.page_of': 'Página {page} de {totalPages}',
 
   // Filtros
   'products.filter.current_results_title': 'Filtrar Resultados Actuales',
