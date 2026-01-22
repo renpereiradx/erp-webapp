@@ -108,6 +108,7 @@ const KeyboardShortcuts = () => {
       'sales.viewHistory': t('settings.shortcuts.sales.history', 'Ver historial'),
       'general.closeModal': t('settings.shortcuts.general.close_modal', 'Cerrar modal'),
       'general.save': t('settings.shortcuts.general.save', 'Guardar'),
+      'general.globalSearch': t('settings.shortcuts.general.global_search', 'Buscador global'),
     }
     return labelMap[shortcutId] || shortcutId
   }

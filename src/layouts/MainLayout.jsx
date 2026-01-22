@@ -30,40 +30,11 @@ import {
   ChevronDown,
   BookOpen,
   SlidersHorizontal,
-  Loader2,
   CircleDollarSign,
-  Euro,
-  PoundSterling,
-  JapaneseYen,
-  IndianRupee,
-  Bitcoin,
   Coins,
+  Search,
 } from 'lucide-react'
-import { ExchangeRateService } from '@/services/exchangeRateService.js'
-
-// Mapeo de iconos de monedas
-const currencyIconMap = {
-  USD: CircleDollarSign,
-  USDT: CircleDollarSign,
-  EUR: Euro,
-  GBP: PoundSterling,
-  JPY: JapaneseYen,
-  CNY: Coins,
-  INR: IndianRupee,
-  BTC: Bitcoin,
-  ETH: Bitcoin,
-  BRL: Coins,
-  ARS: Coins,
-  CLP: Coins,
-  COP: Coins,
-  MXN: Coins,
-  PYG: Coins,
-}
-
-const getCurrencyIcon = (code = '') => {
-  const normalizedCode = String(code || '').toUpperCase()
-  return currencyIconMap[normalizedCode] || Coins
-}
+import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -78,49 +49,19 @@ const MainLayout = ({ children }) => {
   const hasFetchedRatesRef = useRef(false)
 
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0, width: 288 })
-  const [navbarRates, setNavbarRates] = useState([])
-  const [navbarRatesLoading, setNavbarRatesLoading] = useState(false)
-  const [navbarRatesError, setNavbarRatesError] = useState(null)
+  
+  // Global Search State
+  const [globalSearchTerm, setGlobalSearchTerm] = useState('')
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false)
+  const [globalSearchResults, setGlobalSearchResults] = useState([])
+  const globalSearchInputRef = useRef(null)
+  const searchContainerRef = useRef(null)
 
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { t } = useI18n()
-
-  // Formateo de números para tipos de cambio
-  const rateFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat('es-PY', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4,
-      }),
-    []
-  )
-
-  // Filtrar rates válidos
-  const displayedRates = useMemo(
-    () =>
-      navbarRates.filter(
-        rate => rate && rate.currency_code && Number.isFinite(rate.rate_to_base)
-      ),
-    [navbarRates]
-  )
-
-  // Obtener código de moneda base
-  const baseCurrencyCode = useMemo(() => {
-    const fromPayload = navbarRates.find(rate => {
-      const candidate = rate?.original?.base_currency_code
-      return candidate && typeof candidate === 'string'
-    })
-
-    if (fromPayload?.original?.base_currency_code) {
-      return String(fromPayload.original.base_currency_code).toUpperCase()
-    }
-
-    return 'PYG'
-  }, [navbarRates])
-
-  const hasNavbarRates = displayedRates.length > 0
+  const { matchesShortcut } = useKeyboardShortcutsStore()
 
   // Configuración de navegación
   const navigation = useMemo(
@@ -192,6 +133,79 @@ const MainLayout = ({ children }) => {
     [t]
   )
 
+  // Global Search Logic
+  const allNavigationItems = useMemo(() => {
+    const items = []
+    const traverse = (nodes, parentLabel = '') => {
+      nodes.forEach(node => {
+        if (node.href && node.href !== '#') {
+          items.push({
+            name: node.name,
+            href: node.href,
+            icon: node.icon,
+            parent: parentLabel
+          })
+        }
+        if (node.children) {
+          traverse(node.children, node.name)
+        }
+      })
+    }
+    traverse(navigation)
+    return items
+  }, [navigation])
+
+  useEffect(() => {
+    if (!globalSearchTerm.trim()) {
+      setGlobalSearchResults([])
+      return
+    }
+
+    const lowerTerm = globalSearchTerm.toLowerCase()
+    const results = allNavigationItems.filter(item => 
+      item.name.toLowerCase().includes(lowerTerm) || 
+      (item.parent && item.parent.toLowerCase().includes(lowerTerm))
+    )
+    setGlobalSearchResults(results)
+  }, [globalSearchTerm, allNavigationItems])
+
+  // Shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (matchesShortcut('general.globalSearch', event)) {
+        event.preventDefault()
+        globalSearchInputRef.current?.focus()
+        setShowGlobalSearch(true)
+      }
+      
+      if (event.key === 'Escape' && showGlobalSearch) {
+        setShowGlobalSearch(false)
+        globalSearchInputRef.current?.blur()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [matchesShortcut, showGlobalSearch])
+
+  // Click outside listener
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setShowGlobalSearch(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleSearchResultClick = (href) => {
+    navigate(href)
+    setShowGlobalSearch(false)
+    setGlobalSearchTerm('')
+  }
+
   // Detectar tamaño de pantalla
   useEffect(() => {
     setIsClient(true)
@@ -227,51 +241,7 @@ const MainLayout = ({ children }) => {
     }
   }, [showUserMenu])
 
-  // Obtener tipos de cambio
-  useEffect(() => {
-    if (!isClient) return undefined
 
-    let isActive = true
-
-    const fetchRates = async (withLoader = false) => {
-      if (!isActive) {
-        return
-      }
-      if (withLoader) {
-        setNavbarRatesLoading(true)
-      }
-
-      try {
-        const data = await ExchangeRateService.getLatestAll()
-        if (isActive) {
-          setNavbarRates(Array.isArray(data) ? data : [])
-          setNavbarRatesError(null)
-        }
-      } catch (error) {
-        if (isActive) {
-          setNavbarRatesError(
-            error?.message || 'Sin datos de tipo de cambio disponibles'
-          )
-        }
-      } finally {
-        if (isActive) {
-          setNavbarRatesLoading(false)
-          hasFetchedRatesRef.current = true
-        }
-      }
-    }
-
-    fetchRates(!hasFetchedRatesRef.current)
-
-    const intervalId = window.setInterval(() => {
-      fetchRates(false)
-    }, 5 * 60 * 1000)
-
-    return () => {
-      isActive = false
-      window.clearInterval(intervalId)
-    }
-  }, [isClient])
 
   // Auto-expandir menús con sub-items activos
   useEffect(() => {
@@ -514,57 +484,98 @@ const MainLayout = ({ children }) => {
           </button>
 
           <div className='navbar__content'>
-            {/* Exchange Rates */}
-            <div className='navbar__rates'>
-              <span className='navbar__rates-label'>{t('exchangeRates.navbarLabel', 'Tipos de cambio')}</span>
-              <div className='navbar__rates-list'>
-                {navbarRatesLoading ? (
-                  <Loader2
-                    className='navbar__rates-loader'
-                    aria-label='Cargando tipos de cambio'
-                  />
-                ) : hasNavbarRates ? (
-                  displayedRates.map(rate => {
-                    const Icon = getCurrencyIcon(rate.currency_code)
-                    const key = `${rate.currency_code}-${
-                      rate.id ?? rate.date ?? 'latest'
-                    }`
-                    return (
-                      <div
-                        key={key}
-                        className='navbar__rate'
-                        title={
-                          rate.currency_name
-                            ? `${rate.currency_name} • ${rateFormatter.format(
-                                rate.rate_to_base
-                              )} ${baseCurrencyCode}`
-                            : undefined
-                        }
-                      >
-                        <Icon className='navbar__rate-icon' />
-                        <span className='navbar__rate-code'>
-                          {rate.currency_code}
-                        </span>
-                        <span className='navbar__rate-value'>
-                          {rateFormatter.format(rate.rate_to_base)}
-                        </span>
-                        <span className='navbar__rate-base'>
-                          {baseCurrencyCode}
-                        </span>
-                      </div>
-                    )
-                  })
-                ) : navbarRatesError ? (
-                  <span
-                    className='navbar__rates-error'
-                    title={navbarRatesError}
+            {/* Global Search */}
+            <div className='navbar__search' ref={searchContainerRef} style={{ position: 'relative', flex: 1, maxWidth: '400px', margin: '0 20px' }}>
+              <div className='search-input-wrapper' style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <Search className='search-icon' size={18} style={{ position: 'absolute', left: '12px', color: '#64748b' }} />
+                <input
+                  ref={globalSearchInputRef}
+                  type='text'
+                  className='search-input'
+                  placeholder='Buscar páginas (Ctrl+K)...'
+                  value={globalSearchTerm}
+                  onChange={(e) => {
+                    setGlobalSearchTerm(e.target.value)
+                    setShowGlobalSearch(true)
+                  }}
+                  onFocus={() => setShowGlobalSearch(true)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px 8px 36px',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                    backgroundColor: '#f8fafc',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    transition: 'all 0.2s'
+                  }}
+                />
+                {globalSearchTerm && (
+                  <button 
+                    onClick={() => {
+                      setGlobalSearchTerm('')
+                      setGlobalSearchResults([])
+                      globalSearchInputRef.current?.focus()
+                    }}
+                    style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
                   >
-                    Tipos no disponibles
-                  </span>
-                ) : (
-                  <span className='navbar__rates-empty'>Sin datos</span>
+                    <X size={14} />
+                  </button>
                 )}
               </div>
+
+              {/* Search Results Dropdown */}
+              {showGlobalSearch && globalSearchTerm && (
+                <div className='search-results' style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '8px',
+                  backgroundColor: 'white',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                  border: '1px solid #e2e8f0',
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  zIndex: 50
+                }}>
+                  {globalSearchResults.length > 0 ? (
+                    globalSearchResults.map((item, index) => {
+                      const Icon = item.icon || Search
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => handleSearchResultClick(item.href)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            width: '100%',
+                            padding: '10px 16px',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            borderBottom: '1px solid #f1f5f9'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <Icon size={16} style={{ marginRight: '10px', color: '#64748b' }} />
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{item.name}</span>
+                            {item.parent && <span style={{ fontSize: '0.75rem', color: '#64748b' }}>en {item.parent}</span>}
+                          </div>
+                        </button>
+                      )
+                    })
+                  ) : (
+                    <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>
+                      No se encontraron resultados
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* User Menu */}

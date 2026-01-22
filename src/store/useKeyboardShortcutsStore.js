@@ -19,6 +19,7 @@ const DEFAULT_SHORTCUTS = {
   // Generales
   'general.closeModal': { key: 'Escape', description: 'Cerrar modal/diálogo' },
   'general.save': { key: 's', ctrlKey: true, description: 'Guardar' },
+  'general.globalSearch': { key: 'k', ctrlKey: true, description: 'Buscador global' },
 }
 
 // Categorías de atajos
@@ -33,7 +34,7 @@ const SHORTCUT_CATEGORIES = {
   },
   general: {
     label: 'General',
-    shortcuts: ['general.closeModal', 'general.save'],
+    shortcuts: ['general.closeModal', 'general.save', 'general.globalSearch'],
   },
 }
 
