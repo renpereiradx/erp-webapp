@@ -35,6 +35,8 @@ import {
   Search,
 } from 'lucide-react'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
+import { distinctSearchableRoutes } from '@/config/searchableRoutes'
+import { useDebounce } from '@/hooks/useDebounce'
 
 const MainLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -49,11 +51,12 @@ const MainLayout = ({ children }) => {
   const hasFetchedRatesRef = useRef(false)
 
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0, width: 288 })
-  
+
   // Global Search State
   const [globalSearchTerm, setGlobalSearchTerm] = useState('')
   const [showGlobalSearch, setShowGlobalSearch] = useState(false)
   const [globalSearchResults, setGlobalSearchResults] = useState([])
+  const [selectedIndex, setSelectedIndex] = useState(-1)
   const globalSearchInputRef = useRef(null)
   const searchContainerRef = useRef(null)
 
@@ -134,8 +137,21 @@ const MainLayout = ({ children }) => {
   )
 
   // Global Search Logic
+  // Import extra routes dynamically or use predefined ones
+  // We need to import distinctSearchableRoutes inside the component or outside?
+  // Since it's a static file, we should import it at the top, but since I'm using replace_file_content 
+  // and avoiding moving imports around too much, I'll assume I can add the import statement separately 
+  // or just inline the logic if I can't easily add top-level imports without context.
+  // actually, let's try to add the import at the top first in a separate call or handle it here if possible.
+  // Wait, I can only replace a contiguous block. I should probably add the import first at the top.
+  // I will skip adding the import here and do it in 2 steps: 1. Add import, 2. Update logic.
+
+  // This step: updating the logic to use the variable (which I will import in the next step).
+
   const allNavigationItems = useMemo(() => {
     const items = []
+
+    // Process sidebar navigation
     const traverse = (nodes, parentLabel = '') => {
       nodes.forEach(node => {
         if (node.href && node.href !== '#') {
@@ -143,7 +159,8 @@ const MainLayout = ({ children }) => {
             name: node.name,
             href: node.href,
             icon: node.icon,
-            parent: parentLabel
+            parent: parentLabel,
+            category: parentLabel || 'Menú Principal'
           })
         }
         if (node.children) {
@@ -152,8 +169,32 @@ const MainLayout = ({ children }) => {
       })
     }
     traverse(navigation)
+
+    // Process extra routes from config
+    // Note: distinctSearchableRoutes will be imported
+    if (typeof distinctSearchableRoutes !== 'undefined') {
+      distinctSearchableRoutes.forEach(route => {
+        items.push({
+          name: route.name,
+          href: route.href,
+          icon: route.icon,
+          parent: route.category,
+          category: route.category
+        })
+      })
+    }
+
     return items
   }, [navigation])
+
+  // Helper function to normalize text (remove accents, lowercase)
+  const normalizeText = (text) => {
+    if (!text || typeof text !== 'string') return ''
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+  }
 
   useEffect(() => {
     if (!globalSearchTerm.trim()) {
@@ -161,12 +202,27 @@ const MainLayout = ({ children }) => {
       return
     }
 
-    const lowerTerm = globalSearchTerm.toLowerCase()
-    const results = allNavigationItems.filter(item => 
-      item.name.toLowerCase().includes(lowerTerm) || 
-      (item.parent && item.parent.toLowerCase().includes(lowerTerm))
-    )
+    const term = normalizeText(globalSearchTerm)
+
+    // Debug info
+    // console.log('Searching for:', term)
+    // console.log('Total items:', allNavigationItems.length)
+
+    const results = allNavigationItems.filter(item => {
+      const name = normalizeText(item.name)
+      const parent = item.parent ? normalizeText(item.parent) : ''
+      const category = item.category ? normalizeText(item.category) : ''
+
+      const matchName = name.includes(term)
+      const matchParent = parent.includes(term)
+      const matchCategory = category.includes(term)
+
+      return matchName || matchParent || matchCategory
+    })
+
+    // console.log('Results:', results)
     setGlobalSearchResults(results)
+    setSelectedIndex(-1)
   }, [globalSearchTerm, allNavigationItems])
 
   // Shortcut listener
@@ -177,8 +233,30 @@ const MainLayout = ({ children }) => {
         globalSearchInputRef.current?.focus()
         setShowGlobalSearch(true)
       }
-      
-      if (event.key === 'Escape' && showGlobalSearch) {
+
+      if (!showGlobalSearch) return
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        setSelectedIndex(prev =>
+          prev < globalSearchResults.length - 1 ? prev + 1 : prev
+        )
+      }
+
+      if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        setSelectedIndex(prev => prev > 0 ? prev - 1 : -1)
+      }
+
+      if (event.key === 'Enter' && selectedIndex >= 0) {
+        event.preventDefault()
+        const selectedItem = globalSearchResults[selectedIndex]
+        if (selectedItem) {
+          handleSearchResultClick(selectedItem.href)
+        }
+      }
+
+      if (event.key === 'Escape') {
         setShowGlobalSearch(false)
         globalSearchInputRef.current?.blur()
       }
@@ -186,7 +264,7 @@ const MainLayout = ({ children }) => {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [matchesShortcut, showGlobalSearch])
+  }, [matchesShortcut, showGlobalSearch, globalSearchResults, selectedIndex])
 
   // Click outside listener
   useEffect(() => {
@@ -382,9 +460,8 @@ const MainLayout = ({ children }) => {
                   key={child.name}
                   to={child.href}
                   onClick={() => isMobile && setSidebarOpen(false)}
-                  className={`nav__subitem ${
-                    childActive ? 'nav__subitem--active' : ''
-                  }`}
+                  className={`nav__subitem ${childActive ? 'nav__subitem--active' : ''
+                    }`}
                   aria-label={childAriaLabel}
                   title={child.name}
                 >
@@ -407,9 +484,8 @@ const MainLayout = ({ children }) => {
       {isClient && isLargeScreen && (
         <aside
           ref={sidebarRef}
-          className={`sidebar sidebar--desktop ${
-            isSidebarExpanded ? 'sidebar--expanded' : 'sidebar--collapsed'
-          }`}
+          className={`sidebar sidebar--desktop ${isSidebarExpanded ? 'sidebar--expanded' : 'sidebar--collapsed'
+            }`}
           onMouseEnter={handleSidebarMouseEnter}
           onMouseLeave={handleSidebarMouseLeave}
           onFocusCapture={handleSidebarFocus}
@@ -464,13 +540,11 @@ const MainLayout = ({ children }) => {
 
       {/* Main Content */}
       <div
-        className={`layout__main ${
-          isClient && isLargeScreen ? 'layout__main--with-sidebar' : ''
-        } ${
-          isClient && isLargeScreen && isSidebarExpanded
+        className={`layout__main ${isClient && isLargeScreen ? 'layout__main--with-sidebar' : ''
+          } ${isClient && isLargeScreen && isSidebarExpanded
             ? 'layout__main--sidebar-expanded'
             : ''
-        }`}
+          }`}
       >
         {/* Navbar */}
         <header className='navbar'>
@@ -511,7 +585,7 @@ const MainLayout = ({ children }) => {
                   }}
                 />
                 {globalSearchTerm && (
-                  <button 
+                  <button
                     onClick={() => {
                       setGlobalSearchTerm('')
                       setGlobalSearchResults([])
@@ -538,7 +612,7 @@ const MainLayout = ({ children }) => {
                   border: '1px solid #e2e8f0',
                   maxHeight: '300px',
                   overflowY: 'auto',
-                  zIndex: 50
+                  zIndex: 9999
                 }}>
                   {globalSearchResults.length > 0 ? (
                     globalSearchResults.map((item, index) => {
@@ -553,13 +627,20 @@ const MainLayout = ({ children }) => {
                             width: '100%',
                             padding: '10px 16px',
                             border: 'none',
-                            background: 'transparent',
+                            background: index === selectedIndex ? '#f1f5f9' : 'transparent',
                             cursor: 'pointer',
                             textAlign: 'left',
                             borderBottom: '1px solid #f1f5f9'
                           }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          onMouseEnter={(e) => {
+                            setSelectedIndex(index)
+                            e.currentTarget.style.backgroundColor = '#f8fafc'
+                          }}
+                          onMouseLeave={(e) => {
+                            if (index !== selectedIndex) {
+                              e.currentTarget.style.backgroundColor = 'transparent'
+                            }
+                          }}
                         >
                           <Icon size={16} style={{ marginRight: '10px', color: '#64748b' }} />
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -625,7 +706,7 @@ const MainLayout = ({ children }) => {
                     <div className='user-menu__body'>
                       <Link
                         to='/configuracion'
-                         className='user-menu__item'
+                        className='user-menu__item'
                         onClick={() => setShowUserMenu(false)}
                       >
                         <Settings className='user-menu__item-icon' />
