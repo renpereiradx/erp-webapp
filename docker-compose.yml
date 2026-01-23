@@ -48,7 +48,7 @@ services:
   backend:
     image: erp-backend:latest
     build:
-      context: ../backend
+      context: ../business_management
       dockerfile: Dockerfile
     container_name: erp-backend
     ports:
