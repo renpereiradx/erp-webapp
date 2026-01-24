@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import useUserStore from '@/store/useUserStore';
 import { useI18n } from '@/lib/i18n';
 import {
   Dialog,
@@ -42,8 +43,20 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
     },
   });
 
-  const handleSubmit = (data) => {
-    onSubmit(data);
+  const { createUser } = useUserStore();
+
+  const handleSubmit = async (data) => {
+    // Map data to expected format if needed
+    // Assuming backend takes snake_case or standard json
+    const userData = {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        password: data.password,
+        role_ids: [data.role.toLowerCase()] // Simple mapping for now
+    };
+    
+    await createUser(userData);
     onOpenChange(false);
     form.reset();
   };
@@ -68,6 +81,9 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
           <DialogTitle className="user-form__title">
             {t('users.form.createTitle')}
           </DialogTitle>
+          <DialogDescription className="user-form__description">
+            {t('users.form.createDescription')}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

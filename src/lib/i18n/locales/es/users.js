@@ -22,6 +22,7 @@ export const users = {
     rowsPerPage: "Filas por página:",
     showing: "Mostrando",
     of: "de",
+    page: "Página",
     table: {
       user: "Usuario",
       role: "Rol",
@@ -70,4 +71,4 @@ export const users = {
       billingManager: "Gerente de Facturación"
     }
   }
-};
+}; // Updated i18n keys

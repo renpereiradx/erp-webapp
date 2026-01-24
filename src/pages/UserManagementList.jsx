@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import useUserStore from '@/store/useUserStore';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -21,99 +22,58 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
-// URLs de imágenes del ejemplo
-const AVATAR_URLS = {
-  alex: "https://lh3.googleusercontent.com/aida-public/AB6AXuAmk3Rv4lFk00ZfTu6sOhb3HXHaC0Db8DLLwQr9FvPY5rOTgrKxQ29kyjCa46rsKB0hAcYlHbf-Dacplgwz5Xo8l9S1INTBYSjVJH5ZM_JGZgkFH14c8TdOg4iW_xfEoaHWhK_KRvL4mRmd27vaHK0Cofbz-VfHGpQBqJwN4RtZm7maKo9HVIdike7fkALzRrZmRp59AaMbepa7wLDKcbJJPiaej8CVU5P2V9T_aRX6oYixAgLQUliIwtpEYFqw5VsDMMywDWcGWw",
-  sarah: "https://lh3.googleusercontent.com/aida-public/AB6AXuD90dlcJz5mG_zUNtP1BzsozmqTbcEEeJh8TBAFIVhMjbhSB6BKx1-XF7TCE-wQO02iXbrlTisJ0VWAUkXD6Eex4NLr_9lWuzPg4fhQuGR_b0UrbqZnlSIu_UigyVIeTfXc3HnwFDTE_gz3Gm9PeQ0aqYr8ngnRZTUZCu20RuCl-0WKT_bhiY7ccqaCvcu7iJAIGlnY7Zl0sZ52C3ejM9XNVzLkJ8rAddg0mNhO4jh96AGzS-5fmhytZsjjmz-YYOQBb5qb7g16EA",
-  marcus: "https://lh3.googleusercontent.com/aida-public/AB6AXuASZ1h2zlUudvBfYZcoHVWaIeJ_x_ZKzuW-VE3e0Kt1S1RRjKc_4085l4yZAZz2jz0HjwqOUXg_-KeBFGYhGF3C1Kl7kPeW6YVyldcLT_kGkvjuJzNsJ_bJ4sO216tBfSX9CGhX_GA8a3EJe68xdKd_6tajtk0nGHTTYLk0LrKGy4GAZ8CtrSgM9AImhXA_gewUCcUnPafzxVn_ICqPKSmZwvqx5BezlEh_MNE1v9i1znZF5tZC41Doxfop8eUWmTqIcR3jaYbBLw",
-  elena: "https://lh3.googleusercontent.com/aida-public/AB6AXuAaBGzmN6kMPoeM73w4kV85BUV4QuoA2q53koGBh7lM77mwegz7exopFSrG_QEPGihj6afh2qW_4EkQqJdLdKKqXDu1s5HjxbbXq7u5-FVsYkI3NCTdFA3jwY1RD06K0DK0rHedo7dr5gqbYcZT8sT84vusQPU5mAwo47kuVz9563hNXK8PvLf-wtoXCNy_R7JtHgpuTOrO1qihmtajn7XWmjY3tZNDHVLvD-f6C13grhYNIsYEvhQYjAAJ6-bE90LavUMxg_N6ng",
-  david: "https://lh3.googleusercontent.com/aida-public/AB6AXuBG-ZOuHOP2RH9SZBLDN331zLh0TgQBmJjvhME6vz4mup1VjiDUPW6RHClqyHOkBejScFh2J5Zae9RzVwTuHjuxajruUXGldHcAub6qaZXVi-FAktbvy321pW5Ng8hXP8IoMhhDa9UA9eRsXVHLcXZ0JfjAXErdBx8LRZEPBHPWifl7lnz-rkkIzTj6KaMXx9x8Zp8_naQOQDScL8U88xAJ9IzD__JJ0K7-AADM019F8iyHdXRT51-IqaW6g8jR7ygg2uaIshesrg",
-  jessica: "https://lh3.googleusercontent.com/aida-public/AB6AXuC7wEIgOpBOOwNOToirg1-g8DzqTcpsua0ERaxAr4nv7ygNbeyz8a5F9SB5gDP0N7WF4gIvDXMI_ntz6P5AeiivjTHyD2TPxxHFrJy6dj0hXoZxUDJTGot7zVPlUTbc3cfniaALm_9sPXJGRiuVVKdgfA5ilEUwzDSYhQReLPs1bgGc1oLEmpvjnPi9CD07f3r_rhb0T9DpqI9pD08SmGmp52SF1fxXXQX46TgeIH1Q4rnwdwihvB6IrYXpOa38BUV1fRIB8PW3Sg",
-};
-
-const MOCK_USERS = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    email: "sarah.j@company.com",
-    avatar: AVATAR_URLS.sarah,
-    initials: "SJ",
-    role: "Admin",
-    status: "Active",
-    lastActive: "2 mins ago",
-    selected: true
-  },
-  {
-    id: 2,
-    name: "Marcus Smith",
-    email: "m.smith@company.com",
-    avatar: AVATAR_URLS.marcus,
-    initials: "MS",
-    role: "Editor",
-    status: "Active",
-    lastActive: "1 hour ago",
-    selected: true
-  },
-  {
-    id: 3,
-    name: "Elena Rodriguez",
-    email: "e.rodriguez@company.com",
-    avatar: AVATAR_URLS.elena,
-    initials: "ER",
-    role: "Viewer",
-    status: "Inactive",
-    lastActive: "Dec 12, 2023",
-    selected: true
-  },
-  {
-    id: 4,
-    name: "David Kim",
-    email: "david.k@company.com",
-    avatar: AVATAR_URLS.david,
-    initials: "DK",
-    role: "Editor",
-    status: "Active",
-    lastActive: "Just now",
-    selected: false
-  },
-  {
-    id: 5,
-    name: "Jessica Lee",
-    email: "jessica.lee@company.com",
-    avatar: AVATAR_URLS.jessica,
-    initials: "JL",
-    role: "Viewer",
-    status: "Active",
-    lastActive: "Yesterday",
-    selected: false
-  }
-];
+// MOCK_USERS removed in favor of store data
 
 export default function UserManagementList() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [users, setUsers] = useState(MOCK_USERS);
+  const { 
+    users, 
+    pagination, 
+    loading, 
+    fetchUsers, 
+    setPage, 
+    setPageSize,
+    filters,
+    setFilters
+  } = useUserStore();
+  
+  const [selectedUsers, setSelectedUsers] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  React.useEffect(() => {
+    fetchUsers();
+  }, []);
+
   const toggleSelect = (id) => {
-    setUsers(users.map(u => u.id === id ? { ...u, selected: !u.selected } : u));
+    if (selectedUsers.includes(id)) {
+      setSelectedUsers(selectedUsers.filter(userId => userId !== id));
+    } else {
+      setSelectedUsers([...selectedUsers, id]);
+    }
   };
 
-  const selectedCount = users.filter(u => u.selected).length;
+  const selectedCount = selectedUsers.length;
 
-  const handleCreateUser = (userData) => {
-    const newUser = {
-      id: users.length + 1,
-      name: `${userData.firstName} ${userData.lastName}`,
-      email: userData.email,
-      avatar: null, // No avatar for new user initially
-      initials: `${userData.firstName[0]}${userData.lastName[0]}`.toUpperCase(),
-      role: userData.role,
-      status: "Active",
-      lastActive: "Just now",
-      selected: false
-    };
-    setUsers([...users, newUser]);
+  const handleCreateUser = async (userData) => {
+    // Logic handled in modal, just refreshing list here if needed, but store handles it.
+    // We can just close modal here if passed as callback, but modal will call store.
+    // Actually the modal component currently takes onSubmit.
+    // We will refactor modal to call store directly or pass a wrapper.
+    // For now, let's keep the prop but use store inside the wrapper if we want to keep logic here,
+    // OR better, update Modal to use store.
+    // Let's pass a dummy for now or handle the result if we want the modal to be "dumb".
+    // Better pattern: Modal calls store action.
+    // But existing code expects onSubmit.
+    // Let's rely on the store update.
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+       setSelectedUsers(users.map(u => u.id));
+    } else {
+       setSelectedUsers([]);
+    }
   };
 
   return (
@@ -124,12 +84,17 @@ export default function UserManagementList() {
         <div className="user-management__header-row">
           <div className="user-management__header-title">
             <h2>{t('users.title')}</h2>
-            <Badge variant="secondary" style={{ border: 'none' }}>1,240 {t('users.total')}</Badge>
+            <Badge variant="secondary" style={{ border: 'none' }}>{pagination.total_items} {t('users.total')}</Badge>
           </div>
           <div className="user-management__header-actions">
             <div className="user-management__search-bar">
               <span className="material-symbols-outlined text-secondary text-xl">search</span>
-              <input placeholder={t('users.searchPlaceholder')} type="text" />
+              <input 
+                placeholder={t('users.searchPlaceholder')} 
+                type="text" 
+                value={filters.search}
+                onChange={(e) => setFilters({ search: e.target.value })}
+              />
             </div>
             <div className="user-management__header-buttons">
               <Button variant="subtle" size="icon">
@@ -193,7 +158,7 @@ export default function UserManagementList() {
                 </Button>
               </div>
             </div>
-            <button className="text-secondary hover:text-primary border-none bg-transparent cursor-pointer" onClick={() => setUsers(users.map(u => ({...u, selected: false})))}>
+            <button className="text-secondary hover:text-primary border-none bg-transparent cursor-pointer" onClick={() => setSelectedUsers([])}>
               <span className="material-symbols-outlined text-xl">close</span>
             </button>
           </div>
@@ -209,8 +174,8 @@ export default function UserManagementList() {
                     <input 
                       className="user-management__checkbox" 
                       type="checkbox" 
-                      checked={selectedCount === users.length}
-                      onChange={(e) => setUsers(users.map(u => ({...u, selected: e.target.checked})))}
+                      checked={selectedCount > 0 && selectedCount === users.length}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
                     />
                   </TableHead>
                   <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.table.user')}</TableHead>
@@ -221,43 +186,55 @@ export default function UserManagementList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {loading ? (
+                    <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8">Loading...</TableCell>
+                    </TableRow>
+                ) : users.map((user) => (
                   <TableRow 
                     key={user.id} 
-                    className={user.selected ? "fluent-grid-selected" : ""} 
-                    aria-selected={user.selected}
+                    className={selectedUsers.includes(user.id) ? "fluent-grid-selected" : ""} 
+                    aria-selected={selectedUsers.includes(user.id)}
                   >
                     <TableCell className="text-center">
                       <input 
                         className="user-management__checkbox" 
                         type="checkbox" 
-                        checked={user.selected}
+                        checked={selectedUsers.includes(user.id)}
                         onChange={() => toggleSelect(user.id)}
                       />
                     </TableCell>
                     <TableCell>
                       <div className="user-management__user-cell">
                         <Avatar size={32}>
-                          <AvatarImage src={user.avatar} />
-                          <AvatarFallback>{user.initials}</AvatarFallback>
+                          <AvatarImage src={user.avatar_url} />
+                          <AvatarFallback>{user.first_name?.[0]}{user.last_name?.[0]}</AvatarFallback>
                         </Avatar>
                         <div className="user-management__user-info">
-                          <p className="user-management__user-name">{user.name}</p>
+                          <p className="user-management__user-name">{user.first_name} {user.last_name}</p>
                           <p className="user-management__user-email">{user.email}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={user.role === "Admin" ? "subtle-info" : "subtle-primary"}>
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className={`user-management__status ${user.status === 'Active' ? 'user-management__status--active' : 'user-management__status--inactive'}`}>
-                        {user.status === 'Active' ? t('users.status.active') : t('users.status.inactive')}
+                      <div className="flex gap-1">
+                      {user.roles?.map(role => (
+                          <Badge key={role.id} variant={role.id === "admin" ? "subtle-info" : "subtle-primary"}>
+                            {role.name}
+                          </Badge>
+                      ))}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-secondary">{user.lastActive}</TableCell>
+                    <TableCell>
+                      <div className={`user-management__status ${user.status === 'active' ? 'user-management__status--active' : 'user-management__status--inactive'}`}>
+                        {user.status === 'active' ? t('users.status.active') : t('users.status.inactive')}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-secondary">
+                        {user.last_login_at 
+                            ? new Date(user.last_login_at).toLocaleDateString() 
+                            : 'Never'}
+                    </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -291,35 +268,63 @@ export default function UserManagementList() {
           {/* Footer / Pagination */}
           <div className="user-management__pagination">
             <div className="user-management__pagination-info">
-              <span className="text-sm text-secondary">{t('users.showing')} <span className="font-semibold text-primary">1-25</span> {t('users.of')} 1,240 {t('users.total').toLowerCase()}</span>
+              <span className="text-sm text-secondary">
+                {t('users.showing')} <span className="font-semibold text-primary">{(pagination.page - 1) * pagination.page_size + 1}-{Math.min(pagination.page * pagination.page_size, pagination.total_items)}</span> {t('users.of')} {pagination.total_items} {t('users.total').toLowerCase()}
+              </span>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-secondary">{t('users.rowsPerPage')}</span>
-                <select className="user-management__rows-select">
-                  <option>25</option>
-                  <option>50</option>
-                  <option>100</option>
+                <select 
+                    className="user-management__rows-select"
+                    value={pagination.page_size}
+                    onChange={(e) => setPageSize(parseInt(e.target.value))}
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
                 </select>
               </div>
             </div>
             <div className="user-management__pagination-controls">
-              <Button variant="ghost" size="icon" className="size-9 text-secondary">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="size-9 text-secondary"
+                disabled={!pagination.has_prev}
+                onClick={() => setPage(1)}
+              >
                 <span className="material-symbols-outlined">first_page</span>
-                
               </Button>
-              <Button variant="ghost" size="icon" className="size-9 text-secondary">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="size-9 text-secondary"
+                disabled={!pagination.has_prev}
+                onClick={() => setPage(pagination.page - 1)}
+              >
                 <span className="material-symbols-outlined">chevron_left</span>
               </Button>
-              <div className="flex gap-1 px-2">
-                <Button variant="primary" className="size-8 p-0">1</Button>
-                <Button variant="ghost" className="size-8 p-0">2</Button>
-                <Button variant="ghost" className="size-8 p-0">3</Button>
-                <span className="size-8 flex items-center justify-center text-sm">...</span>
-                <Button variant="ghost" className="size-8 p-0">50</Button>
+              
+              <div className="flex gap-1 px-2 items-center text-sm font-medium">
+                {t('users.page')} {pagination.page} {t('users.of')} {pagination.total_pages}
               </div>
-              <Button variant="ghost" size="icon" className="size-9 text-secondary">
+
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="size-9 text-secondary"
+                disabled={!pagination.has_next}
+                onClick={() => setPage(pagination.page + 1)}
+              >
                 <span className="material-symbols-outlined">chevron_right</span>
               </Button>
-              <Button variant="ghost" size="icon" className="size-9 text-secondary">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="size-9 text-secondary"
+                disabled={!pagination.has_next}
+                onClick={() => setPage(pagination.total_pages)}
+              >
                 <span className="material-symbols-outlined">last_page</span>
               </Button>
             </div>
