@@ -45,7 +45,7 @@ if (typeof window !== 'undefined') {
 // Servicio API legacy manteniendo compatibilidad
 export const apiService = {
   // Métodos de autenticación
-  login: (email, password) => apiClient.login(email, password),
+  login: (username, password) => apiClient.login(username, password),
   signup: (email, password) => apiClient.signup(email, password),
   logout: () => apiClient.logout(),
 

@@ -35,12 +35,12 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     setLoading(true);
     setError(null);
+    
     try {
       const result = await authService.login(credentials);
-      if (result.success && result.token) {
-        // 🔧 FIX: Asegurar que el token se guarde correctamente antes de actualizar el estado
-        // Esto previene race conditions donde los componentes intentan hacer requests
-        // antes de que el token esté disponible
+      
+      if (result.token) {
+        // Guardar token en localStorage
         apiService.setToken(result.token);
 
         // Verificar que el token se guardó correctamente
@@ -49,19 +49,33 @@ export const AuthProvider = ({ children }) => {
           throw new Error('Error al guardar el token de autenticación');
         }
 
-        // Actualizar estado solo después de verificar que el token está guardado
+        // Actualizar estado de autenticación
         setIsAuthenticated(true);
         setUser(result.user);
         setToken(result.token);
         setError(null);
       } else {
-        setError(result.message || 'Login failed');
+        // Login fallido - mostrar mensaje del servidor o genérico
+        const errorMsg = result.message || result.error?.message || 'Credenciales inválidas';
+        setError(errorMsg);
       }
+      
       return result;
     } catch (error) {
-      const errorMessage = error.message || 'An error occurred during login';
+      // Manejar errores de red o del servidor
+      let errorMessage = 'Error de conexión. Verifica tu conexión a internet.';
+      
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        errorMessage = 'Credenciales incorrectas';
+      } else if (error.message?.includes('404')) {
+        errorMessage = 'Usuario no encontrado';
+      } else if (error.message?.includes('500')) {
+        errorMessage = 'Error del servidor. Intenta más tarde.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       setError(errorMessage);
-      // Limpiar cualquier token residual en caso de error
       apiService.clearToken();
       return { success: false, message: errorMessage };
     } finally {

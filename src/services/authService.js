@@ -28,10 +28,12 @@ const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
 const authService = {
   login: async (credentials) => {
     const startTime = Date.now();
+    const username = credentials.username || credentials.email;
+    const password = credentials.password;
     
     // Verificar si son credenciales demo
-    if (DEMO_CONFIG.enabled && isDemoCredentials(credentials.email, credentials.password)) {
-      const demoUser = validateDemoCredentials(credentials.email, credentials.password);
+    if (DEMO_CONFIG.enabled && isDemoCredentials(username, password)) {
+      const demoUser = validateDemoCredentials(username, password);
       
       if (demoUser) {
         // Simular delay de red para realismo
@@ -51,35 +53,29 @@ const authService = {
       }
     }
     
-    // Si no es demo o demo está deshabilitado, usar API real
+    // Llamar a la API real de login
     try {
       const result = await _fetchWithRetry(async () => {
-        // El endpoint real es /login, apiService ya lo conoce
-        return await apiService.login(credentials.email, credentials.password);
+        return await apiService.login(username, password);
       });
 
       telemetry.record('auth.login.success', {
         duration: Date.now() - startTime,
       });
 
-      // Normalizar la respuesta del backend para que tenga success: true
+      // Normalizar la respuesta del backend
+      const token = result.token || result.data?.token;
+      const user = result.user || result.data?.user || result.data;
+      const role_id = result.role_id || result.data?.role_id;
+
       return {
         success: true,
-        token: result.token,
-        user: result.user,
-        role_id: result.role_id,
+        token,
+        user,
+        role_id,
         ...result
       };
     } catch (error) {
-      // Si la API falla y demo está habilitado, mostrar mensaje informativo
-      if (DEMO_CONFIG.enabled) {
-        const demoError = new Error(
-          'API no disponible. Usa credenciales demo: admin@demo.com / admin123 o demo / demo'
-        );
-        demoError.isDemoHint = true;
-        throw demoError;
-      }
-      
       telemetry.record('auth.login.error', {
         duration: Date.now() - startTime,
         error: error.message,

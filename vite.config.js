@@ -56,17 +56,23 @@ export default defineConfig({
       // Disable WebSocket connection retries to prevent connection spam
       clientErrorOverlay: false
     },
-    // Headers agresivos para prevenir cache específico de esta app
+    // Aggressive headers to prevent cache specifically for this app
     headers: {
       'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
       'Pragma': 'no-cache',
       'Expires': '0',
       'ETag': 'false',
       'Last-Modified': 'false',
-      // Headers específicos para módulos ES
       'X-Content-Type-Options': 'nosniff',
-      // Prevenir cache de navegador específicamente
       'Vary': 'Accept-Encoding, User-Agent'
+    },
+    // Proxy API requests to avoid CORS issues
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5050',
+        changeOrigin: true,
+        secure: false,
+      }
     }
   },
   build: {

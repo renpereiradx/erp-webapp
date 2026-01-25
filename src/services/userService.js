@@ -15,7 +15,7 @@ export const userService = {
   getUsers: async (params = {}) => {
     try {
       const response = await api.get(BASE_URL, { params });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error fetching users:', error);
       throw error;
@@ -30,7 +30,7 @@ export const userService = {
   getUserById: async (id) => {
     try {
       const response = await api.get(`${BASE_URL}/${id}`);
-      return response.data;
+      return response;
     } catch (error) {
       console.error(`Error fetching user ${id}:`, error);
       throw error;
@@ -45,7 +45,7 @@ export const userService = {
   createUser: async (userData) => {
     try {
       const response = await api.post(BASE_URL, userData);
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
@@ -61,7 +61,7 @@ export const userService = {
   updateUser: async (id, userData) => {
     try {
       const response = await api.put(`${BASE_URL}/${id}`, userData);
-      return response.data;
+      return response;
     } catch (error) {
       console.error(`Error updating user ${id}:`, error);
       throw error;
@@ -76,7 +76,7 @@ export const userService = {
   deleteUser: async (id) => {
     try {
       const response = await api.delete(`${BASE_URL}/${id}`);
-      return response.data;
+      return response;
     } catch (error) {
       console.error(`Error deleting user ${id}:`, error);
       throw error;
@@ -89,7 +89,7 @@ export const userService = {
   changePasswordAdmin: async (id, data) => {
     try {
       const response = await api.post(`${BASE_URL}/${id}/change-password`, data);
-      return response.data;
+      return response;
     } catch (error) {
       console.error(`Error changing password for user ${id}:`, error);
       throw error;
@@ -102,7 +102,7 @@ export const userService = {
   getMe: async () => {
     try {
       const response = await api.get(`${BASE_URL}/me`);
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error fetching my profile:', error);
       throw error;
@@ -115,7 +115,7 @@ export const userService = {
   changeMyPassword: async (data) => {
     try {
       const response = await api.post(`${BASE_URL}/me/change-password`, data);
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Error changing my password:', error);
       throw error;
@@ -128,7 +128,7 @@ export const userService = {
   activateUser: async (id) => {
     try {
       const response = await api.post(`${BASE_URL}/${id}/activate`);
-      return response.data;
+      return response;
     } catch (error) {
       console.error(`Error activating user ${id}:`, error);
       throw error;
@@ -141,7 +141,7 @@ export const userService = {
   deactivateUser: async (id) => {
     try {
       const response = await api.post(`${BASE_URL}/${id}/deactivate`);
-      return response.data;
+      return response;
     } catch (error) {
       console.error(`Error deactivating user ${id}:`, error);
       throw error;
@@ -154,7 +154,7 @@ export const userService = {
   assignRole: async (userId, roleId) => {
     try {
         const response = await api.post(`${BASE_URL}/${userId}/roles`, { role_id: roleId });
-        return response.data;
+        return response;
     } catch (error) {
         console.error(`Error assigning role ${roleId} to user ${userId}:`, error);
         throw error;
@@ -167,12 +167,13 @@ export const userService = {
   removeRole: async (userId, roleId) => {
       try {
           const response = await api.delete(`${BASE_URL}/${userId}/roles/${roleId}`);
-          return response.data;
+          return response;
       } catch (error) {
         console.error(`Error removing role ${roleId} from user ${userId}:`, error);
         throw error;
       }
   }
+
 };
 
 export default userService;

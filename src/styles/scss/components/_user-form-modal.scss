@@ -66,6 +66,22 @@
     }
   }
 
+  &__visibility-toggle {
+    width: $spacing-28 !important;
+    height: $spacing-28 !important;
+    padding: 0 !important;
+    @include themify {
+      color: themed('text-secondary') !important;
+    }
+    
+    &:hover {
+      @include themify {
+        background-color: themed('bg-hover') !important;
+        color: themed('text-primary') !important;
+      }
+    }
+  }
+
   &__grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -116,16 +132,52 @@
   }
 
   &__select-trigger {
-    width: 100% !important;
-    height: 2rem !important; // 32px
-    border-radius: $border-radius-medium !important;
-    padding: 0 $spacing-8 !important;
-    font-size: $font-size-200 !important;
+    border-radius: $border-radius-medium;
+    font-size: $font-size-200;
+    height: 32px;
+    padding: 0 $spacing-12;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border: 1px solid transparent;
+    @include transition(all);
     
     @include themify {
-      background-color: themed('bg-primary');
-      border: 1px solid themed('border-default');
+      background-color: themed('surface-input');
+      border-color: themed('border-default');
       color: themed('text-primary');
+    }
+
+    &:focus, &[data-state="open"] {
+      outline: none;
+      @include themify {
+        border-color: themed('action-primary');
+        box-shadow: 0 0 0 1px themed('action-primary');
+      }
+    }
+
+    &:hover:not(:disabled) {
+      @include themify {
+        background-color: themed('surface-hover');
+        border-color: themed('border-strong');
+      }
+    }
+
+    // Ensure icon visibility
+    .material-symbols-outlined {
+      font-size: 1.25rem;
+      opacity: 0.7;
+    }
+  }
+
+  &__hint {
+    @include text-style($font-size-100);
+    margin-top: $spacing-2;
+    line-height: 1.4;
+    @include themify {
+      color: themed('text-secondary');
     }
   }
 
@@ -155,9 +207,31 @@
 
   &__strength-fill {
     height: 100%;
+    @include transition(width 0.3s ease);
     &--weak { @include themify { background-color: themed('state-error'); } }
     &--medium { @include themify { background-color: themed('state-warning'); } }
     &--strong { @include themify { background-color: themed('state-success'); } }
+  }
+
+  &__strength-info {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+  }
+
+  &__strength-text {
+    @include text-style($font-size-100, $font-weight-medium);
+    margin: 0;
+  }
+
+  &__strength-label {
+    font-weight: $font-weight-bold;
+  }
+
+  &__strength-hint {
+    @include text-style($font-size-100);
+    @include themify { color: themed('text-secondary'); }
+    margin: 0;
   }
 
   &__footer {

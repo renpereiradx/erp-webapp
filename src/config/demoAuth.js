@@ -49,9 +49,9 @@ export const DEMO_TOKEN = 'demo-jwt-token-12345';
 
 // Configuración de demo
 export const DEMO_CONFIG = {
-  enabled: true, // Habilitar/deshabilitar modo demo
+  enabled: false, // 🔧 DESHABILITADO - Usando backend real
   autoLogin: false, // Auto-login con credenciales demo
-  showCredentials: true, // Mostrar credenciales en UI
+  showCredentials: false, // Mostrar credenciales en UI
   sessionDuration: 24 * 60 * 60 * 1000, // 24 horas en ms
 };
 

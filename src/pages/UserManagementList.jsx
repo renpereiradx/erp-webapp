@@ -29,9 +29,11 @@ export default function UserManagementList() {
   const navigate = useNavigate();
   const { 
     users, 
+    roles,
     pagination, 
     loading, 
     fetchUsers, 
+    fetchRoles,
     setPage, 
     setPageSize,
     filters,
@@ -43,6 +45,7 @@ export default function UserManagementList() {
 
   React.useEffect(() => {
     fetchUsers();
+    fetchRoles();
   }, []);
 
   const toggleSelect = (id) => {
@@ -56,16 +59,7 @@ export default function UserManagementList() {
   const selectedCount = selectedUsers.length;
 
   const handleCreateUser = async (userData) => {
-    // Logic handled in modal, just refreshing list here if needed, but store handles it.
-    // We can just close modal here if passed as callback, but modal will call store.
-    // Actually the modal component currently takes onSubmit.
-    // We will refactor modal to call store directly or pass a wrapper.
-    // For now, let's keep the prop but use store inside the wrapper if we want to keep logic here,
-    // OR better, update Modal to use store.
-    // Let's pass a dummy for now or handle the result if we want the modal to be "dumb".
-    // Better pattern: Modal calls store action.
-    // But existing code expects onSubmit.
-    // Let's rely on the store update.
+    // Logic handled in modal
   };
 
   const handleSelectAll = (checked) => {
@@ -111,24 +105,56 @@ export default function UserManagementList() {
         {/* Command Bar / Toolbar */}
         <div className="user-management__toolbar">
           <div className="user-management__filter-group">
-            <Button variant="outline" className="h-auto">
-              <span className="material-symbols-outlined text-lg">filter_list</span>
-              <span>{t('users.filterRole')}</span>
-              <span className="material-symbols-outlined text-sm">expand_more</span>
-            </Button>
-            <Button variant="outline" className="h-auto">
-              <span className="material-symbols-outlined text-lg">check_circle</span>
-              <span>{t('users.filterStatus')}</span>
-              <span className="material-symbols-outlined text-sm text-primary">expand_more</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-auto">
+                  <span className="material-symbols-outlined text-lg">filter_list</span>
+                  <span>{filters.role_id ? (roles.find(r => r.id === filters.role_id)?.name || t('users.filterRole')) : t('users.filterRole')}</span>
+                  <span className="material-symbols-outlined text-sm">expand_more</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setFilters({ role_id: '' })}>
+                  {t('users.filterRole')} (Todos)
+                </DropdownMenuItem>
+                {roles.map(role => (
+                  <DropdownMenuItem key={role.id} onClick={() => setFilters({ role_id: role.id })}>
+                    {role.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="h-auto">
+                    <span className="material-symbols-outlined text-lg">check_circle</span>
+                    <span>{filters.status ? t(`users.status.${filters.status}`) : t('users.filterStatus')}</span>
+                    <span className="material-symbols-outlined text-sm text-primary">expand_more</span>
+                  </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setFilters({ status: '' })}>
+                  {t('users.filterStatus')} (Todos)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilters({ status: 'active' })}>
+                  {t('users.status.active')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilters({ status: 'inactive' })}>
+                  {t('users.status.inactive')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button variant="outline" className="h-auto">
               <span className="material-symbols-outlined text-lg">calendar_today</span>
               <span>{t('users.filterLastActive')}</span>
               <span className="material-symbols-outlined text-sm">expand_more</span>
             </Button>
             <div className="h-6 w-px bg-subtle mx-2"></div>
-            <Button variant="text" className="h-auto px-0 font-bold hover:underline">{t('users.clearAll')}</Button>
+            <Button variant="text" className="h-auto px-0 font-bold hover:underline" onClick={() => setFilters({ search: '', status: '', role_id: '' })}>{t('users.clearAll')}</Button>
           </div>
+
           <div className="user-management__action-group">
             <Button variant="ghost" className="h-auto">
               <span className="material-symbols-outlined text-lg">download</span>
@@ -207,12 +233,18 @@ export default function UserManagementList() {
                     <TableCell>
                       <div className="user-management__user-cell">
                         <Avatar size={32}>
-                          <AvatarImage src={user.avatar_url} />
-                          <AvatarFallback>{user.first_name?.[0]}{user.last_name?.[0]}</AvatarFallback>
+                          {user.avatar_url && !user.avatar_url.includes('example.com') && (
+                            <AvatarImage src={user.avatar_url} alt={user.first_name} />
+                          )}
+                          <AvatarFallback>
+                            {user.first_name && user.last_name 
+                              ? `${user.first_name[0]}${user.last_name[0]}` 
+                              : user.first_name ? user.first_name[0] : null}
+                          </AvatarFallback>
                         </Avatar>
                         <div className="user-management__user-info">
                           <p className="user-management__user-name">{user.first_name} {user.last_name}</p>
-                          <p className="user-management__user-email">{user.email}</p>
+                          <p className="user-management__user-email text-xs text-muted-foreground">@{user.username} • {user.email}</p>
                         </div>
                       </div>
                     </TableCell>

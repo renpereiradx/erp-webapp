@@ -58,6 +58,7 @@ function AvatarImage({
 
 function AvatarFallback({
   className,
+  children,
   ...props
 }) {
   return (
@@ -67,7 +68,10 @@ function AvatarFallback({
         "avatar__initials flex size-full items-center justify-center bg-muted",
         className
       )}
-      {...props} />
+      {...props}
+    >
+      {children || <span className="material-symbols-outlined text-[1.25rem]">person</span>}
+    </AvatarPrimitive.Fallback>
   );
 }
 

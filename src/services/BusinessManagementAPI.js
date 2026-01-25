@@ -28,8 +28,8 @@ class BusinessManagementAPI {
     // No cachear el token - siempre leer del localStorage
     // Esto garantiza que si el token se renovó, se use el nuevo
     const token = localStorage.getItem('authToken')
-
-    if (!token) {
+    // Ensure token is a real string and not "null" or "undefined"
+    if (!token || token === 'null' || token === 'undefined') {
       return {}
     }
 
@@ -188,9 +188,12 @@ class BusinessManagementAPI {
       if (rawErrorBody) {
         try {
           const errorResponse = JSON.parse(rawErrorBody)
-          errorDetails =
-            errorResponse.message || errorResponse.error || errorDetails
-          if (errorResponse.details) {
+          // More robust message extraction
+          const payload = errorResponse.error || errorResponse;
+          if (typeof payload === 'string') {
+            errorDetails = payload;
+          } else if (payload && typeof payload === 'object') {
+            errorDetails = payload.message || payload.error || errorDetails;
           }
         } catch (jsonParseError) {
           errorDetails = rawErrorBody.trim()
@@ -254,14 +257,14 @@ class BusinessManagementAPI {
     return response
   }
 
-  async login(email, password) {
+  async login(username, password) {
     // 🔧 skipAuth: true para evitar enviar Authorization header en login
     // 🔧 FIX: NO guardar el token aquí - se guarda en AuthContext/authService
     // para evitar race conditions y tener un único punto de control
     const response = await this.makeRequest('/login', {
       method: 'POST',
       skipAuth: true,
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password }),
     })
 
     return response

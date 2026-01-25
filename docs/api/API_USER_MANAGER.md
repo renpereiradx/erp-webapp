@@ -1,5 +1,11 @@
 # API de Administración de Usuarios
 
+## Resumen
+
+Esta API permite la gestión completa de usuarios en el sistema. **NO existe auto-registro público** - solo los administradores pueden crear usuarios nuevos.
+
+Para crear el primer usuario administrador, consulta la [guía de bootstrap](../guides/backend/BOOTSTRAP_ADMIN_USER.md).
+
 ## Base URL
 
 ```
@@ -13,6 +19,30 @@ Todos los endpoints requieren autenticación JWT en el header:
 ```
 Authorization: Bearer <token>
 ```
+
+### Login con Username o Email
+
+El sistema soporta login usando **username** o **email** junto con la contraseña:
+
+**Opción 1: Login con Username**
+```json
+POST /login
+{
+  "username": "johndoe",
+  "password": "mypassword"
+}
+```
+
+**Opción 2: Login con Email** (mantiene compatibilidad con versiones anteriores)
+```json
+POST /login
+{
+  "email": "john@example.com",
+  "password": "mypassword"
+}
+```
+
+> **Nota:** Debe proporcionar al menos uno de los dos: `username` o `email`.
 
 ---
 
@@ -58,6 +88,7 @@ curl -X GET "http://localhost:8080/api/v1/users?search=john&status=active&page=1
             "first_name": "John",
             "last_name": "Doe",
             "email": "john@example.com",
+            "username": "johndoe",
             "phone": "+1234567890",
             "avatar_url": null,
             "status": "active",
@@ -116,6 +147,7 @@ curl -X GET "http://localhost:8080/api/v1/users/abc123" \
         "first_name": "John",
         "last_name": "Doe",
         "email": "john@example.com",
+        "username": "johndoe",
         "phone": "+1234567890",
         "avatar_url": "https://example.com/avatar.jpg",
         "status": "active",
@@ -166,6 +198,7 @@ Crea un nuevo usuario en el sistema.
 | `first_name` | string | Sí | Nombre (max 100 caracteres) |
 | `last_name` | string | Sí | Apellido (max 100 caracteres) |
 | `email` | string | Sí | Email único y válido |
+| `username` | string | Sí | Username único (max 50 caracteres) |
 | `password` | string | Sí | Contraseña (min 8 chars, 1 mayúscula, 1 minúscula, 1 número) |
 | `phone` | string | No | Teléfono |
 | `status` | string | No | Estado inicial (default: `active`) |
@@ -181,6 +214,7 @@ curl -X POST "http://localhost:8080/api/v1/users" \
     "first_name": "Jane",
     "last_name": "Smith",
     "email": "jane@example.com",
+    "username": "janesmith",
     "password": "SecurePass123",
     "phone": "+1987654321",
     "role_ids": ["user"]
@@ -197,6 +231,7 @@ curl -X POST "http://localhost:8080/api/v1/users" \
         "first_name": "Jane",
         "last_name": "Smith",
         "email": "jane@example.com",
+        "username": "janesmith",
         "phone": "+1987654321",
         "status": "active",
         "email_verified": false,
@@ -259,6 +294,7 @@ Actualiza los datos de un usuario existente.
 | `first_name` | string | No | Nombre |
 | `last_name` | string | No | Apellido |
 | `email` | string | No | Email (debe ser único) |
+| `username` | string | No | Username (debe ser único) |
 | `phone` | string | No | Teléfono |
 | `avatar_url` | string | No | URL del avatar |
 
@@ -609,6 +645,7 @@ curl -X GET "http://localhost:8080/api/v1/users/me" \
         "first_name": "John",
         "last_name": "Doe",
         "email": "john@example.com",
+        "username": "johndoe",
         "phone": "+1234567890",
         "avatar_url": null,
         "status": "active",
@@ -765,6 +802,7 @@ USER_RESPONSE=$(curl -s -X POST "http://localhost:8080/api/v1/users" \
     "first_name": "Jane",
     "last_name": "Smith",
     "email": "jane@example.com",
+    "username": "janesmith",
     "password": "SecurePass123"
   }')
 

@@ -12,6 +12,7 @@ export const other = {
   'login.credentials.prompt': 'Ingresa tus credenciales para continuar',
   'login.test_credentials.title': 'Credenciales de prueba:',
   'login.username.label': 'Usuario o Email',
+  'login.username_label': 'Usuario o Email',
   'login.email_label': 'Email o Usuario',
   'login.username.placeholder': 'Ingresa tu usuario',
   'login.email_placeholder': 'ej: admin',
