@@ -44,12 +44,17 @@ const Login = () => {
 
   const handleCreateUser = async (userData) => {
     try {
+      let roleId = userData.role.toLowerCase();
+      if (userData.role === 'Administrator') {
+        roleId = 'admin';
+      }
+
       const payload = {
         first_name: userData.firstName,
         last_name: userData.lastName,
         email: userData.email,
         password: userData.password,
-        role_ids: [userData.role.toLowerCase()], // Adaptando al formato de la API
+        role_ids: [roleId], // Adaptando al formato de la API
       };
 
       await userService.createUser(payload);

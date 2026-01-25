@@ -9,6 +9,7 @@ import {
   DEFAULT_REASONS,
   REASON_DETAIL_TEMPLATES,
 } from '@/constants/inventoryDefaults'
+import { getUnitLabel } from '@/constants/units'
 
 const InventoryAdjustmentManualPage = () => {
   const { t } = useI18n()
@@ -225,6 +226,7 @@ const InventoryAdjustmentManualPage = () => {
       new_quantity: newQuantity,
       reason: DEFAULT_REASONS.MANUAL_ADJUSTMENT[formData.reasonCategory],
       metadata: metadata,
+      unit: selectedProduct.base_unit || 'unit', // Enviar unidad del producto
     }
 
     const result = await createManualAdjustment(adjustmentData)
@@ -325,7 +327,7 @@ const InventoryAdjustmentManualPage = () => {
                   <p className='selected-product-card__stock'>
                     Stock Actual:{' '}
                     <strong>{selectedProduct.stock_quantity || 0}</strong>{' '}
-                    Unidades
+                    {getUnitLabel(selectedProduct.base_unit || 'unit')}
                   </p>
                 </div>
                 <div className='selected-product-card__image'>
@@ -360,7 +362,7 @@ const InventoryAdjustmentManualPage = () => {
               <div className='adjustment-form__row'>
                 <div className='form-field'>
                   <label className='form-field__label'>
-                    Cantidad a Ajustar
+                    Cantidad a Ajustar ({selectedProduct ? getUnitLabel(selectedProduct.base_unit || 'unit') : 'Unidades'})
                   </label>
                   <input
                     type='number'
@@ -378,7 +380,7 @@ const InventoryAdjustmentManualPage = () => {
                       }))
                     }
                     disabled={!selectedProduct}
-                    step='0.01'
+                    step={selectedProduct && selectedProduct.base_unit && ['basic', 'packing', 'grocery'].includes(getUnitLabel(selectedProduct.base_unit)) ? '1' : '0.01'}
                   />
                   {formErrors.quantityAdjustment && (
                     <p className='form-field__error'>

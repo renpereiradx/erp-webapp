@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useI18n } from '../lib/i18n';
 import useProductStore from '../store/useProductStore';
 import BusinessManagementAPI from '../services/BusinessManagementAPI';
+import { UNIT_CONFIGS, getGroupedUnitOptions } from '../constants/units';
 
 /**
  * ProductFormModal Component
@@ -31,6 +32,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
     barcode: '',
     brand: '',
     origin: '',
+    base_unit: 'unit', // Default to 'unit'
   });
 
   const [errors, setErrors] = useState({});
@@ -86,6 +88,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
           barcode: product.barcode || '',
           brand: product.brand || '',
           origin: product.origin || '',
+          base_unit: product.base_unit || 'unit',
         };
 
         setFormData(newFormData);
@@ -99,6 +102,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
           barcode: '',
           brand: '',
           origin: '',
+          base_unit: 'unit',
         });
       }
       setErrors({});
@@ -173,6 +177,9 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
       if (formData.origin) {
         productData.origin = formData.origin;
       }
+      
+      // Siempre enviar base_unit (si no está, usar 'unit' como default seguro)
+      productData.base_unit = formData.base_unit || 'unit';
 
       let response;
       // En modo edición, agregar state
@@ -453,6 +460,33 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
                     <option value="NACIONAL">{t('products.origin.national')}</option>
                     <option value="IMPORTADO">{t('products.origin.imported')}</option>
                   </select>
+                </div>
+
+                {/* Base Unit */}
+                <div className="product-form-modal__form-field">
+                  <label htmlFor="product-base-unit" className="product-form-modal__label">
+                    Unidad de Medida
+                  </label>
+                  <select
+                    id="product-base-unit"
+                    name="base_unit"
+                    className="product-form-modal__select"
+                    value={formData.base_unit}
+                    onChange={handleChange}
+                  >
+                    {getGroupedUnitOptions().map((group) => (
+                      <optgroup key={group.label} label={group.label}>
+                        {group.options.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  <p className="product-form-modal__helper-text">
+                    La unidad principal para inventario y precios
+                  </p>
                 </div>
               </div>
             </div>

@@ -1,7 +1,7 @@
 # 📦 API de Órdenes de Compra
 
-**Versión:** 2.4
-**Fecha:** 30 de Diciembre de 2025
+**Versión:** 2.5
+**Fecha:** 25 de Enero de 2026
 **Endpoint Base:** `http://localhost:5050`
 
 ---
@@ -21,6 +21,11 @@ Esta API gestiona el ciclo de vida completo de las órdenes de compra (Purchase 
 ---
 
 ## 📝 Historial de Cambios
+
+### v2.5 - 25 de Enero de 2026
+- ✅ **Migración de Unidades en BD**: Agregada columna `unit` en la tabla `purchase_order_details` de la base de datos.
+- ✅ **Unidades Permitidas**: `kg`, `g`, `lb`, `oz`, `ton`, `l`, `ml`, `gal`, `meter`, `cm`, `sqm`, `unit`, `pair`, `dozen`, `box`, `pack`, `bag`, `case`, `bundle`, `roll`, `hour`, `day`, `month`, `tray`, `bottle`, `can`, `jar`, `carton`, `stick`, `slice`, `portion`.
+- ✅ **Función de Conversión**: Nueva función `products.convert_units()` para conversión entre unidades compatibles.
 
 ### v2.4 - 30 de Diciembre de 2025
 - ✅ **Fix: `sale_price` en Metadata de Detalles**: Corregido el problema donde `sale_price` retornaba 0 en los detalles de órdenes de compra.

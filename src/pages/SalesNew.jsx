@@ -22,6 +22,7 @@ import { CurrencyService } from '@/services/currencyService'
 import { productService } from '@/services/productService'
 import apiService from '@/services/api'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
+import { getUnitLabel } from '@/constants/units'
 
 const STATUS_STYLES = {
   completed: { label: 'Completada', badge: 'badge--subtle-success' },
@@ -136,6 +137,7 @@ const getProductDisplay = product => {
       0,
     sku: product.sku || product.barcode || product.code || '',
     stock: product.stock_quantity || product.stock || product.quantity || 0,
+    base_unit: product.base_unit || product.unit || 'unit',
   }
 }
 
@@ -2797,12 +2799,14 @@ const SalesNew = () => {
                     className='sales-modal__field'
                     htmlFor='modal-quantity'
                   >
-                    <span className='sales-modal__field-label'>Cantidad</span>
+                    <span className='sales-modal__field-label'>
+                      Cantidad ({modalDisplay.base_unit ? getUnitLabel(modalDisplay.base_unit) : 'Unidades'})
+                    </span>
                     <input
                       id='modal-quantity'
                       type='number'
                       min='1'
-                      step='1'
+                      step={modalDisplay.base_unit && ['basic', 'packing', 'grocery'].includes(getUnitLabel(modalDisplay.base_unit)) ? '1' : '0.01'}
                       className='input'
                       value={modalQuantity}
                       onChange={event => setModalQuantity(event.target.value)}

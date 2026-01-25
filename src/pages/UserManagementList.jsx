@@ -336,7 +336,6 @@ export default function UserManagementList() {
       <CreateUserModal 
         open={isCreateModalOpen} 
         onOpenChange={setIsCreateModalOpen} 
-        onSubmit={handleCreateUser}
       />
     </div>
   );

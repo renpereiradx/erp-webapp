@@ -46,17 +46,30 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
   const { createUser } = useUserStore();
 
   const handleSubmit = async (data) => {
-    // Map data to expected format if needed
-    // Assuming backend takes snake_case or standard json
-    const userData = {
+    // Handle specific role mapping
+    let roleId = data.role.toLowerCase();
+    if (data.role === 'Administrator') {
+      roleId = 'admin';
+    }
+
+    // Prepare data for store/API
+     const payload = {
         first_name: data.firstName,
         last_name: data.lastName,
         email: data.email,
         password: data.password,
-        role_ids: [data.role.toLowerCase()] // Simple mapping for now
+        role_ids: [roleId]
     };
+
+    if (onSubmit) {
+      // Pass raw form data to parent handler (Login.jsx expects this format)
+      // Note: Login.jsx handles its own payload construction
+      await onSubmit(data);
+    } else {
+      // Default behavior: Use store
+      await createUser(payload);
+    }
     
-    await createUser(userData);
     onOpenChange(false);
     form.reset();
   };

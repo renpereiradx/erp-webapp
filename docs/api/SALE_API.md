@@ -1,7 +1,7 @@
 # 🛒 Ventas y Pagos - Guía Completa de API
 
-**Versión:** 1.7
-**Fecha:** 11 de Diciembre de 2025
+**Versión:** 1.8
+**Fecha:** 25 de Enero de 2026
 **Endpoint Base:** `http://localhost:5050`
 **Estado:** ✅ Production Ready
 
@@ -116,6 +116,7 @@ Este endpoint crea una nueva venta. Es el punto de entrada para registrar todos 
 |-------|------|-----------|-------------|
 | `product_id` | string | ✅ Sí | ID del producto a vender. |
 | `quantity` | number | ✅ Sí | Cantidad del producto. Debe ser > 0. |
+| `unit` | string | ❌ No | Unidad de medida para productos medibles: `kg`, `meter`, `l`, etc. Si se omite, usa la unidad base del producto o `unit`. |
 | `tax_rate_id` | number | ❌ No | ID de la tasa de impuesto a aplicar. Si se omite, usa la del producto. |
 | `sale_price` | number | ⚠️ Condicional | **Modificación de Precio:** Precio de venta unitario modificado. Requiere `allow_price_modifications: true`. |
 | `price_change_reason` | string | ⚠️ Condicional | Justificación obligatoria si se usa `sale_price`. |
@@ -693,6 +694,7 @@ GET /sale/date_range?start_date=2025-05-01&end_date=2025-06-19&page=1&page_size=
 | `product_name` | string | Nombre del producto o servicio. |
 | `product_type` | string | Tipo: `PHYSICAL` (producto físico) \| `SERVICE` (servicio) |
 | `quantity` | number | Cantidad vendida (puede tener decimales). |
+| `unit` | string \| null | Unidad de medida de la cantidad vendida: `kg`, `meter`, `l`, etc. Si es `null`, se asume `unit`. |
 | `base_price` | number | Precio base original del producto. |
 | `unit_price` | number | Precio unitario final de venta (después de descuentos/modificaciones). |
 | `discount_amount` | number | Monto de descuento aplicado por unidad. |
@@ -830,6 +832,10 @@ Para una especificación técnica completa y machine-readable de esta API, consu
 ---
 
 ## 📝 Historial de Cambios
+
+### v1.8 - 25 de Enero de 2026
+- ✅ **Soporte para Unidades de Medida**: Agregado campo `unit` en `product_details` para especificar unidades de productos medibles (kg, meter, l, etc.).
+- ✅ **Respuesta con Unidad**: Los detalles de venta ahora incluyen el campo `unit` para indicar la unidad de la cantidad vendida.
 
 ### v1.7 - 11 de Diciembre de 2025
 - ✅ Separada la documentación de pagos a un archivo dedicado: `SALE_PAYMENT.md`.

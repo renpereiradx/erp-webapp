@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import MetadataTemplateSelector from '@/components/ui/MetadataTemplateSelector';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { REASON_OPTIONS, DEFAULT_METADATA_TEMPLATES } from '@/constants/inventoryDefaults';
+import { getUnitLabel } from '@/constants/units';
 
 const ProductAdjustmentCard = ({ 
   product, 
@@ -87,7 +88,8 @@ const ProductAdjustmentCard = ({
         custom_reason: useCustomReason,
         ui_submitted: true,
         submission_timestamp: new Date().toISOString()
-      }
+      },
+      unit: product.base_unit || 'unit',
     };
     
     onAdjustmentSubmit(adjustmentData);
@@ -169,7 +171,7 @@ const ProductAdjustmentCard = ({
         <div>
           <label className={`${styles.label()} flex items-center gap-2 mb-2`}>
             <Settings className="w-4 h-4" />
-            Nueva Cantidad de Stock
+            Nueva Cantidad de Stock ({product ? getUnitLabel(product.base_unit || 'unit') : 'Unidades'})
           </label>
           <Input
             type="number"
@@ -265,8 +267,8 @@ const ProductAdjustmentCard = ({
       {/* Info adicional */}
       <div className="mt-3 p-3 bg-blue-50 rounded-lg">
         <p className="text-xs text-blue-700">
-          <strong>💡 Resumen:</strong> Se ajustará el stock de "{product.name}" de {currentStock} a {quantity} unidades 
-          ({difference > 0 ? `+${difference}` : difference} unidades). 
+          <strong>💡 Resumen:</strong> Se ajustará el stock de "{product.name}" de {currentStock} a {quantity} {getUnitLabel(product.base_unit || 'unit')} 
+          ({difference > 0 ? `+${difference}` : difference} {getUnitLabel(product.base_unit || 'unit')}). 
           Razón: {reasonText}
         </p>
       </div>

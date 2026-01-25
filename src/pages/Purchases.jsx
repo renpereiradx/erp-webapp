@@ -28,6 +28,7 @@ import {
   classifySupplierSearchTerm,
   fetchPurchasesBySupplierTerm,
 } from '@/services/purchasePaymentsMvpService'
+import { getUnitLabel } from '@/constants/units'
 
 const Purchases = () => {
   const { t } = useI18n()
@@ -534,7 +535,8 @@ const Purchases = () => {
       product_id: item.product_id,
       name: item.name,
       sku: item.sku,
-      unit: item.unit,
+      unit: item.unit || item.base_unit || 'unit', // Usar unit del item o base_unit si no existe
+      base_unit: item.base_unit || item.unit || 'unit', // Asegurar que base_unit esté presente
       tax_rate_id: item.tax_rate_id,
     })
     setModalProductSearch(item.name)
@@ -616,7 +618,9 @@ const Purchases = () => {
       profit_pct: effectiveProfitPct,
       sale_price: effectiveSalePrice,
       pricing_mode: pricingMode, // 'margin' o 'sale_price'
-      unit: modalSelectedProduct.unit || 'unit',
+      sale_price: effectiveSalePrice,
+      pricing_mode: pricingMode, // 'margin' o 'sale_price'
+      unit: modalSelectedProduct.base_unit || modalSelectedProduct.unit || 'unit', // Priorizar base_unit del producto
       tax_rate_id: modalTaxRateId || null, // Usar el tax_rate_id seleccionado por el usuario
     }
 
@@ -680,8 +684,9 @@ const Purchases = () => {
         const detail = {
           product_id: item.product_id,
           quantity: item.quantity,
+          quantity: item.quantity,
           unit_price: item.unit_price,
-          unit: item.unit || 'unit',
+          unit: item.unit || 'unit', // unit ya viene con el valor correcto desde el item
           profit_pct: item.profit_pct || 30,
           tax_rate_id: item.tax_rate_id || null,
           supplier_id: selectedSupplier.id,
@@ -2003,13 +2008,13 @@ const Purchases = () => {
                     htmlFor='modal-quantity'
                   >
                     <span className='sales-modal__field-label'>
-                      {t('purchases.form.quantity', 'Cantidad')}
+                      {t('purchases.form.quantity', 'Cantidad')} ({modalSelectedProduct && modalSelectedProduct.base_unit ? getUnitLabel(modalSelectedProduct.base_unit) : 'Unidades'})
                     </span>
                     <input
                       id='modal-quantity'
                       type='number'
                       min='1'
-                      step='1'
+                      step={modalSelectedProduct && modalSelectedProduct.base_unit && ['basic', 'packing', 'grocery'].includes(getUnitLabel(modalSelectedProduct.base_unit)) ? '1' : '0.01'}
                       className='input'
                       value={modalQuantity}
                       onChange={e => setModalQuantity(e.target.value)}
