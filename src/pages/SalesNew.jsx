@@ -125,7 +125,7 @@ const toDateInputValue = date => {
 }
 
 const getProductDisplay = product => {
-  if (!product) return { name: '', id: '', price: 0, sku: '' }
+  if (!product) return { name: '', id: '', price: 0, sku: '', stock: 0 }
   return {
     name: product.name || product.product_name || '',
     id: product.id || product.product_id || '',
@@ -135,6 +135,7 @@ const getProductDisplay = product => {
       product.unit_prices?.[0]?.price_per_unit ||
       0,
     sku: product.sku || product.barcode || product.code || '',
+    stock: product.stock_quantity || 0,
   }
 }
 
@@ -987,6 +988,19 @@ const SalesNew = () => {
       return
     }
 
+    // 🔧 FIX: Validar que el producto tenga stock disponible
+    const currentStock = modalDisplay.stock || 0
+    if (currentStock <= 0) {
+      alert(`No se puede agregar "${modalDisplay.name}".\nEl producto no tiene stock disponible (Stock: ${currentStock}).`)
+      return
+    }
+
+    // 🔧 FIX: Validar que la cantidad no exceda el stock disponible
+    if (parsedModalQuantity > currentStock) {
+      alert(`No se puede agregar ${parsedModalQuantity} unidades de "${modalDisplay.name}".\nStock disponible: ${currentStock} unidades.`)
+      return
+    }
+
     // Validar razón de descuento si hay descuento
     if (modalDiscountValue > 0 && !modalDiscountReason.trim()) {
       alert('Debes ingresar una razón para el descuento')
@@ -1011,6 +1025,15 @@ const SalesNew = () => {
 
     setItems(prev => {
       if (editingItemId) {
+        // 🔧 FIX: Modo edición - validar que la nueva cantidad no exceda el stock
+        const currentStock = modalDisplay.stock || 0
+        if (parsedModalQuantity > currentStock) {
+          alert(
+            `No se puede actualizar a ${parsedModalQuantity} unidades de "${modalDisplay.name}".\n` +
+            `Stock disponible: ${currentStock} unidades.`
+          )
+          return prev
+        }
         // Modo edición: actualizar el item existente
         return prev.map(item => (item.id === editingItemId ? newItem : item))
       } else {
@@ -1020,11 +1043,29 @@ const SalesNew = () => {
         )
 
         if (existingItem) {
+          // 🔧 FIX: Validar que la suma de cantidades no exceda el stock
+          const totalQuantity = existingItem.quantity + parsedModalQuantity
+          const currentStock = modalDisplay.stock || 0
+
+          if (totalQuantity > currentStock) {
+            alert(
+              `No se puede sumar ${parsedModalQuantity} unidades de "${modalDisplay.name}".\n\n` +
+              `Cantidad en carrito: ${existingItem.quantity}\n` +
+              `Cantidad a agregar: ${parsedModalQuantity}\n` +
+              `Total: ${totalQuantity}\n` +
+              `Stock disponible: ${currentStock}\n\n` +
+              `La cantidad total excede el stock disponible.`
+            )
+            return prev
+          }
+
           // Producto normal duplicado: preguntar si quiere sumar cantidad
           const shouldMerge = window.confirm(
             `El producto "${modalDisplay.name}" ya está en el carrito.\n\n` +
               `Cantidad actual: ${existingItem.quantity}\n` +
-              `Nueva cantidad: ${parsedModalQuantity}\n\n` +
+              `Nueva cantidad: ${parsedModalQuantity}\n` +
+              `Total: ${totalQuantity}\n` +
+              `Stock disponible: ${currentStock}\n\n` +
               `¿Deseas sumar las cantidades?`
           )
 
@@ -2735,6 +2776,7 @@ const SalesNew = () => {
                             modalSearchResults.map((product, index) => {
                               const display = getProductDisplay(product)
                               const isHighlighted = index === highlightedIndex
+                              const hasStock = display.stock > 0
                               return (
                                 <div
                                   key={`${display.id}-${index}`}
@@ -2754,13 +2796,17 @@ const SalesNew = () => {
                                     setHighlightedIndex(index)
                                   }
                                   onMouseLeave={() => setHighlightedIndex(-1)}
+                                  style={{
+                                    opacity: hasStock ? 1 : 0.6
+                                  }}
                                 >
                                   <div className='sales-product-dropdown__item-info'>
                                     <div className='sales-product-dropdown__item-name'>
                                       {display.name}
+                                      {!hasStock && ' ⚠️'}
                                     </div>
                                     <div className='sales-product-dropdown__item-meta'>
-                                      ID: {display.id}
+                                      ID: {display.id} | Stock: {display.stock}
                                     </div>
                                   </div>
                                   <div className='sales-product-dropdown__item-price'>
@@ -2788,13 +2834,18 @@ const SalesNew = () => {
                       id='modal-quantity'
                       type='number'
                       min='1'
+                      max={modalDisplay.stock > 0 ? modalDisplay.stock : 1}
                       step='1'
                       className='input'
                       value={modalQuantity}
                       onChange={event => setModalQuantity(event.target.value)}
                     />
-                    <span className='sales-modal__field-note'>
-                      Máximo disponible: sin límite definido
+                    <span className='sales-modal__field-note' style={{
+                      color: modalDisplay.stock <= 0 ? '#dc2626' : modalDisplay.stock < 10 ? '#f59e0b' : 'inherit'
+                    }}>
+                      Stock disponible: {modalDisplay.stock || 0} unidades
+                      {modalDisplay.stock <= 0 && ' - ⚠️ Sin stock'}
+                      {modalDisplay.stock > 0 && modalDisplay.stock < 10 && ' - ⚠️ Stock bajo'}
                     </span>
                   </label>
 
