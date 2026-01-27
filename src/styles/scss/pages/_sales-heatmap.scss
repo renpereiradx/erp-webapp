@@ -1,0 +1,446 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.sales-heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+  padding: $spacing-24;
+  height: 100%;
+  overflow-y: auto;
+
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: $spacing-16;
+  }
+
+  &__title-group {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+
+    h1 {
+      @include typography('title-2');
+      font-weight: $font-weight-bold;
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+
+    p {
+      @include typography('body');
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+
+    span {
+      @include typography('caption');
+      font-weight: $font-weight-medium;
+      @include themify {
+        color: themed('text-tertiary');
+      }
+    }
+  }
+
+  &__kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-16;
+
+    @include respond-to(sm) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include respond-to(lg) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  &__main-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-24;
+
+    @include respond-to(xl) {
+      grid-template-columns: repeat(12, 1fr);
+    }
+  }
+
+  &__heatmap-section {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+
+    @include respond-to(xl) {
+      grid-column: span 9;
+    }
+  }
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+
+    @include respond-to(xl) {
+      grid-column: span 3;
+    }
+  }
+
+  &__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: $spacing-16;
+    padding: $spacing-16;
+    border-radius: $border-radius-large;
+    
+    @include themify {
+      background-color: themed('surface-card');
+      border: 1px solid themed('border-default');
+    }
+  }
+
+  &__date-nav {
+    display: flex;
+    align-items: center;
+    border-radius: $border-radius-medium;
+    padding: $spacing-4;
+
+    @include themify {
+      background-color: themed('surface-neutral');
+    }
+
+    button {
+      padding: $spacing-4;
+      border-radius: $border-radius-small;
+      
+      @include themify {
+        color: themed('text-secondary');
+      }
+      
+      &:hover {
+        @include themify {
+          background-color: themed('surface-card');
+          color: themed('action-primary');
+        }
+      }
+    }
+
+    span {
+      padding: 0 $spacing-16;
+      font-weight: $font-weight-bold;
+      font-size: $font-size-300;
+    }
+  }
+
+  &__filters {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+    flex: 1;
+    justify-content: flex-end;
+  }
+}
+
+// KPI Card Specifics
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-20;
+  border-radius: $border-radius-large;
+  transition: box-shadow 0.2s ease;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-default');
+  }
+
+  &:hover {
+    box-shadow: $shadow-fluent-hover;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $spacing-8;
+
+    p {
+      font-size: $font-size-300;
+      font-weight: $font-weight-medium;
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+  }
+
+  &__icon {
+    padding: $spacing-4;
+    border-radius: $border-radius-medium;
+    
+    &--primary { 
+      @include themify {
+        color: themed('action-primary'); 
+        background-color: rgba(themed('action-primary'), 0.1); 
+      }
+    }
+    &--orange { color: #f97316; background-color: rgba(#f97316, 0.1); }
+    &--purple { color: #a855f7; background-color: rgba(#a855f7, 0.1); }
+    &--blue { color: #3b82f6; background-color: rgba(#3b82f6, 0.1); }
+  }
+
+  &__value {
+    font-size: $font-size-600; // approx 24px/1.5rem
+    font-weight: $font-weight-bold;
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__trend {
+    display: flex;
+    align-items: center;
+    gap: $spacing-4;
+    margin-top: $spacing-4;
+    font-size: $font-size-300;
+    font-weight: $font-weight-medium;
+
+    &--up { 
+      @include themify { color: themed('state-success'); }
+    }
+    &--down { 
+      @include themify { color: themed('state-error'); }
+    }
+    &--neutral { 
+      @include themify { color: themed('text-tertiary'); }
+    }
+  }
+}
+
+// Heatmap Visualization
+.heatmap-grid {
+  border-radius: $border-radius-large;
+  padding: $spacing-24;
+  overflow-x: auto;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-default');
+  }
+
+  &__legend {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: $spacing-8;
+    margin-bottom: $spacing-16;
+    font-size: $font-size-200;
+    font-weight: $font-weight-medium;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__gradient-bar {
+    height: 8px;
+    width: 96px;
+    border-radius: 999px;
+    @include themify {
+      background: linear-gradient(to right, rgba(themed('action-primary'), 0.1), themed('action-primary'));
+    }
+  }
+
+  &__container {
+    display: grid;
+    grid-template-columns: auto repeat(14, minmax(0, 1fr));
+    gap: 4px;
+    min-width: 800px;
+  }
+
+  &__header-cell {
+    text-align: center;
+    font-size: $font-size-200;
+    font-weight: $font-weight-medium;
+    padding-bottom: $spacing-8;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__row-label {
+    display: flex;
+    align-items: center;
+    font-size: $font-size-200;
+    font-weight: $font-weight-bold;
+    padding-right: $spacing-8;
+    height: 40px;
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__cell {
+    height: 40px;
+    border-radius: $border-radius-medium;
+    transition: all 0.2s;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $font-size-200;
+    font-weight: $font-weight-bold;
+    color: white;
+
+    &:hover {
+      z-index: 10;
+      @include themify {
+        border: 2px solid themed('action-primary');
+      }
+    }
+  }
+}
+
+// Activity Feed
+.activity-feed {
+  border-radius: $border-radius-large;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-default');
+  }
+
+  &__header {
+    padding: $spacing-16;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    @include themify {
+      border-bottom: 1px solid themed('border-default');
+    }
+
+    h3 {
+      font-weight: $font-weight-bold;
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+
+    button {
+      font-size: $font-size-300;
+      font-weight: $font-weight-medium;
+      
+      @include themify {
+        color: themed('action-primary');
+      }
+      
+      &:hover { text-decoration: underline; }
+    }
+  }
+
+  &__list {
+    padding: $spacing-16;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-20;
+    overflow-y: auto;
+    max-height: 500px;
+  }
+
+  &__item {
+    display: flex;
+    gap: $spacing-12;
+  }
+
+  &__icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &--red { background-color: rgba(#dc2626, 0.1); color: #dc2626; }
+    &--emerald { background-color: rgba(#059669, 0.1); color: #059669; }
+    &--blue { background-color: rgba(#2563eb, 0.1); color: #2563eb; }
+    &--purple { background-color: rgba(#9333ea, 0.1); color: #9333ea; }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    
+    p {
+      font-size: $font-size-300;
+      font-weight: $font-weight-medium;
+      line-height: 1.4;
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+
+    span {
+      font-size: $font-size-200;
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+  }
+}
+
+// Map Widget
+.map-widget {
+  border-radius: $border-radius-large;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  @include themify {
+    background-color: themed('surface-card');
+    border: 1px solid themed('border-default');
+  }
+
+  &__header {
+    padding: $spacing-16;
+    
+    @include themify {
+      border-bottom: 1px solid themed('border-default');
+    }
+    
+    h3 {
+      font-weight: $font-weight-bold;
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+  }
+
+  &__content {
+    height: 192px; // 48 * 4
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    @include themify {
+      background-color: themed('surface-neutral');
+    }
+  }
+}

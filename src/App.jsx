@@ -14,6 +14,7 @@ import MainLayout from '@/layouts/MainLayout'
 import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
 import Dashboard from '@/pages/Dashboard'
 import DetailedKPIs from '@/pages/DetailedKPIs'
+import SalesHeatmap from '@/pages/SalesHeatmap'
 import Products from '@/pages/Products'
 import Clients from '@/pages/Clients'
 import Suppliers from '@/pages/Suppliers'
@@ -126,6 +127,7 @@ function AppContent() {
                       />
                       <Route path='/dashboard' element={<Dashboard />} />
                       <Route path='/dashboard/kpis' element={<DetailedKPIs />} />
+                      <Route path='/dashboard/sales-heatmap' element={<SalesHeatmap />} />
                       <Route path='/productos' element={<Products />} />
                       <Route path='/clientes' element={<Clients />} />
                       <Route path='/proveedores' element={<Suppliers />} />

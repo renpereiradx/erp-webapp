@@ -1,0 +1,283 @@
+@use '../abstracts' as *;
+
+.top-products {
+  @include flex-column;
+  gap: $spacing-24;
+  padding: $spacing-24;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+
+  // Header
+  &__header {
+    @include flex-column;
+    gap: $spacing-16;
+
+    @include respond-to(md) {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+
+    &-title-group {
+      @include flex-column;
+      gap: $spacing-4;
+    }
+
+    &-title {
+      @include typography('display');
+      font-weight: $font-weight-black;
+      letter-spacing: -0.033em;
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+
+    &-subtitle {
+      @include body;
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+  }
+
+  // Stats Grid
+  &__stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-16;
+
+    @include respond-to(md) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  // Table Section
+  &__table-container {
+    @include card;
+    overflow: hidden;
+    @include flex-column;
+  }
+
+  &__toolbar {
+    padding: $spacing-16;
+    border-bottom: 1px solid;
+    @include themify {
+      border-color: themed('border-subtle');
+      background-color: themed('surface-card');
+    }
+    @include flex-between;
+    flex-wrap: wrap;
+    gap: $spacing-16;
+
+    &-group {
+      display: flex;
+      gap: $spacing-8;
+    }
+  }
+
+  &__pagination {
+    padding: $spacing-12 $spacing-16;
+    border-top: 1px solid;
+    @include themify {
+      border-color: themed('border-subtle');
+      background-color: themed('bg-secondary');
+    }
+    @include flex-between;
+  }
+}
+
+// KPI Card Component
+.kpi-card {
+  @include card;
+  padding: $spacing-24;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-8;
+  @include transition(box-shadow);
+
+  &:hover {
+    box-shadow: $shadow-4;
+  }
+
+  &__header {
+    @include flex-between;
+    align-items: flex-start;
+  }
+
+  &__title {
+    @include body-small;
+    font-weight: $font-weight-medium;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__icon {
+    padding: $spacing-4;
+    border-radius: $border-radius-circular;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &--success {
+      background-color: $success-150;
+      color: $success-60;
+    }
+    &--primary {
+      background-color: $brand-150;
+      color: $brand-60;
+    }
+    &--warning {
+      background-color: $warning-150;
+      color: $warning-60;
+    }
+  }
+
+  &__content {
+    display: flex;
+    align-items: baseline;
+    gap: $spacing-8;
+  }
+
+  &__value {
+    @include typography('display'); // Or size-800
+    font-size: $font-size-900; 
+    font-weight: $font-weight-bold;
+    line-height: $line-height-100;
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__trend {
+    @include body-small;
+    font-weight: $font-weight-medium;
+    padding: $spacing-2 $spacing-8;
+    border-radius: $border-radius-medium;
+    
+    &--positive {
+      background-color: $success-150;
+      color: $success-10; // Darker green for text
+    }
+
+    &--warning {
+        color: $warning-60;
+    }
+  }
+
+  &__footer {
+    @include body-small;
+    margin-top: $spacing-8;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__progress {
+    margin-top: $spacing-8;
+    height: 6px;
+    border-radius: $border-radius-pill;
+    overflow: hidden;
+    @include themify {
+      background-color: themed('bg-tertiary');
+    }
+
+    &-bar {
+      height: 100%;
+      border-radius: $border-radius-pill;
+      @include themify {
+        background-color: themed('action-primary');
+      }
+    }
+  }
+}
+
+// Table Specifics
+.product-cell {
+  display: flex;
+  align-items: center;
+  gap: $spacing-12;
+
+  &__image {
+    width: 40px;
+    height: 40px;
+    border-radius: $border-radius-medium;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid;
+    flex-shrink: 0;
+    @include themify {
+      border-color: themed('border-subtle');
+      background-color: themed('bg-tertiary');
+    }
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__name {
+    @include body-small;
+    font-weight: $font-weight-semibold;
+    @include themify {
+      color: themed('text-primary');
+    }
+    
+    .group:hover & {
+        @include themify {
+            color: themed('action-primary');
+        }
+    }
+  }
+
+  &__sku {
+    @include caption;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: $spacing-8;
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: $border-radius-circular;
+
+    &--success { background-color: $success-60; }
+    &--warning { background-color: $warning-60; }
+    &--error { background-color: $error-60; }
+  }
+
+  &__text {
+    @include body-small;
+    font-weight: $font-weight-medium;
+    
+    &--success { @include themify { color: themed('text-primary'); } }
+    &--warning { color: $warning-60; }
+    &--error { color: $error-60; }
+  }
+}
+
+.sparkline {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 32px;
+    
+    svg {
+        overflow: visible;
+    }
+}
+
+.font-mono {
+    font-family: $font-family-monospace;
+}
