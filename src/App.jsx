@@ -15,6 +15,8 @@ import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
 import Dashboard from '@/pages/Dashboard'
 import DetailedKPIs from '@/pages/DetailedKPIs'
 import SalesHeatmap from '@/pages/SalesHeatmap'
+import ConsolidatedAlerts from '@/pages/ConsolidatedAlerts'
+import TopProductsOverview from '@/pages/TopProductsOverview'
 import Products from '@/pages/Products'
 import Clients from '@/pages/Clients'
 import Suppliers from '@/pages/Suppliers'
@@ -54,6 +56,12 @@ import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity'
 // import ProductDetailTest from '@/components/ProductDetailTest';
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
+import ReceivablesDashboard from '@/components/business-intelligence/receivables/ReceivablesDashboard'
+import ReceivablesMasterList from '@/pages/ReceivablesMasterList'
+import ReceivableDetail from '@/pages/ReceivableDetail'
+import OverdueAccounts from '@/pages/OverdueAccounts'
+import ClientCreditProfile from '@/pages/ClientCreditProfile'
+import AgingReport from '@/pages/AgingReport'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -128,6 +136,15 @@ function AppContent() {
                       <Route path='/dashboard' element={<Dashboard />} />
                       <Route path='/dashboard/kpis' element={<DetailedKPIs />} />
                       <Route path='/dashboard/sales-heatmap' element={<SalesHeatmap />} />
+                      <Route path='/dashboard/alerts' element={<ConsolidatedAlerts />} />
+                      <Route path='/dashboard/top-products' element={<TopProductsOverview />} />
+                      <Route path='/dashboard/receivables' element={<ReceivablesDashboard />} />
+                      <Route path='/receivables' element={<ReceivablesDashboard />} />
+                      <Route path='/receivables/list' element={<ReceivablesMasterList />} />
+                      <Route path='/receivables/detail/:id' element={<ReceivableDetail />} />
+                      <Route path='/receivables/overdue' element={<OverdueAccounts />} />
+                      <Route path='/receivables/client-profile/:clientId' element={<ClientCreditProfile />} />
+                      <Route path='/receivables/aging-report' element={<AgingReport />} />
                       <Route path='/productos' element={<Products />} />
                       <Route path='/clientes' element={<Clients />} />
                       <Route path='/proveedores' element={<Suppliers />} />

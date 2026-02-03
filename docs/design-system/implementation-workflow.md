@@ -4,18 +4,27 @@ Guía paso a paso para implementar diseños proporcionados por el equipo de dise
 
 ---
 
-## Archivos Recibidos
+## Flujo de Trabajo (Stitch vs. Archivos)
 
-Al iniciar la implementación de una nueva página, deberás recibir:
+El flujo de trabajo prioriza **Stitch** como fuente de verdad.
 
-- [ ] **Archivo PNG**: Captura visual del diseño de la página
-- [ ] **Archivo HTML**: Implementación de referencia con Tailwind CSS
+### 1. Flujo Principal (Stitch)
+1. **Acceder a Stitch**: Conectar mediante las herramientas disponibles.
+2. **Seleccionar Proyecto**: Ir al proyecto específico indicado.
+3. **Buscar Pantalla**: Localizar la pantalla requerida.
+4. **Obtener Referencias**: Descargar la pantalla en HTML/PNG o capturar un screenshot desde Stitch.
+5. **Implementar**: **Solo si el usuario lo solicita explícitamente.**
+
+### 2. Flujo Secundario (Archivos Locales)
+Este flujo solo se activa si el usuario **pide explícitamente** trabajar con archivos estáticos:
+- [ ] **Archivo PNG**: Captura visual del diseño.
+- [ ] **Archivo HTML**: Implementación de referencia.
 
 ---
 
 ## Fase 1: Preparación
 
-- [ ] Revisar el diseño PNG completo
+- [ ] Revisar el diseño completo (Stitch o PNG)
 - [ ] Identificar secciones principales de la página
 - [ ] Listar todos los componentes UI visibles en el diseño
 - [ ] Leer la [Guía de Componentes](./component-guide.md)
@@ -89,20 +98,11 @@ Para cada componente identificado:
 - [ ] Aplicar clases SCSS del sistema Fluent (NO Tailwind inline)
 - [ ] Verificar responsividad
 
-### Checklist de implementación:
-
-- [ ] Header/Navegación
-- [ ] Contenido principal
-- [ ] Formularios (si aplica)
-- [ ] Tablas/Listas (si aplica)
-- [ ] Modales (si aplica)
-- [ ] Footer (si aplica)
-
 ---
 
 ## Fase 5: Verificación Final
 
-- [ ] Comparar página implementada vs PNG de diseño
+- [ ] Comparar página implementada vs diseño original (Stitch/PNG)
 - [ ] Verificar consistencia de:
   - [ ] Colores
   - [ ] Tipografía

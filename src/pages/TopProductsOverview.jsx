@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import useDashboardStore from '@/store/useDashboardStore';
 import { 
   TrendingUp, 
   Award, 
@@ -9,8 +10,8 @@ import {
   Share2, 
   Download, 
   MoreVertical,
-  ChevronLeft,
-  ChevronRight
+  Package,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,134 +26,69 @@ import {
   TableCell,
 } from '@/components/ui/table';
 
-// Mock Data
-const PRODUCTS_DATA = [
-  {
-    id: 'SKU-10294',
-    name: 'Wireless Headphones X2',
-    category: 'Electronics',
-    price: 299.00,
-    unitsSold: 1240,
-    revenue: 370760,
-    status: 'In Stock',
-    trend: 'up',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&q=80'
-  },
-  {
-    id: 'SKU-45001',
-    name: 'Ergo Chair Pro',
-    category: 'Furniture',
-    price: 450.00,
-    unitsSold: 850,
-    revenue: 382500,
-    status: 'Low Stock',
-    trend: 'stable',
-    image: 'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=100&q=80'
-  },
-  {
-    id: 'SKU-88321',
-    name: 'Mechanical Keychron',
-    category: 'Accessories',
-    price: 149.00,
-    unitsSold: 2100,
-    revenue: 312900,
-    status: 'In Stock',
-    trend: 'up',
-    image: 'https://images.unsplash.com/photo-1587829741301-dc798b91add1?w=100&q=80'
-  },
-  {
-    id: 'SKU-77221',
-    name: 'Smart Hub Mini',
-    category: 'Electronics',
-    price: 49.00,
-    unitsSold: 5400,
-    revenue: 264600,
-    status: 'Out of Stock',
-    trend: 'down',
-    image: 'https://images.unsplash.com/photo-1558089687-f282ffcbc0d5?w=100&q=80'
-  },
-  {
-    id: 'SKU-30022',
-    name: 'UltraView 4K Monitor',
-    category: 'Electronics',
-    price: 599.00,
-    unitsSold: 320,
-    revenue: 191680,
-    status: 'In Stock',
-    trend: 'up',
-    image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=100&q=80'
-  }
-];
-
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0, // Design shows no cents for revenue in table
-    maximumFractionDigits: 0,
-  }).format(value);
-};
-
-const formatPrice = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-};
-
-const formatNumber = (value) => {
-    return new Intl.NumberFormat('en-US').format(value);
-};
-
-const getBadgeVariant = (category) => {
-  switch (category) {
-    case 'Electronics': return 'subtle-info';
-    case 'Furniture': return 'subtle-warning';
-    case 'Accessories': return 'secondary';
-    default: return 'subtle-info';
-  }
-};
-
-// Simple Sparkline SVG Component
-const Sparkline = ({ type }) => {
-  let path = "";
-  let color = "#137fec"; // Primary
-
-  if (type === 'up') {
-    path = "M0 15 L10 12 L20 18 L30 8 L40 10 L50 5 L60 2";
-    color = "#137fec";
-  } else if (type === 'down') {
-    path = "M0 5 L10 8 L20 6 L30 10 L40 12 L50 15 L60 18";
-    color = "#ef4444"; // Error
-  } else {
-    path = "M0 10 L10 10 L20 10 L30 10 L40 10 L50 10 L60 10";
-    color = "#6b7280"; // Gray
-    return (
-        <svg fill="none" height="20" stroke={color} strokeWidth="2" viewBox="0 0 60 20" width="60">
-             <path d={path} strokeDasharray="2 2"></path>
-        </svg>
-    )
-  }
-
-  return (
-    <svg fill="none" height="20" stroke={color} strokeWidth="2" viewBox="0 0 60 20" width="60">
-      <path d={path} strokeLinecap="round" strokeLinejoin="round"></path>
-    </svg>
-  );
-};
-
 const TopProductsOverview = () => {
+    const { 
+        topProducts, 
+        topProductsMetrics, 
+        alerts, 
+        fetchTopProducts, 
+        fetchDashboardData, 
+        loading 
+    } = useDashboardStore();
+
+    useEffect(() => {
+        fetchTopProducts();
+        if (!alerts || alerts.length === 0) fetchDashboardData();
+    }, [fetchTopProducts, fetchDashboardData, alerts]);
+
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('es-PY', {
+            style: 'currency',
+            currency: 'PYG',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(value || 0);
+    };
+
+    const formatNumber = (value) => {
+        return new Intl.NumberFormat('es-PY').format(value || 0);
+    };
+
+    // Calculate metrics
+    const topPerformer = topProducts && topProducts.length > 0 ? topProducts[0] : null;
+    
+    const inventoryAlertsCount = useMemo(() => {
+        if (!alerts) return 0;
+        return alerts.filter(a => a.category === 'inventory').length;
+    }, [alerts]);
+
+    // Trend helper
+    const getTrendIcon = (trend) => {
+        // API returns "up", "down", "stable"
+        // UI expects styling logic.
+        // For simplicity, store doesn't seem to pass mapped icon but string.
+        return trend; // Not strictly used for icon rendering in table yet, just prop pass
+    };
+
+    // Placeholder image logic since API doesn't return images
+    const ProductImagePlaceholder = () => (
+        <div className="w-10 h-10 rounded bg-slate-100 flex items-center justify-center text-slate-400">
+            <Package size={20} />
+        </div>
+    );
+
   return (
     <div className="top-products">
       {/* Page Header */}
       <header className="top-products__header">
         <div className="top-products__header-title-group">
-          <h1 className="top-products__header-title">Top Products Performance</h1>
-          <p className="top-products__header-subtitle">Last 30 Days | Overview of top performing SKUs</p>
+          <h1 className="top-products__header-title">Rendimiento de Productos Top</h1>
+          <p className="top-products__header-subtitle">Resumen de SKUs con mejor desempeño (Últimos 7 días)</p>
         </div>
         <div>
-          <Button variant="outline" className="font-bold">
-            Customize View
+          <Button variant="outline" className="font-bold gap-2" onClick={() => fetchTopProducts()}>
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Actualizar
           </Button>
         </div>
       </header>
@@ -162,47 +98,52 @@ const TopProductsOverview = () => {
         {/* Total Revenue */}
         <div className="kpi-card">
           <div className="kpi-card__header">
-            <span className="kpi-card__title">Total Revenue</span>
+            <span className="kpi-card__title">Ingresos Totales (Top 10)</span>
             <div className="kpi-card__icon kpi-card__icon--success">
               <TrendingUp size={20} />
             </div>
           </div>
           <div className="kpi-card__content">
-            <span className="kpi-card__value">$1.2M</span>
-            <span className="kpi-card__trend kpi-card__trend--positive">+12% vs prev</span>
+            <span className="kpi-card__value">
+                {formatCurrency(topProductsMetrics?.total_revenue || 0)}
+            </span>
           </div>
-          <div className="kpi-card__progress">
-            <div className="kpi-card__progress-bar" style={{ width: '75%' }}></div>
+          <div className="kpi-card__footer text-sm text-muted-foreground mt-2">
+               Generado por los productos listados
           </div>
         </div>
 
         {/* Top Performer */}
         <div className="kpi-card">
           <div className="kpi-card__header">
-            <span className="kpi-card__title">Top Performer</span>
+            <span className="kpi-card__title">Producto Estrella</span>
             <div className="kpi-card__icon kpi-card__icon--primary">
               <Award size={20} />
             </div>
           </div>
           <div className="flex flex-col gap-1 mt-2">
-             <span className="kpi-card__value text-3xl truncate">Headphones X2</span>
-             <span className="kpi-card__footer">Electronics • 1,240 Units Sold</span>
+             <span className="kpi-card__value text-xl truncate font-semibold" title={topPerformer?.name || '-'}>
+                 {topPerformer ? topPerformer.name : '-'}
+             </span>
+             <span className="kpi-card__footer">
+                 {topPerformer ? `${formatNumber(topPerformer.quantity_sold)} Unidades Vendidas` : 'Sin datos'}
+             </span>
           </div>
         </div>
 
         {/* Inventory Alerts */}
         <div className="kpi-card">
           <div className="kpi-card__header">
-            <span className="kpi-card__title">Inventory Alerts</span>
+            <span className="kpi-card__title">Alertas de Inventario</span>
             <div className="kpi-card__icon kpi-card__icon--warning">
               <AlertTriangle size={20} />
             </div>
           </div>
           <div className="kpi-card__content">
-            <span className="kpi-card__value">3 Products</span>
-            <span className="kpi-card__trend kpi-card__trend--warning">Low Stock</span>
+            <span className="kpi-card__value">{inventoryAlertsCount} Alertas</span>
+            <span className="kpi-card__trend kpi-card__trend--warning">Activas</span>
           </div>
-          <span className="kpi-card__footer">Requires immediate reordering</span>
+          <span className="kpi-card__footer">Verifica el módulo de inventario</span>
         </div>
       </div>
 
@@ -213,15 +154,15 @@ const TopProductsOverview = () => {
           <div className="top-products__toolbar-group">
             <Button variant="ghost" className="gap-2">
                 <Filter size={20} />
-                Filter
+                Filtrar
             </Button>
             <Button variant="ghost" className="gap-2">
                 <Columns size={20} />
-                Columns
+                Columnas
             </Button>
             <Button variant="ghost" className="gap-2">
                 <ArrowUpDown size={20} />
-                Sort
+                Ordenar
             </Button>
           </div>
           <div className="top-products__toolbar-group">
@@ -230,7 +171,7 @@ const TopProductsOverview = () => {
             </Button>
             <Button variant="primary" className="gap-2 font-bold">
                 <Download size={18} />
-                Export to Excel
+                Exportar a Excel
             </Button>
           </div>
         </div>
@@ -242,60 +183,54 @@ const TopProductsOverview = () => {
               <TableHead className="w-12">
                 <Checkbox />
               </TableHead>
-              <TableHead className="uppercase text-xs font-semibold tracking-wider">Product Name</TableHead>
-              <TableHead className="uppercase text-xs font-semibold tracking-wider">Category</TableHead>
-              <TableHead className="uppercase text-xs font-semibold tracking-wider text-right">Price</TableHead>
-              <TableHead className="uppercase text-xs font-semibold tracking-wider text-right">Units Sold</TableHead>
-              <TableHead className="uppercase text-xs font-semibold tracking-wider text-right">Revenue</TableHead>
-              <TableHead className="uppercase text-xs font-semibold tracking-wider">Status</TableHead>
-              <TableHead className="uppercase text-xs font-semibold tracking-wider text-center">Trend (7d)</TableHead>
+              <TableHead className="uppercase text-xs font-semibold tracking-wider">Producto</TableHead>
+              <TableHead className="uppercase text-xs font-semibold tracking-wider">Categoría</TableHead>
+              <TableHead className="uppercase text-xs font-semibold tracking-wider text-right">Und. Vendidas</TableHead>
+              <TableHead className="uppercase text-xs font-semibold tracking-wider text-right">Ingresos</TableHead>
+              <TableHead className="uppercase text-xs font-semibold tracking-wider text-right">Margen %</TableHead>
+              <TableHead className="uppercase text-xs font-semibold tracking-wider text-center">Tendencia</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {PRODUCTS_DATA.map((product) => (
+            {topProducts && topProducts.map((product) => (
               <TableRow key={product.id} className="group cursor-pointer">
                 <TableCell>
                   <Checkbox />
                 </TableCell>
                 <TableCell>
-                  <div className="product-cell">
-                    <div 
-                        className="product-cell__image" 
-                        style={{ backgroundImage: `url(${product.image})` }}
-                    ></div>
-                    <div className="product-cell__info">
-                      <span className="product-cell__name">{product.name}</span>
-                      <span className="product-cell__sku">{product.id}</span>
+                  <div className="product-cell flex items-center gap-3">
+                    <ProductImagePlaceholder />
+                    <div className="product-cell__info flex flex-col">
+                      <span className="product-cell__name font-medium text-sm">{product.name}</span>
+                      <span className="product-cell__sku text-xs text-muted-foreground">{product.id}</span>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={getBadgeVariant(product.category)} className="font-medium">
-                    {product.category}
+                  <Badge variant="secondary" className="font-medium">
+                    {product.category || 'General'}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right font-mono font-medium">
-                    {formatPrice(product.price)}
-                </TableCell>
-                <TableCell className="text-right font-mono font-medium">
-                    {formatNumber(product.unitsSold)}
+                    {formatNumber(product.quantity_sold)}
                 </TableCell>
                 <TableCell className="text-right font-mono font-bold">
                     {formatCurrency(product.revenue)}
                 </TableCell>
-                <TableCell>
-                  <div className="status-indicator">
-                    <div className={`status-indicator__dot status-indicator__dot--${product.status === 'In Stock' ? 'success' : product.status === 'Low Stock' ? 'warning' : 'error'}`}></div>
-                    <span className={`status-indicator__text status-indicator__text--${product.status === 'In Stock' ? 'success' : product.status === 'Low Stock' ? 'warning' : 'error'}`}>
-                        {product.status}
-                    </span>
-                  </div>
+                <TableCell className="text-right font-mono">
+                    {product.margin_percentage ? `${product.margin_percentage}%` : '-'}
                 </TableCell>
                 <TableCell className="text-center">
-                   <div className="sparkline">
-                     <Sparkline type={product.trend} />
-                   </div>
+                    {/* Simplified Trend Indicator */}
+                    <div className={`inline-flex items-center text-xs font-medium px-2 py-1 rounded-full ${
+                        product.trend === 'up' ? 'text-green-700 bg-green-50' : 
+                        product.trend === 'down' ? 'text-red-700 bg-red-50' : 'text-gray-600 bg-gray-50'
+                    }`}>
+                        {product.trend === 'up' && <TrendingUp size={14} className="mr-1" />}
+                        {product.trend === 'down' && <TrendingUp size={14} className="mr-1 rotate-180" />}
+                        {product.trend_percentage ? `${product.trend_percentage}%` : product.trend}
+                    </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -304,20 +239,28 @@ const TopProductsOverview = () => {
                 </TableCell>
               </TableRow>
             ))}
+            
+            {!loading && (!topProducts || topProducts.length === 0) && (
+                <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        No se encontraron productos para el período seleccionado.
+                    </TableCell>
+                </TableRow>
+            )}
           </TableBody>
         </Table>
 
-        {/* Pagination */}
+        {/* Pagination - Mock for now as API limit/offset logic minimal */}
         <div className="top-products__pagination">
             <div className="text-sm text-secondary">
-                Showing 1 to 5 of 58 results
+                Mostrando {topProducts?.length || 0} resultados
             </div>
             <div className="flex gap-2">
                 <Button variant="outline" size="sm" disabled>
-                    Previous
+                    Anterior
                 </Button>
-                <Button variant="outline" size="sm">
-                    Next
+                <Button variant="outline" size="sm" disabled>
+                    Siguiente
                 </Button>
             </div>
         </div>

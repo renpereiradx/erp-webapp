@@ -1,99 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import useDashboardStore from '@/store/useDashboardStore';
 import { 
-  LayoutDashboard, 
   Search, 
-  Bell, 
   CheckCheck, 
   RefreshCw, 
   List, 
   AlertCircle, 
   AlertTriangle, 
   Info, 
-  TrendingDown, 
-  TrendingUp, 
-  X, 
-  ChevronDown, 
-  SlidersHorizontal, 
-  ArrowUpDown, 
   Server, 
   Clock, 
   ChevronUp, 
-  Eye, 
+  ChevronDown, 
   ArrowRight, 
   BellOff, 
   DollarSign, 
-  Users, 
   ShieldAlert,
-  Calendar,
-  User
+  Package,
+  ShoppingCart,
+  Activity,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Card } from '@/components/ui/card';
-
-// Mock Data
-const ALERTS_DATA = [
-  {
-    id: 'ALT-2024-892',
-    title: 'High Latency on DB-Cluster-04',
-    source: 'Infrastructure',
-    severity: 'critical', // critical, warning, info
-    timestamp: '12 mins ago',
-    assignee: 'https://github.com/shadcn.png', // Placeholder
-    description: 'Database query latency has exceeded the critical threshold of 500ms for the last 15 minutes. Automated diagnostics indicate a potential deadlock in the payment processing queue. Requires immediate investigation to prevent transaction failures.',
-    errorCode: 'ERR_TIMEOUT_504',
-    affectedUsers: '~1,240 sessions',
-    chartData: [20, 25, 22, 35, 45, 60, 85, 95, 90, 80],
-    icon: Server
-  },
-  {
-    id: 'ALT-2024-890',
-    title: 'Q3 Budget Threshold Approaching',
-    source: 'Finance',
-    severity: 'warning',
-    timestamp: '2h ago',
-    assignee: 'https://github.com/shadcn.png',
-    description: 'Departmental spending is at 92% of the allocated budget for Q3. Projected spend indicates an overage by end of month if not adjusted.',
-    errorCode: 'FIN_BUDGET_WARN',
-    affectedUsers: 'Finance Dept',
-    chartData: [10, 15, 20, 30, 40, 50, 60, 70, 85, 92],
-    icon: DollarSign
-  },
-  {
-    id: 'ALT-2024-885',
-    title: 'New Enterprise Accounts Onboarded',
-    source: 'Sales Ops',
-    severity: 'info',
-    timestamp: 'Yesterday',
-    assignee: null, // Unassigned
-    description: 'Successfully onboarded 3 new enterprise accounts. Initial setup complete, awaiting customer verification.',
-    errorCode: 'OPS_SUCCESS',
-    affectedUsers: 'Sales Team',
-    chartData: [5, 5, 10, 10, 15, 20, 20, 25, 30, 35],
-    icon: Users
-  },
-  {
-    id: 'ALT-2024-881',
-    title: 'Unauthorized Access Attempt Blocked',
-    source: 'Security',
-    severity: 'critical',
-    timestamp: 'Yesterday',
-    assignee: 'https://github.com/shadcn.png',
-    description: 'Multiple failed login attempts detected from IP range 192.168.x.x. Firewall rules automatically updated to block source.',
-    errorCode: 'SEC_AUTH_FAIL',
-    affectedUsers: 'System',
-    chartData: [1, 2, 1, 5, 20, 45, 10, 2, 1, 0],
-    icon: ShieldAlert
-  }
-];
 
 const ConsolidatedAlerts = () => {
-  const [expandedAlertId, setExpandedAlertId] = useState('ALT-2024-892'); // Default open first
+  const { alerts, fetchDashboardData, loading } = useDashboardStore();
+  const [expandedAlertId, setExpandedAlertId] = useState(null);
+  const [filterSeverity, setFilterSeverity] = useState('all');
+
+  useEffect(() => {
+    // Cargar datos si no hay (o forzar refresh si se desea explícito, pero asumimos caché de store)
+    // Para asegurar datos frescos al entrar a la página:
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const toggleAlert = (id) => {
     setExpandedAlertId(expandedAlertId === id ? null : id);
+  };
+
+  // Helper para iconos por categoría
+  const getCategoryIcon = (category) => {
+    if (!category) return Activity;
+    switch (category.toLowerCase()) {
+      case 'inventory': return Package;
+      case 'financial': return DollarSign;
+      case 'sales': return ShoppingCart;
+      case 'security': return ShieldAlert;
+      case 'infrastructure': return Server;
+      default: return Activity;
+    }
   };
 
   const getSeverityIconColor = (severity) => {
@@ -109,7 +66,24 @@ const ConsolidatedAlerts = () => {
     return `alert-item--${severity}`;
   };
 
-  const renderKPI = (title, icon, value, trend, trendValue, trendDirection, type = 'neutral') => (
+  // KPI Calculations
+  const metrics = useMemo(() => {
+    if (!alerts) return { total: 0, critical: 0, warning: 0, info: 0 };
+    return {
+      total: alerts.length,
+      critical: alerts.filter(a => a.severity === 'critical').length,
+      warning: alerts.filter(a => a.severity === 'warning').length,
+      info: alerts.filter(a => a.severity === 'info').length
+    };
+  }, [alerts]);
+
+  const filteredAlerts = useMemo(() => {
+      if (!alerts) return [];
+      if (filterSeverity === 'all') return alerts;
+      return alerts.filter(a => a.severity === filterSeverity);
+  }, [alerts, filterSeverity]);
+
+  const renderKPI = (title, icon, value, type = 'neutral') => (
     <div className={`consolidated-alerts__kpi-card consolidated-alerts__kpi-card--${type}`}>
       <div className="consolidated-alerts__kpi-card-header">
         <span className={`consolidated-alerts__kpi-card-header-title consolidated-alerts__kpi-card-header-title--${type}`}>
@@ -119,17 +93,6 @@ const ConsolidatedAlerts = () => {
       </div>
       <div className="flex items-baseline gap-2">
         <span className="consolidated-alerts__kpi-card-value">{value}</span>
-        {trend && (
-          <span className={`consolidated-alerts__kpi-card-trend consolidated-alerts__kpi-card-trend--${trendDirection}`}>
-            {trendDirection === 'positive' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-            {trendValue}
-          </span>
-        )}
-        {!trend && trendValue && (
-            <span className="consolidated-alerts__kpi-card-trend consolidated-alerts__kpi-card-trend--neutral">
-                {trendValue}
-            </span>
-        )}
       </div>
     </div>
   );
@@ -139,19 +102,19 @@ const ConsolidatedAlerts = () => {
       {/* Header */}
       <header className="consolidated-alerts__header">
         <div className="consolidated-alerts__header-content">
-          <h1 className="consolidated-alerts__header-title">Consolidated Alerts</h1>
+          <h1 className="consolidated-alerts__header-title">Alertas Consolidadas</h1>
           <p className="consolidated-alerts__header-subtitle">
-            Real-time monitoring of critical system events. Last updated: Just now
+            Monitoreo en tiempo real de eventos críticos del sistema.
           </p>
         </div>
         <div className="consolidated-alerts__header-actions">
           <Button variant="outline" className="gap-2">
             <CheckCheck size={18} />
-            Mark All Read
+            Marcar Todo Leído
           </Button>
-          <Button variant="primary" className="gap-2">
-            <RefreshCw size={18} />
-            Refresh Data
+          <Button variant="primary" className="gap-2" onClick={() => fetchDashboardData()}>
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+            Actualizar Datos
           </Button>
         </div>
       </header>
@@ -159,39 +122,27 @@ const ConsolidatedAlerts = () => {
       {/* KPI Grid */}
       <div className="consolidated-alerts__kpi-grid">
         {renderKPI(
-            'Total Active', 
+            'Total Activas', 
             <List size={20} className="text-secondary" />, 
-            '24', 
-            true, 
-            '12%', 
-            'positive', 
+            metrics.total, 
             'neutral'
         )}
         {renderKPI(
-            'Critical', 
+            'Críticas', 
             <AlertCircle size={20} className="text-error" fill="currentColor" fillOpacity={0.2} />, 
-            '3', 
-            false, 
-            'Needs attention', 
-            'neutral', 
+            metrics.critical, 
             'critical'
         )}
         {renderKPI(
-            'Warnings', 
+            'Advertencias', 
             <AlertTriangle size={20} className="text-warning" />, 
-            '8', 
-            true, 
-            '+2', 
-            'negative', 
+            metrics.warning, 
             'warning'
         )}
         {renderKPI(
-            'Information', 
+            'Información', 
             <Info size={20} className="text-info" />, 
-            '13', 
-            false, 
-            'Routine logs', 
-            'neutral', 
+            metrics.info, 
             'info'
         )}
       </div>
@@ -203,43 +154,46 @@ const ConsolidatedAlerts = () => {
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary">
               <Search size={18} />
             </div>
-            <Input className="pl-10" placeholder="Filter alerts..." />
+            <Input className="pl-10" placeholder="Filtrar alertas..." />
           </div>
           
           <div className="divider divider--vertical divider--compact hidden sm:block"></div>
 
-          <Badge variant="subtle-info" className="gap-2 px-3 py-1.5 cursor-pointer">
-            Status: Open
-            <X size={14} />
+          <Badge 
+            variant={filterSeverity === 'all' ? 'default' : 'outline'} 
+            className="gap-2 px-3 py-1.5 cursor-pointer"
+            onClick={() => setFilterSeverity('all')}
+          >
+            Todas
           </Badge>
-          <Button variant="outline" size="sm" className="gap-2 rounded-full font-normal">
-            Severity
-            <ChevronDown size={14} />
-          </Button>
-          <Button variant="outline" size="sm" className="gap-2 rounded-full font-normal">
-            Category
-            <ChevronDown size={14} />
-          </Button>
-        </div>
-
-        <div className="consolidated-alerts__toolbar-view-options">
-          <span className="text-sm text-secondary font-medium hidden sm:block">
-            Sort by: Severity (High to Low)
-          </span>
-          <Button variant="ghost" size="icon">
-            <ArrowUpDown size={20} className="text-secondary" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <SlidersHorizontal size={20} className="text-secondary" />
-          </Button>
+          <Badge 
+             variant={filterSeverity === 'critical' ? 'destructive' : 'outline'}
+             className="gap-2 px-3 py-1.5 cursor-pointer"
+             onClick={() => setFilterSeverity(filterSeverity === 'critical' ? 'all' : 'critical')}
+          >
+             Críticas
+          </Badge>
+           <Badge 
+             variant={filterSeverity === 'warning' ? 'warning' : 'outline'}
+             className="gap-2 px-3 py-1.5 cursor-pointer"
+             onClick={() => setFilterSeverity(filterSeverity === 'warning' ? 'all' : 'warning')}
+          >
+             Advertencias
+          </Badge>
         </div>
       </div>
 
       {/* Alert List */}
       <div className="consolidated-alerts__list">
-        {ALERTS_DATA.map((alert) => {
+        {!loading && filteredAlerts.length === 0 && (
+             <div className="p-8 text-center text-gray-500 bg-white rounded-lg border border-dashed">
+                 No hay alertas activas que coincidan con los filtros.
+             </div>
+        )}
+
+        {filteredAlerts.map((alert) => {
           const isExpanded = expandedAlertId === alert.id;
-          const AlertIcon = alert.icon;
+          const AlertIcon = getCategoryIcon(alert.category);
 
           return (
             <div 
@@ -254,7 +208,7 @@ const ConsolidatedAlerts = () => {
                   <div className="alert-item__header-info">
                     <h3 className="alert-item__header-title">{alert.title}</h3>
                     <span className="alert-item__header-meta">
-                      ID: #{alert.id} • {alert.source}
+                      ID: #{alert.id} • {alert.category}
                     </span>
                   </div>
                 </div>
@@ -264,24 +218,13 @@ const ConsolidatedAlerts = () => {
                     variant={alert.severity === 'critical' ? 'destructive' : alert.severity === 'warning' ? 'warning' : 'secondary'}
                     className="capitalize"
                   >
-                    {alert.severity}
+                    {alert.severity === 'critical' ? 'Crítica' : alert.severity === 'warning' ? 'Advertencia' : 'Info'}
                   </Badge>
                   
                   <div className="flex items-center gap-1 text-xs text-secondary">
                     <Clock size={16} />
-                    {alert.timestamp}
+                    {new Date(alert.created_at).toLocaleDateString()} {new Date(alert.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </div>
-
-                  {alert.assignee ? (
-                    <Avatar className="h-8 w-8 ml-2 border border-white shadow-sm hidden sm:block">
-                      <AvatarImage src={alert.assignee} />
-                      <AvatarFallback>U</AvatarFallback>
-                    </Avatar>
-                  ) : (
-                    <div className="alert-item__unassigned-avatar hidden sm:flex">
-                        <User size={16} />
-                    </div>
-                  )}
 
                   <Button variant="ghost" size="icon" className="ml-1">
                     {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -292,70 +235,49 @@ const ConsolidatedAlerts = () => {
               {isExpanded && (
                 <div className="alert-item__expanded">
                   <div className="alert-item__expanded-grid">
-                    <div className="alert-item__expanded-details">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">Issue Description</h4>
+                    <div className="alert-item__expanded-details col-span-2">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-primary">Detalle del Evento</h4>
                       <p className="alert-item__expanded-description">
-                        {alert.description}
+                        {alert.message}
                       </p>
                       
-                      <div className="flex gap-6 pt-2">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs text-secondary">Error Code</span>
-                          <code className="text-sm">
-                            {alert.errorCode}
-                          </code>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs text-secondary">Affected Users</span>
-                          <span className="text-sm font-medium">{alert.affectedUsers}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="alert-item__expanded-chart-container">
-                        <div className="flex justify-between items-center mb-4">
-                            <span className="text-xs font-semibold text-secondary">Latency (ms) - Last 1h</span>
-                            <span className="text-xs font-bold text-red-600">842ms Peak</span>
-                        </div>
-                        <div className="alert-item__expanded-chart">
-                            {alert.chartData.map((value, idx) => (
-                                <div 
-                                    key={idx} 
-                                    className={`alert-item__expanded-bar ${value > 80 ? 'alert-item__expanded-bar--critical' : value > 50 ? 'alert-item__expanded-bar--high' : ''}`}
-                                    style={{ height: `${value}%` }}
-                                ></div>
-                            ))}
-                        </div>
+                        {/* Dynamic Details Rendering based on API 'details' map */}
+                        {alert.details && Object.keys(alert.details).length > 0 && (
+                            <div className="mt-4 p-3 bg-gray-50 rounded text-sm">
+                                <h5 className="font-semibold text-xs text-gray-500 mb-2 uppercase">Datos Técnicos</h5>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {Object.entries(alert.details).map(([key, val]) => (
+                                        <div key={key} className="flex flex-col">
+                                            <span className="text-xs text-secondary capitalize">{key.replace(/_/g, ' ')}</span>
+                                            <span className="font-medium text-gray-800 break-all">
+                                                {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                   </div>
 
-                  <div className="alert-item__expanded-actions-bar">
-                    <Button variant="ghost" className="gap-2 text-secondary">
+                  <div className="alert-item__expanded-actions-bar mt-4">
+                    <Button variant="secondary" className="gap-2" onClick={(e) => { e.stopPropagation(); }}>
                         <BellOff size={18} />
-                        Mute Alert
+                        Silenciar
                     </Button>
-                    <Button variant="secondary" className="gap-2">
-                        <Eye size={18} />
-                        View Logs
-                    </Button>
-                    <Button variant="primary" className="gap-2">
-                        Investigate
-                        <ArrowRight size={18} />
-                    </Button>
+                    <div className="flex-1"></div>
+                    {alert.action_url && (
+                        <Button variant="primary" className="gap-2" onClick={(e) => { e.stopPropagation(); /* TODO: Navigate abs path? */ }}>
+                            Ver Detalle / Resolver
+                            <ArrowRight size={18} />
+                        </Button>
+                    )}
                   </div>
                 </div>
               )}
             </div>
           );
         })}
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-center pt-4">
-        <Button variant="ghost" className="gap-2 text-secondary hover:text-primary">
-            Show older alerts
-            <ChevronDown size={18} />
-        </Button>
       </div>
     </div>
   );

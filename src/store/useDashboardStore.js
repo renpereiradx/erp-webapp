@@ -33,7 +33,80 @@ const useDashboardStore = create()(
           set({ kpis: response.data, loading: false });
         } catch (error) {
           console.error('❌ Dashboard: Error loading KPIs:', error.message);
-          set({ error: error.message, loading: false });
+          
+          if (DEMO_CONFIG_DASHBOARD.enabled) {
+              console.log('🔄 Dashboard: Falling back to demo KPI data...');
+              // En demo usamos getDemoDashboardData y mapeamos
+              try {
+                  const demo = await getDemoDashboardData();
+                  const data = demo.data;
+                  
+                  // Mapeo de demoData (clientStats) a API structure (customer_kpis)
+                  const mappedKPIs = {
+                      sales_kpis: {
+                          average_ticket: 350000, // Hardcoded or derived
+                          sales_per_day: 15,
+                          conversion_rate: 65.5,
+                          repeat_customer_rate: 42.1
+                      },
+                      financial_kpis: {
+                          net_margin: 32.5,
+                          gross_margin: 46.03,
+                          operating_expense_ratio: 13.5
+                      },
+                      customer_kpis: {
+                          new_customers: data.clientStats.new_this_month,
+                          active_customers: data.clientStats.active,
+                          total_customers: data.clientStats.total_customers || data.clientStats.total,
+                          average_purchase_frequency: 2.3
+                      },
+                      inventory_kpis: {
+                          turnover_rate: 4.2
+                      }
+                  };
+                  
+                  set({ kpis: mappedKPIs, loading: false });
+              } catch (demoError) {
+                   set({ error: error.message, loading: false });
+              }
+          } else {
+             set({ error: error.message, loading: false });
+          }
+        }
+      },
+      
+      // Estado para nuevas páginas
+      salesHeatmap: null,
+      topProducts: [],
+      topProductsMetrics: null,
+
+      fetchSalesHeatmap: async (weeks = 4) => {
+        set({ loading: true, error: null });
+        try {
+            const response = await dashboardService.getSalesHeatmap(weeks);
+            set({ salesHeatmap: response.data, loading: false });
+        } catch(error) {
+            console.error('❌ Dashboard: Error loading heatmap:', error.message);
+            // Fallback mock (opcional, por ahora solo error)
+            set({ error: error.message, loading: false });
+        }
+      },
+
+      fetchTopProducts: async (period = 'week', limit = 10, sortBy = 'revenue') => {
+        set({ loading: true, error: null });
+        try {
+            const response = await dashboardService.getTopProducts(period, limit, sortBy);
+            set({ 
+                topProducts: response.data.products, 
+                topProductsMetrics: {
+                    total_revenue: response.data.total_revenue,
+                    total_profit: response.data.total_profit
+                },
+                loading: false 
+            });
+        } catch(error) {
+             console.error('❌ Dashboard: Error loading top products:', error.message);
+             set({ error: error.message, loading: false });
         }
       },
 

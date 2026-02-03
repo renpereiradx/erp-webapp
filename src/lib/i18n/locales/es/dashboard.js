@@ -6,7 +6,7 @@ export const dashboard = {
     executive: {
       title: 'Resumen Ejecutivo',
       subtitle: 'Vista en tiempo real de indicadores clave de rendimiento',
-      panelSubtitle: 'Consulte los Indicadores Clave de Desempeño (KPIs - Key Performance Indicators) para monitorear la salud y el rendimiento del negocio en tiempo real.'
+      panelSubtitle: 'Análisis detallado de rentabilidad, eficiencia de ventas y gestión de inventario para la toma de decisiones estratégicas.'
     },
     actions: {
       dateRange: 'Últimos 30 Días',
@@ -19,6 +19,18 @@ export const dashboard = {
       budget: 'Presupuesto',
       revenueVsBudget: 'Ingresos vs Presupuesto',
       inventoryByCategory: 'Inventario por Cat.',
+      salesEfficiency: 'Eficiencia de Ventas',
+      avgTicket: 'Ticket Promedio',
+      salesPerDay: 'Ventas por Día',
+      convRate: 'Tasa de Conversión',
+      customerFrequency: 'Frecuencia de Compra',
+      financialHealth: 'Salud Financiera',
+      grossMargin: 'Margen Bruto',
+      operatingRatio: 'Ratio Gasto Operativo',
+      inventoryPerformance: 'Rendimiento de Inventario',
+      turnoverRate: 'Tasa de Rotación',
+      daysOfInventory: 'Días de Inventario',
+      totalSKUs: 'Total SKUs Activos',
 
     regional: {
       title: 'Rendimiento Regional',
@@ -29,8 +41,11 @@ export const dashboard = {
       totalSales: 'Ventas Totales',
       revenue: 'Ingresos Totales',
       newCustomers: 'Nuevos Clientes',
+      totalCustomers: 'Total Clientes',
+      newThisMonth: 'nuevos este mes',
       purchases: 'Compras',
       netProfit: 'Utilidad Neta',
+      netMargin: 'Margen Neto',
       inventoryValue: 'Valor de Inventario',
       inventory: 'Inventario',
       cashRegister: 'Caja Registradora',

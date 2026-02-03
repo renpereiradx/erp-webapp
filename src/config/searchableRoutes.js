@@ -10,7 +10,10 @@ import {
   ClipboardList,
   History,
   PlusCircle,
-  Users
+  Users,
+  Flame,
+  AlertTriangle,
+  Award
 } from 'lucide-react'
 
 /**
@@ -23,6 +26,24 @@ export const distinctSearchableRoutes = [
     name: 'KPIs Detallados',
     href: '/dashboard/kpis',
     icon: TrendingUp,
+    category: 'Dashboard'
+  },
+  {
+    name: 'Mapa de Calor de Ventas',
+    href: '/dashboard/sales-heatmap',
+    icon: Flame,
+    category: 'Dashboard'
+  },
+  {
+    name: 'Alertas Consolidadas',
+    href: '/dashboard/alerts',
+    icon: AlertTriangle,
+    category: 'Dashboard'
+  },
+  {
+    name: 'Top Productos',
+    href: '/dashboard/top-products',
+    icon: Award,
     category: 'Dashboard'
   },
   

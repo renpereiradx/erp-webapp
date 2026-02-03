@@ -97,5 +97,41 @@ export const dashboardService = {
       telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getRecentActivity' });
       throw error;
     }
+  },
+
+  /**
+   * Get sales heatmap data
+   * @param {number} weeks - default 4
+   */
+  async getSalesHeatmap(weeks = 4) {
+    const startTime = Date.now();
+    try {
+      const endpoint = `${API_PREFIX}/sales-heatmap?weeks=${weeks}`;
+      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
+      telemetry.record('dashboard.service.heatmap', { duration: Date.now() - startTime, weeks });
+      return result;
+    } catch (error) {
+      telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getSalesHeatmap' });
+      throw error;
+    }
+  },
+
+  /**
+   * Get top products
+   * @param {string} period - 'today', 'week', 'month'
+   * @param {number} limit - default 10
+   * @param {string} sortBy - 'revenue', 'quantity', 'profit'
+   */
+  async getTopProducts(period = 'week', limit = 10, sortBy = 'revenue') {
+    const startTime = Date.now();
+    try {
+      const endpoint = `${API_PREFIX}/top-products?period=${period}&limit=${limit}&sort_by=${sortBy}`;
+      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
+      telemetry.record('dashboard.service.topProducts', { duration: Date.now() - startTime, period });
+      return result;
+    } catch (error) {
+      telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getTopProducts' });
+      throw error;
+    }
   }
 };

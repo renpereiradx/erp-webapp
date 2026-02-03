@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Receivables Enterprise Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-hover": "#0f6cbd",
+                        "background-light": "#f5f5f5",
+                        "background-dark": "#101922",
+                        "card-light": "#ffffff",
+                        "card-dark": "#1e293b",
+                        "text-primary-light": "#242424",
+                        "text-secondary-light": "#616161",
+                        "fluent-border": "#e0e0e0",
+                        "fluent-red": "#d13438",
+                        "fluent-red-bg": "#fdf3f4",
+                        "fluent-green": "#107c10",
+                        "fluent-green-bg": "#dff6dd",
+                        "fluent-warning": "#797775", 
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Segoe UI", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "full": "9999px",
+                        "md": "0.375rem"
+                    },
+                    boxShadow: {
+                        "fluent-card": "0 2px 4px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.04)",
+                        "fluent-card-hover": "0 4px 8px rgba(0,0,0,0.08), 0 8px 16px rgba(0,0,0,0.08)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background-color: #f5f5f5; /* Light gray background for depth */
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 20px;
+        }
+        .fluent-card {
+            transition: box-shadow 0.2s ease-in-out;
+        }
+        .fluent-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08), 0 8px 16px rgba(0,0,0,0.08);
+        }
+        /* Fluent specific scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-primary-light dark:text-white h-screen overflow-hidden flex flex-row">
+<!-- Sidebar Navigation -->
+<aside class="w-64 bg-white dark:bg-card-dark h-full flex flex-col border-r border-fluent-border shrink-0 z-20 shadow-sm">
+<div class="p-4 flex items-center gap-3 mb-2">
+<div class="bg-primary/10 text-primary p-2 rounded-lg">
+<span class="material-symbols-outlined !text-2xl">account_balance</span>
+</div>
+<div>
+<h1 class="text-base font-semibold text-text-primary-light dark:text-white leading-tight">Contoso ERP</h1>
+<p class="text-xs text-text-secondary-light">Finance Module</p>
+</div>
+</div>
+<nav class="flex-1 px-2 space-y-1 overflow-y-auto">
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-text-secondary-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-gray-500 group-hover:text-primary">grid_view</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-sm font-medium">Receivables</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-text-secondary-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-gray-500 group-hover:text-primary">payments</span>
+<span class="text-sm font-medium">Payables</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-text-secondary-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-gray-500 group-hover:text-primary">group</span>
+<span class="text-sm font-medium">Clients</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-text-secondary-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-gray-500 group-hover:text-primary">analytics</span>
+<span class="text-sm font-medium">Reports</span>
+</a>
+<div class="pt-4 pb-2">
+<p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">System</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-text-secondary-light hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group" href="#">
+<span class="material-symbols-outlined text-gray-500 group-hover:text-primary">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-fluent-border">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-cover bg-center" data-alt="User profile picture placeholder" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCilmV474V73cHGaLmA312NbVcg6MHUrwN7jzY4PzrVJxaVgLRQRz6qR6J2Gf6hRyPKXX7QzVxcRs7ERqClQWIZRNCo89e3XDROyYBsO4spXNx5Z1Z0Cys9_5ufuR8wIROz6SmhrkZZGeAAYuxTSd5zD0nDyVMrlZDLX9lG3abE_BRfFTm8nL3CD3opvY4-VvRGzNdaC8pQHNdvT8pO1i2XAv5c4IeMupktBEc0pvPlp0GMMWFWdDOJBVRE8STmYULPpVTOlMRmiw');"></div>
+<div class="flex flex-col">
+<p class="text-sm font-medium text-text-primary-light dark:text-white">Jane Doe</p>
+<p class="text-xs text-text-secondary-light">Finance Manager</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<!-- Header -->
+<header class="bg-white dark:bg-card-dark h-16 border-b border-fluent-border px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
+<div>
+<h2 class="text-xl font-bold text-text-primary-light dark:text-white tracking-tight">Receivables Overview</h2>
+<p class="text-xs text-text-secondary-light hidden sm:block">Real-time financial insights and debtor management</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-3 py-1.5 rounded-md border border-fluent-border bg-white hover:bg-gray-50 text-text-primary-light text-sm font-medium transition-colors shadow-sm">
+<span class="material-symbols-outlined !text-lg">calendar_today</span>
+<span>Oct 2023</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-1.5 rounded-md bg-primary hover:bg-primary-hover text-white text-sm font-semibold transition-colors shadow-sm">
+<span class="material-symbols-outlined !text-lg">download</span>
+<span>Export Report</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-y-auto p-6 scroll-smooth">
+<div class="max-w-[1400px] mx-auto space-y-6">
+<!-- KPI Cards Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+<!-- Total Receivables -->
+<div class="bg-white dark:bg-card-dark p-5 rounded-lg border border-fluent-border shadow-fluent-card fluent-card flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="absolute right-0 top-0 p-4 opacity-50">
+<span class="material-symbols-outlined text-primary !text-4xl opacity-10 group-hover:opacity-20 transition-opacity">account_balance_wallet</span>
+</div>
+<div>
+<p class="text-sm font-medium text-text-secondary-light">Total Receivables</p>
+<h3 class="text-2xl font-bold text-text-primary-light dark:text-white mt-1">$1,240,500</h3>
+</div>
+<div class="flex items-center gap-1 mt-2">
+<span class="bg-fluent-green-bg text-fluent-green text-xs font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+<span class="material-symbols-outlined !text-sm">trending_up</span> 4.2%
+                            </span>
+<span class="text-xs text-text-secondary-light ml-1">vs last month</span>
+</div>
+</div>
+<!-- Overdue Amount -->
+<div class="bg-white dark:bg-card-dark p-5 rounded-lg border border-l-4 border-l-fluent-red border-y-fluent-border border-r-fluent-border shadow-fluent-card fluent-card flex flex-col justify-between h-32 relative">
+<div class="absolute right-0 top-0 p-4 opacity-50">
+<span class="material-symbols-outlined text-fluent-red !text-4xl opacity-10">warning</span>
+</div>
+<div>
+<p class="text-sm font-medium text-text-secondary-light">Overdue Amount</p>
+<h3 class="text-2xl font-bold text-text-primary-light dark:text-white mt-1">$145,200</h3>
+</div>
+<div class="flex items-center gap-1 mt-2">
+<span class="bg-fluent-red-bg text-fluent-red text-xs font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+<span class="material-symbols-outlined !text-sm">priority_high</span> 12%
+                            </span>
+<span class="text-xs text-text-secondary-light ml-1">Critical Increase</span>
+</div>
+</div>
+<!-- Credits / Returns -->
+<div class="bg-white dark:bg-card-dark p-5 rounded-lg border border-fluent-border shadow-fluent-card fluent-card flex flex-col justify-between h-32 relative">
+<div class="absolute right-0 top-0 p-4 opacity-50">
+<span class="material-symbols-outlined text-gray-400 !text-4xl opacity-10">assignment_return</span>
+</div>
+<div>
+<p class="text-sm font-medium text-text-secondary-light">Credits / Returns</p>
+<h3 class="text-2xl font-bold text-text-primary-light dark:text-white mt-1">$12,400</h3>
+</div>
+<div class="flex items-center gap-1 mt-2">
+<span class="bg-gray-100 text-gray-600 text-xs font-semibold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+<span class="material-symbols-outlined !text-sm">remove</span> 0.5%
+                            </span>
+<span class="text-xs text-text-secondary-light ml-1">Stable</span>
+</div>
+</div>
+<!-- Last Sync Status -->
+<div class="bg-white dark:bg-card-dark p-5 rounded-lg border border-fluent-border shadow-fluent-card fluent-card flex flex-col justify-between h-32 relative">
+<div class="absolute right-0 top-0 p-4 opacity-50">
+<span class="material-symbols-outlined text-fluent-green !text-4xl opacity-10">sync</span>
+</div>
+<div>
+<p class="text-sm font-medium text-text-secondary-light">Last Sync Status</p>
+<h3 class="text-2xl font-bold text-text-primary-light dark:text-white mt-1">Success</h3>
+</div>
+<div class="flex items-center gap-1 mt-2">
+<span class="text-fluent-green flex items-center gap-1 text-sm font-medium">
+<span class="material-symbols-outlined !text-lg">check_circle</span>
+                                Just now
+                            </span>
+</div>
+</div>
+</div>
+<!-- Charts Row -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<!-- Aging Report Chart -->
+<div class="bg-white dark:bg-card-dark rounded-lg border border-fluent-border shadow-fluent-card p-6 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="text-lg font-bold text-text-primary-light dark:text-white">Aging Report</h3>
+<p class="text-xs text-text-secondary-light">Invoice buckets by days overdue</p>
+</div>
+<button class="text-primary hover:text-primary-hover text-sm font-medium">View Details</button>
+</div>
+<!-- Simple CSS Bar Chart for Visual -->
+<div class="flex-1 flex flex-col justify-end gap-2 min-h-[250px]">
+<div class="grid grid-cols-4 gap-4 h-full items-end pb-6 px-2 relative">
+<!-- Grid Lines -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none z-0">
+<div class="border-t border-dashed border-gray-200 w-full h-px"></div>
+<div class="border-t border-dashed border-gray-200 w-full h-px"></div>
+<div class="border-t border-dashed border-gray-200 w-full h-px"></div>
+<div class="border-t border-dashed border-gray-200 w-full h-px"></div>
+<div class="border-b border-gray-300 w-full h-px"></div>
+</div>
+<!-- Bars -->
+<div class="relative z-10 flex flex-col items-center gap-2 group cursor-pointer" style="height: 60%">
+<div class="w-full bg-[#107c10] bg-opacity-90 rounded-t-sm hover:bg-opacity-100 transition-all h-full relative group-hover:shadow-lg">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">$650k</div>
+</div>
+<span class="text-xs font-semibold text-text-secondary-light">0-30 Days</span>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-2 group cursor-pointer" style="height: 35%">
+<div class="w-full bg-[#ffb900] bg-opacity-90 rounded-t-sm hover:bg-opacity-100 transition-all h-full relative group-hover:shadow-lg">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">$280k</div>
+</div>
+<span class="text-xs font-semibold text-text-secondary-light">31-60 Days</span>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-2 group cursor-pointer" style="height: 20%">
+<div class="w-full bg-[#d83b01] bg-opacity-90 rounded-t-sm hover:bg-opacity-100 transition-all h-full relative group-hover:shadow-lg">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">$120k</div>
+</div>
+<span class="text-xs font-semibold text-text-secondary-light">61-90 Days</span>
+</div>
+<div class="relative z-10 flex flex-col items-center gap-2 group cursor-pointer" style="height: 15%">
+<div class="w-full bg-[#a80000] bg-opacity-90 rounded-t-sm hover:bg-opacity-100 transition-all h-full relative group-hover:shadow-lg">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">$85k</div>
+</div>
+<span class="text-xs font-semibold text-text-secondary-light">90+ Days</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Cash Flow Forecast Chart -->
+<div class="bg-white dark:bg-card-dark rounded-lg border border-fluent-border shadow-fluent-card p-6 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="text-lg font-bold text-text-primary-light dark:text-white">Cash Flow Forecast</h3>
+<p class="text-xs text-text-secondary-light">Projected inflow for next 4 weeks</p>
+</div>
+<div class="flex items-center gap-2 text-xs">
+<span class="w-3 h-3 rounded-full bg-primary"></span> Projected
+                                <span class="w-3 h-3 rounded-full bg-gray-300 ml-2"></span> Previous
+                            </div>
+</div>
+<div class="flex-1 min-h-[250px] relative pt-4">
+<!-- SVG Line Chart -->
+<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 500 200">
+<!-- Grid lines -->
+<line stroke="#f0f0f0" stroke-width="1" x1="0" x2="500" y1="0" y2="0"></line>
+<line stroke="#f0f0f0" stroke-width="1" x1="0" x2="500" y1="50" y2="50"></line>
+<line stroke="#f0f0f0" stroke-width="1" x1="0" x2="500" y1="100" y2="100"></line>
+<line stroke="#f0f0f0" stroke-width="1" x1="0" x2="500" y1="150" y2="150"></line>
+<line stroke="#e0e0e0" stroke-width="1" x1="0" x2="500" y1="200" y2="200"></line>
+<!-- Area Fill -->
+<defs>
+<lineargradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#137fec" stop-opacity="0.1"></stop>
+<stop offset="100%" stop-color="#137fec" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,150 C50,140 100,60 166,80 C233,100 280,120 333,50 C400,-10 450,40 500,20 V200 H0 Z" fill="url(#chartGradient)"></path>
+<!-- Line Path -->
+<path d="M0,150 C50,140 100,60 166,80 C233,100 280,120 333,50 C400,-10 450,40 500,20" fill="none" stroke="#137fec" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+<!-- Points -->
+<circle cx="0" cy="150" fill="white" r="4" stroke="#137fec" stroke-width="2"></circle>
+<circle cx="166" cy="80" fill="white" r="4" stroke="#137fec" stroke-width="2"></circle>
+<circle cx="333" cy="50" fill="white" r="4" stroke="#137fec" stroke-width="2"></circle>
+<circle cx="500" cy="20" fill="white" r="4" stroke="#137fec" stroke-width="2"></circle>
+</svg>
+<div class="flex justify-between text-xs text-text-secondary-light font-medium mt-2 px-1">
+<span>Week 1</span>
+<span>Week 2</span>
+<span>Week 3</span>
+<span>Week 4</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Top Debtors Table -->
+<div class="bg-white dark:bg-card-dark rounded-lg border border-fluent-border shadow-fluent-card flex flex-col">
+<div class="px-6 py-4 border-b border-fluent-border flex items-center justify-between">
+<h3 class="text-lg font-bold text-text-primary-light dark:text-white">Top Debtors</h3>
+<div class="flex items-center gap-2">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 !text-lg">search</span>
+<input class="pl-9 pr-3 py-1.5 text-sm border border-fluent-border rounded-md focus:border-primary focus:ring-1 focus:ring-primary outline-none text-text-primary-light" placeholder="Filter client..." type="text"/>
+</div>
+<button class="p-1.5 hover:bg-gray-100 rounded-md text-gray-500 transition-colors">
+<span class="material-symbols-outlined !text-xl">filter_list</span>
+</button>
+<button class="p-1.5 hover:bg-gray-100 rounded-md text-gray-500 transition-colors">
+<span class="material-symbols-outlined !text-xl">more_horiz</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-gray-50/50 border-b border-fluent-border text-xs uppercase text-text-secondary-light font-semibold tracking-wide">
+<th class="px-6 py-3 w-10">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+</th>
+<th class="px-6 py-3">Client Name</th>
+<th class="px-6 py-3">Invoice ID</th>
+<th class="px-6 py-3 text-right">Balance</th>
+<th class="px-6 py-3 text-center">Days Overdue</th>
+<th class="px-6 py-3">Status</th>
+<th class="px-6 py-3 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-fluent-border text-sm">
+<!-- Row 1 -->
+<tr class="hover:bg-gray-50 transition-colors group">
+<td class="px-6 py-4">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+</td>
+<td class="px-6 py-4 font-medium text-primary cursor-pointer hover:underline">Northwind Traders</td>
+<td class="px-6 py-4 text-text-secondary-light">#INV-2023-001</td>
+<td class="px-6 py-4 text-right font-medium text-text-primary-light">$45,200.00</td>
+<td class="px-6 py-4 text-center text-fluent-red font-semibold">92</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-fluent-red-bg text-fluent-red border border-red-100">
+<span class="w-1.5 h-1.5 rounded-full bg-fluent-red"></span>
+                                            At Risk
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:bg-primary/10 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Remind</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-gray-50 transition-colors group">
+<td class="px-6 py-4">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+</td>
+<td class="px-6 py-4 font-medium text-primary cursor-pointer hover:underline">Fabrikam, Inc.</td>
+<td class="px-6 py-4 text-text-secondary-light">#INV-2023-089</td>
+<td class="px-6 py-4 text-right font-medium text-text-primary-light">$21,050.50</td>
+<td class="px-6 py-4 text-center text-orange-600 font-medium">65</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-100">
+<span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                                            Warning
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:bg-primary/10 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Remind</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-gray-50 transition-colors group">
+<td class="px-6 py-4">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+</td>
+<td class="px-6 py-4 font-medium text-primary cursor-pointer hover:underline">Litware Systems</td>
+<td class="px-6 py-4 text-text-secondary-light">#INV-2023-102</td>
+<td class="px-6 py-4 text-right font-medium text-text-primary-light">$12,400.00</td>
+<td class="px-6 py-4 text-center text-yellow-600 font-medium">45</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-100">
+<span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+                                            Late
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-primary hover:bg-primary/10 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Remind</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-gray-50 transition-colors group">
+<td class="px-6 py-4">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+</td>
+<td class="px-6 py-4 font-medium text-primary cursor-pointer hover:underline">Contoso Pharmaceuticals</td>
+<td class="px-6 py-4 text-text-secondary-light">#INV-2023-145</td>
+<td class="px-6 py-4 text-right font-medium text-text-primary-light">$8,900.00</td>
+<td class="px-6 py-4 text-center text-text-secondary-light">15</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-fluent-green-bg text-fluent-green border border-green-100">
+<span class="w-1.5 h-1.5 rounded-full bg-fluent-green"></span>
+                                            Normal
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-gray-400 hover:text-primary hover:bg-primary/10 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Details</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-gray-50 transition-colors group">
+<td class="px-6 py-4">
+<input class="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+</td>
+<td class="px-6 py-4 font-medium text-primary cursor-pointer hover:underline">Adventure Works</td>
+<td class="px-6 py-4 text-text-secondary-light">#INV-2023-156</td>
+<td class="px-6 py-4 text-right font-medium text-text-primary-light">$3,250.00</td>
+<td class="px-6 py-4 text-center text-text-secondary-light">5</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-fluent-green-bg text-fluent-green border border-green-100">
+<span class="w-1.5 h-1.5 rounded-full bg-fluent-green"></span>
+                                            Normal
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-gray-400 hover:text-primary hover:bg-primary/10 px-3 py-1.5 rounded text-xs font-semibold transition-colors">Details</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-6 py-4 border-t border-fluent-border flex items-center justify-between text-xs text-text-secondary-light bg-gray-50/30">
+<span>Showing 5 of 24 records</span>
+<div class="flex gap-1">
+<button class="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-50" disabled="">Prev</button>
+<button class="px-2 py-1 rounded bg-white border border-fluent-border font-medium text-text-primary-light">1</button>
+<button class="px-2 py-1 rounded hover:bg-gray-200">2</button>
+<button class="px-2 py-1 rounded hover:bg-gray-200">3</button>
+<span class="px-2 py-1">...</span>
+<button class="px-2 py-1 rounded hover:bg-gray-200">Next</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -483,6 +483,7 @@ export const DEMO_CLIENT_STATISTICS = {
 export const DEMO_DASHBOARD_DATA = {
   clientStats: {
     total: 1247,
+    total_customers: 1247,
     active: 1108,
     inactive: 139,
     new_this_month: 23,

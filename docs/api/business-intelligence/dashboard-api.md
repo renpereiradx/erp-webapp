@@ -2,6 +2,8 @@
 
 API para obtener métricas ejecutivas y KPIs del negocio en tiempo real.
 
+> **Nota (2026-01-31):** Se agregó el campo `total_customers` a los Customer KPIs para proporcionar contexto del total de clientes en el sistema, independientemente del período analizado.
+>
 > **Nota (2026-01-16):** Esta documentación ha sido actualizada para reflejar con precisión los esquemas de base de datos, nombres de columnas y parámetros reales de la API. Se han corregido inconsistencias entre la documentación y la implementación actual del código.
 
 ## Endpoints
@@ -112,6 +114,7 @@ Obtiene indicadores clave de rendimiento.
     "customer_kpis": {
       "new_customers": 12,
       "active_customers": 85,
+      "total_customers": 250,
       "average_purchase_frequency": 2.3
     },
     "budget_kpis": {
@@ -646,4 +649,43 @@ Esto permite obtener el balance real de las cajas abiertas sin necesidad de una 
 ---
 
 **Estado:** En producción
-**Última actualización:** 2026-01-16
+**Última actualización:** 2026-01-31
+
+---
+
+## Notas de Versión
+
+### v1.1 (2026-01-31)
+
+#### Nuevo Campo: `total_customers`
+
+Se agregó el campo `total_customers` al objeto `customer_kpis` en el endpoint `GET /dashboard/kpis`.
+
+**Motivación:** Los KPIs de clientes anteriores (`new_customers`, `active_customers`) solo mostraban datos del período analizado, lo que resultaba confuso cuando no había actividad reciente. El nuevo campo proporciona contexto del total de clientes en el sistema.
+
+**Ejemplo de uso:**
+```json
+{
+  "customer_kpis": {
+    "new_customers": 0,        // Clientes nuevos este mes
+    "active_customers": 0,     // Clientes con compras este mes
+    "total_customers": 5,      // ← NUEVO: Total de clientes en el sistema
+    "average_purchase_frequency": 0
+  }
+}
+```
+
+**Cálculo:**
+```sql
+SELECT COUNT(*) 
+FROM clients.clients 
+WHERE status = true
+```
+
+**Archivos modificados:**
+- `models/dashboard.go` - Agregado campo `TotalCustomers`
+- `repository/dashboard.go` - Actualizada query `GetCustomerKPIs`
+
+### v1.0 (2026-01-16)
+
+**Release inicial** con correcciones de esquemas de base de datos y nombres de columnas.
