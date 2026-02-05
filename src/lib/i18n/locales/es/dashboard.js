@@ -12,7 +12,11 @@ export const dashboard = {
       dateRange: 'Últimos 30 Días',
       export: 'Exportar Reporte',
       viewReport: 'Ver Reporte',
-      viewDetails: 'Ver Panel de KPIs Detallado'
+      viewDetails: 'Ver Panel de KPIs Detallado',
+      newSale: 'Nueva Venta',
+      newPurchase: 'Nueva Compra',
+      cashEntry: 'Movimiento Caja',
+      priceAdjust: 'Ajuste Precios'
     },
       revenue: 'Ingresos',
       expenses: 'Gastos',

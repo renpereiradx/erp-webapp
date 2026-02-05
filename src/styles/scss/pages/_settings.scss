@@ -7,13 +7,67 @@
 .settings-page {
   display: flex;
   flex-direction: column;
-  gap: $spacing-24;
+  gap: $spacing-32;
   height: 100%;
-  padding: $spacing-24;
+  padding: $spacing-32;
+  max-width: 1200px;
+  margin: 0 auto;
 
   @media (max-width: 640px) {
     padding: $spacing-16;
-    gap: $spacing-16;
+    gap: $spacing-24;
+  }
+}
+
+.page-header {
+  margin-bottom: $spacing-8;
+  
+  &__title {
+    font-size: $font-size-800;
+    font-weight: $font-weight-black;
+    letter-spacing: -0.02em;
+    margin-bottom: $spacing-4;
+    
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__subtitle {
+    font-size: $font-size-400;
+    font-weight: $font-weight-medium;
+    
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: $spacing-32;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+
+  &__title {
+    font-size: $font-size-300;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-left: $spacing-4;
+    
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
   }
 }
 
@@ -22,14 +76,69 @@
 .settings-card {
   border-radius: $border-radius-large;
   overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 
   @include themify($themes) {
     background-color: themed('bg-primary');
     border: 1px solid themed('border-default');
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  &--interactive {
+    cursor: pointer;
+    
+    @include themify($themes) {
+      &:hover {
+        border-color: themed('action-primary');
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        
+        .settings-card__chevron {
+          transform: translateX(4px);
+          color: themed('action-primary');
+        }
+
+        .settings-card__icon-wrapper {
+          transform: scale(1.1);
+        }
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+
+  &__body {
+    padding: $spacing-20;
+    display: flex;
+    align-items: center;
+    gap: $spacing-16;
+  }
+
+  &__icon-wrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: $border-radius-medium;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+
+    &--profile {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+    }
+
+    &--users {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
   }
 
   &__header {
-    padding: $spacing-24;
+    padding: $spacing-20;
     border-bottom: 1px solid;
 
     @include themify($themes) {
@@ -38,21 +147,46 @@
   }
 
   &__title {
-    font-size: $font-size-600;
-    font-weight: $font-weight-semibold;
-    line-height: 1.3;
-    margin-bottom: $spacing-8;
+    font-size: $font-size-400;
+    font-weight: $font-weight-bold;
+    margin: 0;
 
     @include themify($themes) {
       color: themed('text-primary');
     }
   }
 
-  &__description {
-    font-size: $font-size-300;
-    font-weight: $font-weight-regular;
-    line-height: 1.5;
+  &__item-title {
+    font-size: $font-size-400;
+    font-weight: $font-weight-bold;
+    margin: 0 0 $spacing-2;
+
+    @include themify($themes) {
+      color: themed('text-primary');
+    }
+  }
+
+  &__item-description {
+    font-size: $font-size-200;
     margin: 0;
+
+    @include themify($themes) {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__chevron {
+    margin-left: auto;
+    transition: all 0.2s ease;
+    
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__description {
+    font-size: $font-size-200;
+    margin: $spacing-4 0 0;
 
     @include themify($themes) {
       color: themed('text-secondary');
@@ -60,18 +194,11 @@
   }
 
   &__content {
-    padding: $spacing-24;
+    padding: $spacing-20;
   }
 
   &__info {
-    font-size: $font-size-300;
-    font-weight: $font-weight-regular;
-    line-height: 1.5;
-    margin: 0;
-
-    @include themify($themes) {
-      color: themed('text-secondary');
-    }
+    flex: 1;
   }
 }
 
@@ -80,68 +207,66 @@
 .theme-toggle {
   display: flex;
   gap: $spacing-12;
-  max-width: 320px;
-
-  @media (max-width: 640px) {
-    flex-direction: column;
-  }
 
   &__option {
     flex: 1;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: $spacing-8;
-    padding: $spacing-16;
+    justify-content: center;
+    gap: $spacing-12;
+    padding: $spacing-12 $spacing-20;
     border-radius: $border-radius-medium;
     cursor: pointer;
     transition: all 0.2s ease;
     border: 2px solid;
+    font-weight: $font-weight-bold;
 
     @include themify($themes) {
-      background-color: themed('bg-primary');
+      background-color: themed('bg-secondary');
       border-color: themed('border-default');
       color: themed('text-secondary');
 
       &:hover {
         background-color: themed('bg-hover');
-        border-color: themed('action-primary');
+        border-color: themed('border-strong');
       }
 
       &--active {
-        background-color: themed('action-primary');
+        background-color: themed('bg-primary');
         border-color: themed('action-primary');
-        color: themed('text-on-primary');
+        color: themed('action-primary');
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 
         &:hover {
-          background-color: themed('action-primary');
           border-color: themed('action-primary');
         }
-
-        .theme-toggle__icon,
-        .theme-toggle__label {
-          color: themed('text-on-primary');
-        }
       }
     }
-
-    &:focus-visible {
-      outline: 2px solid;
-      outline-offset: 2px;
-
-      @include themify($themes) {
-        outline-color: themed('action-primary');
-      }
-    }
-  }
-
-  &__icon {
-    flex-shrink: 0;
   }
 
   &__label {
     font-size: $font-size-300;
-    font-weight: $font-weight-semibold;
-    text-align: center;
+  }
+}
+
+.settings-footer {
+  margin-top: auto;
+  padding-top: $spacing-32;
+  border-top: 1px solid;
+  
+  @include themify($themes) {
+    border-top-color: themed('border-default');
+  }
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    font-size: $font-size-100;
+    font-weight: $font-weight-medium;
+    
+    @include themify($themes) {
+      color: themed('text-tertiary');
+    }
   }
 }

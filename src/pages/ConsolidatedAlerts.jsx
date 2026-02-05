@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useDashboardStore from '@/store/useDashboardStore';
 import { 
   Search, 
@@ -26,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
 const ConsolidatedAlerts = () => {
+  const navigate = useNavigate();
   const { alerts, fetchDashboardData, loading } = useDashboardStore();
   const [expandedAlertId, setExpandedAlertId] = useState(null);
   const [filterSeverity, setFilterSeverity] = useState('all');
@@ -267,7 +269,7 @@ const ConsolidatedAlerts = () => {
                     </Button>
                     <div className="flex-1"></div>
                     {alert.action_url && (
-                        <Button variant="primary" className="gap-2" onClick={(e) => { e.stopPropagation(); /* TODO: Navigate abs path? */ }}>
+                        <Button variant="primary" className="gap-2" onClick={(e) => { e.stopPropagation(); navigate(alert.action_url); }}>
                             Ver Detalle / Resolver
                             <ArrowRight size={18} />
                         </Button>

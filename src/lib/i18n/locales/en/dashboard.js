@@ -7,7 +7,11 @@ export const dashboard = {
     subtitle: 'Real-time overview of key performance indicators',
     actions: {
       dateRange: 'Last 30 Days',
-      export: 'Export Report'
+      export: 'Export Report',
+      newSale: 'New Sale',
+      newPurchase: 'New Purchase',
+      cashEntry: 'Cash Movement',
+      priceAdjust: 'Price Adjustment'
     },
     kpi: {
       totalSales: 'Total Sales',

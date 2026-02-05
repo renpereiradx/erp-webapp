@@ -13,6 +13,7 @@
 import React, { useState, useEffect } from 'react'
 import { useI18n } from '@/lib/i18n'
 import { useCashRegisterStore } from '@/store/useCashRegisterStore'
+import useDashboardStore from '@/store/useDashboardStore'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ import ToastContainer from '@/components/ui/ToastContainer'
 
 const NewCashRegister = () => {
   const { t } = useI18n()
+  const { fetchDashboardData } = useDashboardStore()
 
   // Toast notifications
   const toast = useToast()
@@ -135,6 +137,9 @@ const NewCashRegister = () => {
         4000
       )
 
+      // Sincronizar dashboard proactivamente
+      fetchDashboardData();
+
       // Reset form on success
       setOpenForm({
         name: '',
@@ -203,6 +208,9 @@ const NewCashRegister = () => {
         ) + ` — ${closedRegisterName}`,
         4000
       )
+
+      // Sincronizar dashboard proactivamente
+      fetchDashboardData();
 
       // Reset form on success
       setCloseForm({

@@ -15,6 +15,7 @@ import {
 import useProductStore from '@/store/useProductStore'
 import useClientStore from '@/store/useClientStore'
 import useSaleStore from '@/store/useSaleStore'
+import useDashboardStore from '@/store/useDashboardStore'
 import { useToast } from '@/hooks/useToast'
 import saleService from '@/services/saleService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
@@ -172,6 +173,8 @@ const SalesNew = () => {
 
   // Tab state
   const [activeTab, setActiveTab] = useState('new-sale')
+
+  const { fetchDashboardData } = useDashboardStore()
 
   // Cart state (temporal - se envía a API al guardar)
   const [items, setItems] = useState([])
@@ -1125,11 +1128,14 @@ const SalesNew = () => {
         )
 
         if (response && response.success) {
-          alert(
+          toast.success(
             `Venta actualizada exitosamente. ${
               response.items_added || newItems.length
             } producto(s) agregado(s).`
           )
+          
+          // Sincronizar dashboard proactivamente
+          fetchDashboardData();
 
           // Limpiar carrito y estado de venta pendiente
           setItems([])
@@ -1169,7 +1175,10 @@ const SalesNew = () => {
         const response = await createSale(saleData)
 
         if (response && response.sale_id) {
-          alert(`Venta creada exitosamente: ${response.sale_id}`)
+          toast.success(`Venta creada exitosamente: ${response.sale_id}`)
+          
+          // Sincronizar dashboard proactivamente
+          fetchDashboardData();
 
           // Limpiar carrito
           setItems([])

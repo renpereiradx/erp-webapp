@@ -18,6 +18,7 @@ import {
 import DataState from '@/components/ui/DataState'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import { useI18n } from '@/lib/i18n'
+import useDashboardStore from '@/store/useDashboardStore'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 import supplierService from '@/services/supplierService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
@@ -32,6 +33,7 @@ import { getUnitLabel } from '@/constants/units'
 
 const Purchases = () => {
   const { t } = useI18n()
+  const { fetchDashboardData } = useDashboardStore()
 
   // Estados locales MVP (sin store por ahora)
   const [purchaseOrders, setPurchaseOrders] = useState([])
@@ -719,6 +721,9 @@ const Purchases = () => {
             'Orden de compra creada exitosamente'
         )
 
+        // Sincronizar dashboard proactivamente
+        fetchDashboardData();
+
         // Limpiar formulario
         setSelectedSupplier(null)
         setSupplierSearch('')
@@ -1036,6 +1041,10 @@ const Purchases = () => {
         )
 
         alert(`Orden #${orderToCancel.id} cancelada exitosamente`)
+        
+        // Sincronizar dashboard proactivamente
+        fetchDashboardData();
+
         setOrderToCancel(null)
         setCancelPreviewData(null)
       } else {

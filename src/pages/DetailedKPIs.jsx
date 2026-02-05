@@ -42,6 +42,7 @@ import {
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
 import SegmentedControl from '../components/ui/SegmentedControl';
+import DashboardNav from '../components/business-intelligence/DashboardNav';
 
 /**
  * Dashboard Page - Executive BI Dashboard
@@ -149,6 +150,9 @@ const DetailedKPIs = () => {
           </Button>
         </div>
       </div>
+
+      {/* 1.1 BI Navigation */}
+      <DashboardNav />
 
       {/* Filters */}
       <div className="dashboard__filters" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px', alignItems: 'center' }}>

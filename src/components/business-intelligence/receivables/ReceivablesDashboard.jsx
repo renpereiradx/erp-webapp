@@ -4,6 +4,7 @@ import ReceivablesAgingChart from './ReceivablesAgingChart';
 import ReceivablesForecastChart from './ReceivablesForecastChart';
 import ReceivablesTopDebtors from './ReceivablesTopDebtors';
 import { receivablesService } from '@/services/receivablesService';
+import DashboardNav from '@/components/business-intelligence/DashboardNav';
 
 // Default initial state
 const INITIAL_STATE = {
@@ -126,6 +127,8 @@ const ReceivablesDashboard = () => {
             <p>Generated at: Oct 26, 2023, 09:41 AM</p>
           </div>
         </div>
+
+        <DashboardNav />
 
         {/* KPI Cards Row */}
         <ReceivablesSummaryCards summaryData={data.summary} />

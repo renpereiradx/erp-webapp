@@ -22,6 +22,7 @@ import {
   Clock
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import DashboardNav from '../components/business-intelligence/DashboardNav';
 import {
   AreaChart,
   Area,
@@ -123,7 +124,7 @@ const Dashboard = () => {
            <p className="dashboard__subtitle">{t('dashboard.executive.subtitle', 'Visión general en tiempo real de los indicadores clave')}</p>
         </div>
          <div className="dashboard__actions">
-            <Button variant="secondary" size="md" className="btn--shadow">
+            <Button variant="secondary" size="md" className="btn--shadow" onClick={() => navigate('/configuracion')}>
                 <Calendar size={18} />
                 <span>{t('dashboard.actions.dateRange', 'Últimos 30 Días')}</span>
                 <ArrowRight size={16} style={{ transform: 'rotate(90deg)', opacity: 0.5 }} />
@@ -135,10 +136,13 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* 1.1 BI Navigation */}
+      <DashboardNav />
+
        {/* 2. Top KPI Cards */}
        <div className="dashboard__kpi-grid">
            {/* Total Sales */}
-           <div className="card kpi-card">
+           <div className="card kpi-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/dashboard/kpis')}>
                <div className="kpi-card__header">
                    <div className="kpi-card__icon kpi-card__icon--blue">
                        <DollarSign size={24} />
@@ -156,7 +160,7 @@ const Dashboard = () => {
            </div>
 
            {/* Purchases */}
-           <div className="card kpi-card">
+           <div className="card kpi-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/compras')}>
                <div className="kpi-card__header">
                    <div className="kpi-card__icon kpi-card__icon--orange">
                        <ShoppingCart size={24} />
@@ -173,7 +177,7 @@ const Dashboard = () => {
            </div>
 
            {/* Net Profit */}
-           <div className="card kpi-card">
+           <div className="card kpi-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/dashboard/kpis')}>
                <div className="kpi-card__header">
                    <div className="kpi-card__icon kpi-card__icon--green">
                        <TrendingUp size={24} />
@@ -190,7 +194,7 @@ const Dashboard = () => {
            </div>
 
            {/* Daily Transactions */}
-           <div className="card kpi-card">
+           <div className="card kpi-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/ventas')}>
                <div className="kpi-card__header">
                    <div className="kpi-card__icon kpi-card__icon--purple">
                        <Receipt size={24} />
@@ -281,7 +285,7 @@ const Dashboard = () => {
            {/* Operations Stack */}
            <div className="operations-stack" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                {/* Inventory Valuation */}
-               <div className="card operation-card">
+               <div className="card operation-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/ajuste-inventario-masivo')}>
                     <div className="operation-card__deco operation-card__deco--orange"></div>
                     <div className="operation-card__content">
                         <div className="operation-card__header">
@@ -301,7 +305,7 @@ const Dashboard = () => {
                </div>
 
                 {/* Cash Register */}
-               <div className="card operation-card">
+               <div className="card operation-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/caja-registradora')}>
                     <div className="operation-card__deco operation-card__deco--green"></div>
                      <div className="operation-card__content">
                         <div className="operation-card__header">
@@ -330,15 +334,15 @@ const Dashboard = () => {
            <div className="card finance-card">
                <div className="card__header" style={{ marginBottom: '1.5rem', justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
                    <h3 className="card__title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('dashboard.finance.title', 'Resumen Financiero')}</h3>
-                   <Button variant="ghost" size="sm" className="text-primary font-bold">{t('dashboard.actions.viewReport', 'Ver Reporte')}</Button>
+                   <Button variant="ghost" size="sm" className="text-primary font-bold" onClick={() => navigate('/receivables')}>{t('dashboard.actions.viewReport', 'Ver Reporte')}</Button>
                </div>
                
                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                     {/* Receivables */}
-                   <div className="finance-group">
+                   <div className="finance-group cursor-pointer group" onClick={() => navigate('/receivables')}>
                        <div className="finance-group__header">
                            <div className="flex flex-col">
-                               <p className="finance-group__label">{t('dashboard.finance.receivables', 'Cuentas por Cobrar')}</p>
+                               <p className="finance-group__label group-hover:text-primary transition-colors">{t('dashboard.finance.receivables', 'Cuentas por Cobrar')}</p>
                                <h4 className="finance-group__value">{formatCurrency(receivablesTotal)}</h4>
                            </div>
                            <span className="finance-group__trend finance-group__trend--positive">+8.5%</span>
@@ -348,10 +352,10 @@ const Dashboard = () => {
                        </div>
                    </div>
                     {/* Payables */}
-                   <div className="finance-group">
+                   <div className="finance-group cursor-pointer group" onClick={() => navigate('/pagos-compras')}>
                        <div className="finance-group__header">
                            <div className="flex flex-col">
-                               <p className="finance-group__label">{t('dashboard.finance.payables', 'Cuentas por Pagar')}</p>
+                               <p className="finance-group__label group-hover:text-primary transition-colors">{t('dashboard.finance.payables', 'Cuentas por Pagar')}</p>
                                <h4 className="finance-group__value">{formatCurrency(payablesTotal)}</h4>
                            </div>
                            <span className="finance-group__trend finance-group__trend--neutral">Normal</span>
@@ -371,7 +375,7 @@ const Dashboard = () => {
                            {salesTotal - purchasesTotal > 0 ? '+' : ''}{formatCurrency(salesTotal - purchasesTotal)}
                        </p>
                    </div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => navigate('/receivables/overdue')}>
                        <p className="finance-group__label" style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)'}}>
                            {t('dashboard.finance.overdueInvoices', 'Facturas Vencidas')}
                        </p>
@@ -394,7 +398,11 @@ const Dashboard = () => {
                <div className="activity-list">
                    {/* Map Alerts */}
                    {alerts.slice(0, 3).map((alert) => (
-                       <div key={alert.id} className="activity-item">
+                       <div 
+                         key={alert.id} 
+                         className="activity-item cursor-pointer hover:bg-red-50/30 transition-colors"
+                         onClick={() => alert.action_url ? navigate(alert.action_url) : navigate('/dashboard/alerts')}
+                       >
                            <div className={`activity-item__icon activity-item__icon--${alert.severity === 'critical' ? 'error' : alert.severity === 'warning' ? 'warning' : 'info'}`}>
                                {alert.severity === 'critical' ? <AlertTriangle size={18} /> : alert.severity === 'warning' ? <AlertTriangle size={18} /> : <Info size={18} />}
                            </div>
@@ -409,22 +417,35 @@ const Dashboard = () => {
                    ))}
 
                    {/* Map Recent Activities if few alerts */}
-                   {alerts.length < 3 && activities.slice(0, 3 - alerts.length).map((activity) => (
-                       <div key={activity.id} className="activity-item">
-                           <div className={`activity-item__icon activity-item__icon--${activity.type === 'sale' ? 'success' : 'info'}`}>
-                               {activity.type === 'sale' ? <CheckCircle2 size={18} /> : <Activity size={18} />}
-                           </div>
-                           <div className="activity-item__content">
-                               <div className="activity-item__header">
-                                   <p className="activity-item__title">{activity.description}</p>
-                                   <span className="activity-item__time">{getTimeAgo(activity.timestamp)}</span>
-                               </div>
-                               <p className="activity-item__desc">
-                                   {activity.user} {activity.amount ? `- ${formatCurrency(activity.amount)}` : ''}
-                               </p>
-                           </div>
-                       </div>
-                   ))}
+                   {alerts.length < 3 && activities.slice(0, 3 - alerts.length).map((activity) => {
+                       const getActivityRoute = () => {
+                           if (activity.type === 'sale') return `/cobros-ventas/${activity.details?.sale_id || ''}`;
+                           if (activity.type === 'purchase') return `/pagos-compras/${activity.details?.purchase_id || ''}`;
+                           if (activity.type === 'payment') return activity.details?.sale_id ? `/cobros-ventas/${activity.details.sale_id}/pagos` : '/movimientos-caja';
+                           return '/dashboard';
+                       };
+
+                       return (
+                        <div 
+                          key={activity.id} 
+                          className="activity-item cursor-pointer hover:bg-blue-50/30 transition-colors"
+                          onClick={() => navigate(getActivityRoute())}
+                        >
+                            <div className={`activity-item__icon activity-item__icon--${activity.type === 'sale' ? 'success' : 'info'}`}>
+                                {activity.type === 'sale' ? <CheckCircle2 size={18} /> : <Activity size={18} />}
+                            </div>
+                            <div className="activity-item__content">
+                                <div className="activity-item__header">
+                                    <p className="activity-item__title">{activity.description}</p>
+                                    <span className="activity-item__time">{getTimeAgo(activity.timestamp)}</span>
+                                </div>
+                                <p className="activity-item__desc">
+                                    {activity.user} {activity.amount ? `- ${formatCurrency(activity.amount)}` : ''}
+                                </p>
+                            </div>
+                        </div>
+                       );
+                   })}
 
                    {alerts.length === 0 && activities.length === 0 && (
                        <div className="p-8 text-center text-tertiary">
@@ -433,7 +454,7 @@ const Dashboard = () => {
                    )}
                </div>
                 <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-subtle)', borderTop: '1px solid var(--border-subtle)', textAlign: 'center' }}>
-                    <button className="text-primary font-bold text-xs uppercase tracking-wider hover:underline" onClick={() => navigate('/dashboard/kpis')}>
+                    <button className="text-primary font-bold text-xs uppercase tracking-wider hover:underline" onClick={() => navigate('/dashboard/alerts')}>
                          {t('dashboard.activity.viewAll', 'Ver Todas las Notificaciones')} 
                     </button>
                 </div>

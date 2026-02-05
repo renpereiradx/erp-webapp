@@ -8,6 +8,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
 import useInventoryManagementStore from '@/store/useInventoryManagementStore'
+import useDashboardStore from '@/store/useDashboardStore'
 import { productService } from '@/services/productService'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
@@ -32,6 +33,7 @@ const InventoryManagement = () => {
   const { t } = useI18n()
   const navigate = useNavigate()
   const toast = useToast()
+  const { fetchDashboardData } = useDashboardStore()
 
   // Store hooks
   const {
@@ -331,6 +333,9 @@ const InventoryManagement = () => {
         4000
       )
 
+      // Sincronizar dashboard proactivamente
+      fetchDashboardData();
+
       setShowCreateModal(false)
       // Limpiar búsqueda
       setProductSearch('')
@@ -441,6 +446,9 @@ const InventoryManagement = () => {
 
       if (result.success) {
         toast.success('Inventario invalidado exitosamente', 3000)
+        
+        // Sincronizar dashboard proactivamente
+        fetchDashboardData();
       } else {
         toast.error(result.error || 'Error al invalidar el inventario', 5000)
       }

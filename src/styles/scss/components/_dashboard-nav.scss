@@ -1,0 +1,76 @@
+@use '../abstracts/variables' as v;
+@use '../abstracts/mixins' as m;
+
+.dashboard-nav {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-paper);
+  padding: 0 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  &__list {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    scrollbar-width: none; // Firefox
+    &::-webkit-scrollbar {
+      display: none; // Chrome/Safari
+    }
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0.25rem;
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    position: relative;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: var(--text-primary);
+      
+      .dashboard-nav__icon {
+        color: var(--action-primary);
+      }
+    }
+
+    &--active {
+      color: var(--action-primary);
+      font-weight: 600;
+
+      .dashboard-nav__icon {
+        color: var(--action-primary);
+      }
+    }
+  }
+
+  &__icon {
+    transition: color 0.2s ease;
+  }
+
+  &__indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: var(--action-primary);
+    border-radius: 3px 3px 0 0;
+  }
+}
+
+// Dark mode adjustments if needed
+[data-theme='dark'] {
+  .dashboard-nav {
+    background-color: var(--bg-secondary);
+  }
+}

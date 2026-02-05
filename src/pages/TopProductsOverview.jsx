@@ -25,6 +25,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
+import DashboardNav from '@/components/business-intelligence/DashboardNav';
 
 const TopProductsOverview = () => {
     const { 
@@ -92,6 +93,8 @@ const TopProductsOverview = () => {
           </Button>
         </div>
       </header>
+
+      <DashboardNav />
 
       {/* KPI Stats Grid */}
       <div className="top-products__stats-grid">
