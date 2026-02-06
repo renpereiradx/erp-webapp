@@ -175,8 +175,8 @@ const InventoryAdjustmentManualPage = () => {
       errors.product = 'Debe seleccionar un producto'
     }
 
-    if (!formData.quantityAdjustment || formData.quantityAdjustment === '0') {
-      errors.quantityAdjustment = 'La cantidad no puede ser cero'
+    if (formData.quantityAdjustment === '') {
+      errors.quantityAdjustment = 'Debe introducir la cantidad de stock real'
     }
 
     if (!formData.details || formData.details.trim().length < 10) {
@@ -199,10 +199,8 @@ const InventoryAdjustmentManualPage = () => {
     setFormErrors({})
     clearError()
 
-    // Calcular nueva cantidad
-    const currentQuantity = selectedProduct.stock_quantity || 0
-    const adjustment = parseFloat(formData.quantityAdjustment)
-    const newQuantity = currentQuantity + adjustment
+    // Nueva cantidad es el valor introducido directamente (stock real)
+    const newQuantity = parseFloat(formData.quantityAdjustment)
 
     if (newQuantity < 0) {
       setFormErrors({
@@ -362,7 +360,7 @@ const InventoryAdjustmentManualPage = () => {
               <div className='adjustment-form__row'>
                 <div className='form-field'>
                   <label className='form-field__label'>
-                    Cantidad a Ajustar ({selectedProduct ? getUnitLabel(selectedProduct.base_unit || 'unit') : 'Unidades'})
+                    Stock Real ({selectedProduct ? getUnitLabel(selectedProduct.base_unit || 'unit') : 'Unidades'})
                   </label>
                   <input
                     type='number'
@@ -371,7 +369,7 @@ const InventoryAdjustmentManualPage = () => {
                         ? 'form-field__input--error'
                         : ''
                     }`}
-                    placeholder='Ej: -10 o 25'
+                    placeholder='Ej: 10 o 25'
                     value={formData.quantityAdjustment}
                     onChange={e =>
                       setFormData(prev => ({
