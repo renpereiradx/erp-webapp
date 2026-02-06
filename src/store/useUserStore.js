@@ -5,6 +5,7 @@ import roleService from '@/services/roleService';
 const useUserStore = create((set, get) => ({
   users: [],
   roles: [],
+  selectedUser: null,
   pagination: {
     page: 1,
     page_size: 20,
@@ -180,6 +181,49 @@ const useUserStore = create((set, get) => ({
       } catch (error) {
           return { success: false, error: error.message };
       }
+  },
+
+  fetchUserById: async (id) => {
+    set({ loading: true, error: null, selectedUser: null });
+    try {
+      const response = await userService.getUserById(id);
+      if (response && response.success) {
+        set({ selectedUser: response.data, loading: false });
+        return { success: true, data: response.data };
+      } else {
+        set({ loading: false, error: response?.error?.message || 'Error fetching user detail' });
+        return { success: false, error: response?.error?.message || 'Error fetching user detail' };
+      }
+    } catch (error) {
+      set({ loading: false, error: error.message });
+      return { success: false, error: error.message };
+    }
+  },
+
+  assignRole: async (userId, roleId) => {
+    try {
+      const response = await userService.assignRole(userId, roleId);
+      if (response && response.success) {
+        await get().fetchUserById(userId);
+        return { success: true };
+      }
+      return { success: false, error: response?.error?.message || 'Error assigning role' };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  removeRole: async (userId, roleId) => {
+    try {
+      const response = await userService.removeRole(userId, roleId);
+      if (response && response.success) {
+        await get().fetchUserById(userId);
+        return { success: true };
+      }
+      return { success: false, error: response?.error?.message || 'Error removing role' };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   }
 
 

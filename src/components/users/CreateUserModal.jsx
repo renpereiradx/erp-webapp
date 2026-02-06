@@ -5,6 +5,7 @@ import { useI18n } from '@/lib/i18n';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -101,12 +102,14 @@ export function CreateUserModal({ open, onOpenChange, onSubmit }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
         className="user-form sm:max-w-[900px] p-0 overflow-hidden border-none shadow-64"
-        aria-describedby={undefined}
       >
         <DialogHeader className="user-form__header">
           <DialogTitle className="user-form__title">
             {t('users.form.createTitle')}
           </DialogTitle>
+          <DialogDescription className="user-form__description">
+            {t('users.form.createDescription')}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

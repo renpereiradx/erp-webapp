@@ -14,6 +14,7 @@ import {
 import { useI18n } from '@/lib/i18n';
 import { useNavigate } from 'react-router-dom';
 import { CreateUserModal } from '@/components/users/CreateUserModal';
+import { EditUserModal } from '@/components/users/EditUserModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,11 +38,14 @@ export default function UserManagementList() {
     setPage, 
     setPageSize,
     filters,
-    setFilters
+    setFilters,
+    deleteUser
   } = useUserStore();
   
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState(null);
 
   React.useEffect(() => {
     fetchUsers();
@@ -57,6 +61,17 @@ export default function UserManagementList() {
   };
 
   const selectedCount = selectedUsers.length;
+
+  const handleEditClick = (user) => {
+    setUserToEdit(user);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteClick = async (user) => {
+    if (window.confirm(t('users.confirmDelete', { name: `${user.first_name} ${user.last_name}` }) || `¿Estás seguro de eliminar a ${user.first_name}?`)) {
+      await deleteUser(user.id);
+    }
+  };
 
   const handleCreateUser = async (userData) => {
     // Logic handled in modal
@@ -279,12 +294,15 @@ export default function UserManagementList() {
                             <span className="material-symbols-outlined mr-2 text-sm">visibility</span>
                             {t('users.actions.view')}
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditClick(user)}>
                             <span className="material-symbols-outlined mr-2 text-sm">edit</span>
                             {t('users.actions.edit')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive focus:text-destructive">
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => handleDeleteClick(user)}
+                          >
                             <span className="material-symbols-outlined mr-2 text-sm">delete</span>
                             {t('users.actions.delete')}
                           </DropdownMenuItem>
@@ -368,6 +386,13 @@ export default function UserManagementList() {
       <CreateUserModal 
         open={isCreateModalOpen} 
         onOpenChange={setIsCreateModalOpen} 
+      />
+
+      {/* Edit User Modal */}
+      <EditUserModal 
+        user={userToEdit}
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
       />
     </div>
   );

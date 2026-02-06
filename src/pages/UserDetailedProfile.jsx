@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import useUserStore from '@/store/useUserStore';
+import { useI18n } from '@/lib/i18n';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -15,49 +17,86 @@ import {
   CardTitle,
   CardContent,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { 
   Info, 
-  Eye, 
-  FileText, 
   Ban, 
   Trash2, 
   ShieldCheck, 
-  CreditCard, 
-  Monitor, 
-  Smartphone, 
-  LogOut, 
   CheckCircle, 
-  AlertCircle,
   Mail,
   Phone,
   KeyRound,
   Edit2,
   MoreVertical,
-  ChevronRight
+  Calendar,
+  User as UserIcon,
+  Unlock
 } from 'lucide-react';
+import { EditUserModal } from '@/components/users/EditUserModal';
+import { ManageRolesPanel } from '@/components/users/ManageRolesPanel';
 
 const UserDetailedProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useI18n();
+  const { 
+    selectedUser: user, 
+    loading, 
+    fetchUserById, 
+    activateUser, 
+    deactivateUser, 
+    deleteUser 
+  } = useUserStore();
 
-  // Mock data fetching based on ID (In a real app, this would be an API call)
-  const userData = {
-    id,
-    name: id === '1' ? 'Sarah Johnson' : id === '2' ? 'Marcus Smith' : 'Caleb Jenkins',
-    initials: id === '1' ? 'SJ' : id === '2' ? 'MS' : 'CJ',
-    email: id === '1' ? 'sarah.j@company.com' : id === '2' ? 'm.smith@company.com' : 'caleb.jenkins@acme.corp',
-    role: id === '1' ? 'Admin' : 'Senior Systems Architect',
-    status: 'Activo'
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isRolesModalOpen, setIsRolesModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      fetchUserById(id);
+    }
+  }, [id, fetchUserById]);
+
+  if (loading && !user) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user && !loading) {
+    return (
+      <div className="p-8 text-center">
+        <h2 className="text-xl font-bold">{t('users.notFound', 'Usuario no encontrado')}</h2>
+        <Button onClick={() => navigate('/usuarios')} className="mt-4">
+          {t('users.backToList', 'Volver a la lista')}
+        </Button>
+      </div>
+    );
+  }
+
+  const initials = user ? `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}` : '';
+  const fullName = user ? `${user.first_name} ${user.last_name}` : '';
+
+  const handleToggleStatus = async () => {
+    if (user.status === 'active') {
+      await deactivateUser(user.id);
+    } else {
+      await activateUser(user.id);
+    }
+    fetchUserById(user.id);
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm(t('users.confirmDelete', { name: fullName }))) {
+      const result = await deleteUser(user.id);
+      if (result.success) {
+        navigate('/usuarios');
+      }
+    }
   };
 
   return (
@@ -69,11 +108,11 @@ const UserDetailedProfile = () => {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="/usuarios">Usuarios</BreadcrumbLink>
+                  <BreadcrumbLink onClick={() => navigate('/usuarios')} className="cursor-pointer">{t('users.title')}</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>{userData.name}</BreadcrumbPage>
+                  <BreadcrumbPage>{fullName}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -84,33 +123,41 @@ const UserDetailedProfile = () => {
             <div className="user-profile__header-left">
               <div className="user-profile__avatar-wrapper">
                 <Avatar size={96}>
-                  <AvatarFallback>{userData.initials}</AvatarFallback>
+                  {user.avatar_url && <AvatarImage src={user.avatar_url} alt={fullName} />}
+                  <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
-                <div className="user-profile__status-indicator" />
+                <div className={`user-profile__status-indicator user-profile__status-indicator--${user.status}`} />
               </div>
               <div className="user-profile__header-info">
                 <div className="user-profile__name-row">
-                  <h1>{userData.name}</h1>
-                  <Badge variant="subtle-success" shape="pill">{userData.status}</Badge>
+                  <h1>{fullName}</h1>
+                  <Badge variant={user.status === 'active' ? 'subtle-success' : 'subtle-error'} shape="pill">
+                    {t(`users.status.${user.status}`)}
+                  </Badge>
                 </div>
                 <div className="user-profile__contact-row">
                   <span className="user-profile__contact-item">
-                    <Mail /> {userData.email}
+                    <Mail size={16} /> {user.email}
                   </span>
-                  <span className="user-profile__contact-item">
-                    <Phone /> +1 (555) 012-3456
+                  {user.phone && (
+                    <span className="user-profile__contact-item">
+                      <Phone size={16} /> {user.phone}
+                    </span>
+                  )}
+                  <span className="user-profile__contact-item text-muted-foreground">
+                    <UserIcon size={16} /> @{user.username}
                   </span>
                 </div>
               </div>
             </div>
             <div className="user-profile__header-actions">
-              <Button variant="secondary">
+              <Button variant="secondary" onClick={() => alert('Próximamente: Cambio de contraseña administrativo')}>
                 <KeyRound className="btn__icon" />
-                Reiniciar Contraseña
+                {t('users.actions.changePassword', 'Reiniciar Contraseña')}
               </Button>
-              <Button variant="primary">
+              <Button variant="primary" onClick={() => setIsEditModalOpen(true)}>
                 <Edit2 className="btn__icon" />
-                Editar Perfil
+                {t('users.actions.edit')}
               </Button>
               <Button variant="secondary" size="icon">
                 <MoreVertical />
@@ -119,199 +166,135 @@ const UserDetailedProfile = () => {
           </div>
 
           <div className="user-profile__grid">
-            {/* Left Sidebar: Metadata & Stats */}
+            {/* Left Sidebar: Metadata & Quick Actions */}
             <div className="user-profile__sidebar">
               <Card>
                 <CardHeader>
                   <CardTitle className="user-profile__card-title">
-                    <Info /> Resumen de Usuario
+                    <Info size={18} /> {t('users.profile.summary', 'Resumen de Usuario')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="user-profile__info-list">
                   <div className="user-profile__info-item">
-                    <span className="user-profile__info-label">ID Empleado</span>
-                    <span className="user-profile__info-value">EMP-88294</span>
+                    <span className="user-profile__info-label">{t('users.table.id', 'ID del Sistema')}</span>
+                    <span className="user-profile__info-value font-mono text-xs">{user.id}</span>
                   </div>
                   <div className="user-profile__info-item">
-                    <span className="user-profile__info-label">Departamento</span>
-                    <span className="user-profile__info-value">Ingeniería Core</span>
+                    <span className="user-profile__info-label">{t('users.table.lastActive', 'Último Acceso')}</span>
+                    <span className="user-profile__info-value">
+                      {user.last_login_at ? new Date(user.last_login_at).toLocaleString() : t('common.never', 'Nunca')}
+                    </span>
                   </div>
                   <div className="user-profile__info-item">
-                    <span className="user-profile__info-label">Reporta a</span>
-                    <div className="user-profile__info-value--persona">
-                      <div className="user-profile__reports-avatar">SH</div>
-                      <span>Sarah Henderson</span>
-                    </div>
-                  </div>
-                  <div className="user-profile__info-item">
-                    <span className="user-profile__info-label">Último Acceso</span>
-                    <span className="user-profile__info-value">hace 2 horas (desde Seattle, WA)</span>
+                    <span className="user-profile__info-label">{t('users.table.createdAt', 'Fecha Registro')}</span>
+                    <span className="user-profile__info-value">
+                      {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Gestión Rápida</CardTitle>
+                  <CardTitle>{t('users.profile.quickActions', 'Gestión Rápida')}</CardTitle>
                 </CardHeader>
                 <CardContent className="user-profile__action-list">
-                  <Button variant="ghost" className="user-profile__quick-action-btn">
-                    <Eye /> Suplantar Usuario
+                  <Button variant="ghost" className="user-profile__quick-action-btn" onClick={handleToggleStatus}>
+                    {user.status === 'active' ? <Ban size={18} /> : <Unlock size={18} />}
+                    {user.status === 'active' ? t('users.deactivate') : t('users.activate')}
                   </Button>
-                  <Button variant="ghost" className="user-profile__quick-action-btn">
-                    <FileText /> Exportar Registro de Auditoría
-                  </Button>
-                  <Button variant="ghost" className="user-profile__quick-action-btn">
-                    <Ban /> Desactivar Cuenta
-                  </Button>
-                  <Button variant="ghost" className="user-profile__quick-action-btn user-profile__quick-action-btn--destructive">
-                    <Trash2 /> Eliminar Usuario
+                  <Button variant="ghost" className="user-profile__quick-action-btn user-profile__quick-action-btn--destructive" onClick={handleDelete}>
+                    <Trash2 size={18} /> {t('users.actions.delete')}
                   </Button>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Right Column: Roles, Sessions, History */}
+            {/* Right Column: Roles & Security Summary */}
             <div className="user-profile__main">
               {/* Roles & Permissions */}
               <Card>
                 <CardHeader className="card__header--with-action">
-                  <CardTitle>Roles y Permisos Asignados</CardTitle>
-                  <Button variant="ghost" className="btn--link">Gestionar Roles</Button>
+                  <CardTitle>{t('users.table.role', 'Roles y Permisos Asignados')}</CardTitle>
+                  <Button variant="ghost" className="btn--link" onClick={() => setIsRolesModalOpen(true)}>
+                    {t('users.actions.manageRoles', 'Gestionar Roles')}
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="user-profile__roles-grid">
-                    <div className="user-profile__role-card">
-                      <div className="user-profile__role-header">
-                        <Badge variant="primary">SYSTEM ADMIN</Badge>
-                        <ShieldCheck />
+                    {user.roles?.map(role => (
+                      <div key={role.id} className="user-profile__role-card">
+                        <div className="user-profile__role-header">
+                          <Badge variant={role.id === 'admin' ? 'primary' : 'secondary'}>{role.name.toUpperCase()}</Badge>
+                          <ShieldCheck size={18} className="text-primary" />
+                        </div>
+                        <p className="user-profile__role-name">
+                          {role.id === 'admin' ? t('users.roles.adminDesc', 'Acceso Total a la Instancia') : t('users.roles.defaultDesc', 'Permisos de Usuario Estándar')}
+                        </p>
+                        <p className="user-profile__role-description">
+                          {role.id === 'admin' 
+                            ? t('users.roles.adminFull', 'Capacidad para gestionar todos los usuarios, configuraciones de seguridad y ajustes globales.')
+                            : t('users.roles.standardFull', 'Acceso a las funcionalidades operativas básicas del sistema.')}
+                        </p>
                       </div>
-                      <p className="user-profile__role-name">Acceso Total a la Instancia</p>
-                      <p className="user-profile__role-description">Capacidad para gestionar todos los usuarios, configuraciones de seguridad y ajustes globales.</p>
-                    </div>
-                    <div className="user-profile__role-card">
-                      <div className="user-profile__role-header">
-                        <Badge variant="secondary">BILLING EDITOR</Badge>
-                        <CreditCard />
-                      </div>
-                      <p className="user-profile__role-name">Operaciones Financieras</p>
-                      <p className="user-profile__role-description">Puede ver y modificar planes de suscripción y métodos de pago.</p>
-                    </div>
+                    ))}
+                    {(!user.roles || user.roles.length === 0) && (
+                      <p className="text-muted-foreground italic p-4 text-center w-full">
+                        {t('users.noRoles', 'No hay roles asignados a este usuario.')}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Active Sessions */}
+              {/* Security Summary */}
               <Card>
-                <CardHeader className="card__header--highlight card__header--with-action">
-                  <CardTitle>Sesiones de Seguridad Activas</CardTitle>
-                  <Button variant="ghost" className="btn--destructive-link">Cerrar sesión en todos los dispositivos</Button>
+                <CardHeader>
+                  <CardTitle>{t('users.profile.securitySummary', 'Resumen de Seguridad')}</CardTitle>
                 </CardHeader>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Navegador / SO</TableHead>
-                      <TableHead>Ubicación</TableHead>
-                      <TableHead>Dirección IP</TableHead>
-                      <TableHead className="text-right">Acción</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>
-                        <div className="user-profile__session-info">
-                          <div className="flex items-center gap-8">
-                            <Monitor className="text-primary w-20 h-20" />
-                            <div>
-                              <span className="font-semibold">Chrome en Windows</span>
-                              <div className="text-success">Sesión Actual</div>
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>Seattle, USA</TableCell>
-                      <TableCell className="id-cell">192.168.1.104</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon">
-                          <LogOut />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <div className="user-profile__session-info">
-                          <div className="flex items-center gap-8">
-                            <Smartphone className="w-20 h-20" />
-                            <div>
-                              <span className="font-semibold">Safari en iPhone 15</span>
-                              <div className="text-muted">Activo hace 4 horas</div>
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>Bellevue, USA</TableCell>
-                      <TableCell className="id-cell">74.125.22.101</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" className="badge--subtle-error badge--small">
-                          Revocar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </Card>
-
-              {/* Login History */}
-              <Card>
-                <CardHeader className="card__header--with-action">
-                  <CardTitle>Historial de Inicio de Sesión Reciente</CardTitle>
-                  <Button variant="ghost" className="btn--link">
-                    Ver Auditoría Completa <ChevronRight />
-                  </Button>
-                </CardHeader>
-                <div className="user-profile__history-list">
-                  <div className="user-profile__history-item">
-                    <div className="user-profile__history-left">
-                      <div className="user-profile__history-icon user-profile__history-icon--success">
-                        <CheckCircle />
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-4 p-4 rounded-lg bg-subtle">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                        <CheckCircle size={20} />
                       </div>
-                      <div className="user-profile__history-details">
-                        <span className="title">Inicio de Sesión Exitoso</span>
-                        <span className="date">24 de Marzo, 2024 a las 10:14 AM</span>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{t('users.profile.activeSessions', 'Sesiones Activas')}</p>
+                        <p className="text-xl font-bold">{user.sessions_count || 0}</p>
                       </div>
                     </div>
-                    <span className="user-profile__ip-badge">192.168.1.104</span>
-                  </div>
-                  <div className="user-profile__history-item">
-                    <div className="user-profile__history-left">
-                      <div className="user-profile__history-icon user-profile__history-icon--error">
-                        <AlertCircle />
+                    <div className="flex items-center gap-4 p-4 rounded-lg bg-subtle">
+                      <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                        <Calendar size={20} />
                       </div>
-                      <div className="user-profile__history-details">
-                        <span className="title">Intento Fallido</span>
-                        <span className="date">23 de Marzo, 2024 a las 11:45 PM (Contraseña Incorrecta)</span>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{t('users.profile.failedAttempts', 'Intentos Fallidos')}</p>
+                        <p className="text-xl font-bold text-orange-600">{user.failed_login_attempts || 0}</p>
                       </div>
                     </div>
-                    <span className="user-profile__ip-badge">203.0.113.42</span>
                   </div>
-                  <div className="user-profile__history-item">
-                    <div className="user-profile__history-left">
-                      <div className="user-profile__history-icon user-profile__history-icon--success">
-                        <CheckCircle />
-                      </div>
-                      <div className="user-profile__history-details">
-                        <span className="title">Inicio de Sesión Exitoso</span>
-                        <span className="date">22 de Marzo, 2024 a las 09:02 AM</span>
-                      </div>
-                    </div>
-                    <span className="user-profile__ip-badge">192.168.1.104</span>
-                  </div>
-                </div>
+                </CardContent>
               </Card>
             </div>
           </div>
         </div>
       </main>
+
+      {/* Edit User Modal */}
+      <EditUserModal 
+        user={user}
+        open={isEditModalOpen}
+        onOpenChange={(open) => {
+          setIsEditModalOpen(open);
+          if (!open) fetchUserById(user.id);
+        }}
+      />
+      {/* Manage Roles Panel */}
+      <ManageRolesPanel 
+        user={user}
+        open={isRolesModalOpen}
+        onOpenChange={setIsRolesModalOpen}
+      />
     </div>
   );
 };
