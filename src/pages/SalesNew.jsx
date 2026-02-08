@@ -3235,6 +3235,7 @@ const SalesNew = () => {
         currencyCode={createdSaleData?.currencyCode || 'PYG'}
         paymentMethodId={createdSaleData?.paymentMethodId}
         paymentMethodLabel={createdSaleData?.paymentMethodLabel}
+        paymentMethods={paymentMethods}
       />
     </div>
   )

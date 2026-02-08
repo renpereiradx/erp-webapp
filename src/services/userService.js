@@ -110,6 +110,20 @@ export const userService = {
   },
 
   /**
+   * Actualizar mi perfil
+   * @param {Object} data - { first_name, last_name, phone, avatar_url }
+   */
+  updateMe: async (data) => {
+    try {
+      const response = await api.put(`${BASE_URL}/me`, data);
+      return response;
+    } catch (error) {
+      console.error('Error updating my profile:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Cambiar mi contraseña
    */
   changeMyPassword: async (data) => {

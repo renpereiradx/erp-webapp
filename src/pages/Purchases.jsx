@@ -2837,6 +2837,7 @@ const Purchases = () => {
         currencyCode={createdOrderData?.currencyCode || 'PYG'}
         paymentMethodId={createdOrderData?.paymentMethodId}
         paymentMethodLabel={createdOrderData?.paymentMethodLabel}
+        paymentMethods={paymentMethods}
       />
     </div>
   )

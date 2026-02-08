@@ -1,57 +1,173 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Camera, 
-  Contact, 
-  Lock, 
-  Smartphone, 
-  Laptop, 
-  Monitor, 
-  X, 
-  CheckCircle,
-  Smartphone as PhoneIcon 
-} from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { useI18n } from '@/lib/i18n';
+import userService from '@/services/userService';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function MyProfileAndSecurity() {
+  const { t } = useI18n();
+  
+  // State for user data
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState({
+    id: '',
+    first_name: '',
+    last_name: '',
+    email: '',
+    username: '',
+    phone: '',
+    avatar_url: '',
+    created_at: '',
+    roles: [],
+    sessions_count: 0
+  });
+
+  // State for forms
+  const [profileForm, setProfileForm] = useState({
+    first_name: '',
+    last_name: '',
+    phone: ''
+  });
+
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
+
+  // Fetch user data on mount
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      const response = await userService.getMe();
+      if (response.success && response.data) {
+        setUserData(response.data);
+        setProfileForm({
+          first_name: response.data.first_name || '',
+          last_name: response.data.last_name || '',
+          phone: response.data.phone || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast.error(t('profile.errors.fetch_failed', 'Failed to load profile data'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await userService.updateMe(profileForm);
+      if (response.success) {
+        toast.success(t('profile.success.update', 'Profile updated successfully'));
+        fetchProfileData(); // Refresh data
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error(t('profile.errors.update_failed', 'Failed to update profile'));
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    
+    if (passwordForm.new_password !== passwordForm.confirm_password) {
+      toast.error(t('profile.errors.password_mismatch', 'Passwords do not match'));
+      return;
+    }
+
+    try {
+      const response = await userService.changeMyPassword({
+        current_password: passwordForm.current_password,
+        new_password: passwordForm.new_password,
+        logout_other_sessions: false // Default behavior from spec
+      });
+
+      if (response.success) {
+        toast.success(t('profile.success.password_changed', 'Password changed successfully'));
+        setPasswordForm({
+          current_password: '',
+          new_password: '',
+          confirm_password: ''
+        });
+      }
+    } catch (error) {
+      console.error('Error changing password:', error);
+      // Construct error message based on backend code if available
+      const msg = error.response?.data?.error?.message || t('profile.errors.password_change_failed', 'Failed to change password');
+      toast.error(msg);
+    }
+  };
+
+  const getUserInitials = () => {
+    const first = userData.first_name?.charAt(0) || '';
+    const last = userData.last_name?.charAt(0) || '';
+    return (first + last).toUpperCase() || 'U';
+  };
+
+  if (loading) {
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+        </div>
+    );
+  }
+
   return (
     <main className="my-profile">
       {/* Page Heading */}
       <div className="my-profile__header">
-        <h1 className="my-profile__title">My Profile & Security Settings</h1>
-        <p className="my-profile__subtitle">Manage your personal information, security credentials, and active device sessions.</p>
+        <h1 className="my-profile__title">{t('profile.title', 'My Profile & Security Settings')}</h1>
+        <p className="my-profile__subtitle">{t('profile.subtitle', 'Manage your personal information, security credentials, and active device sessions.')}</p>
       </div>
 
       {/* Profile Header Card */}
-      <Card variant="default">
-        <CardContent className="my-profile__profile-card">
+      <Card className="my-profile__profile-card">
+        <CardContent className="my-profile__profile-card-content">
           <div className="my-profile__user-info">
-            <div className="my-profile__avatar-wrapper">
-              <Avatar size={96} className="border-4 border-white dark:border-zinc-800 shadow-lg">
-                <AvatarImage src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSwfIaw5G90-tsAI_PeXfhcA2Z7zLyxC8_Pzw_j6HGVHE8G-8Asjyn4qsIJRyMxDQoVVLJAPbFTSQxt1Waw3Muya0NgeWdbs36ns-xoiG00qheiHtU3_JU61CRTY0jrv4_nuJ3f8yNvf3sAGc-Y089pN1z8hQToQuo-YiAhqN-vOZgs_uMZMsX0HvVj6cHfuHJz8hTsy7n6uUdIZtmTH26fOGhAAq8ZEI77ZyxR5c7pPMpSAiMWiASDZVIRFF4B5O49AC3oHUGaQ" alt="Alex Morgan" />
-                <AvatarFallback>AM</AvatarFallback>
-              </Avatar>
-              <button className="my-profile__avatar-edit">
-                <Camera size={16} />
-              </button>
-            </div>
-            
-            <div className="my-profile__details">
-              <h3 className="my-profile__name">Alex Morgan</h3>
-              <p className="my-profile__email">alex.morgan@company.com</p>
-              <div className="my-profile__badges">
-                <Badge variant="subtle-primary" shape="pill">Global Administrator</Badge>
-                <Badge variant="subtle-success" shape="pill">Active Account</Badge>
-              </div>
-            </div>
+             <div className="my-profile__avatar-wrapper">
+                <Avatar className="w-28 h-28 border-4 border-white shadow-lg">
+                  <AvatarImage src={userData.avatar_url} alt={`${userData.first_name} ${userData.last_name}`} />
+                  <AvatarFallback className="text-3xl font-bold bg-neutral-100 text-neutral-500">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <button className="my-profile__avatar-edit">
+                  <span className="material-symbols-outlined">photo_camera</span>
+                </button>
+             </div>
+
+             <div className="my-profile__details">
+                <h3 className="my-profile__name">{userData.first_name} {userData.last_name}</h3>
+                <p className="my-profile__email">{userData.email}</p>
+                <div className="my-profile__badges">
+                    {userData.roles.map(role => (
+                        <Badge key={role.id} variant="primary">
+                            {role.name}
+                        </Badge>
+                    ))}
+                    <Badge variant={userData.status === 'active' ? 'success' : 'warning'}>
+                        {userData.status}
+                    </Badge>
+                </div>
+             </div>
           </div>
 
-          <div>
-            <Button variant="primary">Update Profile</Button>
+          <div className="my-profile__actions">
+             <Button variant="primary" className="w-auto min-w-[140px]">
+                {t('profile.update_profile_btn', 'Update Profile')}
+             </Button>
           </div>
         </CardContent>
       </Card>
@@ -59,164 +175,204 @@ export default function MyProfileAndSecurity() {
       <div className="my-profile__grid">
         {/* Personal Info Card */}
         <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
-              <Contact className="text-primary w-5 h-5" />
-              Personal Information
-            </h2>
-            
-            <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">First Name</label>
-                  <Input defaultValue="Alex" />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Last Name</label>
-                  <Input defaultValue="Morgan" />
-                </div>
-              </div>
+             <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">contact_page</span>
+                    {t('profile.personal_info', 'Personal Information')}
+                </CardTitle>
+             </CardHeader>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Email Address</label>
-                <Input defaultValue="alex.morgan@company.com" disabled className="text-muted-foreground cursor-not-allowed bg-muted/50" />
-              </div>
+             <CardContent>
+                 <form onSubmit={handleProfileUpdate} className="my-profile__form">
+                    <div className="my-profile__form-row-2">
+                        <div className="my-profile__form-group">
+                            <label className="my-profile__label">{t('profile.first_name', 'First Name')}</label>
+                            <Input 
+                                type="text" 
+                                value={profileForm.first_name}
+                                onChange={(e) => setProfileForm({...profileForm, first_name: e.target.value})}
+                            />
+                        </div>
+                        <div className="my-profile__form-group">
+                            <label className="my-profile__label">{t('profile.last_name', 'Last Name')}</label>
+                            <Input 
+                                type="text" 
+                                value={profileForm.last_name}
+                                onChange={(e) => setProfileForm({...profileForm, last_name: e.target.value})}
+                            />
+                        </div>
+                    </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Phone Number</label>
-                <Input type="tel" defaultValue="+1 (555) 012-3456" />
-              </div>
+                    <div className="my-profile__form-group">
+                        <label className="my-profile__label">{t('profile.email', 'Email Address')}</label>
+                        <Input 
+                            type="email" 
+                            value={userData.email}
+                            disabled
+                        />
+                    </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Department</label>
-                <Select defaultValue="executive">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="executive">Executive Management</SelectItem>
-                    <SelectItem value="engineering">Engineering</SelectItem>
-                    <SelectItem value="design">Product Design</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
+                    <div className="my-profile__form-group">
+                        <label className="my-profile__label">{t('profile.phone', 'Phone Number')}</label>
+                        <Input 
+                            type="tel" 
+                            value={profileForm.phone}
+                            onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
+                        />
+                    </div>
+                    
+                    <div className="my-profile__form-group">
+                        <label className="my-profile__label">{t('profile.department', 'Department')}</label>
+                         <select className="my-profile__input h-11 px-4 rounded-lg bg-[#f0f2f4] border-none text-sm outline-none focus:ring-2 focus:ring-primary transition-shadow">
+                            <option>Executive Management</option>
+                            <option>Engineering</option>
+                            <option>Product Design</option>
+                        </select>
+                    </div>
+
+                    <div className="my-profile__form-actions">
+                        <Button type="submit" variant="primary">
+                            {t('profile.update_profile', 'Update Profile')}
+                        </Button>
+                    </div>
+                 </form>
+             </CardContent>
         </Card>
 
         {/* Security & Password Card */}
         <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
-              <Lock className="text-primary w-5 h-5" />
-              Security Settings
-            </h2>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">lock</span>
+                    {t('profile.security_settings', 'Security Settings')}
+                </CardTitle>
+            </CardHeader>
 
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Current Password</label>
-                <Input type="password" placeholder="••••••••••••" />
-              </div>
+            <CardContent>
+                <form onSubmit={handlePasswordChange} className="my-profile__form">
+                    <div className="my-profile__form-group">
+                        <label className="my-profile__label">{t('profile.current_password', 'Current Password')}</label>
+                        <Input 
+                            type="password" 
+                            placeholder="••••••••••••"
+                            value={passwordForm.current_password}
+                            onChange={(e) => setPasswordForm({...passwordForm, current_password: e.target.value})}
+                        />
+                    </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">New Password</label>
-                <Input type="password" placeholder="Min. 12 characters" />
-                
-                <div className="my-profile__strength-meter">
-                  <div className="my-profile__strength-segment my-profile__strength-segment--active"></div>
-                  <div className="my-profile__strength-segment my-profile__strength-segment--active"></div>
-                  <div className="my-profile__strength-segment my-profile__strength-segment--active"></div>
-                  <div className="my-profile__strength-segment"></div>
-                </div>
-                <p className="my-profile__strength-text">Strong Password</p>
-              </div>
+                    <div className="my-profile__form-group">
+                        <label className="my-profile__label">{t('profile.new_password', 'New Password')}</label>
+                        <Input 
+                            type="password" 
+                            placeholder={t('profile.min_chars', 'Min. 12 characters')}
+                            value={passwordForm.new_password}
+                            onChange={(e) => setPasswordForm({...passwordForm, new_password: e.target.value})}
+                        />
+                        {/* Password Strength Visual */}
+                        <div className="my-profile__password-strength">
+                            <div className="my-profile__strength-bar my-profile__strength-bar--filled"></div>
+                            <div className="my-profile__strength-bar my-profile__strength-bar--filled"></div>
+                            <div className="my-profile__strength-bar my-profile__strength-bar--filled"></div>
+                            <div className="my-profile__strength-bar"></div>
+                        </div>
+                        <p className="my-profile__strength-text">{t('profile.strong_password', 'Strong Password')}</p>
+                    </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-tight">Confirm New Password</label>
-                <Input type="password" />
-              </div>
+                    <div className="my-profile__form-group">
+                        <label className="my-profile__label">{t('profile.confirm_password', 'Confirm New Password')}</label>
+                        <Input 
+                            type="password" 
+                            value={passwordForm.confirm_password}
+                            onChange={(e) => setPasswordForm({...passwordForm, confirm_password: e.target.value})}
+                        />
+                    </div>
 
-              <div className="my-profile__2fa-card">
-                <div className="my-profile__2fa-content">
-                  <Smartphone className="text-primary w-6 h-6" />
-                  <div>
-                    <p className="text-sm font-bold">Two-Factor Auth</p>
-                    <p className="text-xs text-muted-foreground">Authenticator App enabled</p>
-                  </div>
-                </div>
-                <button className="text-primary text-xs font-bold hover:underline">Manage</button>
-              </div>
+                    <div className="my-profile__2fa-card">
+                        <div className="my-profile__2fa-content">
+                            <span className="material-symbols-outlined">vibration</span>
+                            <div>
+                                <p className="my-profile__2fa-title">{t('profile.2fa', 'Two-Factor Auth')}</p>
+                                <p className="my-profile__2fa-subtitle">{t('profile.authenticator_app', 'Authenticator App enabled')}</p>
+                            </div>
+                        </div>
+                        <button type="button" className="my-profile__link-button">{t('profile.manage', 'Manage')}</button>
+                    </div>
 
-              <Button variant="primary" className="w-full mt-2">Update Password</Button>
-            </div>
-          </CardContent>
+                    <div className="my-profile__form-actions">
+                        <Button type="submit" variant="primary">
+                             {t('profile.update_password', 'Update Password')}
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
         </Card>
       </div>
 
       {/* Session Management */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold flex items-center gap-2">
-              <Monitor className="text-primary w-5 h-5" />
-              Active Sessions
-            </h2>
-            <Button variant="destructive" size="sm" className="h-8 text-xs">
-              Sign out of all other sessions
-            </Button>
-          </div>
+          <CardHeader className="flex flex-row items-center justify-between pb-6">
+                <CardTitle className="flex items-center gap-2 m-0">
+                    <span className="material-symbols-outlined text-primary">devices</span>
+                    {t('profile.active_sessions', 'Active Sessions')}
+                </CardTitle>
+                <button className="my-profile__signout-all-btn">
+                     {t('profile.sign_out_all', 'Sign out of all other sessions')}
+                </button>
+          </CardHeader>
+          
+          <CardContent className="p-0">
+              <div className="my-profile__sessions-list">
+                 {/* Mock Session 1 - Current */}
+                 <div className="my-profile__session-item px-6">
+                     <div className="my-profile__session-info-group">
+                         <div className="my-profile__session-icon my-profile__session-icon--current">
+                            <span className="material-symbols-outlined">laptop_mac</span>
+                         </div>
+                         <div>
+                             <div className="my-profile__session-details-row">
+                                 <span className="my-profile__session-device">Chrome on macOS Monterey</span>
+                                 <span className="my-profile__session-badge">Current</span>
+                             </div>
+                             <p className="my-profile__session-location">San Francisco, USA • 192.168.1.1</p>
+                         </div>
+                     </div>
+                 </div>
 
-          <div className="session-list">
-            {/* Current Session */}
-            <div className="session-list__item">
-              <div className="session-list__info-wrapper">
-                <div className="session-list__icon session-list__icon--current">
-                  <Laptop size={20} />
-                </div>
-                <div className="session-list__details">
-                  <div className="session-list__device-name">
-                    Chrome on macOS Monterey
-                    <Badge variant="subtle-success" size="sm" className="px-1.5 py-0.5 text-[10px] h-auto">Current</Badge>
-                  </div>
-                  <p className="session-list__location">San Francisco, USA • 192.168.1.1</p>
-                </div>
-              </div>
-            </div>
+                 {/* Mock Session 2 */}
+                 <div className="my-profile__session-item px-6">
+                     <div className="my-profile__session-info-group">
+                         <div className="my-profile__session-icon">
+                            <span className="material-symbols-outlined">smartphone</span>
+                         </div>
+                         <div>
+                             <span className="my-profile__session-device">Safari on iPhone 15 Pro</span>
+                             <p className="my-profile__session-location">San Francisco, USA • 2 hours ago</p>
+                         </div>
+                     </div>
+                     <button className="my-profile__session-close">
+                        <span className="material-symbols-outlined">close</span>
+                     </button>
+                 </div>
 
-            {/* Other Session 1 */}
-            <div className="session-list__item">
-              <div className="session-list__info-wrapper">
-                <div className="session-list__icon">
-                  <Smartphone size={20} />
-                </div>
-                <div className="session-list__details">
-                  <p className="session-list__device-name">Safari on iPhone 15 Pro</p>
-                  <p className="session-list__location">San Francisco, USA • 2 hours ago</p>
-                </div>
+                 {/* Mock Session 3 */}
+                 <div className="my-profile__session-item px-6">
+                     <div className="my-profile__session-info-group">
+                         <div className="my-profile__session-icon">
+                            <span className="material-symbols-outlined">desktop_windows</span>
+                         </div>
+                         <div>
+                             <span className="my-profile__session-device">Firefox on Windows 11</span>
+                             <p className="my-profile__session-location">Seattle, USA • 3 days ago</p>
+                         </div>
+                     </div>
+                     <button className="my-profile__session-close">
+                        <span className="material-symbols-outlined">close</span>
+                     </button>
+                 </div>
               </div>
-              <button className="text-muted-foreground hover:text-destructive transition-colors">
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Other Session 2 */}
-            <div className="session-list__item">
-              <div className="session-list__info-wrapper">
-                <div className="session-list__icon">
-                  <Monitor size={20} />
-                </div>
-                <div className="session-list__details">
-                  <p className="session-list__device-name">Firefox on Windows 11</p>
-                  <p className="session-list__location">Seattle, USA • 3 days ago</p>
-                </div>
-              </div>
-              <button className="text-muted-foreground hover:text-destructive transition-colors">
-                <X size={20} />
-              </button>
-            </div>
-          </div>
-        </CardContent>
+          </CardContent>
       </Card>
+
     </main>
   );
 }

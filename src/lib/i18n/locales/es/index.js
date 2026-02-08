@@ -26,6 +26,7 @@ import { currencies } from './currencies.js'
 import { exchangeRates } from './exchangeRates.js'
 import { dashboard } from './dashboard.js'
 import { users } from './users.js'
+import { myProfile } from './my-profile.js'
 
 /**
  * Diccionario completo de traducciones en español
@@ -54,5 +55,6 @@ export const es = {
   ...exchangeRates,
   ...dashboard,
   ...users,
+  ...myProfile,
   ...other,
 }

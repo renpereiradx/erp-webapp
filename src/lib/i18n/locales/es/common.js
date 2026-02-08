@@ -90,6 +90,7 @@ export const common = {
   'common.total': 'Total',
   'common.subtotal': 'Subtotal',
   'common.user': 'Usuario',
+  'common.no_email': 'Sin correo',
   'common.normal': 'Normal',
   'common.payments': 'Pagos',
   'common.financeConfig': 'Configuración Financiera',

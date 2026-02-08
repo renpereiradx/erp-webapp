@@ -1,5 +1,11 @@
 @use '../abstracts' as *;
 
+// Local variables for strict spec matching
+$spec-bg-input: #f0f2f4;
+$spec-text-secondary: #617589;
+$spec-border-radius-xl: 0.75rem; // 12px (rounded-xl)
+$spec-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
 .my-profile {
   display: flex;
   flex-direction: column;
@@ -12,12 +18,16 @@
   &__header {
     display: flex;
     flex-direction: column;
-    gap: $spacing-4;
+    gap: 4px; // gap-1
     padding: 0 $spacing-8;
   }
 
   &__title {
-    @include heading-2;
+    @include heading-1;
+    font-size: 30px; // text-3xl
+    font-weight: 900; // font-black
+    letter-spacing: -0.025em; // tracking-tight
+    line-height: 1.2;
     margin: 0;
     
     @include themify {
@@ -28,34 +38,28 @@
   &__subtitle {
     @include body;
     margin: 0;
+    color: $spec-text-secondary;
     
     @include themify {
-      color: themed('text-secondary');
+      color: if(themed('text-secondary') == $neutral-gray-50, themed('text-secondary'), $spec-text-secondary);
     }
   }
 
-  // Content Grid
-  &__grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: $spacing-24;
+  // Cards
+  // Using system Card component, keeping class for potential layout specifics or legacy support if needed
+  // Visual styles (border, shadow, bg) are now handled by component
 
-    @include respond-to(xl) {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
+  // Profile Card Specifics
+  &__profile-card-content {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-24;
 
-  // Profile Card Header Specifics
-  &__profile-card {
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-24;
-    
-    @include respond-to(md) {
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-    }
+      @include respond-to(md) {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
   }
 
   &__user-info {
@@ -66,44 +70,50 @@
 
   &__avatar-wrapper {
     position: relative;
+    width: 112px; // size-28
+    height: 112px;
     
-    // Custom larger avatar styling override/wrapper if needed
-    // standard avatar classes are used inside
+    &:hover .my-profile__avatar-edit {
+        transform: scale(1.1);
+    }
   }
 
-  &__avatar-edit {
-    position: absolute;
-    bottom: -8px;
-    right: -8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: $border-radius-circular;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-    border: 1px solid;
-    
-    @include themify {
-      background-color: themed('surface-card');
-      border-color: themed('border-default');
-      color: themed('text-primary');
-    }
+  // Avatar image styles handled by Avatar component
+  // Keeping specific overrides if component isn't enough, but it should be.
+  // Removing __avatar-image and __avatar-placeholder as they are replaced by Avatar component parts
 
-    &:hover {
-      transform: scale(1.1);
-    }
+  &__avatar-edit {
+      position: absolute;
+      bottom: -8px;
+      right: -8px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+      
+      @include themify {
+          background-color: themed('surface-card');
+          border: 1px solid themed('border-default');
+          box-shadow: themed('shadow-4');
+          color: themed('text-primary');
+      }
+
+      .material-symbols-outlined {
+          font-size: 18px;
+      }
   }
 
   &__details {
     display: flex;
     flex-direction: column;
-    gap: $spacing-4;
   }
 
   &__name {
-    @include heading-3;
+    @include heading-3; // text-2xl font-bold
     margin: 0;
     
     @include themify {
@@ -112,10 +122,12 @@
   }
 
   &__email {
-    @include body-small;
-    
+    @include body-small; // text-sm
+    margin: 0;
+    color: $spec-text-secondary;
+
     @include themify {
-      color: themed('text-secondary');
+       color: if(themed('text-secondary') == $neutral-gray-50, themed('text-secondary'), $spec-text-secondary);
     }
   }
 
@@ -125,138 +137,252 @@
     margin-top: $spacing-8;
   }
 
-  // Password Strength Meter
-  &__strength-meter {
-    display: flex;
-    gap: $spacing-4;
-    margin-top: $spacing-8;
-    margin-bottom: $spacing-4;
+  // __badge styles removed - using system Badge component
+
+  // Grid Layout
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-24;
+
+    @include respond-to(xl) {
+      grid-template-columns: 1fr 1fr; // xl:grid-cols-2
+    }
   }
 
-  &__strength-segment {
-    flex: 1;
-    height: 4px;
-    border-radius: $border-radius-pill;
-    
-    @include themify {
-      background-color: themed('border-default');
-    }
+  // Forms
+  &__form {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-16; // space-y-4
+  }
 
-    &--active {
-      @include themify {
-        background-color: themed('state-success');
+  &__form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: $spacing-16;
+
+      @include respond-to(md) {
+          grid-template-columns: 1fr 1fr;
       }
-    }
+  }
+
+  &__form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px; // gap-1.5
+  }
+
+  &__label {
+      @include caption; // text-xs
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+      letter-spacing: -0.025em; // tracking-tight
+      color: $spec-text-secondary;
+      
+      @include themify {
+        color: if(themed('text-secondary') == $neutral-gray-50, themed('text-secondary'), $spec-text-secondary);
+      }
+  }
+
+  // Password Strength
+  &__password-strength {
+      display: flex;
+      gap: 4px; // gap-1
+      margin-top: $spacing-8;
+  }
+
+  &__strength-bar {
+      flex: 1;
+      height: 4px; // h-1
+      border-radius: $border-radius-pill;
+      background-color: #e5e7eb; // bg-gray-200
+
+      &--filled {
+          background-color: $success-60; // bg-success
+      }
   }
 
   &__strength-text {
-    @include caption;
-    font-weight: $font-weight-bold;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    
-    @include themify {
-      color: themed('state-success');
-    }
+      font-size: 10px;
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+      color: $success-60;
   }
 
-  // 2FA Section
+
+  &__form-actions {
+      margin-top: $spacing-8;
+  }
+
+  // 2FA Card
   &__2fa-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: $spacing-16;
     margin-top: $spacing-16;
-    border-radius: $border-radius-medium;
+    border-radius: $border-radius-large; // rounded-lg
     
     @include themify {
-      background-color: rgba(themed('action-primary'), 0.05);
+      background-color: rgba(themed('action-primary'), 0.05); // bg-primary/5
     }
   }
 
   &__2fa-content {
-    display: flex;
-    align-items: center;
-    gap: $spacing-12;
+      display: flex;
+      align-items: center;
+      gap: $spacing-12; // gap-3
+
+      .material-symbols-outlined {
+          @include themify {
+              color: themed('action-primary');
+          }
+      }
   }
 
-  // Session List
-  .session-list {
-    display: flex;
-    flex-direction: column;
-    
-    &__item {
+  &__2fa-title {
+      font-size: 14px;
+      font-weight: $font-weight-bold;
+      margin: 0;
+      
+      @include themify {
+          color: themed('text-primary');
+      }
+  }
+
+  &__2fa-subtitle {
+      font-size: 12px;
+      margin: 0;
+      color: $spec-text-secondary;
+  }
+
+  &__link-button {
+      background: none;
+      border: none;
+      font-size: 12px; // text-xs
+      font-weight: $font-weight-bold;
+      cursor: pointer;
+      
+      @include themify {
+          color: themed('action-primary');
+      }
+
+      &:hover {
+          text-decoration: underline;
+      }
+  }
+
+  // Session Summary (New List Version)
+  &__card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $spacing-24;
+
+      .my-profile__card-title {
+          margin-bottom: 0;
+      }
+  }
+
+  &__signout-all-btn {
+      font-size: 12px; // text-xs
+      font-weight: $font-weight-bold;
+      color: $error-60; // text-red-500
+      background: none;
+      border: none;
+      padding: 6px 12px;
+      border-radius: $border-radius-large;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+          background-color: #fef2f2; // hover:bg-red-50
+      }
+  }
+
+  &__sessions-list {
+      display: flex;
+      flex-direction: column;
+      
+      // Divide lines
+      & > * + * {
+          border-top: 1px solid #f3f4f6; // divide-gray-100
+      }
+  }
+
+  &__session-item {
+      padding: $spacing-16 0; // py-4
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: $spacing-16 0;
-      border-bottom: 1px solid;
-      
-      @include themify {
-        border-color: themed('border-subtle');
-      }
+  }
 
-      &:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-      }
-      
-      &:first-child {
-        padding-top: 0;
-      }
-    }
-
-    &__info-wrapper {
+  &__session-info-group {
       display: flex;
       align-items: center;
-      gap: $spacing-16;
-    }
+      gap: $spacing-16; // gap-4
+  }
 
-    &__icon {
+  &__session-icon {
+      width: 40px; // size-10
+      height: 40px;
+      border-radius: 50%; // rounded-full
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: $border-radius-circular;
-      
-      @include themify {
-        background-color: themed('bg-tertiary');
-        color: themed('text-secondary');
-      }
+      background-color: $neutral-gray-8; // bg-gray-100
+      color: $spec-text-secondary; // text-[#617589]
 
       &--current {
-        @include themify {
-          background-color: rgba(themed('state-success'), 0.1);
-          color: themed('state-success');
-        }
+          background-color: #dcfce7; // bg-green-100
+          color: #16a34a; // text-green-600
       }
-    }
+  }
 
-    &__details {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    &__device-name {
-      @include body-small;
-      font-weight: $font-weight-bold;
+  &__session-details-row {
       display: flex;
       align-items: center;
       gap: $spacing-8;
-      
-      @include themify {
-        color: themed('text-primary');
-      }
-    }
+  }
 
-    &__location {
-      @include caption;
+  &__session-device {
+      font-size: 14px; // text-sm
+      font-weight: $font-weight-bold;
       
       @include themify {
-        color: themed('text-secondary');
+          color: themed('text-primary');
       }
-    }
+  }
+
+  &__session-badge {
+      background-color: #dcfce7; // bg-green-100
+      color: #15803d; // text-green-700
+      font-size: 10px; // text-[10px]
+      font-weight: $font-weight-bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+  }
+
+  &__session-location {
+      font-size: 12px; // text-xs
+      color: $spec-text-secondary; // text-[#617589]
+      margin: 0;
+  }
+
+  &__session-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: $spec-text-secondary;
+      transition: color 0.2s;
+
+      &:hover {
+          color: $error-60; // hover:text-red-500
+      }
   }
 }
+

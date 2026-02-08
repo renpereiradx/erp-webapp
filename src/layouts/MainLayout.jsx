@@ -692,14 +692,18 @@ const MainLayout = ({ children }) => {
                   >
                     <div className='user-menu__header'>
                       <Link to='/perfil' className='user-menu__avatar' onClick={() => setShowUserMenu(false)}>
-                        <User className='user-menu__avatar-icon' />
+                        {user?.avatar_url ? (
+                          <img src={user.avatar_url} alt={user.first_name || 'User'} className='user-menu__avatar-img' style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                        ) : (
+                          <User className='user-menu__avatar-icon' />
+                        )}
                       </Link>
                       <Link to='/perfil' className='user-menu__info' onClick={() => setShowUserMenu(false)} style={{ textDecoration: 'none' }}>
                         <p className='user-menu__name'>
-                          {user?.name || 'Usuario Demo'}
+                          {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user?.username || t('common.user', 'Usuario')}
                         </p>
                         <p className='user-menu__email'>
-                          {user?.email || user?.username || 'demo@erp.com'}
+                          {user?.email || t('common.no_email', 'Sin correo')}
                         </p>
                       </Link>
                     </div>

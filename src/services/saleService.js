@@ -815,10 +815,6 @@ export const saleService = {
           console.log('💰 Creating sale with price modifications/discounts')
         }
 
-        // Log completo del payload enviado al backend
-        console.log('📤 Complete payload being sent to backend:')
-        console.log(JSON.stringify(requestData, null, 2))
-
         const api = new BusinessManagementAPI()
         // ACTUALIZADO: Usar /sale/ según SALE_GET_BY_RANGE_API.md
         // 🔧 FIX: NO pasar headers explícitos - defaultHeaders ya incluye Content-Type

@@ -6,6 +6,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import authService from '../services/authService';
 import apiService from '../services/api';
+import userService from '../services/userService';
 
 const AuthContext = createContext();
 
@@ -17,17 +18,27 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  const initializeAuth = () => {
+  const initializeAuth = async () => {
     try {
       const savedToken = apiService.getToken();
       if (savedToken) {
-        setIsAuthenticated(true);
         setToken(savedToken);
-        setAuthLoading(false);
-      } else {
-        setAuthLoading(false);
+        setIsAuthenticated(true);
+        
+        // Fetch current user data to ensure we have real data
+        try {
+          const response = await userService.getMe();
+          if (response.success && response.data) {
+            setUser(response.data);
+          }
+        } catch (e) {
+          console.error('Error fetching user on init:', e);
+          // If token is invalid/expired, getMe will throw 401 which is handled by API interceptor
+        }
       }
     } catch (e) {
+      console.error('Auth initialization error:', e);
+    } finally {
       setAuthLoading(false);
     }
   };
@@ -39,7 +50,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const result = await authService.login(credentials);
       
-      if (result.token) {
+      if (result.success && result.token) {
         // Guardar token en localStorage
         apiService.setToken(result.token);
 
@@ -49,18 +60,32 @@ export const AuthProvider = ({ children }) => {
           throw new Error('Error al guardar el token de autenticación');
         }
 
-        // Actualizar estado de autenticación
-        setIsAuthenticated(true);
-        setUser(result.user);
+        // Actualizar estado de autenticación básico
         setToken(result.token);
+        setIsAuthenticated(true);
+        
+        // Cargar datos completos del usuario desde /me
+        try {
+          const meResponse = await userService.getMe();
+          if (meResponse.success && meResponse.data) {
+            setUser(meResponse.data);
+          } else {
+            // Fallback al usuario de la respuesta de login si /me falla
+            setUser(result.user);
+          }
+        } catch (e) {
+          console.warn('Could not fetch full user details, using login response:', e);
+          setUser(result.user);
+        }
+        
         setError(null);
+        return { success: true };
       } else {
         // Login fallido - mostrar mensaje del servidor o genérico
         const errorMsg = result.message || result.error?.message || 'Credenciales inválidas';
         setError(errorMsg);
+        return { success: false, message: errorMsg };
       }
-      
-      return result;
     } catch (error) {
       // Manejar errores de red o del servidor
       let errorMessage = 'Error de conexión. Verifica tu conexión a internet.';

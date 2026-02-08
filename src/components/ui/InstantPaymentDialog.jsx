@@ -36,6 +36,7 @@ const InstantPaymentDialog = ({
   currencyCode = 'PYG',
   paymentMethodId,
   paymentMethodLabel,
+  paymentMethods = [], // New prop to allow selection if needed
 }) => {
   const { t } = useI18n()
   const [amount, setAmount] = useState(totalAmount || 0)
@@ -43,6 +44,10 @@ const InstantPaymentDialog = ({
   const [showNotes, setShowNotes] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState(null)
+  
+  // State for payment method selection if not provided
+  const [selectedMethodId, setSelectedMethodId] = useState(paymentMethodId || '')
+  
   const confirmRef = useRef(null)
   const amountRef = useRef(null)
 
@@ -57,10 +62,25 @@ const InstantPaymentDialog = ({
       setShowNotes(false)
       setProcessing(false)
       setError(null)
+      
+      // Initialize selected method if ID provided, otherwise default to first available or empty
+      if (paymentMethodId) {
+        setSelectedMethodId(paymentMethodId)
+      } else if (paymentMethods && paymentMethods.length > 0) {
+        setSelectedMethodId(paymentMethods[0].id)
+      } else {
+        setSelectedMethodId('')
+      }
     }
-  }, [open, totalAmount])
+  }, [open, totalAmount, paymentMethodId, paymentMethods])
 
   const handleConfirm = async () => {
+    // Validate payment method if we are in charge of selecting it
+    if (!paymentMethodId && !selectedMethodId) {
+      setError(t('common.paymentMethodRequired', 'Por favor seleccioná un método de pago'))
+      return
+    }
+
     setProcessing(true)
     setError(null)
     try {
@@ -70,12 +90,13 @@ const InstantPaymentDialog = ({
           amount: amount,
           amount_received: amount,
           payment_notes: notes || null,
+          paymentMethodId: selectedMethodId, // Pass selected method
         })
       } else {
         await onConfirmPayment({
           orderId,
           amount,
-          paymentMethodId,
+          paymentMethodId: selectedMethodId, // Pass selected method
           currencyCode,
           notes: notes || null,
         })
@@ -108,11 +129,11 @@ const InstantPaymentDialog = ({
 
   return (
     <AlertDialog open={open}>
-      <AlertDialogContent className="sm:max-w-md">
+      <AlertDialogContent className="sm:max-w-md radix-dialog__content">
         <AlertDialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+              <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
               <AlertDialogTitle>
@@ -120,7 +141,7 @@ const InstantPaymentDialog = ({
               </AlertDialogTitle>
             </div>
           </div>
-          <AlertDialogDescription className="mt-2">
+          <AlertDialogDescription className="mt-2 text-muted-foreground">
             {t(`${prefix}.description`, isSale
               ? `Venta #${orderId} creada por ${formatAmount(totalAmount, currencyCode)}.`
               : `Orden #${orderId} creada por ${formatAmount(totalAmount, currencyCode)}.`,
@@ -131,33 +152,61 @@ const InstantPaymentDialog = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="space-y-3 py-2">
+        <div className="space-y-4 py-3">
           {/* Amount field */}
-          <div>
-            <label className="text-sm font-medium text-foreground" htmlFor="instant-payment-amount">
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="instant-payment-amount">
               {t(`${prefix}.amountLabel`, isSale ? 'Monto a cobrar' : 'Monto a pagar')}
             </label>
-            <input
-              ref={amountRef}
-              id="instant-payment-amount"
-              type="number"
-              min="0"
-              step="1"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              onKeyDown={handleAmountKeyDown}
-              disabled={processing}
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50"
-            />
+            <div className="relative">
+              <input
+                ref={amountRef}
+                id="instant-payment-amount"
+                type="number"
+                min="0"
+                step="1"
+                value={amount}
+                onChange={(e) => setAmount(Number(e.target.value))}
+                onKeyDown={handleAmountKeyDown}
+                disabled={processing}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground text-sm">
+                {currencyCode}
+              </div>
+            </div>
           </div>
 
-          {/* Payment method indicator (read-only) */}
-          {paymentMethodLabel && (
-            <div>
+          {/* Payment method: Read-only if pre-selected, Selector if missing */}
+          {paymentMethodId ? (
+             <div className="space-y-1">
               <label className="text-sm font-medium text-muted-foreground">
                 {t(`${prefix}.methodLabel`, 'Método de pago')}
               </label>
-              <p className="mt-1 text-sm text-foreground">{paymentMethodLabel} ({currencyCode})</p>
+              <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-primary/80"></span>
+                {paymentMethodLabel}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none" htmlFor="instant-payment-method">
+                {t(`${prefix}.methodLabel`, 'Método de pago')}
+              </label>
+              <select
+                id="instant-payment-method"
+                value={selectedMethodId}
+                onChange={(e) => setSelectedMethodId(e.target.value)}
+                disabled={processing}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {paymentMethods.length === 0 && <option value="">Cargando métodos...</option>}
+                {paymentMethods.map(method => (
+                  <option key={method.id} value={method.id}>
+                    {method.description || method.method_code}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
 
@@ -167,9 +216,9 @@ const InstantPaymentDialog = ({
               type="button"
               onClick={() => setShowNotes(!showNotes)}
               disabled={processing}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
             >
-              {showNotes ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {showNotes ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               {t(`${prefix}.notesLabel`, 'Notas (opcional)')}
             </button>
             {showNotes && (
@@ -180,15 +229,16 @@ const InstantPaymentDialog = ({
                 disabled={processing}
                 placeholder={t(`${prefix}.notesPlaceholder`, isSale ? 'Notas del cobro...' : 'Notas del pago...')}
                 rows={2}
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 resize-none"
+                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 resize-none"
               />
             )}
           </div>
 
           {/* Error message */}
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
+            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              <span>{error}</span>
             </div>
           )}
         </div>
@@ -207,7 +257,7 @@ const InstantPaymentDialog = ({
               handleConfirm()
             }}
             disabled={processing}
-            autoFocus
+            className={isSale ? "bg-green-600 hover:bg-green-700 text-white" : ""}
           >
             {processing ? (
               <>
