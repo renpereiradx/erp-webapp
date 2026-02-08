@@ -192,4 +192,18 @@ export const purchases = {
 
   // Mensaje placeholder (temporal)
   'purchases.placeholder.message': 'Esta sección estará disponible pronto.',
+
+  // Pago instantáneo post-creación
+  'purchases.paymentDecision.title': 'Orden de Compra Creada',
+  'purchases.paymentDecision.description': 'Orden #{orderId} creada por {amount}.',
+  'purchases.paymentDecision.question': '¿Registrar el pago ahora?',
+  'purchases.paymentDecision.amountLabel': 'Monto a pagar',
+  'purchases.paymentDecision.methodLabel': 'Método de pago',
+  'purchases.paymentDecision.notesLabel': 'Notas (opcional)',
+  'purchases.paymentDecision.notesPlaceholder': 'Notas del pago...',
+  'purchases.paymentDecision.payNow': 'Confirmar Pago',
+  'purchases.paymentDecision.leavePending': 'Dejar Pendiente',
+  'purchases.paymentDecision.processing': 'Procesando...',
+  'purchases.paymentDecision.paymentSuccess': 'Pago registrado para orden #{orderId}',
+  'purchases.paymentDecision.paymentError': 'Error al registrar pago. La orden fue creada correctamente.',
 }

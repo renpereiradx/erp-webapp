@@ -28,8 +28,10 @@ import purchaseService from '@/services/purchaseService'
 import {
   classifySupplierSearchTerm,
   fetchPurchasesBySupplierTerm,
+  purchasePaymentsMvpService,
 } from '@/services/purchasePaymentsMvpService'
 import { getUnitLabel } from '@/constants/units'
+import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog'
 
 const Purchases = () => {
   const { t } = useI18n()
@@ -96,6 +98,10 @@ const Purchases = () => {
   const [showViewModal, setShowViewModal] = useState(false)
   const [viewOrderData, setViewOrderData] = useState(null)
   const [_loadingDetails, setLoadingDetails] = useState(false)
+
+  // Estados para pago instantáneo post-creación
+  const [showInstantPayment, setShowInstantPayment] = useState(false)
+  const [createdOrderData, setCreatedOrderData] = useState(null)
 
   // Filtrar productos del modal excluyendo los que ya están en la tabla de compras
   // Esto se actualiza reactivamente cuando se agregan/eliminan productos
@@ -715,23 +721,16 @@ const Purchases = () => {
       )
 
       if (result.success) {
-        alert(
-          result.message ||
-            t('purchases.form.success') ||
-            'Orden de compra creada exitosamente'
-        )
-
-        // Sincronizar dashboard proactivamente
-        fetchDashboardData();
-
-        // Limpiar formulario
-        setSelectedSupplier(null)
-        setSupplierSearch('')
-        setPurchaseItems([])
-        setPaymentMethod('')
-
-        // Recargar lista de órdenes
-        handleRetry()
+        // Mostrar diálogo de pago instantáneo en lugar de limpiar inmediatamente
+        setCreatedOrderData({
+          id: result.purchase_order_id,
+          totalAmount: orderTotals.total,
+          currencyCode: paymentCurrency || 'PYG',
+          paymentMethodId: paymentMethod ? parseInt(paymentMethod) : null,
+          paymentMethodLabel: paymentMethods.find(m => String(m.id) === String(paymentMethod))?.description || '',
+        })
+        fetchDashboardData()
+        setShowInstantPayment(true)
       } else {
         alert(
           result.error ||
@@ -749,6 +748,35 @@ const Purchases = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleInstantPaymentConfirm = async (paymentData) => {
+    await purchasePaymentsMvpService.registerPayment(paymentData.orderId, {
+      amount: paymentData.amount,
+      paymentMethodId: paymentData.paymentMethodId,
+      currencyCode: paymentData.currencyCode,
+      notes: paymentData.notes || null,
+    })
+    setShowInstantPayment(false)
+    setCreatedOrderData(null)
+    setSelectedSupplier(null)
+    setSupplierSearch('')
+    setPurchaseItems([])
+    setPaymentMethod('')
+    handleRetry()
+    alert(
+      t('purchases.paymentDecision.paymentSuccess', 'Pago registrado exitosamente', { orderId: paymentData.orderId })
+    )
+  }
+
+  const handleLeavePurchasePending = () => {
+    setShowInstantPayment(false)
+    setCreatedOrderData(null)
+    setSelectedSupplier(null)
+    setSupplierSearch('')
+    setPurchaseItems([])
+    setPaymentMethod('')
+    handleRetry()
   }
 
   const handleExport = () => {
@@ -2798,6 +2826,18 @@ const Purchases = () => {
           </div>
         </div>
       )}
+
+      <InstantPaymentDialog
+        open={showInstantPayment}
+        onConfirmPayment={handleInstantPaymentConfirm}
+        onLeavePending={handleLeavePurchasePending}
+        variant="purchase"
+        orderId={createdOrderData?.id}
+        totalAmount={createdOrderData?.totalAmount}
+        currencyCode={createdOrderData?.currencyCode || 'PYG'}
+        paymentMethodId={createdOrderData?.paymentMethodId}
+        paymentMethodLabel={createdOrderData?.paymentMethodLabel}
+      />
     </div>
   )
 }

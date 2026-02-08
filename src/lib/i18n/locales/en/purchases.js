@@ -182,4 +182,18 @@ export const purchases = {
 
   // Placeholder message (temporary)
   'purchases.placeholder.message': 'This section will be available soon.',
+
+  // Instant payment post-creation
+  'purchases.paymentDecision.title': 'Purchase Order Created',
+  'purchases.paymentDecision.description': 'Order #{orderId} created for {amount}.',
+  'purchases.paymentDecision.question': 'Register payment now?',
+  'purchases.paymentDecision.amountLabel': 'Amount to pay',
+  'purchases.paymentDecision.methodLabel': 'Payment method',
+  'purchases.paymentDecision.notesLabel': 'Notes (optional)',
+  'purchases.paymentDecision.notesPlaceholder': 'Payment notes...',
+  'purchases.paymentDecision.payNow': 'Confirm Payment',
+  'purchases.paymentDecision.leavePending': 'Leave Pending',
+  'purchases.paymentDecision.processing': 'Processing...',
+  'purchases.paymentDecision.paymentSuccess': 'Payment registered for order #{orderId}',
+  'purchases.paymentDecision.paymentError': 'Error registering payment. The order was created successfully.',
 }

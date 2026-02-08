@@ -24,6 +24,8 @@ import { productService } from '@/services/productService'
 import apiService from '@/services/api'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 import { getUnitLabel } from '@/constants/units'
+import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog'
+import { salePaymentService } from '@/services/salePaymentService'
 
 const STATUS_STYLES = {
   completed: { label: 'Completada', badge: 'badge--subtle-success' },
@@ -233,6 +235,10 @@ const SalesNew = () => {
   const [activeSale, setActiveSale] = useState(null)
   const [showActiveSaleModal, setShowActiveSaleModal] = useState(false)
   const [currentSaleId, setCurrentSaleId] = useState(null) // ID de venta pendiente siendo actualizada
+
+  // Estados para cobro instantáneo post-creación
+  const [showInstantCollection, setShowInstantCollection] = useState(false)
+  const [createdSaleData, setCreatedSaleData] = useState(null)
 
   // Cargar productos al montar
   useEffect(() => {
@@ -1175,14 +1181,17 @@ const SalesNew = () => {
         const response = await createSale(saleData)
 
         if (response && response.sale_id) {
-          toast.success(`Venta creada exitosamente: ${response.sale_id}`)
-          
-          // Sincronizar dashboard proactivamente
-          fetchDashboardData();
-
-          // Limpiar carrito
-          setItems([])
-          setGeneralDiscount(0)
+          // Mostrar diálogo de cobro instantáneo
+          setCreatedSaleData({
+            id: response.sale_id,
+            totalAmount: response.total_amount || total,
+            currencyCode: 'PYG',
+            paymentMethodId: paymentMethodId,
+            paymentMethodLabel: paymentMethods.find(m => m.id === paymentMethodId)?.description || '',
+            clientName: selectedClient?.name || selectedClient?.full_name || '',
+          })
+          fetchDashboardData()
+          setShowInstantCollection(true)
         } else {
           alert('Error: No se recibió ID de venta')
         }
@@ -1193,6 +1202,27 @@ const SalesNew = () => {
         `Error al guardar la venta: ${error.message || 'Error desconocido'}`
       )
     }
+  }
+
+  const handleInstantCollectionConfirm = async (paymentData) => {
+    await salePaymentService.processSalePaymentWithCashRegister({
+      sales_order_id: createdSaleData.id,
+      amount_received: paymentData.amount,
+      payment_notes: paymentData.notes || null,
+    })
+    setShowInstantCollection(false)
+    setCreatedSaleData(null)
+    setItems([])
+    setGeneralDiscount(0)
+    toast.success('Cobro registrado exitosamente')
+  }
+
+  const handleLeaveSalePending = () => {
+    setShowInstantCollection(false)
+    setCreatedSaleData(null)
+    setItems([])
+    setGeneralDiscount(0)
+    toast.success('Venta creada exitosamente')
   }
 
   const handleSelectProduct = product => {
@@ -3194,6 +3224,18 @@ const SalesNew = () => {
           </div>
         </div>
       )}
+
+      <InstantPaymentDialog
+        open={showInstantCollection}
+        onConfirmPayment={handleInstantCollectionConfirm}
+        onLeavePending={handleLeaveSalePending}
+        variant="sale"
+        orderId={createdSaleData?.id}
+        totalAmount={createdSaleData?.totalAmount}
+        currencyCode={createdSaleData?.currencyCode || 'PYG'}
+        paymentMethodId={createdSaleData?.paymentMethodId}
+        paymentMethodLabel={createdSaleData?.paymentMethodLabel}
+      />
     </div>
   )
 }

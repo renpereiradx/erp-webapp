@@ -190,6 +190,7 @@ export const purchasePaymentsMvp = {
     'Ingresá un monto válido.',
   'purchasePaymentsMvp.registerModal.amount.errorExceeded':
     'El monto no puede superar el saldo pendiente.',
+  'purchasePaymentsMvp.registerModal.amount.payFull': 'Pago Total',
   'purchasePaymentsMvp.registerModal.method.label': 'Método de pago',
   'purchasePaymentsMvp.registerModal.method.placeholder':
     'Seleccioná un método de pago',

@@ -239,6 +239,9 @@ export const sales = {
   'sales.registerPaymentModal.amountReceived.label': 'Monto Recibido (Efectivo)',
   'sales.registerPaymentModal.amountReceived.errorRequired':
     'El monto recibido debe ser mayor o igual a 0',
+  'sales.registerPaymentModal.amountReceived.pending':
+    'Saldo pendiente: {amount}',
+  'sales.registerPaymentModal.amountReceived.collectFull': 'Cobro Total',
   'sales.registerPaymentModal.amountToApply.label': 'Monto a Aplicar',
   'sales.registerPaymentModal.amountToApply.pending':
     'Saldo pendiente: {{amount}}',
@@ -277,4 +280,18 @@ export const sales = {
   'sales.registerPaymentModal.submitError':
     'Error al procesar el pago. Intente nuevamente.',
   'sales.registerPaymentModal.successMessage': 'Pago registrado exitosamente',
+
+  // Cobro instantáneo post-creación
+  'sales.collectionDecision.title': 'Venta Creada Exitosamente',
+  'sales.collectionDecision.description': 'Venta #{orderId} creada por {amount}.',
+  'sales.collectionDecision.question': '¿Registrar el cobro ahora?',
+  'sales.collectionDecision.amountLabel': 'Monto a cobrar',
+  'sales.collectionDecision.methodLabel': 'Método de pago',
+  'sales.collectionDecision.notesLabel': 'Notas (opcional)',
+  'sales.collectionDecision.notesPlaceholder': 'Notas del cobro...',
+  'sales.collectionDecision.collectNow': 'Confirmar Cobro',
+  'sales.collectionDecision.leavePending': 'Dejar Pendiente',
+  'sales.collectionDecision.processing': 'Procesando...',
+  'sales.collectionDecision.collectionSuccess': 'Cobro registrado para venta #{orderId}',
+  'sales.collectionDecision.collectionError': 'Error al registrar cobro. La venta fue creada correctamente.',
 }

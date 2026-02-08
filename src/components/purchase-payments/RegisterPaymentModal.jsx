@@ -624,11 +624,38 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
                 />
               </div>
               {pendingLabel && (
-                <p className='purchase-payments-mvp-register__register-hint'>
-                  {t('purchasePaymentsMvp.registerModal.amount.pending', {
-                    amount: pendingLabel,
-                  })}
-                </p>
+                <div className='purchase-payments-mvp-register__register-hint' style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <span>
+                    {t('purchasePaymentsMvp.registerModal.amount.pending', {
+                      amount: pendingLabel,
+                    })}
+                  </span>
+                  <button
+                    type='button'
+                    disabled={isFormDisabled}
+                    onClick={() => {
+                      const pending = getNormalizedPendingAmount(order.pendingAmount, order.currency)
+                      if (pending !== null) {
+                        setAmount(String(pending))
+                        setAmountError(null)
+                      }
+                    }}
+                    style={{
+                      background: 'none',
+                      border: '1px solid #0078d4',
+                      borderRadius: '4px',
+                      color: '#0078d4',
+                      cursor: isFormDisabled ? 'not-allowed' : 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      padding: '2px 8px',
+                      whiteSpace: 'nowrap',
+                      opacity: isFormDisabled ? 0.5 : 1,
+                    }}
+                  >
+                    {t('purchasePaymentsMvp.registerModal.amount.payFull', 'Pago Total')}
+                  </button>
+                </div>
               )}
               {amountError && (
                 <p className='purchase-payments-mvp-register__register-error'>

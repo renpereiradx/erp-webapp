@@ -588,6 +588,41 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
                 className='register-sale-payment-modal__control'
                 placeholder='0'
               />
+              {balanceDueLabel && (
+                <div className='register-sale-payment-modal__hint' style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <span>
+                    {t('sales.registerPaymentModal.amountReceived.pending', 'Saldo pendiente: {amount}', {
+                      amount: balanceDueLabel,
+                    })}
+                  </span>
+                  <button
+                    type='button'
+                    disabled={isFormDisabled}
+                    onClick={() => {
+                      const balanceDue = getNormalizedBalanceDue(sale.balance_due)
+                      if (balanceDue !== null) {
+                        setAmountReceived(formatNumberWithDots(String(balanceDue)))
+                        setAmountReceivedError(null)
+                        userEditedAmountToApply.current = false
+                      }
+                    }}
+                    style={{
+                      background: 'none',
+                      border: '1px solid #0078d4',
+                      borderRadius: '4px',
+                      color: '#0078d4',
+                      cursor: isFormDisabled ? 'not-allowed' : 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      padding: '2px 8px',
+                      whiteSpace: 'nowrap',
+                      opacity: isFormDisabled ? 0.5 : 1,
+                    }}
+                  >
+                    {t('sales.registerPaymentModal.amountReceived.collectFull', 'Cobro Total')}
+                  </button>
+                </div>
+              )}
               {(amountReceivedError || validationErrors.amountReceived) && (
                 <p className='register-sale-payment-modal__error'>
                   {amountReceivedError || validationErrors.amountReceived}
