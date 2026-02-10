@@ -13,7 +13,12 @@ import {
   Users,
   Flame,
   AlertTriangle,
-  Award
+  Award,
+  PieChart,
+  List,
+  History,
+  UserCheck,
+  LayoutDashboard
 } from 'lucide-react'
 
 /**
@@ -21,30 +26,68 @@ import {
  * Estructura compatible con el sistema de navegación de MainLayout
  */
 export const distinctSearchableRoutes = [
+  // Cuentas por Cobrar (Receivables) - Detalle y Reportes específicos
+  {
+    name: 'Dashboard de Resumen de Cuentas por Cobrar',
+    href: '/receivables',
+    icon: LayoutDashboard,
+    category: 'Finanzas'
+  },
+  {
+    name: 'Lista Maestra y Filtros de Cuentas por Cobrar',
+    href: '/receivables/list',
+    icon: List,
+    category: 'Finanzas'
+  },
+  {
+    name: 'Detalle de Cuenta por Cobrar e Historial de Pagos',
+    href: '/receivables/list',
+    icon: History,
+    category: 'Finanzas'
+  },
+  {
+    name: 'Cuentas Vencidas y Tareas de Cobranza',
+    href: '/receivables/overdue',
+    icon: AlertTriangle,
+    category: 'Finanzas'
+  },
+  {
+    name: 'Perfil Crediticio de Cliente y Análisis de Riesgo',
+    href: '/receivables/list',
+    icon: UserCheck,
+    category: 'Finanzas'
+  },
+  {
+    name: 'Reporte de Envejecimiento y Estadísticas de Cobranza',
+    href: '/receivables/aging-report',
+    icon: PieChart,
+    category: 'Finanzas'
+  },
+
   // Dashboard & KPIs
   {
-    name: 'KPIs Detallados',
+    name: 'KPIs Detallados del Negocio',
     href: '/dashboard/kpis',
     icon: TrendingUp,
-    category: 'Dashboard'
+    category: 'Inteligencia'
   },
   {
-    name: 'Mapa de Calor de Ventas',
+    name: 'Análisis de Ventas y Mapa de Calor',
     href: '/dashboard/sales-heatmap',
     icon: Flame,
-    category: 'Dashboard'
+    category: 'Inteligencia'
   },
   {
-    name: 'Alertas Consolidadas',
+    name: 'Alertas Consolidadas del Sistema',
     href: '/dashboard/alerts',
     icon: AlertTriangle,
-    category: 'Dashboard'
+    category: 'Inteligencia'
   },
   {
-    name: 'Top Productos',
+    name: 'Top de Productos más Vendidos',
     href: '/dashboard/top-products',
     icon: Award,
-    category: 'Dashboard'
+    category: 'Inteligencia'
   },
   
   // Gestión de Usuarios y Perfil

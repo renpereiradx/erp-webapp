@@ -33,6 +33,10 @@ import {
   CircleDollarSign,
   Coins,
   Search,
+  TrendingUp,
+  Flame,
+  AlertTriangle,
+  Award,
 } from 'lucide-react'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 import { distinctSearchableRoutes } from '@/config/searchableRoutes'
@@ -69,7 +73,43 @@ const MainLayout = ({ children }) => {
   // Configuración de navegación
   const navigation = useMemo(
     () => [
-      { name: t('common.home', 'Dashboard'), href: '/dashboard', icon: LayoutDashboard },
+      {
+        name: t('common.bi', 'Inteligencia de Negocios'),
+        href: '#',
+        icon: BarChart3,
+        children: [
+          {
+            name: t('common.home', 'Resumen Ejecutivo'),
+            href: '/dashboard',
+            icon: LayoutDashboard,
+          },
+          {
+            name: t('receivables.title', 'Cuentas por Cobrar'),
+            href: '/receivables',
+            icon: CreditCard,
+          },
+          {
+            name: t('dashboard.kpis', 'KPIs y Rendimiento'),
+            href: '/dashboard/kpis',
+            icon: TrendingUp,
+          },
+          {
+            name: t('dashboard.heatmap', 'Análisis de Ventas'),
+            href: '/dashboard/sales-heatmap',
+            icon: Flame,
+          },
+          {
+            name: t('dashboard.alerts', 'Alertas de Negocio'),
+            href: '/dashboard/alerts',
+            icon: AlertTriangle,
+          },
+          {
+            name: t('dashboard.topProducts', 'Top de Productos'),
+            href: '/dashboard/top-products',
+            icon: Award,
+          },
+        ],
+      },
       { name: t('products.title', 'Productos'), href: '/productos', icon: Package },
       { name: t('clients.title', 'Clientes'), href: '/clientes', icon: Users },
       { name: t('suppliers.title', 'Proveedores'), href: '/proveedores', icon: Truck },
