@@ -35,3 +35,9 @@
 @use 'top-products';
 @use 'sales-heatmap';
 @use 'receivables';
+@use 'client-credit-profile';
+@use 'aging-report';
+@use 'receivables-master';
+@use 'receivable-detail';
+@use 'overdue-accounts';
+@use 'receivables-dashboard';

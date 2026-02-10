@@ -1,0 +1,214 @@
+@use '../abstracts' as *;
+
+// =============================================================================
+// RECEIVABLES MASTER LIST PAGE
+// =============================================================================
+
+.receivables-master {
+  padding: $spacing-24 $spacing-40;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: $spacing-16;
+    margin-bottom: $spacing-24;
+
+    @include tablet {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  &__title {
+    @include heading-2;
+    margin: 0;
+  }
+
+  &__subtitle {
+    @include body-small;
+    @include themify {
+      color: themed('text-secondary');
+    }
+    margin-top: $spacing-4;
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-8;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// FILTER PANEL
+// -----------------------------------------------------------------------------
+
+.rec-filter-panel {
+  @include card;
+  padding: $spacing-16;
+  margin-bottom: $spacing-24;
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-16;
+    align-items: flex-end;
+  }
+
+  &__active-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-8;
+    margin-top: $spacing-16;
+  }
+}
+
+.rec-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+  flex: 1;
+  min-width: 200px;
+
+  &__label {
+    @include body-xs;
+    font-weight: $font-weight-semibold;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__icon {
+    position: absolute;
+    left: $spacing-12;
+    @include themify {
+      color: themed('text-tertiary');
+    }
+    display: flex;
+    align-items: center;
+  }
+}
+
+.rec-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 $spacing-12 0 36px;
+  border-radius: $border-radius-medium;
+  @include body-small;
+  @include transition(border-color, $duration-fast);
+
+  @include themify {
+    background-color: themed('surface-input');
+    border: 1px solid themed('border-default');
+    color: themed('text-primary');
+  }
+
+  &:focus {
+    outline: none;
+    @include themify {
+      border-color: themed('action-primary');
+    }
+  }
+}
+
+.rec-select-wrapper {
+  position: relative;
+}
+
+.rec-select {
+  width: 100%;
+  height: 36px;
+  padding: 0 $spacing-32 0 $spacing-12;
+  border-radius: $border-radius-medium;
+  @include body-small;
+  appearance: none;
+
+  @include themify {
+    background-color: themed('surface-input');
+    border: 1px solid themed('border-default');
+    color: themed('text-primary');
+  }
+
+  &:focus {
+    outline: none;
+    @include themify {
+      border-color: themed('action-primary');
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// DATA GRID / TABLE CONTAINER
+// -----------------------------------------------------------------------------
+
+.rec-grid-container {
+  @include card;
+  padding: 0;
+  overflow: hidden;
+}
+
+.rec-grid-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-12 $spacing-16;
+  @include themify {
+    border-bottom: 1px solid themed('border-subtle');
+    background-color: themed('bg-secondary');
+  }
+
+  &__info {
+    @include body-xs;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-4;
+  }
+}
+
+.rec-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-12 $spacing-16;
+  @include themify {
+    border-top: 1px solid themed('border-subtle');
+    background-color: themed('bg-secondary');
+  }
+}
+
+.rec-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-4 $spacing-8;
+  border-radius: $border-radius-small;
+  @include body-xs;
+  font-weight: $font-weight-semibold;
+
+  &--blue {
+    @include themify {
+      background-color: alpha-color(themed('action-primary'), 0.1);
+      color: themed('action-primary');
+    }
+  }
+
+  &__close {
+    cursor: pointer;
+    font-size: 14px;
+    &:hover { opacity: 0.7; }
+  }
+}

@@ -1,0 +1,169 @@
+@use '../abstracts' as *;
+
+// =============================================================================
+// AGING REPORT & COLLECTION STATS PAGE
+// =============================================================================
+
+.aging-report {
+  padding: $spacing-24 $spacing-40;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+    margin-bottom: $spacing-32;
+  }
+
+  &__stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-16;
+    margin-bottom: $spacing-24;
+
+    @include tablet {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &__buckets-card {
+    margin-bottom: $spacing-24;
+  }
+
+  &__main-grid {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+
+    @include desktop {
+      flex-direction: row;
+    }
+  }
+
+  // Stacked Bar for Aging Buckets
+  &__stacked-bar {
+    display: flex;
+    height: 48px;
+    width: 100%;
+    border-radius: $border-radius-medium;
+    overflow: hidden;
+    margin-bottom: $spacing-16;
+    background-color: themed('bg-secondary');
+
+    &-segment {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      @include body-xs;
+      font-weight: $font-weight-bold;
+      transition: all $duration-normal;
+      cursor: help;
+
+      &:hover {
+        opacity: 0.9;
+        transform: scaleY(1.05);
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// AGING TREND CHART (CSS BARS)
+// -----------------------------------------------------------------------------
+
+.aging-trend {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  &__chart {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    height: 200px;
+    padding: $spacing-16 0;
+    gap: $spacing-8;
+  }
+
+  &__column-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $spacing-8;
+  }
+
+  &__bars {
+    display: flex;
+    align-items: end;
+    gap: 4px;
+    height: 160px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  &__bar {
+    width: 8px;
+    border-radius: $border-radius-small $border-radius-small 0 0;
+    transition: height $duration-gentle $ease-ease-in-out;
+
+    &--billed {
+      @include themify {
+        background-color: themed('bg-tertiary');
+      }
+    }
+
+    &--collected {
+      @include themify {
+        background-color: themed('action-primary');
+      }
+    }
+  }
+
+  &__date {
+    @include body-xs;
+    font-weight: $font-weight-bold;
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  &__legend {
+    display: flex;
+    justify-content: center;
+    gap: $spacing-16;
+    margin-top: $spacing-16;
+
+    &-item {
+      display: flex;
+      align-items: center;
+      gap: $spacing-8;
+      @include body-xs;
+      font-weight: $font-weight-semibold;
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+
+    &-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+
+      &--billed {
+        @include themify {
+          background-color: themed('bg-tertiary');
+        }
+      }
+
+      &--collected {
+        @include themify {
+          background-color: themed('action-primary');
+        }
+      }
+    }
+  }
+}

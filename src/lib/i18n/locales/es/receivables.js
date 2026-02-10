@@ -1,0 +1,155 @@
+/**
+ * Traducciones para el módulo de Cuentas por Cobrar (Receivables)
+ */
+
+export const receivables = {
+  // General
+  'receivables.title': 'Cuentas por Cobrar',
+  'receivables.breadcrumb.home': 'Inicio',
+  'receivables.breadcrumb.clients': 'Clientes',
+  
+  // Client Credit Profile
+  'receivables.profile.title': 'Perfil de Crédito y Análisis de Riesgo',
+  'receivables.profile.client_id': 'ID de Cliente',
+  'receivables.profile.status.active': 'Cuenta Activa',
+  'receivables.profile.actions.add_note': 'Añadir Nota',
+  'receivables.profile.actions.suspend_credit': 'Suspender Crédito',
+  'receivables.profile.actions.export': 'Exportar Reporte',
+  
+  // Risk Profile
+  'receivables.risk.title': 'Perfil de Riesgo',
+  'receivables.risk.full_analysis': 'Análisis Completo',
+  'receivables.risk.score': 'PUNTAJE',
+  'receivables.risk.recommendation.title': 'Recomendación del Analista',
+  
+  // Client Info
+  'receivables.info.title': 'Información del Cliente',
+  'receivables.info.billing_address': 'Dirección de Facturación',
+  'receivables.info.primary_contact': 'Contacto Principal',
+  'receivables.info.assigned_rep': 'Representante Asignado',
+  'receivables.info.tax_id': 'ID Fiscal',
+  
+  // Metrics
+  'receivables.metrics.outstanding': 'Total Pendiente',
+  'receivables.metrics.limit': 'Límite de Crédito',
+  'receivables.metrics.avg_days': 'Días Promedio de Pago',
+  'receivables.metrics.last_payment': 'Último Pago',
+  'receivables.metrics.utilization': 'utilizado',
+  'receivables.metrics.trend.vs_last_month': 'vs mes anterior',
+  'receivables.metrics.industry_avg': 'Promedio Industria: 30',
+  'receivables.metrics.received': 'Recibido hace {days} días',
+  
+  // Aging
+  'receivables.aging.title': 'Análisis de Antigüedad',
+  'receivables.aging.current': 'Corriente',
+  'receivables.aging.1_30': '1-30 Días',
+  'receivables.aging.31_60': '31-60 Días',
+  'receivables.aging.90': '>90 Días',
+  'receivables.aging.total_ar': 'Total CxC',
+  'receivables.aging.max_alert': 'Alerta Máxima',
+  
+  // Invoices
+  'receivables.invoices.title': 'Facturas Pendientes',
+  'receivables.invoices.table.id': 'Factura #',
+  'receivables.invoices.table.date': 'Fecha',
+  'receivables.invoices.table.due': 'Vencimiento',
+  'receivables.invoices.table.amount': 'Monto',
+  'receivables.invoices.table.balance': 'Saldo',
+  'receivables.invoices.table.status': 'Estado',
+  'receivables.invoices.showing': 'Mostrando {shown} de {total} facturas',
+  
+  // Aging Report Page
+  'receivables.aging_report.title': 'Reporte de Antigüedad y Estadísticas',
+  'receivables.aging_report.subtitle': 'Análisis detallado de cuentas por cobrar y rendimiento de cobranzas.',
+  'receivables.aging_report.buckets_title': 'Desglose por Antigüedad',
+  'receivables.aging_report.top_debtors': 'Principales Deudores',
+  'receivables.aging_report.trend_title': 'Facturación vs. Cobranzas',
+  'receivables.aging_report.trend_subtitle': 'Tendencia de los últimos 6 meses',
+  'receivables.aging_report.billed': 'Facturado',
+  'receivables.aging_report.collected': 'Cobrado',
+  'receivables.aging_report.dso': 'DSO (Días de Venta Pendientes)',
+  'receivables.aging_report.efficiency': 'Eficiencia de Cobranza (CEI)',
+  'receivables.aging_report.vs_previous': 'Vs. 30 días anteriores',
+  'receivables.aging_report.industry_avg_msg': 'Vs. promedio industria de 45 días',
+  'receivables.aging_report.total_os': 'Total Pendiente',
+  'receivables.aging_report.table.client': 'Cliente',
+  'receivables.aging_report.table.total': 'Total O/S',
+  'receivables.aging_report.table.risk': 'Riesgo',
+  'receivables.aging_report.table.last_payment': 'Último Pago',
+  
+  // Master List Page
+  'receivables.master.title': 'Cuentas por Cobrar',
+  'receivables.master.subtitle': 'Gestiona los pagos pendientes de clientes y el estado de cobranza.',
+  'receivables.master.action.new': 'Nueva Cuenta',
+  'receivables.master.filter.search_client': 'Buscar Cliente',
+  'receivables.master.filter.company_placeholder': 'Empresa o Nombre',
+  'receivables.master.filter.status': 'Estado',
+  'receivables.master.filter.all_statuses': 'Todos los Estados',
+  'receivables.master.filter.date_range': 'Rango de Vencimiento',
+  'receivables.master.filter.apply': 'Aplicar',
+  'receivables.master.filter.clear': 'Limpiar',
+  'receivables.master.table.id': 'ID',
+  'receivables.master.table.client': 'Cliente',
+  'receivables.master.table.sale_date': 'Fecha Venta',
+  'receivables.master.table.due_date': 'Vencimiento',
+  'receivables.master.table.original_amt': 'Monto Original',
+  'receivables.master.table.pending_amt': 'Monto Pendiente',
+  'receivables.master.table.status': 'Estado',
+  'receivables.master.pagination.rows_per_page': 'Filas por página:',
+  'receivables.master.pagination.page_info': 'Página {page} de {total}',
+
+  // Receivable Detail Page
+  'receivables.detail.title': 'Factura #{id}',
+  'receivables.detail.issued': 'Emitido',
+  'receivables.detail.due': 'Vence',
+  'receivables.detail.overdue_days': '{days} Días de Vencimiento',
+  'receivables.detail.stats.total_invoiced': 'Total Facturado',
+  'receivables.detail.stats.total_paid': 'Total Pagado',
+  'receivables.detail.stats.balance_due': 'Saldo Pendiente',
+  'receivables.detail.history.title': 'Historial de Pagos',
+  'receivables.detail.history.table.date': 'Fecha',
+  'receivables.detail.history.table.ref': 'Referencia',
+  'receivables.detail.history.table.method': 'Método',
+  'receivables.detail.history.table.note': 'Nota',
+  'receivables.detail.history.table.amount': 'Monto',
+  'receivables.detail.actions.title': 'Acciones Rápidas',
+  'receivables.detail.actions.register_payment': 'Registrar Pago',
+  'receivables.detail.actions.reminder': 'Recordatorio',
+  'receivables.detail.actions.dispute': 'Disputa',
+  'receivables.detail.contact.title': 'Contacto del Cliente',
+  'receivables.detail.activity.title': 'Actividad y Notas',
+  'receivables.detail.activity.placeholder': 'Añadir una nota...',
+  'receivables.detail.activity.post': 'Publicar Nota',
+
+  // Overdue Accounts Page
+  'receivables.overdue.title': 'Cuentas Vencidas y Cobranzas',
+  'receivables.overdue.subtitle': 'Gestiona deudas pendientes, rastrea cuentas prioritarias y ejecuta tareas de cobranza.',
+  'receivables.overdue.action.create_task': 'Crear Tarea',
+  'receivables.overdue.kpi.total_overdue': 'Total Vencido',
+  'receivables.overdue.kpi.at_risk': 'Cuentas en Riesgo (>90 Días)',
+  'receivables.overdue.kpi.efficiency': 'Eficiencia de Cobranza',
+  'receivables.overdue.kpi.promises': 'Promesas de Pago',
+  'receivables.overdue.kpi.due_this_week': 'Vence esta semana',
+  'receivables.overdue.table.client_invoice': 'Cliente / Factura',
+  'receivables.overdue.table.amount': 'Monto',
+  'receivables.overdue.table.overdue': 'Vencido',
+  'receivables.overdue.table.status': 'Estado',
+  'receivables.overdue.table.last_contact': 'Último Contacto',
+  'receivables.overdue.table.actions': 'Acciones Rápidas',
+  'receivables.overdue.sidebar.tasks_title': 'Tareas de Hoy',
+  'receivables.overdue.sidebar.calling_session': 'Iniciar Sesión de Llamadas',
+  'receivables.overdue.priority.high': 'Alta Prioridad',
+  'receivables.overdue.priority.medium': 'Prioridad Media',
+  'receivables.overdue.priority.low': 'Baja Prioridad',
+
+  // Loading/Error
+  'receivables.loading.generic': 'Cargando...',
+  'receivables.loading.list': 'Cargando lista de cuentas...',
+  'receivables.loading.detail': 'Cargando detalle de factura...',
+  'receivables.loading.profile': 'Cargando perfil de crédito...',
+  'receivables.loading.report': 'Cargando reporte de antigüedad...',
+  'receivables.error.loading': 'No se pudo cargar la información.',
+  'receivables.error.list': 'Error al cargar la lista de cuentas.',
+  'receivables.error.detail': 'Error al cargar el detalle de la factura.',
+  'receivables.error.retry': 'Reintentar'
+};

@@ -1,0 +1,519 @@
+@use '../abstracts' as *;
+
+// =============================================================================
+// CLIENT CREDIT PROFILE & RISK ANALYSIS PAGE
+// =============================================================================
+
+.client-profile {
+  padding: $spacing-24 $spacing-40;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  // Header Section
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+    margin-bottom: $spacing-32;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    @include body-small;
+    
+    @include themify {
+      color: themed('text-secondary');
+    }
+
+    &-link {
+      transition: color $duration-fast;
+      text-decoration: none;
+      color: inherit;
+      
+      &:hover {
+        @include themify {
+          color: themed('action-primary');
+        }
+      }
+    }
+
+    &-separator {
+      font-size: 16px;
+    }
+
+    &-current {
+      font-weight: $font-weight-semibold;
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+  }
+
+  &__title-row {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+
+    @include desktop {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+  }
+
+  &__name-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__title {
+    @include heading-2;
+    margin: 0;
+    letter-spacing: -0.025em;
+  }
+
+  &__subtitle {
+    display: flex;
+    align-items: center;
+    gap: $spacing-12;
+    margin-top: $spacing-4;
+    @include body-small;
+    font-weight: $font-weight-semibold;
+    
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-8;
+  }
+
+  // Main Layout Grid
+  &__main-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-24;
+
+    @include desktop {
+      grid-template-columns: repeat(12, 1fr);
+    }
+  }
+
+  &__left-col {
+    @include desktop {
+      grid-column: span 4;
+    }
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+  }
+
+  &__right-col {
+    @include desktop {
+      grid-column: span 8;
+    }
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+  }
+
+  // Loading & Error States
+  &__loading,
+  &__error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    text-align: center;
+    gap: $spacing-16;
+  }
+
+  &__spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid transparent;
+    border-radius: 50%;
+    
+    @include themify {
+      border-top-color: themed('action-primary');
+      border-left-color: alpha-color(themed('action-primary'), 0.2);
+      border-right-color: alpha-color(themed('action-primary'), 0.2);
+      border-bottom-color: alpha-color(themed('action-primary'), 0.2);
+    }
+    
+    animation: spin 1s linear infinite;
+  }
+
+  // Utilities used in JSX
+  .text-danger {
+    @include themify {
+      color: themed('state-error');
+    }
+  }
+
+  .text-secondary {
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  .text-tertiary {
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+
+  .font-bold {
+    font-weight: $font-weight-bold;
+  }
+
+  .font-mono {
+    font-family: $font-family-monospace;
+  }
+
+  .text-primary {
+    @include themify {
+      color: themed('action-primary');
+    }
+  }
+
+  .flex { display: flex; }
+  .gap-4 { gap: $spacing-16; }
+  .flex-1 { flex: 1; }
+  .overflow-hidden { overflow: hidden; }
+  .p-0 { padding: 0; }
+  .mb-1 { margin-bottom: $spacing-4; }
+  .mt-2 { margin-top: $spacing-8; }
+  .text-right { text-align: right; }
+  .uppercase { text-transform: uppercase; }
+  .tracking-wide { letter-spacing: 0.05em; }
+  .border-none { border: none !important; }
+  .w-10 { width: 40px; }
+}
+
+// -----------------------------------------------------------------------------
+// RISK GAUGE COMPONENT
+// -----------------------------------------------------------------------------
+
+.risk-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-8 0;
+  
+  &__container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+  }
+
+  &__svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+  }
+
+  &__bg-circle {
+    @include themify {
+      stroke: themed('bg-secondary');
+    }
+  }
+
+  &__value-circle {
+    @include themify {
+      stroke: themed('state-warning');
+    }
+    filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.1));
+  }
+
+  &__score {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
+    &-value {
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1;
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+
+    &-label {
+      @include body-xs;
+      font-weight: $font-weight-semibold;
+      margin-top: $spacing-4;
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+  }
+
+  &__badge {
+    margin-top: $spacing-16;
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-8;
+    padding: $spacing-4 $spacing-12;
+    border-radius: 9999px;
+    font-weight: $font-weight-bold;
+    @include body-small;
+
+    @include themify {
+      background-color: alpha-color(themed('state-warning'), 0.15);
+      color: darken(themed('state-warning'), 15%);
+    }
+
+    &-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      @include themify {
+        background-color: themed('state-warning');
+      }
+    }
+  }
+
+  &__recommendation {
+    width: 100%;
+    margin-top: $spacing-24;
+    padding: $spacing-12;
+    border-radius: $border-radius-medium;
+    border: 1px solid transparent;
+
+    @include themify {
+      background-color: alpha-color(themed('state-error'), 0.08);
+      border-color: alpha-color(themed('state-error'), 0.2);
+    }
+
+    &-header {
+      display: flex;
+      gap: $spacing-8;
+      align-items: center;
+      
+      .material-symbols-outlined {
+        @include themify {
+          color: themed('state-error');
+        }
+      }
+    }
+
+    &-title {
+      @include body-small;
+      font-weight: $font-weight-semibold;
+      @include themify {
+        color: themed('state-error');
+      }
+    }
+
+    &-text {
+      @include body-small;
+      margin-top: $spacing-4;
+      padding-left: $spacing-24;
+      @include themify {
+        color: darken(themed('state-error'), 10%);
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// CLIENT INFO LIST
+// -----------------------------------------------------------------------------
+
+.client-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-16;
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-12;
+  }
+
+  &__icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: $border-radius-medium;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    @include themify {
+      background-color: themed('bg-secondary');
+      color: themed('text-secondary');
+    }
+
+    .material-symbols-outlined {
+      font-size: 18px;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__label {
+    @include body-xs;
+    font-weight: $font-weight-semibold;
+    text-transform: uppercase;
+    @include themify {
+      color: themed('text-secondary');
+    }
+  }
+
+  &__value {
+    @include body-small;
+    font-weight: $font-weight-semibold;
+    margin-top: $spacing-4;
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__link {
+    @include body-small;
+    text-decoration: none;
+    @include themify {
+      color: themed('action-primary');
+    }
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__tax-id {
+    margin-top: $spacing-16;
+    padding-top: $spacing-16;
+    @include themify {
+      border-top: 1px solid themed('border-subtle');
+    }
+
+    &-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: $spacing-8;
+      border-radius: $border-radius-small;
+      font-family: $font-family-monospace;
+      @include body-small;
+      margin-top: $spacing-8;
+
+      @include themify {
+        background-color: themed('bg-secondary');
+        color: themed('text-primary');
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// AGING BAR COMPONENT
+// -----------------------------------------------------------------------------
+
+.aging-bar {
+  width: 100%;
+  
+  &__header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-bottom: $spacing-16;
+    gap: $spacing-12;
+
+    @include tablet {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  &__legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-16;
+    @include body-small;
+
+    @include themify {
+      color: themed('text-secondary');
+    }
+
+    &-item {
+      display: flex;
+      align-items: center;
+      gap: $spacing-8;
+    }
+
+    &-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+
+      &--current { background-color: #10b981; }
+      &--1-30 { background-color: #fbbf24; }
+      &--31-60 { background-color: #f97316; }
+      &--90 { background-color: #ef4444; }
+    }
+  }
+
+  &__container {
+    display: flex;
+    height: 48px;
+    width: 100%;
+    border-radius: $border-radius-medium;
+    overflow: hidden;
+    margin-bottom: $spacing-8;
+  }
+
+  &__segment {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    @include body-xs;
+    font-weight: $font-weight-bold;
+    transition: all $duration-normal;
+    cursor: help;
+
+    &:hover {
+      opacity: 0.9;
+      transform: scaleY(1.05);
+    }
+
+    &--current { background-color: #10b981; }
+    &--1-30 { background-color: #fbbf24; color: #78350f; }
+    &--31-60 { background-color: #f97316; }
+    &--90 { background-color: #ef4444; }
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    @include body-xs;
+    font-weight: $font-weight-medium;
+    
+    @include themify {
+      color: themed('text-tertiary');
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

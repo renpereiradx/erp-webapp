@@ -9,6 +9,7 @@ import { purchases } from './purchases.js'
 import { currencies } from './currencies.js'
 import { exchangeRates } from './exchangeRates.js'
 import { dashboard } from './dashboard.js'
+import { receivables } from './receivables.js'
 import { es } from '../es/index.js'
 
 /**
@@ -30,6 +31,7 @@ export const en = {
   ...currencies,
   ...exchangeRates,
   ...dashboard,
+  ...receivables,
   // TODO: Add English translations for new modules:
   // - clients
   // - suppliers

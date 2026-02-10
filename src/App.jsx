@@ -56,7 +56,7 @@ import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity'
 // import ProductDetailTest from '@/components/ProductDetailTest';
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
-import ReceivablesDashboard from '@/components/business-intelligence/receivables/ReceivablesDashboard'
+import ReceivablesDashboard from '@/pages/ReceivablesDashboard'
 import ReceivablesMasterList from '@/pages/ReceivablesMasterList'
 import ReceivableDetail from '@/pages/ReceivableDetail'
 import OverdueAccounts from '@/pages/OverdueAccounts'
