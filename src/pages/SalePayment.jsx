@@ -59,6 +59,8 @@ const SalePayment = () => {
   const clientDropdownRef = useRef(null)
   const clientInputRef = useRef(null)
   const clientListRef = useRef(null)
+  const startDateRef = useRef(null)
+  const endDateRef = useRef(null)
 
   // Inicializar con fechas del último mes por defecto
   const getDefaultDateRange = () => {
@@ -86,20 +88,24 @@ const SalePayment = () => {
   const [selectedSaleId, setSelectedSaleId] = useState(null)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales (solo al montar)
   useEffect(() => {
     handleLoadSales()
   }, [])
 
-  // Recargar API cuando cambian filtros de cliente o fechas
-  useEffect(() => {
-    // Reset a página 1 cuando cambian los filtros
-    setPagination(prev => ({ ...prev, page: 1 }))
-    // Recargar datos con nuevos filtros
-    handleLoadSales()
-  }, [selectedClient, selectedClientName, dateRange.start_date, dateRange.end_date])
-
   // Cargar clientes mediante búsqueda
+  // Handler robusto para cambios de fecha
+  // Usa ref para deduplicar llamadas de onChange/onInput/onBlur
+  const lastDateFetchRef = useRef({ start_date: '', end_date: '' })
+  const handleDateChange = (field, value) => {
+    if (!value || value === lastDateFetchRef.current[field]) return
+    lastDateFetchRef.current[field] = value
+    const newRange = { ...dateRange, [field]: value }
+    setDateRange(newRange)
+    setPagination(prev => ({ ...prev, page: 1 }))
+    handleLoadSales({ dateRange: newRange })
+  }
+
   const handleLoadClients = async (searchTerm = '') => {
     if (!searchTerm || searchTerm.length < 2) {
       return // Requerir al menos 2 caracteres
@@ -112,56 +118,61 @@ const SalePayment = () => {
   }
 
   // Cargar ventas con lógica inteligente según filtros
-  const handleLoadSales = async () => {
+  // Acepta overrides para evitar problemas de stale closures
+  const handleLoadSales = async (overrides = {}) => {
     setIsLoading(true)
     setError(null)
+
+    // Usar overrides si vienen, sino el estado actual
+    const effectiveDateRange = overrides.dateRange || dateRange
+    const effectiveClientName = overrides.clientName !== undefined
+      ? overrides.clientName
+      : selectedClientName
+    const effectiveClient = overrides.client !== undefined
+      ? overrides.client
+      : selectedClient
 
     try {
       let response
 
-      // LÓGICA DE FILTROS según SALE_PAYMENT_API.md:
+      // LÓGICA DE FILTROS:
       // 1. Si hay cliente seleccionado -> usar GET /sale/client_name/{name}/payment-status
       // 2. Si NO hay cliente pero SÍ hay fechas -> usar GET /sale/date_range/payment-status
 
-      const hasValidDateRange = dateRange.start_date && dateRange.end_date
+      const hasValidDateRange = effectiveDateRange.start_date && effectiveDateRange.end_date
       const hasValidClient =
-        selectedClient &&
-        selectedClient !== '' &&
-        selectedClient !== 'all' &&
-        selectedClientName
+        effectiveClient &&
+        effectiveClient !== '' &&
+        effectiveClient !== 'all' &&
+        effectiveClientName
 
       if (hasValidClient) {
-        // PRIORIDAD 1: Buscar por nombre de cliente con estado de pago
-        // Endpoint: GET /sale/client_name/{name}/payment-status
         const filters = {
-          page: pagination.page,
+          page: 1,
           page_size: pagination.page_size,
         }
 
         response =
           await salePaymentService.getSalesByClientNameWithPaymentStatus(
-            selectedClientName,
+            effectiveClientName,
             filters
           )
       } else if (hasValidDateRange) {
-        // PRIORIDAD 2: Buscar por rango de fechas con estado de pago
-        // Endpoint: GET /sale/date_range/payment-status
         const filters = {
-          page: pagination.page,
+          page: 1,
           page_size: pagination.page_size,
-          start_date: dateRange.start_date,
-          end_date: dateRange.end_date,
+          start_date: effectiveDateRange.start_date,
+          end_date: effectiveDateRange.end_date,
         }
 
         response =
           await salePaymentService.getSalesByDateRangeWithPaymentStatus(filters)
       } else {
-        // Sin filtros válidos, usar rango por defecto del último mes
         const filters = {
-          page: pagination.page,
+          page: 1,
           page_size: pagination.page_size,
-          start_date: dateRange.start_date,
-          end_date: dateRange.end_date,
+          start_date: effectiveDateRange.start_date,
+          end_date: effectiveDateRange.end_date,
         }
 
         response =
@@ -297,15 +308,19 @@ const SalePayment = () => {
 
   // Limpiar filtros
   const handleClearFilters = () => {
+    const defaultDates = getDefaultDateRange()
     setSearchTerm('')
     setSelectedClient('')
-    setSelectedClientName('') // Limpiar nombre también
+    setSelectedClientName('')
     setClientSearchTerm('')
     setSelectedStatus('')
-    setDateRange(getDefaultDateRange()) // Restablecer a fechas por defecto
+    setDateRange(defaultDates)
     setPagination(prev => ({ ...prev, page: 1 }))
-    // Recargar con filtros por defecto
-    setTimeout(() => handleLoadSales(), 0)
+    // Resetear DOM de date inputs (son uncontrolled) y dedup ref
+    if (startDateRef.current) startDateRef.current.value = defaultDates.start_date
+    if (endDateRef.current) endDateRef.current.value = defaultDates.end_date
+    lastDateFetchRef.current = { start_date: '', end_date: '' }
+    handleLoadSales({ dateRange: defaultDates, client: '', clientName: '' })
   }
 
   // Funciones para el dropdown de clientes
@@ -322,12 +337,18 @@ const SalePayment = () => {
 
   const handleClientSelect = (clientId, clientName) => {
     setSelectedClient(clientId)
-    setSelectedClientName(clientName) // Guardar nombre para usar en API
+    setSelectedClientName(clientName)
     setClientSearchTerm(clientName)
     setIsClientDropdownOpen(false)
     setHighlightedClientIndex(0)
-    // NO recargar automáticamente - solo cuando se aplique el filtro
-    // NO buscar de nuevo cuando se selecciona (prevenir búsqueda del nombre completo)
+    setPagination(prev => ({ ...prev, page: 1 }))
+    // Recargar directamente con el nuevo cliente
+    if (clientId && clientId !== 'all' && clientName) {
+      handleLoadSales({ client: clientId, clientName })
+    } else {
+      // "Todos los clientes" — recargar por fechas
+      handleLoadSales({ client: '', clientName: '' })
+    }
   }
 
   // Buscar clientes cuando el usuario escribe (con debounce)
@@ -696,23 +717,23 @@ const SalePayment = () => {
 
           {/* Selector de rango de fechas */}
           <div className='sales-payment-new__filter-date'>
-            <Input
+            <input
               type='date'
-              value={dateRange.start_date}
-              onChange={e =>
-                setDateRange(prev => ({ ...prev, start_date: e.target.value }))
-              }
-              placeholder={t('sales.payment.filter.start_date', 'Fecha inicio')}
-              className='sales-payment-new__filter-input'
+              ref={startDateRef}
+              defaultValue={dateRange.start_date}
+              onChange={e => handleDateChange('start_date', e.target.value)}
+              onInput={e => handleDateChange('start_date', e.target.value)}
+              onBlur={e => handleDateChange('start_date', e.target.value)}
+              className='input sales-payment-new__filter-input'
             />
-            <Input
+            <input
               type='date'
-              value={dateRange.end_date}
-              onChange={e =>
-                setDateRange(prev => ({ ...prev, end_date: e.target.value }))
-              }
-              placeholder={t('sales.payment.filter.end_date', 'Fecha fin')}
-              className='sales-payment-new__filter-input'
+              ref={endDateRef}
+              defaultValue={dateRange.end_date}
+              onChange={e => handleDateChange('end_date', e.target.value)}
+              onInput={e => handleDateChange('end_date', e.target.value)}
+              onBlur={e => handleDateChange('end_date', e.target.value)}
+              className='input sales-payment-new__filter-input'
             />
           </div>
         </div>

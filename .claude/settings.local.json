@@ -10,7 +10,13 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat\\(payments\\): pago/cobro instantáneo post-creación y botones de pago total\n\nImplementar flujo integrado de pago/cobro al crear compras y ventas:\n\n1. **Diálogo InstantPaymentDialog** \\(nuevo componente\\)\n   - Aparece tras crear exitosamente una compra o venta\n   - Muestra resumen: ID, monto total, método de pago/moneda\n   - Campo de monto editable para pagos parciales\n   - Notas opcionales \\(colapsible\\)\n   - Navegación completa por teclado \\(Enter confirma, Escape deja pendiente\\)\n   - Manejo de errores inline si el pago falla\n\n2. **Compras \\(Purchases.jsx\\)**\n   - Al crear compra: muestra InstantPaymentDialog con monto pre-llenado\n   - Handlers para confirmar pago o dejar pendiente\n   - Limpieza de formulario después de decisión del usuario\n\n3. **Ventas \\(SalesNew.jsx\\)**\n   - Al crear venta \\(rama nueva\\): muestra InstantPaymentDialog\n   - NO muestra para agregar productos a venta existente\n   - Limpieza de carrito después de decisión\n\n4. **Botones de pago total en modales existentes**\n   - RegisterPaymentModal \\(Pago de Compras\\): botón \"Pago Total\" llena monto con pendiente\n   - RegisterSalePaymentModal \\(Cobro de Ventas\\): botón \"Cobro Total\" llena monto recibido con balance\n   - Ambos respetan formatos/normalizaciones de moneda\n\n5. **Traducciones**\n   - Nuevas claves para paymentDecision \\(compras\\) y collectionDecision \\(ventas\\)\n   - Nuevas claves payFull y collectFull en modales de pago\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(curl:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__list_network_requests",
+      "mcp__chrome-devtools__fill",
+      "mcp__chrome-devtools__evaluate_script"
     ]
   },
   "enableAllProjectMcpServers": true,
