@@ -3,7 +3,7 @@
  * Sistema de autenticación completo con sistema de temas robusto
  */
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import {
   BrowserRouter as Router,
   Routes,
@@ -88,13 +88,7 @@ const ProtectedRoute = ({ children }) => {
 
 // Componente interno que usa los hooks
 function AppContent() {
-  const { isAuthenticated, loading, initializeAuth } = useAuth()
-
-  // Inicializar autenticación al cargar la aplicación
-  useEffect(() => {
-    initializeAuth()
-    // Removed auto-login call - authentication must be explicit by user
-  }, [initializeAuth])
+  const { isAuthenticated, loading } = useAuth()
 
   if (loading) {
     return (

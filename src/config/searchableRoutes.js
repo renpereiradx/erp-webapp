@@ -30,37 +30,37 @@ export const distinctSearchableRoutes = [
     name: 'Dashboard de Resumen de Cuentas por Cobrar',
     href: '/receivables',
     icon: LayoutDashboard,
-    category: 'Finanzas'
+    category: 'BI / Cuentas por Cobrar'
   },
   {
     name: 'Lista Maestra y Filtros de Cuentas por Cobrar',
     href: '/receivables/list',
     icon: List,
-    category: 'Finanzas'
+    category: 'BI / Cuentas por Cobrar'
   },
   {
     name: 'Detalle de Cuenta por Cobrar e Historial de Pagos',
     href: '/receivables/list',
     icon: History,
-    category: 'Finanzas'
+    category: 'BI / Cuentas por Cobrar'
   },
   {
     name: 'Cuentas Vencidas y Tareas de Cobranza',
     href: '/receivables/overdue',
     icon: AlertTriangle,
-    category: 'Finanzas'
+    category: 'BI / Cuentas por Cobrar'
   },
   {
     name: 'Perfil Crediticio de Cliente y Análisis de Riesgo',
     href: '/receivables/list',
     icon: UserCheck,
-    category: 'Finanzas'
+    category: 'BI / Cuentas por Cobrar'
   },
   {
     name: 'Reporte de Envejecimiento y Estadísticas de Cobranza',
     href: '/receivables/aging-report',
     icon: PieChart,
-    category: 'Finanzas'
+    category: 'BI / Cuentas por Cobrar'
   },
 
   // Dashboard & KPIs
@@ -68,25 +68,25 @@ export const distinctSearchableRoutes = [
     name: 'KPIs Detallados del Negocio',
     href: '/dashboard/kpis',
     icon: TrendingUp,
-    category: 'Inteligencia'
+    category: 'BI / Dashboard'
   },
   {
     name: 'Análisis de Ventas y Mapa de Calor',
     href: '/dashboard/sales-heatmap',
     icon: Flame,
-    category: 'Inteligencia'
+    category: 'BI / Dashboard'
   },
   {
     name: 'Alertas Consolidadas del Sistema',
     href: '/dashboard/alerts',
     icon: AlertTriangle,
-    category: 'Inteligencia'
+    category: 'BI / Dashboard'
   },
   {
     name: 'Top de Productos más Vendidos',
     href: '/dashboard/top-products',
     icon: Award,
-    category: 'Inteligencia'
+    category: 'BI / Dashboard'
   },
   
   // Gestión de Usuarios y Perfil

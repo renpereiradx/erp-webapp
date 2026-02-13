@@ -3,7 +3,7 @@
  * Reemplaza Zustand para evitar problemas de compatibilidad
  */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import authService from '../services/authService';
 import apiService from '../services/api';
 import userService from '../services/userService';
@@ -18,13 +18,13 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  const initializeAuth = async () => {
+  const initializeAuth = useCallback(async () => {
     try {
       const savedToken = apiService.getToken();
       if (savedToken) {
         setToken(savedToken);
         setIsAuthenticated(true);
-        
+
         // Fetch current user data to ensure we have real data
         try {
           const response = await userService.getMe();
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setAuthLoading(false);
     }
-  };
+  }, []);
 
   const login = async (credentials) => {
     setLoading(true);

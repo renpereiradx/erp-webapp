@@ -37,6 +37,8 @@ import {
   Flame,
   AlertTriangle,
   Award,
+  List,
+  Clock as ClockIcon,
 } from 'lucide-react'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 import { distinctSearchableRoutes } from '@/config/searchableRoutes'
@@ -79,34 +81,63 @@ const MainLayout = ({ children }) => {
         icon: BarChart3,
         children: [
           {
-            name: t('common.home', 'Resumen Ejecutivo'),
-            href: '/dashboard',
+            name: t('common.dashboard', 'Dashboard'),
+            href: '#',
             icon: LayoutDashboard,
+            children: [
+              {
+                name: t('common.home', 'Resumen Ejecutivo'),
+                href: '/dashboard',
+                icon: BarChart3,
+              },
+              {
+                name: t('dashboard.kpis', 'KPIs y Rendimiento'),
+                href: '/dashboard/kpis',
+                icon: TrendingUp,
+              },
+              {
+                name: t('dashboard.heatmap', 'Análisis de Ventas'),
+                href: '/dashboard/sales-heatmap',
+                icon: Flame,
+              },
+              {
+                name: t('dashboard.alerts', 'Alertas de Negocio'),
+                href: '/dashboard/alerts',
+                icon: AlertTriangle,
+              },
+              {
+                name: t('dashboard.topProducts', 'Top de Productos'),
+                href: '/dashboard/top-products',
+                icon: Award,
+              },
+            ],
           },
           {
             name: t('receivables.title', 'Cuentas por Cobrar'),
-            href: '/receivables',
+            href: '#',
             icon: CreditCard,
-          },
-          {
-            name: t('dashboard.kpis', 'KPIs y Rendimiento'),
-            href: '/dashboard/kpis',
-            icon: TrendingUp,
-          },
-          {
-            name: t('dashboard.heatmap', 'Análisis de Ventas'),
-            href: '/dashboard/sales-heatmap',
-            icon: Flame,
-          },
-          {
-            name: t('dashboard.alerts', 'Alertas de Negocio'),
-            href: '/dashboard/alerts',
-            icon: AlertTriangle,
-          },
-          {
-            name: t('dashboard.topProducts', 'Top de Productos'),
-            href: '/dashboard/top-products',
-            icon: Award,
+            children: [
+              {
+                name: t('receivables.summary', 'Resumen'),
+                href: '/receivables',
+                icon: BarChart3,
+              },
+              {
+                name: t('receivables.list', 'Lista de Cuentas'),
+                href: '/receivables/list',
+                icon: List,
+              },
+              {
+                name: t('receivables.overdue', 'Cuentas Vencidas'),
+                href: '/receivables/overdue',
+                icon: AlertTriangle,
+              },
+              {
+                name: t('receivables.agingReport', 'Reporte de Antigüedad'),
+                href: '/receivables/aging-report',
+                icon: ClockIcon,
+              },
+            ],
           },
         ],
       },
@@ -362,15 +393,40 @@ const MainLayout = ({ children }) => {
 
 
   // Auto-expandir menús con sub-items activos
+  // Soporta hasta 2 niveles de anidamiento y usa startsWith
+  // para que rutas hijas (ej: /receivables/detail/123) expandan el grupo padre
   useEffect(() => {
+    const matchesPath = (href) =>
+      location.pathname === href || location.pathname.startsWith(href + '/')
+
     navigation.forEach(item => {
-      if (
-        item.children &&
-        item.children.some(child => child.href === location.pathname)
-      ) {
+      if (!item.children) return
+      const shouldExpand = item.children.some(child => {
+        if (child.href && child.href !== '#' && matchesPath(child.href)) return true
+        if (child.children) {
+          return child.children.some(grandchild =>
+            grandchild.href && grandchild.href !== '#' && matchesPath(grandchild.href)
+          )
+        }
+        return false
+      })
+      if (shouldExpand) {
         setExpandedMenus(prev => {
           if (prev[item.name]) return prev
           return { ...prev, [item.name]: true }
+        })
+        // También expandir el sub-grupo hijo que coincide
+        item.children.forEach(child => {
+          if (!child.children) return
+          const childMatches = child.children.some(grandchild =>
+            grandchild.href && grandchild.href !== '#' && matchesPath(grandchild.href)
+          )
+          if (childMatches) {
+            setExpandedMenus(prev => {
+              if (prev[child.name]) return prev
+              return { ...prev, [child.name]: true }
+            })
+          }
         })
       }
     })
@@ -381,7 +437,18 @@ const MainLayout = ({ children }) => {
   const isParentActive = item => {
     if (isActive(item.href)) return true
     if (item.children) {
-      return item.children.some(child => isActive(child.href))
+      return item.children.some(child => {
+        if (child.href && child.href !== '#') {
+          if (location.pathname === child.href || location.pathname.startsWith(child.href + '/')) return true
+        }
+        if (child.children) {
+          return child.children.some(grandchild =>
+            location.pathname === grandchild.href ||
+            location.pathname.startsWith(grandchild.href + '/')
+          )
+        }
+        return false
+      })
     }
     return false
   }
@@ -490,18 +557,71 @@ const MainLayout = ({ children }) => {
           <div className='nav__submenu'>
             {item.children.map(child => {
               const ChildIcon = child.icon
-              const childActive = isActive(child.href)
+              const childHasChildren = child.children && child.children.length > 0
+              const childIsExpanded = expandedMenus[child.name]
+              const childActive = childHasChildren
+                ? isParentActive(child)
+                : isActive(child.href)
               const childLabelVisible =
                 !isLargeScreen || isSidebarExpanded || isMobile
               const childAriaLabel = childLabelVisible ? undefined : child.name
+
+              if (childHasChildren) {
+                return (
+                  <div key={child.name} className='nav__item-wrapper'>
+                    <button
+                      onClick={() => toggleMenu(child.name)}
+                      className={`nav__subitem ${childActive ? 'nav__subitem--active' : ''}`}
+                      aria-expanded={childIsExpanded}
+                      aria-label={childAriaLabel}
+                      title={child.name}
+                    >
+                      <ChildIcon className='nav__icon' />
+                      <span className='nav__text' aria-hidden={!childLabelVisible}>
+                        {child.name}
+                      </span>
+                      {childIsExpanded ? (
+                        <ChevronDown className='nav__chevron' aria-hidden={!childLabelVisible} />
+                      ) : (
+                        <ChevronRight className='nav__chevron' aria-hidden={!childLabelVisible} />
+                      )}
+                    </button>
+                    {childIsExpanded && (
+                      <div className='nav__submenu nav__submenu--nested'>
+                        {child.children.map(grandchild => {
+                          const GrandchildIcon = grandchild.icon
+                          const grandchildActive = isActive(grandchild.href)
+                          const gcLabelVisible = !isLargeScreen || isSidebarExpanded || isMobile
+                          const gcAriaLabel = gcLabelVisible ? undefined : grandchild.name
+
+                          return (
+                            <Link
+                              key={grandchild.name}
+                              to={grandchild.href}
+                              onClick={() => isMobile && setSidebarOpen(false)}
+                              className={`nav__subitem nav__subitem--nested ${grandchildActive ? 'nav__subitem--active' : ''}`}
+                              aria-label={gcAriaLabel}
+                              title={grandchild.name}
+                            >
+                              <GrandchildIcon className='nav__icon' />
+                              <span className='nav__text' aria-hidden={!gcLabelVisible}>
+                                {grandchild.name}
+                              </span>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
 
               return (
                 <Link
                   key={child.name}
                   to={child.href}
                   onClick={() => isMobile && setSidebarOpen(false)}
-                  className={`nav__subitem ${childActive ? 'nav__subitem--active' : ''
-                    }`}
+                  className={`nav__subitem ${childActive ? 'nav__subitem--active' : ''}`}
                   aria-label={childAriaLabel}
                   title={child.name}
                 >
