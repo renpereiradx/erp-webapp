@@ -787,6 +787,7 @@ const MainLayout = ({ children }) => {
                             width: '100%',
                             padding: '10px 16px',
                             border: 'none',
+                            borderLeft: index === selectedIndex ? '3px solid #3b82f6' : '3px solid transparent',
                             background: index === selectedIndex ? '#f1f5f9' : 'transparent',
                             cursor: 'pointer',
                             textAlign: 'left',

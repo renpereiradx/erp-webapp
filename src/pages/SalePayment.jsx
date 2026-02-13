@@ -5,7 +5,8 @@ import {
   RefreshCw,
   Search,
   CreditCard,
-  ChevronDown,
+  X,
+  User,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,13 +34,18 @@ import useClientStore from '@/store/useClientStore'
 import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
 
+const formatDocumentId = value => {
+  if (!value) return ''
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
 const SalePayment = () => {
   const { t } = useI18n()
   const navigate = useNavigate()
   const { error: showError, success: showSuccess } = useToast()
 
   // Zustand stores
-  const { searchResults, searchClients } = useClientStore()
+  const { searchResults, searchClients, loading: clientsLoading } = useClientStore()
 
   // Local state para ventas y filtros
   const [rawSales, setRawSales] = useState([]) // Datos sin filtrar de la API
@@ -52,13 +58,12 @@ const SalePayment = () => {
   const [selectedClientName, setSelectedClientName] = useState('') // Nombre del cliente para API
   const [selectedStatus, setSelectedStatus] = useState('')
 
-  // Estado para dropdown de clientes
+  // Estado para dropdown de clientes (mismo patrón que modal de productos en SalesNew)
   const [clientSearchTerm, setClientSearchTerm] = useState('')
-  const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false)
-  const [highlightedClientIndex, setHighlightedClientIndex] = useState(0)
+  const [showClientDropdown, setShowClientDropdown] = useState(false)
+  const [highlightedClientIndex, setHighlightedClientIndex] = useState(-1)
+  const clientSearchContainerRef = useRef(null)
   const clientDropdownRef = useRef(null)
-  const clientInputRef = useRef(null)
-  const clientListRef = useRef(null)
   const startDateRef = useRef(null)
   const endDateRef = useRef(null)
 
@@ -106,16 +111,8 @@ const SalePayment = () => {
     handleLoadSales({ dateRange: newRange })
   }
 
-  const handleLoadClients = async (searchTerm = '') => {
-    if (!searchTerm || searchTerm.length < 2) {
-      return // Requerir al menos 2 caracteres
-    }
-    try {
-      await searchClients(searchTerm)
-    } catch (error) {
-      console.error('Error loading clients:', error)
-    }
-  }
+  // Alias searchResults as clients for the dropdown
+  const clients = searchResults
 
   // Cargar ventas con lógica inteligente según filtros
   // Acepta overrides para evitar problemas de stale closures
@@ -323,162 +320,80 @@ const SalePayment = () => {
     handleLoadSales({ dateRange: defaultDates, client: '', clientName: '' })
   }
 
-  // Funciones para el dropdown de clientes
-  const filteredClients = React.useMemo(() => {
-    // SIEMPRE usar searchResults si están disponibles (después de búsqueda API)
-    // Si no hay searchResults, no mostrar nada hasta que se busque
-    if (clientSearchTerm.length >= 2 && searchResults.length > 0) {
-      return searchResults
-    }
-
-    // Si hay menos de 2 caracteres o no hay resultados, retornar vacío
-    return []
-  }, [searchResults, clientSearchTerm])
-
-  const handleClientSelect = (clientId, clientName) => {
-    setSelectedClient(clientId)
-    setSelectedClientName(clientName)
-    setClientSearchTerm(clientName)
-    setIsClientDropdownOpen(false)
-    setHighlightedClientIndex(0)
+  // Seleccionar cliente desde el dropdown
+  const handleSelectClient = client => {
+    setSelectedClient(client.id.toString())
+    setSelectedClientName(client.name || '')
+    setClientSearchTerm(client.name || '')
+    setShowClientDropdown(false)
+    setHighlightedClientIndex(-1)
     setPagination(prev => ({ ...prev, page: 1 }))
-    // Recargar directamente con el nuevo cliente
-    if (clientId && clientId !== 'all' && clientName) {
-      handleLoadSales({ client: clientId, clientName })
-    } else {
-      // "Todos los clientes" — recargar por fechas
-      handleLoadSales({ client: '', clientName: '' })
-    }
+    handleLoadSales({ client: client.id.toString(), clientName: client.name || '' })
   }
 
-  // Buscar clientes cuando el usuario escribe (con debounce)
+  // Limpiar selección de cliente
+  const handleClearClient = () => {
+    setSelectedClient('')
+    setSelectedClientName('')
+    setClientSearchTerm('')
+    setShowClientDropdown(false)
+    setHighlightedClientIndex(-1)
+    setPagination(prev => ({ ...prev, page: 1 }))
+    handleLoadSales({ client: '', clientName: '' })
+  }
+
+  // Buscar clientes cuando cambia el término de búsqueda (3 chars, 300ms debounce)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // SOLO buscar si NO hay cliente seleccionado (estamos escribiendo para buscar)
-      // Si ya hay cliente seleccionado, NO buscar (el input muestra el nombre del cliente seleccionado)
-      if (clientSearchTerm && clientSearchTerm.length >= 2 && !selectedClient) {
-        handleLoadClients(clientSearchTerm)
-      }
-    }, 500) // Debounce de 500ms
-
-    return () => clearTimeout(timer)
-  }, [clientSearchTerm, selectedClient])
-
-  const handleClientInputClick = () => {
-    setIsClientDropdownOpen(true)
-    setHighlightedClientIndex(0)
-  }
-
-  const handleClientInputKeyDown = e => {
-    if (!isClientDropdownOpen) {
-      if (e.key === 'Enter' || e.key === 'ArrowDown') {
-        setIsClientDropdownOpen(true)
-        setHighlightedClientIndex(0)
-        e.preventDefault()
-      }
-      return
-    }
-
-    const clientsToShow = [
-      {
-        id: 'all',
-        name: t('sales.payment.filter.all_clients', 'Todos los clientes'),
-      },
-      ...filteredClients,
-    ]
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault()
-        setHighlightedClientIndex(prev =>
-          prev < clientsToShow.length - 1 ? prev + 1 : prev
-        )
-        break
-      case 'ArrowUp':
-        e.preventDefault()
-        setHighlightedClientIndex(prev => (prev > 0 ? prev - 1 : 0))
-        break
-      case 'Enter': {
-        e.preventDefault()
-        const selectedItem = clientsToShow[highlightedClientIndex]
-        if (selectedItem) {
-          const clientName =
-            selectedItem.id === 'all'
-              ? ''
-              : selectedItem.name ||
-                `${selectedItem.first_name} ${selectedItem.last_name}`
-          handleClientSelect(selectedItem.id.toString(), clientName)
+    const searchTimeout = setTimeout(async () => {
+      if (clientSearchTerm.trim().length >= 3) {
+        // Evitar búsqueda si el término coincide con el cliente seleccionado
+        if (selectedClient && clientSearchTerm === selectedClientName) {
+          return
         }
-        break
+        try {
+          await searchClients(clientSearchTerm)
+          setShowClientDropdown(true)
+        } catch (error) {
+          console.error('Error searching clients:', error)
+          setShowClientDropdown(false)
+        }
+      } else {
+        setShowClientDropdown(false)
       }
-      case 'Escape':
-        setIsClientDropdownOpen(false)
-        setHighlightedClientIndex(0)
-        break
-      default:
-        break
-    }
-  }
+    }, 300)
 
-  // Cerrar dropdown al hacer clic fuera o presionar ESC
+    return () => clearTimeout(searchTimeout)
+  }, [clientSearchTerm, searchClients, selectedClient, selectedClientName])
+
+  // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
-    if (!isClientDropdownOpen) return
-
     const handleClickOutside = event => {
       if (
-        clientDropdownRef.current &&
-        !clientDropdownRef.current.contains(event.target)
+        clientSearchContainerRef.current &&
+        !clientSearchContainerRef.current.contains(event.target)
       ) {
-        setIsClientDropdownOpen(false)
+        setShowClientDropdown(false)
+        setHighlightedClientIndex(-1)
       }
     }
 
-    const handleEscapeKey = event => {
-      if (event.key === 'Escape') {
-        setIsClientDropdownOpen(false)
-        // Devolver el focus al input
-        clientInputRef.current?.focus()
+    if (showClientDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
       }
     }
+  }, [showClientDropdown])
 
-    document.addEventListener('mousedown', handleClickOutside)
-    document.addEventListener('keydown', handleEscapeKey)
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('keydown', handleEscapeKey)
-    }
-  }, [isClientDropdownOpen])
-
-  // Focus en el primer elemento cuando se abre el dropdown
+  // Scroll al item destacado en el dropdown
   useEffect(() => {
-    if (isClientDropdownOpen && clientListRef.current) {
-      // Primero quitar el focus del input
-      clientInputRef.current?.blur()
-
-      // Usar requestAnimationFrame para asegurar que el DOM esté completamente renderizado
-      requestAnimationFrame(() => {
-        const firstElement = clientListRef.current?.children[0]
-        if (firstElement && typeof firstElement.focus === 'function') {
-          firstElement.focus()
-        }
-      })
-    }
-  }, [isClientDropdownOpen])
-
-  // Scroll al item destacado
-  useEffect(() => {
-    if (isClientDropdownOpen && clientListRef.current) {
-      const highlightedElement =
-        clientListRef.current.children[highlightedClientIndex]
-      if (highlightedElement) {
-        highlightedElement.scrollIntoView({
-          block: 'nearest',
-          behavior: 'smooth',
-        })
+    if (showClientDropdown && clientDropdownRef.current && highlightedClientIndex >= 0) {
+      const item = clientDropdownRef.current.children[highlightedClientIndex]
+      if (item) {
+        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
       }
     }
-  }, [highlightedClientIndex, isClientDropdownOpen])
+  }, [highlightedClientIndex, showClientDropdown])
 
   // Manejar selección de venta (solo una a la vez)
   const handleToggleSaleSelection = saleId => {
@@ -630,89 +545,178 @@ const SalePayment = () => {
             />
           </div>
 
-          {/* Selector de cliente con búsqueda */}
+          {/* Selector de cliente con búsqueda (estilo navbar search) */}
           <div
             className='sales-payment-new__filter-select'
-            ref={clientDropdownRef}
+            ref={clientSearchContainerRef}
+            style={{ position: 'relative' }}
           >
-            <div className='sales-payment-new__client-dropdown'>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Search size={18} style={{ position: 'absolute', left: '12px', color: '#64748b', pointerEvents: 'none' }} />
               <input
-                ref={clientInputRef}
                 type='text'
+                placeholder={t(
+                  'sales.payment.filter.client_placeholder',
+                  'Buscar cliente por nombre...'
+                )}
                 value={clientSearchTerm}
-                onChange={e => {
-                  setClientSearchTerm(e.target.value)
-                  // Limpiar cliente seleccionado cuando el usuario escribe para buscar otro
-                  if (selectedClient) {
+                onChange={event => {
+                  setClientSearchTerm(event.target.value)
+                  setShowClientDropdown(true)
+                  setHighlightedClientIndex(-1)
+                  if (selectedClient && event.target.value !== selectedClientName) {
                     setSelectedClient('')
                     setSelectedClientName('')
                   }
                 }}
-                onClick={handleClientInputClick}
-                onKeyDown={handleClientInputKeyDown}
-                placeholder={t(
-                  'sales.payment.filter.client',
-                  'Seleccionar cliente'
-                )}
-                className='sales-payment-new__filter-input sales-payment-new__client-input'
+                onFocus={() => {
+                  if (clientSearchTerm.length >= 3 && clients.length > 0) {
+                    setShowClientDropdown(true)
+                  }
+                }}
+                onKeyDown={e => {
+                  const itemCount = clients.length
+
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    if (!showClientDropdown && itemCount > 0) {
+                      setShowClientDropdown(true)
+                      setHighlightedClientIndex(0)
+                    } else if (itemCount > 0) {
+                      setHighlightedClientIndex(prev =>
+                        prev < itemCount - 1 ? prev + 1 : 0
+                      )
+                    }
+                  }
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault()
+                    if (itemCount > 0) {
+                      setHighlightedClientIndex(prev =>
+                        prev > 0 ? prev - 1 : itemCount - 1
+                      )
+                    }
+                  }
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    if (showClientDropdown && itemCount > 0) {
+                      const indexToSelect =
+                        highlightedClientIndex >= 0 ? highlightedClientIndex : 0
+                      handleSelectClient(clients[indexToSelect])
+                    }
+                  }
+                  if (e.key === 'Escape') {
+                    e.preventDefault()
+                    setShowClientDropdown(false)
+                    setHighlightedClientIndex(-1)
+                  }
+                  if (e.key === 'Tab') {
+                    setShowClientDropdown(false)
+                    setHighlightedClientIndex(-1)
+                  }
+                }}
+                role='combobox'
+                aria-expanded={showClientDropdown}
+                aria-haspopup='listbox'
+                aria-controls='client-search-listbox'
+                aria-activedescendant={
+                  highlightedClientIndex >= 0
+                    ? `client-option-${highlightedClientIndex}`
+                    : undefined
+                }
+                autoComplete='off'
+                style={{
+                  width: '100%',
+                  padding: '8px 12px 8px 36px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  backgroundColor: '#f8fafc',
+                  fontSize: '0.875rem',
+                  outline: 'none',
+                  transition: 'all 0.2s',
+                  height: '48px',
+                }}
               />
-              <ChevronDown
-                className='sales-payment-new__client-dropdown-icon'
-                onClick={handleClientInputClick}
-              />
-              {isClientDropdownOpen && (
-                <div
-                  className='sales-payment-new__client-dropdown-menu'
-                  ref={clientListRef}
+              {clientSearchTerm && (
+                <button
+                  onClick={handleClearClient}
+                  style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                  aria-label='Limpiar búsqueda de cliente'
                 >
-                  <button
-                    type='button'
-                    className={`sales-payment-new__client-dropdown-item ${
-                      highlightedClientIndex === 0
-                        ? 'sales-payment-new__client-dropdown-item--highlighted'
-                        : ''
-                    }`}
-                    onClick={() => handleClientSelect('all', '')}
-                    onMouseEnter={() => setHighlightedClientIndex(0)}
-                    onFocus={() => setHighlightedClientIndex(0)}
-                  >
-                    {t(
-                      'sales.payment.filter.all_clients',
-                      'Todos los clientes'
-                    )}
-                  </button>
-                  {filteredClients.map((client, index) => {
-                    const clientName =
-                      client.name || `${client.first_name} ${client.last_name}`
-                    return (
-                      <button
-                        type='button'
-                        key={client.id}
-                        className={`sales-payment-new__client-dropdown-item ${
-                          highlightedClientIndex === index + 1
-                            ? 'sales-payment-new__client-dropdown-item--highlighted'
-                            : ''
-                        }`}
-                        onClick={() =>
-                          handleClientSelect(client.id.toString(), clientName)
-                        }
-                        onMouseEnter={() =>
-                          setHighlightedClientIndex(index + 1)
-                        }
-                        onFocus={() => setHighlightedClientIndex(index + 1)}
-                      >
-                        {clientName}
-                      </button>
-                    )
-                  })}
-                  {filteredClients.length === 0 && (
-                    <div className='sales-payment-new__client-dropdown-item sales-payment-new__client-dropdown-item--empty'>
-                      No se encontraron clientes
-                    </div>
-                  )}
-                </div>
+                  <X size={14} />
+                </button>
               )}
             </div>
+
+            {showClientDropdown && (
+              <div
+                ref={clientDropdownRef}
+                role='listbox'
+                id='client-search-listbox'
+                aria-label={t('sales.payment.filter.client_results', 'Resultados de clientes')}
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '8px',
+                  backgroundColor: 'white',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                  border: '1px solid #e2e8f0',
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  zIndex: 9999,
+                }}
+              >
+                {clientsLoading ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>
+                    {t('common.loading', 'Buscando...')}
+                  </div>
+                ) : clients.length === 0 ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>
+                    {clientSearchTerm.length < 3
+                      ? t('sales.payment.filter.min_chars', 'Escribe al menos 3 caracteres')
+                      : t('sales.payment.filter.no_results', 'No se encontraron clientes')}
+                  </div>
+                ) : (
+                  clients.map((client, index) => (
+                    <button
+                      key={`${client.id}-${index}`}
+                      id={`client-option-${index}`}
+                      role='option'
+                      aria-selected={index === highlightedClientIndex}
+                      onClick={() => handleSelectClient(client)}
+                      onMouseEnter={() => setHighlightedClientIndex(index)}
+                      onMouseLeave={() => setHighlightedClientIndex(-1)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        width: '100%',
+                        padding: '10px 16px',
+                        border: 'none',
+                        borderLeft: index === highlightedClientIndex ? '3px solid #3b82f6' : '3px solid transparent',
+                        background: index === highlightedClientIndex ? '#f1f5f9' : 'transparent',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        borderBottom: '1px solid #f1f5f9',
+                      }}
+                    >
+                      <User size={16} style={{ marginRight: '10px', color: '#64748b', flexShrink: 0 }} />
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
+                          {client.name}
+                        </span>
+                        {client.document_id && (
+                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                            Doc: {formatDocumentId(client.document_id)}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
           </div>
 
           {/* Selector de rango de fechas */}

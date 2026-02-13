@@ -227,155 +227,13 @@
   }
 }
 
-// Select
+// Client search container
 .sales-payment-new__filter-select {
   flex: 1;
   min-width: 200px;
 
   @media (max-width: 968px) {
     min-width: 100%;
-  }
-
-  // Override Radix Select styles
-  button[data-radix-select-trigger] {
-    height: 48px;
-    padding: $spacing-12 $spacing-16;
-    border-radius: $border-radius-large;
-    border: 1px solid;
-    font-size: $font-size-300;
-    font-weight: $font-weight-regular;
-    transition: all $duration-fast $ease-ease-in-out;
-    width: 100%;
-    justify-content: space-between;
-
-    @include themify {
-      background-color: themed('bg-primary');
-      border-color: themed('border-default');
-      color: themed('text-primary');
-    }
-
-    &:focus {
-      outline: none;
-      border-width: 2px;
-
-      @include themify {
-        border-color: themed('action-primary');
-      }
-    }
-
-    &[data-placeholder] {
-      @include themify {
-        color: themed('text-tertiary');
-      }
-    }
-  }
-}
-
-.sales-payment-new__select-trigger {
-  width: 100%;
-}
-
-// Custom client dropdown
-.sales-payment-new__client-dropdown {
-  position: relative;
-  width: 100%;
-}
-
-.sales-payment-new__client-input {
-  padding-right: 40px !important;
-  cursor: pointer;
-}
-
-.sales-payment-new__client-dropdown-icon {
-  position: absolute;
-  right: $spacing-16;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  pointer-events: none;
-  transition: transform $duration-fast $ease-ease-in-out;
-
-  @include themify {
-    color: themed('text-tertiary');
-  }
-
-  .sales-payment-new__client-dropdown.open & {
-    transform: translateY(-50%) rotate(180deg);
-  }
-}
-
-.sales-payment-new__client-dropdown-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  max-height: 240px;
-  overflow-y: auto;
-  border-radius: $border-radius-large;
-  border: 1px solid;
-  z-index: 100;
-  @include elevation(8);
-  @include custom-scrollbar;
-
-  @include themify {
-    background-color: themed('bg-primary');
-    border-color: themed('border-default');
-  }
-}
-
-.sales-payment-new__client-dropdown-item {
-  display: block;
-  width: 100%;
-  padding: $spacing-12 $spacing-16;
-  cursor: pointer;
-  transition: background-color $duration-fast $ease-ease-in-out;
-  font-size: $font-size-300;
-  text-align: left;
-  border: none;
-  background: none;
-
-  @include themify {
-    color: themed('text-primary');
-  }
-
-  &:hover,
-  &--highlighted {
-    @include themify {
-      background-color: themed('surface-hover');
-    }
-  }
-
-  &:focus {
-    outline: none;
-
-    @include themify {
-      background-color: themed('surface-hover');
-    }
-  }
-
-  &--empty {
-    cursor: default;
-
-    @include themify {
-      color: themed('text-tertiary');
-    }
-
-    &:hover {
-      @include themify {
-        background-color: transparent;
-      }
-    }
-  }
-
-  &:first-child {
-    border-top-left-radius: $border-radius-large;
-    border-top-right-radius: $border-radius-large;
-  }
-
-  &:last-child {
-    border-bottom-left-radius: $border-radius-large;
-    border-bottom-right-radius: $border-radius-large;
   }
 }
 
@@ -846,7 +704,6 @@
   }
 }
 
-// Animación de spinner
 @keyframes spin {
   from {
     transform: rotate(0deg);
