@@ -91,6 +91,14 @@ const SalePayment = () => {
     handleLoadSales()
   }, [])
 
+  // Recargar API cuando cambian filtros de cliente o fechas
+  useEffect(() => {
+    // Reset a página 1 cuando cambian los filtros
+    setPagination(prev => ({ ...prev, page: 1 }))
+    // Recargar datos con nuevos filtros
+    handleLoadSales()
+  }, [selectedClient, selectedClientName, dateRange.start_date, dateRange.end_date])
+
   // Cargar clientes mediante búsqueda
   const handleLoadClients = async (searchTerm = '') => {
     if (!searchTerm || searchTerm.length < 2) {
