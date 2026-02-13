@@ -21,10 +21,12 @@ export const useReceivablesMasterList = (initialFilters = {}) => {
     setError(null);
     try {
       const response = await receivablesService.getMasterList(filters);
-      setInvoices(response.data || response || []);
+      const data = response.data || response || [];
+      setInvoices(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error loading master list:', err);
       setError('Error al cargar la lista de cuentas.');
+      setInvoices([]); // Ensure invoices is always an array even on error
     } finally {
       setLoading(false);
     }

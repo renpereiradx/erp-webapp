@@ -8,15 +8,18 @@ import { formatPYG } from '@/utils/currencyUtils';
 /**
  * Tabla principal para la lista maestra de cuentas por cobrar.
  */
-const MasterListTable = ({ invoices, loading }) => {
+const MasterListTable = ({ invoices = [], loading }) => {
   const navigate = useNavigate();
   const { t } = useI18n();
+
+  // Defensive check: ensure invoices is always an array
+  const safeInvoices = Array.isArray(invoices) ? invoices : [];
 
   return (
     <div className="rec-grid-container">
       <div className="rec-grid-toolbar">
         <div className="rec-grid-toolbar__info">
-          {t('common.pagination.showing', 'Mostrando')} <strong>1-{invoices.length}</strong> {t('common.pagination.of', 'de')} <strong>1,248</strong> items
+          {t('common.pagination.showing', 'Mostrando')} <strong>1-{safeInvoices.length}</strong> {t('common.pagination.of', 'de')} <strong>1,248</strong> items
         </div>
         <div className="rec-grid-toolbar__actions">
           <Button variant="ghost" size="icon" title="Actualizar">
@@ -55,7 +58,7 @@ const MasterListTable = ({ invoices, loading }) => {
                 </TableCell>
               </TableRow>
             ) : (
-              invoices.map((inv) => (
+              safeInvoices.map((inv) => (
                 <TableRow key={inv.id}>
                   <TableCell><input type="checkbox" className="fluent-checkbox" /></TableCell>
                   <TableCell>
