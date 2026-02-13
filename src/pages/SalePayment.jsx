@@ -527,11 +527,11 @@ const SalePayment = () => {
   }
 
   // Estados de UI
-  if (isLoading && sales.length === 0) {
+  if (isLoading && rawSales.length === 0) {
     return <DataState variant='loading' skeletonVariant='list' />
   }
 
-  if (error && sales.length === 0) {
+  if (error && rawSales.length === 0) {
     return (
       <DataState
         variant='error'
