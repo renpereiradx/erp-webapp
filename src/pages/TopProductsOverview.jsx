@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import useDashboardStore from '@/store/useDashboardStore';
+import { formatPYG } from '@/utils/currencyUtils';
 import { 
   TrendingUp, 
   Award, 
@@ -13,6 +14,7 @@ import {
   Package,
   RefreshCw
 } from 'lucide-react';
+// ... (rest of lucide-react imports remain same)
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -42,14 +44,7 @@ const TopProductsOverview = () => {
         if (!alerts || alerts.length === 0) fetchDashboardData();
     }, [fetchTopProducts, fetchDashboardData, alerts]);
 
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('es-PY', {
-            style: 'currency',
-            currency: 'PYG',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(value || 0);
-    };
+    const formatCurrency = (value) => formatPYG(value);
 
     const formatNumber = (value) => {
         return new Intl.NumberFormat('es-PY').format(value || 0);

@@ -3,7 +3,7 @@ import { telemetry } from '../utils/telemetry';
 import { summaryData, agingData, debtorsData, forecastData, masterListData, detailData, overdueData, clientProfileData, agingReportData } from './mocks/receivablesMock';
 
 const API_PREFIX = '/receivables';
-const USE_MOCK = true; // Toggle this when backend is ready
+const USE_MOCK = false; // Toggle this when backend is ready
 
 // Helper for retries
 const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
@@ -39,7 +39,7 @@ export const receivablesService = {
     try {
       if (USE_MOCK) return _mockRes(summaryData);
 
-      const endpoint = `${API_PREFIX}/summary?period=${period}`;
+      const endpoint = `${API_PREFIX}/overview?period=${period}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       telemetry.record('receivables.service.summary', { duration: Date.now() - startTime, period });
       return result;
@@ -82,7 +82,7 @@ export const receivablesService = {
     try {
       if (USE_MOCK) return _mockRes(agingData);
 
-      const endpoint = `${API_PREFIX}/aging`;
+      const endpoint = `${API_PREFIX}/aging/report`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       telemetry.record('receivables.service.aging', { duration: Date.now() - startTime });
       return result;
@@ -169,7 +169,7 @@ export const receivablesService = {
     try {
       if (USE_MOCK) return _mockRes(forecastData);
 
-      const endpoint = `${API_PREFIX}/forecast?weeks=${weeks}`;
+      const endpoint = `${API_PREFIX}/statistics?period=month`; // Map forecast to stats for now if not ready
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       telemetry.record('receivables.service.forecast', { duration: Date.now() - startTime, weeks });
       return result;
@@ -212,7 +212,7 @@ export const receivablesService = {
       if (USE_MOCK) return _mockRes(masterListData);
 
       const queryParams = new URLSearchParams(filters);
-      const endpoint = `${API_PREFIX}/list?${queryParams.toString()}`;
+      const endpoint = `${API_PREFIX}?${queryParams.toString()}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       telemetry.record('receivables.service.masterList', { duration: Date.now() - startTime, filters });
       return result;
@@ -231,7 +231,7 @@ export const receivablesService = {
     try {
       if (USE_MOCK) return _mockRes(detailData);
 
-      const endpoint = `${API_PREFIX}/detail/${id}`;
+      const endpoint = `${API_PREFIX}/${id}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       telemetry.record('receivables.service.detail', { duration: Date.now() - startTime, id });
       return result;

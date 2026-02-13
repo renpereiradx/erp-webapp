@@ -85,7 +85,7 @@ const ReceivablesDashboard = () => {
                 <span className="material-symbols-outlined">expand_more</span>
             </button>
             <button className="receivables-dashboard__filter-btn">
-                <span className="material-symbols-outlined">attach_money</span>
+                <span className="material-symbols-outlined">payments</span>
                 <span>Moneda: PYG</span>
                 <span className="material-symbols-outlined">expand_more</span>
             </button>

@@ -208,6 +208,10 @@ $theme-map: null !default;
   @include text-style($font-size-200, $font-weight-regular, $line-height-300);
 }
 
+@mixin body-xs {
+  @include text-style($font-size-100, $font-weight-regular, $line-height-100);
+}
+
 @mixin typography($variant) {
   @if $variant == 'display' {
     @include heading-1;
@@ -227,6 +231,8 @@ $theme-map: null !default;
     @include body;
   } @else if $variant == 'body-sm' or $variant == 'body-small' {
     @include body-small;
+  } @else if $variant == 'body-xs' {
+    @include body-xs;
   } @else if $variant == 'caption' {
     @include caption;
   } @else {

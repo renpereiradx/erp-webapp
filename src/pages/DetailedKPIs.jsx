@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../lib/i18n';
 import useDashboardStore from '../store/useDashboardStore';
+import { formatPYG } from '@/utils/currencyUtils';
 import {
   DollarSign,
   Users,
@@ -22,6 +23,7 @@ import {
   Percent,
   BarChart3
 } from 'lucide-react';
+// ... rest of imports
 import { Button } from '../components/ui/button';
 import {
   BarChart,
@@ -58,12 +60,8 @@ const DetailedKPIs = () => {
     fetchKPIData(period);
   }, [fetchDashboardData, fetchKPIData, period]);
 
-  const formatCurrency = (val) => {
-    if (val === undefined || val === null) return '-';
-    if (val >= 1000000) return `Gs. ${(val / 1000000).toFixed(1)}M`;
-    if (val >= 1000) return `Gs. ${(val / 1000).toFixed(0)}k`;
-    return `Gs. ${val}`;
-  };
+  const formatCurrency = (val) => formatPYG(val);
+  const formatCompact = (val) => formatPYG(val, { compact: true });
 
   const getTimeAgo = (timestamp) => {
     if (!timestamp) return '';

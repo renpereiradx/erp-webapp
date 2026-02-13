@@ -58,6 +58,10 @@ h6,
   @include body-small;
 }
 
+.body-xs {
+  @include body-xs;
+}
+
 .caption {
   @include caption;
 }

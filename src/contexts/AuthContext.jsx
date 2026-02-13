@@ -32,12 +32,11 @@ export const AuthProvider = ({ children }) => {
             setUser(response.data);
           }
         } catch (e) {
-          console.error('Error fetching user on init:', e);
-          // If token is invalid/expired, getMe will throw 401 which is handled by API interceptor
+          // Silent error: If token is invalid/expired, it's expected during init or refresh
         }
       }
     } catch (e) {
-      console.error('Auth initialization error:', e);
+      // Silent error for base init
     } finally {
       setAuthLoading(false);
     }

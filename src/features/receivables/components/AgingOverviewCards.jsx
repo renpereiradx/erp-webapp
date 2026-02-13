@@ -1,18 +1,13 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { useI18n } from '@/lib/i18n';
+import { formatPYG } from '@/utils/currencyUtils';
 
 /**
  * Tarjetas de resumen para el reporte de antigüedad.
  */
 const AgingOverviewCards = ({ stats }) => {
   const { t } = useI18n();
-
-  const currencyFormatter = new Intl.NumberFormat('es-PY', { 
-    style: 'currency', 
-    currency: 'PYG',
-    maximumFractionDigits: 0 
-  });
 
   return (
     <div className="aging-report__stats-grid">
@@ -22,7 +17,7 @@ const AgingOverviewCards = ({ stats }) => {
           <span className="material-symbols-outlined text-tertiary">account_balance</span>
         </div>
         <div className="flex items-baseline gap-2">
-          <p className="kpi-card__value">{currencyFormatter.format(stats.total_billed)}</p>
+          <p className="kpi-card__value">{formatPYG(stats.total_billed)}</p>
           <span className="status-pill status-pill--danger">+2.5%</span>
         </div>
         <p className="text-tertiary mt-2" style={{ fontSize: '10px' }}>

@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
+import { formatPYG } from '@/utils/currencyUtils';
 
 /**
  * Tabla optimizada para esfuerzos de cobranza.
@@ -62,7 +63,7 @@ const OverdueTable = ({ accounts }) => {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-right font-bold">{acc.amount}</TableCell>
+                <TableCell className="text-right font-bold">{formatPYG(acc.amount)}</TableCell>
                 <TableCell className="text-center">
                   <span className={`status-pill ${acc.priority === 'High' ? 'status-pill--danger' : 'status-pill--warning'}`}>
                     {acc.days}

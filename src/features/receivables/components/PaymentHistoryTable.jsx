@@ -3,11 +3,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
+import { formatPYG } from '@/utils/currencyUtils';
 
 /**
  * Tabla de historial de pagos para una factura específica.
  */
-const PaymentHistoryTable = ({ history, totalPaid, currency }) => {
+const PaymentHistoryTable = ({ history, totalPaid }) => {
   const { t } = useI18n();
 
   return (
@@ -50,7 +51,7 @@ const PaymentHistoryTable = ({ history, totalPaid, currency }) => {
                     </div>
                   </TableCell>
                   <TableCell className="text-tertiary truncate max-w-[150px]">{payment.note}</TableCell>
-                  <TableCell className="text-right font-bold">{currency}{payment.amount}</TableCell>
+                  <TableCell className="text-right font-bold">{formatPYG(payment.amount)}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100">
                       <span className="material-symbols-outlined">more_vert</span>
@@ -64,7 +65,7 @@ const PaymentHistoryTable = ({ history, totalPaid, currency }) => {
                 <td colSpan="4" className="text-right text-xs font-bold uppercase tracking-wide text-tertiary">
                   {t('receivables.detail.stats.total_paid')}
                 </td>
-                <td className="text-right font-bold text-lg">{currency}{totalPaid}</td>
+                <td className="text-right font-bold text-lg">{formatPYG(totalPaid)}</td>
                 <td></td>
               </tr>
             </tfoot>

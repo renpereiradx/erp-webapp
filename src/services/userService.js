@@ -104,7 +104,7 @@ export const userService = {
       const response = await api.get(`${BASE_URL}/me`);
       return response;
     } catch (error) {
-      console.error('Error fetching my profile:', error);
+      // Silent error for profile fetching, especially during init
       throw error;
     }
   },

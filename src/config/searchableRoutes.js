@@ -16,7 +16,6 @@ import {
   Award,
   PieChart,
   List,
-  History,
   UserCheck,
   LayoutDashboard
 } from 'lucide-react'

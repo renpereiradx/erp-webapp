@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useI18n } from '@/lib/i18n';
+import { formatPYG } from '@/utils/currencyUtils';
 
 // Hooks
 import { useAgingReport } from '@/features/receivables/hooks/useAgingReport';
@@ -115,7 +116,7 @@ const AgingReport = () => {
           <div className="flex justify-between text-xs font-mono text-tertiary">
             {agingBuckets.map((seg, i) => (
               <span key={i} style={{ width: seg.width }} className={i === agingBuckets.length - 1 ? 'text-right text-danger font-bold' : ''}>
-                {new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', notation: 'compact' }).format(seg.amount)}
+                {formatPYG(seg.amount, { compact: true })}
               </span>
             ))}
           </div>

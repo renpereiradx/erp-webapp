@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
+import { formatPYG } from '@/utils/currencyUtils';
 
 /**
  * Tabla principal para la lista maestra de cuentas por cobrar.
@@ -82,8 +83,8 @@ const MasterListTable = ({ invoices, loading }) => {
                   </TableCell>
                   <TableCell className="text-secondary">{inv.issueDate}</TableCell>
                   <TableCell className="text-secondary">{inv.dueDate}</TableCell>
-                  <TableCell className="text-secondary text-right font-mono">{inv.originalAmt}</TableCell>
-                  <TableCell className="text-right font-mono font-bold">{inv.pendingAmt}</TableCell>
+                  <TableCell className="text-secondary text-right font-mono">{formatPYG(inv.originalAmt)}</TableCell>
+                  <TableCell className="text-right font-mono font-bold">{formatPYG(inv.pendingAmt)}</TableCell>
                   <TableCell className="text-center">
                     <span className={`status-pill status-pill--${(inv.statusColor || inv.status || '').toLowerCase()}`}>
                       {inv.status}

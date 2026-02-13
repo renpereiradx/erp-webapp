@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { useI18n } from '@/lib/i18n';
+import { formatPYG } from '@/utils/currencyUtils';
 
 /**
  * Grid de tarjetas de resumen para el dashboard de CXC.
@@ -17,7 +18,7 @@ const SummaryCardsGrid = ({ summary }) => {
             <span className="material-symbols-outlined">payments</span>
           </div>
         </div>
-        <h3 className="kpi-card__value">{summary.totalReceivables?.amount}</h3>
+        <h3 className="kpi-card__value">{formatPYG(summary.totalReceivables?.amount)}</h3>
         <div className="kpi-card__trend is-good">
           <span className="material-symbols-outlined">trending_up</span>
           <span>{summary.totalReceivables?.trend}% {t('receivables.metrics.trend.vs_last_month')}</span>
@@ -31,7 +32,7 @@ const SummaryCardsGrid = ({ summary }) => {
             <span className="material-symbols-outlined">warning</span>
           </div>
         </div>
-        <h3 className="kpi-card__value">{summary.overdueAmount?.amount}</h3>
+        <h3 className="kpi-card__value">{formatPYG(summary.overdueAmount?.amount)}</h3>
         <div className="kpi-card__trend is-bad">
           <span className="material-symbols-outlined">trending_up</span>
           <span>{summary.overdueAmount?.percentage}% Crítico</span>
@@ -45,7 +46,7 @@ const SummaryCardsGrid = ({ summary }) => {
             <span className="material-symbols-outlined">assignment_return</span>
           </div>
         </div>
-        <h3 className="kpi-card__value">{summary.creditsReturns?.amount}</h3>
+        <h3 className="kpi-card__value">{formatPYG(summary.creditsReturns?.amount)}</h3>
         <div className="kpi-card__trend is-good">
           <span className="material-symbols-outlined">trending_down</span>
           <span>Estable</span>
