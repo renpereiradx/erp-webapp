@@ -225,8 +225,8 @@ const SalePayment = () => {
     }
   }
 
-  // Filtrar ventas reactivamente por estado
-  const sales = React.useMemo(() => {
+  // Filtrar ventas reactivamente por estado Y búsqueda
+  const filteredSales = React.useMemo(() => {
     let filtered = rawSales
 
     // Aplicar filtro de estado si está seleccionado
@@ -234,35 +234,51 @@ const SalePayment = () => {
       filtered = filtered.filter(sale => sale.status === selectedStatus)
     }
 
-    return filtered
-  }, [rawSales, selectedStatus])
-
-  // Filtrar ventas localmente por búsqueda de texto
-  const filteredSales = React.useMemo(() => {
-    if (!searchTerm.trim()) {
-      return sales
+    // Aplicar filtro de búsqueda de texto
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim()
+      filtered = filtered.filter(sale => {
+        const orderId = (sale.id || '').toString().toLowerCase()
+        const clientName = (sale.client_name || '').toLowerCase()
+        return orderId.includes(term) || clientName.includes(term)
+      })
     }
 
-    const term = searchTerm.toLowerCase().trim()
-    return sales.filter(sale => {
-      const orderId = (sale.id || '').toString().toLowerCase()
-      const clientName = (sale.client_name || '').toLowerCase()
-      return orderId.includes(term) || clientName.includes(term)
-    })
-  }, [sales, searchTerm])
+    return filtered
+  }, [rawSales, selectedStatus, searchTerm])
 
-  // Manejar cambio de página
+  // Calcular paginación reactivamente basada en datos filtrados
+  const paginatedSales = React.useMemo(() => {
+    const startIndex = (pagination.page - 1) * pagination.page_size
+    const endIndex = startIndex + pagination.page_size
+    return filteredSales.slice(startIndex, endIndex)
+  }, [filteredSales, pagination.page, pagination.page_size])
+
+  // Actualizar total_pages cuando cambian los datos filtrados
+  useEffect(() => {
+    const totalRecords = filteredSales.length
+    const totalPages = Math.ceil(totalRecords / pagination.page_size) || 1
+    // Solo actualizar si cambió
+    setPagination(prev => ({
+      ...prev,
+      total_records: totalRecords,
+      total_pages: totalPages,
+      // Reset a página 1 si la página actual está fuera de rango
+      page: Math.min(prev.page, totalPages),
+    }))
+  }, [filteredSales.length, pagination.page_size])
+
+  // Manejar cambio de página (solo cambiar página, sin recargar API)
   const handlePageChange = newPage => {
     setPagination(prev => ({ ...prev, page: newPage }))
-    // Recargar con nueva página
-    setTimeout(() => handleLoadSales(), 0)
   }
 
-  // Manejar filtro de estado (local, no recarga API)
+  // Manejar filtro de estado (local, reactivo, sin recargar API)
   const handleStatusFilter = status => {
     const newStatus = selectedStatus === status ? '' : status // Toggle: si ya está seleccionado, deseleccionar
     setSelectedStatus(newStatus)
-    // No recargar API - el filtro se aplica localmente en handleLoadSales
+    // Reset a página 1 cuando cambia el filtro
+    setPagination(prev => ({ ...prev, page: 1 }))
   }
 
   // Aplicar filtros
@@ -721,6 +737,28 @@ const SalePayment = () => {
             >
               {t('sales.payment.status.partial', 'Parcialmente Pagado')}
             </button>
+            <button
+              type='button'
+              onClick={() => handleStatusFilter('PAID')}
+              className={`sales-payment-new__status-pill ${
+                selectedStatus === 'PAID'
+                  ? 'sales-payment-new__status-pill--active sales-payment-new__status-pill--paid'
+                  : 'sales-payment-new__status-pill--paid'
+              }`}
+            >
+              {t('sales.payment.status.paid', 'Pagado')}
+            </button>
+            <button
+              type='button'
+              onClick={() => handleStatusFilter('CANCELLED')}
+              className={`sales-payment-new__status-pill ${
+                selectedStatus === 'CANCELLED'
+                  ? 'sales-payment-new__status-pill--active sales-payment-new__status-pill--cancelled'
+                  : 'sales-payment-new__status-pill--cancelled'
+              }`}
+            >
+              {t('sales.payment.status.cancelled', 'Cancelada')}
+            </button>
           </div>
           <div className='sales-payment-new__filter-actions'>
             <Button
@@ -731,20 +769,13 @@ const SalePayment = () => {
             >
               {t('common.action.clear_filters', 'Limpiar Filtros')}
             </Button>
-            <Button
-              onClick={handleApplyFilters}
-              disabled={isLoading}
-              className='btn btn--primary'
-            >
-              {t('common.action.apply_filters', 'Aplicar Filtros')}
-            </Button>
           </div>
         </div>
       </div>
 
       {/* Tabla */}
       <div className='sales-payment-new__table-container'>
-        {filteredSales.length > 0 ? (
+        {paginatedSales.length > 0 || filteredSales.length === 0 ? (
           <>
             <Table className='sales-payment-new__table'>
               <TableHeader>
@@ -776,7 +807,7 @@ const SalePayment = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSales.map(sale => (
+                {paginatedSales.map(sale => (
                   <TableRow
                     key={sale.id}
                     className={`sales-payment-new__table-row ${
@@ -843,13 +874,16 @@ const SalePayment = () => {
             <div className='sales-payment-new__pagination'>
               <div className='sales-payment-new__pagination-info'>
                 {t('sales.payment.pagination.showing', 'Mostrando')}{' '}
-                {(pagination.page - 1) * pagination.page_size + 1}-
+                {filteredSales.length > 0
+                  ? (pagination.page - 1) * pagination.page_size + 1
+                  : 0}
+                -
                 {Math.min(
                   pagination.page * pagination.page_size,
-                  pagination.total_records
+                  filteredSales.length
                 )}{' '}
                 {t('sales.payment.pagination.of', 'de')}{' '}
-                {pagination.total_records}
+                {filteredSales.length}
               </div>
               <div className='sales-payment-new__pagination-controls'>
                 <Button
@@ -863,7 +897,7 @@ const SalePayment = () => {
                 </Button>
                 <div className='sales-payment-new__pagination-pages'>
                   {Array.from(
-                    { length: Math.min(pagination.total_pages, 3) },
+                    { length: Math.min(pagination.total_pages, 5) },
                     (_, i) => {
                       const pageNumber = i + 1
                       return (
