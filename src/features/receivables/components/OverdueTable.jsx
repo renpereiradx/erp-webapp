@@ -8,8 +8,11 @@ import { formatPYG } from '@/utils/currencyUtils';
 /**
  * Tabla optimizada para esfuerzos de cobranza.
  */
-const OverdueTable = ({ accounts }) => {
+const OverdueTable = ({ accounts = [] }) => {
   const { t } = useI18n();
+
+  // Defensive check: ensure accounts is always an array
+  const safeAccounts = Array.isArray(accounts) ? accounts : [];
 
   return (
     <div className="overdue-accounts__main-content">
@@ -49,7 +52,7 @@ const OverdueTable = ({ accounts }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {accounts.map((acc, idx) => (
+            {safeAccounts.map((acc, idx) => (
               <TableRow key={idx} className="group">
                 <TableCell><input type="checkbox" className="rounded" /></TableCell>
                 <TableCell>

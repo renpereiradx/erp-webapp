@@ -24,7 +24,8 @@ export const useOverdueAccounts = () => {
       // Intentamos obtener cuentas vencidas y estadísticas
       // Nota: El servicio OverdueAccounts actualmente devuelve una lista en el mock
       const overdueRes = await receivablesService.getOverdueAccounts();
-      
+      const accountsData = overdueRes.data || overdueRes || [];
+
       setData({
         stats: {
           totalOverdue: '$145,200', // Mock stats for now
@@ -32,11 +33,16 @@ export const useOverdueAccounts = () => {
           efficiency: '68',
           promises: '$32,450'
         },
-        accounts: overdueRes.data || overdueRes || []
+        accounts: Array.isArray(accountsData) ? accountsData : []
       });
     } catch (err) {
       console.error('Error loading overdue accounts:', err);
       setError('Error al cargar las cuentas vencidas.');
+      // Ensure accounts is always an array even on error
+      setData(prev => ({
+        ...prev,
+        accounts: []
+      }));
     } finally {
       setLoading(false);
     }
