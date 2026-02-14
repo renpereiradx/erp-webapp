@@ -329,5 +329,149 @@ export const receivablesService = {
       telemetry.record('receivables.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getClientRiskAnalysis' });
       throw error;
     }
+  },
+
+  /**
+   * Get collection reminders (Endpoint 10)
+   * @param {string} priority - Optional: 'HIGH', 'MEDIUM', 'LOW'
+   */
+  async getCollectionReminders(priority = '') {
+    const startTime = Date.now();
+    try {
+      if (USE_MOCK) {
+        const mockReminders = [
+          {
+            receivable_id: "sale_001",
+            client_id: "client_123",
+            client_name: "Juan Pérez",
+            client_phone: "0981234567",
+            pending_amount: 300000,
+            days_overdue: 15,
+            due_date: "2025-12-15T10:00:00Z",
+            priority: "MEDIUM"
+          },
+          {
+            receivable_id: "sale_045",
+            client_id: "client_456",
+            client_name: "María García",
+            client_phone: "0991234567",
+            pending_amount: 850000,
+            days_overdue: 75,
+            due_date: "2025-10-20T10:00:00Z",
+            priority: "HIGH"
+          },
+          {
+            receivable_id: "sale_089",
+            client_id: "client_789",
+            client_name: "Carlos López",
+            client_phone: "0971234567",
+            pending_amount: 125000,
+            days_overdue: 8,
+            due_date: "2026-01-05T10:00:00Z",
+            priority: "LOW"
+          }
+        ];
+
+        // Filter by priority if provided
+        const filtered = priority
+          ? mockReminders.filter(r => r.priority === priority.toUpperCase())
+          : mockReminders;
+
+        return _mockRes(filtered);
+      }
+
+      const queryParams = new URLSearchParams();
+      if (priority) queryParams.append('priority', priority);
+
+      const endpoint = `${API_PREFIX}/collection/reminders${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
+      telemetry.record('receivables.service.reminders', { duration: Date.now() - startTime, priority });
+      return result;
+    } catch (error) {
+      telemetry.record('receivables.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getCollectionReminders' });
+      throw error;
+    }
+  },
+
+  /**
+   * Get high priority collection reminders (Endpoint 11)
+   * Shortcut for reminders with >60 days overdue
+   */
+  async getHighPriorityReminders() {
+    const startTime = Date.now();
+    try {
+      if (USE_MOCK) {
+        return _mockRes([
+          {
+            receivable_id: "sale_045",
+            client_id: "client_456",
+            client_name: "María García",
+            client_phone: "0991234567",
+            pending_amount: 850000,
+            days_overdue: 75,
+            due_date: "2025-10-20T10:00:00Z",
+            priority: "HIGH"
+          }
+        ]);
+      }
+
+      const endpoint = `${API_PREFIX}/collection/high-priority`;
+      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
+      telemetry.record('receivables.service.highPriorityReminders', { duration: Date.now() - startTime });
+      return result;
+    } catch (error) {
+      telemetry.record('receivables.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getHighPriorityReminders' });
+      throw error;
+    }
+  },
+
+  /**
+   * Get statistics by date range (Endpoint 13)
+   * @param {string} startDate - YYYY-MM-DD format
+   * @param {string} endDate - YYYY-MM-DD format
+   */
+  async getStatisticsByDateRange(startDate, endDate) {
+    const startTime = Date.now();
+    try {
+      if (USE_MOCK) {
+        return _mockRes({
+          period: `${startDate} - ${endDate}`,
+          total_billed: 18500000,
+          total_collected: 14200000,
+          collection_rate: 76.8,
+          average_dso: 32.5,
+          overdue_percentage: 28.7,
+          top_debtors: [
+            {
+              client_id: "client_123",
+              client_name: "Empresa ABC",
+              total_pending: 1850000,
+              payment_behavior: "REGULAR"
+            }
+          ],
+          collection_trend: [
+            {
+              date: startDate,
+              billed: 4500000,
+              collected: 3200000,
+              balance: 1300000
+            }
+          ]
+        });
+      }
+
+      const queryParams = new URLSearchParams({
+        start_date: startDate,
+        end_date: endDate
+      });
+
+      const endpoint = `${API_PREFIX}/statistics/date-range?${queryParams.toString()}`;
+      const result = await _fetchWithRetry(async () => apiService.get(endpoint));
+      telemetry.record('receivables.service.statisticsByDateRange', { duration: Date.now() - startTime, startDate, endDate });
+      return result;
+    } catch (error) {
+      telemetry.record('receivables.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getStatisticsByDateRange' });
+      throw error;
+    }
   }
 };
