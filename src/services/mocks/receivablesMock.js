@@ -157,22 +157,32 @@ export const overdueData = [
   {
     id: 1,
     client: "Northwind Traders",
-    totalDue: "$52,000",
+    amount: 52000000, // PYG amount (numeric)
+    totalDue: 52000000, // For backward compatibility
     daysOverdue: 92,
     priority: "High",
     lastContact: "2 days ago",
     nextAction: "Call CFO",
-    riskScore: 85
+    riskScore: 85,
+    code: "NT",
+    bgColor: "#dbeafe",
+    days: "92 días",
+    contactVia: "Llamada telefónica"
   },
   {
     id: 2,
     client: "Fabrikam, Inc.",
-    totalDue: "$21,050",
+    amount: 21050000, // PYG amount (numeric)
+    totalDue: 21050000, // For backward compatibility
     daysOverdue: 65,
     priority: "Medium",
     lastContact: "1 week ago",
     nextAction: "Send Email",
-    riskScore: 60
+    riskScore: 60,
+    code: "FB",
+    bgColor: "#fef3c7",
+    days: "65 días",
+    contactVia: "Email"
   }
 ];
 

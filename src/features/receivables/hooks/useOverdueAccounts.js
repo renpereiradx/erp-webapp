@@ -28,10 +28,10 @@ export const useOverdueAccounts = () => {
 
       setData({
         stats: {
-          totalOverdue: '$145,200', // Mock stats for now
-          atRisk: '12',
-          efficiency: '68',
-          promises: '$32,450'
+          totalOverdue: 145200000, // PYG amount (numeric)
+          atRisk: 12,
+          efficiency: 68,
+          promises: 32450000 // PYG amount (numeric)
         },
         accounts: Array.isArray(accountsData) ? accountsData : []
       });
