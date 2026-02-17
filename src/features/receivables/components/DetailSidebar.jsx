@@ -1,12 +1,16 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
+import { CreditCard, Send, Flag, Mail, Phone, MapPin, Pencil } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 /**
  * Sidebar para la página de detalle, incluyendo acciones rápidas, contacto y actividad.
  */
-const DetailSidebar = ({ client }) => {
+const DetailSidebar = ({ client = {} }) => {
   const { t } = useI18n();
 
   return (
@@ -16,89 +20,105 @@ const DetailSidebar = ({ client }) => {
         <CardHeader>
           <CardTitle>{t('receivables.detail.actions.title')}</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <Button variant="primary" block className="h-11">
-            <span className="material-symbols-outlined">add_card</span>
-            <span>{t('receivables.detail.actions.register_payment')}</span>
-          </Button>
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" className="h-10">
-              <span className="material-symbols-outlined">send</span>
-              <span>{t('receivables.detail.actions.reminder')}</span>
+        <CardContent>
+          <div className="receivable-detail__sidebar-actions">
+            <Button variant="default" className="w-full h-11">
+              <CreditCard size={16} />
+              <span>{t('receivables.detail.actions.register_payment')}</span>
             </Button>
-            <Button variant="outline" className="h-10">
-              <span className="material-symbols-outlined">flag</span>
-              <span>{t('receivables.detail.actions.dispute')}</span>
-            </Button>
+            <div className="receivable-detail__sidebar-actions-grid">
+              <Button variant="outline" className="h-10">
+                <Send size={16} />
+                <span>{t('receivables.detail.actions.reminder')}</span>
+              </Button>
+              <Button variant="outline" className="h-10">
+                <Flag size={16} />
+                <span>{t('receivables.detail.actions.dispute')}</span>
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Contacto del Cliente */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between border-b pb-3 mb-4">
-          <CardTitle className="mb-0">{t('receivables.detail.contact.title')}</CardTitle>
-          <Button variant="link" size="sm">{t('action.edit', 'Editar')}</Button>
+        <CardHeader className="receivable-detail__contact-header">
+          <CardTitle>{t('receivables.detail.contact.title')}</CardTitle>
+          <Button variant="ghost" size="sm">
+            <Pencil size={14} />
+            <span>{t('action.edit', 'Editar')}</span>
+          </Button>
         </CardHeader>
         <CardContent>
-          <div className="client-card__profile">
-            <div className="client-card__avatar"></div>
+          <div className="receivable-detail__contact-profile">
+            <Avatar size={40} color="brand">
+              <AvatarFallback>{client.contact?.charAt(0) || client.name?.charAt(0) || '?'}</AvatarFallback>
+            </Avatar>
             <div>
-              <p className="text-sm font-bold">{client.contact}</p>
-              <p className="text-xs text-tertiary">Billing Manager</p>
+              <p className="receivable-detail__contact-name">{client.contact || client.name}</p>
+              <p className="receivable-detail__contact-role">Billing Manager</p>
             </div>
           </div>
-          
-          <hr className="card__divider" />
-          
-          <div className="flex flex-col gap-3">
-            <div className="client-card__info-row">
-              <span className="material-symbols-outlined client-card__icon">mail</span>
-              <a href={`mailto:${client.email}`} className="truncate text-sm">{client.email}</a>
-            </div>
-            <div className="client-card__info-row">
-              <span className="material-symbols-outlined client-card__icon">call</span>
-              <a href={`tel:${client.phone}`} className="text-sm">{client.phone}</a>
-            </div>
-            <div className="client-card__info-row">
-              <span className="material-symbols-outlined client-card__icon">location_on</span>
-              <span className="truncate text-tertiary text-sm">{client.address}</span>
-            </div>
+
+          <Separator className="my-4" />
+
+          <div className="receivable-detail__contact-info">
+            {client.email && (
+              <div className="receivable-detail__contact-row">
+                <Mail size={16} style={{ flexShrink: 0 }} />
+                <a href={`mailto:${client.email}`} className="truncate">{client.email}</a>
+              </div>
+            )}
+            {client.phone && (
+              <div className="receivable-detail__contact-row">
+                <Phone size={16} style={{ flexShrink: 0 }} />
+                <a href={`tel:${client.phone}`}>{client.phone}</a>
+              </div>
+            )}
+            {client.address && (
+              <div className="receivable-detail__contact-row">
+                <MapPin size={16} style={{ flexShrink: 0 }} />
+                <span className="truncate">{client.address}</span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
       {/* Actividad y Notas */}
       <Card>
-        <CardHeader className="bg-secondary p-4 border-b">
-          <CardTitle className="text-sm font-bold">{t('receivables.detail.activity.title')}</CardTitle>
+        <CardHeader>
+          <CardTitle>{t('receivables.detail.activity.title')}</CardTitle>
         </CardHeader>
-        <CardContent className="p-4">
-          <div className="activity-card__input-area">
-            <textarea 
-              className="activity-card__textarea" 
+        <CardContent>
+          <div className="receivable-detail__activity-input">
+            <Textarea
               placeholder={t('receivables.detail.activity.placeholder')}
               rows={2}
-            ></textarea>
-            <div className="flex justify-end mt-2">
-              <Button variant="primary" size="sm">
+              className="activity-card__textarea"
+            />
+            <div className="receivable-detail__activity-submit">
+              <Button variant="default" size="sm">
                 {t('receivables.detail.activity.post')}
               </Button>
             </div>
           </div>
-          <div className="activity-card__timeline mt-6">
+
+          <Separator className="my-4" />
+
+          <div className="activity-card__timeline">
             <div className="activity-card__item">
-              <div className="flex flex-col gap-1">
-                <p className="text-xs text-tertiary">Hoy, 9:41 AM</p>
-                <p className="text-sm"><span className="font-bold">Sistema</span> envió recordatorio automático vía Email.</p>
+              <div className="activity-card__item-content">
+                <p className="activity-card__item-date">Hoy, 9:41 AM</p>
+                <p className="activity-card__item-text"><strong>Sistema</strong> envió recordatorio automático vía Email.</p>
               </div>
             </div>
             <div className="activity-card__item activity-card__item--primary">
-              <div className="flex flex-col gap-1">
-                <p className="text-xs text-tertiary">Ayer, 4:20 PM</p>
-                <div className="bg-secondary p-3 rounded-lg">
-                  <p className="text-sm">Llamé a Sarah. Confirmó que el cheque del saldo restante se enviará este viernes.</p>
-                  <p className="text-xs text-primary mt-1 font-bold">- Tú</p>
+              <div className="activity-card__item-content">
+                <p className="activity-card__item-date">Ayer, 4:20 PM</p>
+                <div className="activity-card__item-note">
+                  <p className="activity-card__item-text">Llamé a Sarah. Confirmó que el cheque del saldo restante se enviará este viernes.</p>
+                  <p className="activity-card__item-author">- Tú</p>
                 </div>
               </div>
             </div>

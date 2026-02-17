@@ -84,72 +84,121 @@ export const masterListData = [
   {
     id: "INV-2023-001",
     clientName: "Northwind Traders",
+    clientInitial: "N",
+    clientColor: "#dbeafe",
     issueDate: "2023-09-15",
     dueDate: "2023-10-15",
-    amount: "$45,200.00",
-    status: "Overdue"
+    originalAmt: 45200000,
+    pendingAmt: 45200000,
+    status: "Overdue",
+    statusColor: "red"
   },
   {
     id: "INV-2023-089",
     clientName: "Fabrikam, Inc.",
+    clientInitial: "F",
+    clientColor: "#fef3c7",
     issueDate: "2023-10-01",
     dueDate: "2023-10-31",
-    amount: "$21,050.50",
-    status: "Overdue"
+    originalAmt: 21050000,
+    pendingAmt: 21050000,
+    status: "Overdue",
+    statusColor: "red"
   },
   {
     id: "INV-2023-102",
     clientName: "Litware Systems",
+    clientInitial: "L",
+    clientColor: "#e0e7ff",
     issueDate: "2023-10-10",
     dueDate: "2023-11-10",
-    amount: "$12,400.00",
-    status: "Pending"
+    originalAmt: 12400000,
+    pendingAmt: 12400000,
+    status: "Pending",
+    statusColor: "yellow"
   },
   {
     id: "INV-2023-145",
     clientName: "Contoso Pharmaceuticals",
+    clientInitial: "C",
+    clientColor: "#dcfce7",
     issueDate: "2023-10-15",
     dueDate: "2023-11-15",
-    amount: "$8,900.00",
-    status: "Pending"
+    originalAmt: 8900000,
+    pendingAmt: 5000000,
+    status: "Partial",
+    statusColor: "blue"
   },
   {
     id: "INV-2023-156",
     clientName: "Adventure Works",
+    clientInitial: "A",
+    clientColor: "#f3e8ff",
     issueDate: "2023-10-20",
     dueDate: "2023-11-20",
-    amount: "$3,250.00",
-    status: "Paid"
+    originalAmt: 3250000,
+    pendingAmt: 0,
+    status: "Paid",
+    statusColor: "green"
+  },
+  {
+    id: "INV-2023-201",
+    clientName: "Tailspin Toys",
+    clientInitial: "T",
+    clientColor: "#fce7f3",
+    issueDate: "2023-11-01",
+    dueDate: "2023-12-01",
+    originalAmt: 15600000,
+    pendingAmt: 15600000,
+    status: "Pending",
+    statusColor: "yellow"
+  },
+  {
+    id: "INV-2023-245",
+    clientName: "Wide World Importers",
+    clientInitial: "W",
+    clientColor: "#fef2f2",
+    issueDate: "2023-08-22",
+    dueDate: "2023-09-22",
+    originalAmt: 67800000,
+    pendingAmt: 67800000,
+    status: "Overdue",
+    statusColor: "red"
+  },
+  {
+    id: "INV-2023-312",
+    clientName: "Proseware Inc.",
+    clientInitial: "P",
+    clientColor: "#ecfdf5",
+    issueDate: "2023-11-05",
+    dueDate: "2023-12-05",
+    originalAmt: 9200000,
+    pendingAmt: 4500000,
+    status: "Partial",
+    statusColor: "blue"
   }
 ];
 
 export const detailData = {
   id: "INV-2023-001",
-  client: {
-    id: 1,
-    name: "Northwind Traders",
-    contact: "Maria Anders",
-    email: "maria@northwind.com",
-    phone: "+1 555-0100"
-  },
-  transaction: {
-    issueDate: "2023-09-15",
-    dueDate: "2023-10-15",
-    amount: 45200.00,
-    currency: "USD",
-    status: "Overdue",
-    description: "Consulting Services - Q3",
-    items: [
-      { id: 1, desc: "Strategic Assessment", qty: 1, price: 15000 },
-      { id: 2, desc: "Process Optimization", qty: 200, price: 151 }
-    ]
-  },
-  paymentHistory: [
-    { date: "2023-09-20", amount: 5000, type: "Bank Transfer", ref: "TRX-9988" }
-  ],
-  auditLog: [
-    { date: "2023-10-16", action: "Automated Reminder Sent", user: "System" },
-    { date: "2023-09-15", action: "Invoice Created", user: "Admin" }
+  sale_order_id: "INV-2023-001",
+  client_id: "client_001",
+  client_name: "Northwind Traders",
+  client_phone: "+595 981 234 567",
+  client_email: "maria@northwind.com",
+  client_address: "Avda. Mcal. López 3456, Asunción",
+  sale_date: "2023-09-15T10:00:00Z",
+  due_date: "2023-10-15T10:00:00Z",
+  original_amount: 45200000,
+  paid_amount: 33900000,
+  pending_amount: 11300000,
+  days_overdue: 45,
+  status: "OVERDUE",
+  currency: "PYG",
+  payment_history: [
+    { id: "pay_001", amount: 15000000, payment_date: "2023-09-20T14:30:00Z", payment_method: "Transferencia", reference: "TRF-9988", processed_by: "María García" },
+    { id: "pay_002", amount: 10000000, payment_date: "2023-09-28T11:00:00Z", payment_method: "Efectivo", reference: "", processed_by: "Carlos López" },
+    { id: "pay_003", amount: 8900000, payment_date: "2023-10-05T09:15:00Z", payment_method: "Cheque", reference: "CHQ-4455", processed_by: "María García" },
   ]
 };
 

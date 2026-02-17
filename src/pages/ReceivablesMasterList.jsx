@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb';
+import { FileDown, Plus } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 // Hooks
@@ -17,29 +19,42 @@ import MasterListTable from '@/features/receivables/components/MasterListTable';
 const ReceivablesMasterList = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
-  const { 
-    invoices, 
-    loading, 
-    filters, 
-    handleFilterChange, 
+  const {
+    invoices,
+    loading,
+    filters,
+    pagination,
+    sorting,
+    handleFilterChange,
     resetFilters,
-    refresh 
+    handlePageChange,
+    handlePageSizeChange,
+    handleSort,
+    refresh
   } = useReceivablesMasterList();
 
   return (
     <div className="receivables-master">
-      <div className="max-w-[1400px] mx-auto flex flex-col gap-6">
+      <div className="receivables-master__content">
         
         {/* Breadcrumbs */}
-        <nav className="client-profile__breadcrumb">
-          <a href="#" className="client-profile__breadcrumb-link" onClick={() => navigate('/dashboard')}>
-            {t('receivables.breadcrumb.home')}
-          </a>
-          <span className="material-symbols-outlined client-profile__breadcrumb-separator">chevron_right</span>
-          <span className="client-profile__breadcrumb-current">Finanzas</span>
-          <span className="material-symbols-outlined client-profile__breadcrumb-separator">chevron_right</span>
-          <span className="client-profile__breadcrumb-current">{t('receivables.master.title')}</span>
-        </nav>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink onClick={() => navigate('/dashboard')} className="cursor-pointer">
+                {t('receivables.breadcrumb.home')}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Finanzas</BreadcrumbPage>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{t('receivables.master.title')}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
         {/* Header */}
         <div className="receivables-master__header">
@@ -49,11 +64,11 @@ const ReceivablesMasterList = () => {
           </div>
           <div className="receivables-master__actions">
             <Button variant="outline">
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>ios_share</span>
+              <FileDown className="size-4" />
               <span className="hidden sm:inline">Exportar CSV</span>
             </Button>
-            <Button variant="primary">
-              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>add</span>
+            <Button variant="default">
+              <Plus className="size-4" />
               <span>{t('receivables.master.action.new')}</span>
             </Button>
           </div>
@@ -67,9 +82,14 @@ const ReceivablesMasterList = () => {
         />
 
         {/* Grid de Datos */}
-        <MasterListTable 
-          invoices={invoices} 
-          loading={loading} 
+        <MasterListTable
+          invoices={invoices}
+          loading={loading}
+          pagination={pagination}
+          sorting={sorting}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          onSort={handleSort}
           onRefresh={refresh}
         />
       </div>

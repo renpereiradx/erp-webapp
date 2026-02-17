@@ -1,6 +1,8 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb';
+import { AlertCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 // Hooks
@@ -13,7 +15,6 @@ import DetailSidebar from '@/features/receivables/components/DetailSidebar';
 
 /**
  * Receivable Detail & Payment History
- * Vista granular de una factura específica con historial y acciones.
  */
 const ReceivableDetail = () => {
   const { id } = useParams();
@@ -33,9 +34,9 @@ const ReceivableDetail = () => {
   if (error || !data) {
     return (
       <div className="client-profile__error">
-        <span className="material-symbols-outlined text-danger" style={{ fontSize: '48px' }}>error</span>
+        <AlertCircle size={48} className="text-destructive" />
         <h3 className="text-danger">{t('receivables.error.detail')}</h3>
-        <Button variant="secondary" onClick={() => window.location.reload()}>
+        <Button variant="outline" onClick={() => window.location.reload()}>
           {t('receivables.error.retry')}
         </Button>
       </div>
@@ -45,34 +46,44 @@ const ReceivableDetail = () => {
   return (
     <div className="receivable-detail">
       {/* Breadcrumbs */}
-      <nav className="client-profile__breadcrumb">
-        <a href="#" className="client-profile__breadcrumb-link" onClick={() => navigate('/receivables')}>
-          {t('receivables.title')}
-        </a>
-        <span className="material-symbols-outlined client-profile__breadcrumb-separator">chevron_right</span>
-        <span className="client-profile__breadcrumb-current">Detalle</span>
-        <span className="material-symbols-outlined client-profile__breadcrumb-separator">chevron_right</span>
-        <span className="client-profile__breadcrumb-current">{t('receivables.detail.title', { id: data.id })}</span>
-      </nav>
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink onClick={() => navigate('/dashboard')} className="cursor-pointer">
+              {t('receivables.breadcrumb.home')}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink onClick={() => navigate('/receivables/list')} className="cursor-pointer">
+              {t('receivables.master.title')}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{t('receivables.detail.title', { id: data.id })}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       {/* Header Section */}
-      <DetailHeader 
-        id={data.id} 
-        client={data.client} 
-        transaction={data.transaction} 
+      <DetailHeader
+        id={data.id}
+        client={data.client || {}}
+        transaction={data.transaction || {}}
       />
 
       {/* Content Grid */}
       <div className="receivable-detail__content-grid">
         {/* Left Column: Payment History */}
-        <PaymentHistoryTable 
-          history={data.paymentHistory} 
-          totalPaid={data.transaction.paid} 
-          currency={data.transaction.currency} 
+        <PaymentHistoryTable
+          history={data.paymentHistory || []}
+          totalPaid={data.transaction?.rawPaid || 0}
+          currency={data.transaction?.currency || ''}
         />
 
         {/* Right Column: Actions & Contact */}
-        <DetailSidebar client={data.client} />
+        <DetailSidebar client={data.client || {}} />
       </div>
     </div>
   );

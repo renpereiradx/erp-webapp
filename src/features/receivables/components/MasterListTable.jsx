@@ -2,31 +2,68 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RefreshCw, Columns, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { formatPYG } from '@/utils/currencyUtils';
+
+const SORTABLE_COLUMNS = [
+  { key: 'id', label: 'receivables.master.table.id' },
+  { key: 'client', label: 'receivables.master.table.client' },
+  { key: 'sale_date', label: 'receivables.master.table.sale_date' },
+  { key: 'due_date', label: 'receivables.master.table.due_date' },
+  { key: 'original_amt', label: 'receivables.master.table.original_amt', align: 'text-right' },
+  { key: 'pending_amt', label: 'receivables.master.table.pending_amt', align: 'text-right' },
+  { key: 'status', label: 'receivables.master.table.status', align: 'text-center' },
+];
 
 /**
  * Tabla principal para la lista maestra de cuentas por cobrar.
  */
-const MasterListTable = ({ invoices = [], loading }) => {
+const MasterListTable = ({
+  invoices = [],
+  loading,
+  pagination = {},
+  sorting = {},
+  onPageChange,
+  onPageSizeChange,
+  onSort,
+  onRefresh,
+}) => {
   const navigate = useNavigate();
   const { t } = useI18n();
 
-  // Defensive check: ensure invoices is always an array
   const safeInvoices = Array.isArray(invoices) ? invoices : [];
+  const { page = 1, pageSize = 20, totalItems = 0, totalPages = 0 } = pagination;
+  const { sortBy, sortOrder } = sorting;
+
+  const startItem = totalItems > 0 ? (page - 1) * pageSize + 1 : 0;
+  const endItem = Math.min(page * pageSize, totalItems) || safeInvoices.length;
+
+  const getStatusVariant = (statusColor) => {
+    const colorMap = {
+      red: 'destructive',
+      yellow: 'warning',
+      blue: 'info',
+      green: 'success',
+      gray: 'secondary'
+    };
+    return colorMap[statusColor] || 'secondary';
+  };
 
   return (
     <div className="rec-grid-container">
       <div className="rec-grid-toolbar">
         <div className="rec-grid-toolbar__info">
-          {t('common.pagination.showing', 'Mostrando')} <strong>1-{safeInvoices.length}</strong> {t('common.pagination.of', 'de')} <strong>1,248</strong> items
+          {t('common.pagination.showing', 'Mostrando')} <strong>{startItem}-{endItem}</strong> {t('common.pagination.of', 'de')} <strong>{totalItems || safeInvoices.length}</strong> items
         </div>
         <div className="rec-grid-toolbar__actions">
-          <Button variant="ghost" size="icon" title="Actualizar">
-            <span className="material-symbols-outlined">refresh</span>
+          <Button variant="ghost" size="icon" title="Actualizar" onClick={onRefresh}>
+            <RefreshCw className="size-4" />
           </Button>
           <Button variant="ghost" size="icon" title="Columnas">
-            <span className="material-symbols-outlined">view_column</span>
+            <Columns className="size-4" />
           </Button>
         </div>
       </div>
@@ -36,17 +73,16 @@ const MasterListTable = ({ invoices = [], loading }) => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-12"><input type="checkbox" className="fluent-checkbox" /></TableHead>
-              <TableHead>
-                <div className="flex items-center gap-1 cursor-pointer">
-                  {t('receivables.master.table.id')} <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_downward</span>
-                </div>
-              </TableHead>
-              <TableHead>{t('receivables.master.table.client')}</TableHead>
-              <TableHead>{t('receivables.master.table.sale_date')}</TableHead>
-              <TableHead>{t('receivables.master.table.due_date')}</TableHead>
-              <TableHead className="text-right">{t('receivables.master.table.original_amt')}</TableHead>
-              <TableHead className="text-right">{t('receivables.master.table.pending_amt')}</TableHead>
-              <TableHead className="text-center">{t('receivables.master.table.status')}</TableHead>
+              {SORTABLE_COLUMNS.map((col) => (
+                <TableHead key={col.key} className={col.align || ''}>
+                  <div
+                    className="cursor-pointer select-none hover:text-foreground transition-colors"
+                    onClick={() => onSort?.(col.key)}
+                  >
+                    {t(col.label)}
+                  </div>
+                </TableHead>
+              ))}
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -62,8 +98,8 @@ const MasterListTable = ({ invoices = [], loading }) => {
                 <TableRow key={inv.id}>
                   <TableCell><input type="checkbox" className="fluent-checkbox" /></TableCell>
                   <TableCell>
-                    <a 
-                      href="#" 
+                    <a
+                      href="#"
                       className="text-primary font-medium hover:underline"
                       onClick={(e) => { e.preventDefault(); navigate(`/receivables/detail/${inv.id}`); }}
                     >
@@ -72,11 +108,11 @@ const MasterListTable = ({ invoices = [], loading }) => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div 
+                      <div
                         className="size-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-                        style={{ 
-                          backgroundColor: inv.clientColor || '#eff6ff', 
-                          color: '#1d4ed8' 
+                        style={{
+                          backgroundColor: inv.clientColor || '#eff6ff',
+                          color: '#1d4ed8'
                         }}
                       >
                         {inv.clientInitial || inv.clientName?.charAt(0)}
@@ -89,13 +125,13 @@ const MasterListTable = ({ invoices = [], loading }) => {
                   <TableCell className="text-secondary text-right font-mono">{formatPYG(inv.originalAmt)}</TableCell>
                   <TableCell className="text-right font-mono font-bold">{formatPYG(inv.pendingAmt)}</TableCell>
                   <TableCell className="text-center">
-                    <span className={`status-pill status-pill--${(inv.statusColor || inv.status || '').toLowerCase()}`}>
+                    <Badge variant={getStatusVariant(inv.statusColor)}>
                       {inv.status}
-                    </span>
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon">
-                      <span className="material-symbols-outlined">more_horiz</span>
+                      <MoreHorizontal className="size-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -106,24 +142,39 @@ const MasterListTable = ({ invoices = [], loading }) => {
       </div>
 
       <div className="rec-pagination">
-        <div className="flex items-center gap-2 text-sm text-secondary">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>{t('receivables.master.pagination.rows_per_page')}</span>
-          <select className="bg-transparent font-medium text-primary focus:outline-none cursor-pointer">
-            <option>10</option>
-            <option>20</option>
-            <option>50</option>
-          </select>
+          <Select value={String(pageSize)} onValueChange={(val) => onPageSizeChange?.(val)}>
+            <SelectTrigger className="rec-pagination__select-trigger">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-secondary">
-            {t('receivables.master.pagination.page_info', { page: 1, total: 125 })}
+          <span className="text-sm text-muted-foreground">
+            {t('receivables.master.pagination.page_info', { page, total: totalPages || 1 })}
           </span>
           <div className="flex items-center">
-            <Button variant="ghost" size="icon" disabled>
-              <span className="material-symbols-outlined">chevron_left</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={page <= 1}
+              onClick={() => onPageChange?.(page - 1)}
+            >
+              <ChevronLeft className="size-4" />
             </Button>
-            <Button variant="ghost" size="icon">
-              <span className="material-symbols-outlined">chevron_right</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={page >= totalPages}
+              onClick={() => onPageChange?.(page + 1)}
+            >
+              <ChevronRight className="size-4" />
             </Button>
           </div>
         </div>

@@ -1,26 +1,34 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Search, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
-/**
- * Panel de filtros para la lista maestra de cuentas por cobrar.
- */
 const MasterListFilters = ({ filters, onFilterChange, onReset }) => {
   const { t } = useI18n();
 
+  const statusLabel = (value) => {
+    const labels = { pending: 'Pendiente', overdue: 'Vencido', partial: 'Pago Parcial', paid: 'Pagado' };
+    return labels[value] || value;
+  };
+
+  const hasActiveFilters = filters.status !== 'all' || filters.dateStart || filters.dateEnd
+    || filters.minAmount || filters.maxAmount || filters.daysOverdue;
+
   return (
     <div className="rec-filter-panel">
+      {/* Row 1: Search | Status | Date range */}
       <div className="rec-filter-panel__row">
-        {/* Búsqueda */}
-        <div className="rec-input-group">
-          <label className="rec-input-group__label">{t('receivables.master.filter.search_client')}</label>
-          <div className="rec-input-group__wrapper">
-            <div className="rec-input-group__icon">
-              <span className="material-symbols-outlined">search</span>
-            </div>
-            <input 
-              type="text" 
-              className="rec-input" 
+        <div className="rec-filter-panel__field">
+          <Label htmlFor="search-client">{t('receivables.master.filter.search_client')}</Label>
+          <div className="input-search">
+            <Search className="input-search__icon" style={{ zIndex: 1 }} />
+            <Input
+              id="search-client"
+              type="text"
               placeholder={t('receivables.master.filter.company_placeholder')}
               value={filters.search}
               onChange={(e) => onFilterChange('search', e.target.value)}
@@ -28,59 +36,122 @@ const MasterListFilters = ({ filters, onFilterChange, onReset }) => {
           </div>
         </div>
 
-        {/* Estado */}
-        <div className="rec-input-group">
-          <label className="rec-input-group__label">{t('receivables.master.filter.status')}</label>
-          <div className="rec-select-wrapper">
-            <select 
-              className="rec-select"
-              value={filters.status}
-              onChange={(e) => onFilterChange('status', e.target.value)}
-            >
-              <option value="all">{t('receivables.master.filter.all_statuses')}</option>
-              <option value="pending">Pendiente</option>
-              <option value="overdue">Vencido</option>
-              <option value="partial">Pago Parcial</option>
-              <option value="paid">Pagado</option>
-            </select>
+        <div className="rec-filter-panel__field">
+          <Label>{t('receivables.master.filter.status')}</Label>
+          <Select value={filters.status} onValueChange={(v) => onFilterChange('status', v)}>
+            <SelectTrigger className="rec-filter-panel__select-trigger">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('receivables.master.filter.all_statuses')}</SelectItem>
+              <SelectItem value="pending">Pendiente</SelectItem>
+              <SelectItem value="overdue">Vencido</SelectItem>
+              <SelectItem value="partial">Pago Parcial</SelectItem>
+              <SelectItem value="paid">Pagado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="rec-filter-panel__field">
+          <Label>{t('receivables.master.filter.date_range')}</Label>
+          <div className="rec-filter-panel__range">
+            <Input
+              type="date"
+              value={filters.dateStart}
+              onChange={(e) => onFilterChange('dateStart', e.target.value)}
+            />
+            <span className="rec-filter-panel__separator">—</span>
+            <Input
+              type="date"
+              value={filters.dateEnd}
+              onChange={(e) => onFilterChange('dateEnd', e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Row 2: Amount range | Days overdue | Clear */}
+      <div className="rec-filter-panel__row">
+        <div className="rec-filter-panel__field">
+          <Label>{t('receivables.master.filter.amount_range')}</Label>
+          <div className="rec-filter-panel__range">
+            <Input
+              type="number"
+              placeholder={t('receivables.master.filter.min_amount')}
+              value={filters.minAmount}
+              onChange={(e) => onFilterChange('minAmount', e.target.value)}
+              min="0"
+            />
+            <span className="rec-filter-panel__separator">—</span>
+            <Input
+              type="number"
+              placeholder={t('receivables.master.filter.max_amount')}
+              value={filters.maxAmount}
+              onChange={(e) => onFilterChange('maxAmount', e.target.value)}
+              min="0"
+            />
           </div>
         </div>
 
-        {/* Rango de Fechas */}
-        <div className="rec-input-group">
-          <label className="rec-input-group__label">{t('receivables.master.filter.date_range')}</label>
-          <div className="flex gap-2 items-center">
-            <div className="rec-input-group__wrapper">
-              <input type="date" className="rec-input" />
-            </div>
-            <span className="text-secondary">-</span>
-            <div className="rec-input-group__wrapper">
-              <input type="date" className="rec-input" />
-            </div>
-          </div>
+        <div className="rec-filter-panel__field">
+          <Label>{t('receivables.master.filter.days_overdue')}</Label>
+          <Input
+            type="number"
+            placeholder={t('receivables.master.filter.days_overdue_placeholder')}
+            value={filters.daysOverdue}
+            onChange={(e) => onFilterChange('daysOverdue', e.target.value)}
+            min="0"
+          />
         </div>
 
-        {/* Acciones */}
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onReset}>
+        <div className="rec-filter-panel__field" style={{ justifyContent: 'flex-end' }}>
+          <Button variant="outline" onClick={onReset} className="w-full">
             {t('receivables.master.filter.clear')}
           </Button>
-          <Button variant="primary">
-            <span className="material-symbols-outlined">filter_list</span>
-            <span>{t('receivables.master.filter.apply')}</span>
-          </Button>
         </div>
       </div>
 
-      {/* Etiquetas Activas */}
-      <div className="rec-filter-panel__active-tags">
-        {filters.status !== 'all' && (
-          <div className="rec-tag rec-tag--blue">
-            {t('receivables.master.filter.status')}: {filters.status}
-            <span className="rec-tag__close material-symbols-outlined" onClick={() => onFilterChange('status', 'all')}>close</span>
-          </div>
-        )}
-      </div>
+      {/* Active filter tags */}
+      {hasActiveFilters && (
+        <div className="rec-filter-panel__active-tags">
+          {filters.status !== 'all' && (
+            <Badge variant="secondary" className="gap-1.5">
+              {t('receivables.master.filter.status')}: {statusLabel(filters.status)}
+              <X className="size-3 cursor-pointer" onClick={() => onFilterChange('status', 'all')} />
+            </Badge>
+          )}
+          {filters.dateStart && (
+            <Badge variant="secondary" className="gap-1.5">
+              Desde: {filters.dateStart}
+              <X className="size-3 cursor-pointer" onClick={() => onFilterChange('dateStart', '')} />
+            </Badge>
+          )}
+          {filters.dateEnd && (
+            <Badge variant="secondary" className="gap-1.5">
+              Hasta: {filters.dateEnd}
+              <X className="size-3 cursor-pointer" onClick={() => onFilterChange('dateEnd', '')} />
+            </Badge>
+          )}
+          {filters.minAmount && (
+            <Badge variant="secondary" className="gap-1.5">
+              Min: {Number(filters.minAmount).toLocaleString()}
+              <X className="size-3 cursor-pointer" onClick={() => onFilterChange('minAmount', '')} />
+            </Badge>
+          )}
+          {filters.maxAmount && (
+            <Badge variant="secondary" className="gap-1.5">
+              Max: {Number(filters.maxAmount).toLocaleString()}
+              <X className="size-3 cursor-pointer" onClick={() => onFilterChange('maxAmount', '')} />
+            </Badge>
+          )}
+          {filters.daysOverdue && (
+            <Badge variant="secondary" className="gap-1.5">
+              {filters.daysOverdue}+ días
+              <X className="size-3 cursor-pointer" onClick={() => onFilterChange('daysOverdue', '')} />
+            </Badge>
+          )}
+        </div>
+      )}
     </div>
   );
 };

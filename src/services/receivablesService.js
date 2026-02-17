@@ -205,14 +205,47 @@ export const receivablesService = {
   /**
    * Get master list of receivables
    * @param {Object} filters
+   * @param {Object} pagination - { page, pageSize }
+   * @param {Object} sorting - { sortBy, sortOrder }
    */
-  async getMasterList(filters = {}) {
+  async getMasterList(filters = {}, pagination = {}, sorting = {}) {
     const startTime = Date.now();
     try {
       if (USE_MOCK) return _mockRes(masterListData);
 
-      const queryParams = new URLSearchParams(filters);
-      const endpoint = `${API_PREFIX}?${queryParams.toString()}`;
+      // Map frontend keys to API param names and strip empty/default values
+      const keyMap = {
+        search: 'search',
+        dateStart: 'start_date',
+        dateEnd: 'end_date',
+        minAmount: 'min_amount',
+        maxAmount: 'max_amount',
+        daysOverdue: 'days_overdue',
+      };
+
+      const queryParams = new URLSearchParams();
+
+      // Filters
+      for (const [frontKey, apiKey] of Object.entries(keyMap)) {
+        const val = filters[frontKey];
+        if (val !== undefined && val !== null && val !== '') {
+          queryParams.append(apiKey, val);
+        }
+      }
+      if (filters.status && filters.status !== 'all') {
+        queryParams.append('status', filters.status.toUpperCase());
+      }
+
+      // Pagination
+      if (pagination.page) queryParams.append('page', pagination.page);
+      if (pagination.pageSize) queryParams.append('page_size', pagination.pageSize);
+
+      // Sorting
+      if (sorting.sortBy) queryParams.append('sort_by', sorting.sortBy);
+      if (sorting.sortOrder) queryParams.append('sort_order', sorting.sortOrder);
+
+      const qs = queryParams.toString();
+      const endpoint = `${API_PREFIX}${qs ? '?' + qs : ''}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       telemetry.record('receivables.service.masterList', { duration: Date.now() - startTime, filters });
       return result;
