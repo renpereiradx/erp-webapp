@@ -27,7 +27,7 @@ vi.mock('@/utils/telemetry', () => ({ telemetry: { record: vi.fn(), startTimer: 
 let STORE_STATE = {};
 vi.mock('@/store/useProductStore', () => ({
   __esModule: true,
-  default: (sel) => sel(STORE_STATE)
+  default: (sel) => (typeof sel === 'function' ? sel(STORE_STATE) : STORE_STATE)
 }));
 
 import Products from '@/pages/Products.jsx';

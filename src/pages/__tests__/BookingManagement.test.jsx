@@ -9,34 +9,57 @@ import { BrowserRouter } from 'react-router-dom';
 import BookingManagement from '../BookingManagement';
 
 // Mock de stores
+const MOCK_RESERVATION_STORE = {
+  reservations: [],
+  loading: false,
+  error: null,
+  fetchReservations: vi.fn(),
+  clearError: vi.fn(),
+};
+
+const MOCK_PRODUCT_STORE = {
+  products: [],
+  fetchProducts: vi.fn(),
+  fetchProductsPaginated: vi.fn(),
+  fetchCategories: vi.fn(),
+};
+
+const MOCK_CLIENT_STORE = {
+  clients: [],
+  searchResults: [],
+  fetchClients: vi.fn(),
+};
+
 vi.mock('@/store/useReservationStore', () => ({
-  default: () => ({
-    reservations: [],
-    loading: false,
-    error: null,
-    fetchReservations: vi.fn(),
-    clearError: vi.fn(),
-  }),
+  __esModule: true,
+  default: (sel) => (typeof sel === 'function' ? sel(MOCK_RESERVATION_STORE) : MOCK_RESERVATION_STORE),
 }));
 
 vi.mock('@/store/useProductStore', () => ({
-  default: () => ({
-    products: [],
-    fetchProducts: vi.fn(),
-  }),
+  __esModule: true,
+  default: (sel) => (typeof sel === 'function' ? sel(MOCK_PRODUCT_STORE) : MOCK_PRODUCT_STORE),
 }));
 
 vi.mock('@/store/useClientStore', () => ({
-  default: () => ({
-    clients: [],
-    fetchClients: vi.fn(),
-  }),
+  __esModule: true,
+  default: (sel) => (typeof sel === 'function' ? sel(MOCK_CLIENT_STORE) : MOCK_CLIENT_STORE),
 }));
 
-// Mock de i18n
+// Mock de i18n con textos esperados por este test
 vi.mock('@/lib/i18n', () => ({
   useI18n: () => ({
-    t: (key, fallback) => fallback || key,
+    t: (key) => {
+      const translations = {
+        'booking.title': 'Gestión de Reservas',
+        'booking.action.create': 'Nueva Reserva',
+        'booking.action.back': 'Volver',
+        'booking.tab.reservations': 'Reservas',
+        'booking.status.confirmed': 'Confirmado',
+        'booking.status.pending': 'Pendiente',
+        'booking.status.cancelled': 'Cancelado',
+      };
+      return translations[key] || key;
+    },
   }),
 }));
 
@@ -77,7 +100,7 @@ describe('BookingManagement - MVP Tests', () => {
 
   it('should display tabs', () => {
     renderWithRouter(<BookingManagement />);
-    const reservationsTab = screen.getByText(/Reservas/i);
+    const reservationsTab = screen.getByRole('tab', { name: /Reservas/i });
     expect(reservationsTab).toBeInTheDocument();
   });
 });

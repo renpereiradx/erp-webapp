@@ -10,10 +10,12 @@ import * as productStore from '@/store/useProductStore';
 vi.mock('@/store/useProductStore', async (orig) => {
   const real = await orig();
   const originalHook = real.default;
-  const state = originalHook.getState();
   return {
     __esModule: true,
-    default: ((selector) => selector(originalHook.getState()))
+    default: (selector) => {
+      const state = originalHook.getState();
+      return (typeof selector === 'function' ? selector(state) : state);
+    }
   };
 });
 

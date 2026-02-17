@@ -46,26 +46,28 @@ vi.mock('@/components/ProductDetailModal', () => ({ default: () => null }));
 
 // Mock del store de productos
 const deleteProduct = vi.fn(async () => true);
+const STORE_STATE = {
+  products: [{ id: 'p1', name: 'Prod 1', is_active: true, category_id: 1 }],
+  loading: false,
+  error: null,
+  totalProducts: 1,
+  currentPage: 1,
+  totalPages: 1,
+  pageSize: 10,
+  categories: [{ id: 1, name: 'Cat' }],
+  lastSearchTerm: '',
+  fetchCategories: vi.fn(),
+  searchProducts: vi.fn(),
+  loadPage: vi.fn(),
+  changePageSize: vi.fn(),
+  clearProducts: vi.fn(),
+  deleteProduct,
+  clearError: vi.fn(),
+};
+
 vi.mock('@/store/useProductStore', () => ({
   __esModule: true,
-  default: (sel) => sel({
-    products: [{ id: 'p1', name: 'Prod 1', is_active: true, category_id: 1 }],
-    loading: false,
-    error: null,
-    totalProducts: 1,
-    currentPage: 1,
-    totalPages: 1,
-    pageSize: 10,
-    categories: [{ id: 1, name: 'Cat' }],
-    lastSearchTerm: '',
-    fetchCategories: vi.fn(),
-    searchProducts: vi.fn(),
-    loadPage: vi.fn(),
-    changePageSize: vi.fn(),
-    clearProducts: vi.fn(),
-    deleteProduct,
-    clearError: vi.fn(),
-  })
+  default: (sel) => (typeof sel === 'function' ? sel(STORE_STATE) : STORE_STATE)
 }));
 
 import Products from '@/pages/Products.jsx';
