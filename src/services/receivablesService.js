@@ -3,7 +3,7 @@ import { telemetry } from '../utils/telemetry';
 import { summaryData, agingData, debtorsData, forecastData, masterListData, detailData, overdueData, clientProfileData, agingReportData } from './mocks/receivablesMock';
 
 const API_PREFIX = '/receivables';
-const USE_MOCK = false; // Toggle this when backend is ready
+const USE_MOCK = import.meta.env.VITE_USE_DEMO === 'true'; // Controlled by environment variable
 
 // Helper for retries
 const _fetchWithRetry = async (requestFn, maxRetries = 2) => {

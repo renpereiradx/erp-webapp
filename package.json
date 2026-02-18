@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:demo": "vite --mode demo",
+    "dev:api": "vite --mode api",
     "dev:clean": "rm -rf node_modules/.vite && rm -rf node_modules/.cache && vite",
     "dev:nuclear": "rm -rf node_modules/.vite && rm -rf node_modules/.cache && rm -rf dist && pnpm install --force && vite",
     "build": "vite build",

@@ -6,7 +6,8 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../lib/i18n';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { DEMO_CONFIG } from '../config/demoAuth';
 
 const Login = () => {
   const { t } = useI18n();
@@ -40,6 +41,14 @@ const Login = () => {
 
   return (
     <div className="login">
+      {DEMO_CONFIG.enabled && (
+        <div className="fixed top-4 right-4 z-50 animate-pulse">
+          <div className="bg-amber-500 text-black px-4 py-2 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 font-black uppercase tracking-tighter text-xs">
+            <ShieldCheck size={16} />
+            Modo Demo Activo
+          </div>
+        </div>
+      )}
       <div className="login__container">
         <div className="login__header">
           <h1 className="login__title">
