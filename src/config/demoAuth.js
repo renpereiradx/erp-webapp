@@ -49,7 +49,9 @@ export const DEMO_TOKEN = 'demo-jwt-token-12345';
 
 // Configuración de demo
 export const DEMO_CONFIG = {
-  enabled: import.meta.env.DEV, // 🔧 Solo habilitado en desarrollo
+  // 🔧 Habilitado según variable de entorno o fallback a desarrollo
+  enabled: import.meta.env.VITE_USE_DEMO === 'true' || 
+           (import.meta.env.DEV && import.meta.env.VITE_USE_DEMO !== 'false'),
   autoLogin: import.meta.env.DEV, // Auto-login solo en desarrollo
   showCredentials: import.meta.env.DEV, // Mostrar credenciales solo en desarrollo
   sessionDuration: 24 * 60 * 60 * 1000, // 24 horas en ms

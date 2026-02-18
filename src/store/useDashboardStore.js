@@ -32,19 +32,16 @@ const useDashboardStore = create()(
           const response = await dashboardService.getKPIs(period);
           set({ kpis: response.data, loading: false });
         } catch (error) {
-          console.error('❌ Dashboard: Error loading KPIs:', error.message);
-          
-          if (DEMO_CONFIG_DASHBOARD.enabled) {
-              console.log('🔄 Dashboard: Falling back to demo KPI data...');
-              // En demo usamos getDemoDashboardData y mapeamos
+          if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
+              console.log('🔄 Dashboard: Mapeando KPIs de modo demo...');
               try {
                   const demo = await getDemoDashboardData();
-                  const data = demo.data;
+                  const { clientStats } = demo.data;
                   
-                  // Mapeo de demoData (clientStats) a API structure (customer_kpis)
+                  // Mapeo de demoData a API structure
                   const mappedKPIs = {
                       sales_kpis: {
-                          average_ticket: 350000, // Hardcoded or derived
+                          average_ticket: 350000,
                           sales_per_day: 15,
                           conversion_rate: 65.5,
                           repeat_customer_rate: 42.1
@@ -55,9 +52,9 @@ const useDashboardStore = create()(
                           operating_expense_ratio: 13.5
                       },
                       customer_kpis: {
-                          new_customers: data.clientStats.new_this_month,
-                          active_customers: data.clientStats.active,
-                          total_customers: data.clientStats.total_customers || data.clientStats.total,
+                          new_customers: clientStats.new_this_month,
+                          active_customers: clientStats.active,
+                          total_customers: clientStats.total_customers || clientStats.total,
                           average_purchase_frequency: 2.3
                       },
                       inventory_kpis: {
@@ -65,13 +62,15 @@ const useDashboardStore = create()(
                       }
                   };
                   
-                  set({ kpis: mappedKPIs, loading: false });
+                  set({ kpis: mappedKPIs, loading: false, error: null });
+                  return;
               } catch (demoError) {
-                   set({ error: error.message, loading: false });
+                  console.error('❌ Dashboard: Error en fallback de KPIs:', demoError);
               }
-          } else {
-             set({ error: error.message, loading: false });
           }
+
+          console.error('❌ Dashboard: Error loading KPIs:', error.message);
+          set({ error: error.message, loading: false });
         }
       },
       
@@ -115,12 +114,6 @@ const useDashboardStore = create()(
         set({ loading: true, error: null });
         
         try {
-          if (DEMO_CONFIG_DASHBOARD.enabled && !DEMO_CONFIG_DASHBOARD.useRealAPI) {
-             // ... existing demo logic if needed, or remove if fully switching ...
-             // For now, let's keep the fallback logic in the catch block or handle it here if preferred.
-             // But the instruction was to INTEGRATE REAL API.
-          }
-          
           // Cargar datos de la API real en paralelo de forma resiliente
           const results = await Promise.allSettled([
              dashboardService.getSummary(),
@@ -158,28 +151,44 @@ const useDashboardStore = create()(
             summary: summaryData,
             alerts: alertsData,
             activities: activitiesData,
-            loading: false
+            loading: false,
+            error: null
           });
           
         } catch (error) {
-          console.error('❌ Dashboard: Error loading data:', error.message);
-          
-          // Fallback to demo data if enabled
-          if (DEMO_CONFIG_DASHBOARD.enabled) {
-            console.log('🔄 Dashboard: Falling back to demo data...');
-            const demoData = await getDemoDashboardData();
-            // Adapt demo data structure to new store structure if necessary
-            // For now, let's assume we might need to map it or just use what fits
-            // But since the demo data structure is different, we might just set error for now 
-            // OR ideally map existing demo data to new structure.
-            // Given the task is strict on API integration, I will prioritize setting the error
-            // unless the user specifically asked to keep full demo fallback.
-            // The existing code had a fallback. I will try to respect it but mapped to new keys if possible.
-            // However, simplicity first: set error.
-             set({ error: error.message, loading: false });
-          } else {
-            set({ error: error.message, loading: false });
+          // Fallback silencioso a datos demo si está habilitado
+          if (error.message === 'DEMO_MODE: Using local fallback data' && DEMO_CONFIG_DASHBOARD.enabled) {
+            console.log('🔄 Dashboard: Mapeando datos de modo demo...');
+            try {
+              const demoResponse = await getDemoDashboardData();
+              const { data, charts } = demoResponse;
+              
+              set({
+                summary: {
+                  sales_today: data.salesStats.today,
+                  sales_this_week: data.salesStats.thisWeek,
+                  sales_this_month: data.salesStats.thisMonth,
+                  total_revenue: data.salesStats.total,
+                  revenue_trend: data.salesStats.trend,
+                  active_customers: data.clientStats.active,
+                  low_stock_alerts: data.productStats.lowStock
+                },
+                alerts: [
+                  { id: 1, severity: 'warning', message: `Stock bajo en ${data.productStats.lowStock} productos`, category: 'inventory' },
+                  { id: 2, severity: 'info', message: `${data.clientStats.new_this_month} nuevos clientes este mes`, category: 'sales' }
+                ],
+                activities: charts.recentActivity,
+                loading: false,
+                error: null
+              });
+              return;
+            } catch (demoError) {
+              console.error('❌ Dashboard: Error fatal cargando incluso datos demo:', demoError);
+            }
           }
+
+          console.error('❌ Dashboard: Error loading data:', error.message);
+          set({ error: error.message, loading: false });
         }
       },
     }),
