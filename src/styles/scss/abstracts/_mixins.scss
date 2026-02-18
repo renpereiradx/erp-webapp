@@ -42,6 +42,11 @@ $theme-map: null !default;
 }
 
 @function themed($key) {
+  @if $theme-map == null {
+    // 🔧 Fallback para evitar Error 500 cuando se usa fuera de themify
+    // Intentar usar variable CSS si es posible, o valor nulo
+    @return var(--#{$key}, null);
+  }
   @return map.get($theme-map, $key);
 }
 
@@ -235,6 +240,8 @@ $theme-map: null !default;
     @include body-xs;
   } @else if $variant == 'caption' {
     @include caption;
+  } @else if $variant == 'body-xs' or $variant == 'extra-small' {
+    @include body-xs;
   } @else {
     @error "Typography variant '#{$variant}' not found.";
   }

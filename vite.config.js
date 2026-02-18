@@ -34,6 +34,11 @@ export default defineConfig({
     ],
     exclude: ['react-day-picker/dist/style.css'],
     force: true, // Force re-optimization on every start
+    // 🔧 Solo escanear archivos relevantes para evitar errores con specs/temp
+    entries: [
+      'index.html',
+      'src/main.jsx'
+    ],
     // Add cache invalidation
     esbuildOptions: {
       target: 'esnext'
@@ -52,9 +57,8 @@ export default defineConfig({
     // Enable HMR but with overlay for errors
     hmr: {
       overlay: true,
-      port: 24678,
-      // Disable WebSocket connection retries to prevent connection spam
-      clientErrorOverlay: false
+      // 🔧 Quitamos el puerto fijo para que funcione en Codespaces/Proxies
+      clientErrorOverlay: true
     },
     // Aggressive headers to prevent cache specifically for this app
     headers: {

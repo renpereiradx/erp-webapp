@@ -1,4 +1,5 @@
 import api from '@/services/api';
+import { DEMO_CONFIG, DEMO_USERS } from '../config/demoAuth';
 
 const BASE_URL = '/api/v1/users';
 
@@ -100,6 +101,15 @@ export const userService = {
    * Obtener mi perfil
    */
   getMe: async () => {
+    // 🔧 Bypass en modo demo para evitar errores de red
+    if (DEMO_CONFIG.enabled) {
+      // Simular delay y retornar admin por defecto en demo
+      return {
+        success: true,
+        data: DEMO_USERS.demo // Usar el perfil demo configurado (admin)
+      };
+    }
+
     try {
       const response = await api.get(`${BASE_URL}/me`);
       return response;

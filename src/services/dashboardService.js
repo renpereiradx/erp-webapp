@@ -1,11 +1,22 @@
 // src/services/dashboardService.js
 import apiService from './api';
 import { telemetry } from '../utils/telemetry';
+import { DEMO_CONFIG } from '../config/demoAuth';
 
 const API_PREFIX = '/dashboard';
 
+// Helper to check for demo mode and throw to trigger fallback
+const _checkDemo = () => {
+  if (DEMO_CONFIG.enabled) {
+    throw new Error('DEMO_MODE: Using local fallback data');
+  }
+};
+
 // Helper for retries (consistent with clientService)
 const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
+  // 🔧 Bypass en modo demo para evitar inundar la consola con ERR_CONNECTION_REFUSED
+  _checkDemo();
+
   let lastError;
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -33,12 +44,17 @@ export const dashboardService = {
   async getSummary(period = 'today') {
     const startTime = Date.now();
     try {
+      // Check demo here too for more explicit control
+      _checkDemo();
+
       const endpoint = `${API_PREFIX}/summary?period=${period}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       telemetry.record('dashboard.service.summary', { duration: Date.now() - startTime, period });
       return result;
     } catch (error) {
-      telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getSummary' });
+      if (error.message !== 'DEMO_MODE: Using local fallback data') {
+        telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getSummary' });
+      }
       throw error;
     }
   },
@@ -51,6 +67,8 @@ export const dashboardService = {
   async getAlerts({ severity, category } = {}) {
     const startTime = Date.now();
     try {
+      _checkDemo();
+
       const queryParams = new URLSearchParams();
       if (severity) queryParams.append('severity', severity);
       if (category) queryParams.append('category', category);
@@ -60,7 +78,9 @@ export const dashboardService = {
       telemetry.record('dashboard.service.alerts', { duration: Date.now() - startTime });
       return result;
     } catch (error) {
-      telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getAlerts' });
+      if (error.message !== 'DEMO_MODE: Using local fallback data') {
+        telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getAlerts' });
+      }
       throw error;
     }
   },
@@ -72,12 +92,16 @@ export const dashboardService = {
   async getKPIs(period = 'month') {
     const startTime = Date.now();
     try {
+      _checkDemo();
+
       const endpoint = `${API_PREFIX}/kpis?period=${period}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       telemetry.record('dashboard.service.kpis', { duration: Date.now() - startTime, period });
       return result;
     } catch (error) {
-      telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getKPIs' });
+      if (error.message !== 'DEMO_MODE: Using local fallback data') {
+        telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getKPIs' });
+      }
       throw error;
     }
   },
@@ -89,12 +113,16 @@ export const dashboardService = {
   async getRecentActivity(limit = 20) {
     const startTime = Date.now();
     try {
+      _checkDemo();
+
       const endpoint = `${API_PREFIX}/recent-activity?limit=${limit}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       telemetry.record('dashboard.service.activity', { duration: Date.now() - startTime, limit });
       return result;
     } catch (error) {
-      telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getRecentActivity' });
+      if (error.message !== 'DEMO_MODE: Using local fallback data') {
+        telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getRecentActivity' });
+      }
       throw error;
     }
   },
@@ -106,12 +134,16 @@ export const dashboardService = {
   async getSalesHeatmap(weeks = 4) {
     const startTime = Date.now();
     try {
+      _checkDemo();
+
       const endpoint = `${API_PREFIX}/sales-heatmap?weeks=${weeks}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       telemetry.record('dashboard.service.heatmap', { duration: Date.now() - startTime, weeks });
       return result;
     } catch (error) {
-      telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getSalesHeatmap' });
+      if (error.message !== 'DEMO_MODE: Using local fallback data') {
+        telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getSalesHeatmap' });
+      }
       throw error;
     }
   },
@@ -125,12 +157,16 @@ export const dashboardService = {
   async getTopProducts(period = 'week', limit = 10, sortBy = 'revenue') {
     const startTime = Date.now();
     try {
+      _checkDemo();
+
       const endpoint = `${API_PREFIX}/top-products?period=${period}&limit=${limit}&sort_by=${sortBy}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       telemetry.record('dashboard.service.topProducts', { duration: Date.now() - startTime, period });
       return result;
     } catch (error) {
-      telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getTopProducts' });
+      if (error.message !== 'DEMO_MODE: Using local fallback data') {
+        telemetry.record('dashboard.service.error', { duration: Date.now() - startTime, error: error.message, operation: 'getTopProducts' });
+      }
       throw error;
     }
   }
