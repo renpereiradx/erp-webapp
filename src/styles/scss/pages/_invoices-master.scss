@@ -1,0 +1,306 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.invoices-master {
+  flex: 1;
+  width: 100%;
+  max-width: 2560px;
+  margin: 0 auto;
+  padding: $spacing-24 $spacing-16;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-24;
+
+  @include respond-to(sm) {
+    padding: $spacing-32 $spacing-24;
+  }
+
+  &__breadcrumb {
+    font-size: $font-size-200;
+    @include themify { color: themed('text-tertiary'); }
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+
+    span:last-child {
+      @include themify { color: themed('text-primary'); }
+      font-weight: $font-weight-medium;
+    }
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-16;
+
+    @include respond-to(md) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+  }
+
+  &__title-group {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__title {
+    @include heading-1;
+    @include themify { color: themed('text-primary'); }
+  }
+
+  &__subtitle {
+    @include body-small;
+    @include themify { color: themed('text-secondary'); }
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-12;
+  }
+
+  &__action-btn {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+  }
+
+  &__action-text {
+    display: none;
+    @include respond-to(sm) {
+      display: inline;
+    }
+  }
+
+  &__filters {
+    @include card;
+    padding: $spacing-16 $spacing-24;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-24;
+    margin-bottom: $spacing-8;
+    box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.1), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.05);
+
+    .input, select.input, .input--filled {
+      @include themify {
+        background-color: themed('bg-tertiary');
+        border: 1px solid transparent;
+      }
+      border-radius: $border-radius-large;
+      font-size: $font-size-300;
+      height: 36px;
+      min-width: 160px;
+      
+      &:hover {
+        @include themify { border-color: themed('border-default'); }
+      }
+      
+      &:focus {
+        @include themify { border-color: themed('action-primary'); }
+      }
+    }
+  }
+
+  &__filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &--search {
+      min-width: 280px;
+    }
+
+    &--date {
+      min-width: 320px;
+    }
+
+    label {
+      font-size: 11px;
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      @include themify { color: themed('text-tertiary'); }
+    }
+  }
+
+  &__date-range {
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+
+    .input {
+      flex: 1;
+    }
+  }
+
+  &__date-separator {
+    @include themify { color: themed('text-tertiary'); }
+  }
+
+  &__filter-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+  }
+
+  &__filter-btn {
+    @include themify {
+      color: themed('text-secondary');
+      &:hover { color: themed('action-primary'); }
+    }
+  }
+
+  &__search-wrapper {
+    position: relative;
+    width: 100%;
+    
+    .input {
+      padding-left: $spacing-40 !important;
+    }
+
+    svg {
+      position: absolute;
+      left: $spacing-12;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      @include themify { color: themed('text-tertiary'); }
+      z-index: 1;
+    }
+  }
+
+  &__table-card {
+    @include card;
+    padding: 0;
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__table-toolbar {
+    padding: $spacing-12 $spacing-24;
+    border-bottom: 1px solid;
+    @include themify { 
+      border-color: themed('border-subtle');
+      background-color: rgba(themed('bg-secondary'), 0.5);
+    }
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__toolbar-actions {
+    display: flex;
+    gap: $spacing-8;
+  }
+
+  &__table-wrapper {
+    overflow-x: auto;
+  }
+
+  &__table-check {
+    width: 48px;
+  }
+
+  &__table-cell-right {
+    text-align: right !important;
+  }
+
+  &__table-cell-center {
+    text-align: center !important;
+  }
+
+  &__table-info {
+    font-size: $font-size-200;
+    @include themify { color: themed('text-tertiary'); }
+    
+    strong {
+      @include themify { color: themed('text-primary'); }
+    }
+  }
+
+  // Table Styles
+  .invoice-table {
+    &__id {
+      font-weight: $font-weight-bold;
+      @include themify { color: themed('action-primary'); }
+      cursor: pointer;
+      &:hover { text-decoration: underline; }
+    }
+
+    &__vendor-cell {
+      display: flex;
+      align-items: center;
+      gap: $spacing-8;
+    }
+
+    &__vendor {
+      font-weight: $font-weight-semibold;
+      @include themify { color: themed('text-primary'); }
+    }
+
+    &__amount {
+      font-family: $font-family-monospace;
+      @include themify { color: themed('text-secondary'); }
+    }
+
+    &__amount-pending {
+      font-family: $font-family-monospace;
+      font-weight: $font-weight-bold;
+      @include themify { color: themed('text-primary'); }
+
+      &--danger {
+        @include themify { color: themed('state-error'); }
+      }
+    }
+  }
+
+  &__footer {
+    padding: $spacing-12 $spacing-24;
+    border-top: 1px solid;
+    @include themify { border-color: themed('border-subtle'); }
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &__pagination {
+    display: flex;
+    align-items: center;
+  }
+
+  &__pagination-info {
+    font-size: $font-size-200;
+    @include themify { color: themed('text-tertiary'); }
+    margin-right: $spacing-16;
+  }
+
+  &__pagination-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .btn {
+      width: 32px !important;
+      height: 32px !important;
+      min-width: 32px !important;
+      padding: 0 !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: $border-radius-large !important;
+      
+      svg {
+        width: 16px !important;
+        height: 16px !important;
+        flex-shrink: 0;
+      }
+    }
+  }
+}

@@ -12,8 +12,7 @@ const FilterRibbon = () => {
     <div className="payables-dashboard__filter-ribbon">
       <div className="payables-dashboard__filter-group">
         <label className="payables-dashboard__filter-label">Periodo</label>
-        {/* Placeholder Select until fully integrated with data */}
-        <select className="input input--small min-w-[180px]">
+        <select className="input input--small input--filled min-w-[180px]">
           <option>Este Mes (Mayo 2024)</option>
           <option>Último Trimestre</option>
           <option>Año Fiscal 2024</option>
@@ -22,7 +21,7 @@ const FilterRibbon = () => {
       
       <div className="payables-dashboard__filter-group">
         <label className="payables-dashboard__filter-label">Proveedor</label>
-        <select className="input input--small min-w-[220px]">
+        <select className="input input--small input--filled min-w-[220px]">
           <option>Todos los proveedores</option>
           <option>Global Logistics S.A.</option>
           <option>Tech Solutions Inc.</option>
@@ -32,17 +31,16 @@ const FilterRibbon = () => {
       
       <div className="payables-dashboard__filter-group">
         <label className="payables-dashboard__filter-label">Prioridad</label>
-        <div className="flex gap-2">
-          {/* Using Badge-like styles via class names or small buttons */}
-          <button className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-xs font-semibold border border-primary/20">Alta</button>
-          <button className="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-semibold border border-transparent hover:border-slate-300">Media</button>
-          <button className="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-semibold border border-transparent hover:border-slate-300">Baja</button>
+        <div className="payables-dashboard__priority-group">
+          <button className="payables-dashboard__priority-btn payables-dashboard__priority-btn--active">Alta</button>
+          <button className="payables-dashboard__priority-btn">Media</button>
+          <button className="payables-dashboard__priority-btn">Baja</button>
         </div>
       </div>
       
       <div className="payables-dashboard__filter-group">
         <label className="payables-dashboard__filter-label">Moneda</label>
-        <select className="input input--small">
+        <select className="input input--small input--filled">
           <option>USD - Dólar</option>
           <option>MXN - Peso</option>
           <option>EUR - Euro</option>
@@ -50,10 +48,10 @@ const FilterRibbon = () => {
       </div>
       
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary">
+        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary transition-colors">
           <Filter className="w-5 h-5" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary">
+        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary transition-colors">
           <Search className="w-5 h-5" />
         </Button>
       </div>

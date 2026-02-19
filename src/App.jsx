@@ -59,6 +59,7 @@ import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
 import ReceivablesDashboard from '@/pages/ReceivablesDashboard'
 import PayablesDashboard from '@/pages/PayablesDashboard'
 import ReceivablesMasterList from '@/pages/ReceivablesMasterList'
+import InvoicesMasterList from '@/pages/InvoicesMasterList'
 import ReceivableDetail from '@/pages/ReceivableDetail'
 import OverdueAccounts from '@/pages/OverdueAccounts'
 import ClientCreditProfile from '@/pages/ClientCreditProfile'
@@ -135,6 +136,7 @@ function AppContent() {
                       <Route path='/dashboard/top-products' element={<TopProductsOverview />} />
                       <Route path='/dashboard/receivables' element={<ReceivablesDashboard />} />
                       <Route path='/dashboard/payables' element={<PayablesDashboard />} />
+                      <Route path='/finance/invoices' element={<InvoicesMasterList />} />
                       <Route path='/receivables' element={<ReceivablesDashboard />} />
                       <Route path='/receivables/list' element={<ReceivablesMasterList />} />
                       <Route path='/receivables/detail/:id' element={<ReceivableDetail />} />

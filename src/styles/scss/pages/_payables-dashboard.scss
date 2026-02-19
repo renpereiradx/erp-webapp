@@ -70,12 +70,59 @@
     align-items: center;
     gap: $spacing-24;
     box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.1), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.05);
+
+    .input--filled {
+      border-radius: $border-radius-large;
+      @include themify {
+        background-color: themed('bg-tertiary');
+      }
+    }
   }
 
   &__filter-group {
     display: flex;
     flex-direction: column;
-    gap: $spacing-4;
+    gap: 6px;
+  }
+
+  &__priority-group {
+    display: flex;
+    gap: $spacing-8;
+  }
+
+  &__priority-btn {
+    padding: $spacing-4 $spacing-12;
+    border-radius: $border-radius-large;
+    font-size: $font-size-200;
+    font-weight: $font-weight-semibold;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all $duration-fast;
+
+    @include themify {
+      background-color: themed('bg-tertiary');
+      color: themed('text-secondary');
+    }
+
+    &:hover {
+      @include themify {
+        border-color: themed('border-default');
+      }
+    }
+
+    &--active {
+      @include themify {
+        background-color: rgba(themed('action-primary'), 0.1);
+        color: themed('action-primary');
+        border-color: rgba(themed('action-primary'), 0.2);
+      }
+
+      &:hover {
+        @include themify {
+          background-color: rgba(themed('action-primary'), 0.15);
+        }
+      }
+    }
   }
 
   &__filter-label {
@@ -122,9 +169,11 @@
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
+    border-radius: $border-radius-xlarge;
     box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
     
     @include themify {
+      background-color: themed('surface-card');
       border: 1px solid themed('border-subtle');
     }
 
@@ -141,7 +190,7 @@
     }
 
     &__label {
-      @include body-small;
+      font-size: $font-size-300;
       font-weight: $font-weight-medium;
       @include themify {
         color: themed('text-secondary');
@@ -164,7 +213,11 @@
 
     &__icon {
       padding: $spacing-8;
-      border-radius: $border-radius-medium;
+      border-radius: $border-radius-large;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
       @include themify {
         background-color: rgba(themed('action-primary'), 0.1);
         color: themed('action-primary');
@@ -187,20 +240,49 @@
 
     &__trend {
       margin-top: $spacing-16;
-      @include caption;
+      font-size: $font-size-200;
       font-weight: $font-weight-medium;
       display: flex;
       align-items: center;
 
-      &--up { @include themify { color: themed('state-success'); } }
-      &--down { @include themify { color: themed('state-error'); } }
-      
-      span {
-        @include themify {
-          color: themed('text-tertiary');
-        }
-        margin-left: $spacing-8;
+      &--up { 
+        @include themify { color: themed('state-success'); } 
+        margin-right: $spacing-8;
+        display: flex;
+        align-items: center;
       }
+      
+      &--down { 
+        @include themify { color: themed('state-error'); } 
+        margin-right: $spacing-8;
+        display: flex;
+        align-items: center;
+      }
+      
+      &__label {
+        @include themify {
+          color: themed('text-secondary');
+        }
+      }
+    }
+
+    &__progress-container {
+      margin-top: $spacing-16;
+      width: 100%;
+      @include themify {
+        background-color: themed('bg-tertiary');
+      }
+      height: 6px;
+      border-radius: $border-radius-pill;
+      overflow: hidden;
+    }
+
+    &__progress-bar {
+      height: 100%;
+      @include themify {
+        background-color: themed('action-primary');
+      }
+      transition: width 0.5s ease-in-out;
     }
   }
 
@@ -222,11 +304,29 @@
       margin-bottom: $spacing-4;
     }
 
+    &__label-text {
+      font-weight: $font-weight-medium;
+      @include themify { color: themed('text-secondary'); }
+
+      &--danger {
+        @include themify { color: themed('state-error'); }
+      }
+    }
+
+    &__label-value {
+      font-weight: $font-weight-bold;
+      @include themify { color: themed('text-primary'); }
+
+      &--danger {
+        @include themify { color: themed('state-error'); }
+      }
+    }
+
     &__track {
       width: 100%;
       height: 24px;
       @include themify {
-        background-color: themed('surface-hover');
+        background-color: themed('bg-tertiary');
       }
       border-radius: $border-radius-medium;
       overflow: hidden;
@@ -259,9 +359,136 @@
       }
       text-align: center;
     }
+
+    &__stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-4;
+    }
+
+    &__stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: $font-weight-bold;
+      @include themify { color: themed('text-tertiary'); }
+    }
+
+    &__stat-value {
+      font-size: $font-size-300;
+      font-weight: $font-weight-bold;
+      @include themify { color: themed('text-primary'); }
+
+      &--success { @include themify { color: themed('state-success'); } }
+      &--danger { @include themify { color: themed('state-error'); } }
+    }
   }
 
   // High Density Table Overrides
+  .payables-table-container {
+    margin-bottom: $spacing-24;
+    
+    .payables-table-card__title {
+      @include body-large;
+      font-weight: $font-weight-bold;
+      @include themify { color: themed('text-primary'); }
+    }
+
+    &__badge {
+      padding: $spacing-4 $spacing-8;
+      border-radius: $border-radius-medium;
+      font-size: 10px;
+      font-weight: $font-weight-semibold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      @include themify {
+        background-color: themed('bg-tertiary');
+        color: themed('text-tertiary');
+      }
+    }
+
+    &__search-container {
+      position: relative;
+      width: 100%;
+      @include respond-to(md) { width: 256px; }
+    }
+
+    &__search-icon {
+      position: absolute;
+      left: $spacing-12;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      @include themify { color: themed('text-tertiary'); }
+      z-index: 1;
+    }
+
+    &__search-input {
+      padding-left: $spacing-40 !important;
+      @include themify {
+        background-color: themed('bg-secondary') !important;
+        border: none !important;
+      }
+    }
+
+    &__vendor-name {
+      font-weight: $font-weight-semibold;
+      @include themify { color: themed('text-primary'); }
+    }
+
+    &__rfc {
+      font-family: $font-family-monospace;
+      font-size: $font-size-200;
+      @include themify { color: themed('text-tertiary'); }
+    }
+
+    &__amount {
+      font-weight: $font-weight-bold;
+      @include themify { color: themed('text-primary'); }
+    }
+
+    &__overdue-amount {
+      font-weight: $font-weight-bold;
+      @include themify { color: themed('text-secondary'); }
+
+      &--danger {
+        @include themify { color: themed('state-error'); }
+      }
+    }
+
+    &__pagination-info {
+      font-size: $font-size-200;
+      @include themify { color: themed('text-tertiary'); }
+    }
+
+    &__pagination-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      // Targeting the exact button structure for pagination
+      .btn {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: $border-radius-large !important;
+        
+        svg, .lucide {
+          width: 16px !important;
+          height: 16px !important;
+          flex-shrink: 0;
+          display: block;
+          margin: 0;
+          stroke-width: 2.5px; // Thicker stroke for better visibility
+        }
+      }
+    }
+  }
+
   .payables-table-container {
     th {
       padding: 12px 16px !important;
@@ -315,7 +542,7 @@
       padding: $spacing-12;
       border-radius: $border-radius-medium;
       @include themify {
-        background-color: themed('surface-hover');
+        background-color: themed('bg-tertiary');
       }
       display: flex;
       flex-direction: column;
@@ -327,23 +554,82 @@
           background-color: rgba(themed('state-error'), 0.1);
         }
         
-        span { @include themify { color: themed('state-error') !important; } }
+        .payment-list__month, .payment-list__day { 
+          @include themify { color: themed('state-error') !important; } 
+        }
       }
+    }
 
-      span:first-child {
-        font-size: 10px;
-        font-weight: $font-weight-bold;
-        text-transform: uppercase;
+    &__month {
+      font-size: 10px;
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+      @include themify {
+        color: themed('text-tertiary');
+      }
+    }
+
+    &__day {
+      font-size: 1.125rem;
+      font-weight: $font-weight-bold;
+      @include themify {
+        color: themed('text-primary');
+      }
+    }
+
+    &__info {
+      flex-grow: 1;
+      min-width: 0;
+    }
+
+    &__vendor {
+      font-size: $font-size-300;
+      font-weight: $font-weight-bold;
+      @include truncate;
+      @include themify { color: themed('text-primary'); }
+    }
+
+    &__invoice {
+      font-size: $font-size-200;
+      @include themify { color: themed('text-secondary'); }
+    }
+
+    &__amount-group {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    &__amount {
+      font-size: $font-size-300;
+      font-weight: $font-weight-bold;
+      @include themify { color: themed('text-primary'); }
+    }
+
+    &__status {
+      font-size: 10px;
+      padding: $spacing-2 $spacing-8;
+      border-radius: $border-radius-pill;
+      font-weight: $font-weight-bold;
+      text-transform: uppercase;
+
+      &--neutral {
         @include themify {
-          color: themed('text-tertiary');
+          background-color: themed('bg-tertiary');
+          color: themed('text-secondary');
         }
       }
 
-      span:last-child {
-        font-size: 1.125rem;
-        font-weight: $font-weight-bold;
+      &--info {
         @include themify {
-          color: themed('text-primary');
+          background-color: rgba(themed('action-primary'), 0.1);
+          color: themed('action-primary');
+        }
+      }
+
+      &--danger {
+        @include themify {
+          background-color: rgba(themed('state-error'), 0.1);
+          color: themed('state-error');
         }
       }
     }

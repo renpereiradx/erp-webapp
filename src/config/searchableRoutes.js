@@ -70,6 +70,12 @@ export const distinctSearchableRoutes = [
     icon: LayoutDashboard,
     category: 'BI / Cuentas por Pagar'
   },
+  {
+    name: 'Lista Maestra de Facturas',
+    href: '/finance/invoices',
+    icon: FileText,
+    category: 'Finanzas / Cuentas por Pagar'
+  },
 
   // Dashboard & KPIs
   {

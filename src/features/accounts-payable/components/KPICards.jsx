@@ -30,18 +30,18 @@ const KPICard = ({ title, value, currency, trend, trendType, icon: Icon, subtitl
       </div>
       
       {progress !== undefined ? (
-        <div className="mt-4 w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-          <div className="bg-primary h-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
+        <div className="kpi-card__progress-container">
+          <div className="kpi-card__progress-bar" style={{ width: `${progress}%` }}></div>
         </div>
       ) : (
         <div className="kpi-card__trend">
           {trend && (
             <span className={trendType === 'success' ? 'kpi-card__trend--up' : 'kpi-card__trend--down'}>
-              {trendType === 'success' ? <TrendingUp size={14} className="mr-0.5 inline" /> : <AlertCircle size={14} className="mr-0.5 inline" />}
+              {trendType === 'success' ? <TrendingUp size={14} className="mr-1" /> : <AlertCircle size={14} className="mr-1" />}
               {trend}
             </span>
           )}
-          <span>{subtitle}</span>
+          <span className="kpi-card__trend__label">{subtitle}</span>
         </div>
       )}
     </Card>
