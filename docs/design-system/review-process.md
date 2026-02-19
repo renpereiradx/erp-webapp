@@ -23,6 +23,7 @@ Guía para mantener la consistencia del sistema de diseño Fluent 2.
 
 - [ ] ¿Se actualizó el inventario en `docs/design-system/component-inventory.md`?
 - [ ] ¿Se agregó documentación en `docs/design-system/component-guide.md`?
+- [ ] ¿La página es localizable desde el buscador global (`src/config/searchableRoutes.js`)?
 - [ ] ¿El build compila sin errores?
 
 ---

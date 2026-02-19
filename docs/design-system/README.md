@@ -53,6 +53,15 @@ docs/design-system/
 
 ---
 
+## Requisitos de Implementación
+
+Cada nueva página implementada debe cumplir con:
+1. **Fidelidad Stitch**: Seguir al 100% los tokens y layout definidos en Stitch.
+2. **Componentes UI**: Usar exclusivamente componentes de `@/components/ui/`.
+3. **Buscador Global**: La página DEBE ser integrable y buscable desde la `navbar__search` registrándola en `src/config/searchableRoutes.js`.
+
+---
+
 ## Quick Start
 
 ```jsx

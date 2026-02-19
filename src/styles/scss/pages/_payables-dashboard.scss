@@ -1,0 +1,385 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.payables-dashboard {
+  flex: 1;
+  width: 100%;
+  max-width: 2560px; // Optimized for large screens per design
+  margin: 0 auto;
+  padding: $spacing-24 $spacing-16;
+  overflow-y: auto;
+  position: relative;
+
+  @include respond-to(sm) {
+    padding: $spacing-32 $spacing-24;
+  }
+
+  @include respond-to(lg) {
+    padding: $spacing-32;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: $spacing-16;
+    margin-bottom: $spacing-24;
+
+    @include respond-to('lg') {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  &__title {
+    @include heading-1;
+    @include themify {
+      color: themed('text-primary');
+    }
+  }
+
+  &__subtitle {
+    @include body-small;
+    @include themify {
+      color: themed('text-secondary');
+    }
+    display: flex;
+    align-items: center;
+    margin-top: $spacing-4;
+
+    svg {
+      margin-right: $spacing-4;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-12;
+  }
+
+  &__filter-ribbon {
+    @include card;
+    padding: $spacing-16;
+    margin-bottom: $spacing-24;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-24;
+    box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.1), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  &__filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+  }
+
+  &__filter-label {
+    font-size: 11px;
+    font-weight: $font-weight-bold;
+    @include themify {
+      color: themed('text-tertiary');
+    }
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-24;
+    margin-bottom: $spacing-24;
+
+    @include respond-to('md') {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include respond-to('lg') {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  &__split-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: $spacing-24;
+    margin-bottom: $spacing-24;
+
+    @include respond-to('xl') {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+
+  // KPI Card Styles with Fluent 2 Shadow
+  .kpi-card {
+    @include card;
+    padding: $spacing-24;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    box-shadow: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+    
+    @include themify {
+      border: 1px solid themed('border-subtle');
+    }
+
+    &--critical {
+      @include themify {
+        border-left: 4px solid themed('state-error');
+      }
+    }
+
+    &__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    &__label {
+      @include body-small;
+      font-weight: $font-weight-medium;
+      @include themify {
+        color: themed('text-secondary');
+      }
+    }
+
+    &__value {
+      @include text-style($font-size-900, $font-weight-bold, $line-height-200); // Match 3xl (30px)
+      margin-top: $spacing-4;
+      @include themify {
+        color: themed('text-primary');
+      }
+
+      &--danger {
+        @include themify {
+          color: themed('state-error');
+        }
+      }
+    }
+
+    &__icon {
+      padding: $spacing-8;
+      border-radius: $border-radius-medium;
+      @include themify {
+        background-color: rgba(themed('action-primary'), 0.1);
+        color: themed('action-primary');
+      }
+
+      &--danger {
+        @include themify {
+          background-color: rgba(themed('state-error'), 0.1);
+          color: themed('state-error');
+        }
+      }
+      
+      &--success {
+        @include themify {
+          background-color: rgba(themed('state-success'), 0.1);
+          color: themed('state-success');
+        }
+      }
+    }
+
+    &__trend {
+      margin-top: $spacing-16;
+      @include caption;
+      font-weight: $font-weight-medium;
+      display: flex;
+      align-items: center;
+
+      &--up { @include themify { color: themed('state-success'); } }
+      &--down { @include themify { color: themed('state-error'); } }
+      
+      span {
+        @include themify {
+          color: themed('text-tertiary');
+        }
+        margin-left: $spacing-8;
+      }
+    }
+  }
+
+  // Aging Chart Styles
+  .aging-chart {
+    &__bar-container {
+      margin-bottom: $spacing-24;
+    }
+
+    &__bar-row {
+      margin-bottom: $spacing-8;
+    }
+
+    &__bar-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      @include body-small;
+      margin-bottom: $spacing-4;
+    }
+
+    &__track {
+      width: 100%;
+      height: 24px;
+      @include themify {
+        background-color: themed('surface-hover');
+      }
+      border-radius: $border-radius-medium;
+      overflow: hidden;
+    }
+
+    &__fill {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: $spacing-8;
+      font-size: 10px;
+      font-weight: $font-weight-bold;
+      color: white;
+      transition: width 0.5s ease-out;
+
+      &--primary { @include themify { background-color: themed('action-primary'); } }
+      &--primary-light { @include themify { background-color: themed('action-primary'); } opacity: 0.7; } 
+      &--warning { @include themify { background-color: themed('state-warning'); } }
+      &--danger { @include themify { background-color: themed('state-error'); } }
+    }
+
+    &__stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: $spacing-16;
+      padding-top: $spacing-24;
+      @include themify {
+        border-top: 1px solid themed('border-default');
+      }
+      text-align: center;
+    }
+  }
+
+  // High Density Table Overrides
+  .payables-table-container {
+    th {
+      padding: 12px 16px !important;
+      font-size: 0.75rem !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.05em !important;
+      @include themify {
+        color: themed('text-tertiary') !important;
+      }
+    }
+
+    td {
+      padding: 10px 16px !important;
+      font-size: 0.875rem !important;
+    }
+  }
+
+  // Payment List Styles
+  .payment-list {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 440px;
+    overflow-y: auto;
+
+    &__item {
+      padding: $spacing-16;
+      @include themify {
+        border-bottom: 1px solid themed('border-subtle');
+      }
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      gap: $spacing-16;
+      transition: background-color 0.2s;
+
+      &:hover {
+        @include themify {
+          background-color: themed('surface-hover');
+        }
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    &__date-box {
+      min-width: 54px;
+      padding: $spacing-12;
+      border-radius: $border-radius-medium;
+      @include themify {
+        background-color: themed('surface-hover');
+      }
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      
+      &--urgent {
+        @include themify {
+          background-color: rgba(themed('state-error'), 0.1);
+        }
+        
+        span { @include themify { color: themed('state-error') !important; } }
+      }
+
+      span:first-child {
+        font-size: 10px;
+        font-weight: $font-weight-bold;
+        text-transform: uppercase;
+        @include themify {
+          color: themed('text-tertiary');
+        }
+      }
+
+      span:last-child {
+        font-size: 1.125rem;
+        font-weight: $font-weight-bold;
+        @include themify {
+          color: themed('text-primary');
+        }
+      }
+    }
+  }
+
+  // Mica Effect Circles
+  &__bg-decoration {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -10;
+    pointer-events: none;
+    opacity: 0.3;
+
+    .circle-1 {
+      position: absolute;
+      top: -10%;
+      right: -10%;
+      width: 40%;
+      height: 40%;
+      background-color: rgba(#137fec, 0.1);
+      border-radius: 50%;
+      filter: blur(120px);
+    }
+
+    .circle-2 {
+      position: absolute;
+      bottom: -10%;
+      left: -10%;
+      width: 40%;
+      height: 40%;
+      background-color: rgba(#60a5fa, 0.05);
+      border-radius: 50%;
+      filter: blur(120px);
+    }
+  }
+}

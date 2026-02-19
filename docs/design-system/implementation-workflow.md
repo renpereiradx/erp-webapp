@@ -55,6 +55,7 @@ Este paso consiste en llevar lo extraído de Stitch a nuestros componentes React
 - [ ] Importar los componentes UI necesarios.
 - [ ] Aplicar la estructura de layout extraída de Stitch.
 - [ ] Consumir los datos necesarios mediante el Store (Zustand).
+- [ ] **Indexación en Buscador**: Registrar la nueva ruta en `src/config/searchableRoutes.js` para que sea localizable desde la barra de búsqueda global (`navbar__search`).
 
 ---
 

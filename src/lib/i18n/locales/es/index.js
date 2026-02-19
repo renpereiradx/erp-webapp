@@ -28,6 +28,7 @@ import { dashboard } from './dashboard.js'
 import { users } from './users.js'
 import { myProfile } from './my-profile.js'
 import { receivables } from './receivables.js'
+import payables from './payables.js'
 
 /**
  * Diccionario completo de traducciones en español
@@ -58,5 +59,6 @@ export const es = {
   ...users,
   ...myProfile,
   ...receivables,
+  payables,
   ...other,
 }

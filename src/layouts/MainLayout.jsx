@@ -139,6 +139,18 @@ const MainLayout = ({ children }) => {
               },
             ],
           },
+          {
+            name: t('payables.title', 'Cuentas por Pagar'),
+            href: '#',
+            icon: CircleDollarSign,
+            children: [
+              {
+                name: t('payables.summary', 'Resumen Ejecutivo'),
+                href: '/dashboard/payables',
+                icon: BarChart3,
+              },
+            ],
+          },
         ],
       },
       { name: t('products.title', 'Productos'), href: '/productos', icon: Package },

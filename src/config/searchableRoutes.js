@@ -63,6 +63,14 @@ export const distinctSearchableRoutes = [
     category: 'BI / Cuentas por Cobrar'
   },
 
+  // Cuentas por Pagar (Payables)
+  {
+    name: 'Dashboard Ejecutivo de Cuentas por Pagar',
+    href: '/dashboard/payables',
+    icon: LayoutDashboard,
+    category: 'BI / Cuentas por Pagar'
+  },
+
   // Dashboard & KPIs
   {
     name: 'KPIs Detallados del Negocio',

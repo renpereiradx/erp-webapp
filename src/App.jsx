@@ -57,6 +57,7 @@ import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity'
 // import ProductComparisonDebug from '@/components/ProductComparisonDebug';
 import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
 import ReceivablesDashboard from '@/pages/ReceivablesDashboard'
+import PayablesDashboard from '@/pages/PayablesDashboard'
 import ReceivablesMasterList from '@/pages/ReceivablesMasterList'
 import ReceivableDetail from '@/pages/ReceivableDetail'
 import OverdueAccounts from '@/pages/OverdueAccounts'
@@ -133,6 +134,7 @@ function AppContent() {
                       <Route path='/dashboard/alerts' element={<ConsolidatedAlerts />} />
                       <Route path='/dashboard/top-products' element={<TopProductsOverview />} />
                       <Route path='/dashboard/receivables' element={<ReceivablesDashboard />} />
+                      <Route path='/dashboard/payables' element={<PayablesDashboard />} />
                       <Route path='/receivables' element={<ReceivablesDashboard />} />
                       <Route path='/receivables/list' element={<ReceivablesMasterList />} />
                       <Route path='/receivables/detail/:id' element={<ReceivableDetail />} />
