@@ -280,213 +280,197 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
         {/* Body */}
         <form onSubmit={handleSubmit}>
           <div className="product-form-modal__body">
-            {/* Required Fields Section */}
-            <div className="product-form-modal__section">
-              <h3 className="product-form-modal__section-title">
-                {t('products.modal.section.product_info')}
-              </h3>
-              <div className="product-form-modal__form-grid">
-                {/* Product Name */}
-                <div className="product-form-modal__form-field">
-                  <label htmlFor="product-name" className="product-form-modal__label">
-                    {t('products.modal.field.product_name')}
-                    <span className="product-form-modal__required">*</span>
-                  </label>
-                  <input
-                    id="product-name"
-                    name="name"
-                    type="text"
-                    className="product-form-modal__input"
-                    placeholder={t('products.modal.placeholder.product_name')}
-                    value={formData.name}
-                    onChange={handleChange}
-                    aria-required="true"
-                    aria-invalid={!!errors.name}
-                  />
-                  {errors.name && (
-                    <p className="product-form-modal__error-text" role="alert">
-                      {errors.name}
-                    </p>
-                  )}
-                </div>
+            <div className="product-form-modal__main-layout">
+              
+              {/* Main Column: Basic Info & Description */}
+              <div className="product-form-modal__main-column">
+                <div className="product-form-modal__section">
+                  <h3 className="product-form-modal__section-title">
+                    {t('products.modal.section.product_info')}
+                  </h3>
+                  <div className="product-form-modal__form-grid">
+                    {/* Product Name */}
+                    <div className="product-form-modal__form-field product-form-modal__form-field--full-width">
+                      <label htmlFor="product-name" className="product-form-modal__label">
+                        {t('products.modal.field.product_name')}
+                        <span className="product-form-modal__required">*</span>
+                      </label>
+                      <input
+                        id="product-name"
+                        name="name"
+                        type="text"
+                        className="product-form-modal__input"
+                        placeholder={t('products.modal.placeholder.product_name')}
+                        value={formData.name}
+                        onChange={handleChange}
+                        aria-required="true"
+                        aria-invalid={!!errors.name}
+                      />
+                      {errors.name && (
+                        <p className="product-form-modal__error-text" role="alert">
+                          {errors.name}
+                        </p>
+                      )}
+                    </div>
 
-                {/* Category */}
-                <div className="product-form-modal__form-field">
-                  <label htmlFor="product-category" className="product-form-modal__label">
-                    {t('products.modal.field.category')}
-                    <span className="product-form-modal__required">*</span>
-                  </label>
-                  <select
-                    id="product-category"
-                    name="category"
-                    className="product-form-modal__select"
-                    value={formData.category}
-                    onChange={handleChange}
-                    aria-required="true"
-                    aria-invalid={!!errors.category}
-                    disabled={loadingCategories}
-                  >
-                    <option value="">
-                      {loadingCategories ? 'Cargando categorías...' : t('products.modal.placeholder.category')}
-                    </option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.category && (
-                    <p className="product-form-modal__error-text" role="alert">
-                      {errors.category}
-                    </p>
-                  )}
-                </div>
-
-                {/* Product Type */}
-                <div className="product-form-modal__form-field">
-                  <label htmlFor="product-type" className="product-form-modal__label">
-                    {t('products.modal.field.product_type')}
-                  </label>
-                  <select
-                    id="product-type"
-                    name="productType"
-                    className="product-form-modal__select"
-                    value={formData.productType}
-                    onChange={handleChange}
-                  >
-                    <option value="PHYSICAL">{t('products.type.physical')}</option>
-                    <option value="SERVICE">{t('products.type.service')}</option>
-                    <option value="PRODUCTION">Producto Manufacturado (Producción)</option>
-                  </select>
-                </div>
-
-                {/* Description */}
-                <div className="product-form-modal__form-field product-form-modal__form-field--full-width">
-                  <label htmlFor="product-description" className="product-form-modal__label">
-                    {t('products.modal.field.description')}
-                    <span className="product-form-modal__required">*</span>
-                  </label>
-                  <textarea
-                    id="product-description"
-                    name="description"
-                    className="product-form-modal__textarea"
-                    placeholder={t('products.modal.placeholder.description')}
-                    value={formData.description}
-                    onChange={handleChange}
-                    aria-required="true"
-                    aria-invalid={!!errors.description}
-                  />
-                  {errors.description && (
-                    <p className="product-form-modal__error-text" role="alert">
-                      {errors.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Optional Fields Section */}
-            <div className="product-form-modal__section">
-              <h3 className="product-form-modal__section-title">
-                {t('products.modal.section.additional_details')}
-              </h3>
-              <div className="product-form-modal__form-grid">
-
-                {/* Barcode */}
-                <div className="product-form-modal__form-field">
-                  <label htmlFor="product-barcode" className="product-form-modal__label">
-                    {t('products.modal.field.barcode')}
-                  </label>
-                  <input
-                    id="product-barcode"
-                    name="barcode"
-                    type="text"
-                    maxLength="50"
-                    className="product-form-modal__input"
-                    placeholder={t('products.modal.placeholder.barcode')}
-                    value={formData.barcode}
-                    onChange={handleChange}
-                    aria-invalid={!!errors.barcode}
-                  />
-                  <p className="product-form-modal__helper-text">
-                    {t('products.modal.helper.barcode')}
-                  </p>
-                  {errors.barcode && (
-                    <p className="product-form-modal__error-text" role="alert">
-                      {errors.barcode}
-                    </p>
-                  )}
-                </div>
-
-                {/* Brand */}
-                <div className="product-form-modal__form-field">
-                  <label htmlFor="product-brand" className="product-form-modal__label">
-                    {t('products.modal.field.brand')}
-                  </label>
-                  <input
-                    id="product-brand"
-                    name="brand"
-                    type="text"
-                    maxLength="100"
-                    className="product-form-modal__input"
-                    placeholder={t('products.modal.placeholder.brand')}
-                    value={formData.brand}
-                    onChange={handleChange}
-                    aria-invalid={!!errors.brand}
-                  />
-                  <p className="product-form-modal__helper-text">
-                    {t('products.modal.helper.brand')}
-                  </p>
-                  {errors.brand && (
-                    <p className="product-form-modal__error-text" role="alert">
-                      {errors.brand}
-                    </p>
-                  )}
-                </div>
-
-                {/* Origin */}
-                <div className="product-form-modal__form-field">
-                  <label htmlFor="product-origin" className="product-form-modal__label">
-                    {t('products.modal.field.origin')}
-                  </label>
-                  <select
-                    id="product-origin"
-                    name="origin"
-                    className="product-form-modal__select"
-                    value={formData.origin}
-                    onChange={handleChange}
-                  >
-                    <option value="">{t('products.modal.placeholder.origin')}</option>
-                    <option value="NACIONAL">{t('products.origin.national')}</option>
-                    <option value="IMPORTADO">{t('products.origin.imported')}</option>
-                  </select>
-                </div>
-
-                {/* Base Unit */}
-                <div className="product-form-modal__form-field">
-                  <label htmlFor="product-base-unit" className="product-form-modal__label">
-                    Unidad de Medida
-                  </label>
-                  <select
-                    id="product-base-unit"
-                    name="base_unit"
-                    className="product-form-modal__select"
-                    value={formData.base_unit}
-                    onChange={handleChange}
-                  >
-                    {getGroupedUnitOptions().map((group) => (
-                      <optgroup key={group.label} label={group.label}>
-                        {group.options.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
+                    {/* Category */}
+                    <div className="product-form-modal__form-field">
+                      <label htmlFor="product-category" className="product-form-modal__label">
+                        {t('products.modal.field.category')}
+                        <span className="product-form-modal__required">*</span>
+                      </label>
+                      <select
+                        id="product-category"
+                        name="category"
+                        className="product-form-modal__select"
+                        value={formData.category}
+                        onChange={handleChange}
+                        aria-required="true"
+                        aria-invalid={!!errors.category}
+                        disabled={loadingCategories}
+                      >
+                        <option value="">
+                          {loadingCategories ? 'Cargando categorías...' : t('products.modal.placeholder.category')}
+                        </option>
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
                           </option>
                         ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                  <p className="product-form-modal__helper-text">
-                    La unidad principal para inventario y precios
-                  </p>
+                      </select>
+                      {errors.category && (
+                        <p className="product-form-modal__error-text" role="alert">
+                          {errors.category}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Product Type */}
+                    <div className="product-form-modal__form-field">
+                      <label htmlFor="product-type" className="product-form-modal__label">
+                        {t('products.modal.field.product_type')}
+                      </label>
+                      <select
+                        id="product-type"
+                        name="productType"
+                        className="product-form-modal__select"
+                        value={formData.productType}
+                        onChange={handleChange}
+                      >
+                        <option value="PHYSICAL">{t('products.type.physical')}</option>
+                        <option value="SERVICE">{t('products.type.service')}</option>
+                        <option value="PRODUCTION">Producto Manufacturado</option>
+                      </select>
+                    </div>
+
+                    {/* Description */}
+                    <div className="product-form-modal__form-field product-form-modal__form-field--full-width">
+                      <label htmlFor="product-description" className="product-form-modal__label">
+                        {t('products.modal.field.description')}
+                        <span className="product-form-modal__required">*</span>
+                      </label>
+                      <textarea
+                        id="product-description"
+                        name="description"
+                        className="product-form-modal__textarea"
+                        style={{ minHeight: '120px' }}
+                        placeholder={t('products.modal.placeholder.description')}
+                        value={formData.description}
+                        onChange={handleChange}
+                        aria-required="true"
+                        aria-invalid={!!errors.description}
+                      />
+                      {errors.description && (
+                        <p className="product-form-modal__error-text" role="alert">
+                          {errors.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Side Column: Technical Details */}
+              <div className="product-form-modal__side-column">
+                <div className="product-form-modal__section">
+                  <h3 className="product-form-modal__section-title">
+                    {t('products.modal.section.additional_details')}
+                  </h3>
+                  <div className="product-form-modal__form-grid" style={{ gridTemplateColumns: '1fr' }}>
+                    {/* Barcode */}
+                    <div className="product-form-modal__form-field">
+                      <label htmlFor="product-barcode" className="product-form-modal__label">
+                        {t('products.modal.field.barcode')}
+                      </label>
+                      <input
+                        id="product-barcode"
+                        name="barcode"
+                        type="text"
+                        className="product-form-modal__input"
+                        placeholder={t('products.modal.placeholder.barcode')}
+                        value={formData.barcode}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    {/* Brand */}
+                    <div className="product-form-modal__form-field">
+                      <label htmlFor="product-brand" className="product-form-modal__label">
+                        {t('products.modal.field.brand')}
+                      </label>
+                      <input
+                        id="product-brand"
+                        name="brand"
+                        type="text"
+                        className="product-form-modal__input"
+                        placeholder={t('products.modal.placeholder.brand')}
+                        value={formData.brand}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    {/* Origin */}
+                    <div className="product-form-modal__form-field">
+                      <label htmlFor="product-origin" className="product-form-modal__label">
+                        {t('products.modal.field.origin')}
+                      </label>
+                      <select
+                        id="product-origin"
+                        name="origin"
+                        className="product-form-modal__select"
+                        value={formData.origin}
+                        onChange={handleChange}
+                      >
+                        <option value="">{t('products.modal.placeholder.origin')}</option>
+                        <option value="NACIONAL">{t('products.origin.national')}</option>
+                        <option value="IMPORTADO">{t('products.origin.imported')}</option>
+                      </select>
+                    </div>
+
+                    {/* Base Unit */}
+                    <div className="product-form-modal__form-field">
+                      <label htmlFor="product-base-unit" className="product-form-modal__label">
+                        Unidad de Medida
+                      </label>
+                      <select
+                        id="product-base-unit"
+                        name="base_unit"
+                        className="product-form-modal__select"
+                        value={formData.base_unit}
+                        onChange={handleChange}
+                      >
+                        {getGroupedUnitOptions().map((group) => (
+                          <optgroup key={group.label} label={group.label}>
+                            {group.options.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

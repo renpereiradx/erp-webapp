@@ -742,6 +742,48 @@
     }
   }
 
+  &__modal--large {
+    max-width: 64rem; // 1024px - Wider for desktop
+  }
+
+  // ============================================================================
+  // Two-Column Layout for Create Modal
+  // ============================================================================
+
+  &__create-layout {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+
+    @media (min-width: 1024px) {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+  }
+
+  &__config-column {
+    width: 100%;
+    
+    @media (min-width: 1024px) {
+      width: 320px;
+      flex-shrink: 0;
+      padding-right: $spacing-24;
+      border-right: 1px solid;
+
+      @include themify($themes) {
+        border-color: themed('border-default');
+      }
+    }
+  }
+
+  &__items-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-20;
+    min-width: 0; // Prevent overflow
+  }
+
   &__modal-header {
     padding: $spacing-20;
     border-bottom: 1px solid;

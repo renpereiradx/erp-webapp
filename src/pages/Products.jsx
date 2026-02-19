@@ -5,6 +5,7 @@
 // ===========================================================================
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Share, Plus, ChevronLeft, ChevronRight, MoreHorizontal, X, Calendar, RefreshCw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import useProductStore from '@/store/useProductStore';
@@ -30,6 +31,23 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from '@/components/ui/breadcrumb';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import { Card } from '@/components/ui/card';
 import ProductFormModal from '@/components/ProductFormModal';
 import ProductDetailsModal from '@/components/ProductDetailsModal';
 import '@/styles/scss/pages/_products.scss';
@@ -69,6 +87,7 @@ const useDebounce = (callback, delay) => {
 
 const Products = () => {
   const { t } = useI18n();
+  const navigate = useNavigate();
 
   // Zustand store
   const {
@@ -324,351 +343,313 @@ const Products = () => {
 
     return (
       <div className="products-page">
-        {/* Page Header */}
-        <header className="page-header">
-          <div className="page-header__content">
-            <h1 className="page-header__title">
-              {t('products.page.title')}
-            </h1>
-            <p className="page-header__subtitle">
-              {t('products.page.subtitle')}
-            </p>
-          </div>
-        </header>
+        <div className="products-page__content">
+          
+          {/* Breadcrumbs */}
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink onClick={() => navigate('/dashboard')} className="cursor-pointer">
+                  {t('products.breadcrumb.home', 'Inicio')}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{t('products.breadcrumb.inventory', 'Inventario')}</BreadcrumbPage>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{t('products.page.title')}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
   
-        {/* Toolbar */}
-        <div className="toolbar">
-          {/* Search */}
-          <div className="toolbar__search">
-            <div className="search-box">
-              <div className="search-box__icon-wrapper">
-                {isSearching ? (
-                  <div className="spinner spinner--small" />
-                ) : (
-                  <Search className="search-box__icon" aria-hidden="true" />
+          {/* Page Header */}
+          <div className="products-page__header">
+            <div>
+              <h1 className="products-page__title">{t('products.page.title')}</h1>
+              <p className="products-page__subtitle">{t('products.page.subtitle')}</p>
+            </div>
+            <div className="products-page__actions">
+              <Button variant="secondary" onClick={handleRefresh} disabled={loading}>
+                <RefreshCw className={`size-4 ${loading ? 'spin' : ''}`} />
+                <span className="hidden sm:inline">{t('products.action.refresh', 'Refrescar')}</span>
+              </Button>
+              <Button variant="secondary">
+                <Share className="size-4" />
+                <span className="hidden sm:inline">{t('products.action.export')}</span>
+              </Button>
+              <Button variant="primary" onClick={handleOpenCreateModal}>
+                <Plus className="size-4" />
+                <span>{t('products.action.new_product')}</span>
+              </Button>
+            </div>
+          </div>
+    
+          {/* Toolbar & Filters Container */}
+          <Card className="products-page__toolbar-card">
+            <div className="toolbar">
+              {/* Search */}
+              <div className="toolbar__search">
+                <div className="search-box">
+                  <div className="search-box__icon-wrapper">
+                    {isSearching ? (
+                      <div className="spinner spinner--small" />
+                    ) : (
+                      <Search className="search-box__icon" aria-hidden="true" />
+                    )}
+                  </div>
+                  <Input
+                    type="search"
+                    className="search-box__input"
+                    placeholder={t('products.search.by_name_sku')}
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    onKeyDown={handleSearchKeyDown}
+                  />
+                </div>
+                {searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < 4 && (
+                  <p className="search-box__helper">
+                    {t('products.search.min_chars', 'Escribe al menos 4 caracteres')} ({searchTerm.trim().length}/4)
+                  </p>
                 )}
               </div>
-              <Input
-                type="search"
-                className="search-box__input"
-                placeholder={t('products.search.by_name_sku')}
-                value={searchTerm}
-                onChange={handleSearch}
-                onKeyDown={handleSearchKeyDown}
-                aria-label={t('products.search.by_name_sku')}
-                aria-describedby="search-helper"
-              />
+      
+              {/* Quick Filters Toggle */}
+              <div className="toolbar__filters">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className={showFilters ? 'btn--active' : ''}
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <Filter className="size-4 mr-2" />
+                  {t('products.action.filter')}
+                </Button>
+              </div>
             </div>
-            {searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < 4 && (
-              <p id="search-helper" style={{ fontSize: '11px', marginTop: '4px', color: 'var(--text-secondary)' }}>
-                Escribe al menos 4 caracteres para buscar ({searchTerm.trim().length}/4)
-              </p>
+      
+            {/* Advanced Filters Panel */}
+            {showFilters && (
+              <div className="filters-panel">
+                <div className="filters-panel__grid">
+                  {/* Filtro por categoría */}
+                  <div className="filters-panel__field">
+                    <label className="filters-panel__label">{t('products.filter.category', 'Categoría')}</label>
+                    <Select
+                      value={localFilters.category}
+                      onValueChange={(value) => setLocalFilters(prev => ({ ...prev, category: value }))}
+                    >
+                      <SelectTrigger className="filters-panel__select">
+                        <SelectValue placeholder={t('products.filter.all_categories')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('products.filter.all_categories')}</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+        
+                  {/* Filtro por estado */}
+                  <div className="filters-panel__field">
+                    <label className="filters-panel__label">{t('products.filter.status', 'Estado')}</label>
+                    <Select
+                      value={localFilters.status}
+                      onValueChange={(value) => setLocalFilters(prev => ({ ...prev, status: value }))}
+                    >
+                      <SelectTrigger className="filters-panel__select">
+                        <SelectValue placeholder={t('products.filter.all_statuses')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('products.filter.all_statuses')}</SelectItem>
+                        <SelectItem value="active">{t('products.state.active')}</SelectItem>
+                        <SelectItem value="inactive">{t('products.state.inactive')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+        
+                  {/* Botones de acción */}
+                  <div className="filters-panel__actions">
+                    <Button variant="primary" onClick={handleApplyFilters} size="sm">
+                      {t('products.filter.apply', 'Aplicar')}
+                    </Button>
+                    <Button variant="secondary" onClick={handleClearFilters} size="sm">
+                      {t('products.filter.clear', 'Limpiar')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
             )}
-          </div>
-  
-          {/* Actions */}
-          <div className="toolbar__actions">
-            <Button
-              variant="secondary"
-              size="icon"
-              className={showFilters ? 'btn--active' : ''}
-              aria-label={t('products.action.filter')}
-              title={t('products.action.filter')}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="btn__icon" aria-hidden="true" />
-            </Button>
-  
-            <Button
-              variant="secondary"
-              size="icon"
-              aria-label={t('products.action.refresh', 'Refrescar')}
-              title={t('products.action.refresh', 'Refrescar')}
-              onClick={handleRefresh}
-              disabled={loading}
-            >
-              <RefreshCw className={`btn__icon ${loading ? 'spin' : ''}`} aria-hidden="true" />
-            </Button>
-  
-            <Button
-              variant="secondary"
-              size="icon"
-              aria-label={t('products.action.export')}
-              title={t('products.action.export')}
-            >
-              <Share className="btn__icon" aria-hidden="true" />
-            </Button>
-  
-            <Button
-              variant="primary"
-              onClick={handleOpenCreateModal}
-              className="gap-2"
-            >
-              <Plus className="btn__icon" aria-hidden="true" />
-              <span>{t('products.action.new_product')}</span>
-            </Button>
-          </div>
-        </div>
-  
-        {/* Filters Panel */}
-        {showFilters && (
-          <div className="filters-panel" style={{ padding: '24px', borderRadius: '8px', marginBottom: '24px', display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            {/* Filtro por categoría */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600 }}>
-                {t('products.filter.category', 'Categoría')}
-              </label>
-              <Select
-                value={localFilters.category}
-                onValueChange={(value) => setLocalFilters(prev => ({ ...prev, category: value }))}
-              >
-                <SelectTrigger className="input" style={{ width: '220px', height: '40px' }}>
-                  <SelectValue placeholder={t('products.filter.all_categories')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('products.filter.all_categories')}</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-  
-            {/* Filtro por estado */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600 }}>
-                {t('products.filter.status', 'Estado')}
-              </label>
-              <Select
-                value={localFilters.status}
-                onValueChange={(value) => setLocalFilters(prev => ({ ...prev, status: value }))}
-              >
-                <SelectTrigger className="input" style={{ width: '180px', height: '40px' }}>
-                  <SelectValue placeholder={t('products.filter.all_statuses')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('products.filter.all_statuses')}</SelectItem>
-                  <SelectItem value="active">{t('products.state.active')}</SelectItem>
-                  <SelectItem value="inactive">{t('products.state.inactive')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-  
-            {/* Botones de acción */}
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <Button
-                variant="primary"
-                onClick={handleApplyFilters}
-                size="sm"
-                style={{ padding: '0 24px', height: '40px' }}
-              >
-                {t('products.filter.apply', 'Aplicar')}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={handleClearFilters}
-                size="sm"
-                style={{ padding: '0 24px', height: '40px' }}
-              >
-                {t('products.filter.clear', 'Limpiar')}
-              </Button>
-            </div>
-          </div>
-        )}
+          </Card>
   
         {/* Products Table */}
-        <div className="products-table">
-          <div className="products-table__container">
-            <table className="products-table__table">
-              <thead className="products-table__thead">
-                <tr>
-                  <th className="products-table__th products-table__th--checkbox" scope="col">
-                    <Checkbox
-                      checked={selectedIds.length === products.length && products.length > 0}
-                      onCheckedChange={toggleSelectAll}
+        <div className="products-table-container">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[50px]">
+                  <Checkbox
+                    checked={selectedIds.length === products.length && products.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
+                <TableHead>{t('products.table.product_name')}</TableHead>
+                <TableHead>{t('products.table.category')}</TableHead>
+                <TableHead>{t('products.table.stock')}</TableHead>
+                <TableHead>{t('products.table.state')}</TableHead>
+                <TableHead>{t('products.table.financial_health')}</TableHead>
+                <TableHead>{t('products.table.created_at', 'Creado')}</TableHead>
+                <TableHead className="text-right">{t('products.table.actions')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {/* Estado: Cargando */}
+              {loading && products.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <DataState 
+                      variant="loading" 
+                      skeletonVariant="list" 
+                      skeletonProps={{ count: 10 }} 
                     />
-                  </th>
-                  <th className="products-table__th" scope="col">
-                    {t('products.table.product_name')}
-                  </th>
-                  <th className="products-table__th" scope="col">
-                    {t('products.table.category')}
-                  </th>
-                  <th className="products-table__th" scope="col">
-                    {t('products.table.stock')}
-                  </th>
-                  <th className="products-table__th" scope="col">
-                    {t('products.table.state')}
-                  </th>
-                  <th className="products-table__th" scope="col">
-                    {t('products.table.financial_health')}
-                  </th>
-                  <th className="products-table__th" scope="col">
-                    {t('products.table.created_at', 'Creado')}
-                  </th>
-                  <th className="products-table__th" scope="col">
-                    {t('products.table.updated_at', 'Actualizado')}
-                  </th>
-                  <th className="products-table__th products-table__th--actions" scope="col">
-                    <span className="sr-only">{t('products.table.actions')}</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="products-table__tbody">
-                {/* Estado: Cargando */}
-                {loading && products.length === 0 ? (
-                  <tr>
-                    <td colSpan="9">
-                      <DataState 
-                        variant="loading" 
-                        skeletonVariant="list" 
-                        skeletonProps={{ count: 10 }} 
+                  </TableCell>
+                </TableRow>
+              ) : /* Estado: Error */
+              error ? (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <DataState
+                      variant="error"
+                      title={t('products.error.title')}
+                      message={error}
+                      onRetry={() => {
+                        clearError();
+                        handleRefresh();
+                      }}
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : /* Estado: Sin productos */
+              products.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8}>
+                    <DataState
+                      variant="empty"
+                      title={viewMode === 'search' ? t('products.empty.no_results') : t('products.empty.title')}
+                      description={viewMode === 'search' 
+                        ? `No se encontraron productos con "${searchTerm}"` 
+                        : t('products.empty.description')}
+                      actionLabel={t('products.action.new_product')}
+                      onAction={handleOpenCreateModal}
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : /* Estado: Productos encontrados */
+              products.map((product) => {
+                const productId = product.product_id || product.id;
+                const productName = product.product_name || product.name || t('field.no_name');
+                const categoryName = product.category_name || product.category?.name || '-';
+                const isSelected = selectedIds.includes(productId);
+                const stockInfo = getStockDisplay(product);
+                const healthInfo = getHealthIndicator(product);
+                const isActive = product.state !== false && product.is_active !== false;
+
+                return (
+                  <TableRow key={productId} selected={isSelected}>
+                    <TableCell>
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelectProduct(productId)}
                       />
-                    </td>
-                  </tr>
-                ) : /* Estado: Error */
-                error ? (
-                  <tr>
-                    <td colSpan="9">
-                      <DataState
-                        variant="error"
-                        title={t('products.error.title')}
-                        message={error}
-                        onRetry={() => {
-                          clearError();
-                          handleRefresh();
-                        }}
-                      />
-                    </td>
-                  </tr>
-                ) : /* Estado: Sin productos */
-                products.length === 0 ? (
-                  <tr>
-                    <td colSpan="9">
-                      <DataState
-                        variant="empty"
-                        title={viewMode === 'search' ? t('products.empty.no_results') : t('products.empty.title')}
-                        description={viewMode === 'search' 
-                          ? `No se encontraron productos con "${searchTerm}"` 
-                          : t('products.empty.description')}
-                        actionLabel={t('products.action.new_product')}
-                        onAction={handleOpenCreateModal}
-                      />
-                    </td>
-                  </tr>
-                ) : /* Estado: Productos encontrados */
-                products.map((product) => {
-                  const productId = product.product_id || product.id;
-                  const productName = product.product_name || product.name || t('field.no_name');
-                  const categoryName = product.category_name || product.category?.name || '-';
-                  const isSelected = selectedIds.includes(productId);
-                  const stockInfo = getStockDisplay(product);
-                  const healthInfo = getHealthIndicator(product);
-                  const isActive = product.state !== false && product.is_active !== false;
-  
-                  return (
-                    <tr key={productId}>
-                      <td className="products-table__td products-table__td--checkbox">
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleSelectProduct(productId)}
-                        />
-                      </td>
-                      <td 
-                        className="products-table__td products-table__td--name"
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => handleOpenDetailsModal(product)}
+                    </TableCell>
+                    <TableCell 
+                      className="font-medium cursor-pointer hover:underline"
+                      onClick={() => handleOpenDetailsModal(product)}
+                    >
+                      {productName}
+                    </TableCell>
+                    <TableCell>{categoryName}</TableCell>
+                    <TableCell className={stockInfo.isLow ? 'text-destructive font-semibold' : ''}>
+                      {stockInfo.display}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={isActive ? 'active' : 'inactive'}>
+                        {isActive ? t('products.state.active') : t('products.state.inactive')}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className={`size-2 rounded-full health-dot--${healthInfo.level}`} />
+                        <span className="text-sm">{healthInfo.text}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">
+                      {formatDate(product.created_at)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenEditModal(product)}
                       >
-                        {productName}
-                      </td>
-                      <td className="products-table__td">
-                        {categoryName}
-                      </td>
-                      <td className={`products-table__td ${stockInfo.isLow ? 'products-table__td--stock-low' : ''}`}>
-                        {stockInfo.display}
-                      </td>
-                      <td className="products-table__td">
-                        <span className={`badge ${isActive ? 'badge--active' : 'badge--inactive'}`}>
-                          {isActive ? t('products.state.active') : t('products.state.inactive')}
-                        </span>
-                      </td>
-                      <td className="products-table__td">
-                        <div className="health-indicator">
-                          <div className={`health-indicator__dot health-indicator__dot--${healthInfo.level}`}></div>
-                          <span className="health-indicator__text">{healthInfo.text}</span>
-                        </div>
-                      </td>
-                      <td className="products-table__td" style={{ fontSize: '12px' }}>
-                        {formatDate(product.created_at)}
-                      </td>
-                      <td className="products-table__td" style={{ fontSize: '12px' }}>
-                        {formatDate(product.updated_at)}
-                      </td>
-                      <td className="products-table__td products-table__td--actions">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenEditModal(product)}
-                        >
-                          <MoreHorizontal className="btn__icon" aria-hidden="true" />
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-  
-          {/* Pagination */}
-          <div className="pagination">
-            <span className="pagination__info">
-              {t('products.pagination.showing', {
-                start: startIndex,
-                end: endIndex,
-                total: totalProducts
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
               })}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination */}
+        <div className="pagination">
+          <span className="pagination__info">
+            {t('products.pagination.showing', {
+              start: startIndex,
+              end: endIndex,
+              total: totalProducts
+            })}
+          </span>
+          <div className="pagination__controls">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <span className="pagination__page-info">
+              {currentPage} / {totalPages || 1}
             </span>
-            <div className="pagination__controls">
-              <button
-                className="pagination__button"
-                onClick={handlePreviousPage}
-                disabled={currentPage === 1}
-                aria-label="Página anterior"
-              >
-                <ChevronLeft className="pagination__icon" aria-hidden="true" />
-              </button>
-              <span className="pagination__page-info">
-                {currentPage} / {totalPages || 1}
-              </span>
-              <button
-                className="pagination__button"
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages || totalPages === 0}
-                aria-label="Página siguiente"
-              >
-                <ChevronRight className="pagination__icon" aria-hidden="true" />
-              </button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || totalPages === 0}
+            >
+              <ChevronRight className="size-4" />
+            </Button>
           </div>
         </div>
-  
 
-      {/* Modals */}
-      <ProductFormModal
-        isOpen={isFormModalOpen}
-        onClose={handleCloseFormModal}
-        product={selectedProduct}
-      />
+        {/* Modals */}
+        <ProductFormModal
+          isOpen={isFormModalOpen}
+          onClose={handleCloseFormModal}
+          product={selectedProduct}
+        />
 
-      <ProductDetailsModal
-        isOpen={isDetailsModalOpen}
-        onClose={handleCloseDetailsModal}
-        product={selectedProduct}
-        onEdit={handleEditFromDetails}
-      />
+        <ProductDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={handleCloseDetailsModal}
+          product={selectedProduct}
+          onEdit={handleEditFromDetails}
+        />
+      </div>
     </div>
   );
 };

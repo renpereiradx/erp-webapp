@@ -953,327 +953,193 @@ const InventoryManagement = () => {
                 </div>
               )}
 
-              {/* Sección de Metadata */}
-              <div className='inventory-management__details-section'>
-                <h3 className='inventory-management__details-section-title'>
-                  {t('inventoryManagement.createModal.metadata')}
-                </h3>
-                <div className='inventory-management__form-grid'>
-                  <div className='inventory-management__form-group'>
-                    <label className='inventory-management__form-label'>
-                      {t('inventoryManagement.createModal.operator')} *
-                    </label>
-                    <input
-                      type='text'
-                      className='inventory-management__form-input'
-                      placeholder={t(
-                        'inventoryManagement.createModal.operatorPlaceholder'
-                      )}
-                      value={inventoryForm.metadata.operator}
-                      onChange={e =>
-                        handleMetadataChange('operator', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className='inventory-management__form-group'>
-                    <label className='inventory-management__form-label'>
-                      {t('inventoryManagement.createModal.location')} *
-                    </label>
-                    <input
-                      type='text'
-                      className='inventory-management__form-input'
-                      placeholder={t(
-                        'inventoryManagement.createModal.locationPlaceholder'
-                      )}
-                      value={inventoryForm.metadata.location}
-                      onChange={e =>
-                        handleMetadataChange('location', e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className='inventory-management__form-group'>
-                    <label className='inventory-management__form-label'>
-                      {t('inventoryManagement.createModal.countingMethod')}
-                    </label>
-                    <select
-                      className='inventory-management__form-select'
-                      value={inventoryForm.metadata.counting_method}
-                      onChange={e =>
-                        handleMetadataChange('counting_method', e.target.value)
-                      }
-                    >
-                      <option value='manual'>
-                        {t('inventoryManagement.createModal.methodManual')}
-                      </option>
-                      <option value='barcode_scanner'>
-                        {t('inventoryManagement.createModal.methodScanner')}
-                      </option>
-                      <option value='rfid'>
-                        {t('inventoryManagement.createModal.methodRFID')}
-                      </option>
-                    </select>
-                  </div>
-                  <div className='inventory-management__form-group'>
-                    <label className='inventory-management__form-label'>
-                      {t('inventoryManagement.createModal.verification')}
-                    </label>
-                    <select
-                      className='inventory-management__form-select'
-                      value={inventoryForm.metadata.verification}
-                      onChange={e =>
-                        handleMetadataChange('verification', e.target.value)
-                      }
-                    >
-                      <option value='single_check'>
-                        {t(
-                          'inventoryManagement.createModal.verificationSingle'
-                        )}
-                      </option>
-                      <option value='double_check'>
-                        {t(
-                          'inventoryManagement.createModal.verificationDouble'
-                        )}
-                      </option>
-                    </select>
+              <div className="inventory-management__create-layout">
+                {/* Left Column: Configuration */}
+                <div className="inventory-management__config-column">
+                  <div className='inventory-management__details-section'>
+                    <h3 className='inventory-management__details-section-title'>
+                      {t('inventoryManagement.createModal.metadata')}
+                    </h3>
+                    <div className='flex flex-col gap-4'>
+                      <div className='inventory-management__form-group'>
+                        <label className='inventory-management__form-label'>
+                          {t('inventoryManagement.createModal.operator')} *
+                        </label>
+                        <input
+                          type='text'
+                          className='inventory-management__form-input'
+                          placeholder={t('inventoryManagement.createModal.operatorPlaceholder')}
+                          value={inventoryForm.metadata.operator}
+                          onChange={e => handleMetadataChange('operator', e.target.value)}
+                        />
+                      </div>
+                      <div className='inventory-management__form-group'>
+                        <label className='inventory-management__form-label'>
+                          {t('inventoryManagement.createModal.location')} *
+                        </label>
+                        <input
+                          type='text'
+                          className='inventory-management__form-input'
+                          placeholder={t('inventoryManagement.createModal.locationPlaceholder')}
+                          value={inventoryForm.metadata.location}
+                          onChange={e => handleMetadataChange('location', e.target.value)}
+                        />
+                      </div>
+                      <div className='inventory-management__form-group'>
+                        <label className='inventory-management__form-label'>
+                          {t('inventoryManagement.createModal.countingMethod')}
+                        </label>
+                        <select
+                          className='inventory-management__form-select'
+                          value={inventoryForm.metadata.counting_method}
+                          onChange={e => handleMetadataChange('counting_method', e.target.value)}
+                        >
+                          <option value='manual'>{t('inventoryManagement.createModal.methodManual')}</option>
+                          <option value='barcode_scanner'>{t('inventoryManagement.createModal.methodScanner')}</option>
+                          <option value='rfid'>{t('inventoryManagement.createModal.methodRFID')}</option>
+                        </select>
+                      </div>
+                      <div className='inventory-management__form-group'>
+                        <label className='inventory-management__form-label'>Notas</label>
+                        <textarea
+                          className='inventory-management__form-textarea'
+                          placeholder='Observaciones del inventario...'
+                          value={inventoryForm.metadata.notes}
+                          onChange={e => handleMetadataChange('notes', e.target.value)}
+                          rows={4}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className='inventory-management__form-group'>
-                  <label className='inventory-management__form-label'>
-                    {t('inventoryManagement.createModal.notes')}
-                  </label>
-                  <textarea
-                    className='inventory-management__form-textarea'
-                    placeholder={t(
-                      'inventoryManagement.createModal.notesPlaceholder'
-                    )}
-                    value={inventoryForm.metadata.notes}
-                    onChange={e =>
-                      handleMetadataChange('notes', e.target.value)
-                    }
-                    rows={3}
-                  />
-                </div>
-              </div>
 
-              {/* Sección de Productos */}
-              <div className='inventory-management__details-section'>
-                <div className='inventory-management__products-header'>
-                  <h3 className='inventory-management__details-section-title'>
-                    {t('inventoryManagement.createModal.products')} (
-                    {inventoryForm.items.length})
-                  </h3>
-                </div>
+                {/* Right Column: Search & Items */}
+                <div className="inventory-management__items-column">
+                  <div className='inventory-management__details-section'>
+                    <h3 className='inventory-management__details-section-title'>
+                      {t('inventoryManagement.createModal.products')} ({inventoryForm.items.length})
+                    </h3>
 
-                {/* Sistema de búsqueda inteligente */}
-                <div className='inventory-management__product-search-container'>
-                  <div className='inventory-management__search-input-wrapper'>
-                    <Search
-                      size={20}
-                      className='inventory-management__search-icon'
-                    />
-                    <input
-                      ref={searchInputRef}
-                      type='text'
-                      className='inventory-management__search-input'
-                      placeholder={t(
-                        'inventoryManagement.createModal.searchProduct'
-                      )}
-                      value={productSearch}
-                      onChange={e => {
-                        setProductSearch(e.target.value)
-                        handleProductSearch(e.target.value)
-                        setHighlightedIndex(-1)
-                      }}
-                      onFocus={() => {
-                        if (searchResults.length > 0) {
-                          setShowDropdown(true)
-                        }
-                      }}
-                      onKeyDown={e => {
-                        const itemCount = searchResults.length
-                        if (itemCount === 0) return
-
-                        switch (e.key) {
-                          case 'ArrowDown':
-                            e.preventDefault()
-                            setHighlightedIndex(prev =>
-                              prev < itemCount - 1 ? prev + 1 : 0
-                            )
-                            break
-                          case 'ArrowUp':
-                            e.preventDefault()
-                            setHighlightedIndex(prev =>
-                              prev > 0 ? prev - 1 : itemCount - 1
-                            )
-                            break
-                          case 'Enter':
-                            e.preventDefault()
-                            if (
-                              highlightedIndex >= 0 &&
-                              highlightedIndex < itemCount
-                            ) {
-                              handleSelectProduct(
-                                searchResults[highlightedIndex]
-                              )
-                            } else if (itemCount > 0) {
-                              handleSelectProduct(searchResults[0])
+                    {/* Sistema de búsqueda inteligente */}
+                    <div className='inventory-management__product-search-container'>
+                      <div className='inventory-management__search-input-wrapper'>
+                        <Search size={20} className='inventory-management__search-icon' />
+                        <input
+                          ref={searchInputRef}
+                          type='text'
+                          className='inventory-management__search-input'
+                          placeholder={t('inventoryManagement.createModal.searchProduct')}
+                          value={productSearch}
+                          onChange={e => {
+                            setProductSearch(e.target.value)
+                            handleProductSearch(e.target.value)
+                            setHighlightedIndex(-1)
+                          }}
+                          onFocus={() => {
+                            if (searchResults.length > 0) setShowDropdown(true)
+                          }}
+                          onKeyDown={e => {
+                            const itemCount = searchResults.length
+                            if (itemCount === 0) return
+                            switch (e.key) {
+                              case 'ArrowDown':
+                                e.preventDefault()
+                                setHighlightedIndex(prev => prev < itemCount - 1 ? prev + 1 : 0)
+                                break
+                              case 'ArrowUp':
+                                e.preventDefault()
+                                setHighlightedIndex(prev => prev > 0 ? prev - 1 : itemCount - 1)
+                                break
+                              case 'Enter':
+                                e.preventDefault()
+                                if (highlightedIndex >= 0 && highlightedIndex < itemCount) {
+                                  handleSelectProduct(searchResults[highlightedIndex])
+                                } else if (itemCount > 0) {
+                                  handleSelectProduct(searchResults[0])
+                                }
+                                break
+                              case 'Escape':
+                                e.preventDefault()
+                                setShowDropdown(false)
+                                break
                             }
-                            break
-                          case 'Escape':
-                            e.preventDefault()
-                            setShowDropdown(false)
-                            setHighlightedIndex(-1)
-                            break
-                          case 'Tab':
-                            setShowDropdown(false)
-                            setHighlightedIndex(-1)
-                            break
-                        }
-                      }}
-                      role='combobox'
-                      aria-expanded={showDropdown && searchResults.length > 0}
-                      aria-haspopup='listbox'
-                      aria-controls='inventory-mgmt-product-listbox'
-                      aria-activedescendant={
-                        highlightedIndex >= 0
-                          ? `inventory-mgmt-product-option-${highlightedIndex}`
-                          : undefined
-                      }
-                    />
-                    {searchLoading && (
-                      <Loader2
-                        size={20}
-                        className='inventory-management__search-loader'
-                      />
-                    )}
-                  </div>
+                          }}
+                        />
+                        {searchLoading && <Loader2 size={20} className='inventory-management__search-loader' />}
+                      </div>
 
-                  {/* Dropdown de resultados */}
-                  {showDropdown && (
-                    <div
-                      ref={dropdownRef}
-                      className='inventory-management__search-dropdown'
-                      role='listbox'
-                      id='inventory-mgmt-product-listbox'
-                      aria-label='Productos encontrados'
-                    >
-                      {searchLoading ? (
-                        <div className='inventory-management__search-dropdown-item inventory-management__search-dropdown-item--loading'>
-                          {t(
-                            'inventoryManagement.createModal.searchingProducts'
+                      {showDropdown && (
+                        <div ref={dropdownRef} className='inventory-management__search-dropdown'>
+                          {searchResults.length === 0 ? (
+                            <div className='inventory-management__search-dropdown-item--empty'>Sin resultados</div>
+                          ) : (
+                            searchResults.map((product, index) => (
+                              <div
+                                key={product.product_id}
+                                className={`inventory-management__search-dropdown-item ${highlightedIndex === index ? 'inventory-management__search-dropdown-item--highlighted' : ''}`}
+                                onClick={() => handleSelectProduct(product)}
+                              >
+                                <div className='inventory-management__search-dropdown-item-main'>
+                                  <span className='inventory-management__search-dropdown-item-name'>{product.product_name}</span>
+                                  <span className='inventory-management__search-dropdown-item-id'>ID: {product.product_id}</span>
+                                </div>
+                                <span className='inventory-management__search-dropdown-item-stock'>Stock: {product.stock_quantity || 0}</span>
+                              </div>
+                            ))
                           )}
                         </div>
-                      ) : searchResults.length === 0 ? (
-                        <div className='inventory-management__search-dropdown-item inventory-management__search-dropdown-item--empty'>
-                          {t('inventoryManagement.createModal.noResultsFound')}
-                        </div>
-                      ) : (
-                        searchResults.map((product, index) => (
-                          <div
-                            key={product.product_id}
-                            id={`inventory-mgmt-product-option-${index}`}
-                            className={`inventory-management__search-dropdown-item ${
-                              highlightedIndex === index
-                                ? 'inventory-management__search-dropdown-item--highlighted'
-                                : ''
-                            }`}
-                            onClick={() => handleSelectProduct(product)}
-                            onMouseEnter={() => setHighlightedIndex(index)}
-                            onMouseLeave={() => setHighlightedIndex(-1)}
-                            role='option'
-                            aria-selected={highlightedIndex === index}
-                          >
-                            <div className='inventory-management__search-dropdown-item-main'>
-                              <span className='inventory-management__search-dropdown-item-name'>
-                                {product.product_name}
-                              </span>
-                              <span className='inventory-management__search-dropdown-item-id'>
-                                ID: {product.product_id}
-                              </span>
-                            </div>
-                            <span className='inventory-management__search-dropdown-item-stock'>
-                              Stock: {product.stock_quantity || 0}
-                            </span>
-                          </div>
-                        ))
                       )}
                     </div>
-                  )}
-                </div>
 
-                {inventoryForm.items.length === 0 ? (
-                  <div className='inventory-management__empty-products'>
-                    {t('inventoryManagement.createModal.noProducts')}
+                    <div className='inventory-management__products-table-wrapper' style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                      {inventoryForm.items.length === 0 ? (
+                        <div className='inventory-management__empty-products'>Agregue productos para comenzar el conteo</div>
+                      ) : (
+                        <table className='inventory-management__products-table'>
+                          <thead>
+                            <tr>
+                              <th>Producto</th>
+                              <th className="text-center">Actual</th>
+                              <th className="text-center">Contado</th>
+                              <th style={{ width: '50px' }}></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {inventoryForm.items.map((item, index) => (
+                              <tr key={index}>
+                                <td>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{item.product_name}</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase">{item.product_id}</span>
+                                  </div>
+                                </td>
+                                <td className="text-center tabular-nums">{item.current_quantity}</td>
+                                <td>
+                                  <input
+                                    type='number'
+                                    className='inventory-management__form-input text-center h-8'
+                                    min='0'
+                                    value={item.quantity_checked}
+                                    onChange={e => handleProductChange(index, 'quantity_checked', e.target.value)}
+                                  />
+                                </td>
+                                <td className="text-right">
+                                  <button
+                                    className='inventory-management__remove-button'
+                                    onClick={() => handleRemoveProduct(index)}
+                                    type='button'
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <div className='inventory-management__products-table-wrapper'>
-                    <table className='inventory-management__products-table'>
-                      <thead>
-                        <tr>
-                          <th>
-                            {t('inventoryManagement.createModal.productId')}
-                          </th>
-                          <th>
-                            {t('inventoryManagement.createModal.productName')}
-                          </th>
-                          <th>
-                            {t(
-                              'inventoryManagement.createModal.currentQuantity'
-                            )}
-                          </th>
-                          <th>
-                            {t(
-                              'inventoryManagement.createModal.quantityCounted'
-                            )}
-                          </th>
-                          <th style={{ width: '80px' }}></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {inventoryForm.items.map((item, index) => (
-                          <tr key={index}>
-                            <td className='inventory-management__product-cell-id'>
-                              {item.product_id}
-                            </td>
-                            <td className='inventory-management__product-cell-name'>
-                              {item.product_name}
-                            </td>
-                            <td className='inventory-management__product-cell-current'>
-                              {item.current_quantity}
-                            </td>
-                            <td>
-                              <input
-                                type='number'
-                                className='inventory-management__form-input'
-                                min='0'
-                                value={item.quantity_checked}
-                                onChange={e =>
-                                  handleProductChange(
-                                    index,
-                                    'quantity_checked',
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </td>
-                            <td>
-                              <button
-                                className='inventory-management__remove-button'
-                                onClick={() => handleRemoveProduct(index)}
-                                type='button'
-                                title={t(
-                                  'inventoryManagement.createModal.remove'
-                                )}
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
             <div className='inventory-management__modal-footer'>
@@ -1336,130 +1202,86 @@ const InventoryManagement = () => {
                 <h3 className='inventory-management__details-section-title'>
                   {t('inventoryManagement.viewModal.generalInfo')}
                 </h3>
-                <div className='inventory-management__details-grid'>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4 bg-secondary/30 rounded-lg border border-default'>
                   <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>
-                      {t('inventoryManagement.viewModal.id')}
-                    </div>
-                    <div className='inventory-management__details-value inventory-management__details-value--monospace'>
-                      {selectedInventory.inventory.id}
-                    </div>
+                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.id')}</div>
+                    <div className='inventory-management__details-value inventory-management__details-value--monospace text-xs'>{selectedInventory.inventory.id}</div>
                   </div>
                   <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>
-                      {t('inventoryManagement.viewModal.status')}
-                    </div>
+                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.status')}</div>
                     <div className='inventory-management__details-value'>
-                      <span
-                        className={`inventory-management__badge ${getStatusClass(
-                          getInventoryStatus(
-                            selectedInventory.inventory.state,
-                            selectedInventory.inventory.metadata
-                          ).type
-                        )}`}
-                      >
-                        {
-                          getInventoryStatus(
-                            selectedInventory.inventory.state,
-                            selectedInventory.inventory.metadata
-                          ).label
-                        }
+                      <span className={`inventory-management__badge ${getStatusClass(getInventoryStatus(selectedInventory.inventory.state, selectedInventory.inventory.metadata).type)}`}>
+                        {getInventoryStatus(selectedInventory.inventory.state, selectedInventory.inventory.metadata).label}
                       </span>
                     </div>
                   </div>
                   <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>
-                      {t('inventoryManagement.viewModal.date')}
-                    </div>
-                    <div className='inventory-management__details-value'>
-                      {formatDate(selectedInventory.inventory.check_date)}
-                    </div>
+                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.date')}</div>
+                    <div className='inventory-management__details-value'>{formatDate(selectedInventory.inventory.check_date)}</div>
                   </div>
                   <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>
-                      {t('inventoryManagement.viewModal.location')}
-                    </div>
-                    <div className='inventory-management__details-value'>
-                      {selectedInventory.inventory.metadata?.location || 'N/A'}
-                    </div>
+                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.location')}</div>
+                    <div className='inventory-management__details-value'>{selectedInventory.inventory.metadata?.location || 'N/A'}</div>
                   </div>
                   <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>
-                      {t('inventoryManagement.viewModal.operator')}
-                    </div>
-                    <div className='inventory-management__details-value'>
-                      {selectedInventory.inventory.metadata?.operator || 'N/A'}
-                    </div>
+                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.operator')}</div>
+                    <div className='inventory-management__details-value'>{selectedInventory.inventory.metadata?.operator || 'N/A'}</div>
                   </div>
                   <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>
-                      {t('inventoryManagement.viewModal.origin')}
-                    </div>
-                    <div className='inventory-management__details-value'>
-                      {getOrigin(selectedInventory.inventory.metadata)}
-                    </div>
+                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.origin')}</div>
+                    <div className='inventory-management__details-value'>{getOrigin(selectedInventory.inventory.metadata)}</div>
                   </div>
                   <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>
-                      {t('inventoryManagement.viewModal.method')}
-                    </div>
-                    <div className='inventory-management__details-value'>
-                      {selectedInventory.inventory.metadata?.counting_method ||
-                        'N/A'}
-                    </div>
+                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.method')}</div>
+                    <div className='inventory-management__details-value capitalize'>{selectedInventory.inventory.metadata?.counting_method?.replace('_', ' ') || 'N/A'}</div>
                   </div>
                   <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>
-                      {t('inventoryManagement.viewModal.verification')}
-                    </div>
-                    <div className='inventory-management__details-value'>
-                      {selectedInventory.inventory.metadata?.verification ||
-                        'N/A'}
-                    </div>
+                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.verification')}</div>
+                    <div className='inventory-management__details-value capitalize'>{selectedInventory.inventory.metadata?.verification?.replace('_', ' ') || 'N/A'}</div>
                   </div>
                 </div>
               </div>
 
               {/* Productos Inventariados */}
-              {selectedInventory.items &&
-                selectedInventory.items.length > 0 && (
-                  <div className='inventory-management__details-section'>
-                    <h3 className='inventory-management__details-section-title'>
-                      {t('inventoryManagement.viewModal.items')} (
-                      {selectedInventory.items.length})
-                    </h3>
+              {selectedInventory.items && selectedInventory.items.length > 0 && (
+                <div className='inventory-management__details-section'>
+                  <h3 className='inventory-management__details-section-title'>
+                    {t('inventoryManagement.viewModal.items')} ({selectedInventory.items.length})
+                  </h3>
+                  <div className="inventory-management__table-container">
                     <table className='inventory-management__items-table'>
                       <thead>
                         <tr>
                           <th>{t('inventoryManagement.viewModal.product')}</th>
-                          <th>
-                            {t(
-                              'inventoryManagement.viewModal.previousQuantity'
-                            )}
-                          </th>
-                          <th>
-                            {t('inventoryManagement.viewModal.quantityChecked')}
-                          </th>
-                          <th>
-                            {t('inventoryManagement.viewModal.difference')}
-                          </th>
+                          <th className="text-center">{t('inventoryManagement.viewModal.previousQuantity')}</th>
+                          <th className="text-center">{t('inventoryManagement.viewModal.quantityChecked')}</th>
+                          <th className="text-right">{t('inventoryManagement.viewModal.difference')}</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {selectedInventory.items.map(item => (
-                          <tr key={item.id}>
-                            <td>{item.product_id}</td>
-                            <td>{item.previous_quantity}</td>
-                            <td>{item.quantity_checked}</td>
-                            <td>
-                              {item.quantity_checked - item.previous_quantity}
-                            </td>
-                          </tr>
-                        ))}
+                        {selectedInventory.items.map(item => {
+                          const diff = item.quantity_checked - item.previous_quantity;
+                          return (
+                            <tr key={item.id}>
+                              <td>
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-sm">Producto ID</span>
+                                  <span className="text-[10px] text-muted-foreground font-mono">{item.product_id}</span>
+                                </div>
+                              </td>
+                              <td className="text-center tabular-nums">{item.previous_quantity}</td>
+                              <td className="text-center tabular-nums font-semibold">{item.quantity_checked}</td>
+                              <td className={`text-right tabular-nums font-bold ${diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
+                                {diff > 0 ? `+${diff}` : diff}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
-                )}
+                </div>
+              )}
             </div>
             <div className='inventory-management__modal-footer'>
               <button

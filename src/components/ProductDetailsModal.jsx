@@ -63,7 +63,6 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
   // Stock information
   const stockQuantity = product.stock_quantity;
   const stockStatus = product.stock_status;
-  const stockUpdatedAt = product.stock_updated_at;
 
   // Financial health indicators from API
   const financialHealth = product.financial_health || {};
@@ -74,12 +73,6 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
   // Best margin data from API
   const bestMarginUnit = product.best_margin_unit;
   const bestMarginPercent = product.best_margin_percent;
-
-  // State indicator
-  const isActive = product.state === true || product.state === 'ACTIVE';
-
-  // Check for low stock warning
-  const hasLowStock = stockQuantity != null && stockQuantity > 0 && stockQuantity < 10;
 
   return (
     <div
@@ -122,92 +115,47 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                 <h3 className="product-details-modal__section-title">
                   {t('products.details.section.general_info')}
                 </h3>
-                <div className="product-details-modal__form-grid">
-                  <div className="product-details-modal__form-field product-details-modal__form-field--full-width">
-                    <label className="product-details-modal__label">
-                      {t('products.modal.field.product_name')}
-                    </label>
-                    <input
-                      type="text"
-                      className="product-details-modal__input"
-                      value={productName}
-                      readOnly
-                    />
+                <div className="product-details-modal__info-grid">
+                  <div className="product-details-modal__info-field">
+                    <label className="product-details-modal__info-label">{t('products.modal.field.product_name')}</label>
+                    <p className="product-details-modal__info-value font-semibold">{productName}</p>
                   </div>
-                  {description && (
-                    <div className="product-details-modal__form-field product-details-modal__form-field--full-width">
-                      <label className="product-details-modal__label">
-                        {t('products.modal.field.description')}
-                      </label>
-                      <input
-                        type="text"
-                        className="product-details-modal__input"
-                        value={description}
-                        readOnly
-                      />
-                    </div>
-                  )}
-                  <div className="product-details-modal__form-field">
-                    <label className="product-details-modal__label">
-                      {t('products.modal.field.barcode')}
-                    </label>
-                    <input
-                      type="text"
-                      className="product-details-modal__input"
-                      value={barcode || '-'}
-                      readOnly
-                    />
+                  <div className="product-details-modal__info-field">
+                    <label className="product-details-modal__info-label">{t('products.modal.field.category')}</label>
+                    <p className="product-details-modal__info-value">{categoryName || '-'}</p>
                   </div>
-                  <div className="product-details-modal__form-field">
-                    <label className="product-details-modal__label">
-                      {t('products.modal.field.brand')}
-                    </label>
-                    <input
-                      type="text"
-                      className="product-details-modal__input"
-                      value={brand || '-'}
-                      readOnly
-                    />
+                  <div className="product-details-modal__info-field">
+                    <label className="product-details-modal__info-label">{t('products.modal.field.product_type')}</label>
+                    <p className="product-details-modal__info-value capitalize">{(productType || 'PHYSICAL').toLowerCase()}</p>
                   </div>
-                  <div className="product-details-modal__form-field">
-                    <label className="product-details-modal__label">
-                      {t('products.modal.field.origin')}
-                    </label>
-                    <input
-                      type="text"
-                      className="product-details-modal__input"
-                      value={origin === 'IMPORTADO' ? t('products.origin.imported') : origin === 'NACIONAL' ? t('products.origin.national') : '-'}
-                      readOnly
-                    />
+                  
+                  <div className="product-details-modal__info-field">
+                    <label className="product-details-modal__info-label">{t('products.modal.field.barcode')}</label>
+                    <p className="product-details-modal__info-value tabular-nums">{barcode || '-'}</p>
                   </div>
-                  <div className="product-details-modal__form-field">
-                    <label className="product-details-modal__label">
-                      {t('products.modal.field.category')}
-                    </label>
-                    <input
-                      type="text"
-                      className="product-details-modal__input"
-                      value={categoryName || '-'}
-                      readOnly
-                    />
+                  <div className="product-details-modal__info-field">
+                    <label className="product-details-modal__info-label">{t('products.modal.field.brand')}</label>
+                    <p className="product-details-modal__info-value">{brand || '-'}</p>
                   </div>
-                  <div className="product-details-modal__form-field">
-                    <label className="product-details-modal__label">
-                      {t('products.modal.field.product_type')}
-                    </label>
-                    <input
-                      type="text"
-                      className="product-details-modal__input"
-                      value={productType || 'PHYSICAL'}
-                      readOnly
-                    />
+                  <div className="product-details-modal__info-field">
+                    <label className="product-details-modal__info-label">{t('products.modal.field.origin')}</label>
+                    <p className="product-details-modal__info-value">
+                      {origin === 'IMPORTADO' ? t('products.origin.imported') : origin === 'NACIONAL' ? t('products.origin.national') : '-'}
+                    </p>
                   </div>
                 </div>
+
+                {description && (
+                  <div className="product-details-modal__description-block">
+                    <label className="product-details-modal__info-label">{t('products.modal.field.description')}</label>
+                    <p className="product-details-modal__description-text">{description}</p>
+                  </div>
+                )}
               </div>
 
               {/* Unit Prices Table */}
               {unitPrices.length > 0 && (
-                <div>
+                <div className="product-details-modal__table-section">
                   <h3 className="product-details-modal__section-title">
                     {t('products.details.section.unit_prices')}
                   </h3>
@@ -215,26 +163,16 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                     <table className="product-details-modal__table">
                       <thead className="product-details-modal__table-head">
                         <tr>
-                          <th className="product-details-modal__table-header">
-                            {t('products.details.table.unit')}
-                          </th>
-                          <th className="product-details-modal__table-header">
-                            {t('products.details.table.price')}
-                          </th>
-                          <th className="product-details-modal__table-header">
-                            Fecha Vigencia
-                          </th>
+                          <th className="product-details-modal__table-header">{t('products.details.table.unit')}</th>
+                          <th className="product-details-modal__table-header">{t('products.details.table.price')}</th>
+                          <th className="product-details-modal__table-header">Vigencia</th>
                         </tr>
                       </thead>
                       <tbody className="product-details-modal__table-body">
                         {unitPrices.map((unitPrice) => (
                           <tr key={unitPrice.id}>
-                            <td className="product-details-modal__table-cell">
-                              {unitPrice.unit || '-'}
-                            </td>
-                            <td className="product-details-modal__table-cell">
-                              ${unitPrice.price_per_unit?.toFixed(2) || '0.00'}
-                            </td>
+                            <td className="product-details-modal__table-cell font-medium">{unitPrice.unit || '-'}</td>
+                            <td className="product-details-modal__table-cell tabular-nums">${unitPrice.price_per_unit?.toFixed(2) || '0.00'}</td>
                             <td className="product-details-modal__table-cell product-details-modal__table-cell--secondary">
                               {unitPrice.effective_date ? new Date(unitPrice.effective_date).toLocaleDateString('es') : '-'}
                             </td>
@@ -248,10 +186,8 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
 
               {/* Unit Costs Summary Table */}
               {unitCostsSummary.length > 0 && (
-                <div>
-                  <h3 className="product-details-modal__section-title">
-                    Resumen de Costos por Unidad
-                  </h3>
+                <div className="product-details-modal__table-section">
+                  <h3 className="product-details-modal__section-title">Resumen de Costos</h3>
                   <div className="product-details-modal__table-wrapper">
                     <table className="product-details-modal__table">
                       <thead className="product-details-modal__table-head">
@@ -266,22 +202,12 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
                       <tbody className="product-details-modal__table-body">
                         {unitCostsSummary.map((costSummary, index) => (
                           <tr key={index}>
-                            <td className="product-details-modal__table-cell">
-                              {costSummary.unit || '-'}
-                            </td>
-                            <td className="product-details-modal__table-cell">
-                              ${costSummary.last_cost?.toFixed(2) || '0.00'}
-                            </td>
-                            <td className="product-details-modal__table-cell">
-                              ${costSummary.weighted_avg_cost_6m?.toFixed(2) || '0.00'}
-                            </td>
-                            <td className="product-details-modal__table-cell product-details-modal__table-cell--secondary">
-                              {costSummary.total_purchases || 0}
-                            </td>
-                            <td className="product-details-modal__table-cell product-details-modal__table-cell--secondary">
-                              {costSummary.cost_variance_percent != null
-                                ? `${costSummary.cost_variance_percent.toFixed(1)}%`
-                                : '-'}
+                            <td className="product-details-modal__table-cell font-medium">{costSummary.unit || '-'}</td>
+                            <td className="product-details-modal__table-cell tabular-nums">${costSummary.last_cost?.toFixed(2) || '0.00'}</td>
+                            <td className="product-details-modal__table-cell tabular-nums">${costSummary.weighted_avg_cost_6m?.toFixed(2) || '0.00'}</td>
+                            <td className="product-details-modal__table-cell product-details-modal__table-cell--secondary text-center">{costSummary.total_purchases || 0}</td>
+                            <td className={`product-details-modal__table-cell font-medium ${costSummary.cost_variance_percent > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                              {costSummary.cost_variance_percent != null ? `${costSummary.cost_variance_percent.toFixed(1)}%` : '-'}
                             </td>
                           </tr>
                         ))}
@@ -293,178 +219,56 @@ export default function ProductDetailsModal({ isOpen, onClose, product, onEdit }
             </div>
 
             {/* Sidebar */}
-            <div className="product-details-modal__sidebar">
-              {/* State */}
+            <aside className="product-details-modal__sidebar">
+              {/* Inventory Summary */}
               <div className="product-details-modal__sidebar-group">
-                <p className="product-details-modal__info-label">
-                  {t('products.details.label.state')}
-                </p>
-                <span
-                  className={`product-details-modal__status-badge ${
-                    isActive
-                      ? 'product-details-modal__status-badge--active'
-                      : 'product-details-modal__status-badge--inactive'
-                  }`}
-                >
-                  {isActive ? t('products.state.active') : t('products.state.inactive')}
-                </span>
-              </div>
-
-              {/* Stock Status */}
-              <div className="product-details-modal__sidebar-group">
-                <h3 className="product-details-modal__sidebar-title">
-                  {t('products.details.section.inventory')}
-                </h3>
-                <div className="product-details-modal__info-row">
-                  <span className="product-details-modal__info-label">
-                    Estado
-                  </span>
-                  <span className="product-details-modal__info-value">
-                    {stockStatus === 'in_stock' ? 'En Stock' :
-                     stockStatus === 'out_of_stock' ? 'Sin Stock' :
-                     stockStatus === 'low_stock' ? 'Stock Bajo' : '-'}
-                  </span>
-                </div>
-                <div className="product-details-modal__info-row">
-                  <span className="product-details-modal__info-label">
-                    Cantidad
-                  </span>
-                  <span className="product-details-modal__info-value">
-                    {stockQuantity != null ? `${stockQuantity} unidades` : '-'}
-                  </span>
-                </div>
-                {stockUpdatedAt && (
-                  <div className="product-details-modal__info-row">
-                    <span className="product-details-modal__info-label">
-                      Actualizado
-                    </span>
-                    <span className="product-details-modal__info-value">
-                      {new Date(stockUpdatedAt).toLocaleDateString('es')}
+                <h3 className="product-details-modal__sidebar-title">{t('products.details.section.inventory')}</h3>
+                <div className="product-details-modal__stat-card">
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-2xl font-bold tabular-nums">{stockQuantity ?? 0}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${stockStatus === 'in_stock' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                      {stockStatus === 'in_stock' ? 'Disponible' : 'Stock Bajo'}
                     </span>
                   </div>
-                )}
+                  <p className="text-xs text-muted-foreground">Unidades en inventario</p>
+                </div>
               </div>
 
-              {/* Margin Analysis */}
+              {/* Best Margin Card */}
               {bestMarginUnit && bestMarginPercent != null && (
                 <div className="product-details-modal__sidebar-group">
-                  <h3 className="product-details-modal__sidebar-title">
-                    {t('products.details.section.margin_analysis')}
-                  </h3>
-                  <div className="product-details-modal__info-row">
-                    <span className="product-details-modal__info-label">
-                      {t('products.details.label.best_margin')}
-                    </span>
-                    <span className="product-details-modal__info-value product-details-modal__info-value--success">
-                      {bestMarginPercent.toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className="product-details-modal__info-row">
-                    <span className="product-details-modal__info-label">
-                      {t('products.details.label.best_unit')}
-                    </span>
-                    <span className="product-details-modal__info-value">
-                      {bestMarginUnit}
-                    </span>
+                  <h3 className="product-details-modal__sidebar-title">Rendimiento</h3>
+                  <div className="product-details-modal__stat-card border-l-4 border-green-500">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <span className="text-lg font-bold text-green-600 tabular-nums">{bestMarginPercent.toFixed(2)}%</span>
+                      <span className="text-xs font-medium uppercase text-muted-foreground">{bestMarginUnit}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Mejor margen actual</p>
                   </div>
                 </div>
               )}
 
-              {/* Financial Health */}
+              {/* Financial Health Checklist */}
               <div className="product-details-modal__sidebar-group">
-                <h3 className="product-details-modal__sidebar-title">
-                  {t('products.details.section.financial_health')}
-                </h3>
-                <div className="product-details-modal__health-list">
-                  <div className="product-details-modal__health-item">
-                    <svg
-                      className={`product-details-modal__health-icon ${
-                        hasPrices
-                          ? 'product-details-modal__health-icon--success'
-                          : 'product-details-modal__health-icon--error'
-                      }`}
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                    >
-                      {hasPrices ? (
-                        <path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.354 5.646a.5.5 0 00-.708 0L7 9.293 5.354 7.646a.5.5 0 10-.708.708l2 2a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z" />
-                      ) : (
-                        <path d="M8 0a8 8 0 110 16A8 8 0 018 0zm1 11.5a1 1 0 11-2 0 1 1 0 012 0zM8 10a.5.5 0 00.5-.5v-5a.5.5 0 00-1 0v5A.5.5 0 008 10z" />
-                      )}
-                    </svg>
-                    <span>{t('products.details.health.has_prices')}</span>
-                  </div>
-                  <div className="product-details-modal__health-item">
-                    <svg
-                      className={`product-details-modal__health-icon ${
-                        hasCosts
-                          ? 'product-details-modal__health-icon--success'
-                          : 'product-details-modal__health-icon--error'
-                      }`}
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                    >
-                      {hasCosts ? (
-                        <path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.354 5.646a.5.5 0 00-.708 0L7 9.293 5.354 7.646a.5.5 0 10-.708.708l2 2a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z" />
-                      ) : (
-                        <path d="M8 0a8 8 0 110 16A8 8 0 018 0zm1 11.5a1 1 0 11-2 0 1 1 0 012 0zM8 10a.5.5 0 00.5-.5v-5a.5.5 0 00-1 0v5A.5.5 0 008 10z" />
-                      )}
-                    </svg>
-                    <span>{t('products.details.health.has_costs')}</span>
-                  </div>
-                  <div className="product-details-modal__health-item">
-                    <svg
-                      className={`product-details-modal__health-icon ${
-                        hasStock
-                          ? 'product-details-modal__health-icon--success'
-                          : 'product-details-modal__health-icon--error'
-                      }`}
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                    >
-                      {hasStock ? (
-                        <path d="M8 0a8 8 0 110 16A8 8 0 018 0zm3.354 5.646a.5.5 0 00-.708 0L7 9.293 5.354 7.646a.5.5 0 10-.708.708l2 2a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z" />
-                      ) : (
-                        <path d="M8 0a8 8 0 110 16A8 8 0 018 0zm1 11.5a1 1 0 11-2 0 1 1 0 012 0zM8 10a.5.5 0 00.5-.5v-5a.5.5 0 00-1 0v5A.5.5 0 008 10z" />
-                      )}
-                    </svg>
-                    <span>Tiene Stock</span>
-                  </div>
-                  {hasLowStock && (
-                    <div className="product-details-modal__health-item">
-                      <svg
-                        className="product-details-modal__health-icon product-details-modal__health-icon--warning"
-                        viewBox="0 0 16 16"
-                        fill="currentColor"
-                      >
-                        <path d="M8 0a8 8 0 110 16A8 8 0 018 0zM7 11.5v1a1 1 0 102 0v-1a1 1 0 10-2 0zM8 10a.5.5 0 01-.5-.5v-5a.5.5 0 011 0v5A.5.5 0 018 10z" />
-                      </svg>
-                      <span>{t('products.details.health.low_stock')}</span>
+                <h3 className="product-details-modal__sidebar-title">Estado de Configuración</h3>
+                <div className="product-details-modal__health-checklist">
+                  {[
+                    { label: t('products.details.health.has_prices'), checked: hasPrices },
+                    { label: t('products.details.health.has_costs'), checked: hasCosts },
+                    { label: 'Inventario Base', checked: hasStock }
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2 py-1">
+                      <div className={`size-4 rounded-full flex items-center justify-center ${item.checked ? 'bg-green-500' : 'bg-red-500'}`}>
+                        <svg className="size-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d={item.checked ? "M5 13l4 4L19 7" : "M6 18L18 6M6 6l12 12"} />
+                        </svg>
+                      </div>
+                      <span className="text-xs font-medium">{item.label}</span>
                     </div>
-                  )}
+                  ))}
                 </div>
-                {financialHealth.price_count != null && (
-                  <div className="product-details-modal__info-row" style={{ marginTop: '12px' }}>
-                    <span className="product-details-modal__info-label">
-                      Precios configurados
-                    </span>
-                    <span className="product-details-modal__info-value">
-                      {financialHealth.price_count}
-                    </span>
-                  </div>
-                )}
-                {financialHealth.cost_units_count != null && (
-                  <div className="product-details-modal__info-row">
-                    <span className="product-details-modal__info-label">
-                      Unidades con costos
-                    </span>
-                    <span className="product-details-modal__info-value">
-                      {financialHealth.cost_units_count}
-                    </span>
-                  </div>
-                )}
               </div>
-            </div>
+            </aside>
           </div>
         </div>
 

@@ -1,0 +1,168 @@
+// ============================================================================
+// Add Product Purchase Modal - Optimized for Desktop 720p
+// ============================================================================
+// Specialized modal for adding products to purchase orders with 2-column layout
+
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.purchase-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-16;
+  animation: purchaseFadeIn 0.2s ease-out;
+
+  @keyframes purchaseFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+  }
+
+  &__dialog {
+    position: relative;
+    width: 100%;
+    max-width: 64rem; // 1024px
+    max-height: 90vh;
+    background-color: #fff;
+    border-radius: $border-radius-large;
+    box-shadow: $shadow-64;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: purchaseSlideUp 0.3s ease-out;
+
+    @include themify($themes) {
+      background-color: themed('bg-primary');
+    }
+
+    @keyframes purchaseSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  }
+
+  &__header {
+    padding: $spacing-20 $spacing-24;
+    border-bottom: 1px solid;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    @include themify($themes) {
+      border-color: themed('border-default');
+    }
+  }
+
+  &__title {
+    font-size: $font-size-600;
+    font-weight: $font-weight-bold;
+    margin: 0;
+    @include themify($themes) { color: themed('text-primary'); }
+  }
+
+  &__subtitle {
+    font-size: $font-size-300;
+    margin: $spacing-4 0 0;
+    @include themify($themes) { color: themed('text-secondary'); }
+  }
+
+  &__close {
+    padding: $spacing-8;
+    border-radius: $border-radius-medium;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    @include themify($themes) { color: themed('text-tertiary'); }
+    &:hover { background-color: rgba(0,0,0,0.05); }
+  }
+
+  &__body {
+    padding: $spacing-24;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  &__layout {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-32;
+
+    @media (min-width: 1024px) {
+      flex-direction: row;
+    }
+  }
+
+  &__search-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+  }
+
+  &__finance-col {
+    width: 100%;
+    @media (min-width: 1024px) {
+      width: 400px;
+      padding-left: $spacing-32;
+      border-left: 1px solid;
+      @include themify($themes) { border-color: themed('border-default'); }
+    }
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-20;
+  }
+
+  &__section-title {
+    font-size: $font-size-400;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $spacing-16;
+    display: flex;
+    align-items: center;
+    gap: $spacing-8;
+    @include themify($themes) { color: themed('accent-primary'); }
+  }
+
+  &__info-card {
+    padding: $spacing-16;
+    border-radius: $border-radius-medium;
+    border: 1px solid;
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      border-color: themed('border-default');
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-8;
+  }
+
+  &__label {
+    font-size: $font-size-200;
+    font-weight: $font-weight-semibold;
+    @include themify($themes) { color: themed('text-secondary'); }
+  }
+
+  &__footer {
+    padding: $spacing-16 $spacing-24;
+    border-top: 1px solid;
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-12;
+    @include themify($themes) {
+      background-color: themed('bg-secondary');
+      border-color: themed('border-default');
+    }
+  }
+}

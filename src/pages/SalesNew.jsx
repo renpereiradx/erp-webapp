@@ -251,9 +251,10 @@ const SalesNew = () => {
       try {
         setPaymentMethodsLoading(true)
         const methods = await PaymentMethodService.getAll()
-        setPaymentMethods(methods)
-        if (methods.length > 0) {
-          setPaymentMethodId(methods[0].id)
+        const methodsArray = Array.isArray(methods) ? methods : []
+        setPaymentMethods(methodsArray)
+        if (methodsArray.length > 0) {
+          setPaymentMethodId(methodsArray[0].id)
         }
       } catch (error) {
         console.error('Error loading payment methods:', error)

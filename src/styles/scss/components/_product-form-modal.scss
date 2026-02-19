@@ -40,8 +40,8 @@
 
   &__container {
     width: 100%;
-    max-width: 48rem; // 768px - More compact modal
-    max-height: 85vh;
+    max-width: 64rem; // 1024px - Wider modal for better desktop layout
+    max-height: 90vh; // Increased height for 720p optimization
     border-radius: $border-radius-large;
     box-shadow: $shadow-64;
     display: flex;
@@ -60,6 +60,42 @@
       to {
         opacity: 1;
         transform: translateY(0);
+      }
+    }
+  }
+
+  // ============================================================================
+  // Layout Grid for Two Columns
+  // ============================================================================
+
+  &__main-layout {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-24;
+
+    @media (min-width: 1024px) {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+  }
+
+  &__main-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-20;
+  }
+
+  &__side-column {
+    width: 100%;
+    
+    @media (min-width: 1024px) {
+      width: 320px;
+      padding-left: $spacing-24;
+      border-left: 1px solid;
+
+      @include themify($themes) {
+        border-color: themed('border-default');
       }
     }
   }

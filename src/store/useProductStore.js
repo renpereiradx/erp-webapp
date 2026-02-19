@@ -14,6 +14,11 @@ import {
   isConnectionError,
   getConnectionErrorMessage,
 } from '@/utils/connectionUtils'
+import { 
+  DEMO_CONFIG_PRODUCTS, 
+  DEMO_PRODUCT_DATA, 
+  simulateDelay 
+} from '../config/demoData'
 
 // Jitter helper
 const _jitter = base => {
@@ -384,6 +389,45 @@ const useProductStore = create()(
         const t = telemetry.startTimer('products.fetchPaginated')
 
         try {
+          // PRIORIDAD: Modo Demo habilitado
+          if (DEMO_CONFIG_PRODUCTS.enabled) {
+            console.log('🔄 Products Store: Modo Demo Activo (Mocking)');
+            await simulateDelay();
+            
+            const { filters } = get();
+            let demoProducts = [...DEMO_PRODUCT_DATA];
+
+            // Aplicar filtros locales sobre los mocks
+            if (filters.category && filters.category !== 'all') {
+              demoProducts = demoProducts.filter(p => String(p.category_id) === String(filters.category));
+            }
+            if (filters.status && filters.status !== 'all') {
+              demoProducts = demoProducts.filter(p => {
+                const isActive = p.state !== false && p.is_active !== false;
+                return filters.status === 'active' ? isActive : !isActive;
+              });
+            }
+
+            const total = demoProducts.length;
+            const start = (currentPage - 1) * currentPageSize;
+            const paginated = demoProducts.slice(start, start + currentPageSize);
+            const byId = Object.fromEntries(paginated.map(p => [p.product_id || p.id, p]));
+
+            set({
+              products: paginated,
+              productsById: byId,
+              totalProducts: total,
+              totalPages: Math.max(1, Math.ceil(total / currentPageSize)),
+              currentPage,
+              loading: false,
+              error: null,
+              lastSearchTerm: '',
+            });
+
+            telemetry.endTimer(t, { total, source: 'demo' });
+            return { data: paginated, total };
+          }
+
           // Short-circuit if circuit open
           if (get()._circuitOpen()) {
             const stateNow = get()
@@ -476,6 +520,41 @@ const useProductStore = create()(
           get()._recordSuccess()
           return { data: filteredProducts, total: totalCount }
         } catch (error) {
+          // Lógica de Fallback para Modo Demo
+          if (DEMO_CONFIG_PRODUCTS.enabled) {
+            console.log('🔄 Products Store: Cargando fallback de modo demo...');
+            await simulateDelay();
+            
+            const { filters } = get();
+            let demoProducts = [...DEMO_PRODUCT_DATA];
+
+            // Filtros demo
+            if (filters.category && filters.category !== 'all') {
+              demoProducts = demoProducts.filter(p => String(p.category_id) === String(filters.category));
+            }
+            if (filters.status && filters.status !== 'all') {
+              demoProducts = demoProducts.filter(p => filters.status === 'active' ? p.state : !p.state);
+            }
+
+            const total = demoProducts.length;
+            const start = (currentPage - 1) * currentPageSize;
+            const paginated = demoProducts.slice(start, start + currentPageSize);
+            const byId = Object.fromEntries(paginated.map(p => [p.product_id || p.id, p]));
+
+            set({
+              products: paginated,
+              productsById: byId,
+              totalProducts: total,
+              totalPages: Math.max(1, Math.ceil(total / currentPageSize)),
+              currentPage,
+              loading: false,
+              error: null,
+              lastSearchTerm: '',
+            });
+
+            return { data: paginated, total };
+          }
+
           if (!(error?.name === 'AbortError')) {
             try {
               get()._recordFailure()
@@ -579,7 +658,24 @@ const useProductStore = create()(
           let totalCount = 0
 
           if (searchTerm && searchTerm.trim()) {
-            response = await productService.searchProducts(searchTerm.trim())
+            try {
+              response = await productService.searchProducts(searchTerm.trim())
+            } catch (searchError) {
+              if (DEMO_CONFIG_PRODUCTS.enabled) {
+                console.log('🔄 Products Store: Buscando en mocks (fallback)...');
+                await simulateDelay();
+                const term = searchTerm.toLowerCase();
+                const filtered = DEMO_PRODUCT_DATA.filter(p => 
+                  p.name.toLowerCase().includes(term) || 
+                  p.barcode?.includes(term) ||
+                  p.product_id.toLowerCase().includes(term)
+                );
+                response = filtered;
+              } else {
+                throw searchError;
+              }
+            }
+
             products = Array.isArray(response) ? response : [response]
             totalCount = products.length
             if (totalCount === 0) {

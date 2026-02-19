@@ -1,141 +1,90 @@
-# Flujo de Implementación de Nuevas Páginas
+# Flujo de Extracción e Implementación de Pantallas
 
-Guía paso a paso para implementar diseños proporcionados por el equipo de diseño.
-
----
-
-## Flujo de Trabajo (Stitch vs. Archivos)
-
-El flujo de trabajo prioriza **Stitch** como fuente de verdad.
-
-### 1. Flujo Principal (Stitch)
-1. **Acceder a Stitch**: Conectar mediante las herramientas disponibles.
-2. **Seleccionar Proyecto**: Ir al proyecto específico indicado.
-3. **Buscar Pantalla**: Localizar la pantalla requerida.
-4. **Obtener Referencias**: Descargar la pantalla en HTML/PNG o capturar un screenshot desde Stitch.
-5. **Implementar**: **Solo si el usuario lo solicita explícitamente.**
-
-### 2. Flujo Secundario (Archivos Locales)
-Este flujo solo se activa si el usuario **pide explícitamente** trabajar con archivos estáticos:
-- [ ] **Archivo PNG**: Captura visual del diseño.
-- [ ] **Archivo HTML**: Implementación de referencia.
+Guía para transformar los diseños de **Stitch** en páginas funcionales del ERP.
 
 ---
 
-## Fase 1: Preparación
+## Fuente de Verdad: Stitch
 
-- [ ] Revisar el diseño completo (Stitch o PNG)
-- [ ] Identificar secciones principales de la página
-- [ ] Listar todos los componentes UI visibles en el diseño
-- [ ] Leer la [Guía de Componentes](./component-guide.md)
+No diseñamos interfaces desde cero. Utilizamos Stitch para generar la estructura visual y los tokens, extrayendo los estilos necesarios para mantener la consistencia del sistema.
 
-### Componentes identificados en el diseño:
+### 1. Extracción (Stitch)
+1. **Acceder a Stitch**: Seleccionar el proyecto `ERP WEBAPP`.
+2. **Localizar la Pantalla**: Identificar la pantalla específica requerida.
+3. **Analizar la Estructura**: Observar la jerarquía de componentes (Sidebar, Table, Modals).
+4. **Extraer Tokens**: Identificar colores, bordes y espaciados directamente del diseño.
 
-| Componente | Existe en SCSS? | Necesita actualización? |
+### 2. Mapeo y Adaptación (JSX/SCSS)
+Este paso consiste en llevar lo extraído de Stitch a nuestros componentes React existentes:
+- [ ] **Componentes Base**: Mapear los elementos visuales a nuestros componentes UI (`Button`, `Input`, `Card`).
+- [ ] **Estructura HTML**: Replicar la jerarquía de Stitch en el JSX de la página.
+- [ ] **Estilos Específicos**: Extraer clases SCSS únicas para la página y moverlas a `src/styles/scss/pages/`.
+
+---
+
+## Fase 1: Identificación de Componentes
+
+- [ ] Revisar la pantalla en Stitch.
+- [ ] Listar los componentes UI necesarios.
+- [ ] Verificar si el componente base necesita una variante SCSS nueva para igualar el diseño de Stitch.
+
+### Mapeo de Componentes Extraídos:
+
+| Elemento en Stitch | Componente UI React | Variante SCSS |
 |:--|:--|:--|
-| _(agregar aquí)_ | Sí / No | Sí / No |
+| _(ej: Botón Guardar)_ | `Button` | `--primary` |
 
 ---
 
-## Fase 2: Análisis de Componentes
+## Fase 2: Implementación de Estilos
 
-Para cada componente identificado:
+> ⚠️ **IMPORTANTE**: Si el diseño en Stitch difiere de un componente base, se debe actualizar el SCSS base o crear una variante específica. El diseño de Stitch tiene **absoluta prioridad**.
 
-### 2.1 Verificar existencia
+### 3.1 Proceso de Extracción de Estilos
 
-- [ ] Buscar el componente en `src/styles/scss/components/`
-- [ ] Revisar la documentación en `docs/design-system/component-guide.md`
-
-### 2.2 Comparar con diseño
-
-- [ ] ¿Los estilos base coinciden? (colores, tipografía, espaciado)
-- [ ] ¿Los estados coinciden? (hover, active, disabled)
-- [ ] ¿Los tamaños/variantes coinciden?
-
-### 2.3 Decisión
-
-| Si... | Entonces... |
-|:--|:--|
-| El componente existe y coincide | ✅ Usar clases SCSS existentes |
-| El componente existe pero difiere | ⚠️ **Actualizar el SCSS** (ver Fase 3) |
-| El componente no existe | 🆕 **Crear nuevo SCSS** (ver Fase 3) |
+- [ ] Identificar las variables de diseño (tokens) de Stitch.
+- [ ] Traducir estilos inline o de utilidad de Stitch a BEM SCSS.
+- [ ] Integrar en el archivo SCSS de la página correspondiente.
+- [ ] **Prioridad**: No usar Tailwind inline; usar siempre el sistema de variables SCSS del proyecto.
 
 ---
 
-## Fase 3: Actualización de Componentes
+## Fase 3: Construcción de la Página
 
-> ⚠️ **IMPORTANTE**: Los diseños proporcionados por diseño tienen prioridad.
-> Si el diseño difiere de nuestro componente, actualizar nuestro SCSS.
-
-### 3.1 Antes de modificar
-
-- [ ] Documentar qué cambios son necesarios
-- [ ] Verificar que los cambios no rompan otras páginas
-- [ ] Si hay riesgo, crear variante nueva en vez de modificar base
-
-### 3.2 Proceso de actualización
-
-- [ ] Abrir archivo SCSS del componente
-- [ ] Hacer los cambios siguiendo convención BEM:
-  - Base: `.componente`
-  - Variante: `.componente--variante`
-  - Elemento: `.componente__elemento`
-- [ ] Probar compilación: `pnpm run build`
-- [ ] Verificar que otras páginas no se vean afectadas
-
-### 3.3 Documentar cambios
-
-- [ ] Actualizar `docs/design-system/component-guide.md` con nuevas clases
-- [ ] Si es variante nueva, agregar ejemplo de uso
-- [ ] Commit con mensaje descriptivo: `feat(scss): update [componente] per design spec`
+- [ ] Crear el archivo JSX en `src/pages/`.
+- [ ] Importar los componentes UI necesarios.
+- [ ] Aplicar la estructura de layout extraída de Stitch.
+- [ ] Consumir los datos necesarios mediante el Store (Zustand).
 
 ---
 
-## Fase 4: Implementación de la Página
+## Fase 4: Verificación de Fidelidad
 
-- [ ] Crear archivo JSX en `src/pages/`
-- [ ] Usar componentes UI de `src/components/ui/`
-- [ ] Aplicar clases SCSS del sistema Fluent (NO Tailwind inline)
-- [ ] Verificar responsividad
-
----
-
-## Fase 5: Verificación Final
-
-- [ ] Comparar página implementada vs diseño original (Stitch/PNG)
-- [ ] Verificar consistencia de:
-  - [ ] Colores
-  - [ ] Tipografía
-  - [ ] Espaciados
-  - [ ] Estados interactivos
-- [ ] Probar en diferentes resoluciones
-- [ ] `pnpm run build` sin errores
+- [ ] Comparar la implementación local contra la pantalla de Stitch.
+- [ ] Validar:
+  - [ ] Colores y contraste.
+  - [ ] Alineación de celdas en tablas.
+  - [ ] Espaciados (paddings/margins) idénticos.
+  - [ ] Comportamiento responsivo básico.
 
 ---
 
-## Registro de Cambios por Página
+## Registro de Cambios
 
-### Página: _(nombre de la página)_
+### Página: _(Nombre)_
 
-**Fecha:** _(fecha de implementación)_
-**Desarrollador:** _(nombre)_
+**Fecha:** _(Hoy)_
+**Acción:** Extracción e implementación desde Stitch.
 
-#### Componentes actualizados:
+#### Estilos Actualizados/Extraídos:
 
-| Componente | Archivo SCSS | Cambio realizado |
+| Componente | Cambio / Variante | Notas |
 |:--|:--|:--|
-| _(ejemplo)_ | `_button.scss` | Agregado variant `--outline-primary` |
-
-#### Componentes nuevos creados:
-
-| Componente | Archivo SCSS | Descripción |
-|:--|:--|:--|
-| _(ejemplo)_ | `_stat-card.scss` | Card para métricas del dashboard |
+| `Table` | Agregado hover sutil | Extraído de diseño de lista |
 
 ---
 
 ## Recursos
 
-- [Guía de Componentes](./component-guide.md) - Referencia de clases SCSS
-- [Proceso de Revisión](./review-process.md) - Convenciones y checklist
-- [README](./README.md) - Índice del sistema de diseño
+- [Guía de Componentes](./component-guide.md) - Referencia de clases SCSS existentes.
+- [Inventario](./component-inventory.md) - Estado de integración de componentes.

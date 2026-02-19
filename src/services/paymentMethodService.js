@@ -1,7 +1,16 @@
 import { apiClient } from './api.js'
 import { paymentApiDebug } from './paymentApiDebug.js'
+import { DEMO_CONFIG } from '../config/demoAuth.js'
 
 const SERVICE_NAME = 'PaymentMethodService'
+
+// Datos de métodos de pago para modo demo
+const DEMO_PAYMENT_METHODS = [
+  { id: 1, method_code: 'CASH', description: 'Efectivo', is_active: true },
+  { id: 2, method_code: 'CARD', description: 'Tarjeta de Crédito/Débito', is_active: true },
+  { id: 3, method_code: 'TRANSFER', description: 'Transferencia Bancaria', is_active: true },
+  { id: 4, method_code: 'CHECK', description: 'Cheque', is_active: true },
+]
 const PAYMENT_METHOD_WRITE_ENABLED = false
 
 const logPaymentFailure = (
@@ -39,9 +48,13 @@ class PaymentMethodService {
    * @returns {Promise<import('../types/payment.js').PaymentMethod[]>}
    */
   static async getAll() {
+    if (DEMO_CONFIG.enabled) {
+      return DEMO_PAYMENT_METHODS
+    }
     try {
       const response = await apiClient.makeRequest('/payment-methods')
-      return response.data || response
+      const data = response.data || response
+      return Array.isArray(data) ? data : []
     } catch (error) {
       console.error('Error fetching payment methods:', error)
       logPaymentFailure('getAll', '/payment-methods', error, {

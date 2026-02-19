@@ -1,19 +1,23 @@
-# Sistema de Diseño Fluent 2
+# Sistema de Diseño ERP - Guía de Implementación
 
-Documentación del sistema de componentes UI basado en Microsoft Fluent Design System 2.
+Esta documentación detalla el proceso de extracción, adaptación e implementación de interfaces de usuario para el ERP, utilizando **Stitch** como fuente de verdad de diseño.
 
 ---
+
+## Flujo de Trabajo Principal
+
+El diseño del ERP se gestiona en Stitch. El rol del desarrollo es extraer la estructura HTML, los tokens visuales y la jerarquía de componentes para integrarlos en la arquitectura de React + SCSS del proyecto.
 
 ## Archivos de Documentación
 
 docs/design-system/
-├── README.md                      # Índice actualizado
-├── component-guide.md             # Guía de componentes
-├── component-inventory.md         # Inventario
-├── review-process.md              # Proceso de revisión
-├── implementation-workflow.md     # 🆕 Workflow para nuevas páginas
+├── README.md                      # Índice y visión general
+├── component-guide.md             # Guía de componentes extraídos
+├── component-inventory.md         # Inventario de mapeo JSX → SCSS
+├── review-process.md              # Proceso de revisión de fidelidad
+├── implementation-workflow.md     # 🆕 Workflow de extracción desde Stitch
 └── templates/
-    └── page-implementation-template.md  # 🆕 Template copiable
+    └── page-implementation-template.md  # Template para documentar nuevas implementaciones
 
 ## Documentación
 
