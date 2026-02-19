@@ -2,6 +2,7 @@
  * Demo data configuration for development without API
  * Provides realistic data for dashboard and other components
  */
+import { DEMO_CONFIG } from './demoAuth';
 
 // Supplier demo data
 export const DEMO_SUPPLIER_DATA = [
@@ -553,10 +554,11 @@ export const DEMO_CHART_DATA = {
   ],
 }
 
-// Demo configuration
+// Demo configuration - respects VITE_USE_DEMO env var via DEMO_CONFIG
+
 export const DEMO_CONFIG_DASHBOARD = {
-  enabled: true, // Enable/disable demo mode
-  useRealAPI: false, // Toggle real API calls
+  enabled: DEMO_CONFIG.enabled, // Controlled by VITE_USE_DEMO env var
+  useRealAPI: !DEMO_CONFIG.enabled, // Inverse of demo mode
   simulateDelay: true, // Simulate network delay
   delayMs: 800, // Delay in milliseconds
   showAPIStatus: true, // Show API status in UI
@@ -571,8 +573,8 @@ export const DEMO_CONFIG_CLIENTS = {
 }
 
 export const DEMO_CONFIG_SUPPLIERS = {
-  enabled: true, // Enable/disable demo mode
-  useRealAPI: false, // Toggle real API calls
+  enabled: DEMO_CONFIG.enabled, // Controlled by VITE_USE_DEMO env var
+  useRealAPI: !DEMO_CONFIG.enabled, // Inverse of demo mode
   simulateDelay: true, // Simulate network delay
   delayMs: 500, // Delay in milliseconds
   pageSize: 10, // Items per page
@@ -960,8 +962,8 @@ export const deleteDemoSupplier = async id => {
 
 // === PRODUCTS DEMO CONFIGURATION ===
 export const DEMO_CONFIG_PRODUCTS = {
-  enabled: true, // Enable/disable demo mode
-  useRealAPI: false, // Force demo mode
+  enabled: DEMO_CONFIG.enabled, // Controlled by VITE_USE_DEMO env var
+  useRealAPI: !DEMO_CONFIG.enabled, // Inverse of demo mode
   simulateDelay: true, // Simulate network delay
   delayMs: 800, // Delay in milliseconds
   pageSize: 10, // Default page size
@@ -969,7 +971,7 @@ export const DEMO_CONFIG_PRODUCTS = {
 
 // === RESERVATIONS DEMO CONFIGURATION ===
 export const DEMO_CONFIG_RESERVATIONS = {
-  enabled: true, // Enable/disable demo mode
+  enabled: DEMO_CONFIG.enabled, // Controlled by VITE_USE_DEMO env var
   useRealAPI: true, // CHANGED: Use real API instead of mock data
   simulateDelay: false, // DISABLED: No delay for real API
   delayMs: 600, // Delay in milliseconds
@@ -978,16 +980,16 @@ export const DEMO_CONFIG_RESERVATIONS = {
 
 // === SCHEDULES DEMO CONFIGURATION ===
 export const DEMO_CONFIG_SCHEDULES = {
-  enabled: true, // Enable/disable demo mode
-  useRealAPI: false, // Toggle real API calls
+  enabled: DEMO_CONFIG.enabled, // Controlled by VITE_USE_DEMO env var
+  useRealAPI: !DEMO_CONFIG.enabled, // Inverse of demo mode
   simulateDelay: true, // Simulate network delay
   delayMs: 500, // Delay in milliseconds
   pageSize: 20, // Items per page
 }
 
 export const DEMO_CONFIG_AVAILABLE_SLOTS = {
-  enabled: true, // Enable/disable demo mode
-  useRealAPI: false, // Toggle real API calls
+  enabled: DEMO_CONFIG.enabled, // Controlled by VITE_USE_DEMO env var
+  useRealAPI: !DEMO_CONFIG.enabled, // Inverse of demo mode
   simulateDelay: true, // Simulate network delay
   delayMs: 450, // Delay in milliseconds
 }
@@ -1466,7 +1468,7 @@ export const deleteDemoSchedule = async id => {
 
 // Sales configuration
 export const DEMO_CONFIG_SALES = {
-  enabled: true,
+  enabled: DEMO_CONFIG.enabled, // Controlled by VITE_USE_DEMO env var
   delayMs: 600,
   pageSize: 10,
   simulateErrors: false,
@@ -1633,7 +1635,7 @@ export const DEMO_SALE_ITEMS_DATA = [
 
 // Purchases configuration
 export const DEMO_CONFIG_PURCHASES = {
-  enabled: true,
+  enabled: DEMO_CONFIG.enabled, // Controlled by VITE_USE_DEMO env var
   delayMs: 700,
   pageSize: 10,
   simulateErrors: false,
