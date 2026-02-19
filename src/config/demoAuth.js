@@ -58,6 +58,13 @@ export const DEMO_CONFIG = {
   sessionDuration: 24 * 60 * 60 * 1000, // 24 horas en ms
 };
 
+// Debug log for environment mode
+if (import.meta.env.DEV) {
+  console.log('🧪 [DemoAuth] VITE_USE_DEMO:', import.meta.env.VITE_USE_DEMO);
+  console.log('🧪 [DemoAuth] Mode:', import.meta.env.MODE);
+  console.log('🧪 [DemoAuth] Enabled:', DEMO_CONFIG.enabled);
+}
+
 /**
  * Validar credenciales demo
  * @param {string} email - Email o username
