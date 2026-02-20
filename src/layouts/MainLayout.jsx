@@ -38,6 +38,7 @@ import {
   AlertTriangle,
   Award,
   List,
+  FileText,
   Clock as ClockIcon,
 } from 'lucide-react'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
@@ -148,6 +149,11 @@ const MainLayout = ({ children }) => {
                 name: t('payables.summary', 'Resumen Ejecutivo'),
                 href: '/dashboard/payables',
                 icon: BarChart3,
+              },
+              {
+                name: t('payables.invoices', 'Lista Maestra de Facturas'),
+                href: '/finance/invoices',
+                icon: FileText,
               },
             ],
           },

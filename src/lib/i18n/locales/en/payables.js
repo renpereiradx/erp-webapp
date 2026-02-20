@@ -1,1 +1,5 @@
-export default { title: 'Accounts Payable', summary: 'Executive Summary' };
+export default { 
+  title: 'Accounts Payable', 
+  summary: 'Executive Summary',
+  invoices: 'Invoices Master List'
+};
