@@ -22,16 +22,16 @@ const DetailSidebar = ({ client = {} }) => {
         </CardHeader>
         <CardContent>
           <div className="receivable-detail__sidebar-actions">
-            <Button variant="default" className="w-full h-11">
+            <Button variant="primary" className="receivable-detail__sidebar-btn--large">
               <CreditCard size={16} />
               <span>{t('receivables.detail.actions.register_payment')}</span>
             </Button>
             <div className="receivable-detail__sidebar-actions-grid">
-              <Button variant="outline" className="h-10">
+              <Button variant="secondary" className="receivable-detail__sidebar-btn">
                 <Send size={16} />
                 <span>{t('receivables.detail.actions.reminder')}</span>
               </Button>
-              <Button variant="outline" className="h-10">
+              <Button variant="secondary" className="receivable-detail__sidebar-btn">
                 <Flag size={16} />
                 <span>{t('receivables.detail.actions.dispute')}</span>
               </Button>
@@ -44,7 +44,7 @@ const DetailSidebar = ({ client = {} }) => {
       <Card>
         <CardHeader className="receivable-detail__contact-header">
           <CardTitle>{t('receivables.detail.contact.title')}</CardTitle>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" className="receivable-detail__edit-btn">
             <Pencil size={14} />
             <span>{t('action.edit', 'Editar')}</span>
           </Button>
@@ -54,31 +54,31 @@ const DetailSidebar = ({ client = {} }) => {
             <Avatar size={40} color="brand">
               <AvatarFallback>{client.contact?.charAt(0) || client.name?.charAt(0) || '?'}</AvatarFallback>
             </Avatar>
-            <div>
+            <div className="receivable-detail__contact-details">
               <p className="receivable-detail__contact-name">{client.contact || client.name}</p>
               <p className="receivable-detail__contact-role">Billing Manager</p>
             </div>
           </div>
 
-          <Separator className="my-4" />
+          <Separator className="receivable-detail__sidebar-separator" />
 
           <div className="receivable-detail__contact-info">
             {client.email && (
               <div className="receivable-detail__contact-row">
-                <Mail size={16} style={{ flexShrink: 0 }} />
-                <a href={`mailto:${client.email}`} className="truncate">{client.email}</a>
+                <Mail size={16} />
+                <a href={`mailto:${client.email}`} className="receivable-detail__contact-link">{client.email}</a>
               </div>
             )}
             {client.phone && (
               <div className="receivable-detail__contact-row">
-                <Phone size={16} style={{ flexShrink: 0 }} />
+                <Phone size={16} />
                 <a href={`tel:${client.phone}`}>{client.phone}</a>
               </div>
             )}
             {client.address && (
               <div className="receivable-detail__contact-row">
-                <MapPin size={16} style={{ flexShrink: 0 }} />
-                <span className="truncate">{client.address}</span>
+                <MapPin size={16} />
+                <span className="receivable-detail__contact-text">{client.address}</span>
               </div>
             )}
           </div>
@@ -98,13 +98,13 @@ const DetailSidebar = ({ client = {} }) => {
               className="activity-card__textarea"
             />
             <div className="receivable-detail__activity-submit">
-              <Button variant="default" size="sm">
+              <Button variant="primary" size="sm">
                 {t('receivables.detail.activity.post')}
               </Button>
             </div>
           </div>
 
-          <Separator className="my-4" />
+          <Separator className="receivable-detail__sidebar-separator" />
 
           <div className="activity-card__timeline">
             <div className="activity-card__item">

@@ -42,12 +42,12 @@ const DetailHeader = ({ id, client = {}, transaction = {} }) => {
               <div className="receivable-detail__meta">
                 <Calendar size={16} />
                 <span>{t('receivables.detail.issued')}: <strong>{transaction.issueDate}</strong></span>
-                <span className="size-1 rounded-full bg-gray-300"></span>
+                <span className="receivable-detail__meta-separator"></span>
                 <span>{t('receivables.detail.due')}: <strong>{transaction.dueDate}</strong></span>
                 {isOverdue && transaction.daysOverdue > 0 && (
                   <>
-                    <span className="size-1 rounded-full bg-gray-300"></span>
-                    <span className="text-danger font-medium">
+                    <span className="receivable-detail__meta-separator"></span>
+                    <span className="receivable-detail__overdue-label">
                       {t('receivables.detail.overdue_days', { days: transaction.daysOverdue })}
                     </span>
                   </>
@@ -77,13 +77,13 @@ const DetailHeader = ({ id, client = {}, transaction = {} }) => {
           </div>
           <div className="receivable-detail__stat-item">
             <p className="receivable-detail__stat-label">{t('receivables.detail.stats.total_paid')}</p>
-            <p className="receivable-detail__stat-value text-success">
+            <p className="receivable-detail__stat-value receivable-detail__stat-value--success">
               {transaction.paid}
             </p>
           </div>
           <div className="receivable-detail__stat-item">
             <p className="receivable-detail__stat-label">{t('receivables.detail.stats.balance_due')}</p>
-            <p className="receivable-detail__stat-value text-primary">
+            <p className="receivable-detail__stat-value receivable-detail__stat-value--primary">
               {transaction.balance}
             </p>
             <div className="receivable-detail__progress-bar">

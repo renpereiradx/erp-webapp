@@ -19,10 +19,10 @@ const PaymentHistoryTable = ({ history = [], totalPaid = 0 }) => {
   const { t } = useI18n();
 
   return (
-    <Card className="p-0 overflow-hidden">
+    <Card className="payment-history">
       <CardHeader className="payment-history__header">
         <CardTitle>{t('receivables.detail.history.title')}</CardTitle>
-        <div className="flex gap-2">
+        <div className="payment-history__actions">
           <Button variant="ghost" size="icon">
             <Filter size={16} />
           </Button>
@@ -31,8 +31,8 @@ const PaymentHistoryTable = ({ history = [], totalPaid = 0 }) => {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
+      <CardContent className="payment-history__content">
+        <div className="payment-history__table-container">
           <Table>
             <TableHeader>
               <TableRow>
@@ -40,27 +40,29 @@ const PaymentHistoryTable = ({ history = [], totalPaid = 0 }) => {
                 <TableHead>{t('receivables.detail.history.table.ref')}</TableHead>
                 <TableHead>{t('receivables.detail.history.table.method')}</TableHead>
                 <TableHead>{t('receivables.detail.history.table.note')}</TableHead>
-                <TableHead className="text-right">{t('receivables.detail.history.table.amount')}</TableHead>
-                <TableHead className="w-10"></TableHead>
+                <TableHead className="payment-history__cell--right">{t('receivables.detail.history.table.amount')}</TableHead>
+                <TableHead className="payment-history__cell--actions"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {history.map((payment, idx) => {
                 const MethodIcon = getMethodIcon(payment.method);
                 return (
-                  <TableRow key={idx} className="group">
+                  <TableRow key={idx} className="payment-history__row">
                     <TableCell>{payment.date}</TableCell>
-                    <TableCell className="font-mono">{payment.ref}</TableCell>
+                    <TableCell className="payment-history__cell--mono">{payment.ref}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <MethodIcon size={16} className="text-muted-foreground" />
+                      <div className="payment-history__method">
+                        <MethodIcon size={16} className="payment-history__method-icon" />
                         <span>{payment.method}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground truncate max-w-[150px]">{payment.note}</TableCell>
-                    <TableCell className="text-right font-bold">{formatPYG(payment.amount)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100">
+                    <TableCell className="payment-history__cell--note">{payment.note}</TableCell>
+                    <TableCell className="payment-history__cell--right payment-history__cell--amount">
+                      {formatPYG(payment.amount)}
+                    </TableCell>
+                    <TableCell className="payment-history__cell--right">
+                      <Button variant="ghost" size="icon" className="payment-history__action-btn">
                         <MoreVertical size={16} />
                       </Button>
                     </TableCell>
@@ -69,13 +71,15 @@ const PaymentHistoryTable = ({ history = [], totalPaid = 0 }) => {
               })}
             </TableBody>
             <tfoot className="payment-history__footer">
-              <tr>
-                <td colSpan="4" className="text-right text-xs font-bold uppercase tracking-wide text-muted-foreground p-4">
+              <TableRow>
+                <TableCell colSpan="4" className="payment-history__footer-label">
                   {t('receivables.detail.stats.total_paid')}
-                </td>
-                <td className="text-right font-bold text-lg p-4">{formatPYG(totalPaid)}</td>
-                <td></td>
-              </tr>
+                </TableCell>
+                <TableCell className="payment-history__footer-value">
+                  {formatPYG(totalPaid)}
+                </TableCell>
+                <TableCell></TableCell>
+              </TableRow>
             </tfoot>
           </Table>
         </div>

@@ -33,16 +33,16 @@ export const distinctSearchableRoutes = [
     category: 'BI / Cuentas por Cobrar'
   },
   {
-    name: 'Lista Maestra y Filtros de Cuentas por Cobrar',
+    name: 'Lista Maestra de Facturas (Cuentas por Cobrar)',
     href: '/receivables/list',
     icon: List,
-    category: 'BI / Cuentas por Cobrar'
+    category: 'Finanzas / Cobros'
   },
   {
-    name: 'Detalle de Cuenta por Cobrar e Historial de Pagos',
+    name: 'Detalle de Factura e Historial de Pagos',
     href: '/receivables/list',
     icon: History,
-    category: 'BI / Cuentas por Cobrar'
+    category: 'Finanzas / Cobros'
   },
   {
     name: 'Cuentas Vencidas y Tareas de Cobranza',

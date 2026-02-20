@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Download, 
@@ -21,6 +22,7 @@ import { invoicesMasterData } from '../features/accounts-payable/data/invoicesMo
  * Displays all invoices with advanced filtering and high-density table.
  */
 const InvoicesMasterList = () => {
+  const navigate = useNavigate();
   useEffect(() => {
     document.title = 'Lista Maestra de Facturas | ERP System';
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -155,7 +157,15 @@ const InvoicesMasterList = () => {
                                 <TableCell>
                                   <input type="checkbox" className="checkbox" />
                                 </TableCell>
-                                <TableCell className="invoice-table__id">#{invoice.id}</TableCell>
+                                <TableCell className="invoice-table__id">
+                                  <a 
+                                    href="#" 
+                                    className="text-primary font-medium hover:underline"
+                                    onClick={(e) => { e.preventDefault(); navigate(`/finance/invoices/${invoice.id}`); }}
+                                  >
+                                    #{invoice.id}
+                                  </a>
+                                </TableCell>
                                 <TableCell>
                                   <div className="invoice-table__vendor-cell">
                                     <div className="avatar avatar--24 avatar--brand">
@@ -193,10 +203,10 @@ const InvoicesMasterList = () => {
         <CardFooter className="invoices-master__footer">
           <div className="invoices-master__rows-per-page">
             <span>Filas por página:</span>
-            <select>
-              <option>10</option>
-              <option selected>20</option>
-              <option>50</option>
+            <select defaultValue="20">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
             </select>
           </div>
           

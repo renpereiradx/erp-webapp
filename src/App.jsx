@@ -60,6 +60,7 @@ import ReceivablesDashboard from '@/pages/ReceivablesDashboard'
 import PayablesDashboard from '@/pages/PayablesDashboard'
 import ReceivablesMasterList from '@/pages/ReceivablesMasterList'
 import InvoicesMasterList from '@/pages/InvoicesMasterList'
+import InvoiceDetail from '@/pages/InvoiceDetail'
 import ReceivableDetail from '@/pages/ReceivableDetail'
 import OverdueAccounts from '@/pages/OverdueAccounts'
 import ClientCreditProfile from '@/pages/ClientCreditProfile'
@@ -137,6 +138,7 @@ function AppContent() {
                       <Route path='/dashboard/receivables' element={<ReceivablesDashboard />} />
                       <Route path='/dashboard/payables' element={<PayablesDashboard />} />
                       <Route path='/finance/invoices' element={<InvoicesMasterList />} />
+                      <Route path='/finance/invoices/:id' element={<InvoiceDetail />} />
                       <Route path='/receivables' element={<ReceivablesDashboard />} />
                       <Route path='/receivables/list' element={<ReceivablesMasterList />} />
                       <Route path='/receivables/detail/:id' element={<ReceivableDetail />} />
