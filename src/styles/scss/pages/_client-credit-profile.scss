@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../abstracts' as *;
 
 // =============================================================================
@@ -271,7 +272,7 @@
 
     @include themify {
       background-color: alpha-color(themed('state-warning'), 0.15);
-      color: darken(themed('state-warning'), 15%);
+      color: color.adjust(themed('state-warning'), $lightness: -15%);
     }
 
     &-dot {
@@ -321,7 +322,7 @@
       margin-top: $spacing-4;
       padding-left: $spacing-24;
       @include themify {
-        color: darken(themed('state-error'), 10%);
+        color: color.adjust(themed('state-error'), $lightness: -10%);
       }
     }
   }

@@ -626,8 +626,6 @@ const Purchases = () => {
       profit_pct: effectiveProfitPct,
       sale_price: effectiveSalePrice,
       pricing_mode: pricingMode, // 'margin' o 'sale_price'
-      sale_price: effectiveSalePrice,
-      pricing_mode: pricingMode, // 'margin' o 'sale_price'
       unit: modalSelectedProduct.base_unit || modalSelectedProduct.unit || 'unit', // Priorizar base_unit del producto
       tax_rate_id: modalTaxRateId || null, // Usar el tax_rate_id seleccionado por el usuario
     }
@@ -691,7 +689,6 @@ const Purchases = () => {
       order_details: purchaseItems.map(item => {
         const detail = {
           product_id: item.product_id,
-          quantity: item.quantity,
           quantity: item.quantity,
           unit_price: item.unit_price,
           unit: item.unit || 'unit', // unit ya viene con el valor correcto desde el item
