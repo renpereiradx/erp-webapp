@@ -155,6 +155,11 @@ const MainLayout = ({ children }) => {
                 href: '/finance/invoices',
                 icon: FileText,
               },
+              {
+                name: t('payables.cashFlow', 'Proyección de Pagos y Flujo'),
+                href: '/finance/cash-flow',
+                icon: TrendingUp,
+              },
             ],
           },
         ],
