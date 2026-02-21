@@ -165,6 +165,11 @@ const MainLayout = ({ children }) => {
                 href: '/proveedores/PRV-8820/analisis',
                 icon: TrendingUp,
               },
+              {
+                name: 'Reporte de Antigüedad',
+                href: '/receivables/aging-report',
+                icon: ClockIcon,
+              },
             ],
           },
         ],

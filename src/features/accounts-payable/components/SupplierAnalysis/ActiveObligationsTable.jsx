@@ -1,101 +1,80 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Filter, 
-  Download, 
-  MoreHorizontal, 
-  ChevronDown 
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
+/**
+ * Main Data Grid: Active Obligations for a Supplier.
+ * 100% STITCH FIDELITY - RESPONSIVE
+ */
 const ActiveObligationsTable = ({ invoices, summary }) => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Atrasado':
-        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800 font-black text-[10px] tracking-widest uppercase">Atrasado</Badge>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap">Atrasado</span>;
       case 'En Proceso':
-        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800 font-black text-[10px] tracking-widest uppercase">En Proceso</Badge>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 whitespace-nowrap">En Proceso</span>;
       case 'Parcialmente Pagado':
-        return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800 font-black text-[10px] tracking-widest uppercase">Parcialmente Pagado</Badge>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 whitespace-nowrap">Parcial</span>;
       case 'Borrador':
-        return <Badge className="bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600 font-black text-[10px] tracking-widest uppercase">Borrador</Badge>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 whitespace-nowrap">Borrador</span>;
       default:
-        return <Badge className="bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600 font-black text-[10px] tracking-widest uppercase">{status}</Badge>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-800 dark:text-slate-700 dark:text-slate-300 whitespace-nowrap">{status}</span>;
     }
   };
 
   return (
-    <Card className="border-slate-200 dark:border-slate-800 shadow-xl rounded-2xl overflow-hidden mb-8 group transition-all duration-500 hover:shadow-2xl">
-      <div className="px-8 py-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 group-hover:bg-slate-50/50 dark:group-hover:bg-slate-800/20 transition-colors">
-        <h4 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Obligaciones Activas</h4>
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" className="flex items-center gap-2 text-xs font-black text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl px-4 h-10 uppercase tracking-widest">
-            <Filter className="h-4 w-4" /> Filtrar
-          </Button>
-          <Button variant="ghost" className="flex items-center gap-2 text-xs font-black text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl px-4 h-10 uppercase tracking-widest">
-            <Download className="h-4 w-4" /> Exportar
-          </Button>
+    <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-in fade-in">
+      <div className="px-4 md:px-8 py-4 md:py-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-50/50 dark:bg-slate-800/20 gap-4">
+        <h4 className="text-base md:text-lg font-bold">Obligaciones Activas</h4>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 sm:border-none transition-colors">
+            <span className="material-icons-round text-sm">filter_list</span> <span className="xs:inline">Filtrar</span>
+          </button>
+          <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300 px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 sm:border-none transition-colors">
+            <span className="material-icons-round text-sm">download</span> <span className="xs:inline">Exportar</span>
+          </button>
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <Table className="w-full">
-          <TableHeader>
-            <TableRow className="bg-slate-50/50 dark:bg-slate-900/50 border-none">
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                ID Factura <ChevronDown className="h-3 w-3 inline-block ml-1 opacity-50" />
-              </TableHead>
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Fecha Emisión</TableHead>
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Monto Original</TableHead>
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Saldo Pendiente</TableHead>
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Vencimiento</TableHead>
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Estado</TableHead>
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <div className="overflow-x-auto custom-scrollbar">
+        <table className="w-full text-left border-collapse min-w-[800px]">
+          <thead>
+            <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+              <th className="px-4 md:px-8 py-4">Factura</th>
+              <th className="px-4 py-4">Emisión</th>
+              <th className="px-4 py-4 text-right">Monto</th>
+              <th className="px-4 py-4 text-right">Saldo</th>
+              <th className="px-4 py-4">Vencimiento</th>
+              <th className="px-4 py-4">Estado</th>
+              <th className="px-4 md:px-8 py-4 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs md:text-sm">
             {invoices.map((invoice, idx) => (
-              <TableRow key={idx} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all duration-300 border-slate-100 dark:border-slate-800">
-                <TableCell className="px-8 py-5 font-black text-blue-600 tracking-tight">{invoice.id}</TableCell>
-                <TableCell className="px-8 py-5 text-slate-500 dark:text-slate-400 font-bold uppercase text-[11px] tracking-tight">{invoice.date}</TableCell>
-                <TableCell className="px-8 py-5 text-right font-black text-slate-700 dark:text-slate-200">${invoice.originalAmount.toLocaleString()}</TableCell>
-                <TableCell className="px-8 py-5 text-right font-black text-slate-900 dark:text-white">${invoice.pendingAmount.toLocaleString()}</TableCell>
-                <TableCell className={`px-8 py-5 font-black tracking-tight ${invoice.isOverdue ? 'text-red-500' : 'text-slate-500 dark:text-slate-400'}`}>
+              <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <td className="px-4 md:px-8 py-4 font-medium text-[#137fec]">{invoice.id}</td>
+                <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{invoice.date}</td>
+                <td className="px-4 py-4 text-right font-medium text-slate-700 dark:text-slate-300">${invoice.originalAmount.toLocaleString()}</td>
+                <td className="px-4 py-4 text-right font-bold text-slate-900 dark:text-white">${invoice.pendingAmount.toLocaleString()}</td>
+                <td className={`px-4 py-4 font-medium ${invoice.isOverdue ? 'text-[#dc3545]' : 'text-slate-600 dark:text-slate-400'}`}>
                   {invoice.dueDate}
-                </TableCell>
-                <TableCell className="px-8 py-5">
+                </td>
+                <td className="px-4 py-4">
                   {getStatusBadge(invoice.status)}
-                </TableCell>
-                <TableCell className="px-8 py-5 text-center">
-                  <Button variant="ghost" size="icon" className="text-slate-300 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all h-9 w-9">
-                    <MoreHorizontal className="h-5 w-5" />
-                  </Button>
-                </TableCell>
-              </TableRow>
+                </td>
+                <td className="px-4 md:px-8 py-4 text-center">
+                  <button className="text-slate-400 hover:text-[#137fec] transition-colors"><span className="material-icons-round">more_horiz</span></button>
+                </td>
+              </tr>
             ))}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
-      <div className="px-8 py-5 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-        <span className="opacity-70 group-hover:opacity-100 transition-opacity">Mostrando {invoices.length} de {summary.total} facturas activas</span>
-        <div className="flex gap-2">
-          <Button variant="outline" className="h-8 px-4 text-[10px] font-black bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg hover:shadow-md transition-all active:scale-95 uppercase tracking-widest">
-            Anterior
-          </Button>
-          <Button variant="outline" className="h-8 px-4 text-[10px] font-black bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg hover:shadow-md transition-all active:scale-95 uppercase tracking-widest">
-            Siguiente
-          </Button>
+      <div className="px-4 md:px-8 py-4 bg-slate-50 dark:bg-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs md:text-sm text-slate-500 border-t border-slate-100 dark:border-slate-800">
+        <p>Mostrando {invoices.length} de {summary.total} facturas</p>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button className="flex-1 sm:flex-none px-3 py-1 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 transition-colors">Anterior</button>
+          <button className="flex-1 sm:flex-none px-3 py-1 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 transition-colors">Siguiente</button>
         </div>
       </div>
-    </Card>
+    </section>
   );
 };
 

@@ -19,7 +19,7 @@ import { invoicesMasterData } from '../features/accounts-payable/data/invoicesMo
 
 /**
  * Invoices Master List Page.
- * Displays all invoices with advanced filtering and high-density table.
+ * RESPONSIVE OPTIMIZED - High fidelity maintained.
  */
 const InvoicesMasterList = () => {
   const navigate = useNavigate();
@@ -36,50 +36,51 @@ const InvoicesMasterList = () => {
   };
 
   return (
-    <div className="invoices-master animate-in fade-in duration-500">
-      {/* Breadcrumbs */}
-      <nav className="invoices-master__breadcrumb">
+    <div className="invoices-master p-4 md:p-6 lg:p-8 animate-in fade-in duration-500">
+      {/* Breadcrumbs - Hidden on tiny screens */}
+      <nav className="hidden sm:flex items-center gap-2 text-xs text-slate-500 mb-4">
         <span>Home</span>
-        <span>/</span>
+        <span className="opacity-50">/</span>
         <span>Finanzas</span>
-        <span>/</span>
-        <span>Facturas</span>
+        <span className="opacity-50">/</span>
+        <span className="font-semibold text-slate-900 dark:text-white">Facturas</span>
       </nav>
 
-      {/* Header Section */}
-      <header className="invoices-master__header">
-        <div className="invoices-master__title-group">
-          <h1 className="invoices-master__title">Lista Maestra de Facturas</h1>
-          <p className="invoices-master__subtitle">Gestiona y rastrea todas las facturas de proveedores y estados de pago.</p>
+      {/* Header Section - Responsive stack */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 md:mb-8">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Lista Maestra de Facturas</h1>
+          <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">Gestiona y rastrea todas las facturas de proveedores y estados de pago.</p>
         </div>
-        <div className="invoices-master__actions">
-          <Button variant="secondary" className="invoices-master__action-btn">
-            <Download size={18} />
-            <span className="invoices-master__action-text">Exportar CSV</span>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button variant="outline" className="flex-1 md:flex-none flex items-center justify-center gap-2 h-10 px-4 text-xs font-semibold">
+            <Download size={16} />
+            <span className="hidden sm:inline">Exportar CSV</span>
+            <span className="sm:hidden text-[10px]">CSV</span>
           </Button>
-          <Button variant="primary" className="invoices-master__action-btn">
-            <Plus size={18} />
+          <Button className="flex-1 md:flex-none flex items-center justify-center gap-2 h-10 px-4 bg-[#137fec] text-white text-xs font-semibold">
+            <Plus size={16} />
             <span>Nueva Factura</span>
           </Button>
         </div>
       </header>
 
-      {/* Filter Panel */}
-      <section className="invoices-master__filters">
-        <div className="invoices-master__filter-item invoices-master__filter-item--search">
-          <label>Buscar</label>
-          <div className="invoices-master__search-wrapper">
-            <Search />
+      {/* Filter Panel - Optimized for mobile */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6 md:mb-8">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-1">Buscar</label>
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#137fec] transition-colors" size={16} />
             <Input 
-              placeholder="Buscar proveedor o factura..." 
-              className="invoices-master__search-input"
+              placeholder="Proveedor o factura..." 
+              className="pl-10 h-10 text-xs md:text-sm border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
             />
           </div>
         </div>
         
-        <div className="invoices-master__filter-item">
-          <label>Estado</label>
-          <select className="input input--filled">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-1">Estado</label>
+          <select className="h-10 px-3 text-xs md:text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-md focus:ring-2 focus:ring-[#137fec]/20 outline-none">
             <option>Todos los Estados</option>
             <option>Vencida</option>
             <option>Pendiente</option>
@@ -88,9 +89,9 @@ const InvoicesMasterList = () => {
           </select>
         </div>
 
-        <div className="invoices-master__filter-item">
-          <label>Prioridad</label>
-          <select className="input input--filled">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-1">Prioridad</label>
+          <select className="h-10 px-3 text-xs md:text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-md focus:ring-2 focus:ring-[#137fec]/20 outline-none">
             <option>Todas las Prioridades</option>
             <option>ALTA</option>
             <option>MEDIA</option>
@@ -98,129 +99,122 @@ const InvoicesMasterList = () => {
           </select>
         </div>
 
-        <div className="invoices-master__filter-item invoices-master__filter-item--date">
-          <label>Rango de Fechas</label>
-          <div className="invoices-master__date-range">
-            <Input type="date" className="input--filled" />
-            <span className="invoices-master__date-separator">-</span>
-            <Input type="date" className="input--filled" />
+        <div className="sm:col-span-2 lg:col-span-1 xl:col-span-2 flex flex-col gap-1.5">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-1">Rango de Fechas</label>
+          <div className="flex items-center gap-2">
+            <Input type="date" className="h-10 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex-1" />
+            <span className="text-slate-400 font-bold">-</span>
+            <Input type="date" className="h-10 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex-1" />
           </div>
-        </div>
-
-        <div className="invoices-master__filter-actions">
-          <Button variant="ghost" size="icon" className="invoices-master__filter-btn">
-            <Filter size={20} />
-          </Button>
-          <Button variant="ghost" size="icon" className="invoices-master__filter-btn">
-            <Search size={20} />
-          </Button>
         </div>
       </section>
 
       {/* Data Grid Container */}
-      <Card className="invoices-master__table-card">
-        <CardHeader className="invoices-master__table-toolbar">
-          <div className="invoices-master__table-info">
-            Mostrando <strong>1-{invoicesMasterData.invoices.length}</strong> de <strong>1,248</strong> facturas
+      <Card className="border-slate-200 dark:border-slate-800 shadow-sm rounded-xl overflow-hidden">
+        <CardHeader className="px-4 md:px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between bg-slate-50/50 dark:bg-slate-800/20">
+          <div className="text-xs md:text-sm text-slate-500 font-medium">
+            Mostrando <strong>1-{invoicesMasterData.invoices.length}</strong> de <strong>1,248</strong>
           </div>
-          <div className="invoices-master__toolbar-actions">
-            <Button variant="ghost" size="icon" title="Actualizar">
-              <RefreshCcw size={18} />
+          <div className="flex items-center gap-1 md:gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-[#137fec]" title="Actualizar">
+              <RefreshCcw size={16} />
             </Button>
-            <Button variant="ghost" size="icon" title="Configurar Columnas">
-              <Columns size={18} />
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-[#137fec]" title="Configurar Columnas">
+              <Columns size={16} />
             </Button>
           </div>
         </CardHeader>
 
         <CardContent className="p-0">
-          <div className="overflow-x-auto payables-table-container">
-            <Table className="high-density-table">
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="invoices-master__table-check">
-                                <input type="checkbox" className="checkbox" />
-                              </TableHead>
-                              <TableHead>ID Factura</TableHead>
-                              <TableHead>Proveedor</TableHead>
-                              <TableHead>Fecha Pedido</TableHead>
-                              <TableHead>Vencimiento</TableHead>
-                              <TableHead className="invoices-master__table-cell-right">Importe Total</TableHead>
-                              <TableHead className="invoices-master__table-cell-right">Importe Pendiente</TableHead>
-                              <TableHead className="invoices-master__table-cell-center">Estado</TableHead>
-                              <TableHead className="invoices-master__table-cell-right">Acciones</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {invoicesMasterData.invoices.map((invoice) => (
-                              <TableRow key={invoice.id}>
-                                <TableCell>
-                                  <input type="checkbox" className="checkbox" />
-                                </TableCell>
-                                <TableCell className="invoice-table__id">
-                                  <a 
-                                    href="#" 
-                                    className="text-primary font-medium hover:underline"
-                                    onClick={(e) => { e.preventDefault(); navigate(`/finance/invoices/${invoice.id}`); }}
-                                  >
-                                    #{invoice.id}
-                                  </a>
-                                </TableCell>
-                                <TableCell>
-                                  <div className="invoice-table__vendor-cell">
-                                    <div className="avatar avatar--24 avatar--brand">
-                                      <span className="avatar__initials">{invoice.vendor.substring(0, 1)}</span>
-                                    </div>
-                                    <span className="invoice-table__vendor">{invoice.vendor}</span>
-                                  </div>
-                                </TableCell>
-                                <TableCell>{invoice.orderDate}</TableCell>
-                                <TableCell>{invoice.dueDate}</TableCell>
-                                <TableCell className="invoice-table__amount invoices-master__table-cell-right">
-                                  {formatCurrency(invoice.totalAmount)}
-                                </TableCell>
-                                <TableCell className={`invoice-table__amount-pending invoices-master__table-cell-right ${invoice.pendingAmount > 0 && invoice.status === 'Vencida' ? 'invoice-table__amount-pending--danger' : ''}`}>
-                                  {formatCurrency(invoice.pendingAmount)}
-                                </TableCell>
-                                <TableCell className="invoices-master__table-cell-center">
-                                  <span className={`payment-list__status payment-list__status--${invoice.statusType}`}>
-                                    {invoice.status}
-                                  </span>
-                                </TableCell>
-                                <TableCell className="invoices-master__table-cell-right">
-                                  <Button variant="ghost" size="icon">
-                                    <MoreHorizontal size={18} />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-              
+          <div className="overflow-x-auto custom-scrollbar">
+            <Table className="w-full text-left border-collapse min-w-[900px]">
+              <TableHeader>
+                <TableRow className="bg-slate-50 dark:bg-slate-900/50 border-none">
+                  <TableHead className="w-12 px-4 py-4">
+                    <input type="checkbox" className="rounded border-slate-300 text-[#137fec] focus:ring-[#137fec]" />
+                  </TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider text-slate-500 py-4">ID Factura</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider text-slate-500 py-4">Proveedor</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider text-slate-500 py-4">Fecha</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider text-slate-500 py-4">Vencimiento</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider text-slate-500 py-4 text-right">Importe Total</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider text-slate-500 py-4 text-right">Pendiente</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider text-slate-500 py-4 text-center">Estado</TableHead>
+                  <TableHead className="text-xs font-bold uppercase tracking-wider text-slate-500 py-4 text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invoicesMasterData.invoices.map((invoice) => (
+                  <TableRow key={invoice.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-slate-100 dark:border-slate-800">
+                    <TableCell className="px-4 py-4">
+                      <input type="checkbox" className="rounded border-slate-300 text-[#137fec] focus:ring-[#137fec]" />
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <button 
+                        onClick={() => navigate(`/finance/invoices/${invoice.id}`)}
+                        className="text-[#137fec] font-bold hover:underline"
+                      >
+                        #{invoice.id}
+                      </button>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-[10px] font-bold text-[#137fec]">
+                          {invoice.vendor.substring(0, 1)}
+                        </div>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[150px]">{invoice.vendor}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs md:text-sm text-slate-600 dark:text-slate-400 py-4">{invoice.orderDate}</TableCell>
+                    <TableCell className="text-xs md:text-sm text-slate-600 dark:text-slate-400 py-4">{invoice.dueDate}</TableCell>
+                    <TableCell className="py-4 text-right font-medium text-slate-700 dark:text-slate-300">
+                      {formatCurrency(invoice.totalAmount)}
+                    </TableCell>
+                    <TableCell className={`py-4 text-right font-bold ${invoice.pendingAmount > 0 && invoice.status === 'Vencida' ? 'text-[#dc3545]' : 'text-slate-900 dark:text-white'}`}>
+                      {formatCurrency(invoice.pendingAmount)}
+                    </TableCell>
+                    <TableCell className="py-4 text-center">
+                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider 
+                        ${invoice.statusType === 'danger' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 
+                          invoice.statusType === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                          invoice.statusType === 'warning' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                          'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'}`}>
+                        {invoice.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-4 text-right">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-[#137fec]">
+                        <MoreHorizontal size={16} />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
           </div>
         </CardContent>
 
-        <CardFooter className="invoices-master__footer">
-          <div className="invoices-master__rows-per-page">
+        <CardFooter className="px-4 md:px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900">
+          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
             <span>Filas por página:</span>
-            <select defaultValue="20">
+            <select defaultValue="20" className="bg-transparent border-none focus:ring-0 cursor-pointer font-bold text-slate-700 dark:text-slate-200">
               <option value="10">10</option>
               <option value="20">20</option>
               <option value="50">50</option>
             </select>
           </div>
           
-          <div className="invoices-master__pagination">
-            <span className="invoices-master__pagination-info">Página 1 de 63</span>
-            <div className="invoices-master__pagination-actions">
-              <Button variant="secondary" className="btn--icon-only h-8 w-8" disabled>
-                <ChevronLeft size={16} />
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <span className="text-xs text-slate-500 font-medium order-2 sm:order-1">Página 1 de 63</span>
+            <div className="flex items-center gap-1 order-1 sm:order-2">
+              <Button variant="outline" className="h-8 w-8 p-0" disabled>
+                <ChevronLeft size={14} />
               </Button>
-              <Button variant="primary" className="btn--icon-only h-8 w-8">1</Button>
-              <Button variant="ghost" className="btn--icon-only h-8 w-8">2</Button>
-              <Button variant="ghost" className="btn--icon-only h-8 w-8">3</Button>
-              <Button variant="secondary" className="btn--icon-only h-8 w-8">
-                <ChevronRight size={16} />
+              <Button className="h-8 w-8 p-0 bg-[#137fec] text-white text-xs font-bold shadow-sm">1</Button>
+              <Button variant="ghost" className="h-8 w-8 p-0 text-xs">2</Button>
+              <Button variant="ghost" className="h-8 w-8 p-0 text-xs">3</Button>
+              <Button variant="outline" className="h-8 w-8 p-0">
+                <ChevronRight size={14} />
               </Button>
             </div>
           </div>

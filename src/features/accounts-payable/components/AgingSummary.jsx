@@ -4,34 +4,34 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 /**
  * Aging Summary Chart for the Dashboard.
- * Displays aging bars (0-30, 31-60, 61-90, 90+ days).
+ * RESPONSIVE OPTIMIZED.
  */
 const AgingSummary = ({ aging = [], stats = {} }) => {
   return (
-    <Card className="aging-summary-card h-full">
-      <CardHeader className="flex flex-row justify-between items-center">
-        <CardTitle className="text-lg">Resumen de Antigüedad (Aging)</CardTitle>
+    <Card className="h-full border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <CardHeader className="flex flex-row justify-between items-center px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+        <CardTitle className="text-base md:text-lg font-bold">Resumen de Antigüedad (Aging)</CardTitle>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400">Cifras en USD</span>
+          <span className="text-[10px] md:text-xs text-slate-400 font-medium">USD</span>
           <Info className="text-slate-300 w-4 h-4" />
         </div>
       </CardHeader>
       
-      <CardContent>
-        <div className="aging-chart__bar-container">
+      <CardContent className="px-6 py-6 space-y-8">
+        <div className="space-y-6">
           {aging.map((item, index) => {
-            let fillClass = 'aging-chart__fill--primary';
-            if (item.critical) fillClass = 'aging-chart__fill--danger';
-            else if (item.label.includes('61')) fillClass = 'aging-chart__fill--warning';
-            else if (item.label.includes('31')) fillClass = 'aging-chart__fill--primary-light';
+            let colorClass = 'bg-[#137fec]';
+            if (item.critical) colorClass = 'bg-[#dc3545]';
+            else if (item.label.includes('61')) colorClass = 'bg-[#ffc107]';
+            else if (item.label.includes('31')) colorClass = 'bg-[#137fec]/60';
 
             return (
-              <div key={index} className="aging-chart__bar-row">
-                <div className="aging-chart__bar-label">
-                  <span className={`aging-chart__label-text ${item.critical ? 'aging-chart__label-text--danger' : ''}`}>
+              <div key={index} className="space-y-2 group">
+                <div className="flex justify-between items-center">
+                  <span className={`text-xs md:text-sm font-bold uppercase tracking-tight ${item.critical ? 'text-[#dc3545]' : 'text-slate-600 dark:text-slate-300'}`}>
                     {item.label}
                   </span>
-                  <span className={`aging-chart__label-value ${item.critical ? 'aging-chart__label-value--danger' : ''}`}>
+                  <span className={`text-xs md:text-sm font-black ${item.critical ? 'text-[#dc3545]' : 'text-slate-900 dark:text-white'}`}>
                     {new Intl.NumberFormat('en-US', {
                       style: 'currency',
                       currency: 'USD',
@@ -39,12 +39,12 @@ const AgingSummary = ({ aging = [], stats = {} }) => {
                     }).format(item.amount)}
                   </span>
                 </div>
-                <div className="aging-chart__track">
+                <div className="w-full bg-slate-100 dark:bg-slate-800 h-6 md:h-8 rounded-lg overflow-hidden p-1 shadow-inner">
                   <div 
-                    className={`aging-chart__fill ${fillClass}`}
+                    className={`${colorClass} h-full rounded-md flex items-center justify-center text-[10px] font-black text-white transition-all duration-1000 group-hover:opacity-90`}
                     style={{ width: `${item.percentage}%` }}
                   >
-                    {item.percentage}%
+                    {item.percentage >= 10 ? `${item.percentage}%` : ''}
                   </div>
                 </div>
               </div>
@@ -52,22 +52,23 @@ const AgingSummary = ({ aging = [], stats = {} }) => {
           })}
         </div>
         
-        <div className="aging-chart__stats">
-          <div className="aging-chart__stat-item">
-            <p className="aging-chart__stat-label">Total</p>
-            <p className="aging-chart__stat-value">{stats.total}</p>
+        {/* Stats Grid - Responsive wrap */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-800/20 rounded-xl border border-slate-100 dark:border-slate-800">
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Total</p>
+            <p className="text-sm md:text-base font-black text-slate-900 dark:text-white">{stats.total}</p>
           </div>
-          <div className="aging-chart__stat-item">
-            <p className="aging-chart__stat-label">Al Corriente</p>
-            <p className="aging-chart__stat-value aging-chart__stat-value--success">{stats.onTime}</p>
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Al Corriente</p>
+            <p className="text-sm md:text-base font-black text-[#28a745]">{stats.onTime}</p>
           </div>
-          <div className="aging-chart__stat-item">
-            <p className="aging-chart__stat-label">Vencimiento Crítico</p>
-            <p className="aging-chart__stat-value aging-chart__stat-value--danger">{stats.critical}</p>
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Crítico</p>
+            <p className="text-sm md:text-base font-black text-[#dc3545]">{stats.critical}</p>
           </div>
-          <div className="aging-chart__stat-item">
-            <p className="aging-chart__stat-label">Prom. Días Pago</p>
-            <p className="aging-chart__stat-value">{stats.avgDays}</p>
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Días Prom.</p>
+            <p className="text-sm md:text-base font-black text-slate-900 dark:text-white">{stats.avgDays}</p>
           </div>
         </div>
       </CardContent>

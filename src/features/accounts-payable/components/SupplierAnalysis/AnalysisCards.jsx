@@ -1,75 +1,59 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Star, Clock, AlertCircle, TrendingUp, ShieldCheck } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
+/**
+ * Analysis Section (Rating & Terms).
+ * 100% STITCH FIDELITY - RESPONSIVE
+ */
 const AnalysisCards = ({ rating, terms }) => {
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 animate-in fade-in">
       {/* Payment Rating */}
-      <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden h-full group transition-all duration-300 hover:shadow-xl">
-        <CardContent className="p-8 flex flex-col md:flex-row items-center gap-10">
-          <div className="flex-shrink-0 text-center group-hover:scale-105 transition-transform duration-500">
-            <div className="text-6xl font-black text-blue-600 mb-2 leading-none tracking-tighter">{rating.score}</div>
-            <div className="flex gap-1 justify-center text-blue-600 mb-3">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <Star key={s} className={`h-5 w-5 ${s <= rating.stars ? 'fill-blue-600' : 'text-slate-200 fill-slate-200'}`} />
-              ))}
-            </div>
-            <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Score de Pago</p>
+      <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center gap-6 md:gap-10">
+        <div className="flex-shrink-0 text-center">
+          <div className="text-4xl md:text-5xl font-bold text-[#137fec] mb-2">{rating.score}</div>
+          <div className="flex gap-1 text-[#137fec] justify-center">
+            <span className="material-icons-round text-sm md:text-base">star</span>
+            <span className="material-icons-round text-sm md:text-base">star</span>
+            <span className="material-icons-round text-sm md:text-base">star</span>
+            <span className="material-icons-round text-sm md:text-base">star</span>
+            <span className="material-icons-round text-sm md:text-base">star_half</span>
           </div>
-          <div className="hidden md:block h-24 w-px bg-slate-200 dark:bg-slate-700 shadow-sm shadow-white/10"></div>
-          <div>
-            <div className="flex items-center gap-3 mb-3">
-              <h4 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Calificación de Pago</h4>
-              <ShieldCheck className="h-5 w-5 text-green-500" />
-            </div>
-            <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm font-bold uppercase tracking-tight">
-              {rating.description}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+          <p className="text-[10px] text-slate-500 mt-2 font-medium uppercase tracking-widest">Score de Pago</p>
+        </div>
+        <div className="hidden md:block h-16 w-px bg-slate-200 dark:bg-slate-700"></div>
+        <div>
+          <h4 className="text-base md:text-lg font-bold mb-2">Calificación de Pago</h4>
+          <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            {rating.description}
+          </p>
+        </div>
+      </div>
 
       {/* Credit Terms */}
-      <Card className="border-slate-200 dark:border-slate-800 shadow-sm h-full group transition-all duration-300 hover:shadow-xl">
-        <CardContent className="p-8">
-          <div className="flex justify-between items-start mb-8">
-            <div className="flex items-center gap-3">
-              <h4 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Términos de Crédito</h4>
-              <Clock className="h-5 w-5 text-blue-500" />
-            </div>
-            <Badge variant="outline" className="text-[10px] font-black text-blue-600 px-3 py-1 bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 uppercase tracking-widest shadow-sm">
-              Actualizado hace 2h
-            </Badge>
+      <div className="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex justify-between items-start mb-6">
+          <h4 className="text-base md:text-lg font-bold">Términos de Crédito</h4>
+          <span className="text-[10px] font-semibold text-[#137fec] px-3 py-1 bg-blue-50/50 dark:bg-blue-900/20 rounded-full">Hace 2h</span>
+        </div>
+        <div className="grid grid-cols-2 gap-y-4 gap-x-4">
+          <div className="min-w-0">
+            <p className="text-[10px] text-slate-500 uppercase truncate">Términos Base</p>
+            <p className="text-sm md:text-base font-bold truncate">{terms.base}</p>
           </div>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-            <div className="space-y-1 group/item">
-              <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black">Términos Base</p>
-              <p className="font-black text-slate-900 dark:text-white tracking-tight text-lg group-hover/item:text-blue-500 transition-colors">{terms.base}</p>
-            </div>
-            <div className="space-y-1 group/item">
-              <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black">Factura más antigua</p>
-              <div className="flex items-center gap-2">
-                <p className="font-black text-red-500 tracking-tight text-lg group-hover/item:translate-x-1 transition-transform">{terms.oldestInvoice}</p>
-                <AlertCircle className="h-4 w-4 text-red-500 animate-pulse" />
-              </div>
-            </div>
-            <div className="space-y-1 group/item">
-              <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black">Límite de Crédito</p>
-              <p className="font-black text-slate-900 dark:text-white tracking-tight text-lg group-hover/item:text-blue-500 transition-colors">
-                ${terms.creditLimit.toLocaleString()}
-              </p>
-            </div>
-            <div className="space-y-1 group/item">
-              <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black">Crédito Disponible</p>
-              <p className="font-black text-green-600 tracking-tight text-lg group-hover/item:text-green-500 transition-colors">
-                ${terms.availableCredit.toLocaleString()}
-              </p>
-            </div>
+          <div className="min-w-0">
+            <p className="text-[10px] text-slate-500 uppercase truncate">Factura antigua</p>
+            <p className="text-sm md:text-base font-bold text-[#dc3545] truncate">{terms.oldestInvoice}</p>
           </div>
-        </CardContent>
-      </Card>
+          <div className="min-w-0">
+            <p className="text-[10px] text-slate-500 uppercase truncate">Límite</p>
+            <p className="text-sm md:text-base font-bold truncate">${terms.creditLimit.toLocaleString()}</p>
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] text-slate-500 uppercase truncate">Disponible</p>
+            <p className="text-sm md:text-base font-bold text-[#28a745] truncate">${terms.availableCredit.toLocaleString()}</p>
+          </div>
+        </div>
+      </div>
     </section>
   );
 };
