@@ -160,6 +160,11 @@ const MainLayout = ({ children }) => {
                 href: '/finance/cash-flow',
                 icon: TrendingUp,
               },
+              {
+                name: 'Análisis de Proveedor',
+                href: '/proveedores/PRV-8820/analisis',
+                icon: TrendingUp,
+              },
             ],
           },
         ],

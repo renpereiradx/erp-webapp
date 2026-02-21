@@ -1,132 +1,96 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { useI18n } from '@/lib/i18n';
-import { formatPYG } from '@/utils/currencyUtils';
+
+// Feature components
+import AgingHero from '@/features/accounts-payable/components/AgingReport/AgingHero';
+import AgingKpiGrid from '@/features/accounts-payable/components/AgingReport/AgingKpiGrid';
+import AgingBreakdownTable from '@/features/accounts-payable/components/AgingReport/AgingBreakdownTable';
+import AgingTrendAnalysis from '@/features/accounts-payable/components/AgingReport/AgingTrendAnalysis';
 
 // Hooks
-import { useAgingReport } from '@/features/receivables/hooks/useAgingReport';
-
-// Componentes
-import AgingOverviewCards from '@/features/receivables/components/AgingOverviewCards';
-import AgingTrendChart from '@/features/receivables/components/AgingTrendChart';
-import AgingByClientTable from '@/features/receivables/components/AgingByClientTable';
+import { useAgingReport } from '@/features/accounts-payable/hooks/useAgingReport';
 
 /**
- * Reporte de Antigüedad y Estadísticas de Cobranza.
- * Proporciona una visión global de la salud de las cuentas por cobrar.
+ * Aging Report Page.
+ * 100% LITERAL STITCH REPRODUCTION - PIXEL PERFECT
+ * Avoids project UI components to prevent style pollution.
  */
 const AgingReport = () => {
-  const navigate = useNavigate();
-  const { t } = useI18n();
-  const { data, loading, error } = useAgingReport('month');
+  const { 
+    loading, 
+    summary, 
+    kpis, 
+    providers, 
+    totals, 
+    searchTerm, 
+    setSearchTerm 
+  } = useAgingReport();
 
   if (loading) {
     return (
-      <div className="client-profile__loading">
-        <div className="client-profile__spinner"></div>
-        <p className="text-secondary">{t('receivables.loading.report')}</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#f6f7f8] dark:bg-[#101922]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#137fec] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Generando Reporte Analítico...</p>
+        </div>
       </div>
     );
   }
-
-  if (error || !data) {
-    return (
-      <div className="client-profile__error">
-        <span className="material-symbols-outlined text-danger" style={{ fontSize: '48px' }}>error</span>
-        <h3 className="text-danger">{t('receivables.error.report')}</h3>
-        <Button variant="secondary" onClick={() => window.location.reload()}>
-          {t('receivables.error.retry')}
-        </Button>
-      </div>
-    );
-  }
-
-  // Preparamos los datos para la barra de buckets
-  const agingBuckets = [
-    { label: t('receivables.aging.current'), amount: data.summary.current.amount, width: `${data.summary.current.percentage}%`, color: '#10b981' },
-    { label: t('receivables.aging.1_30'), amount: data.summary.days_30_60.amount, width: `${data.summary.days_30_60.percentage}%`, color: '#fbbf24' },
-    { label: t('receivables.aging.31_60'), amount: data.summary.days_60_90.amount, width: `${data.summary.days_60_90.percentage}%`, color: '#f97316' },
-    { label: t('receivables.aging.90'), amount: data.summary.over_90_days.amount, width: `${data.summary.over_90_days.percentage}%`, color: '#ef4444' }
-  ];
 
   return (
-    <div className="aging-report">
-      {/* Header */}
-      <header className="aging-report__header">
-        <nav className="client-profile__breadcrumb">
-          <a href="#" className="client-profile__breadcrumb-link" onClick={() => navigate('/receivables')}>
-            {t('receivables.breadcrumb.home')}
-          </a>
-          <span className="material-symbols-outlined client-profile__breadcrumb-separator">chevron_right</span>
-          <span className="client-profile__breadcrumb-current">Finanzas</span>
-          <span className="material-symbols-outlined client-profile__breadcrumb-separator">chevron_right</span>
-          <span className="client-profile__breadcrumb-current">{t('receivables.title')}</span>
-        </nav>
-        
-        <div className="client-profile__title-row">
-          <div className="client-profile__name-group">
-            <h1 className="client-profile__title">{t('receivables.aging_report.title')}</h1>
-            <p className="text-secondary">{t('receivables.aging_report.subtitle')}</p>
+    <div className="bg-[#f6f7f8] dark:bg-[#101922] font-['Inter',_sans-serif] text-slate-900 dark:text-slate-100 min-h-screen selection:bg-blue-100 selection:text-blue-900">
+      
+      {/* Top Navigation Bar (Literal Classes) */}
+      <nav className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-8 py-3">
+        <div className="max-w-[2560px] margin-0-auto flex justify-between items-center">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="material-icons-round text-[#137fec] text-3xl">account_balance_wallet</span>
+              <h1 className="text-xl font-bold tracking-tight">Reporte de Antigüedad de Deuda</h1>
+            </div>
+            <div className="h-6 w-px bg-slate-300 dark:bg-slate-700"></div>
+            <div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold tracking-wider leading-none">Corte al:</p>
+              <p className="text-sm font-medium">{summary.lastUpdate}</p>
+            </div>
           </div>
-          <div className="client-profile__actions">
-            <Button variant="outline">
-              <span className="material-symbols-outlined">calendar_today</span>
-              <span>Oct 1, 2023 - Oct 31, 2023</span>
-              <span className="material-symbols-outlined">expand_more</span>
-            </Button>
-            <Button variant="primary">
-              <span className="material-symbols-outlined">download</span>
-              <span>{t('receivables.profile.actions.export')}</span>
-            </Button>
+          <div className="flex items-center gap-3">
+            <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+              <span className="material-icons-round text-sm">filter_list</span> Filtrar
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+              <span className="material-icons-round text-sm">file_download</span> Exportar a Excel
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+              <span className="material-icons-round text-sm">print</span> Imprimir
+            </button>
+            <div className="w-px h-6 bg-slate-300 dark:bg-slate-700 mx-2"></div>
+            <button className="bg-[#137fec] hover:opacity-90 text-white px-5 py-2 rounded text-sm font-semibold transition-all shadow-sm">
+              Nuevo Pago
+            </button>
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* KPI Cards */}
-      <AgingOverviewCards stats={data.statistics} />
+      <main className="p-8 space-y-8 max-w-[2560px] mx-auto animate-in fade-in">
+        <AgingHero summary={summary} />
+        <AgingKpiGrid kpis={kpis} />
+        <AgingBreakdownTable 
+          providers={providers} 
+          totals={totals} 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm} 
+        />
+        <AgingTrendAnalysis trendData={summary} />
+      </main>
 
-      {/* Aging Buckets Breakdown */}
-      <Card className="aging-report__buckets-card">
-        <CardHeader>
-          <CardTitle>{t('receivables.aging_report.buckets_title')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-6 mb-6 text-xs font-bold text-secondary">
-            {agingBuckets.map((seg, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: seg.color }}></span>
-                <span>{seg.label}</span>
-              </div>
-            ))}
-          </div>
-          <div className="aging-report__stacked-bar">
-            {agingBuckets.map((seg, i) => (
-              <div 
-                key={i} 
-                className="aging-report__stacked-bar-segment" 
-                style={{ width: seg.width, backgroundColor: seg.color }}
-                title={seg.label}
-              >
-                {seg.width}
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between text-xs font-mono text-tertiary">
-            {agingBuckets.map((seg, i) => (
-              <span key={i} style={{ width: seg.width }} className={i === agingBuckets.length - 1 ? 'text-right text-danger font-bold' : ''}>
-                {formatPYG(seg.amount, { compact: true })}
-              </span>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Main Grid: Table & Chart */}
-      <div className="aging-report__main-grid">
-        <AgingByClientTable clientsData={data.detailed.by_client} />
-        <AgingTrendChart trendData={data.statistics.collection_trend} />
+      {/* Global Floating Help */}
+      <div className="fixed bottom-8 right-8 flex flex-col gap-3 z-50">
+        <button className="w-12 h-12 bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-all">
+          <span className="material-icons-round">help_outline</span>
+        </button>
+        <button className="w-12 h-12 bg-[#137fec] text-white shadow-xl rounded-full flex items-center justify-center hover:scale-105 transition-all">
+          <span className="material-icons-round">chat_bubble_outline</span>
+        </button>
       </div>
     </div>
   );

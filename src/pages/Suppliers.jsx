@@ -11,7 +11,9 @@ import {
   Pencil,
   Eye,
   Copy,
+  TrendingUp,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
 import useSupplierDirectoryStore from '@/store/useSupplierDirectoryStore'
@@ -48,6 +50,7 @@ const SupplierActionsMenu = ({
   context,
   onClose,
   onView,
+  onAnalyze,
   onEdit,
   onCopy,
   onDeactivate,
@@ -108,6 +111,10 @@ const SupplierActionsMenu = ({
         <Eye size={16} />
         {t('supplier.action.view', 'Ver detalle')}
       </button>
+      <button className='dropdown-menu__item' type='button' onClick={onAnalyze}>
+        <TrendingUp size={16} />
+        {t('supplier.action.analyze', 'Análisis de Deuda')}
+      </button>
       <button className='dropdown-menu__item' type='button' onClick={onEdit}>
         <Pencil size={16} />
         {t('supplier.action.edit', 'Editar')}
@@ -144,6 +151,7 @@ const SupplierActionsMenu = ({
 const SuppliersPage = () => {
   const { t } = useI18n()
   const toast = useToast()
+  const navigate = useNavigate()
 
   const suppliers = useSupplierDirectoryStore(state => state.suppliers)
   const searchResults = useSupplierDirectoryStore(state => state.searchResults)
@@ -189,6 +197,11 @@ const SuppliersPage = () => {
   const handleViewSupplier = supplier => {
     closeMenu()
     setDetailsSupplier(supplier)
+  }
+
+  const handleAnalyzeSupplier = supplier => {
+    closeMenu()
+    navigate(`/proveedores/${supplier.id}/analisis`)
   }
 
   const handleEditSupplier = supplier => {
@@ -632,6 +645,7 @@ const SuppliersPage = () => {
           context={menuContext}
           onClose={closeMenu}
           onView={() => handleViewSupplier(menuContext.supplier)}
+          onAnalyze={() => handleAnalyzeSupplier(menuContext.supplier)}
           onEdit={() => handleEditSupplier(menuContext.supplier)}
           onCopy={() => handleCopySupplierId(menuContext.supplier)}
           onDeactivate={() => handleDeleteSupplier(menuContext.supplier)}

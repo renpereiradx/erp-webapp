@@ -76,6 +76,12 @@ export const distinctSearchableRoutes = [
     icon: FileText,
     category: 'Finanzas / Cuentas por Pagar'
   },
+  {
+    name: 'Análisis de Proveedor (Inteligente)',
+    href: '/proveedores/PRV-8820/analisis',
+    icon: TrendingUp,
+    category: 'BI / Cuentas por Pagar'
+  },
 
   // Dashboard & KPIs
   {

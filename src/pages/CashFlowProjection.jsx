@@ -33,7 +33,7 @@ const CashFlowProjection = () => {
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922] text-slate-800 dark:text-slate-100 font-sans selection:bg-blue-100 selection:text-blue-900">
       
       {/* Header (Top Navigation) */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#101922]/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 md:px-10 py-4 transition-all">
+      <header className="bg-white/80 dark:bg-[#101922]/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 md:px-10 py-6 transition-all">
         <div className="max-w-[2400px] mx-auto flex flex-col xl:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-6 group">
             <div className="bg-blue-600 p-2.5 rounded-xl text-white shadow-xl shadow-blue-600/30 group-hover:scale-110 transition-transform cursor-pointer">

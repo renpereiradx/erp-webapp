@@ -62,6 +62,7 @@ import ReceivablesMasterList from '@/pages/ReceivablesMasterList'
 import InvoicesMasterList from '@/pages/InvoicesMasterList'
 import InvoiceDetail from '@/pages/InvoiceDetail'
 import CashFlowProjection from '@/pages/CashFlowProjection'
+import SupplierAnalysis from '@/pages/SupplierAnalysis'
 import ReceivableDetail from '@/pages/ReceivableDetail'
 import OverdueAccounts from '@/pages/OverdueAccounts'
 import ClientCreditProfile from '@/pages/ClientCreditProfile'
@@ -150,6 +151,7 @@ function AppContent() {
                       <Route path='/productos' element={<Products />} />
                       <Route path='/clientes' element={<Clients />} />
                       <Route path='/proveedores' element={<Suppliers />} />
+                      <Route path='/proveedores/:id/analisis' element={<SupplierAnalysis />} />
                       <Route path='/ventas' element={<SalesNew />} />
                       <Route
                         path='/gestion-reservas'
