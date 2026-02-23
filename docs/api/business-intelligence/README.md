@@ -29,11 +29,11 @@ Este módulo agrega capacidades de inteligencia de negocios al ERP, permitiendo:
 | Analytics de Ventas | Completado | [sales-analytics-api.md](sales-analytics-api.md) |
 | Analytics de Inventario | Completado | [inventory-analytics-api.md](inventory-analytics-api.md) |
 | Análisis de Rentabilidad | Completado | [profitability-api.md](profitability-api.md) |
-| Comisiones | Completado | [commissions-api.md](commissions-api.md) |
-| Fidelización | Completado | [loyalty-api.md](loyalty-api.md) |
+| Comisiones | Deshabilitado | [commissions-api.md](commissions-api.md) |
+| Fidelización | Deshabilitado | [loyalty-api.md](loyalty-api.md) |
 | Auditoría | Completado | [audit-api.md](audit-api.md) |
 | Forecasting | Completado | [forecast-api.md](forecast-api.md) |
-| Metas | Completado | [goals-api.md](goals-api.md) |
+| Metas | Deshabilitado | [goals-api.md](goals-api.md) |
 
 ## Arquitectura
 
@@ -113,13 +113,13 @@ Este módulo agrega capacidades de inteligencia de negocios al ERP, permitiendo:
    - Analytics de Inventario (Completado)
    - Análisis de Rentabilidad (Completado)
 
-4. **Fase 4 - Avanzado** (Completado)
-   - Comisiones (Completado)
-   - Fidelización (Completado)
+4. **Fase 4 - Avanzado** (Parcial)
+   - Comisiones (Deshabilitado — tablas de BD no creadas)
+   - Fidelización (Deshabilitado — tablas de BD no creadas)
    - Auditoría (Completado)
    - Forecasting (Completado)
-   - Metas (Completado)
+   - Metas (Deshabilitado — tablas de BD no creadas)
 
 ---
 
-**Última actualización:** 2026-01-07
+**Última actualización:** 2026-02-23

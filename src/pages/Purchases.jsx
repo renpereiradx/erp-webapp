@@ -226,6 +226,105 @@ const Purchases = () => {
   const formatCurrency = (amt, curr) => new Intl.NumberFormat('es-PY', { style: 'currency', currency: curr || paymentCurrency || 'PYG' }).format(amt || 0)
   const formatDate = d => d ? new Date(d).toLocaleDateString('es-PY') : '-'
 
+  // Helper functions for status display
+  const getStatusText = (status) => {
+    switch (status?.toUpperCase()) {
+      case 'PENDING': return 'Pendiente';
+      case 'APPROVED': return 'Aprobada';
+      case 'RECEIVED': return 'Recibida';
+      case 'COMPLETED': return 'Completada';
+      case 'CANCELLED': return 'Cancelada';
+      default: return status || 'Desconocido';
+    }
+  };
+
+  const getStatusBadgeClass = (status) => {
+    switch (status?.toUpperCase()) {
+      case 'PENDING': return 'badge--warning';
+      case 'APPROVED': return 'badge--info';
+      case 'RECEIVED': return 'badge--success';
+      case 'COMPLETED': return 'badge--success';
+      case 'CANCELLED': return 'badge--danger';
+      default: return 'badge--secondary';
+    }
+  };
+
+  const handleFilter = () => {
+    // Placeholder for actual filtering logic
+    console.log("Filtering with:", { searchTerm, searchType, startDate, endDate });
+  };
+
+  const handleViewPurchase = (order) => {
+    setViewOrderData({ purchase: order }); // Mock data for now
+    setShowViewModal(true);
+  };
+
+  const handleCancelPurchase = (order) => {
+    setOrderToCancel(order);
+    // Mock data for cancellation preview - in a real app, this would be fetched
+    setCancelPreviewData({
+      impact_analysis: {
+        total_items: 5,
+        total_paid_amount: 150000,
+        payments_to_cancel: 1,
+        requires_stock_adjustment: true,
+        products_with_insufficient_stock: 0,
+      },
+      stock_impact: [
+        { product_name: "Producto A", current_stock: 10, stock_after_cancellation: 5, quantity_to_revert: 5 },
+        { product_name: "Producto B", current_stock: 20, stock_after_cancellation: 15, quantity_to_revert: 5 },
+      ],
+      payment_impact: [
+        { payment_method: "Efectivo", amount: 50000, payment_date: "2023-10-26", current_status: "Pagado" },
+        { payment_method: "Transferencia", amount: 100000, payment_date: "2023-10-27", current_status: "Pendiente" },
+      ],
+      warnings: ["El proveedor podría no haber recibido aún la notificación."],
+      cancellation_issues: [],
+      recommendations: ["Notificar manualmente al proveedor sobre la cancelación."],
+      general_recommendations: { estimated_complexity: "Low", notify_supplier: true, requires_approval: false },
+    });
+    setShowCancelPreview(true);
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItemId(item.id);
+    setModalSelectedProduct({ id: item.product_id, name: item.name, sku: item.sku, unit: item.unit, cost_price: item.unit_price });
+    setModalQuantity(item.quantity);
+    setModalUnitPrice(item.unit_price);
+    setModalProfitPct(item.profit_pct);
+    setModalSalePrice(item.sale_price);
+    setPricingMode(item.pricing_mode);
+    setModalTaxRateId(item.tax_rate_id);
+    setIsModalOpen(true);
+  };
+  
+  const handleInstantPaymentConfirm = () => {
+    setShowInstantPayment(false);
+    setActiveTab('historial');
+    handleFilter();
+  };
+
+  const handleLeavePurchasePending = () => {
+    setShowInstantPayment(false);
+    setActiveTab('historial');
+    handleFilter();
+  };
+  
+  const clearPurchase = () => {
+    setPurchaseItems([]);
+    setSelectedSupplier(null);
+    setSupplierSearch('');
+    setModalSelectedProduct(null);
+    setModalQuantity('');
+    setModalUnitPrice('');
+    setModalProfitPct(30);
+    setModalSalePrice(0);
+    setPricingMode('margin');
+    setModalTaxRateId(null);
+    setModalProductSearch('');
+  };
+
+
   return (
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922] font-sans selection:bg-blue-100 selection:text-blue-900 transition-colors duration-500 pb-20">
       
@@ -697,10 +796,45 @@ const Purchases = () => {
                         MODO PRECIO FIJO
                       </button>
                     </div>
+                    {/* Tax Rate Selector */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">
+                        {t('purchases.modal.tax_rate', 'Tasa de Impuesto')}
+                      </label>
+                      <select
+                        className="w-full px-6 py-4 bg-white dark:bg-[#1a2632] border-none rounded-2xl text-lg font-black text-slate-900 dark:text-white focus:ring-4 focus:ring-[#137fec1a] transition-all shadow-sm"
+                        value={modalTaxRateId || ''}
+                        onChange={e =>
+                          setModalTaxRateId(
+                            e.target.value ? Number(e.target.value) : null
+                          )
+                        }
+                        disabled={loadingTaxRates}
+                      >
+                        <option value=''>
+                          {loadingTaxRates
+                            ? 'Cargando...'
+                            : t('purchases.modal.no_tax', 'Sin impuesto')}
+                        </option>
+                        {taxRates.map(taxRate => (
+                          <option key={taxRate.id} value={taxRate.id}>
+                            {taxRate.tax_name} - {taxRate.rate}%{' '}
+                            {taxRate.country ? `(${taxRate.country})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 px-2">
+                        {t(
+                          'purchases.modal.tax_rate_note',
+                          'Selecciona la tasa de impuesto aplicable al producto'
+                        )}
+                      </p>
+                    </div>
 
                     <div className="grid grid-cols-2 gap-8">
+                      {/* Dynamic pricing fields */}
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">{pricingMode === 'margin' ? 'Margen Ganancia' : 'Margen Real'}</label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">{pricingMode === 'margin' ? 'Margen Ganancia' : 'Margen Real'}</label>
                         <div className="relative group/margin">
                           <input 
                             type="number" 
@@ -713,7 +847,7 @@ const Purchases = () => {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">{pricingMode === 'sale_price' ? 'Precio de Venta' : 'Precio Sugerido'}</label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">{pricingMode === 'sale_price' ? 'Precio de Venta' : 'Precio Sugerido'}</label>
                         <input 
                           type="number" 
                           className={`w-full px-6 py-4 bg-white dark:bg-[#1a2632] border-none rounded-2xl font-black text-lg transition-all ${pricingMode !== 'sale_price' ? 'opacity-40 grayscale cursor-not-allowed' : 'focus:ring-4 focus:ring-[#137fec1a] text-[#137fec]'}`} 

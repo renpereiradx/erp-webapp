@@ -68,7 +68,9 @@ Obtiene un resumen consolidado del estado actual del negocio.
   },
   "metadata": {
     "generated_at": "2025-01-15T10:30:00Z",
-    "period": "today"
+    "period": "today",
+    "period_start": "2025-01-15",
+    "period_end": "2025-01-16"
   }
 }
 ```
@@ -428,7 +430,7 @@ Obtiene las últimas actividades del sistema.
 | Parámetro | Tipo | Requerido | Descripción |
 |-----------|------|-----------|-------------|
 | `limit` | int | No | Cantidad de actividades. Default: 20 |
-| `types` | string | No | Tipos separados por coma: `sale,purchase,payment,adjustment` |
+| `types` | string | No | Tipos separados por coma: `sale,purchase,payment` |
 
 #### Response
 
@@ -655,6 +657,16 @@ Esto permite obtener el balance real de las cajas abiertas sin necesidad de una 
 
 ## Notas de Versión
 
+### v1.2 (2026-02-23)
+
+#### Correcciones
+
+- `GET /dashboard/recent-activity`: eliminado tipo `adjustment` de los valores válidos del parámetro `types` — no estaba implementado en la query.
+- `GET /dashboard/summary`: agregados campos `period_start` y `period_end` al objeto `metadata` de la respuesta.
+- `repository/dashboard.go`: corregido filtro en `GetReceivablesSummary` de `status IN ('PENDING', 'COMPLETED')` a `status NOT IN ('CANCELLED', 'PAID')` — `COMPLETED` no es un estado válido en `transactions.sales_orders`.
+
+---
+
 ### v1.1 (2026-01-31)
 
 #### Nuevo Campo: `total_customers`
@@ -677,14 +689,16 @@ Se agregó el campo `total_customers` al objeto `customer_kpis` en el endpoint `
 
 **Cálculo:**
 ```sql
-SELECT COUNT(*) 
-FROM clients.clients 
+SELECT COUNT(*)
+FROM clients.clients
 WHERE status = true
 ```
 
 **Archivos modificados:**
 - `models/dashboard.go` - Agregado campo `TotalCustomers`
 - `repository/dashboard.go` - Actualizada query `GetCustomerKPIs`
+
+---
 
 ### v1.0 (2026-01-16)
 

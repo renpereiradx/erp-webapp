@@ -77,7 +77,7 @@ Obtiene la lista paginada de cuentas por cobrar con filtros.
 | `days_overdue` | int | No | Mínimo días de vencimiento |
 | `page` | int | No | Número de página. Default: 1 |
 | `page_size` | int | No | Items por página. Default: 20, Max: 100 |
-| `sort_by` | string | No | Ordenar por: `date`, `amount`, `client`, `days_overdue` |
+| `sort_by` | string | No | Ordenar por: `date`, `amount`, `client`, `days_overdue`. Default: `date` |
 | `sort_order` | string | No | Orden: `asc`, `desc`. Default: `desc` |
 
 #### Response
@@ -158,7 +158,6 @@ Obtiene el detalle de una cuenta por cobrar con historial de pagos.
         "amount": 150000,
         "payment_date": "2025-12-20T14:30:00Z",
         "payment_method": "Efectivo",
-        "reference": "",
         "processed_by": "María García"
       },
       {
@@ -490,6 +489,8 @@ Obtiene estadísticas de cuentas por cobrar para un período predefinido.
         "client_id": "client_123",
         "client_name": "Empresa ABC",
         "total_pending": 2500000,
+        "total_overdue": 800000,
+        "pending_count": 5,
         "payment_behavior": "REGULAR"
       }
     ],
@@ -621,4 +622,22 @@ curl -X GET "http://localhost:8080/receivables/aging/report" \
 ---
 
 **Estado:** Completado
-**Última actualización:** 2026-01-03
+**Última actualización:** 2026-02-23
+
+---
+
+## Notas de Versión
+
+### v1.1 (2026-02-23)
+
+#### Correcciones de documentación
+
+- `GET /receivables`: agregado `Default: \`date\`` al parámetro `sort_by`.
+- `GET /receivables/statistics`: completado el ejemplo de `top_debtors` con los campos `total_overdue` y `pending_count` que el modelo retorna pero faltaban en el ejemplo.
+- `GET /receivables/{id}`: corregido el ejemplo de `payment_history` — el campo `reference` tiene `omitempty`, por lo que no aparece en el JSON cuando está vacío; eliminado del ejemplo de pago en efectivo.
+
+---
+
+### v1.0 (2026-01-03)
+
+**Release inicial.** Implementación completa de cuentas por cobrar con resumen, lista paginada, detalle, aging, recordatorios de cobro y estadísticas.
