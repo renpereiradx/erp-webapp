@@ -9,6 +9,20 @@ import {
   MoreVertical,
   Eye,
   Ban,
+  Package,
+  ChevronRight,
+  Truck,
+  CreditCard,
+  Hash,
+  Tag,
+  Percent,
+  DollarSign,
+  AlertCircle,
+  ShoppingCart,
+  FileText,
+  ArrowRight,
+  Check,
+  Minus,
 } from 'lucide-react'
 import DataState from '@/components/ui/DataState'
 import SegmentedControl from '@/components/ui/SegmentedControl'
@@ -28,9 +42,9 @@ import {
 import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog'
 
 /**
- * Purchases Page - 100% Tailwind CSS Refactor.
- * Follows "React Best Practices" and "React Components" skills.
- * Eliminated all Sass dependencies.
+ * Purchases Page - Fluent Design System 2
+ * Refactored with Tailwind CSS using Fluent 2 design tokens.
+ * Modal optimized for low-height desktop screens (720p+).
  */
 const Purchases = () => {
   const { t } = useI18n()
@@ -326,19 +340,27 @@ const Purchases = () => {
 
 
   return (
-    <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922] font-sans selection:bg-blue-100 selection:text-blue-900 transition-colors duration-500 pb-20">
+    <div className="min-h-screen bg-[var(--fluent-background-canvas,#FAFAFA)] dark:bg-[var(--fluent-neutral-grey-160,#201F1E)] font-sans transition-colors duration-[var(--fluent-duration-normal,200ms)] pb-16">
       
-      {/* Tab Navigation */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-8 mb-6 md:mb-8 sticky top-0 z-20">
-        <div className="max-w-[2560px] mx-auto flex">
+      {/* Tab Navigation - Fluent 2 Pivot Style */}
+      <div className="bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] px-4 md:px-6 mb-4 md:mb-6 sticky top-0 z-20">
+        <div className="max-w-[1920px] mx-auto flex gap-1">
           <button 
-            className={`px-6 md:px-8 py-4 text-xs md:text-sm font-black uppercase tracking-[0.1em] transition-all border-b-4 ${activeTab === 'nueva-compra' ? 'border-[#137fec] text-[#137fec]' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+            className={`px-5 py-3 text-sm font-semibold transition-all duration-[var(--fluent-duration-fast,150ms)] border-b-2 ${
+              activeTab === 'nueva-compra' 
+                ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]' 
+                : 'border-transparent text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)]'
+            }`}
             onClick={() => setActiveTab('nueva-compra')}
           >
             Nueva Compra
           </button>
           <button 
-            className={`px-6 md:px-8 py-4 text-xs md:text-sm font-black uppercase tracking-[0.1em] transition-all border-b-4 ${activeTab === 'historial' ? 'border-[#137fec] text-[#137fec]' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+            className={`px-5 py-3 text-sm font-semibold transition-all duration-[var(--fluent-duration-fast,150ms)] border-b-2 ${
+              activeTab === 'historial' 
+                ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]' 
+                : 'border-transparent text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)]'
+            }`}
             onClick={() => setActiveTab('historial')}
           >
             Historial de Órdenes
@@ -346,70 +368,75 @@ const Purchases = () => {
         </div>
       </div>
 
-      <main className="max-w-[2560px] mx-auto px-4 md:px-8">
+      <main className="max-w-[1920px] mx-auto px-4 md:px-6">
         
         {activeTab === 'nueva-compra' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
             
             {/* Left Column: Items & Summary */}
-            <div className="lg:col-span-8 space-y-6 md:space-y-8">
+            <div className="lg:col-span-8 space-y-4 md:space-y-6">
               
-              {/* Products Table Card */}
-              <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-blue-900/5 overflow-hidden group">
-                <div className="px-6 md:px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center bg-slate-50/50 dark:bg-slate-800/20 gap-4">
+              {/* Products Table Card - Fluent 2 Card */}
+              <section className="bg-[var(--fluent-surface-card,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-xlarge,8px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] shadow-[var(--fluent-shadow-4)] overflow-hidden">
+                <div className="px-5 py-4 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] flex flex-col sm:flex-row justify-between items-center bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] gap-3">
                   <div>
-                    <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight transition-all group-hover:translate-x-1">Productos en la Orden</h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Lista detallada de artículos a ingresar</p>
+                    <h3 className="text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">Productos en la Orden</h3>
+                    <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)] mt-0.5">Artículos a ingresar al inventario</p>
                   </div>
                   <button 
-                    className="w-full sm:w-auto bg-[#137fec] hover:bg-blue-600 text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white px-4 py-2 rounded-[var(--fluent-corner-radius-medium,4px)] font-semibold text-sm shadow-[var(--fluent-shadow-2)] active:scale-[0.98] transition-all duration-[var(--fluent-duration-fast,150ms)] flex items-center justify-center gap-2"
                     onClick={() => setIsModalOpen(true)}
                   >
-                    <Plus size={16} strokeWidth={3} />
+                    <Plus size={16} strokeWidth={2.5} />
                     Agregar Artículo
                   </button>
                 </div>
                 
-                <div className="overflow-x-auto custom-scrollbar">
+                <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse min-w-[800px]">
-                    <thead className="bg-slate-50/80 dark:bg-slate-800/50 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                    <thead className="bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)]">
                       <tr>
-                        <th className="px-6 py-4">ID / SKU</th>
-                        <th className="px-6 py-4">Producto</th>
-                        <th className="px-6 py-4 text-center">Cant.</th>
-                        <th className="px-6 py-4 text-right">Costo Unit.</th>
-                        <th className="px-6 py-4 text-right">Margen</th>
-                        <th className="px-6 py-4 text-right">Subtotal</th>
-                        <th className="px-6 py-4"></th>
+                        <th className="px-4 py-3">ID / SKU</th>
+                        <th className="px-4 py-3">Producto</th>
+                        <th className="px-4 py-3 text-center">Cant.</th>
+                        <th className="px-4 py-3 text-right">Costo Unit.</th>
+                        <th className="px-4 py-3 text-right">Margen</th>
+                        <th className="px-4 py-3 text-right">Subtotal</th>
+                        <th className="px-4 py-3 text-right">Venta Esp.</th>
+                        <th className="px-4 py-3 w-12"></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    <tbody className="divide-y divide-[var(--fluent-border-neutral,#E1DFDD)] dark:divide-[var(--fluent-neutral-grey-140,#484644)]">
                       {purchaseItems.length === 0 ? (
                         <tr>
-                          <td colSpan="7" className="py-20 text-center">
-                            <div className="flex flex-col items-center gap-3 opacity-40 grayscale">
-                              <Search size={40} className="text-slate-300" />
-                              <p className="text-sm font-black text-slate-400 uppercase tracking-widest">No hay artículos seleccionados</p>
+                          <td colSpan="8" className="py-12 text-center">
+                            <div className="flex flex-col items-center gap-2 text-[var(--fluent-text-tertiary,#8A8886)]">
+                              <Package size={32} strokeWidth={1.5} />
+                              <p className="text-sm">No hay artículos seleccionados</p>
                             </div>
                           </td>
                         </tr>
                       ) : (
                         purchaseItems.map(item => (
-                          <tr key={item.id} className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all group/row" onDoubleClick={() => handleEditItem(item)}>
-                            <td className="px-6 py-5">
-                              <div className="text-xs font-mono font-bold text-slate-400">#{item.product_id}</div>
-                              <div className="text-[10px] font-black text-slate-300 uppercase tracking-tight">{item.sku}</div>
+                          <tr key={item.id} className="hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] transition-colors duration-[var(--fluent-duration-faster,100ms)] group/row" onDoubleClick={() => handleEditItem(item)}>
+                            <td className="px-4 py-3">
+                              <div className="text-xs font-mono text-[var(--fluent-text-secondary,#605E5C)]">#{item.product_id}</div>
+                              <div className="text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]">{item.sku}</div>
                             </td>
-                            <td className="px-6 py-5">
-                              <div className="font-black text-sm text-slate-700 dark:text-slate-200 group-hover/row:text-[#137fec] transition-colors uppercase">{item.name}</div>
-                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Unidad: {item.unit}</div>
+                            <td className="px-4 py-3">
+                              <div className="font-semibold text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white group-hover/row:text-[var(--fluent-brand-primary,#0078D4)] transition-colors">{item.name}</div>
+                              <div className="text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]">Unidad: {item.unit}</div>
                             </td>
-                            <td className="px-6 py-5 text-center font-black text-slate-900 dark:text-white">{item.quantity}</td>
-                            <td className="px-6 py-5 text-right font-bold text-slate-600 dark:text-slate-400">{formatCurrency(item.unit_price)}</td>
-                            <td className="px-6 py-5 text-right font-black text-green-600">{item.profit_pct.toFixed(1)}%</td>
-                            <td className="px-6 py-5 text-right font-black text-slate-900 dark:text-white text-lg tracking-tighter">{formatCurrency(item.unit_price * item.quantity)}</td>
-                            <td className="px-6 py-5 text-right">
-                              <button onClick={() => setPurchaseItems(prev => prev.filter(i => i.id !== item.id))} className="p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"><X size={18} /></button>
+                            <td className="px-4 py-3 text-center font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">{item.quantity}</td>
+                            <td className="px-4 py-3 text-right text-sm text-[var(--fluent-text-secondary,#605E5C)]">{formatCurrency(item.unit_price)}</td>
+                            <td className="px-4 py-3 text-right font-semibold text-[var(--fluent-semantic-success,#107C10)]">{item.profit_pct.toFixed(1)}%</td>
+                            <td className="px-4 py-3 text-right font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency(item.unit_price * item.quantity)}</td>
+                            <td className="px-4 py-3 text-right">
+                              <div className="font-semibold text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency(item.sale_price * item.quantity)}</div>
+                              <div className="text-[10px] text-[var(--fluent-semantic-success,#107C10)]">+{formatCurrency((item.sale_price - item.unit_price) * item.quantity)}</div>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <button onClick={() => setPurchaseItems(prev => prev.filter(i => i.id !== item.id))} className="p-1.5 text-[var(--fluent-text-tertiary,#8A8886)] hover:text-[var(--fluent-semantic-danger,#D13438)] hover:bg-red-50 dark:hover:bg-red-900/20 rounded-[var(--fluent-corner-radius-medium,4px)] transition-all"><X size={16} /></button>
                             </td>
                           </tr>
                         ))
@@ -419,71 +446,84 @@ const Purchases = () => {
                 </div>
               </section>
 
-              {/* Purchase Totals Card */}
-              <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-blue-900/5 p-6 md:p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-                  <div className="space-y-4">
+              {/* Purchase Totals Card - Fluent 2 */}
+              <section className="bg-[var(--fluent-surface-card,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-xlarge,8px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] shadow-[var(--fluent-shadow-4)] p-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="font-black text-slate-400 uppercase tracking-widest">Artículos Totales</span>
-                      <span className="font-black text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">{purchaseItems.reduce((s, i) => s + i.quantity, 0)}</span>
+                      <span className="text-[var(--fluent-text-secondary,#605E5C)]">Artículos Totales</span>
+                      <span className="font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] px-2.5 py-0.5 rounded-[var(--fluent-corner-radius-medium,4px)]">{purchaseItems.reduce((s, i) => s + i.quantity, 0)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="font-black text-slate-400 uppercase tracking-widest">Subtotal Compra</span>
-                      <span className="font-bold text-slate-700 dark:text-slate-300">{formatCurrency(purchaseItems.reduce((s, i) => s + (i.quantity * i.unit_price), 0))}</span>
+                      <span className="text-[var(--fluent-text-secondary,#605E5C)]">Total Compra</span>
+                      <span className="text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency(purchaseItems.reduce((s, i) => s + (i.quantity * i.unit_price), 0))}</span>
                     </div>
-                    <div className="h-px bg-slate-100 dark:border-slate-800 my-4"></div>
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Total Final</span>
-                      <span className="text-3xl font-black text-[#137fec] tracking-tighter">{formatCurrency(purchaseItems.reduce((s, i) => s + (i.quantity * i.unit_price), 0))}</span>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-[var(--fluent-text-secondary,#605E5C)]">Venta Esperada</span>
+                      <span className="font-medium text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency(purchaseItems.reduce((s, i) => s + (i.quantity * i.sale_price), 0))}</span>
+                    </div>
+                    <div className="h-px bg-[var(--fluent-border-neutral,#E1DFDD)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] my-2"></div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">Ganancia Proyectada</span>
+                      <div className="text-right">
+                        <span className={`text-lg font-bold ${purchaseItems.reduce((s, i) => s + (i.quantity * i.sale_price), 0) - purchaseItems.reduce((s, i) => s + (i.quantity * i.unit_price), 0) >= 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}>
+                          {formatCurrency(purchaseItems.reduce((s, i) => s + (i.quantity * i.sale_price), 0) - purchaseItems.reduce((s, i) => s + (i.quantity * i.unit_price), 0))}
+                        </span>
+                        {purchaseItems.length > 0 && purchaseItems.reduce((s, i) => s + (i.quantity * i.unit_price), 0) > 0 && (
+                          <span className="ml-1.5 text-xs font-medium text-[var(--fluent-semantic-success,#107C10)]">
+                            (+{(((purchaseItems.reduce((s, i) => s + (i.quantity * i.sale_price), 0) / purchaseItems.reduce((s, i) => s + (i.quantity * i.unit_price), 0)) - 1) * 100).toFixed(1)}%)
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-4 justify-end">
+                  <div className="flex flex-col gap-3 justify-end">
                     <button 
-                      className="w-full py-4 bg-[#137fec] hover:bg-blue-600 text-white font-black rounded-2xl shadow-2xl shadow-blue-500/30 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:pointer-events-none uppercase tracking-widest text-xs"
+                      className="w-full py-3 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all duration-[var(--fluent-duration-fast,150ms)] disabled:opacity-50 disabled:pointer-events-none text-sm"
                       onClick={handleSavePurchase}
                       disabled={!selectedSupplier || purchaseItems.length === 0 || loading}
                     >
-                      {loading ? 'PROCESANDO...' : 'CONFIRMAR Y GUARDAR COMPRA'}
+                      {loading ? 'Procesando...' : 'Confirmar y Guardar Compra'}
                     </button>
                     <button 
-                      className="w-full py-4 border-2 border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 font-black rounded-2xl transition-all uppercase tracking-widest text-xs"
+                      className="w-full py-3 border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] text-[var(--fluent-text-secondary,#605E5C)] font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] transition-all duration-[var(--fluent-duration-fast,150ms)] text-sm"
                       onClick={() => { if (confirm('¿Borrar toda la orden?')) { setPurchaseItems([]); setSelectedSupplier(null); setSupplierSearch(''); } }}
                     >
-                      CANCELAR TODO
+                      Cancelar Todo
                     </button>
                   </div>
                 </div>
               </section>
             </div>
 
-            {/* Right Column: Configuration & Supplier */}
-            <aside className="lg:col-span-4 space-y-6 md:space-y-8">
+            {/* Right Column: Configuration & Supplier - Fluent 2 */}
+            <aside className="lg:col-span-4 space-y-4 md:space-y-6">
               
               {/* Supplier Selection Card */}
-              <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-blue-900/5 p-6 md:p-8 group">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-6">Proveedor del Pedido</h3>
+              <section className="bg-[var(--fluent-surface-card,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-xlarge,8px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] shadow-[var(--fluent-shadow-4)] p-5">
+                <h3 className="text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white mb-4">Proveedor del Pedido</h3>
                 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="relative" ref={supplierSearchRef}>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block px-1">Buscar Empresa</label>
-                    <div className="relative group/input">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-[#137fec] transition-colors" size={18} />
+                    <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)] mb-1.5 block">Buscar Empresa</label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fluent-text-tertiary,#8A8886)]" size={16} />
                       <input 
                         type="text" 
                         placeholder="Nombre del proveedor..." 
-                        className="w-full pl-12 pr-10 py-3.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#137fec1a] transition-all"
+                        className="w-full pl-9 pr-9 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all"
                         value={supplierSearch}
                         onChange={e => setSupplierSearch(e.target.value)}
                       />
-                      {searchingSuppliers && <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#137fec] border-t-transparent rounded-full animate-spin"></div>}
+                      {searchingSuppliers && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[var(--fluent-brand-primary,#0078D4)] border-t-transparent rounded-full animate-spin"></div>}
                     </div>
                     
                     {supplierResults.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-30 py-2 animate-in slide-in-from-top-2">
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] overflow-hidden z-30 py-1">
                         {supplierResults.map(s => (
-                          <button key={s.id} className="w-full px-6 py-3.5 text-left hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors flex justify-between items-center group/item" onClick={() => handleSupplierSelect(s)}>
-                            <span className="font-bold text-slate-700 dark:text-slate-200 group-hover/item:text-[#137fec] transition-colors">{s.name}</span>
-                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">ID: {s.id}</span>
+                          <button key={s.id} className="w-full px-4 py-2.5 text-left hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] transition-colors flex justify-between items-center" onClick={() => handleSupplierSelect(s)}>
+                            <span className="font-medium text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white">{s.name}</span>
+                            <span className="text-xs text-[var(--fluent-text-tertiary,#8A8886)]">ID: {s.id}</span>
                           </button>
                         ))}
                       </div>
@@ -491,29 +531,29 @@ const Purchases = () => {
                   </div>
 
                   {selectedSupplier && (
-                    <div className="p-6 bg-blue-50 dark:bg-blue-900/20 border border-[#137fec1a] rounded-3xl animate-in zoom-in-95 duration-300">
-                      <div className="font-black text-[#137fec] text-sm uppercase tracking-widest flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-[#137fec] animate-pulse"></div>
+                    <div className="p-4 bg-[rgba(0,120,212,0.08)] dark:bg-[rgba(0,120,212,0.15)] border border-[rgba(0,120,212,0.2)] rounded-[var(--fluent-corner-radius-large,6px)]">
+                      <div className="font-semibold text-[var(--fluent-brand-primary,#0078D4)] text-sm flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-[var(--fluent-brand-primary,#0078D4)] animate-pulse"></div>
                         {selectedSupplier.name}
                       </div>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center gap-2 text-xs font-medium text-slate-500"><Calendar size={14} /> Registrado: {formatDate(selectedSupplier.created_at)}</div>
-                        <div className="text-xs font-bold text-slate-400">ID: {selectedSupplier.id}</div>
+                      <div className="mt-3 space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs text-[var(--fluent-text-secondary,#605E5C)]"><Calendar size={12} /> Registrado: {formatDate(selectedSupplier.created_at)}</div>
+                        <div className="text-xs text-[var(--fluent-text-tertiary,#8A8886)]">ID: {selectedSupplier.id}</div>
                       </div>
                     </div>
                   )}
                 </div>
               </section>
 
-              {/* Payment Config Card */}
-              <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-blue-900/5 p-6 md:p-8">
-                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-6">Configuración Financiera</h3>
+              {/* Payment Config Card - Fluent 2 */}
+              <section className="bg-[var(--fluent-surface-card,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-xlarge,8px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] shadow-[var(--fluent-shadow-4)] p-5">
+                <h3 className="text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white mb-4">Configuración Financiera</h3>
                 
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 block">Método de Pago</label>
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)] block">Método de Pago</label>
                     <select 
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#137fec1a] transition-all outline-none"
+                      className="w-full px-3 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all cursor-pointer"
                       value={paymentMethod}
                       onChange={e => setPaymentMethod(e.target.value)}
                     >
@@ -521,10 +561,10 @@ const Purchases = () => {
                     </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 block">Moneda de Transacción</label>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)] block">Moneda de Transacción</label>
                     <select 
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#137fec1a] transition-all outline-none"
+                      className="w-full px-3 py-2 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all cursor-pointer"
                       value={paymentCurrency}
                       onChange={e => setPaymentCurrency(e.target.value)}
                     >
@@ -538,73 +578,81 @@ const Purchases = () => {
         )}
 
         {activeTab === 'historial' && (
-          <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
+          <div className="space-y-4 md:space-y-6">
             
-            {/* History Filter Toolbar */}
-            <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-blue-900/5 overflow-hidden">
-              <div className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-800 flex flex-col xl:flex-row justify-between items-center bg-slate-50/30 dark:bg-slate-800/10 gap-6">
-                <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
-                  <div className="relative w-full sm:w-96 group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#137fec] transition-colors" size={18} />
+            {/* History Filter Toolbar - Fluent 2 CommandBar style */}
+            <section className="bg-[var(--fluent-surface-card,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-xlarge,8px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] shadow-[var(--fluent-shadow-4)] overflow-hidden">
+              <div className="p-4 md:p-5 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] flex flex-col xl:flex-row justify-between items-center bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] gap-4">
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+                  <div className="relative w-full sm:w-80">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fluent-text-tertiary,#8A8886)]" size={16} />
                     <input 
                       type="text" 
                       placeholder="Buscar por ID o Proveedor..." 
-                      className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#137fec1a] focus:border-[#137fec] transition-all outline-none"
+                      className="w-full pl-9 pr-3 py-2 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all"
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleFilter()}
                     />
                   </div>
                   <button 
-                    className="w-full sm:w-auto px-8 py-3 bg-[#137fec] text-white font-black rounded-2xl shadow-xl shadow-blue-500/20 active:scale-95 transition-all uppercase tracking-widest text-xs"
+                    className="w-full sm:w-auto px-5 py-2 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-2)] active:scale-[0.98] transition-all duration-[var(--fluent-duration-fast,150ms)] text-sm"
                     onClick={handleFilter}
                   >
-                    BUSCAR
+                    Buscar
                   </button>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto justify-end">
-                  <div className="flex p-1.5 bg-slate-100 dark:bg-slate-950 rounded-xl">
+                <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto justify-end">
+                  <div className="flex p-0.5 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)]">
                     <button 
-                      className={`px-6 py-2 text-[10px] font-black rounded-lg transition-all ${searchType === 'date' ? 'bg-white dark:bg-slate-800 shadow-xl text-[#137fec]' : 'text-slate-400 uppercase tracking-widest'}`}
+                      className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
+                        searchType === 'date' 
+                          ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]' 
+                          : 'text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)]'
+                      }`}
                       onClick={() => setSearchType('date')}
                     >
-                      FECHA
+                      Fecha
                     </button>
                     <button 
-                      className={`px-6 py-2 text-[10px] font-black rounded-lg transition-all ${searchType === 'supplier' ? 'bg-white dark:bg-slate-800 shadow-xl text-[#137fec]' : 'text-slate-400 uppercase tracking-widest'}`}
+                      className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
+                        searchType === 'supplier' 
+                          ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]' 
+                          : 'text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)]'
+                      }`}
                       onClick={() => setSearchType('supplier')}
                     >
-                      PROVEEDOR
+                      Proveedor
                     </button>
                   </div>
                   
                   {searchType === 'date' && (
-                    <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-inner">
-                      <input type="date" className="bg-transparent border-none text-xs font-black text-slate-600 dark:text-slate-300 outline-none" value={startDate} onChange={e => setStartDate(e.target.value)} />
-                      <span className="text-slate-300 font-black">/</span>
-                      <input type="date" className="bg-transparent border-none text-xs font-black text-slate-600 dark:text-slate-300 outline-none" value={endDate} onChange={e => setEndDate(e.target.value)} />
+                    <div className="flex items-center gap-2 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] px-3 py-1.5 rounded-[var(--fluent-corner-radius-medium,4px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                      <input type="date" className="bg-transparent border-none text-xs text-[var(--fluent-text-primary,#212121)] dark:text-white outline-none" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                      <span className="text-[var(--fluent-text-tertiary,#8A8886)]">→</span>
+                      <input type="date" className="bg-transparent border-none text-xs text-[var(--fluent-text-primary,#212121)] dark:text-white outline-none" value={endDate} onChange={e => setEndDate(e.target.value)} />
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* History Table */}
-              <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full text-left border-collapse min-w-[1000px]">
-                  <thead className="bg-slate-50/80 dark:bg-slate-800/50 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              {/* History Table - Fluent 2 DataGrid */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[900px]">
+                  <thead className="bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)]">
                     <tr>
-                      <th className="px-8 py-5 border-b border-slate-100 dark:border-slate-800">Orden ID</th>
-                      <th className="px-8 py-5 border-b border-slate-100 dark:border-slate-800">Fecha Pedido</th>
-                      <th className="px-8 py-5 border-b border-slate-100 dark:border-slate-800">Proveedor Empresa</th>
-                      <th className="px-8 py-5 border-b border-slate-100 dark:border-slate-800 text-right">Monto Total</th>
-                      <th className="px-8 py-5 border-b border-slate-100 dark:border-slate-800 text-center">Estado</th>
-                      <th className="px-8 py-5 border-b border-slate-100 dark:border-slate-800 text-right">Gestión</th>
+                      <th className="px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">Orden ID</th>
+                      <th className="px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">Fecha Pedido</th>
+                      <th className="px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">Proveedor</th>
+                      <th className="px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] text-right">Monto Total</th>
+                      <th className="px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] text-center">Estado</th>
+                      <th className="px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] text-right w-20">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tbody className="divide-y divide-[var(--fluent-border-neutral,#E1DFDD)] dark:divide-[var(--fluent-neutral-grey-140,#484644)]">
                     {purchaseOrders.length === 0 ? (
-                      <tr><td colSpan="6" className="py-32 text-center text-slate-300 italic uppercase tracking-widest font-black opacity-30">No se encontraron registros de compra</td></tr>
+                      <tr><td colSpan="6" className="py-16 text-center text-[var(--fluent-text-tertiary,#8A8886)] text-sm">No se encontraron registros de compra</td></tr>
                     ) : (
                       purchaseOrders.map(orderData => {
                         const order = orderData.purchase || orderData;
@@ -612,40 +660,40 @@ const Purchases = () => {
                         const isCancelled = order.status?.toUpperCase() === 'CANCELLED';
                         
                         return (
-                          <tr key={order.id} className="hover:bg-slate-50/50 dark:hover:bg-blue-900/10 transition-all group/row">
-                            <td className="px-8 py-6 font-black text-[#137fec] text-sm tracking-tight group-hover/row:scale-105 transition-transform origin-left">#{order.id}</td>
-                            <td className="px-8 py-6 text-slate-500 dark:text-slate-400 font-bold text-xs">{formatDate(order.order_date)}</td>
-                            <td className="px-8 py-6 font-black text-slate-700 dark:text-slate-200 text-sm uppercase">{order.supplier_name || '-'}</td>
-                            <td className="px-8 py-6 text-right font-black text-slate-900 dark:text-white text-lg tracking-tighter">{formatCurrency(order.total_amount, order.currency)}</td>
-                            <td className="px-8 py-6 text-center">
-                              <span className={`inline-flex px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                isCompleted ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                isCancelled ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 animate-pulse'
+                          <tr key={order.id} className="hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] transition-colors duration-[var(--fluent-duration-faster,100ms)]">
+                            <td className="px-5 py-3.5 font-semibold text-[var(--fluent-brand-primary,#0078D4)] text-sm">#{order.id}</td>
+                            <td className="px-5 py-3.5 text-[var(--fluent-text-secondary,#605E5C)] text-sm">{formatDate(order.order_date)}</td>
+                            <td className="px-5 py-3.5 font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white text-sm">{order.supplier_name || '-'}</td>
+                            <td className="px-5 py-3.5 text-right font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency(order.total_amount, order.currency)}</td>
+                            <td className="px-5 py-3.5 text-center">
+                              <span className={`inline-flex px-2.5 py-1 rounded-[var(--fluent-corner-radius-medium,4px)] text-xs font-semibold ${
+                                isCompleted ? 'bg-[rgba(16,124,16,0.1)] text-[var(--fluent-semantic-success,#107C10)]' :
+                                isCancelled ? 'bg-[rgba(209,52,56,0.1)] text-[var(--fluent-semantic-danger,#D13438)]' :
+                                'bg-[rgba(255,185,0,0.15)] text-[#B87900]'
                               }`}>
                                 {getStatusText(order.status)}
                               </span>
                             </td>
-                            <td className="px-8 py-6 text-right">
+                            <td className="px-5 py-3.5 text-right">
                               <div className="relative inline-block">
                                 <button 
                                   onClick={() => setOpenActionMenu(openActionMenu === order.id ? null : order.id)} 
-                                  className="p-2.5 text-slate-200 hover:text-[#137fec] hover:bg-[#137fec0d] rounded-xl transition-all shadow-sm active:scale-90"
+                                  className="p-1.5 text-[var(--fluent-text-tertiary,#8A8886)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)] transition-all"
                                 >
-                                  <MoreVertical size={20} />
+                                  <MoreVertical size={18} />
                                 </button>
                                 {openActionMenu === order.id && (
-                                  <div className="absolute right-0 mt-3 w-56 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 z-40 py-2 animate-in slide-in-from-top-2 duration-200 overflow-hidden">
+                                  <div className="absolute right-0 mt-1 w-48 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] z-40 py-1 overflow-hidden">
                                     <button 
                                       onClick={() => handleViewPurchase(order)} 
-                                      className="w-full px-6 py-3.5 text-left text-xs font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-4 transition-colors uppercase tracking-widest"
+                                      className="w-full px-4 py-2.5 text-left text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] flex items-center gap-3 transition-colors"
                                     >
-                                      <Eye size={16} className="text-[#137fec]" /> Ver Auditoría
+                                      <Eye size={16} className="text-[var(--fluent-brand-primary,#0078D4)]" /> Ver Detalle
                                     </button>
                                     {!isCancelled && (
                                       <button 
                                         onClick={() => handleCancelPurchase(order)} 
-                                        className="w-full px-6 py-3.5 text-left text-xs font-black text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-4 transition-colors uppercase tracking-widest"
+                                        className="w-full px-4 py-2.5 text-left text-sm text-[var(--fluent-semantic-danger,#D13438)] hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors"
                                       >
                                         <Ban size={16} /> Anular Orden
                                       </button>
@@ -666,60 +714,62 @@ const Purchases = () => {
         )}
       </main>
 
-      {/* PRODUCT MODAL - 720p OPTIMIZED & 100% TAILWIND */}
+      {/* PRODUCT MODAL - Fluent 2 Dialog - Optimized for low-height screens (720p+) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md transition-opacity" onClick={() => setIsModalOpen(false)}></div>
-          <div className="relative bg-white dark:bg-[#1a2632] w-full max-w-5xl max-h-[90vh] md:max-h-[85vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-white/10">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setIsModalOpen(false)}></div>
+          <div className="relative bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] w-full max-w-7xl max-h-[95vh] md:max-h-[92vh] rounded-[var(--fluent-corner-radius-xlarge,8px)] shadow-[var(--fluent-shadow-64)] overflow-hidden flex flex-col border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)]">
             
-            <header className="px-8 md:px-12 py-6 md:py-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-[#1a2632] sticky top-0 z-10">
-              <div className="group">
-                <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter transition-all group-hover:translate-x-1">
-                  {editingItemId ? 'Editor de Artículo' : 'Nuevo Artículo de Compra'}
+            {/* Header - Compact */}
+            <header className="px-4 md:px-6 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] flex justify-between items-center bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] shrink-0">
+              <div>
+                <h3 className="text-base md:text-lg font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">
+                  {editingItemId ? 'Editar Artículo' : 'Agregar Artículo de Compra'}
                 </h3>
-                <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Gestión de costos y márgenes operativos</p>
+                <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)] mt-0.5">Gestión de costos y márgenes</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)} 
-                className="w-12 h-12 flex items-center justify-center bg-slate-50 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/30 text-slate-400 hover:text-red-500 rounded-2xl transition-all shadow-inner active:scale-90"
+                className="w-8 h-8 flex items-center justify-center text-[var(--fluent-text-tertiary,#8A8886)] hover:text-[var(--fluent-semantic-danger,#D13438)] hover:bg-red-50 dark:hover:bg-red-900/20 rounded-[var(--fluent-corner-radius-medium,4px)] transition-all"
               >
-                <X size={20} strokeWidth={3} />
+                <X size={18} />
               </button>
             </header>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-12">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16">
+            {/* Content - Horizontal layout prioritizing width over height */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 h-full">
                 
-                {/* Left Section: Catalog Discovery */}
-                <div className="space-y-10">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-[#137fec] uppercase tracking-[0.3em] block px-1">Explorar Catálogo</label>
-                    <div className="relative group" ref={modalProductSearchRef}>
-                      <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#137fec] transition-colors" size={22} />
+                {/* Column 1: Product Search & Selection */}
+                <div className="lg:col-span-4 space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-[var(--fluent-brand-primary,#0078D4)]">Buscar Producto</label>
+                    <div className="relative" ref={modalProductSearchRef}>
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fluent-text-tertiary,#8A8886)]" size={16} />
                       <input 
                         type="text" 
-                        className="w-full pl-14 pr-14 py-5 bg-slate-50 dark:bg-slate-800/50 border-none rounded-[1.5rem] text-sm md:text-base font-bold focus:ring-4 focus:ring-[#137fec1a] transition-all shadow-inner" 
-                        placeholder="SKU, EAN o Nombre del producto..." 
+                        className="w-full pl-9 pr-9 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all" 
+                        placeholder="SKU, EAN o Nombre..." 
                         value={modalProductSearch} 
                         onChange={e => setModalProductSearch(e.target.value)} 
                         onFocus={() => setShowProductDropdown(true)} 
                       />
-                      {searchingProducts && <div className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 border-3 border-[#137fec] border-t-transparent rounded-full animate-spin"></div>}
+                      {searchingProducts && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[var(--fluent-brand-primary,#0078D4)] border-t-transparent rounded-full animate-spin"></div>}
                       
                       {showProductDropdown && filteredModalProducts.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-4 bg-white dark:bg-slate-800 rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-slate-100 dark:border-slate-700 overflow-hidden z-50 max-h-[300px] overflow-y-auto animate-in slide-in-from-top-4">
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] overflow-hidden z-50 max-h-[200px] overflow-y-auto">
                           {filteredModalProducts.map(p => (
-                            <div key={p.id} className="px-8 py-5 hover:bg-blue-50 dark:hover:bg-blue-900/40 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-none flex justify-between items-center group/item" onClick={() => handleProductSelect(p)}>
-                              <div className="min-w-0">
-                                <div className="font-black text-sm md:text-base text-slate-700 dark:text-slate-200 group-hover/item:text-[#137fec] transition-colors uppercase truncate">{p.name || p.product_name}</div>
-                                <div className="flex gap-3 mt-1.5">
-                                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">ID: {p.id}</span>
-                                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">SKU: {p.sku || '-'}</span>
+                            <div key={p.id} className="px-4 py-2.5 hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] cursor-pointer border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] last:border-none flex justify-between items-center" onClick={() => handleProductSelect(p)}>
+                              <div className="min-w-0 flex-1">
+                                <div className="font-medium text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white truncate">{p.name || p.product_name}</div>
+                                <div className="flex gap-2 mt-0.5">
+                                  <span className="text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]">ID: {p.id}</span>
+                                  <span className="text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]">SKU: {p.sku || '-'}</span>
                                 </div>
                               </div>
-                              <div className="text-right flex-shrink-0 ml-4">
-                                <div className="text-sm font-black text-slate-900 dark:text-white tracking-tighter">{formatCurrency(p.cost_price || p.unit_cost || 0)}</div>
-                                <div className={`text-[9px] font-black mt-1 uppercase tracking-tighter ${p.stock > 0 ? 'text-green-500' : 'text-red-400'}`}>Stock: {p.stock || 0}</div>
+                              <div className="text-right flex-shrink-0 ml-3">
+                                <div className="text-sm font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency(p.cost_price || p.unit_cost || 0)}</div>
+                                <div className={`text-[10px] font-medium ${p.stock > 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}>Stock: {p.stock || 0}</div>
                               </div>
                             </div>
                           ))}
@@ -728,52 +778,52 @@ const Purchases = () => {
                     </div>
                   </div>
 
+                  {/* Selected Product Card */}
                   {modalSelectedProduct ? (
-                    <div className="p-8 bg-[#137fec0d] border-2 border-dashed border-[#137fec26] rounded-[2rem] animate-in zoom-in-95 duration-500">
-                      <div className="flex items-start gap-6">
-                        <div className="w-20 h-20 bg-white dark:bg-[#1a2632] rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-blue-900/10 font-black text-[#137fec] text-3xl shrink-0">{modalSelectedProduct.name?.charAt(0)}</div>
-                        <div className="min-w-0">
-                          <h4 className="text-lg md:text-xl font-black text-slate-900 dark:text-white uppercase leading-tight truncate">{modalSelectedProduct.name}</h4>
-                          <div className="grid grid-cols-2 gap-4 mt-4">
-                            <div className="bg-white/50 dark:bg-slate-800/50 p-3 rounded-xl border border-white/20">
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">SKU Oficial</p>
-                              <p className="text-xs font-bold text-slate-600 dark:text-slate-300 truncate">{modalSelectedProduct.sku}</p>
+                    <div className="p-4 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] border border-[rgba(0,120,212,0.15)] rounded-[var(--fluent-corner-radius-large,6px)]">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] flex items-center justify-center text-white font-semibold text-lg shrink-0">{modalSelectedProduct.name?.charAt(0)}</div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-semibold text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white truncate">{modalSelectedProduct.name}</h4>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                            <div>
+                              <p className="text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]">SKU</p>
+                              <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)]">{modalSelectedProduct.sku || '-'}</p>
                             </div>
-                            <div className="bg-white/50 dark:bg-slate-800/50 p-3 rounded-xl border border-white/20">
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Unidad Medida</p>
-                              <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">{modalSelectedProduct.unit}</p>
+                            <div>
+                              <p className="text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]">Unidad</p>
+                              <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)]">{modalSelectedProduct.unit || 'unit'}</p>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="h-48 border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 opacity-40">
-                      <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center"><Search size={32} className="text-slate-300" /></div>
-                      <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Pendiente de Selección</p>
+                    <div className="h-24 border-2 border-dashed border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-large,6px)] flex flex-col items-center justify-center">
+                      <Package size={24} className="text-[var(--fluent-text-tertiary,#8A8886)]" />
+                      <p className="text-xs text-[var(--fluent-text-tertiary,#8A8886)] mt-1">Selecciona un producto</p>
                     </div>
                   )}
                 </div>
 
-                {/* Right Section: Quantitative Logic */}
-                <div className="bg-slate-50 dark:bg-slate-800/30 p-8 md:p-10 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 space-y-10 shadow-inner">
-                  
-                  <div className="grid grid-cols-2 gap-8">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">Cantidad</label>
+                {/* Column 2: Quantity & Cost */}
+                <div className="lg:col-span-4 space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)]">Cantidad</label>
                       <input 
                         type="number" 
-                        className="w-full px-6 py-4 bg-white dark:bg-[#1a2632] border-none rounded-2xl text-xl font-black text-slate-900 dark:text-white focus:ring-4 focus:ring-[#137fec1a] transition-all shadow-sm" 
+                        className="w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-lg font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all" 
                         value={modalQuantity} 
                         onChange={e => setModalQuantity(e.target.value)} 
                         placeholder="0"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">Costo Neto</label>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)]">Costo Unitario</label>
                       <input 
                         type="number" 
-                        className="w-full px-6 py-4 bg-white dark:bg-[#1a2632] border-none rounded-2xl text-xl font-black text-slate-900 dark:text-white focus:ring-4 focus:ring-[#137fec1a] transition-all shadow-sm" 
+                        className="w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-lg font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all" 
                         value={modalUnitPrice} 
                         onChange={e => setModalUnitPrice(e.target.value)} 
                         placeholder="0.00"
@@ -781,80 +831,144 @@ const Purchases = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-6 pt-8 border-t border-slate-200 dark:border-slate-700">
-                    <div className="flex p-1.5 bg-slate-200 dark:bg-slate-950 rounded-[1.25rem]">
+                  {/* Tax Rate */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)]">
+                      {t('purchases.modal.tax_rate', 'Tasa de Impuesto')}
+                    </label>
+                    <select
+                      className="w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all cursor-pointer"
+                      value={modalTaxRateId || ''}
+                      onChange={e => setModalTaxRateId(e.target.value ? Number(e.target.value) : null)}
+                      disabled={loading}
+                    >
+                      <option value="">{loading ? 'Cargando...' : t('purchases.modal.no_tax', 'Sin impuesto')}</option>
+                      {taxRates.map(taxRate => (
+                        <option key={taxRate.id} value={taxRate.id}>
+                          {taxRate.tax_name} - {taxRate.rate}% {taxRate.country ? `(${taxRate.country})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Line Total Preview */}
+                  <div className="p-3 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                    <div className="text-[10px] font-semibold text-[var(--fluent-text-secondary,#605E5C)] uppercase tracking-wide mb-2">Resumen de Línea</div>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-[var(--fluent-text-tertiary,#8A8886)]">{modalQuantity || 0} × {formatCurrency(modalUnitPrice || 0)}</span>
+                        <span className="font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency((modalQuantity || 0) * (modalUnitPrice || 0))}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Column 3: Pricing Strategy */}
+                <div className="lg:col-span-4 space-y-4">
+                  {/* Pricing Mode Toggle */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)]">Modo de Precio</label>
+                    <div className="flex p-0.5 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)]">
                       <button 
-                        className={`flex-1 py-3 text-[10px] font-black rounded-xl transition-all ${pricingMode === 'margin' ? 'bg-white dark:bg-slate-800 shadow-xl text-[#137fec]' : 'text-slate-500 uppercase tracking-widest'}`} 
+                        className={`flex-1 py-2 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
+                          pricingMode === 'margin' 
+                            ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]' 
+                            : 'text-[var(--fluent-text-secondary,#605E5C)]'
+                        }`} 
                         onClick={() => setPricingMode('margin')}
                       >
-                        MODO MARGEN (%)
+                        Por Margen %
                       </button>
                       <button 
-                        className={`flex-1 py-3 text-[10px] font-black rounded-xl transition-all ${pricingMode === 'sale_price' ? 'bg-white dark:bg-slate-800 shadow-xl text-[#137fec]' : 'text-slate-500 uppercase tracking-widest'}`} 
+                        className={`flex-1 py-2 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
+                          pricingMode === 'sale_price' 
+                            ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]' 
+                            : 'text-[var(--fluent-text-secondary,#605E5C)]'
+                        }`} 
                         onClick={() => setPricingMode('sale_price')}
                       >
-                        MODO PRECIO FIJO
+                        Precio Fijo
                       </button>
                     </div>
-                    {/* Tax Rate Selector */}
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">
-                        {t('purchases.modal.tax_rate', 'Tasa de Impuesto')}
-                      </label>
-                      <select
-                        className="w-full px-6 py-4 bg-white dark:bg-[#1a2632] border-none rounded-2xl text-lg font-black text-slate-900 dark:text-white focus:ring-4 focus:ring-[#137fec1a] transition-all shadow-sm"
-                        value={modalTaxRateId || ''}
-                        onChange={e =>
-                          setModalTaxRateId(
-                            e.target.value ? Number(e.target.value) : null
-                          )
-                        }
-                        disabled={loadingTaxRates}
-                      >
-                        <option value=''>
-                          {loadingTaxRates
-                            ? 'Cargando...'
-                            : t('purchases.modal.no_tax', 'Sin impuesto')}
-                        </option>
-                        {taxRates.map(taxRate => (
-                          <option key={taxRate.id} value={taxRate.id}>
-                            {taxRate.tax_name} - {taxRate.rate}%{' '}
-                            {taxRate.country ? `(${taxRate.country})` : ''}
-                          </option>
-                        ))}
-                      </select>
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 px-2">
-                        {t(
-                          'purchases.modal.tax_rate_note',
-                          'Selecciona la tasa de impuesto aplicable al producto'
-                        )}
-                      </p>
-                    </div>
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-8">
-                      {/* Dynamic pricing fields */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">{pricingMode === 'margin' ? 'Margen Ganancia' : 'Margen Real'}</label>
-                        <div className="relative group/margin">
-                          <input 
-                            type="number" 
-                            className={`w-full pl-6 pr-12 py-4 bg-white dark:bg-[#1a2632] border-none rounded-2xl font-black text-lg transition-all ${pricingMode !== 'margin' ? 'opacity-40 grayscale cursor-not-allowed' : 'focus:ring-4 focus:ring-[#137fec1a] text-[#137fec]'}`} 
-                            value={pricingMode === 'margin' ? modalProfitPct : effectiveProfitPct.toFixed(1)} 
-                            onChange={e => pricingMode === 'margin' && setModalProfitPct(Number(e.target.value))} 
-                            readOnly={pricingMode !== 'margin'} 
-                          />
-                          <span className="absolute right-5 top-1/2 -translate-y-1/2 font-black text-slate-300 text-lg">%</span>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">{pricingMode === 'sale_price' ? 'Precio de Venta' : 'Precio Sugerido'}</label>
+                  {/* Margin & Price Fields */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)]">{pricingMode === 'margin' ? 'Margen %' : 'Margen Real'}</label>
+                      <div className="relative">
                         <input 
                           type="number" 
-                          className={`w-full px-6 py-4 bg-white dark:bg-[#1a2632] border-none rounded-2xl font-black text-lg transition-all ${pricingMode !== 'sale_price' ? 'opacity-40 grayscale cursor-not-allowed' : 'focus:ring-4 focus:ring-[#137fec1a] text-[#137fec]'}`} 
-                          value={pricingMode === 'sale_price' ? modalSalePrice : effectiveSalePrice.toFixed(0)} 
-                          onChange={e => pricingMode === 'sale_price' && setModalSalePrice(Number(e.target.value))} 
-                          readOnly={pricingMode !== 'sale_price'} 
+                          className={`w-full pl-3 pr-8 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-lg font-semibold transition-all ${
+                            pricingMode !== 'margin' 
+                              ? 'opacity-50 cursor-not-allowed text-[var(--fluent-text-tertiary,#8A8886)]' 
+                              : 'text-[var(--fluent-semantic-success,#107C10)] focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]'
+                          }`} 
+                          value={pricingMode === 'margin' ? modalProfitPct : effectiveProfitPct.toFixed(1)} 
+                          onChange={e => pricingMode === 'margin' && setModalProfitPct(Number(e.target.value))} 
+                          readOnly={pricingMode !== 'margin'} 
                         />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--fluent-text-tertiary,#8A8886)]">%</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)]">{pricingMode === 'sale_price' ? 'Precio Venta' : 'Precio Sugerido'}</label>
+                      <input 
+                        type="number" 
+                        className={`w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-lg font-semibold transition-all ${
+                          pricingMode !== 'sale_price' 
+                            ? 'opacity-50 cursor-not-allowed text-[var(--fluent-text-tertiary,#8A8886)]' 
+                            : 'text-[var(--fluent-brand-primary,#0078D4)] focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]'
+                        }`} 
+                        value={pricingMode === 'sale_price' ? modalSalePrice : effectiveSalePrice.toFixed(0)} 
+                        onChange={e => pricingMode === 'sale_price' && setModalSalePrice(Number(e.target.value))} 
+                        readOnly={pricingMode !== 'sale_price'} 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pricing Summary */}
+                  <div className="p-3 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] rounded-[var(--fluent-corner-radius-medium,4px)] border border-[rgba(0,120,212,0.15)]">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-[var(--fluent-text-tertiary,#8A8886)]">Costo Unit.:</span>
+                        <span className="ml-1 font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency(modalUnitPrice || 0)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[var(--fluent-text-tertiary,#8A8886)]">Venta Unit.:</span>
+                        <span className="ml-1 font-semibold text-[var(--fluent-semantic-success,#107C10)]">{formatCurrency(effectiveSalePrice)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Financial Projection Panel */}
+                  <div className="p-3 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-large,6px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] space-y-2">
+                    <div className="text-[10px] font-semibold text-[var(--fluent-text-secondary,#605E5C)] uppercase tracking-wide">Proyección Financiera</div>
+                    
+                    {/* Total Compra */}
+                    <div className="flex justify-between items-center py-1.5 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                      <span className="text-xs text-[var(--fluent-text-secondary,#605E5C)]">Total Compra</span>
+                      <span className="text-sm font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency((modalQuantity || 0) * (modalUnitPrice || 0))}</span>
+                    </div>
+                    
+                    {/* Total Venta Esperado */}
+                    <div className="flex justify-between items-center py-1.5 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                      <span className="text-xs text-[var(--fluent-text-secondary,#605E5C)]">Venta Esperada</span>
+                      <span className="text-sm font-semibold text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency((modalQuantity || 0) * effectiveSalePrice)}</span>
+                    </div>
+                    
+                    {/* Ganancia Esperada */}
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="text-xs font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white">Ganancia Esperada</span>
+                      <div className="text-right">
+                        <span className={`text-base font-bold ${((modalQuantity || 0) * effectiveSalePrice) - ((modalQuantity || 0) * (modalUnitPrice || 0)) >= 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}>
+                          {formatCurrency(((modalQuantity || 0) * effectiveSalePrice) - ((modalQuantity || 0) * (modalUnitPrice || 0)))}
+                        </span>
+                        {(modalQuantity || 0) > 0 && (modalUnitPrice || 0) > 0 && (
+                          <span className="ml-1.5 text-[10px] font-medium text-[var(--fluent-semantic-success,#107C10)]">
+                            (+{effectiveProfitPct.toFixed(1)}%)
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -862,90 +976,88 @@ const Purchases = () => {
               </div>
             </div>
 
-            <footer className="px-8 md:px-12 py-8 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#1a2632] flex flex-col sm:flex-row justify-between items-center gap-6">
-              <div className="text-left hidden sm:block">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Resumen del Renglón</p>
-                <p className="text-xl font-black text-slate-900 dark:text-white tracking-tighter">Total: {formatCurrency((modalQuantity || 0) * (modalUnitPrice || 0))}</p>
-              </div>
-              <div className="flex w-full sm:w-auto gap-4">
-                <button 
-                  className="flex-1 sm:flex-none px-10 py-4 font-black text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-[1.5rem] transition-all uppercase tracking-widest text-[10px]" 
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  DESCARTAR
-                </button>
-                <button 
-                  className="flex-1 sm:flex-none px-12 py-4 bg-[#137fec] text-white font-black rounded-[1.5rem] shadow-[0_20px_40px_-10px_rgba(19,127,236,0.4)] active:scale-95 transition-all disabled:opacity-50 disabled:grayscale uppercase tracking-widest text-[10px]" 
-                  onClick={handleConfirmAddProduct} 
-                  disabled={!modalSelectedProduct || !modalQuantity || !modalUnitPrice}
-                >
-                  {editingItemId ? 'GUARDAR CAMBIOS' : 'AÑADIR A LA ORDEN'}
-                </button>
-              </div>
+            {/* Footer - Compact */}
+            <footer className="px-4 md:px-6 py-3 border-t border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] flex justify-end items-center gap-3 shrink-0">
+              <button 
+                className="px-4 py-2 font-medium text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:hover:bg-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] transition-all text-sm" 
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="px-5 py-2 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none text-sm" 
+                onClick={handleConfirmAddProduct} 
+                disabled={!modalSelectedProduct || !modalQuantity || !modalUnitPrice}
+              >
+                {editingItemId ? 'Guardar Cambios' : 'Agregar a la Orden'}
+              </button>
             </footer>
           </div>
         </div>
       )}
 
-      {/* REUSABLE MODALS - DETALLE Y CANCELACIÓN */}
+      {/* VIEW ORDER MODAL - Fluent 2 Dialog */}
       {showViewModal && viewOrderData && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" onClick={() => setShowViewModal(false)}></div>
-          <div className="relative bg-white dark:bg-[#1a2632] w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col border border-white/10">
-            <header className="px-10 py-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-[#1a2632]">
-              <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Auditoría de Orden #{viewOrderData.purchase?.id || viewOrderData.id}</h3>
-              <button onClick={() => setShowViewModal(false)} className="w-10 h-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-xl hover:text-red-500 transition-colors"><X size={20} /></button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowViewModal(false)}></div>
+          <div className="relative bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] w-full max-w-3xl max-h-[90vh] rounded-[var(--fluent-corner-radius-xlarge,8px)] shadow-[var(--fluent-shadow-64)] overflow-hidden flex flex-col border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)]">
+            <header className="px-5 py-4 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] flex justify-between items-center bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)]">
+              <h3 className="text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">Detalle de Orden #{viewOrderData.purchase?.id || viewOrderData.id}</h3>
+              <button onClick={() => setShowViewModal(false)} className="w-8 h-8 flex items-center justify-center text-[var(--fluent-text-tertiary,#8A8886)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-tertiary,#F3F2F1)] rounded-[var(--fluent-corner-radius-medium,4px)] transition-colors"><X size={18} /></button>
             </header>
-            <div className="flex-1 overflow-y-auto p-10 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-[1.5rem] border border-slate-100 dark:border-slate-700">
-                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Proveedor Asociado</div>
-                  <div className="font-black text-sm text-[#137fec] uppercase truncate">{viewOrderData.purchase?.supplier_name || '-'}</div>
+            <div className="flex-1 overflow-y-auto p-5 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-large,6px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                  <div className="text-xs text-[var(--fluent-text-tertiary,#8A8886)] mb-1">Proveedor</div>
+                  <div className="font-semibold text-sm text-[var(--fluent-brand-primary,#0078D4)]">{viewOrderData.purchase?.supplier_name || '-'}</div>
                 </div>
-                <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-[1.5rem] border border-slate-100 dark:border-slate-700">
-                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado Actual</div>
-                  <div className="inline-flex px-3 py-1 bg-white dark:bg-slate-900 rounded-lg shadow-sm font-black text-[10px] uppercase tracking-widest">{getStatusText(viewOrderData.purchase?.status || viewOrderData.status)}</div>
+                <div className="p-4 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-large,6px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                  <div className="text-xs text-[var(--fluent-text-tertiary,#8A8886)] mb-1">Estado</div>
+                  <span className="inline-flex px-2 py-0.5 rounded-[var(--fluent-corner-radius-small,2px)] text-xs font-medium bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-130,#605E5C)]">{getStatusText(viewOrderData.purchase?.status || viewOrderData.status)}</span>
                 </div>
-                <div className="p-6 bg-[#137fec0d] rounded-[1.5rem] border border-[#137fec1a]">
-                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 text-[#137fec]">Monto Consolidado</div>
-                  <div className="font-black text-2xl text-[#137fec] tracking-tighter">{formatCurrency(viewOrderData.purchase?.total_amount || viewOrderData.total_amount)}</div>
+                <div className="p-4 bg-[rgba(0,120,212,0.08)] rounded-[var(--fluent-corner-radius-large,6px)] border border-[rgba(0,120,212,0.2)]">
+                  <div className="text-xs text-[var(--fluent-text-tertiary,#8A8886)] mb-1">Monto Total</div>
+                  <div className="font-bold text-lg text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency(viewOrderData.purchase?.total_amount || viewOrderData.total_amount)}</div>
                 </div>
               </div>
-              <div className="space-y-4">
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Desglose de Artículos</h4>
-                <div className="rounded-[2rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-inner">
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)]">Artículos</h4>
+                <div className="rounded-[var(--fluent-corner-radius-large,6px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] overflow-hidden">
                   <table className="w-full text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                      <tr><th className="px-6 py-4">Producto</th><th className="px-6 py-4 text-center">Cant.</th><th className="px-6 py-4 text-right">Subtotal</th></tr>
+                    <thead className="bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] text-xs text-[var(--fluent-text-secondary,#605E5C)]">
+                      <tr><th className="px-4 py-2.5">Producto</th><th className="px-4 py-2.5 text-center">Cant.</th><th className="px-4 py-2.5 text-right">Subtotal</th></tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                    <tbody className="divide-y divide-[var(--fluent-border-neutral,#E1DFDD)] dark:divide-[var(--fluent-neutral-grey-140,#484644)]">
                       {viewOrderData.details?.map((d, i) => (
-                        <tr key={i}><td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 uppercase text-xs">{d.product_name}</td><td className="px-6 py-4 text-center font-black text-xs">{d.quantity} {d.unit}</td><td className="px-6 py-4 text-right font-black text-[#137fec] text-sm tracking-tight">{formatCurrency(d.line_total || (d.quantity * d.unit_price))}</td></tr>
+                        <tr key={i}><td className="px-4 py-2.5 text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white">{d.product_name}</td><td className="px-4 py-2.5 text-center text-sm">{d.quantity} {d.unit}</td><td className="px-4 py-2.5 text-right font-semibold text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency(d.line_total || (d.quantity * d.unit_price))}</td></tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
-            <footer className="p-8 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-end">
-              <button className="px-10 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-xs uppercase tracking-widest shadow-sm active:scale-95 transition-all" onClick={() => setShowViewModal(false)}>CERRAR AUDITORÍA</button>
+            <footer className="px-5 py-3 border-t border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] flex justify-end">
+              <button className="px-4 py-2 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-130,#605E5C)] hover:bg-[var(--fluent-surface-quaternary,#EDEBE9)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-120,#797775)] rounded-[var(--fluent-corner-radius-medium,4px)] font-medium text-sm transition-colors" onClick={() => setShowViewModal(false)}>Cerrar</button>
             </footer>
           </div>
         </div>
       )}
 
+      {/* CANCEL ORDER MODAL - Fluent 2 Dialog */}
       {showCancelPreview && cancelPreviewData && orderToCancel && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-red-950/40 backdrop-blur-xl" onClick={() => setShowCancelPreview(false)}></div>
-          <div className="relative bg-white dark:bg-[#1a2632] w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 border-2 border-red-100 dark:border-red-900/20 text-center space-y-8 animate-in zoom-in-95">
-            <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner"><Ban size={40} strokeWidth={3} /></div>
-            <div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">¿Anular Orden?</h3>
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-2 px-4">Esta acción afectará los saldos pendientes con <span className="text-red-500 font-black underline underline-offset-4">{orderToCancel.supplier_name}</span>.</p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowCancelPreview(false)}></div>
+          <div className="relative bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] w-full max-w-sm rounded-[var(--fluent-corner-radius-xlarge,8px)] shadow-[var(--fluent-shadow-64)] p-6 border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] text-center space-y-5">
+            <div className="w-14 h-14 bg-[rgba(209,52,56,0.1)] text-[var(--fluent-semantic-danger,#D13438)] rounded-full flex items-center justify-center mx-auto">
+              <Ban size={28} />
             </div>
-            <div className="flex gap-4">
-              <button className="flex-1 py-4 font-black text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all uppercase tracking-widest text-[10px]" onClick={() => setShowCancelPreview(false)}>VOLVER</button>
-              <button className="flex-1 py-4 bg-red-600 text-white font-black rounded-2xl shadow-xl shadow-red-500/30 active:scale-95 transition-all uppercase tracking-widest text-[10px]" onClick={handleConfirmCancellation}>SÍ, ANULAR</button>
+            <div>
+              <h3 className="text-lg font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">¿Anular esta orden?</h3>
+              <p className="text-sm text-[var(--fluent-text-secondary,#605E5C)] mt-2">Esta acción afectará los saldos con <span className="font-semibold text-[var(--fluent-semantic-danger,#D13438)]">{orderToCancel.supplier_name}</span>.</p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button className="flex-1 py-2.5 font-medium text-[var(--fluent-text-secondary,#605E5C)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] transition-colors text-sm" onClick={() => setShowCancelPreview(false)}>Cancelar</button>
+              <button className="flex-1 py-2.5 bg-[var(--fluent-semantic-danger,#D13438)] hover:bg-[#B52E31] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all text-sm" onClick={handleConfirmCancellation}>Sí, Anular</button>
             </div>
           </div>
         </div>

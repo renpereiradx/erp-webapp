@@ -231,8 +231,8 @@ const Dashboard = () => {
                        </div>
                    </div>
                </div>
-               <div className="chart-card__container" style={{ height: 300, marginTop: '1.5rem' }}>
-                    <ResponsiveContainer width="100%" height="100%">
+               <div className="chart-card__container" style={{ height: 300, marginTop: '1.5rem', minWidth: 0 }}>
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <AreaChart data={revenueExpensesData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">

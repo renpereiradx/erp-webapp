@@ -1,5 +1,7 @@
 import { apiClient } from './api.js'
 import { paymentApiDebug } from './paymentApiDebug.js'
+import { DEMO_CONFIG } from '../config/demoAuth.js'
+import { DEMO_CURRENCIES_DATA } from '../config/demoData.js'
 
 const SERVICE_NAME = 'CurrencyService'
 
@@ -97,6 +99,10 @@ class CurrencyService {
    * @returns {Promise<import('../types/payment.js').Currency[]>}
    */
   static async getAll() {
+    if (DEMO_CONFIG.enabled) {
+      console.log('🧪 [CurrencyService] Demo mode: returning mock currencies')
+      return DEMO_CURRENCIES_DATA
+    }
     try {
       const response = await apiClient.makeRequest('/currencies')
       return this.normalizeCurrencyList(response)

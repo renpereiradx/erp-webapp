@@ -6,6 +6,8 @@
 
 import { apiClient } from './api'
 import { telemetryService } from './telemetryService'
+import { DEMO_CONFIG } from '../config/demoAuth'
+import { DEMO_PURCHASE_ORDERS_DATA, DEMO_TAX_RATES_DATA } from '../config/demoData'
 // TypeScript types are available in ../types/purchase.ts
 
 // Configuración de timeouts y reintentos
@@ -299,6 +301,14 @@ class PurchaseService {
     pageSize = 50,
     options = {}
   ) {
+    if (DEMO_CONFIG.enabled) {
+      console.log('🧪 [PurchaseService] Demo mode: returning mock purchase orders')
+      return {
+        success: true,
+        data: DEMO_PURCHASE_ORDERS_DATA,
+        pagination: { page: 1, pageSize: 50, hasMore: false },
+      }
+    }
     try {
       // Construir query parameters según la nueva especificación API
       const params = new URLSearchParams({
@@ -383,6 +393,10 @@ class PurchaseService {
 
   // Obtener tasas de impuestos disponibles
   async getTaxRates(start = 1, limit = 10) {
+    if (DEMO_CONFIG.enabled) {
+      console.log('🧪 [PurchaseService] Demo mode: returning mock tax rates')
+      return { success: true, data: DEMO_TAX_RATES_DATA }
+    }
     const startTime = performance.now()
     try {
       return await withRetry(async () => {
