@@ -58,42 +58,6 @@ const dropdownMenuItemStyle = {
   textAlign: 'left',
 }
 
-const dropdownMenuDangerStyle = {
-  color: '#b42318',
-}
-
-const RadioGroup = ({ label, options, value, onChange, name }) => (
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      flexWrap: 'wrap',
-    }}
-    role='radiogroup'
-    aria-label={label}
-  >
-    <span style={{ fontWeight: 600 }}>{label}</span>
-    <div style={{ display: 'flex', gap: '12px' }}>
-      {options.map(option => (
-        <label
-          key={option.value}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          <input
-            type='radio'
-            name={name}
-            value={option.value}
-            checked={value === option.value}
-            onChange={event => onChange(event.target.value)}
-          />
-          <span>{option.label}</span>
-        </label>
-      ))}
-    </div>
-  </div>
-)
-
 const formatCurrency = (value, currencyCode) => {
   const isPYG = currencyCode === 'PYG'
   return new Intl.NumberFormat('es-PY', {
@@ -1234,194 +1198,137 @@ const SalesNew = () => {
   }
 
   return (
-    <div className='sales-new'>
-      <div className='tabs sales-new__tabs' aria-label='Gestión de ventas'>
-        <div className='tabs__list' role='tablist'>
+    <div className="min-h-screen bg-[var(--fluent-surface-subtle,#F5F5F5)] p-4 lg:p-6">
+      {/* Fluent 2 Pivot Tabs */}
+      <nav className="mb-6" aria-label="Gestión de ventas">
+        <div className="flex gap-1 border-b border-[var(--fluent-border-default,#E0E0E0)]" role="tablist">
           <button
-            type='button'
-            className={`tabs__tab ${
-              activeTab === 'new-sale' ? 'tabs__tab--active' : ''
-            }`}
+            type="button"
             onClick={() => setActiveTab('new-sale')}
-            id='sales-new-tab'
-            role='tab'
+            id="sales-new-tab"
+            role="tab"
             aria-selected={activeTab === 'new-sale'}
-            aria-controls='sales-new-panel'
+            aria-controls="sales-new-panel"
+            className={`px-4 py-2.5 text-sm font-medium transition-all duration-[var(--fluent-duration-normal,200ms)] border-b-2 -mb-px ${
+              activeTab === 'new-sale'
+                ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]'
+                : 'border-transparent text-[var(--fluent-text-secondary,#616161)] hover:text-[var(--fluent-text-primary,#242424)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)]'
+            }`}
           >
             Nueva Venta
           </button>
           <button
-            type='button'
-            className={`tabs__tab ${
-              activeTab === 'history' ? 'tabs__tab--active' : ''
-            }`}
+            type="button"
             onClick={() => setActiveTab('history')}
-            id='sales-history-tab'
-            role='tab'
+            id="sales-history-tab"
+            role="tab"
             aria-selected={activeTab === 'history'}
-            aria-controls='sales-history-panel'
+            aria-controls="sales-history-panel"
+            className={`px-4 py-2.5 text-sm font-medium transition-all duration-[var(--fluent-duration-normal,200ms)] border-b-2 -mb-px ${
+              activeTab === 'history'
+                ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]'
+                : 'border-transparent text-[var(--fluent-text-secondary,#616161)] hover:text-[var(--fluent-text-primary,#242424)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)]'
+            }`}
           >
             Historial de Ventas
           </button>
         </div>
-      </div>
+      </nav>
 
       {activeTab === 'new-sale' && (
         <section
-          id='sales-new-panel'
-          role='tabpanel'
-          aria-label='Gestión de nueva venta'
-          aria-labelledby='sales-new-tab'
-          className='sales-new__section'
+          id="sales-new-panel"
+          role="tabpanel"
+          aria-label="Gestión de nueva venta"
+          aria-labelledby="sales-new-tab"
         >
-          <div className='sales-new__grid'>
-            <div className='sales-new__main'>
-              <article className='card card--elevated'>
-                <div className='card__header'>
-                  <h3 className='card__title'>
-                    <span className='card__title-icon'>
-                      <ShoppingCart size={18} />
-                    </span>
-                    <span className='card__title-text'>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+            {/* Main Content - 8 columns */}
+            <div className="lg:col-span-8 space-y-4">
+              {/* Products Card */}
+              <article className="bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-large,8px)] shadow-[var(--fluent-shadow-4,0_2px_4px_rgba(0,0,0,0.14),0_0_2px_rgba(0,0,0,0.12))] overflow-hidden">
+                <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--fluent-border-subtle,#F0F0F0)]">
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart size={18} className="text-[var(--fluent-brand-primary,#0078D4)]" />
+                    <h3 className="text-base font-semibold text-[var(--fluent-text-primary,#242424)]">
                       Productos Seleccionados
-                    </span>
-                  </h3>
-                </div>
-                <div className='card__content'>
-                  <div className='sales-new__search-row'>
-                    <button
-                      type='button'
-                      className='btn btn--primary'
-                      onClick={handleOpenModal}
-                      title='Ctrl+A'
-                    >
-                      <Plus size={16} aria-hidden='true' />
-                      Agregar Producto
-                    </button>
+                    </h3>
                   </div>
-
-                  <div className='table-container'>
-                    <table
-                      className='table'
-                      aria-label='Productos seleccionados'
-                    >
+                  <button
+                    type="button"
+                    onClick={handleOpenModal}
+                    title="Ctrl+A"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-brand-hover,#106EBE)] active:bg-[var(--fluent-brand-pressed,#005A9E)] transition-colors duration-[var(--fluent-duration-fast,100ms)]"
+                  >
+                    <Plus size={16} aria-hidden="true" />
+                    Agregar
+                  </button>
+                </header>
+                <div className="p-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm" aria-label="Productos seleccionados">
                       <thead>
-                        <tr>
-                          <th scope='col'>ID</th>
-                          <th scope='col'>Producto</th>
-                          <th scope='col' className='text-right'>
-                            Cantidad
-                          </th>
-                          <th scope='col' className='text-right'>
-                            Precio Unitario
-                          </th>
-                          <th scope='col' className='text-right'>
-                            Descuento
-                          </th>
-                          <th scope='col' className='text-right'>
-                            Total
-                          </th>
-                          <th scope='col' className='text-right'>
-                            ACCIONES
-                          </th>
+                        <tr className="border-b border-[var(--fluent-border-default,#E0E0E0)]">
+                          <th className="text-left py-2 px-3 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide">ID</th>
+                          <th className="text-left py-2 px-3 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide">Producto</th>
+                          <th className="text-right py-2 px-3 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide">Cant.</th>
+                          <th className="text-right py-2 px-3 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide">P. Unit.</th>
+                          <th className="text-right py-2 px-3 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide">Desc.</th>
+                          <th className="text-right py-2 px-3 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide">Total</th>
+                          <th className="text-right py-2 px-3 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide w-16"></th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredItems.length === 0 ? (
                           <tr>
-                            <td colSpan={7} className='text-center text-muted'>
-                              No se encontraron productos que coincidan con la
-                              búsqueda.
+                            <td colSpan={7} className="text-center py-8 text-[var(--fluent-text-secondary,#616161)]">
+                              No hay productos en el carrito. Haz clic en "Agregar" para comenzar.
                             </td>
                           </tr>
                         ) : (
                           filteredItems.map(item => {
-                            const lineTotal =
-                              item.price * item.quantity - (item.discount || 0)
+                            const lineTotal = item.price * item.quantity - (item.discount || 0)
                             return (
-                              <tr key={item.id}>
-                                <td>{item.productId || item.id || '-'}</td>
-                                <td>
+                              <tr key={item.id} className="border-b border-[var(--fluent-border-subtle,#F0F0F0)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors">
+                                <td className="py-2 px-3 text-[var(--fluent-text-secondary,#616161)]">{item.productId || item.id || '-'}</td>
+                                <td className="py-2 px-3 text-[var(--fluent-text-primary,#242424)]">
                                   {item.isReservation && (
-                                    <span
-                                      className='badge badge--pill badge--small badge--info'
-                                      style={{
-                                        marginRight: '8px',
-                                        fontSize: '0.75rem',
-                                        verticalAlign: 'middle',
-                                      }}
-                                      title='Este item corresponde a una reserva confirmada'
-                                    >
+                                    <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-[var(--fluent-brand-light,#DEECF9)] text-[var(--fluent-brand-primary,#0078D4)] rounded mr-2">
                                       Reserva
                                     </span>
                                   )}
                                   {item.name}
                                 </td>
-                                <td className='text-right'>{item.quantity}</td>
-                                <td className='text-right'>
-                                  {formatCurrency(item.price, 'PYG')}
-                                </td>
-                                <td className='text-right'>
-                                  {formatCurrency(item.discount || 0, 'PYG')}
-                                </td>
-                                <td className='text-right'>
-                                  {formatCurrency(lineTotal, 'PYG')}
-                                </td>
-                                <td className='text-right'>
-                                  <div
-                                    style={{
-                                      position: 'relative',
-                                      display: 'inline-block',
-                                    }}
-                                  >
+                                <td className="py-2 px-3 text-right text-[var(--fluent-text-primary,#242424)]">{item.quantity}</td>
+                                <td className="py-2 px-3 text-right text-[var(--fluent-text-primary,#242424)]">{formatCurrency(item.price, 'PYG')}</td>
+                                <td className="py-2 px-3 text-right text-[var(--fluent-text-primary,#242424)]">{formatCurrency(item.discount || 0, 'PYG')}</td>
+                                <td className="py-2 px-3 text-right font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(lineTotal, 'PYG')}</td>
+                                <td className="py-2 px-3 text-right">
+                                  <div className="relative inline-block">
                                     <button
-                                      type='button'
-                                      className='btn btn--ghost btn--icon-only btn--small'
+                                      type="button"
                                       onClick={() => toggleActionMenu(item.id)}
                                       aria-label={`Acciones para ${item.name}`}
+                                      className="p-1.5 rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-pressed,#E0E0E0)] transition-colors"
                                     >
-                                      <MoreVertical
-                                        size={16}
-                                        aria-hidden='true'
-                                      />
+                                      <MoreVertical size={16} className="text-[var(--fluent-text-secondary,#616161)]" />
                                     </button>
                                     {openActionMenuId === item.id && (
-                                      <div
-                                        role='menu'
-                                        aria-orientation='vertical'
-                                        data-side='bottom'
-                                        data-align='end'
-                                        data-state='open'
-                                        className='dropdown-menu__content'
-                                        style={{
-                                          position: 'absolute',
-                                          right: 0,
-                                          top: 'calc(100% + 6px)',
-                                          ...dropdownMenuStyle,
-                                          minWidth: '160px',
-                                        }}
-                                      >
+                                      <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16,0_8px_16px_rgba(0,0,0,0.14),0_0_2px_rgba(0,0,0,0.12))] border border-[var(--fluent-border-default,#E0E0E0)] py-1">
                                         <button
-                                          type='button'
-                                          role='menuitem'
-                                          className='dropdown-menu__item'
-                                          style={dropdownMenuItemStyle}
+                                          type="button"
                                           onClick={() => handleEditItem(item)}
+                                          className="w-full px-3 py-2 text-left text-sm text-[var(--fluent-text-primary,#242424)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors"
                                         >
                                           Editar
                                         </button>
                                         <button
-                                          type='button'
-                                          role='menuitem'
-                                          className='dropdown-menu__item dropdown-menu__item--danger'
-                                          style={{
-                                            ...dropdownMenuItemStyle,
-                                            ...dropdownMenuDangerStyle,
-                                          }}
+                                          type="button"
                                           onClick={() => {
                                             handleRemoveItem(item.id)
                                             setOpenActionMenuId(null)
                                           }}
+                                          className="w-full px-3 py-2 text-left text-sm text-[var(--fluent-status-danger,#D13438)] hover:bg-red-50 transition-colors"
                                         >
                                           Eliminar
                                         </button>
@@ -1439,64 +1346,60 @@ const SalesNew = () => {
                 </div>
               </article>
 
-              <article className='card card--elevated'>
-                <div className='card__header'>
-                  <h3 className='card__title'>
-                    <span className='card__title-icon'>
-                      <DollarSign size={18} />
-                    </span>
-                    <span className='card__title-text'>
-                      Resumen de la Venta
-                    </span>
+              {/* Sale Summary Card */}
+              <article className="bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-large,8px)] shadow-[var(--fluent-shadow-4,0_2px_4px_rgba(0,0,0,0.14),0_0_2px_rgba(0,0,0,0.12))] overflow-hidden">
+                <header className="flex items-center gap-2 px-4 py-3 border-b border-[var(--fluent-border-subtle,#F0F0F0)]">
+                  <DollarSign size={18} className="text-[var(--fluent-brand-primary,#0078D4)]" />
+                  <h3 className="text-base font-semibold text-[var(--fluent-text-primary,#242424)]">
+                    Resumen de la Venta
                   </h3>
-                </div>
-                <div className='card__content'>
-                  <div className='sales-new__summary'>
-                    <div className='sales-new__summary-column'>
-                      <div className='sales-new__summary-row'>
-                        <span className='text-muted'>Subtotal</span>
-                        <span>{formatCurrency(subtotal, 'PYG')}</span>
+                </header>
+                <div className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Totals Column */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-sm text-[var(--fluent-text-secondary,#616161)]">Subtotal</span>
+                        <span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(subtotal, 'PYG')}</span>
                       </div>
-                      <div className='sales-new__summary-row'>
-                        <span className='text-muted'>Impuestos (IVA 16%)</span>
-                        <span>{formatCurrency(taxes, 'PYG')}</span>
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-sm text-[var(--fluent-text-secondary,#616161)]">Impuestos (IVA 16%)</span>
+                        <span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(taxes, 'PYG')}</span>
                       </div>
-                      <div className='sales-new__summary-row'>
-                        <span className='text-muted'>Descuentos</span>
-                        <span>
-                          {formatCurrency(
-                            lineDiscounts + generalDiscount,
-                            'PYG'
-                          )}
-                        </span>
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-sm text-[var(--fluent-text-secondary,#616161)]">Descuentos</span>
+                        <span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(lineDiscounts + generalDiscount, 'PYG')}</span>
                       </div>
-                      <hr className='card__divider' />
-                      <div className='sales-new__summary-row sales-new__summary-total'>
-                        <span>Total</span>
-                        <span>{formatCurrency(total, 'PYG')}</span>
+                      <div className="border-t border-[var(--fluent-border-default,#E0E0E0)] pt-2 mt-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-base font-semibold text-[var(--fluent-text-primary,#242424)]">Total</span>
+                          <span className="text-lg font-bold text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency(total, 'PYG')}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className='sales-new__summary-actions'>
+
+                    {/* Actions Column */}
+                    <div className="flex flex-col justify-end gap-3">
                       <button
-                        type='button'
-                        className='btn btn--ghost'
+                        type="button"
                         onClick={() => setGeneralDiscount(value => value + 10)}
+                        className="w-full px-4 py-2 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-transparent border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors"
                       >
                         Aplicar Descuento General
                       </button>
-                      <div className='sales-new__summary-buttons'>
+                      <div className="flex gap-2">
                         <button
-                          type='button'
-                          className='btn btn--secondary'
+                          type="button"
                           onClick={resetSaleForm}
+                          className="flex-1 px-4 py-2 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-[var(--fluent-surface-subtle,#F5F5F5)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#E8E8E8)] transition-colors"
                         >
                           Cancelar
                         </button>
                         <button
-                          type='button'
-                          className='btn btn--primary'
+                          type="button"
                           onClick={handleSaveSale}
                           disabled={saleLoading || items.length === 0}
+                          className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-brand-hover,#106EBE)] active:bg-[var(--fluent-brand-pressed,#005A9E)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           {saleLoading ? 'Guardando...' : 'Guardar Venta'}
                         </button>
@@ -1507,188 +1410,109 @@ const SalesNew = () => {
               </article>
             </div>
 
-            <aside
-              className='sales-new__sidebar'
-              aria-label='Detalles de la venta'
-            >
-              <article className='card card--elevated'>
-                <div className='card__header'>
-                  <h3 className='card__title'>
-                    <span className='card__title-icon'>
-                      <User size={18} />
-                    </span>
-                    <span className='card__title-text'>
-                      Información del Cliente
-                    </span>
+            {/* Sidebar - 4 columns */}
+            <aside className="lg:col-span-4 space-y-4" aria-label="Detalles de la venta">
+              {/* Client Info Card */}
+              <article className="bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-large,8px)] shadow-[var(--fluent-shadow-4,0_2px_4px_rgba(0,0,0,0.14),0_0_2px_rgba(0,0,0,0.12))] overflow-hidden">
+                <header className="flex items-center gap-2 px-4 py-3 border-b border-[var(--fluent-border-subtle,#F0F0F0)]">
+                  <User size={18} className="text-[var(--fluent-brand-primary,#0078D4)]" />
+                  <h3 className="text-base font-semibold text-[var(--fluent-text-primary,#242424)]">
+                    Información del Cliente
                   </h3>
-                </div>
-                <div className='card__content'>
-                  <label className='form-field__label' htmlFor='client-search'>
-                    Buscar Cliente
-                  </label>
-                  <div
-                    style={{ position: 'relative' }}
-                    ref={clientSearchContainerRef}
-                  >
-                    <div className='search-box'>
-                      <Search className='search-box__icon' aria-hidden='true' />
-                      <input
-                        id='client-search'
-                        type='search'
-                        className='input search-box__input'
-                        placeholder='Escribe al menos 3 caracteres...'
-                        value={clientSearchTerm}
-                        onChange={event => {
-                          setClientSearchTerm(event.target.value)
-                          if (
-                            selectedClient &&
-                            event.target.value !== selectedClient.name
-                          ) {
-                            setSelectedClient(null)
-                          }
-                        }}
-                        onFocus={() => {
-                          if (
-                            clientSearchTerm.length >= 3 &&
-                            clients.length > 0
-                          ) {
-                            setShowClientDropdown(true)
-                          }
-                        }}
-                        disabled={clientsLoading}
-                      />
-                    </div>
-
-                    {showClientDropdown && clients.length > 0 && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          right: 0,
-                          marginTop: '4px',
-                          backgroundColor: 'white',
-                          border: '1px solid var(--color-border-default)',
-                          borderRadius: '6px',
-                          boxShadow:
-                            '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                          maxHeight: '240px',
-                          overflowY: 'auto',
-                          zIndex: 1000,
-                        }}
-                      >
-                        {clients.map((client, index) => (
-                          <button
-                            key={`${client.id}-${index}`}
-                            type='button'
-                            onClick={() => handleSelectClient(client)}
-                            style={{
-                              width: '100%',
-                              padding: '12px 16px',
-                              textAlign: 'left',
-                              border: 'none',
-                              backgroundColor: 'transparent',
-                              cursor: 'pointer',
-                              transition: 'background-color 0.15s',
-                              borderBottom:
-                                '1px solid var(--color-border-subtle)',
-                            }}
-                            onMouseEnter={e => {
-                              e.currentTarget.style.backgroundColor =
-                                'var(--color-bg-secondary)'
-                            }}
-                            onMouseLeave={e => {
-                              e.currentTarget.style.backgroundColor =
-                                'transparent'
-                            }}
-                          >
-                            <div
-                              style={{ fontWeight: '500', marginBottom: '2px' }}
-                            >
-                              {client.name}
-                            </div>
-                            {client.document_id && (
-                              <div
-                                style={{
-                                  fontSize: '0.875rem',
-                                  color: 'var(--color-text-muted)',
-                                }}
-                              >
-                                Doc: {formatDocumentId(client.document_id)}
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {clientSearchTerm.length > 0 &&
-                      clientSearchTerm.length < 3 && (
-                        <p
-                          style={{
-                            fontSize: '0.875rem',
-                            color: 'var(--color-text-muted)',
-                            marginTop: '4px',
+                </header>
+                <div className="p-4 space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1.5" htmlFor="client-search">
+                      Buscar Cliente
+                    </label>
+                    <div className="relative" ref={clientSearchContainerRef}>
+                      <div className="relative">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fluent-text-secondary,#616161)]" aria-hidden="true" />
+                        <input
+                          id="client-search"
+                          type="search"
+                          className="w-full pl-9 pr-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] placeholder:text-[var(--fluent-text-secondary,#616161)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          placeholder="Escribe al menos 3 caracteres..."
+                          value={clientSearchTerm}
+                          onChange={event => {
+                            setClientSearchTerm(event.target.value)
+                            if (selectedClient && event.target.value !== selectedClient.name) {
+                              setSelectedClient(null)
+                            }
                           }}
-                        >
+                          onFocus={() => {
+                            if (clientSearchTerm.length >= 3 && clients.length > 0) {
+                              setShowClientDropdown(true)
+                            }
+                          }}
+                          disabled={clientsLoading}
+                        />
+                      </div>
+
+                      {showClientDropdown && clients.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16,0_8px_16px_rgba(0,0,0,0.14),0_0_2px_rgba(0,0,0,0.12))] max-h-60 overflow-y-auto">
+                          {clients.map((client, index) => (
+                            <button
+                              key={`${client.id}-${index}`}
+                              type="button"
+                              onClick={() => handleSelectClient(client)}
+                              className="w-full px-3 py-2.5 text-left text-sm hover:bg-[var(--fluent-surface-hover,#F5F5F5)] border-b border-[var(--fluent-border-subtle,#F0F0F0)] last:border-b-0 transition-colors"
+                            >
+                              <div className="font-medium text-[var(--fluent-text-primary,#242424)]">{client.name}</div>
+                              {client.document_id && (
+                                <div className="text-xs text-[var(--fluent-text-secondary,#616161)] mt-0.5">
+                                  Doc: {formatDocumentId(client.document_id)}
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {clientSearchTerm.length > 0 && clientSearchTerm.length < 3 && (
+                        <p className="text-xs text-[var(--fluent-text-secondary,#616161)] mt-1">
                           Escribe al menos 3 caracteres para buscar
                         </p>
                       )}
 
-                    {clientsLoading && clientSearchTerm.length >= 3 && (
-                      <p
-                        style={{
-                          fontSize: '0.875rem',
-                          color: 'var(--color-text-muted)',
-                          marginTop: '4px',
-                        }}
-                      >
-                        Buscando...
-                      </p>
-                    )}
+                      {clientsLoading && clientSearchTerm.length >= 3 && (
+                        <p className="text-xs text-[var(--fluent-text-secondary,#616161)] mt-1">
+                          Buscando...
+                        </p>
+                      )}
 
-                    {!clientsLoading &&
-                      clientSearchTerm.length >= 3 &&
-                      clients.length === 0 && (
-                        <p
-                          style={{
-                            fontSize: '0.875rem',
-                            color: 'var(--color-text-muted)',
-                            marginTop: '4px',
-                          }}
-                        >
+                      {!clientsLoading && clientSearchTerm.length >= 3 && clients.length === 0 && (
+                        <p className="text-xs text-[var(--fluent-text-secondary,#616161)] mt-1">
                           No se encontraron clientes
                         </p>
                       )}
+                    </div>
                   </div>
 
                   {selectedClient && (
-                    <div className='client-info' aria-live='polite'>
-                      <p>
-                        <strong>Nombre:</strong> {selectedClient.name}
+                    <div className="p-3 bg-[var(--fluent-surface-subtle,#F5F5F5)] rounded-[var(--fluent-corner-radius-medium,4px)] space-y-1.5" aria-live="polite">
+                      <p className="text-sm text-[var(--fluent-text-primary,#242424)]">
+                        <span className="font-medium">Nombre:</span> {selectedClient.name}
                       </p>
                       {selectedClient.document_id && (
-                        <p>
-                          <strong>Documento:</strong>{' '}
-                          {formatDocumentId(selectedClient.document_id)}
+                        <p className="text-sm text-[var(--fluent-text-primary,#242424)]">
+                          <span className="font-medium">Documento:</span> {formatDocumentId(selectedClient.document_id)}
                         </p>
                       )}
                       {selectedClient.contact?.email && (
-                        <p>
-                          <strong>Email:</strong> {selectedClient.contact.email}
+                        <p className="text-sm text-[var(--fluent-text-primary,#242424)]">
+                          <span className="font-medium">Email:</span> {selectedClient.contact.email}
                         </p>
                       )}
                       {selectedClient.contact?.phone && (
-                        <p>
-                          <strong>Teléfono:</strong>{' '}
-                          {selectedClient.contact.phone}
+                        <p className="text-sm text-[var(--fluent-text-primary,#242424)]">
+                          <span className="font-medium">Teléfono:</span> {selectedClient.contact.phone}
                         </p>
                       )}
                       <button
-                        type='button'
-                        className='btn btn--secondary btn--small'
+                        type="button"
                         onClick={handleSearchReservations}
-                        style={{ marginTop: '12px', width: '100%' }}
+                        className="w-full mt-2 px-3 py-1.5 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#E8E8E8)] transition-colors"
                       >
                         Buscar Reservas Confirmadas
                       </button>
@@ -1696,82 +1520,73 @@ const SalesNew = () => {
                   )}
 
                   <button
-                    type='button'
-                    className='btn btn--ghost btn--block'
+                    type="button"
                     onClick={() => navigate('/clientes')}
+                    className="w-full px-3 py-2 text-sm font-medium text-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-light,#DEECF9)] rounded-[var(--fluent-corner-radius-medium,4px)] transition-colors"
                   >
                     Crear nuevo cliente
                   </button>
                 </div>
               </article>
 
-              <article className='card card--elevated'>
-                <div className='card__header'>
-                  <h3 className='card__title'>
-                    <span className='card__title-icon'>
-                      <CreditCard size={18} />
-                    </span>
-                    <span className='card__title-text'>Opciones de Pago</span>
+              {/* Payment Options Card */}
+              <article className="bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-large,8px)] shadow-[var(--fluent-shadow-4,0_2px_4px_rgba(0,0,0,0.14),0_0_2px_rgba(0,0,0,0.12))] overflow-hidden">
+                <header className="flex items-center gap-2 px-4 py-3 border-b border-[var(--fluent-border-subtle,#F0F0F0)]">
+                  <CreditCard size={18} className="text-[var(--fluent-brand-primary,#0078D4)]" />
+                  <h3 className="text-base font-semibold text-[var(--fluent-text-primary,#242424)]">
+                    Opciones de Pago
                   </h3>
-                </div>
-                <div className='card__content'>
-                  <label className='form-field__label' htmlFor='payment-method'>
-                    Método de Pago
-                  </label>
-                  <select
-                    id='payment-method'
-                    className='input'
-                    value={paymentMethodId}
-                    onChange={event =>
-                      setPaymentMethodId(Number(event.target.value))
-                    }
-                    disabled={paymentMethodsLoading}
-                  >
-                    {paymentMethodsLoading ? (
-                      <option value=''>Cargando métodos de pago...</option>
-                    ) : paymentMethods.length === 0 ? (
-                      <option value=''>No hay métodos disponibles</option>
-                    ) : (
-                      paymentMethods.map((method, index) => (
-                        <option key={`${method.id}-${index}`} value={method.id}>
-                          {method.method_code} - {method.description}
-                        </option>
-                      ))
-                    )}
-                  </select>
+                </header>
+                <div className="p-4 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1.5" htmlFor="payment-method">
+                      Método de Pago
+                    </label>
+                    <select
+                      id="payment-method"
+                      value={paymentMethodId}
+                      onChange={event => setPaymentMethodId(Number(event.target.value))}
+                      disabled={paymentMethodsLoading}
+                      className="w-full px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {paymentMethodsLoading ? (
+                        <option value="">Cargando métodos de pago...</option>
+                      ) : paymentMethods.length === 0 ? (
+                        <option value="">No hay métodos disponibles</option>
+                      ) : (
+                        paymentMethods.map((method, index) => (
+                          <option key={`${method.id}-${index}`} value={method.id}>
+                            {method.method_code} - {method.description}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
 
-                  <label
-                    className='form-field__label'
-                    htmlFor='currency'
-                    style={{ marginTop: '12px' }}
-                  >
-                    Moneda
-                  </label>
-                  <select
-                    id='currency'
-                    className='input'
-                    value={currencyId}
-                    onChange={event =>
-                      setCurrencyId(Number(event.target.value))
-                    }
-                    disabled={currenciesLoading}
-                  >
-                    {currenciesLoading ? (
-                      <option value=''>Cargando monedas...</option>
-                    ) : currencies.length === 0 ? (
-                      <option value=''>No hay monedas disponibles</option>
-                    ) : (
-                      currencies.map((currency, index) => (
-                        <option
-                          key={`${currency.id}-${index}`}
-                          value={currency.id}
-                        >
-                          {currency.currency_code} -{' '}
-                          {currency.currency_name || currency.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1.5" htmlFor="currency">
+                      Moneda
+                    </label>
+                    <select
+                      id="currency"
+                      value={currencyId}
+                      onChange={event => setCurrencyId(Number(event.target.value))}
+                      disabled={currenciesLoading}
+                      className="w-full px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {currenciesLoading ? (
+                        <option value="">Cargando monedas...</option>
+                      ) : currencies.length === 0 ? (
+                        <option value="">No hay monedas disponibles</option>
+                      ) : (
+                        currencies.map((currency, index) => (
+                          <option key={`${currency.id}-${index}`} value={currency.id}>
+                            {currency.currency_code} - {currency.currency_name || currency.name}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
                 </div>
               </article>
             </aside>
@@ -1785,50 +1600,27 @@ const SalesNew = () => {
           role='tabpanel'
           aria-label='Historial de ventas'
           aria-labelledby='sales-history-tab'
-          className='sales-history'
+          className='space-y-4'
         >
-          <article className='card card--elevated'>
-            <div className='card__content'>
+          <article className='bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-large,8px)] shadow-[var(--fluent-shadow-4,0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.08))] border border-[var(--fluent-border-subtle,#F0F0F0)]'>
+            <div className='p-4'>
               <div
-                className='sales-history__filters'
-                style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '14px',
-                  padding: '16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '14px',
-                }}
+                className='p-4 flex flex-col gap-3.5 bg-[var(--fluent-surface-subtle,#F5F5F5)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-large,8px)]' 
               >
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '12px',
-                    flexWrap: 'wrap',
-                    alignItems: 'flex-start',
-                  }}
-                >
-                  <div
-                    style={{
-                      flex: '1 1 260px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '6px',
-                    }}
-                  >
+                <div className="flex gap-3 flex-wrap items-start">
+                  <div className="flex-[1_1_260px] flex flex-col gap-1.5">
                     <label
-                      className='form-field__label'
+                      className='text-xs font-medium text-[var(--fluent-text-secondary,#616161)]'
                       htmlFor='history-search'
                     >
                       Buscar por cliente o ID
                     </label>
-                    <div className='search-box'>
-                      <Search className='search-box__icon' aria-hidden='true' />
+                    <div className='relative'>
+                      <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--fluent-text-secondary,#616161)]' aria-hidden='true' />
                       <input
                         id='history-search'
                         type='search'
-                        className='input search-box__input'
+                        className='w-full pl-9 pr-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] placeholder:text-[var(--fluent-text-secondary,#616161)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]'
                         placeholder='Ej: Juan, Pérez o #1234'
                         value={historySearch}
                         onChange={event => setHistorySearch(event.target.value)}
@@ -1837,24 +1629,10 @@ const SalesNew = () => {
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      flex: '0 1 260px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px',
-                    }}
-                  >
-                    <span className='form-field__label'>Filtrar por</span>
+                  <div className="flex-[0_1_260px] flex flex-col gap-2">
+                    <span className='text-xs font-medium text-[var(--fluent-text-secondary,#616161)]'>Filtrar por</span>
                     <div
-                      style={{
-                        display: 'inline-flex',
-                        padding: '4px',
-                        borderRadius: '12px',
-                        background: '#eef2ff',
-                        border: '1px solid #dfe3f3',
-                        gap: '6px',
-                      }}
+                      className='inline-flex p-1 rounded-[var(--fluent-corner-radius-large,8px)] bg-[var(--fluent-brand-primary,#0078D4)]/5 border border-[var(--fluent-brand-primary,#0078D4)]/20 gap-1'
                       role='radiogroup'
                       aria-label='Filtrar por'
                     >
@@ -1868,42 +1646,24 @@ const SalesNew = () => {
                             key={option.value}
                             type='button'
                             onClick={() => setHistoryFilterMode(option.value)}
-                            className='btn btn--ghost btn--small'
                             aria-pressed={active}
-                            style={{
-                              borderRadius: '10px',
-                              background: active ? '#fff' : 'transparent',
-                              border: active
-                                ? '1px solid #4f46e5'
-                                : '1px solid transparent',
-                              color: active ? '#111827' : '#374151',
-                              boxShadow: active
-                                ? '0 1px 4px rgba(79, 70, 229, 0.15)'
-                                : 'none',
-                              transition: 'all 0.15s ease',
-                            }}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-[var(--fluent-corner-radius-medium,4px)] transition-colors ${active ? 'bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] border border-[var(--fluent-brand-primary,#0078D4)] shadow-sm' : 'text-[var(--fluent-text-secondary,#616161)] border border-transparent hover:bg-white/60'}`}
                           >
                             {option.label}
                           </button>
                         )
                       })}
                     </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '4px',
-                      }}
-                    >
+                    <div className="flex flex-col gap-1">
                       <small
                         id='history-filter-hint'
-                        style={{ color: '#4b5563', lineHeight: 1.4 }}
+                        className='text-xs text-[var(--fluent-text-secondary,#616161)]'
                       >
                         {historyFilterHint}
                       </small>
                       {historyFilterError && (
                         <small
-                          style={{ color: '#b42318', lineHeight: 1.4 }}
+                          className='text-xs text-[var(--fluent-status-danger,#D13438)]'
                           role='alert'
                         >
                           {historyFilterError}
@@ -1912,24 +1672,10 @@ const SalesNew = () => {
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      flex: '0 1 340px',
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '10px',
-                      alignItems: 'end',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px',
-                      }}
-                    >
+                  <div className="flex-[0_1_340px] grid grid-cols-2 gap-2.5 items-end">
+                    <div className="flex flex-col gap-1.5">
                       <label
-                        className='form-field__label'
+                        className='text-xs font-medium text-[var(--fluent-text-secondary,#616161)]'
                         htmlFor='history-date-from'
                       >
                         Desde
@@ -1937,22 +1683,16 @@ const SalesNew = () => {
                       <input
                         id='history-date-from'
                         type='date'
-                        className='input'
+                        className='px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] disabled:opacity-50 disabled:cursor-not-allowed'
                         value={dateFrom}
                         onChange={event => setDateFrom(event.target.value)}
                         aria-label='Fecha desde'
                         disabled={historyFilterMode !== 'date'}
                       />
                     </div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px',
-                      }}
-                    >
+                    <div className="flex flex-col gap-1.5">
                       <label
-                        className='form-field__label'
+                        className='text-xs font-medium text-[var(--fluent-text-secondary,#616161)]'
                         htmlFor='history-date-to'
                       >
                         Hasta
@@ -1960,24 +1700,17 @@ const SalesNew = () => {
                       <input
                         id='history-date-to'
                         type='date'
-                        className='input'
+                        className='px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] disabled:opacity-50 disabled:cursor-not-allowed'
                         value={dateTo}
                         onChange={event => setDateTo(event.target.value)}
                         aria-label='Fecha hasta'
                         disabled={historyFilterMode !== 'date'}
                       />
                     </div>
-                    <div
-                      style={{
-                        gridColumn: '1 / span 2',
-                        display: 'flex',
-                        gap: '8px',
-                        flexWrap: 'wrap',
-                      }}
-                    >
+                    <div className='col-span-2 flex gap-2 flex-wrap'>
                       <button
                         type='button'
-                        className='btn btn--ghost btn--small'
+                        className='px-2.5 py-1 text-xs font-medium text-[var(--fluent-text-secondary,#616161)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
                         disabled={historyFilterMode !== 'date'}
                         onClick={() => applyDatePreset('today')}
                       >
@@ -1985,7 +1718,7 @@ const SalesNew = () => {
                       </button>
                       <button
                         type='button'
-                        className='btn btn--ghost btn--small'
+                        className='px-2.5 py-1 text-xs font-medium text-[var(--fluent-text-secondary,#616161)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
                         disabled={historyFilterMode !== 'date'}
                         onClick={() => applyDatePreset('last7')}
                       >
@@ -1993,7 +1726,7 @@ const SalesNew = () => {
                       </button>
                       <button
                         type='button'
-                        className='btn btn--ghost btn--small'
+                        className='px-2.5 py-1 text-xs font-medium text-[var(--fluent-text-secondary,#616161)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
                         disabled={historyFilterMode !== 'date'}
                         onClick={() => applyDatePreset('month')}
                       >
@@ -2003,122 +1736,61 @@ const SalesNew = () => {
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    gap: '12px',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <div
-                    style={{
-                      flex: '0 0 auto',
-                      display: 'flex',
-                      flexDirection: 'row',
-                      gap: '8px',
-                      alignItems: 'stretch',
-                      flexWrap: 'wrap',
-                    }}
+                <div className='flex justify-end gap-2 flex-wrap'>
+                  <button
+                    type='button'
+                    className='inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-brand-hover,#106EBE)] active:bg-[var(--fluent-brand-pressed,#005A9E)] transition-colors'
+                    onClick={handleHistoryFilter}
                   >
-                    <button
-                      type='button'
-                      className='btn btn--primary'
-                      onClick={handleHistoryFilter}
-                      style={{ minWidth: '140px' }}
-                    >
-                      <Filter size={16} aria-hidden='true' />
-                      Filtrar
-                    </button>
-                    <button
-                      type='button'
-                      className='btn btn--ghost'
-                      onClick={handleHistoryClear}
-                      style={{ minWidth: '140px' }}
-                    >
-                      <X size={16} aria-hidden='true' />
-                      Limpiar
-                    </button>
-                  </div>
+                    <Filter size={16} aria-hidden='true' />
+                    Filtrar
+                  </button>
+                  <button
+                    type='button'
+                    className='inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors'
+                    onClick={handleHistoryClear}
+                  >
+                    <X size={16} aria-hidden='true' />
+                    Limpiar
+                  </button>
                 </div>
               </div>
 
-              {(historyFilterMode === 'name' && historySearch.trim()) ||
-              (historyFilterMode === 'date' && dateFrom && dateTo) ? (
-                <div
-                  style={{
-                    marginTop: '10px',
-                    display: 'flex',
-                    gap: '8px',
-                    flexWrap: 'wrap',
-                  }}
-                  aria-live='polite'
-                >
+              {((historyFilterMode === 'name' && historySearch.trim()) || (historyFilterMode === 'date' && dateFrom && dateTo)) && (
+                <div className="mt-3 flex gap-2 flex-wrap" aria-live="polite">
                   {historyFilterMode === 'name' && historySearch.trim() && (
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '6px 10px',
-                        background: '#eef2ff',
-                        color: '#3730a3',
-                        borderRadius: '999px',
-                        fontSize: '0.9rem',
-                        border: '1px solid #c7d2fe',
-                      }}
-                    >
-                      Filtro: nombre contiene “{historySearch.trim()}”
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-[var(--fluent-brand-light,#DEECF9)] text-[var(--fluent-brand-primary,#0078D4)] rounded-full border border-[var(--fluent-brand-primary,#0078D4)]/20">
+                      Filtro: nombre contiene "{historySearch.trim()}"
                     </span>
                   )}
                   {historyFilterMode === 'date' && dateFrom && dateTo && (
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '6px 10px',
-                        background: '#ecfdf3',
-                        color: '#166534',
-                        borderRadius: '999px',
-                        fontSize: '0.9rem',
-                        border: '1px solid #bbf7d0',
-                      }}
-                    >
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-[var(--fluent-status-success-bg,#DFF6DD)] text-[var(--fluent-status-success,#107C10)] rounded-full border border-[var(--fluent-status-success,#107C10)]/20">
                       Rango: {dateFrom} → {dateTo}
                     </span>
                   )}
                 </div>
-              ) : null}
+              )}
 
-              <div className='table-container'>
-                <table className='table' aria-label='Historial de ventas'>
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full text-sm" aria-label="Historial de ventas">
                   <thead>
-                    <tr>
-                      <th scope='col'>ID Venta</th>
-                      <th scope='col'>Fecha</th>
-                      <th scope='col'>Cliente</th>
-                      <th scope='col' className='text-right'>
-                        Total
-                      </th>
-                      <th scope='col' className='text-center'>
-                        Estado
-                      </th>
-                      <th scope='col' className='text-right'>
-                        ACCIONES
-                      </th>
+                    <tr className="border-b border-[var(--fluent-border-default,#E0E0E0)]">
+                      <th className="py-2 px-3 text-left font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide">ID Venta</th>
+                      <th className="py-2 px-3 text-left font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide">Fecha</th>
+                      <th className="py-2 px-3 text-left font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide">Cliente</th>
+                      <th className="py-2 px-3 text-right font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide">Total</th>
+                      <th className="py-2 px-3 text-center font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide">Estado</th>
+                      <th className="py-2 px-3 text-right font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase tracking-wide w-16"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {saleLoading ? (
                       <tr>
-                        <td colSpan={6} className='text-center text-muted'>
-                          Cargando ventas...
-                        </td>
+                        <td colSpan={6} className="py-8 text-center text-[var(--fluent-text-secondary,#616161)]">Cargando ventas...</td>
                       </tr>
                     ) : filteredHistory.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className='text-center text-muted'>
+                        <td colSpan={6} className="py-8 text-center text-[var(--fluent-text-secondary,#616161)]">
                           {historyFilterMode === 'name' && historySearch
                             ? 'No se encontraron ventas para el nombre ingresado'
                             : dateFrom && dateTo
@@ -2130,89 +1802,47 @@ const SalesNew = () => {
                       filteredHistory.map((entry, index) => {
                         const saleId = entry.sale_id || entry.id
                         const statusKey = (entry.status || '').toLowerCase()
-                        const status =
-                          STATUS_STYLES[statusKey] || STATUS_STYLES.pending
+                        const status = STATUS_STYLES[statusKey] || STATUS_STYLES.pending
                         return (
-                          <tr key={`${saleId}-${index}`}>
-                            <td className='font-medium'>#{saleId}</td>
-                            <td>
-                              {entry.order_date
-                                ? new Date(entry.order_date).toLocaleString(
-                                    'es-ES',
-                                    {
-                                      dateStyle: 'short',
-                                      timeStyle: 'short',
-                                    }
-                                  )
-                                : '—'}
+                          <tr key={`${saleId}-${index}`} className="border-b border-[var(--fluent-border-subtle,#F0F0F0)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors">
+                            <td className="py-2 px-3 font-medium text-[var(--fluent-text-primary,#242424)]">#{saleId}</td>
+                            <td className="py-2 px-3 text-[var(--fluent-text-primary,#242424)]">
+                              {entry.order_date ? new Date(entry.order_date).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) : '—'}
                             </td>
-                            <td>{entry.client_name || '—'}</td>
-                            <td className='text-right'>
-                              {formatCurrency(
-                                entry.total_amount || entry.total || 0,
-                                'PYG'
-                              )}
+                            <td className="py-2 px-3 text-[var(--fluent-text-primary,#242424)]">{entry.client_name || '—'}</td>
+                            <td className="py-2 px-3 text-right font-medium text-[var(--fluent-text-primary,#242424)]">
+                              {formatCurrency(entry.total_amount || entry.total || 0, 'PYG')}
                             </td>
-                            <td className='text-center'>
-                              <span
-                                className={`badge badge--pill badge--small ${status.badge}`}
-                              >
+                            <td className="py-2 px-3 text-center">
+                              <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${status.badge}`}>
                                 {status.label}
                               </span>
                             </td>
-                            <td className='text-right'>
-                              <div
-                                style={{
-                                  position: 'relative',
-                                  display: 'inline-block',
-                                }}
-                              >
+                            <td className="py-2 px-3 text-right">
+                              <div className="relative inline-block">
                                 <button
-                                  type='button'
-                                  className='btn btn--ghost btn--icon-only btn--small'
-                                  onClick={() =>
-                                    toggleHistoryActionMenu(saleId)
-                                  }
+                                  type="button"
+                                  onClick={() => toggleHistoryActionMenu(saleId)}
                                   aria-label={`Acciones para la venta ${saleId}`}
+                                  className="p-1.5 rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-pressed,#E0E0E0)] transition-colors"
                                 >
-                                  <MoreVertical size={16} aria-hidden='true' />
+                                  <MoreVertical size={16} className="text-[var(--fluent-text-secondary,#616161)]" />
                                 </button>
                                 {historyActionMenuId === saleId && (
-                                  <div
-                                    role='menu'
-                                    aria-orientation='vertical'
-                                    data-side='bottom'
-                                    data-align='end'
-                                    data-state='open'
-                                    className='dropdown-menu__content'
-                                    style={{
-                                      position: 'absolute',
-                                      right: 0,
-                                      top: 'calc(100% + 6px)',
-                                      ...dropdownMenuStyle,
-                                    }}
-                                  >
+                                  <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16,0_8px_16px_rgba(0,0,0,0.14),0_0_2px_rgba(0,0,0,0.12))] border border-[var(--fluent-border-default,#E0E0E0)] py-1">
                                     <button
-                                      type='button'
-                                      role='menuitem'
-                                      className='dropdown-menu__item'
-                                      style={dropdownMenuItemStyle}
+                                      type="button"
                                       onClick={() => handleViewSale(entry)}
+                                      className="w-full px-3 py-2 text-left text-sm text-[var(--fluent-text-primary,#242424)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors flex items-center gap-2"
                                     >
-                                      <Eye size={16} aria-hidden='true' /> Ver
+                                      <Eye size={16} aria-hidden="true" /> Ver
                                     </button>
                                     <button
-                                      type='button'
-                                      role='menuitem'
-                                      className='dropdown-menu__item dropdown-menu__item--danger'
-                                      style={{
-                                        ...dropdownMenuItemStyle,
-                                        ...dropdownMenuDangerStyle,
-                                      }}
+                                      type="button"
                                       onClick={() => handleCancelSale(entry)}
+                                      className="w-full px-3 py-2 text-left text-sm text-[var(--fluent-status-danger,#D13438)] hover:bg-red-50 transition-colors flex items-center gap-2"
                                     >
-                                      <X size={16} aria-hidden='true' />{' '}
-                                      Cancelar venta
+                                      <X size={16} aria-hidden="true" /> Cancelar venta
                                     </button>
                                   </div>
                                 )}
@@ -2231,181 +1861,70 @@ const SalesNew = () => {
       )}
 
       {showSaleDetailModal && selectedHistorySale && (
-        <div
-          className='sales-modal'
-          role='dialog'
-          aria-modal='true'
-          aria-labelledby='sale-detail-modal-title'
-        >
-          <div
-            className='sales-modal__overlay'
-            onClick={() => {
-              setShowSaleDetailModal(false)
-              setSelectedHistorySale(null)
-            }}
-            aria-hidden='true'
-          />
-          <div className='sales-modal__dialog'>
-            <header className='sales-modal__header'>
-              <div className='sales-modal__header-content'>
-                <h3 id='sale-detail-modal-title' className='sales-modal__title'>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="sale-detail-modal-title">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setShowSaleDetailModal(false); setSelectedHistorySale(null) }} aria-hidden="true" />
+          <div className="relative w-full max-w-2xl mx-4 max-h-[90vh] bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-xlarge,12px)] shadow-[var(--fluent-shadow-64,0_32px_64px_rgba(0,0,0,0.24),0_0_8px_rgba(0,0,0,0.1))] flex flex-col overflow-hidden">
+            <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-surface-subtle,#FAFAFA)]">
+              <div>
+                <h3 id="sale-detail-modal-title" className="text-base font-semibold text-[var(--fluent-text-primary,#242424)]">
                   Venta #{selectedHistorySale.sale_id || selectedHistorySale.id}
                 </h3>
-                <p className='sales-modal__subtitle'>
-                  Detalles completos de la venta seleccionada.
-                </p>
+                <p className="text-xs text-[var(--fluent-text-secondary,#616161)]">Detalles completos de la venta</p>
               </div>
-              <button
-                type='button'
-                className='sales-modal__close'
-                onClick={() => {
-                  setShowSaleDetailModal(false)
-                  setSelectedHistorySale(null)
-                }}
-              >
-                <X size={16} aria-hidden='true' />
-                <span className='sr-only'>Cerrar</span>
+              <button type="button" onClick={() => { setShowSaleDetailModal(false); setSelectedHistorySale(null) }} className="p-1.5 rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)] transition-colors">
+                <X size={18} className="text-[var(--fluent-text-secondary,#616161)]" />
               </button>
             </header>
 
-            <div className='sales-modal__body'>
-              <section className='sales-modal__section sales-modal__section--context'>
-                <div className='sales-modal__info-grid'>
-                  <div className='sales-modal__info-item'>
-                    <span className='sales-modal__label'>Cliente</span>
-                    <span className='sales-modal__value'>
-                      {selectedHistorySale.client_name || '—'}
-                    </span>
-                  </div>
-                  <div className='sales-modal__info-item'>
-                    <span className='sales-modal__label'>Fecha</span>
-                    <span className='sales-modal__value'>
-                      {formatDateTime(
-                        selectedHistorySale.order_date ||
-                          selectedHistorySale.sale_date ||
-                          selectedHistorySale.created_at
-                      )}
-                    </span>
-                  </div>
-                  <div className='sales-modal__info-item'>
-                    <span className='sales-modal__label'>Estado</span>
-                    <span className='sales-modal__value'>
-                      {formatStatusLabel(selectedHistorySale.status)}
-                    </span>
-                  </div>
-                  <div className='sales-modal__info-item'>
-                    <span className='sales-modal__label'>Total</span>
-                    <span className='sales-modal__value'>
-                      {formatCurrency(
-                        selectedHistorySale.total_amount ||
-                          selectedHistorySale.total ||
-                          0,
-                        'PYG'
-                      )}
-                    </span>
-                  </div>
-                  <div className='sales-modal__info-item'>
-                    <span className='sales-modal__label'>Método de pago</span>
-                    <span className='sales-modal__value'>
-                      {selectedHistorySale.payment_method || '—'}
-                    </span>
-                  </div>
-                  <div className='sales-modal__info-item'>
-                    <span className='sales-modal__label'>Atendido por</span>
-                    <span className='sales-modal__value'>
-                      {selectedHistorySale.user_name || '—'}
-                    </span>
-                  </div>
-                </div>
-              </section>
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-3 bg-[var(--fluent-surface-subtle,#F5F5F5)] rounded-[var(--fluent-corner-radius-medium,4px)] mb-4">
+                <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Cliente</span><span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{selectedHistorySale.client_name || '—'}</span></div>
+                <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Fecha</span><span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{formatDateTime(selectedHistorySale.order_date || selectedHistorySale.sale_date || selectedHistorySale.created_at)}</span></div>
+                <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Estado</span><span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{formatStatusLabel(selectedHistorySale.status)}</span></div>
+                <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Total</span><span className="text-sm font-bold text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency(selectedHistorySale.total_amount || selectedHistorySale.total || 0, 'PYG')}</span></div>
+                <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Método de pago</span><span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{selectedHistorySale.payment_method || '—'}</span></div>
+                <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Atendido por</span><span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{selectedHistorySale.user_name || '—'}</span></div>
+              </div>
 
-              <section className='sales-modal__section'>
-                <h4 className='sales-modal__section-title'>Productos</h4>
-                <div className='table-container'>
-                  <table className='table' aria-label='Productos de la venta'>
-                    <thead>
-                      <tr>
-                        <th scope='col'>Producto</th>
-                        <th scope='col' className='text-right'>
-                          Cantidad
-                        </th>
-                        <th scope='col' className='text-right'>
-                          Precio
-                        </th>
-                        <th scope='col' className='text-right'>
-                          Descuento
-                        </th>
-                        <th scope='col' className='text-right'>
-                          Total
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedSaleDetails.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className='text-center text-muted'>
-                            No hay detalles de productos para esta venta.
-                          </td>
-                        </tr>
-                      ) : (
-                        selectedSaleDetails.map((detail, detailIndex) => {
-                          const quantity = Number(detail.quantity) || 0
-                          const unitPrice =
-                            detail.unit_price ||
-                            detail.sale_price ||
-                            detail.price ||
-                            detail.base_price ||
-                            0
-                          const discountAmount =
-                            detail.discount_amount || detail.discount || 0
-                          const lineTotal =
-                            detail.total_with_tax ||
-                            detail.subtotal ||
-                            quantity * unitPrice - discountAmount
-
-                          return (
-                            <tr
-                              key={`${
-                                detail.id ||
-                                detail.order_id ||
-                                detail.product_id ||
-                                'detail'
-                              }-${detailIndex}`}
-                            >
-                              <td>
-                                {detail.product_name ||
-                                  detail.product_id ||
-                                  'Producto'}
-                              </td>
-                              <td className='text-right'>{quantity}</td>
-                              <td className='text-right'>
-                                {formatCurrency(unitPrice, 'PYG')}
-                              </td>
-                              <td className='text-right'>
-                                {formatCurrency(discountAmount, 'PYG')}
-                              </td>
-                              <td className='text-right'>
-                                {formatCurrency(lineTotal, 'PYG')}
-                              </td>
-                            </tr>
-                          )
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
+              <h4 className="text-sm font-semibold text-[var(--fluent-text-primary,#242424)] mb-2">Productos</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" aria-label="Productos de la venta">
+                  <thead>
+                    <tr className="border-b border-[var(--fluent-border-default,#E0E0E0)]">
+                      <th className="text-left py-2 px-2 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase">Producto</th>
+                      <th className="text-right py-2 px-2 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase">Cant.</th>
+                      <th className="text-right py-2 px-2 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase">Precio</th>
+                      <th className="text-right py-2 px-2 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase">Desc.</th>
+                      <th className="text-right py-2 px-2 font-semibold text-[var(--fluent-text-secondary,#616161)] text-xs uppercase">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedSaleDetails.length === 0 ? (
+                      <tr><td colSpan={5} className="text-center py-4 text-[var(--fluent-text-secondary,#616161)]">No hay detalles de productos.</td></tr>
+                    ) : (
+                      selectedSaleDetails.map((detail, detailIndex) => {
+                        const quantity = Number(detail.quantity) || 0
+                        const unitPrice = detail.unit_price || detail.sale_price || detail.price || detail.base_price || 0
+                        const discountAmount = detail.discount_amount || detail.discount || 0
+                        const lineTotal = detail.total_with_tax || detail.subtotal || quantity * unitPrice - discountAmount
+                        return (
+                          <tr key={`${detail.id || detail.order_id || detail.product_id || 'detail'}-${detailIndex}`} className="border-b border-[var(--fluent-border-subtle,#F0F0F0)]">
+                            <td className="py-2 px-2 text-[var(--fluent-text-primary,#242424)]">{detail.product_name || detail.product_id || 'Producto'}</td>
+                            <td className="py-2 px-2 text-right text-[var(--fluent-text-primary,#242424)]">{quantity}</td>
+                            <td className="py-2 px-2 text-right text-[var(--fluent-text-primary,#242424)]">{formatCurrency(unitPrice, 'PYG')}</td>
+                            <td className="py-2 px-2 text-right text-[var(--fluent-text-primary,#242424)]">{formatCurrency(discountAmount, 'PYG')}</td>
+                            <td className="py-2 px-2 text-right font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(lineTotal, 'PYG')}</td>
+                          </tr>
+                        )
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <footer className='sales-modal__footer'>
-              <button
-                type='button'
-                className='btn btn--secondary'
-                onClick={() => {
-                  setShowSaleDetailModal(false)
-                  setSelectedHistorySale(null)
-                }}
-              >
+            <footer className="flex justify-end px-4 py-3 border-t border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-surface-subtle,#FAFAFA)]">
+              <button type="button" onClick={() => { setShowSaleDetailModal(false); setSelectedHistorySale(null) }} className="px-4 py-2 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors">
                 Cerrar
               </button>
             </footer>
@@ -2414,202 +1933,73 @@ const SalesNew = () => {
       )}
 
       {showCancelSaleModal && selectedHistorySale && (
-        <div
-          className='sales-modal'
-          role='dialog'
-          aria-modal='true'
-          aria-labelledby='cancel-sale-modal-title'
-        >
-          <div
-            className='sales-modal__overlay'
-            onClick={() => {
-              if (cancelSubmitting) return
-              setShowCancelSaleModal(false)
-              setCancelPreview(null)
-              setSelectedHistorySale(null)
-            }}
-            aria-hidden='true'
-          />
-          <div className='sales-modal__dialog'>
-            <header className='sales-modal__header'>
-              <div className='sales-modal__header-content'>
-                <h3 id='cancel-sale-modal-title' className='sales-modal__title'>
-                  Anular venta #
-                  {selectedHistorySale.sale_id || selectedHistorySale.id}
+        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="cancel-sale-modal-title">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { if (cancelSubmitting) return; setShowCancelSaleModal(false); setCancelPreview(null); setSelectedHistorySale(null) }} aria-hidden="true" />
+          <div className="relative w-full max-w-lg mx-4 max-h-[90vh] bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-xlarge,12px)] shadow-[var(--fluent-shadow-64,0_32px_64px_rgba(0,0,0,0.24),0_0_8px_rgba(0,0,0,0.1))] flex flex-col overflow-hidden">
+            <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-status-danger,#D13438)]/5">
+              <div>
+                <h3 id="cancel-sale-modal-title" className="text-base font-semibold text-[var(--fluent-status-danger,#D13438)]">
+                  Anular venta #{selectedHistorySale.sale_id || selectedHistorySale.id}
                 </h3>
-                <p className='sales-modal__subtitle'>
-                  Previsualiza el impacto antes de confirmar la anulación.
-                </p>
+                <p className="text-xs text-[var(--fluent-text-secondary,#616161)]">Previsualiza el impacto antes de confirmar</p>
               </div>
-              <button
-                type='button'
-                className='sales-modal__close'
-                onClick={() => {
-                  if (cancelSubmitting) return
-                  setShowCancelSaleModal(false)
-                  setCancelPreview(null)
-                  setSelectedHistorySale(null)
-                }}
-              >
-                <X size={16} aria-hidden='true' />
-                <span className='sr-only'>Cerrar</span>
+              <button type="button" onClick={() => { if (cancelSubmitting) return; setShowCancelSaleModal(false); setCancelPreview(null); setSelectedHistorySale(null) }} className="p-1.5 rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)] transition-colors">
+                <X size={18} className="text-[var(--fluent-text-secondary,#616161)]" />
               </button>
             </header>
 
-            <div className='sales-modal__body'>
+            <div className="flex-1 overflow-y-auto p-4">
               {cancelPreviewLoading ? (
-                <p className='text-muted'>Cargando previsualización...</p>
+                <p className="text-center py-4 text-[var(--fluent-text-secondary,#616161)]">Cargando previsualización...</p>
               ) : (
                 <>
-                  <section className='sales-modal__section sales-modal__section--context'>
-                    <div className='sales-modal__info-grid'>
-                      <div className='sales-modal__info-item'>
-                        <span className='sales-modal__label'>Cliente</span>
-                        <span className='sales-modal__value'>
-                          {selectedHistorySale.client_name || '—'}
-                        </span>
-                      </div>
-                      <div className='sales-modal__info-item'>
-                        <span className='sales-modal__label'>Fecha</span>
-                        <span className='sales-modal__value'>
-                          {formatDateTime(
-                            selectedHistorySale.order_date ||
-                              selectedHistorySale.sale_date ||
-                              selectedHistorySale.created_at
-                          )}
-                        </span>
-                      </div>
-                      <div className='sales-modal__info-item'>
-                        <span className='sales-modal__label'>
-                          Estado actual
-                        </span>
-                        <span className='sales-modal__value'>
-                          {formatStatusLabel(selectedHistorySale.status)}
-                        </span>
-                      </div>
-                      <div className='sales-modal__info-item'>
-                        <span className='sales-modal__label'>Total</span>
-                        <span className='sales-modal__value'>
-                          {formatCurrency(
-                            selectedHistorySale.total_amount ||
-                              selectedHistorySale.total ||
-                              0,
-                            'PYG'
-                          )}
-                        </span>
-                      </div>
+                  <div className="grid grid-cols-2 gap-3 p-3 bg-[var(--fluent-surface-subtle,#F5F5F5)] rounded-[var(--fluent-corner-radius-medium,4px)] mb-4">
+                    <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Cliente</span><span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{selectedHistorySale.client_name || '—'}</span></div>
+                    <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Fecha</span><span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{formatDateTime(selectedHistorySale.order_date || selectedHistorySale.sale_date || selectedHistorySale.created_at)}</span></div>
+                    <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Estado actual</span><span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{formatStatusLabel(selectedHistorySale.status)}</span></div>
+                    <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Total</span><span className="text-sm font-bold text-[var(--fluent-status-danger,#D13438)]">{formatCurrency(selectedHistorySale.total_amount || selectedHistorySale.total || 0, 'PYG')}</span></div>
+                  </div>
+
+                  <h4 className="text-sm font-semibold text-[var(--fluent-text-primary,#242424)] mb-2">Impacto de la anulación</h4>
+                  <div className="grid grid-cols-2 gap-3 p-3 bg-[var(--fluent-status-warning-bg,#FFF4CE)] border border-[var(--fluent-status-warning,#FFB900)]/30 rounded-[var(--fluent-corner-radius-medium,4px)] mb-4">
+                    <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Reversiones de stock</span><span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{cancelPreview?.impact_summary?.stock_reversion_count ?? cancelPreview?.summary?.stock_movements ?? '—'}</span></div>
+                    <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Pagos a revertir</span><span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{cancelPreview?.impact_summary?.payment_reversals ?? cancelPreview?.summary?.payments_to_refund ?? '—'}</span></div>
+                    <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Monto a reembolsar</span><span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(cancelPreview?.impact_summary?.total_refund || cancelPreview?.summary?.total_refund || 0, 'PYG')}</span></div>
+                    <div><span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">¿Se puede anular?</span><span className={`text-sm font-medium ${cancelPreview?.is_cancellable === false ? 'text-[var(--fluent-status-danger,#D13438)]' : 'text-[var(--fluent-status-success,#107C10)]'}`}>{cancelPreview?.is_cancellable === false ? 'No' : 'Sí'}</span></div>
+                  </div>
+
+                  {Array.isArray(cancelPreview?.warnings) && cancelPreview.warnings.length > 0 && (
+                    <div className="p-3 bg-[var(--fluent-status-warning-bg,#FFF4CE)] border border-[var(--fluent-status-warning,#FFB900)]/30 rounded-[var(--fluent-corner-radius-medium,4px)] mb-4">
+                      <ul className="text-sm text-[var(--fluent-text-primary,#242424)] space-y-1 list-disc pl-4">
+                        {cancelPreview.warnings.map((warning, idx) => (<li key={`warning-${idx}`}>{warning}</li>))}
+                      </ul>
                     </div>
-                  </section>
+                  )}
 
-                  <section className='sales-modal__section'>
-                    <h4 className='sales-modal__section-title'>Impacto</h4>
-                    <div className='sales-modal__info-grid'>
-                      <div className='sales-modal__info-item'>
-                        <span className='sales-modal__label'>
-                          Reversiones de stock
-                        </span>
-                        <span className='sales-modal__value'>
-                          {cancelPreview?.impact_summary
-                            ?.stock_reversion_count ??
-                            cancelPreview?.summary?.stock_movements ??
-                            '—'}
-                        </span>
-                      </div>
-                      <div className='sales-modal__info-item'>
-                        <span className='sales-modal__label'>
-                          Pagos a revertir
-                        </span>
-                        <span className='sales-modal__value'>
-                          {cancelPreview?.impact_summary?.payment_reversals ??
-                            cancelPreview?.summary?.payments_to_refund ??
-                            '—'}
-                        </span>
-                      </div>
-                      <div className='sales-modal__info-item'>
-                        <span className='sales-modal__label'>
-                          Monto a reembolsar
-                        </span>
-                        <span className='sales-modal__value'>
-                          {formatCurrency(
-                            cancelPreview?.impact_summary?.total_refund ||
-                              cancelPreview?.summary?.total_refund ||
-                              0,
-                            'PYG'
-                          )}
-                        </span>
-                      </div>
-                      <div className='sales-modal__info-item'>
-                        <span className='sales-modal__label'>
-                          ¿Se puede anular?
-                        </span>
-                        <span className='sales-modal__value'>
-                          {cancelPreview?.is_cancellable === false
-                            ? 'No'
-                            : 'Sí'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {Array.isArray(cancelPreview?.warnings) &&
-                      cancelPreview.warnings.length > 0 && (
-                        <div
-                          className='alert alert--warning'
-                          style={{ marginTop: '12px' }}
-                        >
-                          <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                            {cancelPreview.warnings.map((warning, idx) => (
-                              <li key={`warning-${idx}`}>{warning}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                  </section>
-
-                  <section className='sales-modal__section'>
-                    <label
-                      className='sales-modal__field'
-                      htmlFor='cancel-reason'
-                    >
-                      <span className='sales-modal__field-label'>
-                        Motivo de la anulación
-                      </span>
-                      <textarea
-                        id='cancel-reason'
-                        className='input'
-                        rows={3}
-                        placeholder='Ej: El cliente canceló la compra.'
-                        value={cancelReason}
-                        onChange={event => setCancelReason(event.target.value)}
-                        disabled={cancelSubmitting}
-                        required
-                      />
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1" htmlFor="cancel-reason">
+                      Motivo de la anulación *
                     </label>
-                  </section>
+                    <textarea
+                      id="cancel-reason"
+                      rows={3}
+                      className="w-full px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] placeholder:text-[var(--fluent-text-secondary,#616161)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] resize-none disabled:opacity-50"
+                      placeholder="Ej: El cliente canceló la compra."
+                      value={cancelReason}
+                      onChange={event => setCancelReason(event.target.value)}
+                      disabled={cancelSubmitting}
+                      required
+                    />
+                  </div>
                 </>
               )}
             </div>
 
-            <footer className='sales-modal__footer'>
-              <button
-                type='button'
-                className='btn btn--secondary'
-                onClick={() => {
-                  if (cancelSubmitting) return
-                  setShowCancelSaleModal(false)
-                  setCancelPreview(null)
-                  setSelectedHistorySale(null)
-                }}
-              >
+            <footer className="flex justify-end gap-2 px-4 py-3 border-t border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-surface-subtle,#FAFAFA)]">
+              <button type="button" onClick={() => { if (cancelSubmitting) return; setShowCancelSaleModal(false); setCancelPreview(null); setSelectedHistorySale(null) }} className="px-4 py-2 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors">
                 Cerrar
               </button>
-              <button
-                type='button'
-                className='btn btn--destructive'
-                disabled={
-                  cancelSubmitting || cancelPreview?.is_cancellable === false
-                }
-                onClick={handleConfirmCancelSale}
-              >
+              <button type="button" disabled={cancelSubmitting || cancelPreview?.is_cancellable === false} onClick={handleConfirmCancelSale} className="px-4 py-2 text-sm font-medium text-white bg-[var(--fluent-status-danger,#D13438)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[#B10E1C] active:bg-[#960B18] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                 {cancelSubmitting ? 'Anulando...' : 'Confirmar anulación'}
               </button>
             </footer>
@@ -2618,161 +2008,112 @@ const SalesNew = () => {
       )}
 
       {isModalOpen && (
-        <div
-          className='sales-modal'
-          role='dialog'
-          aria-modal='true'
-          aria-labelledby='sales-modal-title'
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="sales-modal-title">
+          {/* Overlay */}
           <div
-            className='sales-modal__overlay'
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => {
               setIsModalOpen(false)
               setEditingItemId(null)
             }}
-            aria-hidden='true'
+            aria-hidden="true"
           />
-          <div className='sales-modal__dialog'>
-            <header className='sales-modal__header'>
-              <div className='sales-modal__header-content'>
-                <h3 id='sales-modal-title' className='sales-modal__title'>
-                  Agregar producto a la venta
+          {/* Modal - Horizontal Layout for 720p+ */}
+          <div className="relative w-full max-w-7xl mx-4 max-h-[95vh] bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-xlarge,12px)] shadow-[var(--fluent-shadow-64,0_32px_64px_rgba(0,0,0,0.24),0_0_8px_rgba(0,0,0,0.1))] flex flex-col overflow-hidden">
+            {/* Compact Header */}
+            <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-surface-subtle,#FAFAFA)]">
+              <div>
+                <h3 id="sales-modal-title" className="text-base font-semibold text-[var(--fluent-text-primary,#242424)]">
+                  {editingItemId ? 'Editar producto' : 'Agregar producto a la venta'}
                 </h3>
-                <p className='sales-modal__subtitle'>
-                  Seleccione un artículo del catálogo, ajuste la cantidad y
-                  configure un descuento antes de añadirlo a la orden.
+                <p className="text-xs text-[var(--fluent-text-secondary,#616161)]">
+                  Selecciona, ajusta cantidad y configura descuento
                 </p>
               </div>
               <button
-                type='button'
-                className='sales-modal__close'
-                onClick={() => {
-                  setIsModalOpen(false)
-                  setEditingItemId(null)
-                }}
+                type="button"
+                onClick={() => { setIsModalOpen(false); setEditingItemId(null) }}
+                className="p-1.5 rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)] transition-colors"
               >
-                <X size={16} aria-hidden='true' />
-                <span className='sr-only'>Cerrar</span>
+                <X size={18} className="text-[var(--fluent-text-secondary,#616161)]" />
+                <span className="sr-only">Cerrar</span>
               </button>
             </header>
-            <div className='sales-modal__body'>
-              <section className='sales-modal__section sales-modal__section--context'>
-                <div className='sales-modal__info-grid'>
-                  <div className='sales-modal__info-item'>
-                    <span className='sales-modal__label'>
-                      Producto seleccionado
-                    </span>
-                    <span className='sales-modal__value'>
-                      {modalDisplay.name || 'Selecciona un producto'}
-                    </span>
-                  </div>
-                  <div className='sales-modal__info-item'>
-                    <span className='sales-modal__label'>ID</span>
-                    <span className='sales-modal__value'>
-                      {modalDisplay.id || '—'}
-                    </span>
-                  </div>
-                </div>
-              </section>
 
-              <section className='sales-modal__section'>
-                <div className='sales-modal__form-grid'>
-                  <label className='sales-modal__field' htmlFor='modal-product'>
-                    <span className='sales-modal__field-label'>Producto</span>
-                    <div
-                      style={{ position: 'relative' }}
-                      ref={productSearchContainerRef}
-                    >
+            {/* Body - Horizontal 3-column Grid */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                {/* Column 1: Product Search (5 cols) */}
+                <div className="lg:col-span-5 space-y-3">
+                  <div className="p-3 bg-[var(--fluent-surface-subtle,#F5F5F5)] rounded-[var(--fluent-corner-radius-medium,4px)]">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-[var(--fluent-text-secondary,#616161)] uppercase tracking-wide">Producto seleccionado</span>
+                      <span className="text-xs text-[var(--fluent-text-secondary,#616161)]">ID: {modalDisplay.id || '—'}</span>
+                    </div>
+                    <p className="text-sm font-medium text-[var(--fluent-text-primary,#242424)] truncate">
+                      {modalDisplay.name || 'Ninguno seleccionado'}
+                    </p>
+                    <p className="text-xs text-[var(--fluent-brand-primary,#0078D4)] mt-1">
+                      Precio: {formatCurrency(modalUnitPrice, 'PYG')}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1" htmlFor="modal-product">
+                      Buscar producto
+                    </label>
+                    <div className="relative" ref={productSearchContainerRef}>
                       <input
                         ref={modalProductInputRef}
-                        id='modal-product'
-                        type='text'
-                        className='input'
+                        id="modal-product"
+                        type="text"
+                        className="w-full px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] placeholder:text-[var(--fluent-text-secondary,#616161)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
                         value={productSearchTerm}
                         onChange={event => {
                           setProductSearchTerm(event.target.value)
                           setShowProductDropdown(true)
-                          setHighlightedIndex(-1) // Reset al escribir
+                          setHighlightedIndex(-1)
                         }}
                         onFocus={() => {
-                          if (modalSearchResults.length > 0) {
-                            setShowProductDropdown(true)
-                          }
+                          if (modalSearchResults.length > 0) setShowProductDropdown(true)
                         }}
                         onKeyDown={e => {
                           const itemCount = modalSearchResults.length
-
                           if (e.key === 'ArrowDown') {
                             e.preventDefault()
-                            if (!showProductDropdown && itemCount > 0) {
-                              setShowProductDropdown(true)
-                              setHighlightedIndex(0)
-                            } else if (itemCount > 0) {
-                              setHighlightedIndex(prev =>
-                                prev < itemCount - 1 ? prev + 1 : 0
-                              )
-                            }
+                            if (!showProductDropdown && itemCount > 0) { setShowProductDropdown(true); setHighlightedIndex(0) }
+                            else if (itemCount > 0) { setHighlightedIndex(prev => prev < itemCount - 1 ? prev + 1 : 0) }
                           }
                           if (e.key === 'ArrowUp') {
                             e.preventDefault()
-                            if (itemCount > 0) {
-                              setHighlightedIndex(prev =>
-                                prev > 0 ? prev - 1 : itemCount - 1
-                              )
-                            }
+                            if (itemCount > 0) { setHighlightedIndex(prev => prev > 0 ? prev - 1 : itemCount - 1) }
                           }
                           if (e.key === 'Enter') {
                             e.preventDefault()
                             if (showProductDropdown && itemCount > 0) {
-                              // Si hay un item resaltado, seleccionarlo; si no, el primero
-                              const indexToSelect =
-                                highlightedIndex >= 0 ? highlightedIndex : 0
-                              handleSelectProduct(
-                                modalSearchResults[indexToSelect]
-                              )
+                              const indexToSelect = highlightedIndex >= 0 ? highlightedIndex : 0
+                              handleSelectProduct(modalSearchResults[indexToSelect])
                               setHighlightedIndex(-1)
                             }
                           }
-                          if (e.key === 'Escape') {
-                            e.preventDefault()
-                            setShowProductDropdown(false)
-                            setHighlightedIndex(-1)
-                          }
-                          if (e.key === 'Tab') {
-                            setShowProductDropdown(false)
-                            setHighlightedIndex(-1)
-                          }
+                          if (e.key === 'Escape') { e.preventDefault(); setShowProductDropdown(false); setHighlightedIndex(-1) }
+                          if (e.key === 'Tab') { setShowProductDropdown(false); setHighlightedIndex(-1) }
                         }}
-                        role='combobox'
+                        role="combobox"
                         aria-expanded={showProductDropdown}
-                        aria-haspopup='listbox'
-                        aria-controls='sales-product-search-listbox'
-                        aria-activedescendant={
-                          highlightedIndex >= 0
-                            ? `sales-product-option-${highlightedIndex}`
-                            : undefined
-                        }
-                        placeholder='Buscar por nombre, ID o código de barras...'
-                        disabled={false}
-                        autoComplete='off'
+                        aria-haspopup="listbox"
+                        aria-controls="sales-product-search-listbox"
+                        aria-activedescendant={highlightedIndex >= 0 ? `sales-product-option-${highlightedIndex}` : undefined}
+                        placeholder="Nombre, ID o código de barras..."
+                        autoComplete="off"
                       />
                       {showProductDropdown && (
-                        <div
-                          ref={productDropdownRef}
-                          className='sales-product-dropdown'
-                          role='listbox'
-                          id='sales-product-search-listbox'
-                          aria-label='Resultados de productos'
-                        >
+                        <div ref={productDropdownRef} className="absolute top-full left-0 right-0 mt-1 z-50 max-h-48 overflow-y-auto bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16,0_8px_16px_rgba(0,0,0,0.14),0_0_2px_rgba(0,0,0,0.12))]" role="listbox" id="sales-product-search-listbox" aria-label="Resultados de productos">
                           {isSearchingProducts ? (
-                            <div className='sales-product-dropdown__message'>
-                              Buscando...
-                            </div>
+                            <div className="px-3 py-2 text-sm text-[var(--fluent-text-secondary,#616161)]">Buscando...</div>
                           ) : modalSearchResults.length === 0 ? (
-                            <div className='sales-product-dropdown__message'>
-                              {productSearchTerm.length < 3
-                                ? 'Escribe al menos 3 caracteres'
-                                : 'No se encontraron productos'}
+                            <div className="px-3 py-2 text-sm text-[var(--fluent-text-secondary,#616161)]">
+                              {productSearchTerm.length < 3 ? 'Escribe al menos 3 caracteres' : 'No se encontraron productos'}
                             </div>
                           ) : (
                             modalSearchResults.map((product, index) => {
@@ -2782,44 +2123,21 @@ const SalesNew = () => {
                                 <div
                                   key={`${display.id}-${index}`}
                                   id={`sales-product-option-${index}`}
-                                  role='option'
+                                  role="option"
                                   aria-selected={isHighlighted}
-                                  className={`sales-product-dropdown__item${
-                                    isHighlighted
-                                      ? ' sales-product-dropdown__item--highlighted'
-                                      : ''
-                                  }`}
-                                  onClick={() => {
-                                    handleSelectProduct(product)
-                                    setHighlightedIndex(-1)
-                                  }}
-                                  onMouseEnter={() =>
-                                    setHighlightedIndex(index)
-                                  }
+                                  className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer transition-colors ${isHighlighted ? 'bg-[var(--fluent-brand-light,#DEECF9)]' : 'hover:bg-[var(--fluent-surface-hover,#F5F5F5)]'}`}
+                                  onClick={() => { handleSelectProduct(product); setHighlightedIndex(-1) }}
+                                  onMouseEnter={() => setHighlightedIndex(index)}
                                   onMouseLeave={() => setHighlightedIndex(-1)}
                                 >
-                                  <div className='sales-product-dropdown__item-info'>
-                                    <div className='sales-product-dropdown__item-name'>
-                                      {display.name}
-                                    </div>
-                                    <div className='sales-product-dropdown__item-meta'>
-                                      ID: {display.id}
-                                    </div>
+                                  <div>
+                                    <div className="font-medium text-[var(--fluent-text-primary,#242424)]">{display.name}</div>
+                                    <div className="text-xs text-[var(--fluent-text-secondary,#616161)]">ID: {display.id}</div>
                                   </div>
-                                  <div className='sales-product-dropdown__item-price'>
-                                    <div>{formatCurrency(display.price, 'PYG')}</div>
-                                    <div
-                                      style={{
-                                        fontSize: '0.75rem',
-                                        color:
-                                          display.stock > 0
-                                            ? '#16a34a'
-                                            : '#dc2626',
-                                        marginTop: '2px',
-                                        fontWeight: 500,
-                                      }}
-                                    >
-                                      Disponible: {display.stock}
+                                  <div className="text-right">
+                                    <div className="font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(display.price, 'PYG')}</div>
+                                    <div className={`text-xs font-medium ${display.stock > 0 ? 'text-[var(--fluent-status-success,#107C10)]' : 'text-[var(--fluent-status-danger,#D13438)]'}`}>
+                                      Stock: {display.stock}
                                     </div>
                                   </div>
                                 </div>
@@ -2829,159 +2147,128 @@ const SalesNew = () => {
                         </div>
                       )}
                     </div>
-                    <span className='sales-modal__field-note'>
-                      Precio unitario actual:{' '}
-                      {formatCurrency(modalUnitPrice, 'PYG')}
-                    </span>
-                  </label>
+                  </div>
+                </div>
 
-                  <label
-                    className='sales-modal__field'
-                    htmlFor='modal-quantity'
-                  >
-                    <span className='sales-modal__field-label'>
-                      Cantidad ({modalDisplay.base_unit ? getUnitLabel(modalDisplay.base_unit) : 'Unidades'})
-                    </span>
-                    <input
-                      id='modal-quantity'
-                      type='number'
-                      min='1'
-                      step={modalDisplay.base_unit && ['basic', 'packing', 'grocery'].includes(getUnitLabel(modalDisplay.base_unit)) ? '1' : '0.01'}
-                      className='input'
-                      value={modalQuantity}
-                      onChange={event => setModalQuantity(event.target.value)}
-                    />
-                    <span className='sales-modal__field-note'>
-                      Máximo disponible: sin límite definido
-                    </span>
-                  </label>
-
-                  <label
-                    className='sales-modal__field'
-                    htmlFor='modal-discount-type'
-                  >
-                    <span className='sales-modal__field-label'>
-                      Tipo de Descuento
-                    </span>
-                    <select
-                      id='modal-discount-type'
-                      className='input'
-                      value={modalDiscountType}
-                      onChange={e => setModalDiscountType(e.target.value)}
-                    >
-                      <option value='amount'>Monto Fijo (Unitario)</option>
-                      <option value='percent'>Porcentaje (%)</option>
-                    </select>
-                  </label>
-
-                  <label
-                    className='sales-modal__field'
-                    htmlFor='modal-discount'
-                  >
-                    <span className='sales-modal__field-label'>
-                      Valor del Descuento
-                    </span>
-                    <div className='sales-modal__input-wrapper'>
+                {/* Column 2: Quantity & Discount (4 cols) */}
+                <div className="lg:col-span-4 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1" htmlFor="modal-quantity">
+                        Cantidad ({modalDisplay.base_unit ? getUnitLabel(modalDisplay.base_unit) : 'Unidades'})
+                      </label>
                       <input
-                        id='modal-discount'
-                        type='number'
-                        min='0'
+                        id="modal-quantity"
+                        type="number"
+                        min="1"
+                        step={modalDisplay.base_unit && ['basic', 'packing', 'grocery'].includes(getUnitLabel(modalDisplay.base_unit)) ? '1' : '0.01'}
+                        className="w-full px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
+                        value={modalQuantity}
+                        onChange={event => setModalQuantity(event.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1" htmlFor="modal-discount-type">
+                        Tipo Descuento
+                      </label>
+                      <select
+                        id="modal-discount-type"
+                        className="w-full px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
+                        value={modalDiscountType}
+                        onChange={e => setModalDiscountType(e.target.value)}
+                      >
+                        <option value="amount">Monto Fijo</option>
+                        <option value="percent">Porcentaje</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1" htmlFor="modal-discount">
+                      Valor Descuento
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="modal-discount"
+                        type="number"
+                        min="0"
                         step={modalDiscountType === 'percent' ? '1' : '0.01'}
-                        className='input sales-modal__input'
+                        className="w-full px-3 py-2 pr-12 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
                         value={modalDiscount}
                         onChange={event => setModalDiscount(event.target.value)}
-                        placeholder={
-                          modalDiscountType === 'percent' ? '0' : '0.00'
-                        }
+                        placeholder={modalDiscountType === 'percent' ? '0' : '0.00'}
                       />
-                      <span className='sales-modal__input-affix'>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--fluent-text-secondary,#616161)]">
                         {modalDiscountType === 'percent' ? '%' : 'PYG'}
                       </span>
                     </div>
-                    <span className='sales-modal__field-note'>
-                      {modalDiscountType === 'percent'
-                        ? 'Porcentaje sobre precio unitario'
-                        : 'Monto a descontar por unidad'}
-                    </span>
-                  </label>
+                    <p className="text-xs text-[var(--fluent-text-secondary,#616161)] mt-1">
+                      {modalDiscountType === 'percent' ? 'Porcentaje sobre precio unitario' : 'Monto a descontar por unidad'}
+                    </p>
+                  </div>
 
                   {modalDiscountValue > 0 && (
-                    <label
-                      className='sales-modal__field'
-                      htmlFor='modal-discount-reason'
-                      style={{ gridColumn: '1 / -1' }}
-                    >
-                      <span className='sales-modal__field-label'>
-                        Razón del Descuento (Requerido)
-                      </span>
+                    <div>
+                      <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1" htmlFor="modal-discount-reason">
+                        Razón del Descuento *
+                      </label>
                       <input
-                        id='modal-discount-reason'
-                        type='text'
-                        className='input'
+                        id="modal-discount-reason"
+                        type="text"
+                        className="w-full px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
                         value={modalDiscountReason}
                         onChange={e => setModalDiscountReason(e.target.value)}
-                        placeholder='Ej: Promoción de verano, Cliente frecuente...'
+                        placeholder="Ej: Promoción de verano..."
                         required
                       />
-                    </label>
+                    </div>
                   )}
                 </div>
-              </section>
 
-              <section className='sales-modal__section'>
-                <div className='sales-modal__totals'>
-                  <div className='sales-modal__totals-grid'>
-                    <div className='sales-modal__info-item'>
-                      <span className='sales-modal__label'>
-                        Precio unitario
-                      </span>
-                      <span className='sales-modal__value'>
-                        {formatCurrency(modalUnitPrice, 'PYG')}
-                      </span>
-                    </div>
-                    <div className='sales-modal__info-item'>
-                      <span className='sales-modal__label'>
-                        Subtotal sin descuento
-                      </span>
-                      <span className='sales-modal__value'>
-                        {formatCurrency(modalSubtotal, 'PYG')}
-                      </span>
-                    </div>
-                    <div className='sales-modal__info-item'>
-                      <span className='sales-modal__label'>
-                        Descuento aplicado
-                      </span>
-                      <span className='sales-modal__value'>
-                        {formatCurrency(modalDiscountValue, 'PYG')}
-                      </span>
-                    </div>
-                    <div className='sales-modal__info-item'>
-                      <span className='sales-modal__label'>Total de línea</span>
-                      <span className='sales-modal__value sales-modal__value--highlight'>
-                        {formatCurrency(modalLineTotal, 'PYG')}
-                      </span>
+                {/* Column 3: Totals Summary (3 cols) */}
+                <div className="lg:col-span-3">
+                  <div className="h-full p-3 bg-[var(--fluent-brand-light,#DEECF9)]/30 border border-[var(--fluent-brand-primary,#0078D4)]/20 rounded-[var(--fluent-corner-radius-medium,4px)]">
+                    <h4 className="text-xs font-semibold text-[var(--fluent-text-secondary,#616161)] uppercase tracking-wide mb-3">Resumen de Línea</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[var(--fluent-text-secondary,#616161)]">Precio unit.</span>
+                        <span className="font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(modalUnitPrice, 'PYG')}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[var(--fluent-text-secondary,#616161)]">Subtotal</span>
+                        <span className="font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(modalSubtotal, 'PYG')}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[var(--fluent-text-secondary,#616161)]">Descuento</span>
+                        <span className="font-medium text-[var(--fluent-status-danger,#D13438)]">-{formatCurrency(modalDiscountValue, 'PYG')}</span>
+                      </div>
+                      <div className="border-t border-[var(--fluent-brand-primary,#0078D4)]/20 pt-2 mt-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm font-semibold text-[var(--fluent-text-primary,#242424)]">Total línea</span>
+                          <span className="text-lg font-bold text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency(modalLineTotal, 'PYG')}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </section>
+              </div>
             </div>
-            <footer className='sales-modal__footer'>
+
+            {/* Compact Footer */}
+            <footer className="flex items-center justify-end gap-2 px-4 py-3 border-t border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-surface-subtle,#FAFAFA)]">
               <button
-                type='button'
-                className='btn btn--secondary'
-                onClick={() => {
-                  setIsModalOpen(false)
-                  setEditingItemId(null)
-                }}
+                type="button"
+                onClick={() => { setIsModalOpen(false); setEditingItemId(null) }}
+                className="px-4 py-2 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors"
               >
                 Cancelar
               </button>
               <button
-                type='button'
-                className='btn btn--primary'
+                type="button"
                 onClick={handleConfirmAdd}
+                className="px-4 py-2 text-sm font-medium text-white bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-brand-hover,#106EBE)] active:bg-[var(--fluent-brand-pressed,#005A9E)] transition-colors"
               >
-                Confirmar
+                {editingItemId ? 'Guardar cambios' : 'Agregar producto'}
               </button>
             </footer>
           </div>
@@ -2990,87 +2277,48 @@ const SalesNew = () => {
 
       {/* Modal de Reservas Pendientes */}
       {showReservationModal && (
-        <div
-          className='sales-modal'
-          role='dialog'
-          aria-modal='true'
-          aria-labelledby='reservation-modal-title'
-        >
-          <div
-            className='sales-modal__overlay'
-            onClick={() => setShowReservationModal(false)}
-            aria-hidden='true'
-          />
-          <div className='sales-modal__dialog'>
-            <header className='sales-modal__header'>
-              <div className='sales-modal__header-content'>
-                <h3 id='reservation-modal-title' className='sales-modal__title'>
-                  Reservas Pendientes
-                </h3>
-                <p className='sales-modal__subtitle'>
-                  El cliente tiene reservas confirmadas pendientes de pago.
-                </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="reservation-modal-title">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowReservationModal(false)} aria-hidden="true" />
+          <div className="relative w-full max-w-lg mx-4 max-h-[90vh] bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-xlarge,12px)] shadow-[var(--fluent-shadow-64,0_32px_64px_rgba(0,0,0,0.24),0_0_8px_rgba(0,0,0,0.1))] flex flex-col overflow-hidden">
+            <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--fluent-border-subtle,#F0F0F0)]">
+              <div>
+                <h3 id="reservation-modal-title" className="text-base font-semibold text-[var(--fluent-text-primary,#242424)]">Reservas Pendientes</h3>
+                <p className="text-xs text-[var(--fluent-text-secondary,#616161)]">El cliente tiene reservas confirmadas pendientes de pago.</p>
               </div>
-              <button
-                type='button'
-                className='sales-modal__close'
-                onClick={() => setShowReservationModal(false)}
-              >
-                <X size={16} aria-hidden='true' />
-                <span className='sr-only'>Cerrar</span>
+              <button type="button" onClick={() => setShowReservationModal(false)} className="p-1.5 rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)] transition-colors">
+                <X size={18} className="text-[var(--fluent-text-secondary,#616161)]" />
               </button>
             </header>
-            <div className='sales-modal__body'>
-              <div className='table-container'>
-                <table className='table'>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
                   <thead>
-                    <tr>
-                      <th>Servicio</th>
-                      <th>Fecha</th>
-                      <th className='text-right'>Monto</th>
+                    <tr className="border-b border-[var(--fluent-border-default,#E0E0E0)]">
+                      <th className="px-3 py-2 text-left font-semibold text-[var(--fluent-text-secondary,#616161)]">Servicio</th>
+                      <th className="px-3 py-2 text-left font-semibold text-[var(--fluent-text-secondary,#616161)]">Fecha</th>
+                      <th className="px-3 py-2 text-right font-semibold text-[var(--fluent-text-secondary,#616161)]">Monto</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pendingReservations.map((res, index) => (
-                      <tr key={`${res.reserve_id || res.id}-${index}`}>
-                        <td>
-                          {res.product_name}
-                          <span
-                            style={{
-                              display: 'block',
-                              fontSize: '0.85em',
-                              color: 'var(--color-text-secondary)',
-                            }}
-                          >
-                            Duración: {res.duration || res.duration_hours || 1}{' '}
-                            hrs
-                          </span>
+                      <tr key={`${res.reserve_id || res.id}-${index}`} className="border-b border-[var(--fluent-border-subtle,#F0F0F0)] hover:bg-[var(--fluent-surface-subtle,#FAFAFA)]">
+                        <td className="px-3 py-2">
+                          <span className="text-[var(--fluent-text-primary,#242424)]">{res.product_name}</span>
+                          <span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Duración: {res.duration || res.duration_hours || 1} hrs</span>
                         </td>
-                        <td>{new Date(res.start_time).toLocaleDateString()}</td>
-                        <td className='text-right'>
-                          {formatCurrency(res.total_amount, 'PYG')}
-                        </td>
+                        <td className="px-3 py-2 text-[var(--fluent-text-primary,#242424)]">{new Date(res.start_time).toLocaleDateString()}</td>
+                        <td className="px-3 py-2 text-right font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(res.total_amount, 'PYG')}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             </div>
-            <footer className='sales-modal__footer'>
-              <button
-                type='button'
-                className='btn btn--secondary'
-                onClick={() => setShowReservationModal(false)}
-              >
-                Ignorar
-              </button>
-              <button
-                type='button'
-                className='btn btn--primary'
-                onClick={handleAddReservations}
-              >
-                Agregar a la Venta
-              </button>
+
+            <footer className="flex justify-end gap-2 px-4 py-3 border-t border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-surface-subtle,#FAFAFA)]">
+              <button type="button" onClick={() => setShowReservationModal(false)} className="px-4 py-2 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors">Ignorar</button>
+              <button type="button" onClick={handleAddReservations} className="px-4 py-2 text-sm font-medium text-white bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-brand-hover,#106EBE)] active:bg-[var(--fluent-brand-pressed,#005A9E)] transition-colors">Agregar a la Venta</button>
             </footer>
           </div>
         </div>
@@ -3078,149 +2326,50 @@ const SalesNew = () => {
 
       {/* Modal de Venta Activa */}
       {showActiveSaleModal && activeSale && (
-        <div
-          className='sales-modal'
-          role='dialog'
-          aria-modal='true'
-          aria-labelledby='active-sale-modal-title'
-        >
-          <div
-            className='sales-modal__overlay'
-            onClick={() => setShowActiveSaleModal(false)}
-            aria-hidden='true'
-          />
-          <div className='sales-modal__dialog'>
-            <header className='sales-modal__header'>
-              <div className='sales-modal__header-content'>
-                <h3 id='active-sale-modal-title' className='sales-modal__title'>
-                  Ventas Activas Encontradas
-                </h3>
-                <p className='sales-modal__subtitle'>
-                  Selecciona una venta pendiente para continuar o inicia una
-                  nueva.
-                </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="active-sale-modal-title">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowActiveSaleModal(false)} aria-hidden="true" />
+          <div className="relative w-full max-w-2xl mx-4 max-h-[90vh] bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-xlarge,12px)] shadow-[var(--fluent-shadow-64,0_32px_64px_rgba(0,0,0,0.24),0_0_8px_rgba(0,0,0,0.1))] flex flex-col overflow-hidden">
+            <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--fluent-border-subtle,#F0F0F0)]">
+              <div>
+                <h3 id="active-sale-modal-title" className="text-base font-semibold text-[var(--fluent-text-primary,#242424)]">Ventas Activas Encontradas</h3>
+                <p className="text-xs text-[var(--fluent-text-secondary,#616161)]">Selecciona una venta pendiente para continuar o inicia una nueva.</p>
               </div>
-              <button
-                type='button'
-                className='sales-modal__close'
-                onClick={() => setShowActiveSaleModal(false)}
-              >
-                <X size={16} aria-hidden='true' />
-                <span className='sr-only'>Cerrar</span>
+              <button type="button" onClick={() => setShowActiveSaleModal(false)} className="p-1.5 rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)] transition-colors">
+                <X size={18} className="text-[var(--fluent-text-secondary,#616161)]" />
               </button>
             </header>
-            <div className='sales-modal__body'>
-              <div
-                className='sales-modal__list'
-                style={{
-                  display: 'grid',
-                  gap: '12px',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                }}
-              >
+
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {activeSales.map(sale => {
                   const saleId = sale.sale_id || sale.id
-                  const selected =
-                    saleId &&
-                    (saleId === activeSale?.sale_id ||
-                      saleId === activeSale?.id)
+                  const selected = saleId && (saleId === activeSale?.sale_id || saleId === activeSale?.id)
 
                   return (
-                    <label
-                      key={saleId}
-                      className={`sales-modal__list-item card ${
-                        selected ? 'sales-modal__list-item--active' : ''
-                      }`}
-                      style={{
-                        border: selected
-                          ? '2px solid #0e4775'
-                          : '1px solid #d2d0ce',
-                        borderRadius: '8px',
-                        padding: '12px',
-                        boxShadow: selected
-                          ? '0 4px 8px rgba(0, 0, 0, 0.12)'
-                          : '0 2px 4px rgba(0, 0, 0, 0.08)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          marginBottom: '8px',
-                        }}
-                      >
-                        <input
-                          type='radio'
-                          name='active-sale'
-                          checked={selected}
-                          onChange={() => setActiveSale(sale)}
-                          aria-label={`Seleccionar venta ${saleId}`}
-                        />
-                        <div className='sales-modal__list-title'>
-                          Venta #{saleId}
+                    <label key={saleId} className={`block p-3 border rounded-[var(--fluent-corner-radius-medium,4px)] cursor-pointer transition-all ${selected ? 'border-[var(--fluent-brand-primary,#0078D4)] border-2 bg-[var(--fluent-brand-primary,#0078D4)]/5 shadow-md' : 'border-[var(--fluent-border-default,#E0E0E0)] bg-[var(--fluent-surface-card,#FFFFFF)] hover:border-[var(--fluent-border-stronger,#D0D0D0)] hover:shadow-sm'}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <input type="radio" name="active-sale" checked={selected} onChange={() => setActiveSale(sale)} aria-label={`Seleccionar venta ${saleId}`} className="w-4 h-4 text-[var(--fluent-brand-primary,#0078D4)]" />
+                        <span className="font-semibold text-[var(--fluent-text-primary,#242424)]">Venta #{saleId}</span>
+                        <span className="ml-auto px-2 py-0.5 text-xs font-medium rounded-full bg-[var(--fluent-brand-primary,#0078D4)]/10 text-[var(--fluent-brand-primary,#0078D4)] border border-[var(--fluent-brand-primary,#0078D4)]/30">{formatStatusLabel(sale.status)}</span>
+                      </div>
+                      <div className="text-sm text-[var(--fluent-text-primary,#242424)]">Cliente: {sale.client_name || 'Sin nombre'}</div>
+                      <div className="text-xs text-[var(--fluent-text-secondary,#616161)]">Fecha: {formatDateTime(sale.sale_date || sale.created_at)}</div>
+                      <div className="text-xs text-[var(--fluent-text-secondary,#616161)]">Total: {formatCurrency(sale.total_amount || 0, 'PYG')}</div>
+                      {Array.isArray(sale.details) && sale.details.length > 0 && (
+                        <div className="mt-2 text-xs text-[var(--fluent-text-secondary,#616161)]">
+                          {sale.details.slice(0, 2).map(detail => (<div key={`${saleId}-${detail.product_id}`}>• {detail.product_name || detail.product_id} × {detail.quantity}</div>))}
+                          {sale.details.length > 2 && '…'}
                         </div>
-                        <span
-                          className='badge badge--pill badge--small'
-                          style={{
-                            marginLeft: 'auto',
-                            backgroundColor: '#f3f9ff',
-                            color: '#0c3b5e',
-                            border: '1px solid #0e4775',
-                          }}
-                        >
-                          {formatStatusLabel(sale.status)}
-                        </span>
-                      </div>
-
-                      <div className='sales-modal__list-subtitle'>
-                        Cliente: {sale.client_name || 'Sin nombre'}
-                      </div>
-
-                      <div className='sales-modal__list-meta'>
-                        Fecha:{' '}
-                        {formatDateTime(sale.sale_date || sale.created_at)}
-                      </div>
-                      <div className='sales-modal__list-meta'>
-                        Total: {formatCurrency(sale.total_amount || 0, 'PYG')}
-                      </div>
-
-                      {Array.isArray(sale.details) &&
-                        sale.details.length > 0 && (
-                          <div
-                            className='sales-modal__list-meta'
-                            style={{ marginTop: '8px', color: '#605e5c' }}
-                          >
-                            {sale.details.slice(0, 2).map(detail => (
-                              <div key={`${saleId}-${detail.product_id}`}>
-                                • {detail.product_name || detail.product_id} ×{' '}
-                                {detail.quantity}
-                              </div>
-                            ))}
-                            {sale.details.length > 2 && '…'}
-                          </div>
-                        )}
+                      )}
                     </label>
                   )
                 })}
               </div>
             </div>
-            <footer className='sales-modal__footer'>
-              <button
-                type='button'
-                className='btn btn--secondary'
-                onClick={() => setShowActiveSaleModal(false)}
-              >
-                Nueva Venta
-              </button>
-              <button
-                type='button'
-                className='btn btn--primary'
-                onClick={handleContinueSale}
-              >
-                Continuar Venta
-              </button>
+
+            <footer className="flex justify-end gap-2 px-4 py-3 border-t border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-surface-subtle,#FAFAFA)]">
+              <button type="button" onClick={() => setShowActiveSaleModal(false)} className="px-4 py-2 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors">Nueva Venta</button>
+              <button type="button" onClick={handleContinueSale} className="px-4 py-2 text-sm font-medium text-white bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-brand-hover,#106EBE)] active:bg-[var(--fluent-brand-pressed,#005A9E)] transition-colors">Continuar Venta</button>
             </footer>
           </div>
         </div>
