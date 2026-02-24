@@ -17,7 +17,9 @@ import {
   PieChart,
   List,
   UserCheck,
-  LayoutDashboard
+  LayoutDashboard,
+  BarChart3,
+  SlidersHorizontal
 } from 'lucide-react'
 
 /**
@@ -107,6 +109,14 @@ export const distinctSearchableRoutes = [
     href: '/dashboard/top-products',
     icon: Award,
     category: 'BI / Dashboard'
+  },
+
+  // Reportes Financieros BI
+  {
+    name: 'Resumen Financiero BI y Salud del Negocio',
+    href: '/dashboard/financial-summary',
+    icon: TrendingUp,
+    category: 'BI / Reportes Financieros'
   },
   
   // Gestión de Usuarios y Perfil

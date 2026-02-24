@@ -38,6 +38,12 @@ const DashboardNav = () => {
       icon: BarChart3
     },
     {
+      id: 'financial-summary',
+      path: '/dashboard/financial-summary',
+      label: 'Resumen Financiero BI',
+      icon: WalletCards
+    },
+    {
       id: 'heatmap',
       path: '/dashboard/sales-heatmap',
       label: t('dashboard.nav.heatmap', 'Mapa de Calor'),

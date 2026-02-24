@@ -172,6 +172,18 @@ const MainLayout = ({ children }) => {
               },
             ],
           },
+          {
+            name: 'Reportes Financieros',
+            href: '#',
+            icon: FileText,
+            children: [
+              {
+                name: 'Resumen Financiero BI',
+                href: '/dashboard/financial-summary',
+                icon: TrendingUp,
+              },
+            ],
+          },
         ],
       },
       { name: t('products.title', 'Productos'), href: '/productos', icon: Package },

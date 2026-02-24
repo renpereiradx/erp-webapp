@@ -13,6 +13,7 @@ import {
 import MainLayout from '@/layouts/MainLayout'
 import PriceAdjustmentLayout from '@/layouts/PriceAdjustmentLayout'
 import Dashboard from '@/pages/Dashboard'
+import FinancialSummaryDashboard from '@/pages/FinancialSummaryDashboard'
 import DetailedKPIs from '@/pages/DetailedKPIs'
 import SalesHeatmap from '@/pages/SalesHeatmap'
 import ConsolidatedAlerts from '@/pages/ConsolidatedAlerts'
@@ -133,6 +134,7 @@ function AppContent() {
                         element={<Navigate to='/dashboard' replace />}
                       />
                       <Route path='/dashboard' element={<Dashboard />} />
+                      <Route path='/dashboard/financial-summary' element={<FinancialSummaryDashboard />} />
                       <Route path='/dashboard/kpis' element={<DetailedKPIs />} />
                       <Route path='/dashboard/sales-heatmap' element={<SalesHeatmap />} />
                       <Route path='/dashboard/alerts' element={<ConsolidatedAlerts />} />
