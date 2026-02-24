@@ -24,8 +24,8 @@ const FinancialSummaryDashboard = () => {
             </p>
           </div>
           
-          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
-            <div className="flex h-9 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 w-full sm:w-auto">
+            <div className="flex h-9 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 p-1 grow sm:grow-0">
               {['Hoy', 'Semana', 'Mes', 'Año'].map((p) => {
                 const value = p === 'Hoy' ? 'Today' : p === 'Semana' ? 'Week' : p === 'Mes' ? 'Month' : 'Year';
                 const isSelected = period === value;
@@ -44,10 +44,10 @@ const FinancialSummaryDashboard = () => {
                 );
               })}
             </div>
-            <div className="hidden xs:block h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-            <button className="flex items-center justify-center gap-2 px-4 py-2 bg-[#137fec] text-white text-sm font-bold rounded-lg hover:bg-[#137fec]/90 transition-all shadow-md shadow-[#137fec]/20">
+            <div className="hidden sm:block h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+            <button className="flex items-center justify-center gap-2 px-4 py-2 bg-[#137fec] text-white text-sm font-bold rounded-lg hover:bg-[#137fec]/90 transition-all shadow-md shadow-[#137fec]/20 whitespace-nowrap">
               <span className="material-symbols-outlined text-[18px]">download</span>
-              Exportar BI
+              <span>Exportar BI</span>
             </button>
           </div>
         </div>
@@ -133,8 +133,8 @@ const FinancialSummaryDashboard = () => {
               {/* Gauge Visual */}
               <div className="relative flex items-center justify-center pt-4 scale-90 sm:scale-100">
                 <svg className="w-40 h-40 sm:w-48 sm:h-48 transform -rotate-90">
-                  <circle className="text-slate-100 dark:text-slate-800" cx="80" cy="80" r="70" stroke="currentColor" strokeDasharray="440" strokeDashoffset="110" strokeWidth="12" fill="transparent" className="sm:cx-96 sm:cy-96 sm:r-80 sm:stroke-width-14 sm:stroke-dasharray-502 sm:stroke-dashoffset-125" style={{cx: '50%', cy: '50%'}}></circle>
-                  <circle className="text-[#137fec]" cx="80" cy="80" r="70" stroke="currentColor" strokeDasharray="440" strokeDashoffset="154" strokeLinecap="round" strokeWidth="12" fill="transparent" className="sm:cx-96 sm:cy-96 sm:r-80 sm:stroke-width-14 sm:stroke-dasharray-502 sm:stroke-dashoffset-175" style={{cx: '50%', cy: '50%'}}></circle>
+                  <circle className="text-slate-100 dark:text-slate-800 sm:cx-96 sm:cy-96 sm:r-80 sm:stroke-width-14 sm:stroke-dasharray-502 sm:stroke-dashoffset-125" cx="80" cy="80" r="70" stroke="currentColor" strokeDasharray="440" strokeDashoffset="110" strokeWidth="12" fill="transparent" style={{cx: '50%', cy: '50%'}}></circle>
+                  <circle className="text-[#137fec] sm:cx-96 sm:cy-96 sm:r-80 sm:stroke-width-14 sm:stroke-dasharray-502 sm:stroke-dashoffset-175" cx="80" cy="80" r="70" stroke="currentColor" strokeDasharray="440" strokeDashoffset="154" strokeLinecap="round" strokeWidth="12" fill="transparent" style={{cx: '50%', cy: '50%'}}></circle>
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">84</span>

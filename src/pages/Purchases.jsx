@@ -340,13 +340,13 @@ const Purchases = () => {
 
 
   return (
-    <div className="min-h-screen bg-[var(--fluent-background-canvas,#FAFAFA)] dark:bg-[var(--fluent-neutral-grey-160,#201F1E)] font-sans transition-colors duration-[var(--fluent-duration-normal,200ms)] pb-16">
+    <div className="min-h-screen bg-[var(--fluent-background-canvas,#FAFAFA)] dark:bg-[var(--fluent-neutral-grey-160,#201F1E)] font-sans transition-colors duration-[duration:var(--fluent-duration-normal,200ms)] pb-16">
       
       {/* Tab Navigation - Fluent 2 Pivot Style */}
       <div className="bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] px-4 md:px-6 mb-4 md:mb-6 sticky top-0 z-20">
         <div className="max-w-[1920px] mx-auto flex gap-1">
           <button 
-            className={`px-5 py-3 text-sm font-semibold transition-all duration-[var(--fluent-duration-fast,150ms)] border-b-2 ${
+            className={`px-5 py-3 text-sm font-semibold transition-all duration-[duration:var(--fluent-duration-fast,150ms)] border-b-2 ${
               activeTab === 'nueva-compra' 
                 ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]' 
                 : 'border-transparent text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)]'
@@ -356,7 +356,7 @@ const Purchases = () => {
             Nueva Compra
           </button>
           <button 
-            className={`px-5 py-3 text-sm font-semibold transition-all duration-[var(--fluent-duration-fast,150ms)] border-b-2 ${
+            className={`px-5 py-3 text-sm font-semibold transition-all duration-[duration:var(--fluent-duration-fast,150ms)] border-b-2 ${
               activeTab === 'historial' 
                 ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]' 
                 : 'border-transparent text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)]'
@@ -384,7 +384,7 @@ const Purchases = () => {
                     <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)] mt-0.5">Artículos a ingresar al inventario</p>
                   </div>
                   <button 
-                    className="w-full sm:w-auto bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white px-4 py-2 rounded-[var(--fluent-corner-radius-medium,4px)] font-semibold text-sm shadow-[var(--fluent-shadow-2)] active:scale-[0.98] transition-all duration-[var(--fluent-duration-fast,150ms)] flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white px-4 py-2 rounded-[var(--fluent-corner-radius-medium,4px)] font-semibold text-sm shadow-[var(--fluent-shadow-2)] active:scale-[0.98] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] flex items-center justify-center gap-2"
                     onClick={() => setIsModalOpen(true)}
                   >
                     <Plus size={16} strokeWidth={2.5} />
@@ -418,7 +418,7 @@ const Purchases = () => {
                         </tr>
                       ) : (
                         purchaseItems.map(item => (
-                          <tr key={item.id} className="hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] transition-colors duration-[var(--fluent-duration-faster,100ms)] group/row" onDoubleClick={() => handleEditItem(item)}>
+                          <tr key={item.id} className="hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] transition-colors duration-[duration:var(--fluent-duration-faster,100ms)] group/row" onDoubleClick={() => handleEditItem(item)}>
                             <td className="px-4 py-3">
                               <div className="text-xs font-mono text-[var(--fluent-text-secondary,#605E5C)]">#{item.product_id}</div>
                               <div className="text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]">{item.sku}</div>
@@ -479,14 +479,14 @@ const Purchases = () => {
                   </div>
                   <div className="flex flex-col gap-3 justify-end">
                     <button 
-                      className="w-full py-3 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all duration-[var(--fluent-duration-fast,150ms)] disabled:opacity-50 disabled:pointer-events-none text-sm"
+                      className="w-full py-3 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-4)] active:scale-[0.98] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] disabled:opacity-50 disabled:pointer-events-none text-sm"
                       onClick={handleSavePurchase}
                       disabled={!selectedSupplier || purchaseItems.length === 0 || loading}
                     >
                       {loading ? 'Procesando...' : 'Confirmar y Guardar Compra'}
                     </button>
                     <button 
-                      className="w-full py-3 border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] text-[var(--fluent-text-secondary,#605E5C)] font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] transition-all duration-[var(--fluent-duration-fast,150ms)] text-sm"
+                      className="w-full py-3 border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] hover:bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] text-[var(--fluent-text-secondary,#605E5C)] font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] text-sm"
                       onClick={() => { if (confirm('¿Borrar toda la orden?')) { setPurchaseItems([]); setSelectedSupplier(null); setSupplierSearch(''); } }}
                     >
                       Cancelar Todo
@@ -596,7 +596,7 @@ const Purchases = () => {
                     />
                   </div>
                   <button 
-                    className="w-full sm:w-auto px-5 py-2 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-2)] active:scale-[0.98] transition-all duration-[var(--fluent-duration-fast,150ms)] text-sm"
+                    className="w-full sm:w-auto px-5 py-2 bg-[var(--fluent-brand-primary,#0078D4)] hover:bg-[var(--fluent-brand-primary-hover,#005A9E)] text-white font-semibold rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-2)] active:scale-[0.98] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] text-sm"
                     onClick={handleFilter}
                   >
                     Buscar
@@ -606,7 +606,7 @@ const Purchases = () => {
                 <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto justify-end">
                   <div className="flex p-0.5 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)]">
                     <button 
-                      className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
+                      className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] ${
                         searchType === 'date' 
                           ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]' 
                           : 'text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)]'
@@ -616,7 +616,7 @@ const Purchases = () => {
                       Fecha
                     </button>
                     <button 
-                      className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
+                      className={`px-4 py-1.5 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] ${
                         searchType === 'supplier' 
                           ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]' 
                           : 'text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)]'
@@ -660,7 +660,7 @@ const Purchases = () => {
                         const isCancelled = order.status?.toUpperCase() === 'CANCELLED';
                         
                         return (
-                          <tr key={order.id} className="hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] transition-colors duration-[var(--fluent-duration-faster,100ms)]">
+                          <tr key={order.id} className="hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] transition-colors duration-[duration:var(--fluent-duration-faster,100ms)]">
                             <td className="px-5 py-3.5 font-semibold text-[var(--fluent-brand-primary,#0078D4)] text-sm">#{order.id}</td>
                             <td className="px-5 py-3.5 text-[var(--fluent-text-secondary,#605E5C)] text-sm">{formatDate(order.order_date)}</td>
                             <td className="px-5 py-3.5 font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white text-sm">{order.supplier_name || '-'}</td>
@@ -864,7 +864,7 @@ const Purchases = () => {
                     <label className="text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]">Estrategia de Precio de Venta</label>
                     <div className="flex p-0.5 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)]">
                       <button 
-                        className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
+                        className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] ${
                           pricingMode === 'margin' 
                             ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]' 
                             : 'text-[var(--fluent-text-secondary,#605E5C)]'
@@ -874,7 +874,7 @@ const Purchases = () => {
                         Por Margen %
                       </button>
                       <button 
-                        className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
+                        className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[duration:var(--fluent-duration-fast,150ms)] ${
                           pricingMode === 'sale_price' 
                             ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]' 
                             : 'text-[var(--fluent-text-secondary,#605E5C)]'

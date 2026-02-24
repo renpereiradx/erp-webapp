@@ -182,6 +182,21 @@ const MainLayout = ({ children }) => {
                 href: '/dashboard/financial-summary',
                 icon: TrendingUp,
               },
+              {
+                name: 'Flujo de Efectivo Analítico',
+                href: '/finance/analytical-cash-flow',
+                icon: CircleDollarSign,
+              },
+              {
+                name: 'Gestión de IVA / Fiscal',
+                href: '/finance/tax-management',
+                icon: FileText,
+              },
+              {
+                name: 'Estado de Resultados (P&L)',
+                href: '/finance/profit-and-loss',
+                icon: BarChart3,
+              },
             ],
           },
         ],

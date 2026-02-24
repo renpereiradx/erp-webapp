@@ -118,6 +118,18 @@ export const distinctSearchableRoutes = [
     icon: TrendingUp,
     category: 'BI / Reportes Financieros'
   },
+  {
+    name: 'Flujo de Efectivo Analítico',
+    href: '/finance/analytical-cash-flow',
+    icon: BarChart3,
+    category: 'BI / Reportes Financieros'
+  },
+  {
+    name: 'Gestión de IVA y Resumen Fiscal',
+    href: '/finance/tax-management',
+    icon: FileText,
+    category: 'BI / Reportes Financieros'
+  },
   
   // Gestión de Usuarios y Perfil
   {

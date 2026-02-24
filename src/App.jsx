@@ -63,11 +63,14 @@ import ReceivablesMasterList from '@/pages/ReceivablesMasterList'
 import InvoicesMasterList from '@/pages/InvoicesMasterList'
 import InvoiceDetail from '@/pages/InvoiceDetail'
 import CashFlowProjection from '@/pages/CashFlowProjection'
+import CashFlowAnalysisDashboard from '@/pages/CashFlowAnalysisDashboard'
+import TaxManagementDashboard from '@/pages/TaxManagementDashboard'
 import SupplierAnalysis from '@/pages/SupplierAnalysis'
 import ReceivableDetail from '@/pages/ReceivableDetail'
 import OverdueAccounts from '@/pages/OverdueAccounts'
 import ClientCreditProfile from '@/pages/ClientCreditProfile'
 import AgingReport from '@/pages/AgingReport'
+import ProfitAndLoss from '@/pages/ProfitAndLoss'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -144,6 +147,9 @@ function AppContent() {
                       <Route path='/finance/invoices' element={<InvoicesMasterList />} />
                       <Route path='/finance/invoices/:id' element={<InvoiceDetail />} />
                       <Route path='/finance/cash-flow' element={<CashFlowProjection />} />
+                      <Route path='/finance/analytical-cash-flow' element={<CashFlowAnalysisDashboard />} />
+                      <Route path='/finance/tax-management' element={<TaxManagementDashboard />} />
+                      <Route path='/finance/profit-and-loss' element={<ProfitAndLoss />} />
                       <Route path='/receivables' element={<ReceivablesDashboard />} />
                       <Route path='/receivables/list' element={<ReceivablesMasterList />} />
                       <Route path='/receivables/detail/:id' element={<ReceivableDetail />} />

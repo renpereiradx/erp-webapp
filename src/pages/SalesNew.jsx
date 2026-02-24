@@ -1209,7 +1209,7 @@ const SalesNew = () => {
             role="tab"
             aria-selected={activeTab === 'new-sale'}
             aria-controls="sales-new-panel"
-            className={`px-4 py-2.5 text-sm font-medium transition-all duration-[var(--fluent-duration-normal,200ms)] border-b-2 -mb-px ${
+            className={`px-4 py-2.5 text-sm font-medium transition-all duration-[duration:var(--fluent-duration-normal,200ms)] border-b-2 -mb-px ${
               activeTab === 'new-sale'
                 ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]'
                 : 'border-transparent text-[var(--fluent-text-secondary,#616161)] hover:text-[var(--fluent-text-primary,#242424)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)]'
@@ -1224,7 +1224,7 @@ const SalesNew = () => {
             role="tab"
             aria-selected={activeTab === 'history'}
             aria-controls="sales-history-panel"
-            className={`px-4 py-2.5 text-sm font-medium transition-all duration-[var(--fluent-duration-normal,200ms)] border-b-2 -mb-px ${
+            className={`px-4 py-2.5 text-sm font-medium transition-all duration-[duration:var(--fluent-duration-normal,200ms)] border-b-2 -mb-px ${
               activeTab === 'history'
                 ? 'border-[var(--fluent-brand-primary,#0078D4)] text-[var(--fluent-brand-primary,#0078D4)]'
                 : 'border-transparent text-[var(--fluent-text-secondary,#616161)] hover:text-[var(--fluent-text-primary,#242424)] hover:bg-[var(--fluent-surface-hover,#F0F0F0)]'
@@ -1258,7 +1258,7 @@ const SalesNew = () => {
                     type="button"
                     onClick={handleOpenModal}
                     title="Ctrl+A"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-brand-hover,#106EBE)] active:bg-[var(--fluent-brand-pressed,#005A9E)] transition-colors duration-[var(--fluent-duration-fast,100ms)]"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-brand-hover,#106EBE)] active:bg-[var(--fluent-brand-pressed,#005A9E)] transition-colors duration-[duration:var(--fluent-duration-fast,100ms)]"
                   >
                     <Plus size={16} aria-hidden="true" />
                     Agregar
