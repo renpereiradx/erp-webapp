@@ -14,7 +14,7 @@ const FinancialSummaryDashboard = () => {
       <main className="flex-1 p-4 sm:p-6 lg:p-10 max-w-[1440px] mx-auto w-full space-y-6 sm:space-y-8">
         
         {/* Header Section */}
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="flex flex-col gap-1">
             <h1 className="text-slate-900 dark:text-white text-3xl font-black leading-tight tracking-tight">
               Resumen Financiero
@@ -24,7 +24,7 @@ const FinancialSummaryDashboard = () => {
             </p>
           </div>
           
-          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
             <div className="flex h-9 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 p-1">
               {['Hoy', 'Semana', 'Mes', 'Año'].map((p) => {
                 const value = p === 'Hoy' ? 'Today' : p === 'Semana' ? 'Week' : p === 'Mes' ? 'Month' : 'Year';
@@ -44,8 +44,8 @@ const FinancialSummaryDashboard = () => {
                 );
               })}
             </div>
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white text-sm font-bold rounded-lg hover:bg-[#137fec]/90 transition-all shadow-md shadow-[#137fec]/20">
+            <div className="hidden xs:block h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+            <button className="flex items-center justify-center gap-2 px-4 py-2 bg-[#137fec] text-white text-sm font-bold rounded-lg hover:bg-[#137fec]/90 transition-all shadow-md shadow-[#137fec]/20">
               <span className="material-symbols-outlined text-[18px]">download</span>
               Exportar BI
             </button>
