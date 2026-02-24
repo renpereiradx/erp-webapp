@@ -243,15 +243,6 @@ const FinancialSummaryDashboard = () => {
           <div className="absolute -bottom-12 -right-12 size-48 sm:size-64 bg-[#137fec]/10 rounded-full blur-3xl"></div>
         </div>
 
-        {/* Footer */}
-        <footer className="pt-6 sm:pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col xs:flex-row justify-between items-center gap-4">
-          <p className="text-slate-500 text-[10px] sm:text-xs font-medium text-center">© 2024 ERP Financial System • Versión 4.2.0-Fluent</p>
-          <div className="flex gap-4">
-            <a className="text-slate-400 hover:text-[#137fec] transition-colors cursor-pointer"><span className="material-symbols-outlined text-[18px] sm:text-[20px]">help_center</span></a>
-            <a className="text-slate-400 hover:text-[#137fec] transition-colors cursor-pointer"><span className="material-symbols-outlined text-[18px] sm:text-[20px]">contact_support</span></a>
-          </div>
-        </footer>
-
       </main>
     </div>
   );
