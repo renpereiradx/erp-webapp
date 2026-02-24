@@ -714,19 +714,19 @@ const Purchases = () => {
         )}
       </main>
 
-      {/* PRODUCT MODAL - Fluent 2 Dialog - Optimized for low-height screens (720p+) */}
+      {/* PRODUCT MODAL - Fluent 2 Dialog - 2-column layout optimized for 720p+ */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setIsModalOpen(false)}></div>
-          <div className="relative bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] w-full max-w-7xl max-h-[95vh] md:max-h-[92vh] rounded-[var(--fluent-corner-radius-xlarge,8px)] shadow-[var(--fluent-shadow-64)] overflow-hidden flex flex-col border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)]">
+          <div className="relative bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] w-full max-w-4xl max-h-[98vh] rounded-[var(--fluent-corner-radius-xlarge,8px)] shadow-[var(--fluent-shadow-64)] overflow-hidden flex flex-col border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)]">
             
-            {/* Header - Compact */}
-            <header className="px-4 md:px-6 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] flex justify-between items-center bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] shrink-0">
+            {/* Header */}
+            <header className="px-5 py-3 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] flex justify-between items-center bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] shrink-0">
               <div>
-                <h3 className="text-base md:text-lg font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">
+                <h3 className="text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">
                   {editingItemId ? 'Editar Artículo' : 'Agregar Artículo de Compra'}
                 </h3>
-                <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)] mt-0.5">Gestión de costos y márgenes</p>
+                <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)] mt-0.5">Seleccione un producto, configure cantidad, costo y estrategia de precio</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)} 
@@ -736,20 +736,21 @@ const Purchases = () => {
               </button>
             </header>
 
-            {/* Content - Horizontal layout prioritizing width over height */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 h-full">
+            {/* Content - 2-column layout */}
+            <div className="flex-1 overflow-y-auto p-5">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 
-                {/* Column 1: Product Search & Selection */}
-                <div className="lg:col-span-4 space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-[var(--fluent-brand-primary,#0078D4)]">Buscar Producto</label>
+                {/* Column 1: Product Search, Selection & Basic Info */}
+                <div className="space-y-4">
+                  {/* Product Search */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]">Buscar Producto</label>
                     <div className="relative" ref={modalProductSearchRef}>
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fluent-text-tertiary,#8A8886)]" size={16} />
                       <input 
                         type="text" 
                         className="w-full pl-9 pr-9 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-sm focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all" 
-                        placeholder="SKU, EAN o Nombre..." 
+                        placeholder="Buscar por SKU, EAN o Nombre..." 
                         value={modalProductSearch} 
                         onChange={e => setModalProductSearch(e.target.value)} 
                         onFocus={() => setShowProductDropdown(true)} 
@@ -757,7 +758,7 @@ const Purchases = () => {
                       {searchingProducts && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[var(--fluent-brand-primary,#0078D4)] border-t-transparent rounded-full animate-spin"></div>}
                       
                       {showProductDropdown && filteredModalProducts.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] overflow-hidden z-50 max-h-[200px] overflow-y-auto">
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] overflow-hidden z-50 max-h-[220px] overflow-y-auto">
                           {filteredModalProducts.map(p => (
                             <div key={p.id} className="px-4 py-2.5 hover:bg-[var(--fluent-surface-card-hover,#F8F8F8)] dark:hover:bg-[var(--fluent-neutral-grey-140,#484644)] cursor-pointer border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] last:border-none flex justify-between items-center" onClick={() => handleProductSelect(p)}>
                               <div className="min-w-0 flex-1">
@@ -785,7 +786,11 @@ const Purchases = () => {
                         <div className="w-10 h-10 bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] flex items-center justify-center text-white font-semibold text-lg shrink-0">{modalSelectedProduct.name?.charAt(0)}</div>
                         <div className="min-w-0 flex-1">
                           <h4 className="font-semibold text-sm text-[var(--fluent-text-primary,#212121)] dark:text-white truncate">{modalSelectedProduct.name}</h4>
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                          <div className="grid grid-cols-3 gap-2 mt-2">
+                            <div>
+                              <p className="text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]">ID</p>
+                              <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)]">{modalSelectedProduct.id}</p>
+                            </div>
                             <div>
                               <p className="text-[10px] text-[var(--fluent-text-tertiary,#8A8886)]">SKU</p>
                               <p className="text-xs text-[var(--fluent-text-secondary,#605E5C)]">{modalSelectedProduct.sku || '-'}</p>
@@ -804,36 +809,36 @@ const Purchases = () => {
                       <p className="text-xs text-[var(--fluent-text-tertiary,#8A8886)] mt-1">Selecciona un producto</p>
                     </div>
                   )}
-                </div>
 
-                {/* Column 2: Quantity & Cost */}
-                <div className="lg:col-span-4 space-y-4">
+                  {/* Quantity & Cost */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)]">Cantidad</label>
+                      <label className="text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]">Cantidad</label>
                       <input 
                         type="number" 
-                        className="w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-lg font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all" 
+                        className="w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all" 
                         value={modalQuantity} 
                         onChange={e => setModalQuantity(e.target.value)} 
                         placeholder="0"
                       />
+                      <p className="text-xs text-[var(--fluent-text-tertiary,#8A8886)]">Unidades a comprar</p>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)]">Costo Unitario</label>
+                      <label className="text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]">Costo Unitario</label>
                       <input 
                         type="number" 
-                        className="w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-lg font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all" 
+                        className="w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-base font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)] transition-all" 
                         value={modalUnitPrice} 
                         onChange={e => setModalUnitPrice(e.target.value)} 
                         placeholder="0.00"
                       />
+                      <p className="text-xs text-[var(--fluent-text-tertiary,#8A8886)]">Precio de compra por unidad</p>
                     </div>
                   </div>
 
                   {/* Tax Rate */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)]">
+                    <label className="text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]">
                       {t('purchases.modal.tax_rate', 'Tasa de Impuesto')}
                     </label>
                     <select
@@ -850,27 +855,16 @@ const Purchases = () => {
                       ))}
                     </select>
                   </div>
-
-                  {/* Line Total Preview */}
-                  <div className="p-3 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
-                    <div className="text-[10px] font-semibold text-[var(--fluent-text-secondary,#605E5C)] uppercase tracking-wide mb-2">Resumen de Línea</div>
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-[var(--fluent-text-tertiary,#8A8886)]">{modalQuantity || 0} × {formatCurrency(modalUnitPrice || 0)}</span>
-                        <span className="font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency((modalQuantity || 0) * (modalUnitPrice || 0))}</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
-                {/* Column 3: Pricing Strategy */}
-                <div className="lg:col-span-4 space-y-4">
+                {/* Column 2: Pricing Strategy & Financial Summary */}
+                <div className="space-y-4">
                   {/* Pricing Mode Toggle */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)]">Modo de Precio</label>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]">Estrategia de Precio de Venta</label>
                     <div className="flex p-0.5 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-medium,4px)]">
                       <button 
-                        className={`flex-1 py-2 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
+                        className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
                           pricingMode === 'margin' 
                             ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]' 
                             : 'text-[var(--fluent-text-secondary,#605E5C)]'
@@ -880,7 +874,7 @@ const Purchases = () => {
                         Por Margen %
                       </button>
                       <button 
-                        className={`flex-1 py-2 text-xs font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
+                        className={`flex-1 py-2.5 text-sm font-semibold rounded-[var(--fluent-corner-radius-small,2px)] transition-all duration-[var(--fluent-duration-fast,150ms)] ${
                           pricingMode === 'sale_price' 
                             ? 'bg-[var(--fluent-surface-primary,#FFFFFF)] dark:bg-[var(--fluent-neutral-grey-150,#323130)] shadow-[var(--fluent-shadow-2)] text-[var(--fluent-brand-primary,#0078D4)]' 
                             : 'text-[var(--fluent-text-secondary,#605E5C)]'
@@ -895,13 +889,13 @@ const Purchases = () => {
                   {/* Margin & Price Fields */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)]">{pricingMode === 'margin' ? 'Margen %' : 'Margen Real'}</label>
+                      <label className="text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]">{pricingMode === 'margin' ? 'Margen de Ganancia' : 'Margen Calculado'}</label>
                       <div className="relative">
                         <input 
                           type="number" 
-                          className={`w-full pl-3 pr-8 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-lg font-semibold transition-all ${
+                          className={`w-full pl-3 pr-8 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-base font-semibold transition-all ${
                             pricingMode !== 'margin' 
-                              ? 'opacity-50 cursor-not-allowed text-[var(--fluent-text-tertiary,#8A8886)]' 
+                              ? 'opacity-60 cursor-not-allowed text-[var(--fluent-text-tertiary,#8A8886)]' 
                               : 'text-[var(--fluent-semantic-success,#107C10)] focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]'
                           }`} 
                           value={pricingMode === 'margin' ? modalProfitPct : effectiveProfitPct.toFixed(1)} 
@@ -910,65 +904,74 @@ const Purchases = () => {
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--fluent-text-tertiary,#8A8886)]">%</span>
                       </div>
+                      <p className="text-xs text-[var(--fluent-text-tertiary,#8A8886)]">{pricingMode === 'margin' ? 'Define el % de ganancia deseado' : 'Porcentaje resultante del precio fijo'}</p>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-[var(--fluent-text-secondary,#605E5C)]">{pricingMode === 'sale_price' ? 'Precio Venta' : 'Precio Sugerido'}</label>
+                      <label className="text-sm font-medium text-[var(--fluent-text-secondary,#605E5C)]">{pricingMode === 'sale_price' ? 'Precio de Venta' : 'Precio Sugerido'}</label>
                       <input 
                         type="number" 
-                        className={`w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-lg font-semibold transition-all ${
+                        className={`w-full px-3 py-2.5 bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] text-base font-semibold transition-all ${
                           pricingMode !== 'sale_price' 
-                            ? 'opacity-50 cursor-not-allowed text-[var(--fluent-text-tertiary,#8A8886)]' 
+                            ? 'opacity-60 cursor-not-allowed text-[var(--fluent-text-tertiary,#8A8886)]' 
                             : 'text-[var(--fluent-brand-primary,#0078D4)] focus:border-[var(--fluent-brand-primary,#0078D4)] focus:outline-none focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]'
                         }`} 
                         value={pricingMode === 'sale_price' ? modalSalePrice : effectiveSalePrice.toFixed(0)} 
                         onChange={e => pricingMode === 'sale_price' && setModalSalePrice(Number(e.target.value))} 
                         readOnly={pricingMode !== 'sale_price'} 
                       />
+                      <p className="text-xs text-[var(--fluent-text-tertiary,#8A8886)]">{pricingMode === 'sale_price' ? 'Precio final al público' : 'Calculado según margen'}</p>
                     </div>
                   </div>
 
                   {/* Pricing Summary */}
-                  <div className="p-3 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] rounded-[var(--fluent-corner-radius-medium,4px)] border border-[rgba(0,120,212,0.15)]">
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-4 bg-[rgba(0,120,212,0.06)] dark:bg-[rgba(0,120,212,0.12)] rounded-[var(--fluent-corner-radius-medium,4px)] border border-[rgba(0,120,212,0.15)]">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <span className="text-[var(--fluent-text-tertiary,#8A8886)]">Costo Unit.:</span>
-                        <span className="ml-1 font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency(modalUnitPrice || 0)}</span>
+                        <span className="block text-xs text-[var(--fluent-text-tertiary,#8A8886)]">Costo Unitario</span>
+                        <span className="text-sm font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency(modalUnitPrice || 0)}</span>
                       </div>
                       <div>
-                        <span className="text-[var(--fluent-text-tertiary,#8A8886)]">Venta Unit.:</span>
-                        <span className="ml-1 font-semibold text-[var(--fluent-semantic-success,#107C10)]">{formatCurrency(effectiveSalePrice)}</span>
+                        <span className="block text-xs text-[var(--fluent-text-tertiary,#8A8886)]">Precio Venta Unitario</span>
+                        <span className="text-sm font-semibold text-[var(--fluent-semantic-success,#107C10)]">{formatCurrency(effectiveSalePrice)}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Financial Projection Panel */}
-                  <div className="p-3 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-large,6px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)] space-y-2">
-                    <div className="text-[10px] font-semibold text-[var(--fluent-text-secondary,#605E5C)] uppercase tracking-wide">Proyección Financiera</div>
-                    
-                    {/* Total Compra */}
-                    <div className="flex justify-between items-center py-1.5 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
-                      <span className="text-xs text-[var(--fluent-text-secondary,#605E5C)]">Total Compra</span>
-                      <span className="text-sm font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency((modalQuantity || 0) * (modalUnitPrice || 0))}</span>
-                    </div>
-                    
-                    {/* Total Venta Esperado */}
-                    <div className="flex justify-between items-center py-1.5 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
-                      <span className="text-xs text-[var(--fluent-text-secondary,#605E5C)]">Venta Esperada</span>
-                      <span className="text-sm font-semibold text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency((modalQuantity || 0) * effectiveSalePrice)}</span>
-                    </div>
-                    
-                    {/* Ganancia Esperada */}
-                    <div className="flex justify-between items-center pt-1">
-                      <span className="text-xs font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white">Ganancia Esperada</span>
-                      <div className="text-right">
-                        <span className={`text-base font-bold ${((modalQuantity || 0) * effectiveSalePrice) - ((modalQuantity || 0) * (modalUnitPrice || 0)) >= 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}>
-                          {formatCurrency(((modalQuantity || 0) * effectiveSalePrice) - ((modalQuantity || 0) * (modalUnitPrice || 0)))}
-                        </span>
-                        {(modalQuantity || 0) > 0 && (modalUnitPrice || 0) > 0 && (
-                          <span className="ml-1.5 text-[10px] font-medium text-[var(--fluent-semantic-success,#107C10)]">
-                            (+{effectiveProfitPct.toFixed(1)}%)
+                  <div className="p-4 bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] rounded-[var(--fluent-corner-radius-large,6px)] border border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                    <div className="text-xs font-semibold text-[var(--fluent-text-secondary,#605E5C)] uppercase tracking-wide mb-3">Proyección Financiera</div>
+                    <div className="space-y-2">
+                      {/* Resumen de Línea */}
+                      <div className="flex justify-between items-center py-2 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                        <span className="text-xs text-[var(--fluent-text-secondary,#605E5C)]">Subtotal Línea</span>
+                        <span className="text-xs text-[var(--fluent-text-tertiary,#8A8886)]">{modalQuantity || 0} × {formatCurrency(modalUnitPrice || 0)}</span>
+                      </div>
+                      
+                      {/* Total Compra */}
+                      <div className="flex justify-between items-center py-2 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                        <span className="text-sm text-[var(--fluent-text-secondary,#605E5C)]">Total Compra</span>
+                        <span className="text-sm font-semibold text-[var(--fluent-text-primary,#212121)] dark:text-white">{formatCurrency((modalQuantity || 0) * (modalUnitPrice || 0))}</span>
+                      </div>
+                      
+                      {/* Total Venta Esperado */}
+                      <div className="flex justify-between items-center py-2 border-b border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-130,#605E5C)]">
+                        <span className="text-sm text-[var(--fluent-text-secondary,#605E5C)]">Venta Esperada</span>
+                        <span className="text-sm font-semibold text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency((modalQuantity || 0) * effectiveSalePrice)}</span>
+                      </div>
+                      
+                      {/* Ganancia Esperada */}
+                      <div className="flex justify-between items-center pt-2">
+                        <span className="text-sm font-medium text-[var(--fluent-text-primary,#212121)] dark:text-white">Ganancia Esperada</span>
+                        <div className="text-right">
+                          <span className={`text-lg font-bold ${((modalQuantity || 0) * effectiveSalePrice) - ((modalQuantity || 0) * (modalUnitPrice || 0)) >= 0 ? 'text-[var(--fluent-semantic-success,#107C10)]' : 'text-[var(--fluent-semantic-danger,#D13438)]'}`}>
+                            {formatCurrency(((modalQuantity || 0) * effectiveSalePrice) - ((modalQuantity || 0) * (modalUnitPrice || 0)))}
                           </span>
-                        )}
+                          {(modalQuantity || 0) > 0 && (modalUnitPrice || 0) > 0 && (
+                            <span className="ml-1.5 text-xs font-medium text-[var(--fluent-semantic-success,#107C10)]">
+                              (+{effectiveProfitPct.toFixed(1)}%)
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -976,10 +979,10 @@ const Purchases = () => {
               </div>
             </div>
 
-            {/* Footer - Compact */}
-            <footer className="px-4 md:px-6 py-3 border-t border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] flex justify-end items-center gap-3 shrink-0">
+            {/* Footer */}
+            <footer className="px-5 py-3 border-t border-[var(--fluent-border-neutral,#E1DFDD)] dark:border-[var(--fluent-neutral-grey-140,#484644)] bg-[var(--fluent-surface-secondary,#FAF9F8)] dark:bg-[var(--fluent-neutral-grey-140,#484644)] flex justify-end items-center gap-3 shrink-0">
               <button 
-                className="px-4 py-2 font-medium text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:hover:bg-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] transition-all text-sm" 
+                className="px-5 py-2 font-medium text-[var(--fluent-text-secondary,#605E5C)] hover:text-[var(--fluent-text-primary,#212121)] hover:bg-[var(--fluent-surface-tertiary,#F3F2F1)] dark:hover:bg-[var(--fluent-neutral-grey-130,#605E5C)] rounded-[var(--fluent-corner-radius-medium,4px)] transition-all text-sm border border-[var(--fluent-border-neutral,#E1DFDD)]" 
                 onClick={() => setIsModalOpen(false)}
               >
                 Cancelar

@@ -2018,16 +2018,16 @@ const SalesNew = () => {
             }}
             aria-hidden="true"
           />
-          {/* Modal - Horizontal Layout for 720p+ */}
-          <div className="relative w-full max-w-7xl mx-4 max-h-[95vh] bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-xlarge,12px)] shadow-[var(--fluent-shadow-64,0_32px_64px_rgba(0,0,0,0.24),0_0_8px_rgba(0,0,0,0.1))] flex flex-col overflow-hidden">
+          {/* Modal - 2-column Layout optimized for 720p+ */}
+          <div className="relative w-full max-w-4xl mx-4 max-h-[98vh] bg-[var(--fluent-surface-card,#FFFFFF)] rounded-[var(--fluent-corner-radius-xlarge,12px)] shadow-[var(--fluent-shadow-64,0_32px_64px_rgba(0,0,0,0.24),0_0_8px_rgba(0,0,0,0.1))] flex flex-col overflow-hidden">
             {/* Compact Header */}
-            <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-surface-subtle,#FAFAFA)]">
+            <header className="flex items-center justify-between px-5 py-3 border-b border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-surface-subtle,#FAFAFA)]">
               <div>
                 <h3 id="sales-modal-title" className="text-base font-semibold text-[var(--fluent-text-primary,#242424)]">
                   {editingItemId ? 'Editar producto' : 'Agregar producto a la venta'}
                 </h3>
                 <p className="text-xs text-[var(--fluent-text-secondary,#616161)]">
-                  Selecciona, ajusta cantidad y configura descuento
+                  Seleccione un artículo del catálogo, ajuste la cantidad y configure un descuento antes de añadirlo
                 </p>
               </div>
               <button
@@ -2040,34 +2040,22 @@ const SalesNew = () => {
               </button>
             </header>
 
-            {/* Body - Horizontal 3-column Grid */}
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                {/* Column 1: Product Search (5 cols) */}
-                <div className="lg:col-span-5 space-y-3">
-                  <div className="p-3 bg-[var(--fluent-surface-subtle,#F5F5F5)] rounded-[var(--fluent-corner-radius-medium,4px)]">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-[var(--fluent-text-secondary,#616161)] uppercase tracking-wide">Producto seleccionado</span>
-                      <span className="text-xs text-[var(--fluent-text-secondary,#616161)]">ID: {modalDisplay.id || '—'}</span>
-                    </div>
-                    <p className="text-sm font-medium text-[var(--fluent-text-primary,#242424)] truncate">
-                      {modalDisplay.name || 'Ninguno seleccionado'}
-                    </p>
-                    <p className="text-xs text-[var(--fluent-brand-primary,#0078D4)] mt-1">
-                      Precio: {formatCurrency(modalUnitPrice, 'PYG')}
-                    </p>
-                  </div>
-
+            {/* Body - 2-column Grid */}
+            <div className="flex-1 overflow-y-auto p-5">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {/* Column 1: Product Search & Selection */}
+                <div className="space-y-4">
+                  {/* Product Search */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1" htmlFor="modal-product">
-                      Buscar producto
+                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1.5" htmlFor="modal-product">
+                      Producto
                     </label>
                     <div className="relative" ref={productSearchContainerRef}>
                       <input
                         ref={modalProductInputRef}
                         id="modal-product"
                         type="text"
-                        className="w-full px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] placeholder:text-[var(--fluent-text-secondary,#616161)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
+                        className="w-full px-3 py-2.5 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] placeholder:text-[var(--fluent-text-secondary,#616161)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
                         value={productSearchTerm}
                         onChange={event => {
                           setProductSearchTerm(event.target.value)
@@ -2104,11 +2092,11 @@ const SalesNew = () => {
                         aria-haspopup="listbox"
                         aria-controls="sales-product-search-listbox"
                         aria-activedescendant={highlightedIndex >= 0 ? `sales-product-option-${highlightedIndex}` : undefined}
-                        placeholder="Nombre, ID o código de barras..."
+                        placeholder="Buscar por nombre, ID o código de barras..."
                         autoComplete="off"
                       />
                       {showProductDropdown && (
-                        <div ref={productDropdownRef} className="absolute top-full left-0 right-0 mt-1 z-50 max-h-48 overflow-y-auto bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16,0_8px_16px_rgba(0,0,0,0.14),0_0_2px_rgba(0,0,0,0.12))]" role="listbox" id="sales-product-search-listbox" aria-label="Resultados de productos">
+                        <div ref={productDropdownRef} className="absolute top-full left-0 right-0 mt-1 z-50 max-h-52 overflow-y-auto bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] shadow-[var(--fluent-shadow-16,0_8px_16px_rgba(0,0,0,0.14),0_0_2px_rgba(0,0,0,0.12))]" role="listbox" id="sales-product-search-listbox" aria-label="Resultados de productos">
                           {isSearchingProducts ? (
                             <div className="px-3 py-2 text-sm text-[var(--fluent-text-secondary,#616161)]">Buscando...</div>
                           ) : modalSearchResults.length === 0 ? (
@@ -2125,7 +2113,7 @@ const SalesNew = () => {
                                   id={`sales-product-option-${index}`}
                                   role="option"
                                   aria-selected={isHighlighted}
-                                  className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer transition-colors ${isHighlighted ? 'bg-[var(--fluent-brand-light,#DEECF9)]' : 'hover:bg-[var(--fluent-surface-hover,#F5F5F5)]'}`}
+                                  className={`flex items-center justify-between px-3 py-2.5 text-sm cursor-pointer transition-colors ${isHighlighted ? 'bg-[var(--fluent-brand-light,#DEECF9)]' : 'hover:bg-[var(--fluent-surface-hover,#F5F5F5)]'}`}
                                   onClick={() => { handleSelectProduct(product); setHighlightedIndex(-1) }}
                                   onMouseEnter={() => setHighlightedIndex(index)}
                                   onMouseLeave={() => setHighlightedIndex(-1)}
@@ -2137,7 +2125,7 @@ const SalesNew = () => {
                                   <div className="text-right">
                                     <div className="font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(display.price, 'PYG')}</div>
                                     <div className={`text-xs font-medium ${display.stock > 0 ? 'text-[var(--fluent-status-success,#107C10)]' : 'text-[var(--fluent-status-danger,#D13438)]'}`}>
-                                      Stock: {display.stock}
+                                      Disponible: {display.stock}
                                     </div>
                                   </div>
                                 </div>
@@ -2147,45 +2135,71 @@ const SalesNew = () => {
                         </div>
                       )}
                     </div>
+                    <p className="text-xs text-[var(--fluent-text-secondary,#616161)] mt-1.5">
+                      Precio unitario actual: <span className="font-medium text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency(modalUnitPrice, 'PYG')}</span>
+                    </p>
+                  </div>
+
+                  {/* Selected Product Info */}
+                  <div className="p-4 bg-[var(--fluent-surface-subtle,#F5F5F5)] rounded-[var(--fluent-corner-radius-medium,4px)] border border-[var(--fluent-border-subtle,#E8E8E8)]">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="block text-xs font-medium text-[var(--fluent-text-secondary,#616161)] uppercase tracking-wide mb-1">Producto seleccionado</span>
+                        <p className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">
+                          {modalDisplay.name || 'Selecciona un producto'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="block text-xs font-medium text-[var(--fluent-text-secondary,#616161)] uppercase tracking-wide mb-1">ID</span>
+                        <p className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">
+                          {modalDisplay.id || '—'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quantity */}
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1.5" htmlFor="modal-quantity">
+                      Cantidad ({modalDisplay.base_unit ? getUnitLabel(modalDisplay.base_unit) : 'Unidades'})
+                    </label>
+                    <input
+                      id="modal-quantity"
+                      type="number"
+                      min="1"
+                      step={modalDisplay.base_unit && ['basic', 'packing', 'grocery'].includes(getUnitLabel(modalDisplay.base_unit)) ? '1' : '0.01'}
+                      className="w-full px-3 py-2.5 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
+                      value={modalQuantity}
+                      onChange={event => setModalQuantity(event.target.value)}
+                    />
+                    <p className="text-xs text-[var(--fluent-text-secondary,#616161)] mt-1.5">
+                      Máximo disponible: <span className={`font-medium ${modalDisplay.stock > 0 ? 'text-[var(--fluent-status-success,#107C10)]' : 'text-[var(--fluent-text-secondary,#616161)]'}`}>{modalDisplay.stock > 0 ? `${modalDisplay.stock} unidades` : 'sin límite definido'}</span>
+                    </p>
                   </div>
                 </div>
 
-                {/* Column 2: Quantity & Discount (4 cols) */}
-                <div className="lg:col-span-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1" htmlFor="modal-quantity">
-                        Cantidad ({modalDisplay.base_unit ? getUnitLabel(modalDisplay.base_unit) : 'Unidades'})
-                      </label>
-                      <input
-                        id="modal-quantity"
-                        type="number"
-                        min="1"
-                        step={modalDisplay.base_unit && ['basic', 'packing', 'grocery'].includes(getUnitLabel(modalDisplay.base_unit)) ? '1' : '0.01'}
-                        className="w-full px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
-                        value={modalQuantity}
-                        onChange={event => setModalQuantity(event.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1" htmlFor="modal-discount-type">
-                        Tipo Descuento
-                      </label>
-                      <select
-                        id="modal-discount-type"
-                        className="w-full px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
-                        value={modalDiscountType}
-                        onChange={e => setModalDiscountType(e.target.value)}
-                      >
-                        <option value="amount">Monto Fijo</option>
-                        <option value="percent">Porcentaje</option>
-                      </select>
-                    </div>
+                {/* Column 2: Discount & Totals */}
+                <div className="space-y-4">
+                  {/* Discount Type */}
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1.5" htmlFor="modal-discount-type">
+                      Tipo de Descuento
+                    </label>
+                    <select
+                      id="modal-discount-type"
+                      className="w-full px-3 py-2.5 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
+                      value={modalDiscountType}
+                      onChange={e => setModalDiscountType(e.target.value)}
+                    >
+                      <option value="amount">Monto Fijo (Unitario)</option>
+                      <option value="percent">Porcentaje (%)</option>
+                    </select>
                   </div>
 
+                  {/* Discount Value */}
                   <div>
-                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1" htmlFor="modal-discount">
-                      Valor Descuento
+                    <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1.5" htmlFor="modal-discount">
+                      Valor del Descuento
                     </label>
                     <div className="relative">
                       <input
@@ -2193,60 +2207,57 @@ const SalesNew = () => {
                         type="number"
                         min="0"
                         step={modalDiscountType === 'percent' ? '1' : '0.01'}
-                        className="w-full px-3 py-2 pr-12 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
+                        className="w-full px-3 py-2.5 pr-14 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
                         value={modalDiscount}
                         onChange={event => setModalDiscount(event.target.value)}
                         placeholder={modalDiscountType === 'percent' ? '0' : '0.00'}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--fluent-text-secondary,#616161)]">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-[var(--fluent-text-secondary,#616161)]">
                         {modalDiscountType === 'percent' ? '%' : 'PYG'}
                       </span>
                     </div>
-                    <p className="text-xs text-[var(--fluent-text-secondary,#616161)] mt-1">
+                    <p className="text-xs text-[var(--fluent-text-secondary,#616161)] mt-1.5">
                       {modalDiscountType === 'percent' ? 'Porcentaje sobre precio unitario' : 'Monto a descontar por unidad'}
                     </p>
                   </div>
 
+                  {/* Discount Reason (conditional) */}
                   {modalDiscountValue > 0 && (
                     <div>
-                      <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1" htmlFor="modal-discount-reason">
-                        Razón del Descuento *
+                      <label className="block text-sm font-medium text-[var(--fluent-text-secondary,#616161)] mb-1.5" htmlFor="modal-discount-reason">
+                        Razón del Descuento (Requerido)
                       </label>
                       <input
                         id="modal-discount-reason"
                         type="text"
-                        className="w-full px-3 py-2 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
+                        className="w-full px-3 py-2.5 text-sm border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] bg-[var(--fluent-surface-card,#FFFFFF)] text-[var(--fluent-text-primary,#242424)] focus:outline-none focus:border-[var(--fluent-brand-primary,#0078D4)] focus:ring-1 focus:ring-[var(--fluent-brand-primary,#0078D4)]"
                         value={modalDiscountReason}
                         onChange={e => setModalDiscountReason(e.target.value)}
-                        placeholder="Ej: Promoción de verano..."
+                        placeholder="Ej: Promoción de verano, Cliente frecuente..."
                         required
                       />
                     </div>
                   )}
-                </div>
 
-                {/* Column 3: Totals Summary (3 cols) */}
-                <div className="lg:col-span-3">
-                  <div className="h-full p-3 bg-[var(--fluent-brand-light,#DEECF9)]/30 border border-[var(--fluent-brand-primary,#0078D4)]/20 rounded-[var(--fluent-corner-radius-medium,4px)]">
+                  {/* Totals Summary */}
+                  <div className="p-4 bg-[var(--fluent-brand-light,#DEECF9)]/30 border border-[var(--fluent-brand-primary,#0078D4)]/20 rounded-[var(--fluent-corner-radius-medium,4px)]">
                     <h4 className="text-xs font-semibold text-[var(--fluent-text-secondary,#616161)] uppercase tracking-wide mb-3">Resumen de Línea</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-[var(--fluent-text-secondary,#616161)]">Precio unit.</span>
-                        <span className="font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(modalUnitPrice, 'PYG')}</span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Precio unitario</span>
+                        <span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(modalUnitPrice, 'PYG')}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-[var(--fluent-text-secondary,#616161)]">Subtotal</span>
-                        <span className="font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(modalSubtotal, 'PYG')}</span>
+                      <div>
+                        <span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Subtotal sin descuento</span>
+                        <span className="text-sm font-medium text-[var(--fluent-text-primary,#242424)]">{formatCurrency(modalSubtotal, 'PYG')}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-[var(--fluent-text-secondary,#616161)]">Descuento</span>
-                        <span className="font-medium text-[var(--fluent-status-danger,#D13438)]">-{formatCurrency(modalDiscountValue, 'PYG')}</span>
+                      <div>
+                        <span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Descuento aplicado</span>
+                        <span className="text-sm font-medium text-[var(--fluent-status-danger,#D13438)]">-{formatCurrency(modalDiscountValue, 'PYG')}</span>
                       </div>
-                      <div className="border-t border-[var(--fluent-brand-primary,#0078D4)]/20 pt-2 mt-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm font-semibold text-[var(--fluent-text-primary,#242424)]">Total línea</span>
-                          <span className="text-lg font-bold text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency(modalLineTotal, 'PYG')}</span>
-                        </div>
+                      <div>
+                        <span className="block text-xs text-[var(--fluent-text-secondary,#616161)]">Total de línea</span>
+                        <span className="text-lg font-bold text-[var(--fluent-brand-primary,#0078D4)]">{formatCurrency(modalLineTotal, 'PYG')}</span>
                       </div>
                     </div>
                   </div>
@@ -2254,21 +2265,21 @@ const SalesNew = () => {
               </div>
             </div>
 
-            {/* Compact Footer */}
-            <footer className="flex items-center justify-end gap-2 px-4 py-3 border-t border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-surface-subtle,#FAFAFA)]">
+            {/* Footer */}
+            <footer className="flex items-center justify-end gap-3 px-5 py-3 border-t border-[var(--fluent-border-subtle,#F0F0F0)] bg-[var(--fluent-surface-subtle,#FAFAFA)]">
               <button
                 type="button"
                 onClick={() => { setIsModalOpen(false); setEditingItemId(null) }}
-                className="px-4 py-2 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors"
+                className="px-5 py-2 text-sm font-medium text-[var(--fluent-text-primary,#242424)] bg-[var(--fluent-surface-card,#FFFFFF)] border border-[var(--fluent-border-default,#E0E0E0)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-surface-hover,#F5F5F5)] transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleConfirmAdd}
-                className="px-4 py-2 text-sm font-medium text-white bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-brand-hover,#106EBE)] active:bg-[var(--fluent-brand-pressed,#005A9E)] transition-colors"
+                className="px-5 py-2 text-sm font-medium text-white bg-[var(--fluent-brand-primary,#0078D4)] rounded-[var(--fluent-corner-radius-medium,4px)] hover:bg-[var(--fluent-brand-hover,#106EBE)] active:bg-[var(--fluent-brand-pressed,#005A9E)] transition-colors"
               >
-                {editingItemId ? 'Guardar cambios' : 'Agregar producto'}
+                {editingItemId ? 'Guardar cambios' : 'Confirmar'}
               </button>
             </footer>
           </div>
