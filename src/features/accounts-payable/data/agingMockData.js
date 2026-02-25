@@ -3,66 +3,86 @@ export const agingData = {
     totalDebt: 4285120.45,
     lastUpdate: '24 de Mayo, 2024',
     distribution: [
-      { label: 'Corriente (0-30 d)', amount: 2356816.25, percentage: 55, color: 'bg-green-500' },
-      { label: 'Vencido (31-60 d)', amount: 857024.09, percentage: 20, color: 'bg-amber-400' },
-      { label: 'Vencido (61-90 d)', amount: 642768.07, percentage: 15, color: 'bg-orange-500' },
-      { label: 'Crítico (+90 d)', amount: 428512.04, percentage: 10, color: 'bg-red-500' }
-    ]
+      {
+        label: 'Corriente (0-30 d)',
+        amount: 2356816.25,
+        percentage: 55,
+        color: 'bg-green-500',
+      },
+      {
+        label: 'Vencido (31-60 d)',
+        amount: 857024.09,
+        percentage: 20,
+        color: 'bg-amber-400',
+      },
+      {
+        label: 'Vencido (61-90 d)',
+        amount: 642768.07,
+        percentage: 15,
+        color: 'bg-orange-500',
+      },
+      {
+        label: 'Crítico (+90 d)',
+        amount: 428512.04,
+        percentage: 10,
+        color: 'bg-red-500',
+      },
+    ],
   },
   kpis: {
     dpo: { value: 42, trend: 2.4, previous: 41 },
     overduePercentage: { value: 15.4, trend: 1.2, target: 10 },
-    criticalRisk: { value: 450000, trend: -12000, providersCount: 8 }
+    criticalRisk: { value: 450000, trend: -12000, clientsCount: 8 },
   },
-  providers: [
+  clients: [
     {
       name: 'Global Tech Solutions S.A.',
-      corriente: 142500.00,
+      corriente: 142500.0,
       v31_60: 0,
       v61_90: 0,
       v91plus: 0,
-      total: 142500.00,
-      risk: 'Mínimo'
+      total: 142500.0,
+      risk: 'Mínimo',
     },
     {
       name: 'Constructora del Norte & Cía',
-      corriente: 85200.00,
-      v31_60: 124000.00,
+      corriente: 85200.0,
+      v31_60: 124000.0,
       v61_90: 0,
       v91plus: 0,
-      total: 209200.00,
-      risk: 'Moderado'
+      total: 209200.0,
+      risk: 'Moderado',
     },
     {
       name: 'Insumos Industriales MX',
-      corriente: 12000.00,
-      v31_60: 15400.00,
-      v61_90: 88900.00,
-      v91plus: 310000.00,
-      total: 426300.00,
-      risk: 'Crítico'
+      corriente: 12000.0,
+      v31_60: 15400.0,
+      v61_90: 88900.0,
+      v91plus: 310000.0,
+      total: 426300.0,
+      risk: 'Crítico',
     },
     {
       name: 'Logística Express Internacional',
-      corriente: 320000.00,
+      corriente: 320000.0,
       v31_60: 0,
       v61_90: 0,
       v91plus: 0,
-      total: 320000.00,
-      risk: 'Mínimo'
+      total: 320000.0,
+      risk: 'Mínimo',
     },
     {
       name: 'Servicios Energéticos del Sur',
-      corriente: 45000.00,
-      v31_60: 18000.00,
+      corriente: 45000.0,
+      v31_60: 18000.0,
       v61_90: 0,
       v91plus: 0,
-      total: 63000.00,
-      risk: 'Moderado'
-    }
+      total: 63000.0,
+      risk: 'Moderado',
+    },
   ],
   trend: {
     total: [100, 80, 90, 60, 40, 70, 50, 65], // Simplified values for points
-    overdue: [200, 190, 210, 180, 170, 190, 160, 180]
-  }
-};
+    overdue: [200, 190, 210, 180, 170, 190, 160, 180],
+  },
+}

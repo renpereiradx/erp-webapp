@@ -1,57 +1,119 @@
-import { useState, useEffect, useCallback } from 'react';
-import { receivablesService } from '@/services/receivablesService';
+import { useState, useEffect, useCallback } from 'react'
+import { receivablesService } from '@/services/receivablesService'
+
+/**
+ * Transforma la respuesta de /receivables/overview al formato esperado por SummaryCardsGrid
+ */
+const transformSummary = apiData => {
+  const overduePercentage =
+    apiData.total_pending > 0
+      ? ((apiData.total_overdue / apiData.total_pending) * 100).toFixed(1)
+      : 0
+
+  return {
+    totalReceivables: {
+      amount: apiData.total_pending || 0,
+      trend: apiData.collection_rate || 0,
+    },
+    overdueAmount: {
+      amount: apiData.total_overdue || 0,
+      percentage: overduePercentage,
+    },
+    // Datos no disponibles en la API - mostramos valores neutros
+    totalCount: apiData.total_count || 0,
+    overdueCount: apiData.overdue_count || 0,
+    avgDaysToCollect: apiData.average_days_to_collect || 0,
+    collectionRate: apiData.collection_rate || 0,
+  }
+}
+
+/**
+ * Transforma una lista de cuentas por cobrar al formato de la tabla de facturas recientes
+ */
+const transformRecentInvoices = items => {
+  return items.map(item => ({
+    id: item.id || item.sale_order_id,
+    invoiceId: `#${item.id || item.sale_order_id}`,
+    client: item.client_name,
+    balance: item.pending_amount || 0,
+    daysOverdue: item.days_overdue || 0,
+    status: item.status,
+    statusColor:
+      item.status === 'OVERDUE'
+        ? 'red'
+        : item.status === 'PARTIAL'
+          ? 'blue'
+          : item.status === 'PENDING'
+            ? 'yellow'
+            : 'green',
+  }))
+}
 
 /**
  * Hook para manejar los datos del dashboard de cuentas por cobrar.
  */
 export const useReceivablesDashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [data, setData] = useState({
     summary: {
-      totalReceivables: { amount: '$0', trend: '0' },
-      overdueAmount: { amount: '$0', percentage: '0' },
-      creditsReturns: { amount: '$0', trend: '0' },
-      lastSync: { status: 'Generated' }
+      totalReceivables: { amount: 0, trend: 0 },
+      overdueAmount: { amount: 0, percentage: 0 },
+      totalCount: 0,
+      overdueCount: 0,
+      avgDaysToCollect: 0,
+      collectionRate: 0,
     },
-    aging: [],
-    forecast: [],
-    debtors: []
-  });
+    aging: {},
+    recentInvoices: [],
+  })
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      const [summaryRes, agingRes, forecastRes, debtorsRes] = await Promise.all([
+      const [summaryRes, agingRes, recentRes] = await Promise.all([
         receivablesService.getSummary(),
-        receivablesService.getAgingSummary(), // Usamos el endpoint 8 mapeado antes
-        receivablesService.getForecast(),
-        receivablesService.getTopDebtors()
-      ]);
+        receivablesService.getAgingSummary(),
+        receivablesService.getMasterList(
+          { status: 'all' },
+          { page: 1, pageSize: 5 },
+          { sortBy: 'date', sortOrder: 'desc' },
+        ),
+      ])
+
+      // Parse recent invoices from API response
+      const rawRecent = recentRes.data || recentRes || {}
+      const recentItems =
+        rawRecent.data?.items ||
+        rawRecent.items ||
+        rawRecent.data ||
+        rawRecent ||
+        []
 
       setData({
-        summary: summaryRes.data || summaryRes,
+        summary: transformSummary(summaryRes.data || summaryRes),
         aging: agingRes.data || agingRes,
-        forecast: forecastRes.data || forecastRes,
-        debtors: debtorsRes.data || debtorsRes
-      });
+        recentInvoices: transformRecentInvoices(
+          Array.isArray(recentItems) ? recentItems : [],
+        ),
+      })
     } catch (err) {
-      console.warn('Error fetching dashboard data:', err);
-      setError('Error al cargar los datos del dashboard.');
+      console.warn('Error fetching dashboard data:', err)
+      setError('Error al cargar los datos del dashboard.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData()
+  }, [fetchData])
 
   return {
     ...data,
     loading,
     error,
-    refresh: fetchData
-  };
-};
+    refresh: fetchData,
+  }
+}

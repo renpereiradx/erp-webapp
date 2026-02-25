@@ -1,260 +1,345 @@
+// Mock data matching GET /receivables/overview API response format
 export const summaryData = {
-  totalReceivables: {
-    amount: "$1,240,500",
-    trend: 4.2,
-    trendLabel: "vs last month",
-    isPositive: true
+  total_pending: 15200000,
+  total_overdue: 3500000,
+  total_count: 45,
+  overdue_count: 8,
+  average_days_to_collect: 28.5,
+  collection_rate: 78.5,
+  currency: 'PYG',
+  aging_summary: {
+    current: { amount: 8500000, count: 25, percentage: 55.92 },
+    days_30_60: { amount: 3200000, count: 12, percentage: 21.05 },
+    days_60_90: { amount: 2000000, count: 5, percentage: 13.16 },
+    over_90_days: { amount: 1500000, count: 3, percentage: 9.87 },
   },
-  overdueAmount: {
-    amount: "$145,200",
-    percentage: 12,
-    label: "Critical Increase",
-    isCritical: true
-  },
-  creditsReturns: {
-    amount: "$12,400",
-    percentage: 0.5,
-    label: "Stable",
-    isStable: true
-  },
-  lastSync: {
-    status: "Success",
-    time: "Just now"
-  }
-};
+}
 
 export const agingData = [
-  { label: "0-30 Days", amount: "$650k", value: 650000, color: "bg-[#107c10]", height: "60%" },
-  { label: "31-60 Days", amount: "$280k", value: 280000, color: "bg-[#ffb900]", height: "35%" },
-  { label: "61-90 Days", amount: "$120k", value: 120000, color: "bg-[#d83b01]", height: "20%" },
-  { label: "90+ Days", amount: "$85k", value: 85000, color: "bg-[#a80000]", height: "15%" }
-];
+  {
+    label: '0-30 Days',
+    amount: '$650k',
+    value: 650000,
+    color: 'bg-[#107c10]',
+    height: '60%',
+  },
+  {
+    label: '31-60 Days',
+    amount: '$280k',
+    value: 280000,
+    color: 'bg-[#ffb900]',
+    height: '35%',
+  },
+  {
+    label: '61-90 Days',
+    amount: '$120k',
+    value: 120000,
+    color: 'bg-[#d83b01]',
+    height: '20%',
+  },
+  {
+    label: '90+ Days',
+    amount: '$85k',
+    value: 85000,
+    color: 'bg-[#a80000]',
+    height: '15%',
+  },
+]
 
 export const debtorsData = [
   {
-    id: 1,
-    client: "Northwind Traders",
-    invoiceId: "#INV-2023-001",
-    balance: "$45,200.00",
-    daysOverdue: 92,
-    status: "At Risk",
-    statusColor: "red"
+    client_id: 'client_001',
+    client_name: 'Northwind Traders',
+    total_pending: 52000000,
+    total_overdue: 45000000,
+    pending_count: 8,
+    payment_behavior: 'POOR',
   },
   {
-    id: 2,
-    client: "Fabrikam, Inc.",
-    invoiceId: "#INV-2023-089",
-    balance: "$21,050.50",
-    daysOverdue: 65,
-    status: "Warning",
-    statusColor: "orange"
+    client_id: 'client_002',
+    client_name: 'Fabrikam, Inc.',
+    total_pending: 38000000,
+    total_overdue: 21050000,
+    pending_count: 5,
+    payment_behavior: 'REGULAR',
   },
   {
-    id: 3,
-    client: "Litware Systems",
-    invoiceId: "#INV-2023-102",
-    balance: "$12,400.00",
-    daysOverdue: 45,
-    status: "Late",
-    statusColor: "yellow"
+    client_id: 'client_003',
+    client_name: 'Litware Systems',
+    total_pending: 25000000,
+    total_overdue: 12400000,
+    pending_count: 3,
+    payment_behavior: 'REGULAR',
   },
   {
-    id: 4,
-    client: "Contoso Pharmaceuticals",
-    invoiceId: "#INV-2023-145",
-    balance: "$8,900.00",
-    daysOverdue: 15,
-    status: "Normal",
-    statusColor: "green"
+    client_id: 'client_004',
+    client_name: 'Contoso Pharmaceuticals',
+    total_pending: 18500000,
+    total_overdue: 8900000,
+    pending_count: 4,
+    payment_behavior: 'GOOD',
   },
   {
-    id: 5,
-    client: "Adventure Works",
-    invoiceId: "#INV-2023-156",
-    balance: "$3,250.00",
-    daysOverdue: 5,
-    status: "Normal",
-    statusColor: "green"
-  }
-];
+    client_id: 'client_005',
+    client_name: 'Adventure Works',
+    total_pending: 12000000,
+    total_overdue: 3250000,
+    pending_count: 2,
+    payment_behavior: 'EXCELLENT',
+  },
+]
 
-export const forecastData = [150, 80, 50, 20]; // Mock points for the graph
+export const forecastData = [150, 80, 50, 20] // Mock points for the graph
 
 export const masterListData = [
   {
-    id: "INV-2023-001",
-    clientName: "Northwind Traders",
-    clientInitial: "N",
-    clientColor: "#dbeafe",
-    issueDate: "2023-09-15",
-    dueDate: "2023-10-15",
+    id: 'INV-2023-001',
+    clientName: 'Northwind Traders',
+    clientInitial: 'N',
+    clientColor: '#dbeafe',
+    issueDate: '2023-09-15',
+    dueDate: '2023-10-15',
     originalAmt: 45200000,
     pendingAmt: 45200000,
-    status: "Overdue",
-    statusColor: "red"
+    status: 'Overdue',
+    statusColor: 'red',
   },
   {
-    id: "INV-2023-089",
-    clientName: "Fabrikam, Inc.",
-    clientInitial: "F",
-    clientColor: "#fef3c7",
-    issueDate: "2023-10-01",
-    dueDate: "2023-10-31",
+    id: 'INV-2023-089',
+    clientName: 'Fabrikam, Inc.',
+    clientInitial: 'F',
+    clientColor: '#fef3c7',
+    issueDate: '2023-10-01',
+    dueDate: '2023-10-31',
     originalAmt: 21050000,
     pendingAmt: 21050000,
-    status: "Overdue",
-    statusColor: "red"
+    status: 'Overdue',
+    statusColor: 'red',
   },
   {
-    id: "INV-2023-102",
-    clientName: "Litware Systems",
-    clientInitial: "L",
-    clientColor: "#e0e7ff",
-    issueDate: "2023-10-10",
-    dueDate: "2023-11-10",
+    id: 'INV-2023-102',
+    clientName: 'Litware Systems',
+    clientInitial: 'L',
+    clientColor: '#e0e7ff',
+    issueDate: '2023-10-10',
+    dueDate: '2023-11-10',
     originalAmt: 12400000,
     pendingAmt: 12400000,
-    status: "Pending",
-    statusColor: "yellow"
+    status: 'Pending',
+    statusColor: 'yellow',
   },
   {
-    id: "INV-2023-145",
-    clientName: "Contoso Pharmaceuticals",
-    clientInitial: "C",
-    clientColor: "#dcfce7",
-    issueDate: "2023-10-15",
-    dueDate: "2023-11-15",
+    id: 'INV-2023-145',
+    clientName: 'Contoso Pharmaceuticals',
+    clientInitial: 'C',
+    clientColor: '#dcfce7',
+    issueDate: '2023-10-15',
+    dueDate: '2023-11-15',
     originalAmt: 8900000,
     pendingAmt: 5000000,
-    status: "Partial",
-    statusColor: "blue"
+    status: 'Partial',
+    statusColor: 'blue',
   },
   {
-    id: "INV-2023-156",
-    clientName: "Adventure Works",
-    clientInitial: "A",
-    clientColor: "#f3e8ff",
-    issueDate: "2023-10-20",
-    dueDate: "2023-11-20",
+    id: 'INV-2023-156',
+    clientName: 'Adventure Works',
+    clientInitial: 'A',
+    clientColor: '#f3e8ff',
+    issueDate: '2023-10-20',
+    dueDate: '2023-11-20',
     originalAmt: 3250000,
     pendingAmt: 0,
-    status: "Paid",
-    statusColor: "green"
+    status: 'Paid',
+    statusColor: 'green',
   },
   {
-    id: "INV-2023-201",
-    clientName: "Tailspin Toys",
-    clientInitial: "T",
-    clientColor: "#fce7f3",
-    issueDate: "2023-11-01",
-    dueDate: "2023-12-01",
+    id: 'INV-2023-201',
+    clientName: 'Tailspin Toys',
+    clientInitial: 'T',
+    clientColor: '#fce7f3',
+    issueDate: '2023-11-01',
+    dueDate: '2023-12-01',
     originalAmt: 15600000,
     pendingAmt: 15600000,
-    status: "Pending",
-    statusColor: "yellow"
+    status: 'Pending',
+    statusColor: 'yellow',
   },
   {
-    id: "INV-2023-245",
-    clientName: "Wide World Importers",
-    clientInitial: "W",
-    clientColor: "#fef2f2",
-    issueDate: "2023-08-22",
-    dueDate: "2023-09-22",
+    id: 'INV-2023-245',
+    clientName: 'Wide World Importers',
+    clientInitial: 'W',
+    clientColor: '#fef2f2',
+    issueDate: '2023-08-22',
+    dueDate: '2023-09-22',
     originalAmt: 67800000,
     pendingAmt: 67800000,
-    status: "Overdue",
-    statusColor: "red"
+    status: 'Overdue',
+    statusColor: 'red',
   },
   {
-    id: "INV-2023-312",
-    clientName: "Proseware Inc.",
-    clientInitial: "P",
-    clientColor: "#ecfdf5",
-    issueDate: "2023-11-05",
-    dueDate: "2023-12-05",
+    id: 'INV-2023-312',
+    clientName: 'Proseware Inc.',
+    clientInitial: 'P',
+    clientColor: '#ecfdf5',
+    issueDate: '2023-11-05',
+    dueDate: '2023-12-05',
     originalAmt: 9200000,
     pendingAmt: 4500000,
-    status: "Partial",
-    statusColor: "blue"
-  }
-];
+    status: 'Partial',
+    statusColor: 'blue',
+  },
+]
 
 export const detailData = {
-  id: "INV-2023-001",
-  sale_order_id: "INV-2023-001",
-  client_id: "client_001",
-  client_name: "Northwind Traders",
-  client_phone: "+595 981 234 567",
-  client_email: "maria@northwind.com",
-  client_address: "Avda. Mcal. López 3456, Asunción",
-  sale_date: "2023-09-15T10:00:00Z",
-  due_date: "2023-10-15T10:00:00Z",
+  id: 'INV-2023-001',
+  sale_order_id: 'INV-2023-001',
+  client_id: 'client_001',
+  client_name: 'Northwind Traders',
+  client_phone: '+595 981 234 567',
+  client_email: 'maria@northwind.com',
+  client_address: 'Avda. Mcal. López 3456, Asunción',
+  sale_date: '2023-09-15T10:00:00Z',
+  due_date: '2023-10-15T10:00:00Z',
   original_amount: 45200000,
   paid_amount: 33900000,
   pending_amount: 11300000,
   days_overdue: 45,
-  status: "OVERDUE",
-  currency: "PYG",
+  status: 'OVERDUE',
+  currency: 'PYG',
   payment_history: [
-    { id: "pay_001", amount: 15000000, payment_date: "2023-09-20T14:30:00Z", payment_method: "Transferencia", reference: "TRF-9988", processed_by: "María García" },
-    { id: "pay_002", amount: 10000000, payment_date: "2023-09-28T11:00:00Z", payment_method: "Efectivo", reference: "", processed_by: "Carlos López" },
-    { id: "pay_003", amount: 8900000, payment_date: "2023-10-05T09:15:00Z", payment_method: "Cheque", reference: "CHQ-4455", processed_by: "María García" },
-  ]
-};
+    {
+      id: 'pay_001',
+      amount: 15000000,
+      payment_date: '2023-09-20T14:30:00Z',
+      payment_method: 'Transferencia',
+      reference: 'TRF-9988',
+      processed_by: 'María García',
+    },
+    {
+      id: 'pay_002',
+      amount: 10000000,
+      payment_date: '2023-09-28T11:00:00Z',
+      payment_method: 'Efectivo',
+      reference: '',
+      processed_by: 'Carlos López',
+    },
+    {
+      id: 'pay_003',
+      amount: 8900000,
+      payment_date: '2023-10-05T09:15:00Z',
+      payment_method: 'Cheque',
+      reference: 'CHQ-4455',
+      processed_by: 'María García',
+    },
+  ],
+}
 
-export const overdueData = [
-  {
-    id: 1,
-    client: "Northwind Traders",
-    amount: 52000000, // PYG amount (numeric)
-    totalDue: 52000000, // For backward compatibility
-    daysOverdue: 92,
-    priority: "High",
-    lastContact: "2 days ago",
-    nextAction: "Call CFO",
-    riskScore: 85,
-    code: "NT",
-    bgColor: "#dbeafe",
-    days: "92 días",
-    contactVia: "Llamada telefónica"
+export const overdueData = {
+  items: [
+    {
+      id: 'sale_001',
+      sale_order_id: 'sale_001',
+      client_id: 'client_001',
+      client_name: 'Northwind Traders',
+      client_phone: '0981234567',
+      sale_date: '2025-10-15T10:00:00Z',
+      due_date: '2025-11-14T10:00:00Z',
+      original_amount: 65000000,
+      paid_amount: 13000000,
+      pending_amount: 52000000,
+      days_overdue: 92,
+      status: 'OVERDUE',
+      currency: 'PYG',
+    },
+    {
+      id: 'sale_002',
+      sale_order_id: 'sale_002',
+      client_id: 'client_002',
+      client_name: 'Fabrikam, Inc.',
+      client_phone: '0971987654',
+      sale_date: '2025-11-20T10:00:00Z',
+      due_date: '2025-12-20T10:00:00Z',
+      original_amount: 28000000,
+      paid_amount: 6950000,
+      pending_amount: 21050000,
+      days_overdue: 65,
+      status: 'OVERDUE',
+      currency: 'PYG',
+    },
+    {
+      id: 'sale_003',
+      sale_order_id: 'sale_003',
+      client_id: 'client_003',
+      client_name: 'Contoso Ltd',
+      client_phone: '0961456789',
+      sale_date: '2025-12-01T10:00:00Z',
+      due_date: '2025-12-31T10:00:00Z',
+      original_amount: 45000000,
+      paid_amount: 0,
+      pending_amount: 45000000,
+      days_overdue: 55,
+      status: 'OVERDUE',
+      currency: 'PYG',
+    },
+    {
+      id: 'sale_004',
+      sale_order_id: 'sale_004',
+      client_id: 'client_004',
+      client_name: 'Adventure Works',
+      client_phone: '0981556677',
+      sale_date: '2025-12-15T10:00:00Z',
+      due_date: '2026-01-14T10:00:00Z',
+      original_amount: 18500000,
+      paid_amount: 5000000,
+      pending_amount: 13500000,
+      days_overdue: 41,
+      status: 'OVERDUE',
+      currency: 'PYG',
+    },
+    {
+      id: 'sale_005',
+      sale_order_id: 'sale_005',
+      client_id: 'client_005',
+      client_name: 'Wide World Importers',
+      client_phone: '0991223344',
+      sale_date: '2025-12-28T10:00:00Z',
+      due_date: '2026-01-27T10:00:00Z',
+      original_amount: 32000000,
+      paid_amount: 18000000,
+      pending_amount: 14000000,
+      days_overdue: 28,
+      status: 'PARTIAL',
+      currency: 'PYG',
+    },
+  ],
+  pagination: {
+    page: 1,
+    page_size: 20,
+    total_items: 5,
+    total_pages: 1,
   },
-  {
-    id: 2,
-    client: "Fabrikam, Inc.",
-    amount: 21050000, // PYG amount (numeric)
-    totalDue: 21050000, // For backward compatibility
-    daysOverdue: 65,
-    priority: "Medium",
-    lastContact: "1 week ago",
-    nextAction: "Send Email",
-    riskScore: 60,
-    code: "FB",
-    bgColor: "#fef3c7",
-    days: "65 días",
-    contactVia: "Email"
-  }
-];
+}
 
 export const clientProfileData = {
   id: 1,
-  name: "Northwind Traders",
-  creditLimit: "$100,000",
-  availableCredit: "$48,000",
-  riskLevel: "High",
-  paymentTerms: "Net 60",
+  name: 'Northwind Traders',
+  creditLimit: '$100,000',
+  availableCredit: '$48,000',
+  riskLevel: 'High',
+  paymentTerms: 'Net 60',
   outstandingDebts: [
-    { id: "INV-001", amount: "$45,200", status: "Overdue", due: "2023-10-15" },
-    { id: "INV-022", amount: "$6,800", status: "Current", due: "2023-11-20" }
+    { id: 'INV-001', amount: '$45,200', status: 'Overdue', due: '2023-10-15' },
+    { id: 'INV-022', amount: '$6,800', status: 'Current', due: '2023-11-20' },
   ],
   paymentBehavior: {
     averageDays: 72,
-    onTimePercentage: 45
-  }
-};
+    onTimePercentage: 45,
+  },
+}
 
 export const agingReportData = [
-  { range: "0-30 Days", amount: 650000, count: 45, percentage: 52 },
-  { range: "31-60 Days", amount: 280000, count: 12, percentage: 22 },
-  { range: "61-90 Days", amount: 120000, count: 8, percentage: 10 },
-  { range: "90+ Days", amount: 85000, count: 5, percentage: 16 }
-];
+  { range: '0-30 Days', amount: 650000, count: 45, percentage: 52 },
+  { range: '31-60 Days', amount: 280000, count: 12, percentage: 22 },
+  { range: '61-90 Days', amount: 120000, count: 8, percentage: 10 },
+  { range: '90+ Days', amount: 85000, count: 5, percentage: 16 },
+]
