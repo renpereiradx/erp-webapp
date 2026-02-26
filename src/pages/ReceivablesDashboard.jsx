@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/lib/i18n'
+import { Download, RefreshCw, Calendar, Globe, CircleDollarSign } from 'lucide-react'
 
 // Hooks
 import { useReceivablesDashboard } from '@/features/receivables/hooks/useReceivablesDashboard'
@@ -24,121 +25,96 @@ const ReceivablesDashboard = () => {
 
   if (loading) {
     return (
-      <div className='client-profile__loading'>
-        <div className='client-profile__spinner'></div>
-        <p className='text-secondary'>{t('receivables.loading.generic')}</p>
+      <div className='flex flex-col items-center justify-center min-h-[60vh] gap-4'>
+        <RefreshCw className='animate-spin text-primary' size={48} />
+        <p className='text-lg font-medium text-text-secondary'>{t('receivables.loading.generic')}</p>
       </div>
     )
   }
 
   return (
-    <div className='receivables-dashboard'>
-      <div className='max-w-[1400px] mx-auto flex flex-col gap-6'>
-        {/* Header */}
-        <header className='receivables-dashboard__header'>
-          <div className='receivables-dashboard__title-group'>
-            <h1 className='receivables-dashboard__title'>
-              {t('receivables.master.title')} Overview
-            </h1>
-            <p className='receivables-dashboard__subtitle'>
-              Finanzas y Contabilidad
-            </p>
-          </div>
-
-          <nav className='receivables-dashboard__nav'>
-            <a
-              href='#'
-              className='receivables-dashboard__nav-link receivables-dashboard__nav-link--active'
-            >
-              Dashboard
-            </a>
-            <a
-              href='#'
-              className='receivables-dashboard__nav-link'
-              onClick={() => navigate('/receivables/list')}
-            >
-              Facturas
-            </a>
-            <a
-              href='#'
-              className='receivables-dashboard__nav-link'
-              onClick={() => navigate('/clientes')}
-            >
-              Clientes
-            </a>
-            <a
-              href='#'
-              className='receivables-dashboard__nav-link'
-              onClick={() => navigate('/receivables/aging-report')}
-            >
-              Reportes
-            </a>
-          </nav>
-
-          <div className='receivables-dashboard__actions'>
-            <Button variant='primary'>
-              <span className='material-symbols-outlined'>add_chart</span>
-              <span>{t('receivables.profile.actions.export')}</span>
-            </Button>
-            <Button variant='ghost' size='icon'>
-              <span className='material-symbols-outlined'>notifications</span>
-            </Button>
-            <Button variant='ghost' size='icon'>
-              <span className='material-symbols-outlined'>settings</span>
-            </Button>
-          </div>
-        </header>
-
-        {/* Barra de Filtros */}
-        <div className='receivables-dashboard__filter-bar'>
-          <div className='receivables-dashboard__filters'>
-            <button className='receivables-dashboard__filter-btn'>
-              <span className='material-symbols-outlined'>calendar_today</span>
-              <span>Periodo: Últimos 30 Días</span>
-              <span className='material-symbols-outlined'>expand_more</span>
-            </button>
-            <button className='receivables-dashboard__filter-btn'>
-              <span className='material-symbols-outlined'>domain</span>
-              <span>Entidad: Todas las Regiones</span>
-              <span className='material-symbols-outlined'>expand_more</span>
-            </button>
-            <button className='receivables-dashboard__filter-btn'>
-              <span className='material-symbols-outlined'>payments</span>
-              <span>Moneda: PYG</span>
-              <span className='material-symbols-outlined'>expand_more</span>
-            </button>
-          </div>
-          <div className='receivables-dashboard__meta'>
-            <span className='material-symbols-outlined'>sync</span>
-            <p>Generado el: {new Date().toLocaleString('es-ES')}</p>
-          </div>
+    <div className='space-y-8'>
+      {/* Header */}
+      <header className='flex flex-col md:flex-row md:items-center justify-between gap-6'>
+        <div className='space-y-1'>
+          <h1 className='text-3xl font-black text-text-main tracking-tight uppercase'>
+            {t('receivables.master.title')} Overview
+          </h1>
+          <p className='text-sm text-text-secondary font-medium'>
+            Finanzas y Contabilidad
+          </p>
         </div>
 
-        <DashboardNav />
-
-        {/* KPIs */}
-        <SummaryCardsGrid summary={summary} />
-
-        {/* Gráfico de Aging */}
-        <div className='receivables-dashboard__charts-grid'>
-          <AgingSummaryChart agingData={aging} />
+        <div className='flex items-center gap-3'>
+          <Button variant='primary' size='md' className="shadow-md">
+            <Download size={18} className="mr-2" />
+            <span>{t('receivables.profile.actions.export')}</span>
+          </Button>
+          <Button variant='secondary' size='md' className="shadow-sm border-border-subtle bg-surface" onClick={refresh}>
+            <RefreshCw size={18} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <span>{t('common.refresh', 'Actualizar')}</span>
+          </Button>
         </div>
+      </header>
 
-        {/* Facturas Recientes */}
-        <section className='recent-invoices'>
-          <header className='recent-invoices__header'>
-            <h3 className='recent-invoices__title'>Facturas Recientes</h3>
-            <a
-              href='#'
-              className='recent-invoices__link'
-              onClick={() => navigate('/receivables/list')}
-            >
-              Ver Todas
-            </a>
-          </header>
-          <RecentInvoicesTable invoices={recentInvoices} />
-        </section>
+      <DashboardNav />
+
+      {/* Barra de Filtros */}
+      <div className='bg-surface p-4 rounded-xl border border-border-subtle shadow-sm flex flex-col md:flex-row items-center justify-between gap-4'>
+        <div className='flex flex-wrap items-center gap-2'>
+          <button className='flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-50 border border-border-subtle text-xs font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-colors'>
+            <Calendar size={16} />
+            <span>Periodo: Últimos 30 Días</span>
+            <span className='material-symbols-outlined text-[18px]'>expand_more</span>
+          </button>
+          <button className='flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-50 border border-border-subtle text-xs font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-colors'>
+            <Globe size={16} />
+            <span>Entidad: Todas las Regiones</span>
+            <span className='material-symbols-outlined text-[18px]'>expand_more</span>
+          </button>
+          <button className='flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-50 border border-border-subtle text-xs font-black uppercase tracking-widest text-text-secondary hover:text-primary transition-colors'>
+            <CircleDollarSign size={16} />
+            <span>Moneda: PYG</span>
+            <span className='material-symbols-outlined text-[18px]'>expand_more</span>
+          </button>
+        </div>
+        <div className='flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60'>
+          <RefreshCw size={14} />
+          <p>Generado el: {new Date().toLocaleString('es-ES')}</p>
+        </div>
       </div>
+
+      {/* KPIs */}
+      <SummaryCardsGrid summary={summary} />
+
+      {/* Gráfico de Aging */}
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
+        <AgingSummaryChart agingData={aging} />
+        <div className="bg-surface rounded-xl border border-border-subtle shadow-fluent-2 p-8 flex flex-col items-center justify-center text-center space-y-4">
+          <div className="size-16 rounded-full bg-blue-50 flex items-center justify-center text-primary">
+            <RefreshCw size={32} />
+          </div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 leading-relaxed">
+            Visualización de tendencias adicionales en desarrollo
+          </p>
+        </div>
+      </div>
+
+      {/* Facturas Recientes */}
+      <section className='space-y-6 pb-10'>
+        <header className='flex items-center justify-between'>
+          <h3 className='text-lg font-black text-text-main uppercase tracking-tight'>Facturas Recientes</h3>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-primary font-black uppercase tracking-widest text-[11px] hover:bg-blue-50"
+            onClick={() => navigate('/receivables/list')}
+          >
+            Ver Todas
+          </Button>
+        </header>
+        <RecentInvoicesTable invoices={recentInvoices} />
+      </section>
     </div>
   )
 }

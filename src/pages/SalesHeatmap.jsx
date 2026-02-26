@@ -90,16 +90,16 @@ const SalesHeatmap = () => {
     };
 
   return (
-    <div className="sales-heatmap">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="sales-heatmap__header">
-        <div className="sales-heatmap__title-group">
-          <h1>Mapa de Calor de Ventas por Hora</h1>
-          <p>Visualizando picos de actividad e intensidad de ventas.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">Mapa de Calor de Ventas por Hora</h1>
+          <p className="text-sm text-text-secondary font-medium">Visualizando picos de actividad e intensidad de ventas.</p>
         </div>
-        <div className="sales-heatmap__actions">
-          <Button variant="outline" className="gap-2" onClick={() => fetchSalesHeatmap()}>
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="md" className="shadow-sm border-border-subtle bg-surface" onClick={() => fetchSalesHeatmap()}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Actualizar
           </Button>
         </div>
@@ -108,75 +108,83 @@ const SalesHeatmap = () => {
       <DashboardNav />
 
       {/* KPI Grid */}
-      <div className="sales-heatmap__kpi-grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
          {/* Ingresos (from Summary) */}
-         <div className="kpi-card">
-            <div className="kpi-card__header">
-              <p>Ingresos del Día</p>
-              <div className="kpi-card__icon kpi-card__icon--primary">
-                <DollarSign className="h-5 w-5" />
+         <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
+            <div className="flex items-start justify-between mb-4">
+              <div className="size-12 rounded-lg bg-blue-50 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <DollarSign size={24} />
               </div>
             </div>
-            <div className="kpi-card__value">{formatCurrency(summary?.sales?.total || 0)}</div>
+            <div className="space-y-1">
+              <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Ingresos del Día</p>
+              <h3 className="text-2xl font-black text-text-main tracking-tight">{formatCurrency(summary?.sales?.total || 0)}</h3>
+            </div>
           </div>
 
         {/* Hora Punta (from Heatmap API) */}
-          <div className="kpi-card">
-            <div className="kpi-card__header">
-              <p>Hora Punta (Promedio)</p>
-              <div className="kpi-card__icon kpi-card__icon--orange">
-                <Clock className="h-5 w-5" />
+          <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
+            <div className="flex items-start justify-between mb-4">
+              <div className="size-12 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
+                <Clock size={24} />
               </div>
             </div>
-            <div className="kpi-card__value text-xl">
+            <div className="space-y-1">
+              <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Hora Punta (Promedio)</p>
+              <h3 className="text-2xl font-black text-text-main tracking-tight">
                 {peakTime.day} {peakTime.hour}:00
-            </div>
-            <div className="kpi-card__subtext text-xs text-muted-foreground mt-1">
-                 Mayor afluencia promedio
+              </h3>
+              <p className="text-[10px] font-bold text-text-secondary opacity-60 uppercase tracking-wider">Mayor afluencia promedio</p>
             </div>
           </div>
 
         {/* Ticket Promedio (from Summary) */}
-          <div className="kpi-card">
-              <div className="kpi-card__header">
-                <p>Ticket Promedio</p>
-                <div className="kpi-card__icon kpi-card__icon--purple">
-                  <Receipt className="h-5 w-5" />
+          <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
+              <div className="flex items-start justify-between mb-4">
+                <div className="size-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+                  <Receipt size={24} />
                 </div>
               </div>
-              <div className="kpi-card__value">{formatCurrency(summary?.sales?.average_ticket || 0)}</div>
+              <div className="space-y-1">
+                <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Ticket Promedio</p>
+                <h3 className="text-2xl font-black text-text-main tracking-tight">{formatCurrency(summary?.sales?.average_ticket || 0)}</h3>
+              </div>
           </div>
 
         {/* Cajas Activas (from Summary) */}
-          <div className="kpi-card">
-               <div className="kpi-card__header">
-                  <p>Cajas Activas</p>
-                  <div className="kpi-card__icon kpi-card__icon--blue">
-                    <Store className="h-5 w-5" />
+          <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
+               <div className="flex items-start justify-between mb-4">
+                  <div className="size-12 rounded-lg bg-green-50 flex items-center justify-center text-success group-hover:scale-110 transition-transform">
+                    <Store size={24} />
                   </div>
                 </div>
-                <div className="kpi-card__value">{summary?.cash_registers?.open_count || 0}</div>
-                <div className="kpi-card__trend kpi-card__trend--neutral">
-                  <span>En operación ahora</span>
+                <div className="space-y-1">
+                  <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Cajas Activas</p>
+                  <h3 className="text-2xl font-black text-text-main tracking-tight">{summary?.cash_registers?.open_count || 0}</h3>
+                  <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-success">
+                    <span className="size-2 rounded-full bg-success animate-pulse"></span>
+                    <span>En operación ahora</span>
+                  </div>
                 </div>
           </div>
       </div>
 
       {/* Main Layout */}
-      <div className="sales-heatmap__main-layout">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 pb-10">
         
         {/* Heatmap Section */}
-        <div className="sales-heatmap__heatmap-section">
+        <div className="xl:col-span-3 bg-surface rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden flex flex-col">
           
           {/* Controls */}
-          <div className="sales-heatmap__controls">
-            <div className="sales-heatmap__date-nav">
-               <span className="font-medium">Análisis de últimas 4 semanas</span>
+          <div className="px-8 py-6 border-b border-border-subtle bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+               <div className="size-2 rounded-full bg-primary animate-pulse"></div>
+               <span className="text-sm font-black text-text-main uppercase tracking-tight">Análisis de últimas 4 semanas</span>
             </div>
 
-            <div className="sales-heatmap__filters">
+            <div className="flex items-center gap-3">
               <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[200px] h-10 rounded-lg border-border-subtle bg-white text-sm font-bold uppercase tracking-wider">
                   <SelectValue placeholder="Todas las Sucursales" />
                 </SelectTrigger>
                 <SelectContent>
@@ -187,32 +195,32 @@ const SalesHeatmap = () => {
           </div>
 
           {/* Visualization */}
-          <div className="heatmap-grid">
-            <div className="heatmap-grid__legend">
+          <div className="p-8 space-y-8 overflow-x-auto">
+            <div className="flex items-center justify-end gap-4 text-[10px] font-black uppercase tracking-widest text-text-secondary mb-2">
               <span>Baja Intensidad</span>
-              <div className="heatmap-grid__gradient-bar"></div>
+              <div className="w-32 h-2 bg-gradient-to-r from-blue-50 to-primary rounded-full"></div>
               <span>Alta Intensidad</span>
             </div>
 
-            <div className="heatmap-grid__container">
+            <div className="min-w-[800px] grid grid-cols-[100px_repeat(14,1fr)] gap-2">
               {/* Header Row */}
               <div className="h-8"></div> {/* Empty corner */}
               {hours.map(hour => (
-                <div key={hour} className="heatmap-grid__header-cell">{hour}</div>
+                <div key={hour} className="text-[10px] font-black uppercase tracking-widest text-text-secondary text-center flex items-center justify-center">{hour}</div>
               ))}
 
               {/* Data Rows */}
               {uiDays.map((day, dIndex) => (
                 <React.Fragment key={day}>
-                  <div className="heatmap-grid__row-label">{day}</div>
+                  <div className="h-10 text-[10px] font-black uppercase tracking-widest text-text-main flex items-center pr-4 border-r border-border-subtle">{day}</div>
                   {hours.map((hour, hIndex) => {
                     const { opacity, label } = getIntensity(dIndex, hour)
                     return (
                       <div 
                         key={`${day}-${hIndex}`} 
-                        className="heatmap-grid__cell"
+                        className="h-10 rounded-md transition-all hover:scale-105 hover:shadow-md cursor-help flex items-center justify-center text-[10px] font-black text-white"
                         style={{ 
-                          backgroundColor: `rgba(19, 127, 236, ${opacity})`, 
+                          backgroundColor: `rgba(16, 110, 190, ${opacity})`, 
                         }}
                         title={`${day} @ ${hour}`}
                       >
@@ -228,38 +236,45 @@ const SalesHeatmap = () => {
         </div>
 
         {/* Sidebar Section */}
-        <div className="sales-heatmap__sidebar">
+        <div className="flex flex-col gap-8">
           
           {/* Activity Feed */}
-          <div className="activity-feed">
-            <div className="activity-feed__header">
-              <h3>Actividad Reciente</h3>
+          <div className="bg-surface rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col overflow-hidden">
+            <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50">
+              <h3 className="text-sm font-black text-text-main uppercase tracking-tight">Actividad Reciente</h3>
             </div>
-            <div className="activity-feed__list">
+            <div className="divide-y divide-border-subtle">
               {activities && activities.slice(0, 5).map(item => (
-                <div key={item.id} className="activity-feed__item">
-                  <div className={`activity-feed__icon activity-feed__icon--blue`}>
-                    <Activity className="h-4 w-4" />
+                <div key={item.id} className="p-4 flex gap-3 group hover:bg-slate-50 transition-colors cursor-pointer">
+                  <div className="size-8 rounded-lg bg-blue-50 flex-shrink-0 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <Activity size={16} />
                   </div>
-                  <div className="activity-feed__content">
-                    <p>{item.description}</p>
-                    <span>{new Date(item.timestamp).toLocaleTimeString()}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-text-main truncate group-hover:text-primary transition-colors">{item.description}</p>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">{new Date(item.timestamp).toLocaleTimeString()}</span>
                   </div>
                 </div>
               ))}
               {(!activities || activities.length === 0) && (
-                  <div className="p-4 text-center text-sm text-gray-500">Sin actividad reciente</div>
+                  <div className="p-8 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">Sin actividad reciente</p>
+                  </div>
               )}
             </div>
           </div>
 
-          {/* Map Widget Placeholder - Keeping as UI element but static since no API data */}
-          <div className="map-widget">
-            <div className="map-widget__header">
-              <h3>Cobertura</h3>
+          {/* Map Widget Placeholder */}
+          <div className="bg-surface rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col overflow-hidden">
+            <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50">
+              <h3 className="text-sm font-black text-text-main uppercase tracking-tight">Cobertura</h3>
             </div>
-            <div className="map-widget__content bg-slate-100 flex items-center justify-center text-slate-400 text-sm p-8 rounded-lg">
-                Visualización de mapa no disponible en API v1
+            <div className="p-8 flex flex-col items-center justify-center text-center space-y-4">
+                <div className="size-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
+                  <Flag size={32} />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 leading-relaxed">
+                    Visualización de mapa no disponible en API v1
+                </p>
             </div>
           </div>
 

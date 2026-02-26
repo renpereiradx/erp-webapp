@@ -17,25 +17,27 @@ const AgingSummaryChart = ({ agingData }) => {
   ];
 
   return (
-    <Card className="chart-card">
-      <CardHeader>
-        <CardTitle>{t('receivables.aging_report.buckets_title')}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="chart-card__aging-list">
+    <div className="bg-surface rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col overflow-hidden">
+      <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50">
+        <h3 className="text-sm font-black text-text-main uppercase tracking-tight">
+          {t('receivables.aging_report.buckets_title')}
+        </h3>
+      </div>
+      <div className="p-6 space-y-6">
+        <div className="flex flex-col gap-6">
           {buckets.map((bucket, i) => {
             const data = agingData[bucket.key] || { amount: 0, percentage: 0 };
             return (
-              <div key={i} className="chart-card__aging-item">
-                <div className="chart-card__aging-header">
-                  <span className="chart-card__aging-label">{bucket.label}</span>
-                  <span className={`chart-card__aging-amount ${bucket.key === 'over_90_days' ? 'chart-card__aging-amount--danger' : ''}`}>
+              <div key={i} className="space-y-3">
+                <div className="flex justify-between items-end">
+                  <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">{bucket.label}</span>
+                  <span className={`text-sm font-black ${bucket.key === 'over_90_days' ? 'text-error' : 'text-text-main'}`}>
                     {new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', notation: 'compact' }).format(data.amount)}
                   </span>
                 </div>
-                <div className="chart-card__aging-track">
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                   <div 
-                    className="chart-card__aging-fill" 
+                    className="h-full rounded-full transition-all duration-1000" 
                     style={{ width: `${data.percentage}%`, backgroundColor: bucket.color }}
                   ></div>
                 </div>
@@ -43,8 +45,8 @@ const AgingSummaryChart = ({ agingData }) => {
             );
           })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

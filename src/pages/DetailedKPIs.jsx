@@ -80,21 +80,21 @@ const DetailedKPIs = () => {
 
   if (loading && !kpis && !summary) {
     return (
-      <div className="dashboard dashboard--loading">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <RefreshCcw className="animate-spin text-primary" size={48} />
-        <p className="text-lg font-medium text-tertiary">{t('dashboard.loading', 'Cargando indicadores...')}</p>
+        <p className="text-lg font-medium text-text-secondary">{t('dashboard.loading', 'Cargando indicadores...')}</p>
       </div>
     );
   }
 
   if (error && !kpis) {
     return (
-      <div className="dashboard dashboard--error">
-          <div className="p-4 bg-red-100 rounded-full text-red-600 mb-4">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+          <div className="p-4 bg-red-100 rounded-full text-error mb-4">
             <AlertTriangle size={48} />
           </div>
-          <h2 className="text-2xl font-bold mb-2">{t('dashboard.error.title', 'Error al cargar los KPIs')}</h2>
-          <p className="text-tertiary mb-6">{error}</p>
+          <h2 className="text-2xl font-bold mb-2 text-text-main">{t('dashboard.error.title', 'Error al cargar los KPIs')}</h2>
+          <p className="text-text-secondary mb-6 max-w-md">{error}</p>
           <Button variant="primary" onClick={() => fetchKPIData(period)}>
             {t('common.retry', 'Reintentar')}
           </Button>
@@ -124,26 +124,28 @@ const DetailedKPIs = () => {
   const convRate = kpis?.sales_kpis?.conversion_rate || 0;
 
   return (
-    <div className="dashboard detailed-kpis">
+    <div className="space-y-8">
       {/* Page Header */}
-      <div className="dashboard__header">
-        <div className="dashboard__titles">
-          <h2 className="dashboard__title">{t('dashboard.dashboard.actions.viewDetails', 'Panel de KPIs Detallado')}</h2>
-          <p className="dashboard__subtitle" style={{ fontSize: '14px', maxWidth: '600px', marginBottom: '8px' }}>
-            {t('dashboard.dashboard.executive.panelSubtitle', 'Análisis detallado de rentabilidad, eficiencia de ventas y gestión de inventario para la toma de decisiones estratégicas.')}
-          </p>
-          <p className="dashboard__subtitle" style={{ opacity: 0.7 }}>
-            <Clock size={14} style={{ display: 'inline', marginRight: '4px' }} />
-            {t('dashboard.dashboard.activity.lastUpdated', 'Última actualización')}: {lastUpdated}
-          </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">{t('dashboard.dashboard.actions.viewDetails', 'Panel de KPIs Detallado')}</h1>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-text-secondary font-medium max-w-2xl">
+              {t('dashboard.dashboard.executive.panelSubtitle', 'Análisis detallado de rentabilidad, eficiencia de ventas y gestión de inventario para la toma de decisiones estratégicas.')}
+            </p>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70">
+              <Clock size={14} />
+              <span>{t('dashboard.dashboard.activity.lastUpdated', 'Última actualización')}: {lastUpdated}</span>
+            </div>
+          </div>
         </div>
-        <div className="dashboard__actions">
-          <Button variant="primary" onClick={() => { fetchDashboardData(); fetchKPIData(period); }}>
-            <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} />
+        <div className="flex items-center gap-3">
+          <Button variant="primary" size="md" className="shadow-md" onClick={() => { fetchDashboardData(); fetchKPIData(period); }}>
+            <RefreshCcw size={18} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
             {t('common.refresh', 'Actualizar')}
           </Button>
-          <Button variant="secondary">
-            <Download size={18} />
+          <Button variant="secondary" size="md" className="shadow-sm border-border-subtle">
+            <Download size={18} className="mr-2" />
             {t('dashboard.dashboard.actions.export', 'Exportar')}
           </Button>
         </div>
@@ -153,7 +155,7 @@ const DetailedKPIs = () => {
       <DashboardNav />
 
       {/* Filters */}
-      <div className="dashboard__filters" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px', alignItems: 'center' }}>
+      <div className="flex flex-wrap items-center gap-4 bg-surface p-4 rounded-xl border border-border-subtle shadow-sm">
         <SegmentedControl
             options={['today', 'week', 'month', 'year'].map(p => ({
                 value: p,
@@ -164,205 +166,211 @@ const DetailedKPIs = () => {
             size="small"
         />
         
-        <div className="ml-auto flex gap-2">
-            <Button variant="ghost" size="sm" style={{ color: 'var(--action-primary)', fontWeight: 500 }}>
+        <div className="ml-auto">
+            <Button variant="ghost" size="sm" className="text-primary font-bold uppercase tracking-widest text-[11px] hover:bg-blue-50">
               {t('common.clearFilters', 'Limpiar filtros')}
             </Button>
         </div>
       </div>
 
       {/* Primary KPI Cards */}
-      <div className="dashboard__kpi-grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Revenue */}
-        <Card className="kpi-card">
-          <CardContent className="pt-6">
-            <div className="kpi-card__background-icon icon-blue">
-              <DollarSign />
-            </div>
-            <div className="kpi-card__header">
-              <div>
-                <p className="kpi-card__label">{t('dashboard.dashboard.kpi.revenue', 'Ingresos Totales')}</p>
-                <h3 className="kpi-card__value">{formatCurrency(revenueTotal)}</h3>
+        <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
+            <div className="flex items-start justify-between mb-4">
+              <div className="size-12 rounded-lg bg-blue-50 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <DollarSign size={24} />
               </div>
-              <Badge variant="subtle-success" className="gap-1">
-                <TrendingUp size={14} /> +12%
-              </Badge>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-success text-xs font-bold">
+                <TrendingUp size={14} /> 
+                <span>12%</span>
+              </div>
             </div>
-            <p className="kpi-card__footer-text">{vsLast30Days}</p>
-          </CardContent>
-        </Card>
+            <div className="space-y-1">
+              <p className="text-xs font-black uppercase tracking-widest text-text-secondary">{t('dashboard.dashboard.kpi.revenue', 'Ingresos Totales')}</p>
+              <h3 className="text-2xl font-black text-text-main tracking-tight">{formatCurrency(revenueTotal)}</h3>
+              <p className="text-[10px] font-bold text-text-secondary opacity-60 uppercase tracking-wider">{vsLast30Days}</p>
+            </div>
+        </div>
 
         {/* Profit */}
-        <Card className="kpi-card">
-          <CardContent className="pt-6">
-            <div className="kpi-card__background-icon icon-purple">
-              <Percent />
-            </div>
-            <div className="kpi-card__header">
-              <div>
-                <p className="kpi-card__label">{t('dashboard.dashboard.kpi.netProfit', 'Margen Neto')}</p>
-                <h3 className="kpi-card__value">{netMargin}%</h3>
+        <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
+            <div className="flex items-start justify-between mb-4">
+              <div className="size-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+                <Percent size={24} />
               </div>
-              <Badge variant="subtle-success" className="gap-1">
-                <TrendingUp size={14} /> +3.2%
-              </Badge>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-success text-xs font-bold">
+                <TrendingUp size={14} /> 
+                <span>3.2%</span>
+              </div>
             </div>
-            <p className="kpi-card__footer-text">{vsLast30Days}</p>
-          </CardContent>
-        </Card>
+            <div className="space-y-1">
+              <p className="text-xs font-black uppercase tracking-widest text-text-secondary">{t('dashboard.dashboard.kpi.netProfit', 'Margen Neto')}</p>
+              <h3 className="text-2xl font-black text-text-main tracking-tight">{netMargin}%</h3>
+              <p className="text-[10px] font-bold text-text-secondary opacity-60 uppercase tracking-wider">{vsLast30Days}</p>
+            </div>
+        </div>
 
         {/* Customers */}
-        <Card className="kpi-card">
-          <CardContent className="pt-6">
-            <div className="kpi-card__background-icon icon-blue">
-              <Users />
-            </div>
-            <div className="kpi-card__header">
-              <div>
-                <p className="kpi-card__label">{t('dashboard.dashboard.kpi.totalCustomers', 'Total Clientes')}</p>
-                <h3 className="kpi-card__value">{totalCustomers.toLocaleString()}</h3>
+        <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
+            <div className="flex items-start mb-4">
+              <div className="size-12 rounded-lg bg-blue-50 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <Users size={24} />
               </div>
             </div>
-            <p className="kpi-card__footer-text">
-              <span style={{ fontWeight: 600, color: 'var(--success)' }}>+{newCustomers}</span> {t('dashboard.dashboard.kpi.newThisMonth', 'nuevos este mes')}
-            </p>
-          </CardContent>
-        </Card>
+            <div className="space-y-1">
+              <p className="text-xs font-black uppercase tracking-widest text-text-secondary">{t('dashboard.dashboard.kpi.totalCustomers', 'Total Clientes')}</p>
+              <h3 className="text-2xl font-black text-text-main tracking-tight">{totalCustomers.toLocaleString()}</h3>
+              <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
+                <span className="text-success font-black">+{newCustomers}</span> {t('dashboard.dashboard.kpi.newThisMonth', 'nuevos este mes')}
+              </p>
+            </div>
+        </div>
 
         {/* Inventory */}
-        <Card className="kpi-card">
-          <CardContent className="pt-6">
-            <div className="kpi-card__background-icon icon-orange">
-              <Package />
-            </div>
-            <div className="kpi-card__header">
-              <div>
-                <p className="kpi-card__label">{t('dashboard.dashboard.kpi.inventoryValue', 'Valor de Inventario')}</p>
-                <h3 className="kpi-card__value">{formatCurrency(inventoryValue)}</h3>
+        <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
+            <div className="flex items-start mb-4">
+              <div className="size-12 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
+                <Package size={24} />
               </div>
             </div>
-            <p className="kpi-card__footer-text">
-              <span style={{ fontWeight: 600, color: 'var(--warning)' }}>{lowStockCount}</span> {t('dashboard.dashboard.inventory.lowStock', 'productos con stock bajo')}
-            </p>
-          </CardContent>
-        </Card>
+            <div className="space-y-1">
+              <p className="text-xs font-black uppercase tracking-widest text-text-secondary">{t('dashboard.dashboard.kpi.inventoryValue', 'Valor de Inventario')}</p>
+              <h3 className="text-2xl font-black text-text-main tracking-tight">{formatCurrency(inventoryValue)}</h3>
+              <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
+                <span className="text-orange-600 font-black">{lowStockCount}</span> {t('dashboard.dashboard.inventory.lowStock', 'productos con stock bajo')}
+              </p>
+            </div>
+        </div>
       </div>
 
       {/* Detailed Metrics Sections */}
-      <div className="dashboard__detailed-grid">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
         {/* Sales & Efficiency */}
-        <Card className="col-span-4">
-          <CardHeader className="border-b border-subtle pb-3 mb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <div className="bg-surface rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col overflow-hidden">
+          <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50">
+            <h3 className="text-sm font-black text-text-main uppercase tracking-tight flex items-center gap-2">
               <Activity size={18} className="text-primary" />
               {t('dashboard.dashboard.salesEfficiency', 'Eficiencia de Ventas')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-0">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-tertiary">{t('dashboard.dashboard.avgTicket', 'Ticket Promedio')}</span>
-              <span className="font-bold">{formatCurrency(avgTicket)}</span>
+            </h3>
+          </div>
+          <div className="p-6 space-y-6 flex-1">
+            <div className="flex justify-between items-center group">
+              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest group-hover:text-primary transition-colors">{t('dashboard.dashboard.avgTicket', 'Ticket Promedio')}</span>
+              <span className="text-base font-black text-text-main">{formatCurrency(avgTicket)}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-tertiary">{t('dashboard.dashboard.salesPerDay', 'Ventas por Día')}</span>
-              <span className="font-bold">{salesPerDay}</span>
+            <div className="flex justify-between items-center group">
+              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest group-hover:text-primary transition-colors">{t('dashboard.dashboard.salesPerDay', 'Ventas por Día')}</span>
+              <span className="text-base font-black text-text-main">{salesPerDay}</span>
             </div>
-            <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                    <span className="text-sm text-tertiary">{t('dashboard.dashboard.convRate', 'Tasa de Conversión')}</span>
-                    <span className="font-bold text-primary">{convRate}%</span>
+            <div className="space-y-3">
+                <div className="flex justify-between items-center group">
+                    <span className="text-xs font-bold text-text-secondary uppercase tracking-widest group-hover:text-primary transition-colors">{t('dashboard.dashboard.convRate', 'Tasa de Conversión')}</span>
+                    <span className="text-base font-black text-primary">{convRate}%</span>
                 </div>
-                <Progress value={convRate} className="h-2" />
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${convRate}%` }}></div>
+                </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-tertiary">{t('dashboard.dashboard.customerFrequency', 'Frecuencia de Compra')}</span>
-              <span className="font-bold">{purchaseFreq}x</span>
+            <div className="flex justify-between items-center group border-t border-border-subtle pt-4">
+              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest group-hover:text-primary transition-colors">{t('dashboard.dashboard.customerFrequency', 'Frecuencia de Compra')}</span>
+              <span className="text-base font-black text-text-main">{purchaseFreq}x</span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Financial Health */}
-        <Card className="col-span-4">
-          <CardHeader className="border-b border-subtle pb-3 mb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <div className="bg-surface rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col overflow-hidden">
+          <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50">
+            <h3 className="text-sm font-black text-text-main uppercase tracking-tight flex items-center gap-2">
               <DollarSign size={18} className="text-purple-600" />
               {t('dashboard.dashboard.financialHealth', 'Salud Financiera')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-0">
-            <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-tertiary">{t('dashboard.dashboard.grossMargin', 'Margen Bruto')}</span>
-                  <span className="font-bold">{grossMargin}%</span>
+            </h3>
+          </div>
+          <div className="p-6 space-y-6 flex-1">
+            <div className="space-y-3">
+                <div className="flex justify-between items-center group">
+                  <span className="text-xs font-bold text-text-secondary uppercase tracking-widest group-hover:text-primary transition-colors">{t('dashboard.dashboard.grossMargin', 'Margen Bruto')}</span>
+                  <span className="text-base font-black text-text-main">{grossMargin}%</span>
                 </div>
-                <Progress value={grossMargin} className="h-2" />
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-success rounded-full transition-all duration-1000" style={{ width: `${grossMargin}%` }}></div>
+                </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-tertiary">{t('dashboard.dashboard.netMargin', 'Margen Neto')}</span>
-              <span className="font-bold text-success-foreground">{netMargin}%</span>
+            <div className="flex justify-between items-center group">
+              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest group-hover:text-primary transition-colors">{t('dashboard.dashboard.netMargin', 'Margen Neto')}</span>
+              <span className="text-base font-black text-success">{netMargin}%</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-tertiary">{t('dashboard.dashboard.operatingRatio', 'Ratio Gasto Operativo')}</span>
-              <span className="font-bold">{opExpenseRatio}%</span>
+            <div className="flex justify-between items-center group border-t border-border-subtle pt-4">
+              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest group-hover:text-primary transition-colors">{t('dashboard.dashboard.operatingRatio', 'Ratio Gasto Operativo')}</span>
+              <span className="text-base font-black text-orange-600">{opExpenseRatio}%</span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Inventory Performance */}
-        <Card className="col-span-4">
-          <CardHeader className="border-b border-subtle pb-3 mb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
+        <div className="bg-surface rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col overflow-hidden">
+          <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50">
+            <h3 className="text-sm font-black text-text-main uppercase tracking-tight flex items-center gap-2">
               <Package size={18} className="text-orange-500" />
               {t('dashboard.dashboard.inventoryPerformance', 'Rendimiento de Inventario')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-0">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-tertiary">{t('dashboard.dashboard.turnoverRate', 'Tasa de Rotación')}</span>
-              <span className="font-bold">{turnoverRate}x</span>
+            </h3>
+          </div>
+          <div className="p-6 space-y-6 flex-1">
+            <div className="flex justify-between items-center group">
+              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest group-hover:text-primary transition-colors">{t('dashboard.dashboard.turnoverRate', 'Tasa de Rotación')}</span>
+              <span className="text-base font-black text-text-main">{turnoverRate}x</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-tertiary">{t('dashboard.dashboard.daysOfInventory', 'Días de Inventario')}</span>
-              <span className="font-bold">{daysOfInventory} {t('common.days', 'días')}</span>
+            <div className="flex justify-between items-center group">
+              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest group-hover:text-primary transition-colors">{t('dashboard.dashboard.daysOfInventory', 'Días de Inventario')}</span>
+              <span className="text-base font-black text-text-main">{daysOfInventory} {t('common.days', 'días')}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-tertiary">{t('dashboard.dashboard.totalSKUs', 'Total SKUs Activos')}</span>
-              <span className="font-bold">{totalProducts}</span>
+            <div className="flex justify-between items-center group border-t border-border-subtle pt-4">
+              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest group-hover:text-primary transition-colors">{t('dashboard.dashboard.totalSKUs', 'Total SKUs Activos')}</span>
+              <span className="text-base font-black text-text-main">{totalProducts}</span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Recent Alerts (Bottom Row) */}
-        <Card className="col-span-12">
-          <CardHeader className="mb-4 flex flex-row items-center justify-between">
-            <CardTitle>{t('dashboard.dashboard.activity.title', 'Alertas de Impacto')}</CardTitle>
-            <Button variant="ghost" size="sm" className="text-primary">
+        <div className="lg:col-span-3 bg-surface rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden">
+          <div className="px-8 py-5 border-b border-border-subtle flex items-center justify-between bg-slate-50/50">
+            <h3 className="text-lg font-black text-text-main uppercase tracking-tight">{t('dashboard.dashboard.activity.title', 'Alertas de Impacto')}</h3>
+            <Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-blue-50">
               {t('common.viewAll', 'Ver Todas')}
             </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="activity-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          </div>
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {alerts.slice(0, 6).map((alert) => (
-                  <div key={alert.id} className={`activity-item activity-item--${alert.severity === 'critical' ? 'error' : alert.severity === 'warning' ? 'warning' : 'info'}`}>
-                      <div className="activity-item__icon">
+                  <div key={alert.id} className="flex gap-4 p-4 rounded-xl border border-border-subtle bg-slate-50/30 hover:bg-slate-50 transition-colors group cursor-pointer">
+                      <div className={`size-10 rounded-lg flex-shrink-0 flex items-center justify-center transition-transform group-hover:scale-110 ${
+                          alert.severity === 'critical' ? 'bg-red-50 text-error' : 
+                          alert.severity === 'warning' ? 'bg-amber-50 text-amber-600' : 
+                          'bg-blue-50 text-primary'
+                      }`}>
                           {alert.severity === 'critical' ? <AlertTriangle size={20} /> : <Activity size={20} />}
                       </div>
-                      <div className="activity-item__content">
-                          <p className="activity-item__title font-bold">{alert.title}</p>
-                          <p className="activity-item__desc text-tertiary text-xs">{alert.message}</p>
+                      <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center justify-between gap-4">
+                              <p className="text-sm font-bold text-text-main truncate group-hover:text-primary transition-colors">{alert.title}</p>
+                              <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary whitespace-nowrap">{getTimeAgo(alert.created_at)}</span>
+                          </div>
+                          <p className="text-xs text-text-secondary line-clamp-2">{alert.message}</p>
                       </div>
-                      <span className="activity-item__time text-[10px] opacity-60 ml-auto">{getTimeAgo(alert.created_at)}</span>
                   </div>
               ))}
               {alerts.length === 0 && (
-                  <div className="col-span-full p-8 text-center text-tertiary">
-                      {t('dashboard.dashboard.activity.noActivity', 'Sin alertas críticas.')}
+                  <div className="col-span-full p-12 text-center">
+                      <p className="text-sm font-bold text-text-secondary uppercase tracking-widest">
+                        {t('dashboard.dashboard.activity.noActivity', 'Sin alertas críticas.')}
+                      </p>
                   </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -19,72 +19,70 @@ const PaymentHistoryTable = ({ history = [], totalPaid = 0 }) => {
   const { t } = useI18n();
 
   return (
-    <Card className="payment-history">
-      <CardHeader className="payment-history__header">
-        <CardTitle>{t('receivables.detail.history.title')}</CardTitle>
-        <div className="payment-history__actions">
-          <Button variant="ghost" size="icon">
+    <div className="bg-surface rounded-xl border border-border-subtle overflow-hidden shadow-fluent-2 flex flex-col h-fit">
+      <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 flex items-center justify-between">
+        <h3 className="text-sm font-black text-text-main uppercase tracking-tight">{t('receivables.detail.history.title')}</h3>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary hover:text-primary">
             <Filter size={16} />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary hover:text-primary">
             <Share2 size={16} />
           </Button>
         </div>
-      </CardHeader>
-      <CardContent className="payment-history__content">
-        <div className="payment-history__table-container">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t('receivables.detail.history.table.date')}</TableHead>
-                <TableHead>{t('receivables.detail.history.table.ref')}</TableHead>
-                <TableHead>{t('receivables.detail.history.table.method')}</TableHead>
-                <TableHead>{t('receivables.detail.history.table.note')}</TableHead>
-                <TableHead className="payment-history__cell--right">{t('receivables.detail.history.table.amount')}</TableHead>
-                <TableHead className="payment-history__cell--actions"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {history.map((payment, idx) => {
-                const MethodIcon = getMethodIcon(payment.method);
-                return (
-                  <TableRow key={idx} className="payment-history__row">
-                    <TableCell>{payment.date}</TableCell>
-                    <TableCell className="payment-history__cell--mono">{payment.ref}</TableCell>
-                    <TableCell>
-                      <div className="payment-history__method">
-                        <MethodIcon size={16} className="payment-history__method-icon" />
-                        <span>{payment.method}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="payment-history__cell--note">{payment.note}</TableCell>
-                    <TableCell className="payment-history__cell--right payment-history__cell--amount">
-                      {formatPYG(payment.amount)}
-                    </TableCell>
-                    <TableCell className="payment-history__cell--right">
-                      <Button variant="ghost" size="icon" className="payment-history__action-btn">
-                        <MoreVertical size={16} />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-            <tfoot className="payment-history__footer">
-              <TableRow>
-                <TableCell colSpan="4" className="payment-history__footer-label">
-                  {t('receivables.detail.stats.total_paid')}
-                </TableCell>
-                <TableCell className="payment-history__footer-value">
-                  {formatPYG(totalPaid)}
-                </TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            </tfoot>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader className="bg-slate-50/30">
+            <TableRow className="hover:bg-transparent border-border-subtle">
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">{t('receivables.detail.history.table.date')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">{t('receivables.detail.history.table.ref')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">{t('receivables.detail.history.table.method')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">{t('receivables.detail.history.table.note')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-right px-6">{t('receivables.detail.history.table.amount')}</TableHead>
+              <TableHead className="w-12"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {history.map((payment, idx) => {
+              const MethodIcon = getMethodIcon(payment.method);
+              return (
+                <TableRow key={idx} className="group hover:bg-slate-50 transition-colors border-border-subtle">
+                  <TableCell className="text-sm font-bold text-text-main">{payment.date}</TableCell>
+                  <TableCell className="text-xs font-black uppercase tracking-widest text-text-secondary opacity-60 font-mono">#{payment.ref}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+                      <MethodIcon size={16} className="text-primary opacity-60" />
+                      <span>{payment.method}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-text-secondary italic min-w-[150px]">{payment.note}</TableCell>
+                  <TableCell className="text-right px-6 text-sm font-black text-text-main">
+                    {formatPYG(payment.amount)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary opacity-0 group-hover:opacity-100 transition-all">
+                      <MoreVertical size={16} />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+          <tfoot className="bg-slate-50/50 border-t border-border-subtle">
+            <TableRow>
+              <TableCell colSpan="4" className="py-4 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-right">
+                {t('receivables.detail.stats.total_paid')}
+              </TableCell>
+              <TableCell className="py-4 px-6 text-base font-black text-success text-right">
+                {formatPYG(totalPaid)}
+              </TableCell>
+              <TableCell></TableCell>
+            </TableRow>
+          </tfoot>
+        </Table>
+      </div>
+    </div>
   );
 };
 

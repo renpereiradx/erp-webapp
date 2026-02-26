@@ -9,53 +9,45 @@ const KPIStatsGrid = ({ metrics }) => {
   const { t } = useI18n();
 
   return (
-    <div className="receivables-dashboard__kpi-grid">
-      <Card className="kpi-card">
-        <CardHeader className="p-0 border-none mb-1">
-          <p className="kpi-card__label uppercase tracking-wide">{t('receivables.metrics.outstanding')}</p>
-        </CardHeader>
-        <p className="kpi-card__value">{metrics.outstanding}</p>
-        <div className="kpi-card__trend is-bad">
-          <span className="material-symbols-outlined">trending_up</span>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
+        <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70 mb-4">{t('receivables.metrics.outstanding')}</p>
+        <h3 className="text-2xl font-black text-text-main tracking-tight">{metrics.outstanding}</h3>
+        <div className="flex items-center gap-1.5 mt-2 text-[10px] font-black uppercase tracking-widest text-error">
+          <span className="material-symbols-outlined text-[14px]">trending_up</span>
           <span>+12% {t('receivables.metrics.trend.vs_last_month')}</span>
         </div>
-      </Card>
+      </div>
       
-      <Card className="kpi-card">
-        <CardHeader className="p-0 border-none mb-1">
-          <p className="kpi-card__label uppercase tracking-wide">{t('receivables.metrics.limit')}</p>
-        </CardHeader>
-        <p className="kpi-card__value">{metrics.limit}</p>
-        <div className="progress progress--thin mt-2">
-          <div className="progress__track">
-            <div className="progress__fill" style={{ width: `${metrics.utilization}%` }}></div>
+      <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
+        <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70 mb-4">{t('receivables.metrics.limit')}</p>
+        <h3 className="text-2xl font-black text-text-main tracking-tight">{metrics.limit}</h3>
+        <div className="space-y-2 mt-3">
+          <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full" style={{ width: `${metrics.utilization}%` }}></div>
           </div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 text-right">
+            {metrics.utilization}% {t('receivables.metrics.utilization')}
+          </p>
         </div>
-        <p className="text-tertiary" style={{ fontSize: '10px', marginTop: '4px', textAlign: 'right' }}>
-          {metrics.utilization}% {t('receivables.metrics.utilization')}
-        </p>
-      </Card>
+      </div>
       
-      <Card className="kpi-card">
-        <CardHeader className="p-0 border-none mb-1">
-          <p className="kpi-card__label uppercase tracking-wide">{t('receivables.metrics.avg_days')}</p>
-        </CardHeader>
-        <p className="kpi-card__value">{metrics.avgDays}</p>
-        <div className="kpi-card__trend is-bad">
-          <span className="material-symbols-outlined">warning</span>
+      <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
+        <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70 mb-4">{t('receivables.metrics.avg_days')}</p>
+        <h3 className="text-2xl font-black text-text-main tracking-tight">{metrics.avgDays}</h3>
+        <div className="flex items-center gap-1.5 mt-2 text-[10px] font-black uppercase tracking-widest text-warning">
+          <span className="material-symbols-outlined text-[14px]">warning</span>
           <span>{t('receivables.metrics.industry_avg')}</span>
         </div>
-      </Card>
+      </div>
       
-      <Card className="kpi-card">
-        <CardHeader className="p-0 border-none mb-1">
-          <p className="kpi-card__label uppercase tracking-wide">{t('receivables.metrics.last_payment')}</p>
-        </CardHeader>
-        <p className="kpi-card__value">{metrics.lastPayment}</p>
-        <p className="text-tertiary" style={{ fontSize: '10px', marginTop: '4px' }}>
+      <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
+        <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70 mb-4">{t('receivables.metrics.last_payment')}</p>
+        <h3 className="text-2xl font-black text-success tracking-tight">{metrics.lastPayment}</h3>
+        <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 mt-2">
           {t('receivables.metrics.received', { days: 2 })}
         </p>
-      </Card>
+      </div>
     </div>
   );
 };

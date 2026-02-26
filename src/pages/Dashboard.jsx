@@ -81,21 +81,21 @@ const Dashboard = () => {
 
   if (loading && !summary) {
     return (
-      <div className="dashboard dashboard--loading">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
           <RefreshCcw className="animate-spin text-primary" size={48} />
-          <p className="text-lg font-medium text-tertiary">{t('dashboard.loading', 'Cargando dashboard...')}</p>
+          <p className="text-lg font-medium text-text-secondary">{t('dashboard.loading', 'Cargando dashboard...')}</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="dashboard dashboard--error">
-          <div className="p-4 bg-red-100 rounded-full text-red-600 mb-4">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+          <div className="p-4 bg-red-100 rounded-full text-error mb-4">
             <AlertTriangle size={48} />
           </div>
-          <h2 className="text-2xl font-bold mb-2">{t('dashboard.error.title', 'Error al cargar el Dashboard')}</h2>
-          <p className="text-tertiary mb-6">{error}</p>
+          <h2 className="text-2xl font-bold mb-2 text-text-main">{t('dashboard.error.title', 'Error al cargar el Dashboard')}</h2>
+          <p className="text-text-secondary mb-6 max-w-md">{error}</p>
           <Button variant="primary" onClick={() => fetchDashboardData()}>
             {t('common.retry', 'Reintentar')}
           </Button>
@@ -116,21 +116,21 @@ const Dashboard = () => {
   const payablesTotal = summary?.payables?.total_pending || 0;
 
   return (
-    <div className="dashboard">
+    <div className="space-y-8">
       {/* 1. Header */}
-      <div className="dashboard__header">
-        <div className="dashboard__titles">
-           <h1 className="dashboard__title">{t('dashboard.executive.title', 'Resumen Ejecutivo')}</h1>
-           <p className="dashboard__subtitle">{t('dashboard.executive.subtitle', 'Visión general en tiempo real de los indicadores clave')}</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+           <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">{t('dashboard.executive.title', 'Resumen Ejecutivo')}</h1>
+           <p className="text-sm text-text-secondary font-medium">{t('dashboard.executive.subtitle', 'Visión general en tiempo real de los indicadores clave')}</p>
         </div>
-         <div className="dashboard__actions">
-            <Button variant="secondary" size="md" className="btn--shadow" onClick={() => navigate('/configuracion')}>
-                <Calendar size={18} />
+         <div className="flex items-center gap-3">
+            <Button variant="secondary" size="md" className="shadow-sm border-border-subtle" onClick={() => navigate('/configuracion')}>
+                <Calendar size={18} className="mr-2" />
                 <span>{t('dashboard.actions.dateRange', 'Últimos 30 Días')}</span>
-                <ArrowRight size={16} style={{ transform: 'rotate(90deg)', opacity: 0.5 }} />
+                <ArrowRight size={16} className="ml-2 opacity-50 rotate-90" />
             </Button>
-             <Button variant="primary" size="md">
-                <Download size={18} />
+             <Button variant="primary" size="md" className="shadow-md">
+                <Download size={18} className="mr-2" />
                 <span>{t('dashboard.actions.export', 'Exportar Informe')}</span>
             </Button>
         </div>
@@ -140,132 +140,131 @@ const Dashboard = () => {
       <DashboardNav />
 
        {/* 2. Top KPI Cards */}
-       <div className="dashboard__kpi-grid">
+       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
            {/* Total Sales */}
-           <div className="card kpi-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/dashboard/kpis')}>
-               <div className="kpi-card__header">
-                   <div className="kpi-card__icon kpi-card__icon--blue">
+           <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/dashboard/kpis')}>
+               <div className="flex items-start justify-between mb-4">
+                   <div className="size-12 rounded-lg bg-blue-50 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                        <DollarSign size={24} />
                    </div>
-                   {/* Trend data would come from /dashboard/trends, using placeholder for now */}
-                   <div className="kpi-card__trend kpi-card__trend--up">
+                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-success text-xs font-bold">
                        <TrendingUp size={14} />
                        <span>12%</span>
                    </div>
                </div>
                <div>
-                   <p className="kpi-card__label">{t('dashboard.kpi.totalSales', 'Ventas Totales')}</p>
-                   <h3 className="kpi-card__value">{formatCurrency(salesTotal)}</h3>
+                   <p className="text-xs font-black uppercase tracking-widest text-text-secondary mb-1">{t('dashboard.kpi.totalSales', 'Ventas Totales')}</p>
+                   <h3 className="text-2xl font-black text-text-main tracking-tight">{formatCurrency(salesTotal)}</h3>
                </div>
            </div>
 
            {/* Purchases */}
-           <div className="card kpi-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/compras')}>
-               <div className="kpi-card__header">
-                   <div className="kpi-card__icon kpi-card__icon--orange">
+           <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/compras')}>
+               <div className="flex items-start justify-between mb-4">
+                   <div className="size-12 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
                        <ShoppingCart size={24} />
                    </div>
-                   <div className="kpi-card__trend kpi-card__trend--down">
+                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-50 text-error text-xs font-bold">
                        <TrendingDown size={14} />
                        <span>5%</span>
                    </div>
                </div>
                <div>
-                   <p className="kpi-card__label">{t('dashboard.kpi.purchases', 'Compras')}</p>
-                   <h3 className="kpi-card__value">{formatCurrency(purchasesTotal)}</h3>
+                   <p className="text-xs font-black uppercase tracking-widest text-text-secondary mb-1">{t('dashboard.kpi.purchases', 'Compras')}</p>
+                   <h3 className="text-2xl font-black text-text-main tracking-tight">{formatCurrency(purchasesTotal)}</h3>
                </div>
            </div>
 
            {/* Net Profit */}
-           <div className="card kpi-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/dashboard/kpis')}>
-               <div className="kpi-card__header">
-                   <div className="kpi-card__icon kpi-card__icon--green">
+           <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/dashboard/kpis')}>
+               <div className="flex items-start justify-between mb-4">
+                   <div className="size-12 rounded-lg bg-green-50 flex items-center justify-center text-success group-hover:scale-110 transition-transform">
                        <TrendingUp size={24} />
                    </div>
-                   <div className="kpi-card__trend kpi-card__trend--up">
+                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-success text-xs font-bold">
                        <TrendingUp size={14} />
                        <span>18%</span>
                    </div>
                </div>
                <div>
-                   <p className="kpi-card__label">{t('dashboard.kpi.netProfit', 'Ganancia Bruta')}</p>
-                   <h3 className="kpi-card__value">{formatCurrency(grossProfit)}</h3>
+                   <p className="text-xs font-black uppercase tracking-widest text-text-secondary mb-1">{t('dashboard.kpi.netProfit', 'Ganancia Bruta')}</p>
+                   <h3 className="text-2xl font-black text-text-main tracking-tight">{formatCurrency(grossProfit)}</h3>
                </div>
            </div>
 
            {/* Daily Transactions */}
-           <div className="card kpi-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/ventas')}>
-               <div className="kpi-card__header">
-                   <div className="kpi-card__icon kpi-card__icon--purple">
+           <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all cursor-pointer group" onClick={() => navigate('/ventas')}>
+               <div className="flex items-start justify-between mb-4">
+                   <div className="size-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
                        <Receipt size={24} />
                    </div>
-                   <div className="kpi-card__trend kpi-card__trend--up">
+                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-success text-xs font-bold">
                        <TrendingUp size={14} />
                        <span>2%</span>
                    </div>
                </div>
                 <div>
-                   <p className="kpi-card__label">{t('dashboard.kpi.dailyTransactions', 'Transacciones Diarias')}</p>
-                   <h3 className="kpi-card__value">{salesCount.toLocaleString()}</h3>
+                   <p className="text-xs font-black uppercase tracking-widest text-text-secondary mb-1">{t('dashboard.kpi.dailyTransactions', 'Transacciones Diarias')}</p>
+                   <h3 className="text-2xl font-black text-text-main tracking-tight">{salesCount.toLocaleString()}</h3>
                </div>
            </div>
        </div>
 
        {/* 3. Main Chart & Operations */}
-       <div className="dashboard__main-grid">
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
            {/* Revenue vs Expenses Chart (Area) */}
-           <div className="card chart-card lg:col-span-2">
-               <div className="chart-card__header">
-                   <div>
-                       <h3 className="card__title">{t('dashboard.charts.revVsExp', 'Ingresos vs Gastos')}</h3>
-                       <p className="card__subtitle">{t('dashboard.charts.revenueVsExpenses.subtitle', 'Rendimiento en el tiempo')}</p>
+           <div className="lg:col-span-2 bg-surface p-8 rounded-xl shadow-fluent-2 border border-border-subtle">
+               <div className="flex items-center justify-between mb-8">
+                   <div className="space-y-1">
+                       <h3 className="text-lg font-black text-text-main uppercase tracking-tight">{t('dashboard.charts.revVsExp', 'Ingresos vs Gastos')}</h3>
+                       <p className="text-xs text-text-secondary font-medium">{t('dashboard.charts.revenueVsExpenses.subtitle', 'Rendimiento en el tiempo')}</p>
                    </div>
-                   <div className="chart-card__legend">
-                       <div className="chart-card__legend-item">
-                           <span className="dot" style={{backgroundColor: '#137fec'}}></span>
-                           <span className="label">{t('dashboard.revenue', 'Ingresos')}</span>
+                   <div className="flex items-center gap-6">
+                       <div className="flex items-center gap-2">
+                           <span className="size-2 rounded-full bg-primary"></span>
+                           <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">{t('dashboard.revenue', 'Ingresos')}</span>
                        </div>
-                       <div className="chart-card__legend-item">
-                           <span className="dot" style={{backgroundColor: '#cbd5e1'}}></span>
-                           <span className="label">{t('dashboard.expenses', 'Gastos')}</span>
+                       <div className="flex items-center gap-2">
+                           <span className="size-2 rounded-full bg-slate-300"></span>
+                           <span className="text-xs font-bold text-text-secondary uppercase tracking-wider">{t('dashboard.expenses', 'Gastos')}</span>
                        </div>
                    </div>
                </div>
-               <div className="chart-card__container" style={{ height: 300, marginTop: '1.5rem', minWidth: 0 }}>
-                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+               <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={revenueExpensesData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#137fec" stopOpacity={0.15}/>
-                                    <stop offset="95%" stopColor="#137fec" stopOpacity={0}/>
+                                    <stop offset="5%" stopColor="#106ebe" stopOpacity={0.15}/>
+                                    <stop offset="95%" stopColor="#106ebe" stopOpacity={0}/>
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--border-subtle)" />
+                            <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#e5e7eb" />
                             <XAxis 
                               dataKey="name" 
                               axisLine={false} 
                               tickLine={false} 
-                              tick={{fill: 'var(--text-tertiary)', fontSize: 11, fontWeight: 500}} 
+                              tick={{fill: '#616161', fontSize: 11, fontWeight: 600}} 
                               dy={15}
                             />
                             <Tooltip 
                                contentStyle={{ 
                                    borderRadius: '8px', 
-                                   border: '1px solid var(--border-subtle)',
-                                   boxShadow: 'var(--shadow-8)',
+                                   border: '1px solid #e5e7eb',
+                                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                                    fontSize: '12px',
-                                   backgroundColor: 'var(--bg-paper)',
-                                   color: 'var(--text-primary)'
+                                   backgroundColor: '#ffffff',
+                                   color: '#242424',
+                                   fontWeight: 600
                                }}
                             />
                             <Area 
                                type="monotone" 
                                dataKey="revenue" 
-                               stroke="#137fec" 
+                               stroke="#106ebe" 
                                fillOpacity={1} 
                                fill="url(#colorRevenue)" 
                                strokeWidth={3} 
-                               className="revenue-area"
                                animateNewValues
                             />
                             <Area 
@@ -283,103 +282,110 @@ const Dashboard = () => {
            </div>
 
            {/* Operations Stack */}
-           <div className="operations-stack" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+           <div className="flex flex-col gap-6">
                {/* Inventory Valuation */}
-               <div className="card operation-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/ajuste-inventario-masivo')}>
-                    <div className="operation-card__deco operation-card__deco--orange"></div>
-                    <div className="operation-card__content">
-                        <div className="operation-card__header">
-                            <div className="operation-card__icon operation-card__icon--orange">
+               <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle relative overflow-hidden group cursor-pointer hover:shadow-fluent-8 transition-all" onClick={() => navigate('/ajuste-inventario-masivo')}>
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-500"></div>
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="size-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
                                 <Package size={22} />
                             </div>
-                            <h4 className="operation-card__title">{t('dashboard.kpi.inventory', 'Inventario')}</h4>
+                            <h4 className="text-sm font-black text-text-main uppercase tracking-tight">{t('dashboard.kpi.inventory', 'Inventario')}</h4>
                         </div>
-                        <p className="kpi-card__label">{t('dashboard.operations.inventory.valuation', 'Valuación Total')}</p>
-                        <h3 className="kpi-card__value">{formatCurrency(inventoryValue)}</h3>
+                        <div>
+                            <p className="text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">{t('dashboard.operations.inventory.valuation', 'Valuación Total')}</p>
+                            <h3 className="text-2xl font-black text-text-main tracking-tight">{formatCurrency(inventoryValue)}</h3>
+                        </div>
                         
-                        <div className={`operation-card__alert ${lowStockCount > 0 ? 'operation-card__alert--warning' : ''}`}>
-                            <AlertTriangle size={18} />
+                        <div className={`flex items-center gap-2 p-3 rounded-lg text-xs font-bold ${lowStockCount > 0 ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-green-50 text-success border border-green-100'}`}>
+                            <AlertTriangle size={18} className={lowStockCount > 0 ? 'animate-pulse' : ''} />
                             <span>{t('dashboard.operations.inventory.lowStock', '{count} Artículos con bajo stock', { count: lowStockCount }).replace('{count}', lowStockCount)}</span>
                         </div>
                     </div>
                </div>
 
                 {/* Cash Register */}
-               <div className="card operation-card cursor-pointer hover:shadow-lg transition-all" onClick={() => navigate('/caja-registradora')}>
-                    <div className="operation-card__deco operation-card__deco--green"></div>
-                     <div className="operation-card__content">
-                        <div className="operation-card__header">
-                            <div className="operation-card__icon operation-card__icon--green">
+               <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle relative overflow-hidden group cursor-pointer hover:shadow-fluent-8 transition-all" onClick={() => navigate('/caja-registradora')}>
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-success"></div>
+                     <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="size-10 rounded-lg bg-green-50 flex items-center justify-center text-success group-hover:scale-110 transition-transform">
                                 <CreditCard size={22} />
                             </div>
-                            <h4 className="operation-card__title">{t('dashboard.kpi.cashRegister', 'Caja Registradora')}</h4>
+                            <h4 className="text-sm font-black text-text-main uppercase tracking-tight">{t('dashboard.kpi.cashRegister', 'Caja Registradora')}</h4>
                         </div>
-                        <p className="kpi-card__label">{t('dashboard.operations.cashRegister.balance', 'Saldo Actual')}</p>
-                        <h3 className="kpi-card__value">{formatCurrency(cashBalance)}</h3>
+                        <div>
+                            <p className="text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">{t('dashboard.operations.cashRegister.balance', 'Saldo Actual')}</p>
+                            <h3 className="text-2xl font-black text-text-main tracking-tight">{formatCurrency(cashBalance)}</h3>
+                        </div>
                         
-                        <div className="progress" style={{marginTop: '1.5rem', height: '6px', borderRadius: '3px', backgroundColor: 'var(--bg-tertiary)', overflow: 'hidden'}}>
-                            <div style={{width: '75%', height: '100%', backgroundColor: '#10b981', borderRadius: '3px'}}></div>
+                        <div className="space-y-2">
+                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-success rounded-full" style={{ width: '75%' }}></div>
+                            </div>
+                            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-text-secondary">
+                                <span>{t('dashboard.operations.cashRegister.target', 'Meta')}</span>
+                                <span className="text-text-main">{formatCurrency(5500000)}</span>
+                            </div>
                         </div>
-                         <p style={{marginTop: '0.75rem', fontSize: '11px', color: 'var(--text-tertiary)', textAlign: 'right', fontWeight: 600}}>
-                             {t('dashboard.operations.cashRegister.target', 'Meta')}: {formatCurrency(5500000)}
-                         </p>
                     </div>
                </div>
            </div>
        </div>
 
        {/* 4. Bottom Row: Finance & Activity */}
-       <div className="dashboard__bottom-grid">
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-10">
            {/* Finance Overview */}
-           <div className="card finance-card">
-               <div className="card__header" style={{ marginBottom: '1.5rem', justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
-                   <h3 className="card__title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('dashboard.finance.title', 'Resumen Financiero')}</h3>
-                   <Button variant="ghost" size="sm" className="text-primary font-bold" onClick={() => navigate('/receivables')}>{t('dashboard.actions.viewReport', 'Ver Reporte')}</Button>
+           <div className="bg-surface p-8 rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col">
+               <div className="flex items-center justify-between mb-8">
+                   <h3 className="text-lg font-black text-text-main uppercase tracking-tight">{t('dashboard.finance.title', 'Resumen Financiero')}</h3>
+                   <Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-blue-50" onClick={() => navigate('/receivables')}>{t('dashboard.actions.viewReport', 'Ver Reporte')}</Button>
                </div>
                
-               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+               <div className="space-y-8 flex-1">
                     {/* Receivables */}
-                   <div className="finance-group cursor-pointer group" onClick={() => navigate('/receivables')}>
-                       <div className="finance-group__header">
-                           <div className="flex flex-col">
-                               <p className="finance-group__label group-hover:text-primary transition-colors">{t('dashboard.finance.receivables', 'Cuentas por Cobrar')}</p>
-                               <h4 className="finance-group__value">{formatCurrency(receivablesTotal)}</h4>
+                   <div className="group cursor-pointer space-y-3" onClick={() => navigate('/receivables')}>
+                       <div className="flex items-end justify-between">
+                           <div className="space-y-1">
+                               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary group-hover:text-primary transition-colors">{t('dashboard.finance.receivables', 'Cuentas por Cobrar')}</p>
+                               <h4 className="text-xl font-black text-text-main">{formatCurrency(receivablesTotal)}</h4>
                            </div>
-                           <span className="finance-group__trend finance-group__trend--positive">+8.5%</span>
+                           <span className="text-xs font-bold text-success bg-green-50 px-2 py-1 rounded">+8.5%</span>
                        </div>
-                       <div className="progress" style={{height: '10px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '5px', overflow: 'hidden'}}>
-                            <div style={{width: '65%', height: '100%', backgroundColor: '#3b82f6', borderRadius: '5px'}}></div>
+                       <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-primary rounded-full" style={{ width: '65%' }}></div>
                        </div>
                    </div>
                     {/* Payables */}
-                   <div className="finance-group cursor-pointer group" onClick={() => navigate('/pagos-compras')}>
-                       <div className="finance-group__header">
-                           <div className="flex flex-col">
-                               <p className="finance-group__label group-hover:text-primary transition-colors">{t('dashboard.finance.payables', 'Cuentas por Pagar')}</p>
-                               <h4 className="finance-group__value">{formatCurrency(payablesTotal)}</h4>
+                   <div className="group cursor-pointer space-y-3" onClick={() => navigate('/pagos-compras')}>
+                       <div className="flex items-end justify-between">
+                           <div className="space-y-1">
+                               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary group-hover:text-primary transition-colors">{t('dashboard.finance.payables', 'Cuentas por Pagar')}</p>
+                               <h4 className="text-xl font-black text-text-main">{formatCurrency(payablesTotal)}</h4>
                            </div>
-                           <span className="finance-group__trend finance-group__trend--neutral">Normal</span>
+                           <span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded">Normal</span>
                        </div>
-                        <div className="progress" style={{height: '10px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '5px', overflow: 'hidden'}}>
-                            <div style={{width: '40%', height: '100%', backgroundColor: '#f97316', borderRadius: '5px'}}></div>
+                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-orange-500 rounded-full" style={{ width: '40%' }}></div>
                         </div>
                    </div>
                </div>
 
-               <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '2rem' }}>
-                   <div style={{ flex: 1 }}>
-                       <p className="finance-group__label" style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)'}}>
+               <div className="mt-8 pt-8 border-t border-border-subtle grid grid-cols-2 gap-8">
+                   <div>
+                       <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1">
                            {t('dashboard.finance.netCashflow', 'Flujo de Caja Neto')}
                        </p>
-                       <p className="finance-group__value" style={{fontSize: '1.125rem', marginTop: '4px'}}>
+                       <p className={`text-lg font-black ${salesTotal - purchasesTotal > 0 ? 'text-success' : 'text-error'}`}>
                            {salesTotal - purchasesTotal > 0 ? '+' : ''}{formatCurrency(salesTotal - purchasesTotal)}
                        </p>
                    </div>
-                    <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => navigate('/receivables/overdue')}>
-                       <p className="finance-group__label" style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)'}}>
+                    <div className="cursor-pointer group" onClick={() => navigate('/receivables/overdue')}>
+                       <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary mb-1 group-hover:text-primary transition-colors">
                            {t('dashboard.finance.overdueInvoices', 'Facturas Vencidas')}
                        </p>
-                       <p className="finance-group__value" style={{fontSize: '1.125rem', color: receivablesOverdue > 0 ? '#dc2626' : 'inherit', marginTop: '4px'}}>
+                       <p className={`text-lg font-black ${receivablesOverdue > 0 ? 'text-error' : 'text-text-main'}`}>
                            {receivablesOverdue}
                        </p>
                    </div>
@@ -387,31 +393,35 @@ const Dashboard = () => {
            </div>
 
            {/* Recent Alerts & Activity */}
-           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-               <div className="card__header" style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-subtle)' }}>
-                   <h3 className="card__title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('dashboard.activity.title', 'Alertas y Actividad Reciente')}</h3>
-                   <div className="badge-group">
-                       <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#dc2626', display: 'inline-block' }} className="animate-pulse"></span>
-                       <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>{t('dashboard.activity.live', 'Live')}</span>
+           <div className="bg-surface rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col overflow-hidden">
+               <div className="px-8 py-5 border-b border-border-subtle flex items-center justify-between bg-slate-50/50">
+                   <h3 className="text-lg font-black text-text-main uppercase tracking-tight">{t('dashboard.activity.title', 'Alertas y Actividad Reciente')}</h3>
+                   <div className="flex items-center gap-2 px-2 py-1 rounded bg-white border border-border-subtle shadow-sm">
+                       <span className="size-2 rounded-full bg-error animate-pulse"></span>
+                       <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary">{t('dashboard.activity.live', 'Live')}</span>
                    </div>
                </div>
-               <div className="activity-list">
+               <div className="flex-1 divide-y divide-border-subtle">
                    {/* Map Alerts */}
                    {alerts.slice(0, 3).map((alert) => (
                        <div 
                          key={alert.id} 
-                         className="activity-item cursor-pointer hover:bg-red-50/30 transition-colors"
+                         className="flex gap-4 p-6 cursor-pointer hover:bg-slate-50 transition-colors group"
                          onClick={() => alert.action_url ? navigate(alert.action_url) : navigate('/dashboard/alerts')}
                        >
-                           <div className={`activity-item__icon activity-item__icon--${alert.severity === 'critical' ? 'error' : alert.severity === 'warning' ? 'warning' : 'info'}`}>
+                           <div className={`size-10 rounded-lg flex-shrink-0 flex items-center justify-center transition-transform group-hover:scale-110 ${
+                               alert.severity === 'critical' ? 'bg-red-50 text-error' : 
+                               alert.severity === 'warning' ? 'bg-amber-50 text-amber-600' : 
+                               'bg-blue-50 text-primary'
+                           }`}>
                                {alert.severity === 'critical' ? <AlertTriangle size={18} /> : alert.severity === 'warning' ? <AlertTriangle size={18} /> : <Info size={18} />}
                            </div>
-                           <div className="activity-item__content">
-                               <div className="activity-item__header">
-                                   <p className="activity-item__title">{alert.title}</p>
-                                   <span className="activity-item__time">{getTimeAgo(alert.created_at)}</span>
+                           <div className="flex-1 min-w-0 space-y-1">
+                               <div className="flex items-center justify-between gap-4">
+                                   <p className="text-sm font-bold text-text-main truncate group-hover:text-primary transition-colors">{alert.title}</p>
+                                   <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary whitespace-nowrap">{getTimeAgo(alert.created_at)}</span>
                                </div>
-                               <p className="activity-item__desc">{alert.message}</p>
+                               <p className="text-xs text-text-secondary line-clamp-2">{alert.message}</p>
                            </div>
                        </div>
                    ))}
@@ -428,19 +438,21 @@ const Dashboard = () => {
                        return (
                         <div 
                           key={activity.id} 
-                          className="activity-item cursor-pointer hover:bg-blue-50/30 transition-colors"
+                          className="flex gap-4 p-6 cursor-pointer hover:bg-slate-50 transition-colors group"
                           onClick={() => navigate(getActivityRoute())}
                         >
-                            <div className={`activity-item__icon activity-item__icon--${activity.type === 'sale' ? 'success' : 'info'}`}>
+                            <div className={`size-10 rounded-lg flex-shrink-0 flex items-center justify-center transition-transform group-hover:scale-110 ${
+                                activity.type === 'sale' ? 'bg-green-50 text-success' : 'bg-blue-50 text-primary'
+                            }`}>
                                 {activity.type === 'sale' ? <CheckCircle2 size={18} /> : <Activity size={18} />}
                             </div>
-                            <div className="activity-item__content">
-                                <div className="activity-item__header">
-                                    <p className="activity-item__title">{activity.description}</p>
-                                    <span className="activity-item__time">{getTimeAgo(activity.timestamp)}</span>
+                            <div className="flex-1 min-w-0 space-y-1">
+                                <div className="flex items-center justify-between gap-4">
+                                    <p className="text-sm font-bold text-text-main truncate group-hover:text-primary transition-colors">{activity.description}</p>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary whitespace-nowrap">{getTimeAgo(activity.timestamp)}</span>
                                 </div>
-                                <p className="activity-item__desc">
-                                    {activity.user} {activity.amount ? `- ${formatCurrency(activity.amount)}` : ''}
+                                <p className="text-xs text-text-secondary">
+                                    {activity.user} {activity.amount ? `· ${formatCurrency(activity.amount)}` : ''}
                                 </p>
                             </div>
                         </div>
@@ -448,13 +460,15 @@ const Dashboard = () => {
                    })}
 
                    {alerts.length === 0 && activities.length === 0 && (
-                       <div className="p-8 text-center text-tertiary">
-                           {t('dashboard.activity.noActivity', 'Sin actividad reciente.')}
+                       <div className="p-12 text-center">
+                           <p className="text-sm font-bold text-text-secondary uppercase tracking-widest">
+                               {t('dashboard.activity.noActivity', 'Sin actividad reciente.')}
+                           </p>
                        </div>
                    )}
                </div>
-                <div style={{ padding: '0.75rem', backgroundColor: 'var(--bg-subtle)', borderTop: '1px solid var(--border-subtle)', textAlign: 'center' }}>
-                    <button className="text-primary font-bold text-xs uppercase tracking-wider hover:underline" onClick={() => navigate('/dashboard/alerts')}>
+                <div className="p-4 bg-slate-50/50 border-t border-border-subtle text-center">
+                    <button className="text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:underline" onClick={() => navigate('/dashboard/alerts')}>
                          {t('dashboard.activity.viewAll', 'Ver Todas las Notificaciones')} 
                     </button>
                 </div>

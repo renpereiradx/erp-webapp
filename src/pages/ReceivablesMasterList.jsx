@@ -34,43 +34,44 @@ const ReceivablesMasterList = () => {
   } = useReceivablesMasterList();
 
   return (
-    <div className="receivables-master">
-      <div className="receivables-master__content">
+    <div className="space-y-8">
+      <div className="max-w-[1600px] mx-auto space-y-8">
         
-        {/* Breadcrumbs */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink onClick={() => navigate('/dashboard')} className="cursor-pointer">
-                {t('receivables.breadcrumb.home')}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Finanzas</BreadcrumbPage>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{t('receivables.master.title')}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        {/* Header & Breadcrumbs */}
+        <div className="flex flex-col gap-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink onClick={() => navigate('/dashboard')} className="cursor-pointer text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 hover:text-primary transition-colors">
+                  {t('receivables.breadcrumb.home')}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="opacity-20" />
+              <BreadcrumbItem>
+                <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">Finanzas</span>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="opacity-20" />
+              <BreadcrumbItem>
+                <span className="text-[10px] font-black uppercase tracking-widest text-text-main">{t('receivables.master.title')}</span>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
 
-        {/* Header */}
-        <div className="receivables-master__header">
-          <div>
-            <h1 className="receivables-master__title">{t('receivables.master.title')}</h1>
-            <p className="receivables-master__subtitle">{t('receivables.master.subtitle')}</p>
-          </div>
-          <div className="receivables-master__actions">
-            <Button variant="outline">
-              <FileDown className="size-4" />
-              <span className="hidden sm:inline">Exportar CSV</span>
-            </Button>
-            <Button variant="default">
-              <Plus className="size-4" />
-              <span>{t('receivables.master.action.new')}</span>
-            </Button>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">{t('receivables.master.title')}</h1>
+              <p className="text-sm text-text-secondary font-medium">{t('receivables.master.subtitle')}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="secondary" size="md" className="shadow-sm border-border-subtle bg-surface">
+                <FileDown className="mr-2 size-4" />
+                <span>Exportar CSV</span>
+              </Button>
+              <Button variant="primary" size="md" className="shadow-md">
+                <Plus className="mr-2 size-4" />
+                <span>{t('receivables.master.action.new')}</span>
+              </Button>
+            </div>
           </div>
         </div>
 

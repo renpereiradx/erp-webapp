@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/lib/i18n';
 
 /**
@@ -11,25 +12,23 @@ const AgingByClientTable = ({ clientsData }) => {
   const { t } = useI18n();
 
   return (
-    <Card className="flex-1 overflow-hidden">
-      <CardHeader>
-        <CardTitle>{t('receivables.aging_report.top_debtors')}</CardTitle>
-        <CardAction>
-          <Button variant="ghost" size="sm">
-            <span className="material-symbols-outlined">filter_list</span>
-          </Button>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="p-0">
+    <div className="bg-surface rounded-xl border border-border-subtle overflow-hidden shadow-fluent-2 flex flex-col h-fit">
+      <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 flex items-center justify-between">
+        <h3 className="text-sm font-black text-text-main uppercase tracking-tight">{t('receivables.aging_report.top_debtors')}</h3>
+        <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary hover:text-primary">
+          <span className="material-symbols-outlined text-[18px]">filter_list</span>
+        </Button>
+      </div>
+      <div className="overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('receivables.aging_report.table.client')}</TableHead>
-              <TableHead className="text-right">{t('receivables.aging_report.table.total')}</TableHead>
-              <TableHead className="text-right text-danger">{t('receivables.aging.90')}</TableHead>
-              <TableHead className="text-center">{t('receivables.aging_report.table.risk')}</TableHead>
-              <TableHead>{t('receivables.aging_report.table.last_payment')}</TableHead>
-              <TableHead className="w-10"></TableHead>
+          <TableHeader className="bg-slate-50/30">
+            <TableRow className="hover:bg-transparent border-border-subtle">
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">{t('receivables.aging_report.table.client')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-right px-6">{t('receivables.aging_report.table.total')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-error text-right px-6">{t('receivables.aging.90')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-center">{t('receivables.aging_report.table.risk')}</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">{t('receivables.aging_report.table.last_payment')}</TableHead>
+              <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -38,38 +37,44 @@ const AgingByClientTable = ({ clientsData }) => {
               const hasHighRisk = client.over_90_days > 0;
               
               return (
-                <TableRow key={idx}>
+                <TableRow key={idx} className="group hover:bg-slate-50 transition-colors border-border-subtle">
                   <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-bold">{client.client_name}</span>
-                      <span className="text-tertiary" style={{ fontSize: '10px' }}>ID: {client.client_id}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="size-8 rounded-lg bg-blue-50 flex items-center justify-center text-[10px] font-black text-primary">
+                        {client.client_name?.charAt(0)}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-bold text-text-main truncate group-hover:text-primary transition-colors uppercase tracking-tight">{client.client_name}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">ID: {client.client_id}</span>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-mono font-bold">
+                  <TableCell className="text-right px-6 text-sm font-black text-text-main">
                     {new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG' }).format(client.total)}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-danger font-bold">
+                  <TableCell className="text-right px-6 text-sm font-black text-error">
                     {new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG' }).format(client.over_90_days)}
                   </TableCell>
                   <TableCell className="text-center">
-                    <span className={`status-pill ${hasHighRisk ? 'status-pill--danger' : 'status-pill--success'}`}>
+                    <Badge className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest ${hasHighRisk ? 'bg-error text-white' : 'bg-success text-white'}`}>
                       {hasHighRisk ? 'Alto' : 'Bajo'}
-                    </span>
+                    </Badge>
                   </TableCell>
-                  <TableCell className="text-tertiary">
-                    {/* Mock last payment date since it's not in Endpoint 9 */}
+                  <TableCell className="text-xs font-bold text-text-secondary opacity-60 uppercase tracking-widest">
                     Oct 12, 2023 
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="link" size="sm">Ver</Button>
+                    <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary opacity-0 group-hover:opacity-100 transition-all hover:bg-slate-200">
+                      <span className="material-symbols-outlined text-[18px]">visibility</span>
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
             })}
           </TableBody>
         </Table>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

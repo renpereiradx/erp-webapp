@@ -1,107 +1,103 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { useI18n } from '@/lib/i18n'
+import { Download, Printer, Filter, RefreshCw, Clock } from 'lucide-react'
+import DashboardNav from '@/components/business-intelligence/DashboardNav'
 
-// Feature components
-import AgingHero from '@/features/accounts-payable/components/AgingReport/AgingHero'
-import AgingKpiGrid from '@/features/accounts-payable/components/AgingReport/AgingKpiGrid'
-import AgingBreakdownTable from '@/features/accounts-payable/components/AgingReport/AgingBreakdownTable'
-import AgingTrendAnalysis from '@/features/accounts-payable/components/AgingReport/AgingTrendAnalysis'
+// Sub-componentes Receivables
+import AgingOverviewCards from '@/features/receivables/components/AgingOverviewCards'
+import AgingSummaryChart from '@/features/receivables/components/AgingSummaryChart'
+import AgingByClientTable from '@/features/receivables/components/AgingByClientTable'
+import AgingTrendChart from '@/features/receivables/components/AgingTrendChart'
 
 // Hooks
-import { useAgingReport } from '@/features/accounts-payable/hooks/useAgingReport'
+import { useAgingReport } from '@/features/receivables/hooks/useAgingReport'
 
 /**
- * Aging Report Page.
- * 100% STITCH FIDELITY - RESPONSIVE OPTIMIZED
+ * Aging Report Page - Receivables Optimized
  */
 const AgingReport = () => {
-  const { loading, summary, kpis, clients, totals, searchTerm, setSearchTerm } =
-    useAgingReport()
+  const navigate = useNavigate()
+  const { t } = useI18n()
+  const [period, setPeriod] = useState('month')
+  const { data, loading, error } = useAgingReport(period)
 
-  if (loading) {
+  if (loading && !data) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-[#f6f7f8] dark:bg-[#101922]'>
-        <div className='flex flex-col items-center gap-4'>
-          <div className='w-12 h-12 border-4 border-[#137fec] border-t-transparent rounded-full animate-spin'></div>
-          <p className='text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse'>
-            Generando Reporte Analítico...
-          </p>
+      <div className='flex flex-col items-center justify-center min-h-[60vh] gap-4'>
+        <RefreshCw className='animate-spin text-primary' size={48} />
+        <p className='text-lg font-medium text-text-secondary'>Generando Reporte Analítico...</p>
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+        <div className="p-4 bg-red-100 rounded-full text-error mb-4">
+          <Clock size={48} />
         </div>
+        <h2 className="text-2xl font-bold mb-2 text-text-main">Error al generar reporte</h2>
+        <p className="text-text-secondary mb-6 max-w-md">{error}</p>
+        <Button variant="primary" onClick={() => window.location.reload()}>
+          Reintentar
+        </Button>
       </div>
     )
   }
 
   return (
-    <div className="bg-[#f6f7f8] dark:bg-[#101922] font-['Inter',_sans-serif] text-slate-900 dark:text-slate-100 min-h-screen selection:bg-blue-100 selection:text-blue-900 pb-12">
-      {/* Top Navigation Bar - Responsive Stack */}
-      <nav className='bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-8 py-4 md:py-3 sticky top-0 z-30'>
-        <div className='max-w-[2560px] mx-auto flex flex-col lg:flex-row gap-4 lg:gap-0 lg:justify-between lg:items-center'>
-          <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6'>
-            <div className='flex items-center gap-2'>
-              <span className='material-icons-round text-[#137fec] text-2xl md:text-3xl'>
-                account_balance_wallet
-              </span>
-              <h1 className='text-lg md:text-xl font-bold tracking-tight'>
+    <div className='space-y-8'>
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        {/* Header */}
+        <header className='flex flex-col md:flex-row md:items-center justify-between gap-6'>
+          <div className="flex items-center gap-6">
+            <div className="size-14 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+              <Clock size={32} strokeWidth={2.5} />
+            </div>
+            <div className="space-y-1">
+              <h1 className='text-3xl font-black text-text-main tracking-tight uppercase'>
                 Reporte de Antigüedad
               </h1>
-            </div>
-            <div className='hidden sm:block h-6 w-px bg-slate-300 dark:bg-slate-700'></div>
-            <div className='flex items-center gap-2 sm:block'>
-              <p className='text-[10px] md:text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold tracking-wider leading-none'>
-                Corte al:
-              </p>
-              <p className='text-xs md:text-sm font-medium'>
-                {summary.lastUpdate}
-              </p>
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">
+                <span>Corte al:</span>
+                <strong className="text-text-main opacity-100">Hoy, {new Date().toLocaleDateString()}</strong>
+              </div>
             </div>
           </div>
-          <div className='flex flex-wrap items-center gap-2 md:gap-3'>
-            <button className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-medium border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
-              <span className='material-icons-round text-sm'>filter_list</span>{' '}
-              <span className='hidden sm:inline'>Filtrar</span>
-            </button>
-            <button className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-medium border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
-              <span className='material-icons-round text-sm'>
-                file_download
-              </span>{' '}
-              <span className='hidden sm:inline'>Exportar</span>
-            </button>
-            <button className='hidden md:flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
-              <span className='material-icons-round text-sm'>print</span>{' '}
-              Imprimir
-            </button>
-            <div className='hidden lg:block w-px h-6 bg-slate-300 dark:bg-slate-700 mx-2'></div>
-            <button className='w-full sm:w-auto bg-[#137fec] hover:opacity-90 text-white px-5 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all shadow-sm'>
-              Nuevo Pago
-            </button>
+
+          <div className='flex items-center gap-3'>
+            <Button variant="secondary" size="md" className="shadow-sm border-border-subtle bg-surface font-black uppercase tracking-widest text-[11px]">
+              <Filter size={18} className="mr-2" />
+              <span>Filtrar</span>
+            </Button>
+            <Button variant="secondary" size="md" className="shadow-sm border-border-subtle bg-surface font-black uppercase tracking-widest text-[11px]">
+              <Printer size={18} className="mr-2" />
+              <span>Imprimir</span>
+            </Button>
+            <Button variant='primary' size='md' className="shadow-md font-black uppercase tracking-widest text-[11px]">
+              <Download size={18} className="mr-2" />
+              <span>Exportar Reporte</span>
+            </Button>
+          </div>
+        </header>
+
+        <DashboardNav />
+
+        {/* Main Content Area */}
+        <div className="space-y-8">
+          <AgingOverviewCards stats={data.statistics?.summary || {}} />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <AgingSummaryChart agingData={data.summary || {}} />
+            <AgingTrendChart trendData={data.statistics?.trends || []} />
+          </div>
+
+          <div className="pb-10">
+            <AgingByClientTable clientsData={data.detailed || []} />
           </div>
         </div>
-      </nav>
-
-      {/* Main Content Area - Responsive spacing */}
-      <main className='p-4 md:p-8 space-y-6 md:space-y-8 max-w-[2560px] mx-auto animate-in fade-in'>
-        <AgingHero summary={summary} />
-        <AgingKpiGrid kpis={kpis} />
-        <AgingBreakdownTable
-          clients={clients}
-          totals={totals}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-        />
-        <AgingTrendAnalysis trendData={summary} />
-      </main>
-
-      {/* Global Floating Help */}
-      <div className='fixed bottom-6 right-6 md:bottom-8 md:right-8 flex flex-col gap-3 z-50'>
-        <button className='w-10 h-10 md:w-12 md:h-12 bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-all'>
-          <span className='material-icons-round text-sm md:text-base'>
-            help_outline
-          </span>
-        </button>
-        <button className='w-10 h-10 md:w-12 md:h-12 bg-[#137fec] text-white shadow-xl rounded-full flex items-center justify-center hover:scale-105 transition-all'>
-          <span className='material-icons-round text-sm md:text-base'>
-            chat_bubble_outline
-          </span>
-        </button>
       </div>
     </div>
   )

@@ -2,6 +2,10 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
+import { RefreshCw, AlertCircle, Download } from 'lucide-react';
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Badge } from '@/components/ui/badge';
+import DashboardNav from '@/components/business-intelligence/DashboardNav';
 
 // Hooks y Datos
 import { useClientCreditProfile } from '@/features/receivables/hooks/useClientCreditProfile';
@@ -23,30 +27,26 @@ const ClientCreditProfile = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   
-  // Usamos el hook personalizado para la lógica de datos
   const { data: remoteData, loading, error } = useClientCreditProfile(clientId);
-  
-  // Usamos mock data si no hay datos remotos (para propósitos de diseño/demo)
   const data = remoteData || clientProfileMock;
 
   if (loading && !remoteData) {
     return (
-      <div className="client-profile__loading">
-        <div className="client-profile__spinner"></div>
-        <p className="text-secondary">{t('receivables.loading.profile')}</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <RefreshCw className="animate-spin text-primary" size={48} />
+        <p className="text-lg font-medium text-text-secondary">{t('receivables.loading.profile')}</p>
       </div>
     );
   }
 
   if (error && !remoteData) {
     return (
-      <div className="client-profile__error">
-        <span className="material-symbols-outlined text-danger" style={{ fontSize: '48px' }}>error</span>
-        <h3 className="text-danger">{t('receivables.error.loading')}</h3>
-        <Button 
-          variant="secondary"
-          onClick={() => window.location.reload()}
-        >
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+        <div className="p-4 bg-red-100 rounded-full text-error mb-4">
+          <AlertCircle size={48} />
+        </div>
+        <h2 className="text-2xl font-bold mb-2 text-text-main">{t('receivables.error.loading')}</h2>
+        <Button variant="primary" onClick={() => window.location.reload()}>
           {t('receivables.error.retry')}
         </Button>
       </div>
@@ -54,80 +54,95 @@ const ClientCreditProfile = () => {
   }
 
   return (
-    <div className="client-profile">
-      {/* Header & Breadcrumbs */}
-      <header className="client-profile__header">
-        <nav className="client-profile__breadcrumb">
-          <a href="#" className="client-profile__breadcrumb-link" onClick={() => navigate('/receivables')}>
-            {t('receivables.breadcrumb.home')}
-          </a>
-          <span className="material-symbols-outlined client-profile__breadcrumb-separator">chevron_right</span>
-          <a href="#" className="client-profile__breadcrumb-link">
-            {t('receivables.breadcrumb.clients')}
-          </a>
-          <span className="material-symbols-outlined client-profile__breadcrumb-separator">chevron_right</span>
-          <span className="client-profile__breadcrumb-current">{data.client.name}</span>
-        </nav>
-        
-        <div className="client-profile__title-row">
-          <div className="client-profile__name-group">
-            <h1 className="client-profile__title">{data.client.name}</h1>
-            <div className="client-profile__subtitle">
-              <span>{t('receivables.profile.client_id')}: #{data.client.id}</span>
-              <span className="status-pill status-pill--success">
-                {t('receivables.profile.status.active')}
-              </span>
+    <div className="space-y-8">
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        {/* Header & Breadcrumbs */}
+        <div className="flex flex-col gap-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink onClick={() => navigate('/receivables')} className="cursor-pointer text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 hover:text-primary transition-colors">
+                  {t('receivables.breadcrumb.home')}
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="opacity-20" />
+              <BreadcrumbItem>
+                <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">{t('receivables.breadcrumb.clients')}</span>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="opacity-20" />
+              <BreadcrumbItem>
+                <span className="text-[10px] font-black uppercase tracking-widest text-text-main">{data.client.name}</span>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
+              <div className="size-16 rounded-xl bg-blue-50 flex items-center justify-center text-primary font-black text-2xl shadow-sm border border-blue-100">
+                {data.client.name?.charAt(0)}
+              </div>
+              <div className="space-y-1">
+                <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">{data.client.name}</h1>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-text-secondary opacity-60 uppercase tracking-widest">{t('receivables.profile.client_id')}: #{data.client.id}</span>
+                  <Badge className="bg-success text-white px-3 py-0.5 text-[10px] font-black uppercase tracking-widest">
+                    {t('receivables.profile.status.active')}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="secondary" size="md" className="shadow-sm border-border-subtle bg-surface font-black uppercase tracking-widest text-[11px]">
+                <span className="material-symbols-outlined text-[18px] mr-2">edit_note</span>
+                <span>{t('receivables.profile.actions.add_note')}</span>
+              </Button>
+              <Button variant="secondary" size="md" className="shadow-sm border-error/20 bg-white text-error hover:bg-red-50 font-black uppercase tracking-widest text-[11px]">
+                <span className="material-symbols-outlined text-[18px] mr-2">block</span>
+                <span>{t('receivables.profile.actions.suspend_credit')}</span>
+              </Button>
+              <Button variant="primary" size="md" className="shadow-md font-black uppercase tracking-widest text-[11px]">
+                <Download size={18} className="mr-2" />
+                <span>{t('receivables.profile.actions.export')}</span>
+              </Button>
             </div>
           </div>
-          <div className="client-profile__actions">
-            <Button variant="outline">
-              <span className="material-symbols-outlined">edit_note</span>
-              <span>{t('receivables.profile.actions.add_note')}</span>
-            </Button>
-            <Button variant="outline" className="text-danger">
-              <span className="material-symbols-outlined">block</span>
-              <span>{t('receivables.profile.actions.suspend_credit')}</span>
-            </Button>
-            <Button variant="primary">
-              <span className="material-symbols-outlined">download</span>
-              <span>{t('receivables.profile.actions.export')}</span>
-            </Button>
-          </div>
         </div>
-      </header>
 
-      {/* Dashboard Content Grid */}
-      <div className="client-profile__main-grid">
-        {/* Left Column: Risk & Info */}
-        <aside className="client-profile__left-col">
-          <RiskGauge 
-            score={data.risk.score} 
-            level={data.risk.level} 
-            recommendation={data.risk.recommendation} 
-          />
-          <ClientInfoList 
-            address={data.client.address}
-            contact={data.client.contact}
-            phone={data.client.phone}
-            rep={data.client.rep}
-            taxId={data.client.taxId}
-          />
-        </aside>
+        <DashboardNav />
 
-        {/* Right Column: Metrics & Data */}
-        <main className="client-profile__right-col">
-          <KPIStatsGrid metrics={data.metrics} />
-          
-          <AgingBar 
-            aging={data.aging} 
-            totalAR={data.metrics.outstanding} 
-          />
+        {/* Dashboard Content Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 pb-10">
+          {/* Left Column: Risk & Info */}
+          <aside className="xl:col-span-1 space-y-8">
+            <RiskGauge 
+              score={data.risk.score} 
+              level={data.risk.level} 
+              recommendation={data.risk.recommendation} 
+            />
+            <ClientInfoList 
+              address={data.client.address}
+              contact={data.client.contact}
+              phone={data.client.phone}
+              rep={data.client.rep}
+              taxId={data.client.taxId}
+            />
+          </aside>
 
-          <InvoicesTable 
-            invoices={data.invoices} 
-            outstandingAmount={data.metrics.outstanding} 
-          />
-        </main>
+          {/* Right Column: Metrics & Data */}
+          <main className="xl:col-span-3 space-y-8">
+            <KPIStatsGrid metrics={data.metrics} />
+            
+            <AgingBar 
+              aging={data.aging} 
+              totalAR={data.metrics.outstanding} 
+            />
+
+            <InvoicesTable 
+              invoices={data.invoices} 
+              outstandingAmount={data.metrics.outstanding} 
+            />
+          </main>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { RefreshCw } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { formatPYG } from '@/utils/currencyUtils'
 import { receivablesService } from '@/services/receivablesService'
@@ -56,52 +57,47 @@ const OverdueSidebar = () => {
   }, [])
 
   return (
-    <aside className='overdue-accounts__sidebar'>
+    <aside className='flex flex-col gap-8 w-full xl:w-[400px]'>
       {/* Ranking de Deudores */}
-      <Card>
-        <CardHeader className='flex flex-row items-center justify-between border-b pb-3 mb-4'>
-          <CardTitle className='mb-0'>Principales Deudores</CardTitle>
-          <Button variant='ghost' size='icon'>
-            <span className='material-symbols-outlined'>more_horiz</span>
+      <div className='bg-surface rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col overflow-hidden'>
+        <div className='px-6 py-4 border-b border-border-subtle bg-slate-50/50 flex items-center justify-between'>
+          <h3 className='text-sm font-black text-text-main uppercase tracking-tight'>Principales Deudores</h3>
+          <Button variant='ghost' size='icon' className="size-8 rounded-full text-text-secondary">
+            <span className='material-symbols-outlined text-[18px]'>more_horiz</span>
           </Button>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className='p-6'>
           {loading ? (
-            <div className='flex items-center justify-center py-8'>
-              <div className='w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin'></div>
+            <div className='flex items-center justify-center py-12'>
+              <RefreshCw className='size-8 animate-spin text-primary opacity-50' />
             </div>
           ) : debtors.length === 0 ? (
-            <div className='text-center py-8 text-tertiary'>
-              <span className='material-symbols-outlined text-3xl mb-2'>
-                inbox
-              </span>
-              <p className='text-sm'>Sin deudores pendientes</p>
+            <div className='text-center py-12'>
+              <p className='text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60'>Sin deudores pendientes</p>
             </div>
           ) : (
-            <div className='debtor-list'>
+            <div className='space-y-6'>
               {debtors.map((debtor, i) => {
                 const widthPercent = Math.round(
                   (debtor.total_pending / maxAmount) * 100,
                 )
+                const behaviorColor = getColorByBehavior(debtor.payment_behavior, i);
                 return (
-                  <div key={debtor.client_id} className='debtor-list__item'>
-                    <div className='debtor-list__info'>
-                      <span className='debtor-list__name'>
+                  <div key={debtor.client_id} className='space-y-3 group cursor-pointer'>
+                    <div className='flex justify-between items-end'>
+                      <span className='text-xs font-black text-text-main uppercase tracking-tight group-hover:text-primary transition-colors'>
                         {i + 1}. {debtor.client_name}
                       </span>
-                      <span className='debtor-list__amount'>
+                      <span className='text-sm font-black text-text-main'>
                         {formatPYG(debtor.total_pending, { compact: true })}
                       </span>
                     </div>
-                    <div className='debtor-list__track'>
+                    <div className='h-1.5 w-full bg-slate-100 rounded-full overflow-hidden'>
                       <div
-                        className='debtor-list__fill'
+                        className='h-full rounded-full transition-all duration-1000'
                         style={{
                           width: `${widthPercent}%`,
-                          backgroundColor: getColorByBehavior(
-                            debtor.payment_behavior,
-                            i,
-                          ),
+                          backgroundColor: behaviorColor,
                         }}
                       ></div>
                     </div>
@@ -110,11 +106,11 @@ const OverdueSidebar = () => {
               })}
             </div>
           )}
-          <Button variant='link' block className='mt-5'>
+          <Button variant='ghost' className='w-full mt-6 h-11 text-[11px] font-black uppercase tracking-widest text-primary hover:bg-blue-50 border border-transparent hover:border-blue-100'>
             Ver Ranking Completo
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </aside>
   )
 }

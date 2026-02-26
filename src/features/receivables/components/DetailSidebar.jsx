@@ -14,117 +14,116 @@ const DetailSidebar = ({ client = {} }) => {
   const { t } = useI18n();
 
   return (
-    <div className="receivable-detail__sidebar">
+    <div className="flex flex-col gap-8">
       {/* Acciones Rápidas */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('receivables.detail.actions.title')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="receivable-detail__sidebar-actions">
-            <Button variant="primary" className="receivable-detail__sidebar-btn--large">
-              <CreditCard size={16} />
-              <span>{t('receivables.detail.actions.register_payment')}</span>
+      <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-6">
+        <h3 className="text-sm font-black text-text-main uppercase tracking-tight">{t('receivables.detail.actions.title')}</h3>
+        <div className="flex flex-col gap-3">
+          <Button variant="primary" size="lg" className="w-full h-12 shadow-md font-black uppercase tracking-widest text-xs">
+            <CreditCard size={18} className="mr-2" />
+            <span>{t('receivables.detail.actions.register_payment')}</span>
+          </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="secondary" size="md" className="h-11 bg-white border-border-subtle shadow-sm font-black uppercase tracking-widest text-[10px]">
+              <Send size={16} className="mr-2" />
+              <span>{t('receivables.detail.actions.reminder')}</span>
             </Button>
-            <div className="receivable-detail__sidebar-actions-grid">
-              <Button variant="secondary" className="receivable-detail__sidebar-btn">
-                <Send size={16} />
-                <span>{t('receivables.detail.actions.reminder')}</span>
-              </Button>
-              <Button variant="secondary" className="receivable-detail__sidebar-btn">
-                <Flag size={16} />
-                <span>{t('receivables.detail.actions.dispute')}</span>
-              </Button>
-            </div>
+            <Button variant="secondary" size="md" className="h-11 bg-white border-border-subtle shadow-sm font-black uppercase tracking-widest text-[10px]">
+              <Flag size={16} className="mr-2" />
+              <span>{t('receivables.detail.actions.dispute')}</span>
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Contacto del Cliente */}
-      <Card>
-        <CardHeader className="receivable-detail__contact-header">
-          <CardTitle>{t('receivables.detail.contact.title')}</CardTitle>
-          <Button variant="ghost" size="sm" className="receivable-detail__edit-btn">
+      <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-black text-text-main uppercase tracking-tight">{t('receivables.detail.contact.title')}</h3>
+          <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary hover:text-primary">
             <Pencil size={14} />
-            <span>{t('action.edit', 'Editar')}</span>
           </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="receivable-detail__contact-profile">
-            <Avatar size={40} color="brand">
-              <AvatarFallback>{client.contact?.charAt(0) || client.name?.charAt(0) || '?'}</AvatarFallback>
-            </Avatar>
-            <div className="receivable-detail__contact-details">
-              <p className="receivable-detail__contact-name">{client.contact || client.name}</p>
-              <p className="receivable-detail__contact-role">Billing Manager</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="size-12 rounded-lg bg-blue-50 flex items-center justify-center text-primary font-black text-lg shadow-sm border border-blue-100">
+            {client.contact?.charAt(0) || client.name?.charAt(0) || '?'}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-black text-text-main truncate">{client.contact || client.name}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">Billing Manager</p>
+          </div>
+        </div>
+
+        <div className="h-px bg-border-subtle opacity-50"></div>
+
+        <div className="space-y-4">
+          {client.email && (
+            <div className="flex items-center gap-3 text-sm font-medium text-text-secondary group cursor-pointer hover:text-primary transition-colors">
+              <Mail size={16} className="opacity-60" />
+              <a href={`mailto:${client.email}`} className="truncate">{client.email}</a>
             </div>
-          </div>
-
-          <Separator className="receivable-detail__sidebar-separator" />
-
-          <div className="receivable-detail__contact-info">
-            {client.email && (
-              <div className="receivable-detail__contact-row">
-                <Mail size={16} />
-                <a href={`mailto:${client.email}`} className="receivable-detail__contact-link">{client.email}</a>
-              </div>
-            )}
-            {client.phone && (
-              <div className="receivable-detail__contact-row">
-                <Phone size={16} />
-                <a href={`tel:${client.phone}`}>{client.phone}</a>
-              </div>
-            )}
-            {client.address && (
-              <div className="receivable-detail__contact-row">
-                <MapPin size={16} />
-                <span className="receivable-detail__contact-text">{client.address}</span>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          )}
+          {client.phone && (
+            <div className="flex items-center gap-3 text-sm font-medium text-text-secondary group cursor-pointer hover:text-primary transition-colors">
+              <Phone size={16} className="opacity-60" />
+              <a href={`tel:${client.phone}`}>{client.phone}</a>
+            </div>
+          )}
+          {client.address && (
+            <div className="flex items-start gap-3 text-sm font-medium text-text-secondary">
+              <MapPin size={16} className="opacity-60 mt-0.5" />
+              <span className="leading-tight">{client.address}</span>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Actividad y Notas */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('receivables.detail.activity.title')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="receivable-detail__activity-input">
-            <Textarea
-              placeholder={t('receivables.detail.activity.placeholder')}
-              rows={2}
-              className="activity-card__textarea"
-            />
-            <div className="receivable-detail__activity-submit">
-              <Button variant="primary" size="sm">
-                {t('receivables.detail.activity.post')}
-              </Button>
+      <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-6">
+        <h3 className="text-sm font-black text-text-main uppercase tracking-tight">{t('receivables.detail.activity.title')}</h3>
+        <div className="space-y-3">
+          <Textarea
+            placeholder={t('receivables.detail.activity.placeholder')}
+            className="min-h-[80px] bg-slate-50 border-border-subtle focus:bg-white transition-all text-sm font-medium placeholder:text-text-secondary placeholder:opacity-40"
+          />
+          <div className="flex justify-end">
+            <Button variant="primary" size="sm" className="px-4 h-9 font-black uppercase tracking-widest text-[10px] shadow-sm">
+              {t('receivables.detail.activity.post')}
+            </Button>
+          </div>
+        </div>
+
+        <div className="h-px bg-border-subtle opacity-50"></div>
+
+        <div className="space-y-6">
+          <div className="flex gap-4 group">
+            <div className="relative flex flex-col items-center">
+              <div className="size-2 rounded-full bg-primary mt-1.5 shadow-[0_0_0_4px_rgba(16,110,190,0.1)]"></div>
+              <div className="w-0.5 h-full bg-slate-100 absolute top-3.5 -bottom-6"></div>
+            </div>
+            <div className="space-y-1 pb-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">Hoy, 9:41 AM</p>
+              <p className="text-xs text-text-main font-medium leading-relaxed">
+                <strong className="text-primary">Sistema</strong> envió recordatorio automático vía Email.
+              </p>
             </div>
           </div>
-
-          <Separator className="receivable-detail__sidebar-separator" />
-
-          <div className="activity-card__timeline">
-            <div className="activity-card__item">
-              <div className="activity-card__item-content">
-                <p className="activity-card__item-date">Hoy, 9:41 AM</p>
-                <p className="activity-card__item-text"><strong>Sistema</strong> envió recordatorio automático vía Email.</p>
-              </div>
+          <div className="flex gap-4 group">
+            <div className="relative flex flex-col items-center">
+              <div className="size-2 rounded-full bg-blue-400 mt-1.5 shadow-[0_0_0_4px_rgba(96,165,250,0.1)]"></div>
             </div>
-            <div className="activity-card__item activity-card__item--primary">
-              <div className="activity-card__item-content">
-                <p className="activity-card__item-date">Ayer, 4:20 PM</p>
-                <div className="activity-card__item-note">
-                  <p className="activity-card__item-text">Llamé a Sarah. Confirmó que el cheque del saldo restante se enviará este viernes.</p>
-                  <p className="activity-card__item-author">- Tú</p>
-                </div>
+            <div className="space-y-2 pb-2">
+              <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">Ayer, 4:20 PM</p>
+              <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100/50">
+                <p className="text-xs text-text-main font-medium leading-relaxed italic">
+                  "Llamé a Sarah. Confirmó que el cheque del saldo restante se enviará este viernes."
+                </p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary text-right mt-2">— Tú</p>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

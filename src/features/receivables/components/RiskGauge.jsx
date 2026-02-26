@@ -9,44 +9,58 @@ import { useI18n } from '@/lib/i18n';
 const RiskGauge = ({ score, level, recommendation }) => {
   const { t } = useI18n();
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('receivables.risk.title')}</CardTitle>
-        <CardAction>
-          <Button variant="link" size="sm">
-            {t('receivables.risk.full_analysis')}
-          </Button>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <div className="risk-gauge">
-          <div className="risk-gauge__container">
-            <svg className="risk-gauge__svg" viewBox="0 0 36 36">
-              <path className="risk-gauge__bg-circle" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeWidth="3"></path>
-              <path className="risk-gauge__value-circle" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" strokeDasharray={`${score}, 100`} strokeLinecap="round" strokeWidth="3"></path>
-            </svg>
-            <div className="risk-gauge__score">
-              <span className="risk-gauge__score-value">{score}</span>
-              <span className="risk-gauge__score-label">{t('receivables.risk.score')}</span>
-            </div>
-          </div>
-          
-          <div className="risk-gauge__badge">
-            <span className="risk-gauge__badge-dot"></span>
-            {level}
-          </div>
+  const getRiskColor = (s) => {
+    if (s >= 80) return '#107c10'; // Success
+    if (s >= 50) return '#ffb900'; // Warning
+    return '#a4262c'; // Error
+  };
 
-          <div className="risk-gauge__recommendation">
-            <div className="risk-gauge__recommendation-header">
-              <span className="material-symbols-outlined">warning</span>
-              <p className="risk-gauge__recommendation-title">{t('receivables.risk.recommendation.title')}</p>
-            </div>
-            <p className="risk-gauge__recommendation-text">{recommendation}</p>
+  return (
+    <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-black text-text-main uppercase tracking-tight">{t('receivables.risk.title')}</h3>
+        <Button variant="ghost" size="sm" className="text-primary font-black uppercase tracking-widest text-[10px] hover:bg-blue-50">
+          {t('receivables.risk.full_analysis')}
+        </Button>
+      </div>
+      
+      <div className="flex flex-col items-center text-center space-y-4">
+        <div className="relative size-32">
+          <svg className="size-full transform -rotate-90" viewBox="0 0 36 36">
+            <circle className="text-slate-100" cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="3"></circle>
+            <circle 
+              className="transition-all duration-1000 ease-out" 
+              cx="18" cy="18" r="16" fill="none" 
+              stroke={getRiskColor(score)} 
+              strokeWidth="3" 
+              strokeDasharray={`${score}, 100`} 
+              strokeLinecap="round"
+            ></circle>
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-3xl font-black text-text-main tracking-tight">{score}</span>
+            <span className="text-[8px] font-black uppercase tracking-widest text-text-secondary opacity-60">{t('receivables.risk.score')}</span>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        
+        <div className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${
+          score >= 80 ? 'bg-green-50 text-success' : score >= 50 ? 'bg-amber-50 text-warning' : 'bg-red-50 text-error'
+        }`}>
+          <span className={`size-2 rounded-full animate-pulse ${
+            score >= 80 ? 'bg-success' : score >= 50 ? 'bg-warning' : 'bg-error'
+          }`}></span>
+          {level}
+        </div>
+
+        <div className="w-full p-4 rounded-lg bg-slate-50 border border-border-subtle/50 space-y-2">
+          <div className="flex items-center gap-2 text-primary">
+            <span className="material-symbols-outlined text-[18px]">lightbulb</span>
+            <p className="text-[10px] font-black uppercase tracking-widest">{t('receivables.risk.recommendation.title')}</p>
+          </div>
+          <p className="text-xs text-text-secondary leading-relaxed text-left font-medium">{recommendation}</p>
+        </div>
+      </div>
+    </div>
   );
 };
 

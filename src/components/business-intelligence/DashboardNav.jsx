@@ -108,7 +108,7 @@ const DashboardNav = () => {
   };
 
   return (
-    <nav className="dashboard-nav dashboard-nav__list">
+    <nav className="flex items-center gap-1 border-b border-border-subtle mb-8 overflow-x-auto pb-px scrollbar-hide">
       {navItems.map((item) => {
         const Icon = item.icon;
         const active = isActive(item.path);
@@ -117,12 +117,18 @@ const DashboardNav = () => {
           <button
             key={item.id}
             onClick={() => handleNavigation(item.path, item.label)}
-            className={`dashboard-nav__item ${active ? 'dashboard-nav__item--active' : ''}`}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap group ${
+              active 
+                ? 'text-primary font-bold' 
+                : 'text-text-secondary hover:text-primary'
+            }`}
             aria-current={active ? 'page' : undefined}
           >
-            <Icon size={18} className="dashboard-nav__icon" />
-            <span className="dashboard-nav__label">{item.label}</span>
-            {active && <div className="dashboard-nav__indicator" />}
+            <Icon size={18} className={`${active ? 'text-primary' : 'text-text-secondary group-hover:text-primary'} transition-colors`} />
+            <span>{item.label}</span>
+            {active && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full shadow-[0_0_8px_rgba(16,110,190,0.4)]" />
+            )}
           </button>
         );
       })}

@@ -43,26 +43,26 @@ const MasterListTable = ({
 
   const getStatusVariant = (statusColor) => {
     const colorMap = {
-      red: 'destructive',
-      yellow: 'warning',
-      blue: 'info',
-      green: 'success',
-      gray: 'secondary'
+      red: 'bg-error text-white',
+      yellow: 'bg-warning text-black',
+      blue: 'bg-info text-white',
+      green: 'bg-success text-white',
+      gray: 'bg-slate-100 text-slate-700'
     };
-    return colorMap[statusColor] || 'secondary';
+    return colorMap[statusColor] || 'bg-slate-100 text-slate-700';
   };
 
   return (
-    <div className="rec-grid-container">
-      <div className="rec-grid-toolbar">
-        <div className="rec-grid-toolbar__info">
-          {t('common.pagination.showing', 'Mostrando')} <strong>{startItem}-{endItem}</strong> {t('common.pagination.of', 'de')} <strong>{totalItems || safeInvoices.length}</strong> items
+    <div className="bg-surface rounded-xl border border-border-subtle overflow-hidden shadow-sm flex flex-col">
+      <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70">
+          {t('common.pagination.showing', 'Mostrando')} <strong className="text-text-main">{startItem}-{endItem}</strong> {t('common.pagination.of', 'de')} <strong className="text-text-main">{totalItems || safeInvoices.length}</strong> items
         </div>
-        <div className="rec-grid-toolbar__actions">
-          <Button variant="ghost" size="icon" title="Actualizar" onClick={onRefresh}>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="size-9 rounded-full text-text-secondary hover:text-primary hover:bg-blue-50" title="Actualizar" onClick={onRefresh}>
             <RefreshCw className="size-4" />
           </Button>
-          <Button variant="ghost" size="icon" title="Columnas">
+          <Button variant="ghost" size="icon" className="size-9 rounded-full text-text-secondary hover:text-primary hover:bg-blue-50" title="Columnas">
             <Columns className="size-4" />
           </Button>
         </div>
@@ -70,16 +70,23 @@ const MasterListTable = ({
 
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12"><input type="checkbox" className="fluent-checkbox" /></TableHead>
+          <TableHeader className="bg-slate-50/30">
+            <TableRow className="hover:bg-transparent border-border-subtle">
+              <TableHead className="w-12 text-center">
+                <input type="checkbox" className="rounded-sm border-slate-300" />
+              </TableHead>
               {SORTABLE_COLUMNS.map((col) => (
-                <TableHead key={col.key} className={col.align || ''}>
+                <TableHead key={col.key} className={`${col.align || ''} text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary`}>
                   <div
-                    className="cursor-pointer select-none hover:text-foreground transition-colors"
+                    className="cursor-pointer select-none hover:text-primary transition-colors flex items-center gap-1"
                     onClick={() => onSort?.(col.key)}
                   >
                     {t(col.label)}
+                    {sortBy === col.key && (
+                      <span className="material-symbols-outlined text-[14px]">
+                        {sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                      </span>
+                    )}
                   </div>
                 </TableHead>
               ))}
@@ -89,27 +96,31 @@ const MasterListTable = ({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-8">
-                  {t('receivables.loading.generic')}
+                <TableCell colSpan={9} className="text-center py-12">
+                  <div className="flex flex-col items-center gap-3">
+                    <RefreshCw className="size-8 animate-spin text-primary opacity-50" />
+                    <p className="text-xs font-black uppercase tracking-widest text-text-secondary opacity-60">{t('receivables.loading.generic')}</p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (
               safeInvoices.map((inv) => (
-                <TableRow key={inv.id}>
-                  <TableCell><input type="checkbox" className="fluent-checkbox" /></TableCell>
+                <TableRow key={inv.id} className="group hover:bg-slate-50 transition-colors border-border-subtle">
+                  <TableCell className="text-center">
+                    <input type="checkbox" className="rounded-sm border-slate-300" />
+                  </TableCell>
                   <TableCell>
-                    <a
-                      href="#"
-                      className="text-primary font-medium hover:underline"
+                    <button
+                      className="text-sm font-black text-primary hover:underline uppercase tracking-tight"
                       onClick={(e) => { e.preventDefault(); navigate(`/receivables/detail/${inv.id}`); }}
                     >
                       #{inv.id}
-                    </a>
+                    </button>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <div
-                        className="size-6 rounded-full flex items-center justify-center text-[10px] font-bold"
+                        className="size-8 rounded-lg flex items-center justify-center text-[10px] font-black"
                         style={{
                           backgroundColor: inv.clientColor || '#eff6ff',
                           color: '#1d4ed8'
@@ -117,20 +128,20 @@ const MasterListTable = ({
                       >
                         {inv.clientInitial || inv.clientName?.charAt(0)}
                       </div>
-                      <span className="font-medium">{inv.clientName}</span>
+                      <span className="text-sm font-bold text-text-main group-hover:text-primary transition-colors">{inv.clientName}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-secondary">{inv.issueDate}</TableCell>
-                  <TableCell className="text-secondary">{inv.dueDate}</TableCell>
-                  <TableCell className="text-secondary text-right font-mono">{formatPYG(inv.originalAmt)}</TableCell>
-                  <TableCell className="text-right font-mono font-bold">{formatPYG(inv.pendingAmt)}</TableCell>
+                  <TableCell className="text-xs font-black uppercase tracking-widest text-text-secondary">{inv.issueDate}</TableCell>
+                  <TableCell className="text-xs font-black uppercase tracking-widest text-text-secondary">{inv.dueDate}</TableCell>
+                  <TableCell className="text-right px-6 text-sm font-black text-text-main opacity-60">{formatPYG(inv.originalAmt)}</TableCell>
+                  <TableCell className="text-right px-6 text-sm font-black text-text-main">{formatPYG(inv.pendingAmt)}</TableCell>
                   <TableCell className="text-center">
-                    <Badge variant={getStatusVariant(inv.statusColor)}>
+                    <Badge className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest ${getStatusVariant(inv.statusColor)}`}>
                       {inv.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary opacity-0 group-hover:opacity-100 transition-all hover:bg-slate-200">
                       <MoreHorizontal className="size-4" />
                     </Button>
                   </TableCell>
@@ -141,36 +152,38 @@ const MasterListTable = ({
         </Table>
       </div>
 
-      <div className="rec-pagination">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="px-6 py-4 bg-slate-50/50 border-t border-border-subtle flex items-center justify-between">
+        <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-text-secondary">
           <span>{t('receivables.master.pagination.rows_per_page')}</span>
           <Select value={String(pageSize)} onValueChange={(val) => onPageSizeChange?.(val)}>
-            <SelectTrigger className="rec-pagination__select-trigger">
+            <SelectTrigger className="h-8 min-w-[70px] border-border-subtle bg-white text-[10px] font-black">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="10" className="text-[10px] font-black">10</SelectItem>
+              <SelectItem value="20" className="text-[10px] font-black">20</SelectItem>
+              <SelectItem value="50" className="text-[10px] font-black">50</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
+        <div className="flex items-center gap-6">
+          <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">
             {t('receivables.master.pagination.page_info', { page, total: totalPages || 1 })}
           </span>
-          <div className="flex items-center">
+          <div className="flex items-center gap-1">
             <Button
-              variant="ghost"
+              variant="secondary"
               size="icon"
+              className="size-8 rounded-lg border border-border-subtle bg-white disabled:opacity-30"
               disabled={page <= 1}
               onClick={() => onPageChange?.(page - 1)}
             >
               <ChevronLeft className="size-4" />
             </Button>
             <Button
-              variant="ghost"
+              variant="secondary"
               size="icon"
+              className="size-8 rounded-lg border border-border-subtle bg-white disabled:opacity-30"
               disabled={page >= totalPages}
               onClick={() => onPageChange?.(page + 1)}
             >
