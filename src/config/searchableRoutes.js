@@ -125,10 +125,10 @@ export const distinctSearchableRoutes = [
     category: 'BI / Reportes Financieros'
   },
   {
-    name: 'Gestión de IVA y Resumen Fiscal',
+    name: 'Gestión de IVA, Resumen Fiscal y Formulario 120',
     href: '/finance/tax-management',
     icon: FileText,
-    category: 'BI / Reportes Financieros'
+    category: 'Finanzas / Impuestos'
   },
   
   // Gestión de Usuarios y Perfil
