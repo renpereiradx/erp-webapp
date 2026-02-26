@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
 import useSupplierDirectoryStore from '@/store/useSupplierDirectoryStore'
+import { Button } from '@/components/ui/button'
 
 const EMPTY_FORM = {
   name: '',
@@ -181,20 +182,24 @@ const SupplierDirectoryFormModal = ({ isOpen, onClose, supplier = null }) => {
   if (!isOpen) return null
 
   return (
-    <div className='dialog-overlay' onClick={handleClose}>
+    <div 
+      className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity' 
+      onClick={handleClose}
+    >
       <div
-        className='dialog dialog--medium'
+        className='w-full max-w-xl bg-white rounded-xl shadow-fluent-16 overflow-hidden flex flex-col animate-in zoom-in-95 duration-200'
         onClick={event => event.stopPropagation()}
       >
-        <div className='dialog__header'>
-          <h2 className='dialog__title'>
+        {/* Header */}
+        <div className='flex items-center justify-between p-6 border-b border-[#d1d1d1]'>
+          <h2 className='text-xl font-black text-[#323130] uppercase tracking-tighter'>
             {isEditMode
               ? t('supplier.form.title.edit', 'Editar proveedor')
               : t('supplier.form.title.create', 'Nuevo proveedor')}
           </h2>
           <button
             type='button'
-            className='dialog__close'
+            className='p-2 text-[#616161] hover:bg-[#f3f4f6] hover:text-[#323130] rounded-md transition-all'
             onClick={handleClose}
             aria-label={t('action.close', 'Cerrar')}
             disabled={isSubmitting}
@@ -203,20 +208,19 @@ const SupplierDirectoryFormModal = ({ isOpen, onClose, supplier = null }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className='dialog__content'>
-          <div className='form-field-group form-field-group--grid-2'>
-            <div className='form-field'>
-              <label htmlFor='name' className='form-field__label'>
+        {/* Content */}
+        <form onSubmit={handleSubmit} className='p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-200px)] custom-scrollbar'>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div className='space-y-2'>
+              <label htmlFor='name' className='text-[10px] font-black text-[#616161] uppercase tracking-widest block'>
                 {t('supplier.form.field.name', 'Nombre del proveedor')}{' '}
-                <span className='form-field__required'>*</span>
+                <span className='text-[#a4262c]'>*</span>
               </label>
               <input
                 id='name'
                 name='name'
                 type='text'
-                className={`form-field__input ${
-                  errors.name ? 'form-field__input--error' : ''
-                }`}
+                className={`w-full h-10 px-3 bg-white border ${errors.name ? 'border-[#a4262c] ring-1 ring-[#a4262c]' : 'border-[#d1d1d1]'} rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none`}
                 value={formData.name}
                 onChange={handleChange}
                 disabled={isSubmitting}
@@ -227,22 +231,20 @@ const SupplierDirectoryFormModal = ({ isOpen, onClose, supplier = null }) => {
                 autoFocus
               />
               {errors.name && (
-                <span className='form-field__error'>{errors.name}</span>
+                <span className='text-[10px] font-bold text-[#a4262c] uppercase'>{errors.name}</span>
               )}
             </div>
 
-            <div className='form-field'>
-              <label htmlFor='taxId' className='form-field__label'>
+            <div className='space-y-2'>
+              <label htmlFor='taxId' className='text-[10px] font-black text-[#616161] uppercase tracking-widest block'>
                 {t('supplier.form.field.taxId', 'RFC / Tax ID')}{' '}
-                <span className='form-field__required'>*</span>
+                <span className='text-[#a4262c]'>*</span>
               </label>
               <input
                 id='taxId'
                 name='taxId'
                 type='text'
-                className={`form-field__input ${
-                  errors.taxId ? 'form-field__input--error' : ''
-                }`}
+                className={`w-full h-10 px-3 bg-white border ${errors.taxId ? 'border-[#a4262c] ring-1 ring-[#a4262c]' : 'border-[#d1d1d1]'} rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none`}
                 value={formData.taxId}
                 onChange={handleChange}
                 disabled={isSubmitting}
@@ -252,23 +254,21 @@ const SupplierDirectoryFormModal = ({ isOpen, onClose, supplier = null }) => {
                 )}
               />
               {errors.taxId && (
-                <span className='form-field__error'>{errors.taxId}</span>
+                <span className='text-[10px] font-bold text-[#a4262c] uppercase'>{errors.taxId}</span>
               )}
             </div>
           </div>
 
-          <div className='form-field-group form-field-group--grid-2'>
-            <div className='form-field'>
-              <label htmlFor='contactEmail' className='form-field__label'>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div className='space-y-2'>
+              <label htmlFor='contactEmail' className='text-[10px] font-black text-[#616161] uppercase tracking-widest block'>
                 {t('supplier.form.field.email', 'Correo de contacto')}
               </label>
               <input
                 id='contactEmail'
                 name='contactEmail'
                 type='email'
-                className={`form-field__input ${
-                  errors.contactEmail ? 'form-field__input--error' : ''
-                }`}
+                className={`w-full h-10 px-3 bg-white border ${errors.contactEmail ? 'border-[#a4262c] ring-1 ring-[#a4262c]' : 'border-[#d1d1d1]'} rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none`}
                 value={formData.contactEmail}
                 onChange={handleChange}
                 disabled={isSubmitting}
@@ -278,19 +278,19 @@ const SupplierDirectoryFormModal = ({ isOpen, onClose, supplier = null }) => {
                 )}
               />
               {errors.contactEmail && (
-                <span className='form-field__error'>{errors.contactEmail}</span>
+                <span className='text-[10px] font-bold text-[#a4262c] uppercase'>{errors.contactEmail}</span>
               )}
             </div>
 
-            <div className='form-field'>
-              <label htmlFor='contactPhone' className='form-field__label'>
+            <div className='space-y-2'>
+              <label htmlFor='contactPhone' className='text-[10px] font-black text-[#616161] uppercase tracking-widest block'>
                 {t('supplier.form.field.phone', 'Teléfono de contacto')}
               </label>
               <input
                 id='contactPhone'
                 name='contactPhone'
                 type='text'
-                className='form-field__input'
+                className='w-full h-10 px-3 bg-white border border-[#d1d1d1] rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none'
                 value={formData.contactPhone}
                 onChange={handleChange}
                 disabled={isSubmitting}
@@ -302,14 +302,14 @@ const SupplierDirectoryFormModal = ({ isOpen, onClose, supplier = null }) => {
             </div>
           </div>
 
-          <div className='form-field'>
-            <label htmlFor='contactAddress' className='form-field__label'>
+          <div className='space-y-2'>
+            <label htmlFor='contactAddress' className='text-[10px] font-black text-[#616161] uppercase tracking-widest block'>
               {t('supplier.form.field.address', 'Dirección')}
             </label>
             <textarea
               id='contactAddress'
               name='contactAddress'
-              className='form-field__textarea'
+              className='w-full p-3 bg-white border border-[#d1d1d1] rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none resize-none'
               value={formData.contactAddress}
               onChange={handleChange}
               disabled={isSubmitting}
@@ -322,21 +322,25 @@ const SupplierDirectoryFormModal = ({ isOpen, onClose, supplier = null }) => {
           </div>
 
           {errors.submit && (
-            <div className='dialog__error'>{errors.submit}</div>
+            <div className='p-3 bg-[#a4262c]/10 border-l-4 border-[#a4262c] rounded text-[#a4262c] text-xs font-bold uppercase'>
+              {errors.submit}
+            </div>
           )}
 
-          <div className='dialog__footer'>
-            <button
+          {/* Footer */}
+          <div className='flex items-center justify-end gap-3 pt-6 border-t border-[#f3f4f6]'>
+            <Button
+              variant="outline"
               type='button'
-              className='btn btn--secondary'
+              className='px-5 py-2'
               onClick={handleClose}
               disabled={isSubmitting}
             >
               {t('action.cancel', 'Cancelar')}
-            </button>
-            <button
+            </Button>
+            <Button
               type='submit'
-              className='btn btn--primary'
+              className='px-5 py-2 bg-[#106ebe] hover:bg-[#005a9e] text-white font-black uppercase text-xs'
               disabled={isSubmitting}
             >
               {isSubmitting
@@ -344,7 +348,7 @@ const SupplierDirectoryFormModal = ({ isOpen, onClose, supplier = null }) => {
                 : isEditMode
                 ? t('action.save_changes', 'Guardar cambios')
                 : t('action.create', 'Crear')}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

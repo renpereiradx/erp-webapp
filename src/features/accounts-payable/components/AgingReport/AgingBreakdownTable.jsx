@@ -195,27 +195,27 @@ const AgingBreakdownTable = ({
         </p>
         <div className='flex items-center gap-2'>
           <button
-            className='p-2 border border-slate-200 dark:border-slate-700 rounded disabled:opacity-50 transition-opacity'
+            className='p-2 border border-slate-200 dark:border-slate-700 rounded-xl disabled:opacity-50 transition-opacity'
             disabled
           >
             <span className='material-icons-round text-sm'>chevron_left</span>
           </button>
           <div className='flex items-center gap-1'>
-            <button className='px-2.5 md:px-3 py-1 bg-[#137fec] text-white rounded text-xs md:text-sm font-bold shadow-sm'>
+            <button className='px-2.5 md:px-3 py-1 bg-[#137fec] text-white rounded-xl text-xs md:text-sm font-bold shadow-sm'>
               1
             </button>
-            <button className='px-2.5 md:px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-xs md:text-sm font-medium transition-colors'>
+            <button className='px-2.5 md:px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs md:text-sm font-medium transition-colors'>
               2
             </button>
-            <button className='px-2.5 md:px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-xs md:text-sm font-medium transition-colors'>
+            <button className='px-2.5 md:px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs md:text-sm font-medium transition-colors'>
               3
             </button>
             <span className='px-1 text-slate-400 font-medium text-xs'>...</span>
-            <button className='hidden xs:block px-2.5 md:px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-xs md:text-sm font-medium transition-colors'>
+            <button className='hidden xs:block px-2.5 md:px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs md:text-sm font-medium transition-colors'>
               15
             </button>
           </div>
-          <button className='p-2 border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 transition-colors'>
+          <button className='p-2 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 transition-colors'>
             <span className='material-icons-round text-sm'>chevron_right</span>
           </button>
         </div>

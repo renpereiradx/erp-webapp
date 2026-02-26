@@ -4,10 +4,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { Keyboard, RotateCcw, Edit2, Check, X } from 'lucide-react'
+import { Keyboard, RotateCcw, Edit2, Check, X, Info } from 'lucide-react'
 import useKeyboardShortcutsStore from '@/store/useKeyboardShortcutsStore'
 import { useI18n } from '@/lib/i18n'
-import '@/styles/scss/components/_keyboard-shortcuts.scss'
+import { Button } from '@/components/ui/button'
 
 const KeyboardShortcuts = () => {
   const { t } = useI18n()
@@ -123,37 +123,39 @@ const KeyboardShortcuts = () => {
   }
 
   return (
-    <div className="keyboard-shortcuts">
-      <div className="keyboard-shortcuts__header">
-        <div className="keyboard-shortcuts__header-content">
-          <Keyboard className="keyboard-shortcuts__icon" size={20} />
+    <div className="bg-white">
+      <div className="p-6 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-sm">
+            <Keyboard size={20} />
+          </div>
           <div>
-            <h3 className="keyboard-shortcuts__title">
+            <h3 className="text-sm font-black uppercase tracking-widest text-text-main">
               {t('settings.shortcuts.title', 'Atajos de Teclado')}
             </h3>
-            <p className="keyboard-shortcuts__description">
+            <p className="text-[11px] text-text-secondary font-medium">
               {t('settings.shortcuts.description', 'Personaliza los atajos de teclado para navegar más rápido.')}
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          className="btn btn--ghost btn--sm"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={resetAllShortcuts}
-          title={t('settings.shortcuts.reset_all', 'Restaurar todos')}
+          className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary hover:bg-primary/5"
         >
-          <RotateCcw size={16} />
-          <span>{t('settings.shortcuts.reset_all', 'Restaurar todos')}</span>
-        </button>
+          <RotateCcw size={14} className="mr-2" />
+          {t('settings.shortcuts.reset_all', 'Restaurar todos')}
+        </Button>
       </div>
 
-      <div className="keyboard-shortcuts__categories">
+      <div className="p-6 space-y-8">
         {Object.entries(categories).map(([categoryKey, category]) => (
-          <div key={categoryKey} className="keyboard-shortcuts__category">
-            <h4 className="keyboard-shortcuts__category-title">
+          <div key={categoryKey} className="space-y-4">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">
               {getCategoryLabel(categoryKey)}
             </h4>
-            <ul className="keyboard-shortcuts__list">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {category.shortcuts.map((shortcutId) => {
                 const shortcut = shortcuts[shortcutId]
                 if (!shortcut) return null
@@ -161,69 +163,72 @@ const KeyboardShortcuts = () => {
                 const isEditing = editingShortcut === shortcutId
 
                 return (
-                  <li key={shortcutId} className="keyboard-shortcuts__item">
-                    <span className="keyboard-shortcuts__label">
+                  <div key={shortcutId} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/30 hover:border-primary/20 transition-colors group">
+                    <span className="text-xs font-bold text-text-main">
                       {getShortcutLabel(shortcutId)}
                     </span>
 
-                    <div className="keyboard-shortcuts__actions">
+                    <div className="flex items-center gap-2">
                       {isEditing ? (
-                        <>
-                          <kbd className="keyboard-shortcuts__kbd keyboard-shortcuts__kbd--editing">
+                        <div className="flex items-center gap-1.5">
+                          <kbd className="px-2 py-1 rounded bg-primary text-white text-[10px] font-black shadow-sm animate-pulse">
                             {formatRecordingKeys(recordingKeys)}
                           </kbd>
-                          <button
-                            type="button"
-                            className="btn btn--icon btn--ghost btn--sm"
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 rounded-lg text-success hover:bg-success/10"
                             onClick={saveShortcut}
                             disabled={!recordingKeys?.key}
-                            title={t('action.save', 'Guardar')}
                           >
                             <Check size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn--icon btn--ghost btn--sm"
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 rounded-lg text-slate-400 hover:bg-slate-100"
                             onClick={cancelEditing}
-                            title={t('action.cancel', 'Cancelar')}
                           >
                             <X size={14} />
-                          </button>
-                        </>
+                          </Button>
+                        </div>
                       ) : (
-                        <>
-                          <kbd className="keyboard-shortcuts__kbd">
+                        <div className="flex items-center gap-1.5">
+                          <kbd className="px-2 py-1 rounded bg-white border border-slate-200 text-slate-600 text-[10px] font-black shadow-sm group-hover:border-primary/30 transition-colors">
                             {formatShortcut(shortcutId)}
                           </kbd>
-                          <button
-                            type="button"
-                            className="btn btn--icon btn--ghost btn--sm"
-                            onClick={() => startEditing(shortcutId)}
-                            title={t('action.edit', 'Editar')}
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn--icon btn--ghost btn--sm"
-                            onClick={() => handleResetShortcut(shortcutId)}
-                            title={t('settings.shortcuts.reset', 'Restaurar')}
-                          >
-                            <RotateCcw size={14} />
-                          </button>
-                        </>
+                          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 rounded-lg text-slate-400 hover:text-primary"
+                              onClick={() => startEditing(shortcutId)}
+                            >
+                              <Edit2 size={14} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 rounded-lg text-slate-400 hover:text-orange-500"
+                              onClick={() => handleResetShortcut(shortcutId)}
+                            >
+                              <RotateCcw size={14} />
+                            </Button>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  </li>
+                  </div>
                 )
               })}
-            </ul>
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="keyboard-shortcuts__footer">
-        <p className="keyboard-shortcuts__hint">
+      <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-50 flex items-center gap-2">
+        <Info size={14} className="text-primary" />
+        <p className="text-[10px] font-medium text-text-secondary italic">
           {t('settings.shortcuts.hint', 'Haz clic en el icono de editar y presiona la combinación de teclas deseada.')}
         </p>
       </div>

@@ -12,7 +12,6 @@ import useDashboardStore from '@/store/useDashboardStore'
 import { productService } from '@/services/productService'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
-import '../styles/scss/pages/_inventory-management.scss'
 
 // Iconos de Lucide React
 import {

@@ -36,14 +36,22 @@ export default function ClientDetailsModal({ isOpen, onClose, client }) {
   };
 
   return (
-    <div className="dialog-overlay" onClick={onClose}>
-      <div className="dialog dialog--medium" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity"
+      onClick={onClose}
+    >
+      <div 
+        className="w-full max-w-xl bg-white rounded-xl shadow-fluent-16 overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="dialog__header">
-          <h2 className="dialog__title">{t('clients.modal.title.details', 'Detalles del Cliente')}</h2>
+        <div className="flex items-center justify-between p-6 border-b border-[#d1d1d1]">
+          <h2 className="text-xl font-black text-[#323130] uppercase tracking-tighter">
+            {t('clients.modal.title.details', 'Detalles del Cliente')}
+          </h2>
           <button
             type="button"
-            className="dialog__close"
+            className="p-2 text-[#616161] hover:bg-[#f3f4f6] hover:text-[#323130] rounded-md transition-all"
             onClick={onClose}
             aria-label={t('action.close', 'Cerrar')}
           >
@@ -52,71 +60,91 @@ export default function ClientDetailsModal({ isOpen, onClose, client }) {
         </div>
 
         {/* Content */}
-        <div className="dialog__content">
-          <div className="client-details">
-            {/* First Row - ID and Status */}
-            <div className="client-details__row">
-              <div className="client-details__field">
-                <span className="client-details__label">{t('clients.modal.field.id', 'ID')}</span>
-                <span className="client-details__value">{client.id || '-'}</span>
-              </div>
-              <div className="client-details__field">
-                <span className="client-details__label">{t('clients.modal.field.status', 'Estado')}</span>
-                <span className="client-details__value">
-                  <span className={`badge badge--${client.status ? 'success' : 'default'}`}>
-                    {client.status 
-                      ? t('clients.status.active', 'Activo') 
-                      : t('clients.status.inactive', 'Inactivo')
-                    }
-                  </span>
+        <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-200px)] custom-scrollbar">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* ID */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
+                {t('clients.modal.field.id', 'ID')}
+              </span>
+              <span className="text-sm font-mono font-bold text-[#323130]">{client.id || '-'}</span>
+            </div>
+
+            {/* Status */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
+                {t('clients.modal.field.status', 'Estado')}
+              </span>
+              <div>
+                <span className={`inline-flex items-center px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-widest ${
+                  client.status 
+                    ? 'bg-[#dff6dd] text-[#107c10]' 
+                    : 'bg-[#f3f4f6] text-[#616161]'
+                }`}>
+                  {client.status 
+                    ? t('clients.status.active', 'Activo') 
+                    : t('clients.status.inactive', 'Inactivo')
+                  }
                 </span>
               </div>
             </div>
 
-            {/* Second Row - Name and Last Name */}
-            <div className="client-details__row">
-              <div className="client-details__field">
-                <span className="client-details__label">{t('clients.modal.field.name', 'Nombre')}</span>
-                <span className="client-details__value">{client.name || '-'}</span>
-              </div>
-              <div className="client-details__field">
-                <span className="client-details__label">{t('clients.modal.field.last_name', 'Apellido')}</span>
-                <span className="client-details__value">{client.last_name || '-'}</span>
-              </div>
+            {/* Name */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
+                {t('clients.modal.field.name', 'Nombre')}
+              </span>
+              <span className="text-sm font-bold text-[#323130]">{client.name || '-'}</span>
             </div>
 
-            {/* Third Row - Document ID and Contact */}
-            <div className="client-details__row">
-              <div className="client-details__field">
-                <span className="client-details__label">{t('clients.modal.field.document', 'Documento de Identidad')}</span>
-                <span className="client-details__value">{client.document_id || '-'}</span>
-              </div>
-              <div className="client-details__field">
-                <span className="client-details__label">{t('clients.modal.field.contact', 'Contacto')}</span>
-                <span className="client-details__value">
-                  {client.contact?.email || client.contact?.phone || client.contact?.raw || '-'}
-                </span>
-              </div>
+            {/* Last Name */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
+                {t('clients.modal.field.last_name', 'Apellido')}
+              </span>
+              <span className="text-sm font-bold text-[#323130]">{client.last_name || '-'}</span>
             </div>
 
-            {/* Fourth Row - Created By and Created At */}
-            <div className="client-details__row">
-              <div className="client-details__field">
-                <span className="client-details__label">{t('clients.modal.field.created_by', 'Creado Por (ID Usuario)')}</span>
-                <span className="client-details__value">{client.user_id || '-'}</span>
-              </div>
-              <div className="client-details__field">
-                <span className="client-details__label">{t('clients.modal.field.created_at', 'Fecha de Creación')}</span>
-                <span className="client-details__value">{formatDate(client.created_at)}</span>
-              </div>
+            {/* Document ID */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
+                {t('clients.modal.field.document', 'Documento de Identidad')}
+              </span>
+              <span className="text-sm font-mono font-bold text-[#323130]">{client.document_id || '-'}</span>
+            </div>
+
+            {/* Contact */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
+                {t('clients.modal.field.contact', 'Contacto')}
+              </span>
+              <span className="text-sm font-medium text-[#323130]">
+                {client.contact?.email || client.contact?.phone || client.contact?.raw || '-'}
+              </span>
+            </div>
+
+            {/* Created By */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
+                {t('clients.modal.field.created_by', 'Creado Por (ID Usuario)')}
+              </span>
+              <span className="text-sm font-bold text-[#323130]">{client.user_id || '-'}</span>
+            </div>
+
+            {/* Created At */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-[#616161] uppercase tracking-[0.15em] block">
+                {t('clients.modal.field.created_at', 'Fecha de Creación')}
+              </span>
+              <span className="text-sm font-bold text-[#323130]">{formatDate(client.created_at)}</span>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="dialog__footer dialog__footer--single">
+          <div className="flex items-center justify-center pt-8 border-t border-[#f3f4f6]">
             <button
               type="button"
-              className="btn btn--secondary"
+              className="px-10 py-2 border border-[#d1d1d1] text-[#323130] text-xs font-bold uppercase rounded shadow-sm hover:bg-[#f3f4f6] active:scale-[0.98] transition-all"
               onClick={onClose}
             >
               {t('action.close', 'Cerrar')}

@@ -55,7 +55,6 @@ import {
   BanIcon,
   WalletIcon,
 } from 'lucide-react'
-import '@/styles/scss/pages/_cash-movements.scss'
 
 const CashMovements = () => {
   const { t } = useI18n()

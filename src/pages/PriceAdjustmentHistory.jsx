@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import DataState from '@/components/ui/DataState'
 import { priceAdjustmentService } from '@/services/priceAdjustmentService'
-import '@/styles/scss/pages/_price-adjustment-history.scss'
 
 const PriceAdjustmentHistory = () => {
   const { t } = useI18n()

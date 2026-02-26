@@ -22,24 +22,31 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-
-// MOCK_USERS removed in favor of store data
+import { 
+  Search, 
+  Plus, 
+  Filter, 
+  ChevronDown, 
+  Download, 
+  MoreVertical, 
+  Eye, 
+  Edit, 
+  Trash2,
+  Calendar,
+  CheckCircle,
+  MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
+} from 'lucide-react';
 
 export default function UserManagementList() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { 
-    users, 
-    roles,
-    pagination, 
-    loading, 
-    fetchUsers, 
-    fetchRoles,
-    setPage, 
-    setPageSize,
-    filters,
-    setFilters,
-    deleteUser
+    users, roles, pagination, loading, fetchUsers, fetchRoles,
+    setPage, setPageSize, filters, setFilters, deleteUser
   } = useUserStore();
   
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -53,11 +60,7 @@ export default function UserManagementList() {
   }, []);
 
   const toggleSelect = (id) => {
-    if (selectedUsers.includes(id)) {
-      setSelectedUsers(selectedUsers.filter(userId => userId !== id));
-    } else {
-      setSelectedUsers([...selectedUsers, id]);
-    }
+    setSelectedUsers(prev => prev.includes(id) ? prev.filter(userId => userId !== id) : [...prev, id]);
   };
 
   const selectedCount = selectedUsers.length;
@@ -73,327 +76,194 @@ export default function UserManagementList() {
     }
   };
 
-  const handleCreateUser = async (userData) => {
-    // Logic handled in modal
-  };
-
   const handleSelectAll = (checked) => {
-    if (checked) {
-       setSelectedUsers(users.map(u => u.id));
-    } else {
-       setSelectedUsers([]);
-    }
+    setSelectedUsers(checked ? users.map(u => u.id) : []);
   };
 
   return (
-    <div className="user-management">
-      {/* Main Content */}
-      <div className="user-management__content">
-        {/* Header Content moved here */}
-        <div className="user-management__header-row">
-          <div className="user-management__header-title">
-            <h2>{t('users.title')}</h2>
-            <Badge variant="secondary" style={{ border: 'none' }}>{pagination.total_items} {t('users.total')}</Badge>
+    <div className="min-h-screen bg-background-light p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+      
+      {/* Page Header */}
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="flex flex-col gap-1 border-l-4 border-primary pl-4">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">{t('users.title')}</h1>
+            <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase tracking-wider h-5 px-2">{pagination.total_items} {t('users.total')}</Badge>
           </div>
-          <div className="user-management__header-actions">
-            <div className="user-management__search-bar">
-              <span className="material-symbols-outlined text-secondary text-xl">search</span>
-              <input 
-                placeholder={t('users.searchPlaceholder')} 
-                type="text" 
-                value={filters.search}
-                onChange={(e) => setFilters({ search: e.target.value })}
-              />
-            </div>
-            <div className="user-management__header-buttons">
-              <Button variant="subtle" size="icon">
-                <span className="material-symbols-outlined">notifications</span>
-              </Button>
-              <Button variant="primary" size="lg" onClick={() => setIsCreateModalOpen(true)}>
-                <span className="material-symbols-outlined text-lg">person_add</span>
-                <span>{t('users.addUser')}</span>
-              </Button>
-            </div>
-          </div>
+          <p className="text-text-secondary text-sm font-medium mt-1">Administra accesos, roles y seguridad de la plataforma.</p>
         </div>
+        
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="h-11 border-border-subtle font-bold uppercase text-[11px] tracking-widest bg-white">
+            <Download size={18} className="mr-2 text-slate-400" />{t('users.export')}
+          </Button>
+          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest px-6 h-11">
+            <Plus size={18} className="mr-2" />{t('users.addUser')}
+          </Button>
+        </div>
+      </header>
 
-        {/* Command Bar / Toolbar */}
-        <div className="user-management__toolbar">
-          <div className="user-management__filter-group">
+      {/* Toolbar & Filters */}
+      <div className="bg-white p-4 rounded-xl border border-border-subtle shadow-fluent-2 space-y-4">
+        <div className="flex flex-col xl:flex-row xl:items-center gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
+            <input 
+              className="w-full h-11 pl-10 pr-4 rounded-lg border border-border-subtle bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-primary/20 transition-all outline-none text-sm font-medium"
+              placeholder={t('users.searchPlaceholder')} 
+              type="text" 
+              value={filters.search}
+              onChange={(e) => setFilters({ search: e.target.value })}
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="h-auto">
-                  <span className="material-symbols-outlined text-lg">filter_list</span>
-                  <span>{filters.role_id ? (roles.find(r => r.id === filters.role_id)?.name || t('users.filterRole')) : t('users.filterRole')}</span>
-                  <span className="material-symbols-outlined text-sm">expand_more</span>
+                <Button variant="outline" className="h-11 border-border-subtle bg-white text-xs font-bold uppercase tracking-wider text-text-secondary hover:text-primary">
+                  <Filter className="size-4 mr-2" />
+                  {filters.role_id ? (roles.find(r => r.id === filters.role_id)?.name) : t('users.filterRole')}
+                  <ChevronDown className="size-3 ml-2 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setFilters({ role_id: '' })}>
-                  {t('users.filterRole')} (Todos)
-                </DropdownMenuItem>
+              <DropdownMenuContent align="start" className="w-56 rounded-xl shadow-fluent-16">
+                <DropdownMenuItem className="text-xs font-bold uppercase tracking-wider" onClick={() => setFilters({ role_id: '' })}>{t('users.filterRole')} (Todos)</DropdownMenuItem>
+                <DropdownMenuSeparator />
                 {roles.map(role => (
-                  <DropdownMenuItem key={role.id} onClick={() => setFilters({ role_id: role.id })}>
-                    {role.name}
-                  </DropdownMenuItem>
+                  <DropdownMenuItem key={role.id} className="text-xs font-medium" onClick={() => setFilters({ role_id: role.id })}>{role.name}</DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="h-auto">
-                    <span className="material-symbols-outlined text-lg">check_circle</span>
-                    <span>{filters.status ? t(`users.status.${filters.status}`) : t('users.filterStatus')}</span>
-                    <span className="material-symbols-outlined text-sm text-primary">expand_more</span>
-                  </Button>
+                <Button variant="outline" className="h-11 border-border-subtle bg-white text-xs font-bold uppercase tracking-wider text-text-secondary hover:text-primary">
+                  <CheckCircle className="size-4 mr-2" />
+                  {filters.status ? t(`users.status.${filters.status}`) : t('users.filterStatus')}
+                  <ChevronDown className="size-3 ml-2 opacity-50" />
+                </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setFilters({ status: '' })}>
-                  {t('users.filterStatus')} (Todos)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilters({ status: 'active' })}>
-                  {t('users.status.active')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilters({ status: 'inactive' })}>
-                  {t('users.status.inactive')}
-                </DropdownMenuItem>
+              <DropdownMenuContent align="start" className="w-48 rounded-xl shadow-fluent-16">
+                <DropdownMenuItem className="text-xs font-bold uppercase tracking-wider" onClick={() => setFilters({ status: '' })}>{t('users.filterStatus')} (Todos)</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-xs font-medium" onClick={() => setFilters({ status: 'active' })}>{t('users.status.active')}</DropdownMenuItem>
+                <DropdownMenuItem className="text-xs font-medium" onClick={() => setFilters({ status: 'inactive' })}>{t('users.status.inactive')}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="outline" className="h-auto">
-              <span className="material-symbols-outlined text-lg">calendar_today</span>
-              <span>{t('users.filterLastActive')}</span>
-              <span className="material-symbols-outlined text-sm">expand_more</span>
-            </Button>
-            <div className="h-6 w-px bg-subtle mx-2"></div>
-            <Button variant="text" className="h-auto px-0 font-bold hover:underline" onClick={() => setFilters({ search: '', status: '', role_id: '' })}>{t('users.clearAll')}</Button>
-          </div>
-
-          <div className="user-management__action-group">
-            <Button variant="ghost" className="h-auto">
-              <span className="material-symbols-outlined text-lg">download</span>
-              <span>{t('users.export')}</span>
-            </Button>
-            <Button variant="ghost" size="icon" className="h-auto w-auto">
-              <span className="material-symbols-outlined text-lg">more_horiz</span>
-            </Button>
+            <Button variant="ghost" className="h-11 text-xs font-black text-slate-400 hover:text-primary uppercase tracking-widest px-4" onClick={() => setFilters({ search: '', status: '', role_id: '' })}>{t('users.clearAll')}</Button>
           </div>
         </div>
 
-        {/* Selected Actions Bar */}
+        {/* Multi-selection bar */}
         {selectedCount > 0 && (
-          <div className="user-management__selection-bar">
-            <div className="user-management__selection-actions">
-              <span className="text-sm font-semibold text-primary">{t('users.selectedUsers', { count: selectedCount })}</span>
-              <div className="h-4 w-px bg-primary opacity-20"></div>
-              <div className="user-management__selection-buttons">
-                <Button variant="secondary" size="sm">
-                  <span className="material-symbols-outlined text-base">check</span> {t('users.activate')}
-                </Button>
-                <Button variant="secondary" size="sm">
-                  <span className="material-symbols-outlined text-base">block</span> {t('users.deactivate')}
-                </Button>
-                <Button variant="destructive" size="sm">
-                  <span className="material-symbols-outlined text-base">delete</span> {t('users.delete')}
-                </Button>
+          <div className="p-2 bg-primary/5 border border-primary/10 rounded-lg flex items-center justify-between animate-in slide-in-from-top-2">
+            <div className="flex items-center gap-4 px-2">
+              <span className="text-xs font-black text-primary uppercase tracking-widest">{t('users.selectedUsers', { count: selectedCount })}</span>
+              <div className="w-px h-4 bg-primary/20"></div>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-primary hover:bg-primary/10">Activar</Button>
+                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100">Desactivar</Button>
+                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-error hover:bg-error/10">Eliminar</Button>
               </div>
             </div>
-            <button className="text-secondary hover:text-primary border-none bg-transparent cursor-pointer" onClick={() => setSelectedUsers([])}>
-              <span className="material-symbols-outlined text-xl">close</span>
-            </button>
+            <button className="p-1 hover:bg-primary/10 rounded-full text-primary" onClick={() => setSelectedUsers([])}><X size={16} /></button>
           </div>
         )}
+      </div>
 
-        {/* Data Grid */}
-        <div className="user-management__grid-container">
-          <div className="user-management__grid-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12 text-center h-auto">
-                    <input 
-                      className="user-management__checkbox" 
-                      type="checkbox" 
-                      checked={selectedCount > 0 && selectedCount === users.length}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                    />
-                  </TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.table.user')}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.table.role')}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.table.status')}</TableHead>
-                  <TableHead className="text-xs font-bold uppercase tracking-wider h-auto">{t('users.table.lastActive')}</TableHead>
-                  <TableHead className="w-20 h-auto"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                    <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">Loading...</TableCell>
-                    </TableRow>
-                ) : users.map((user) => (
-                  <TableRow 
-                    key={user.id} 
-                    className={selectedUsers.includes(user.id) ? "fluent-grid-selected" : ""} 
-                    aria-selected={selectedUsers.includes(user.id)}
-                  >
-                    <TableCell className="text-center">
-                      <input 
-                        className="user-management__checkbox" 
-                        type="checkbox" 
-                        checked={selectedUsers.includes(user.id)}
-                        onChange={() => toggleSelect(user.id)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="user-management__user-cell">
-                        <Avatar size={32}>
-                          {user.avatar_url && !user.avatar_url.includes('example.com') && (
-                            <AvatarImage src={user.avatar_url} alt={user.first_name} />
-                          )}
-                          <AvatarFallback>
-                            {user.first_name && user.last_name 
-                              ? `${user.first_name[0]}${user.last_name[0]}` 
-                              : user.first_name ? user.first_name[0] : null}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="user-management__user-info">
-                          <p className="user-management__user-name">{user.first_name} {user.last_name}</p>
-                          <p className="user-management__user-email text-xs text-muted-foreground">@{user.username} • {user.email}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                      {user.roles?.map(role => (
-                          <Badge key={role.id} variant={role.id === "admin" ? "subtle-info" : "subtle-primary"}>
-                            {role.name}
-                          </Badge>
-                      ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className={`user-management__status ${user.status === 'active' ? 'user-management__status--active' : 'user-management__status--inactive'}`}>
-                        {user.status === 'active' ? t('users.status.active') : t('users.status.inactive')}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-secondary">
-                        {user.last_login_at 
-                            ? new Date(user.last_login_at).toLocaleDateString() 
-                            : 'Never'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="size-8">
-                            <span className="material-symbols-outlined text-secondary">more_vert</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem onClick={() => navigate(`/usuarios/${user.id}`)}>
-                            <span className="material-symbols-outlined mr-2 text-sm">visibility</span>
-                            {t('users.actions.view')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditClick(user)}>
-                            <span className="material-symbols-outlined mr-2 text-sm">edit</span>
-                            {t('users.actions.edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => handleDeleteClick(user)}
-                          >
-                            <span className="material-symbols-outlined mr-2 text-sm">delete</span>
-                            {t('users.actions.delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+      {/* Data Grid */}
+      <div className="overflow-hidden rounded-xl border border-border-subtle bg-white shadow-fluent-2">
+        <Table>
+          <TableHeader className="bg-gray-50/50">
+            <TableRow>
+              <TableHead className="w-12 px-6 text-center"><input type="checkbox" className="rounded border-slate-300 text-primary" checked={selectedCount > 0 && selectedCount === users.length} onChange={(e) => handleSelectAll(e.target.checked)} /></TableHead>
+              <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 py-4 px-6">{t('users.table.user')}</TableHead>
+              <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 py-4 px-6">{t('users.table.role')}</TableHead>
+              <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 py-4 px-6">{t('users.table.status')}</TableHead>
+              <TableHead className="text-[11px] font-black uppercase tracking-wider text-slate-500 py-4 px-6">{t('users.table.lastActive')}</TableHead>
+              <TableHead className="w-20 px-6 text-right"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow><TableCell colSpan={6} className="py-20 text-center text-slate-400 font-bold uppercase tracking-[0.2em] text-xs">Cargando Usuarios...</TableCell></TableRow>
+            ) : users.map((user) => (
+              <TableRow key={user.id} className={`hover:bg-slate-50 transition-colors group ${selectedUsers.includes(user.id) ? 'bg-primary/5' : ''}`}>
+                <TableCell className="px-6 text-center"><input type="checkbox" className="rounded border-slate-300 text-primary" checked={selectedUsers.includes(user.id)} onChange={() => toggleSelect(user.id)} /></TableCell>
+                <TableCell className="py-4 px-6">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="size-10 border-2 border-white shadow-sm ring-1 ring-slate-100">
+                      {user.avatar_url && <AvatarImage src={user.avatar_url} />}
+                      <AvatarFallback className="bg-primary/10 text-primary font-black text-xs">{user.first_name?.[0]}{user.last_name?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-bold text-text-main truncate leading-none">{user.first_name} {user.last_name}</span>
+                      <span className="text-[10px] text-text-secondary font-medium truncate mt-1">@{user.username} • {user.email}</span>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  <div className="flex flex-wrap gap-1">
+                    {user.roles?.map(role => (
+                      <Badge key={role.id} className={`border-none text-[9px] font-black uppercase tracking-wider h-5 ${role.id === "admin" ? "bg-indigo-50 text-indigo-600" : "bg-slate-100 text-slate-500"}`}>{role.name}</Badge>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${user.status === 'active' ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-500'}`}>
+                    <span className={`size-1.5 rounded-full ${user.status === 'active' ? 'bg-success' : 'bg-slate-400'}`}></span>
+                    {user.status === 'active' ? t('users.status.active') : t('users.status.inactive')}
+                  </span>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  <span className="text-xs font-bold text-slate-400">{user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : 'Nunca'}</span>
+                </TableCell>
+                <TableCell className="py-4 px-6 text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="size-8 text-slate-300 hover:text-primary group-hover:opacity-100 opacity-0 transition-opacity">
+                        <MoreVertical size={18} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-fluent-16">
+                      <DropdownMenuItem className="text-xs font-bold uppercase tracking-wider" onClick={() => navigate(`/usuarios/${user.id}`)}><Eye size={14} className="mr-2" />{t('users.actions.view')}</DropdownMenuItem>
+                      <DropdownMenuItem className="text-xs font-bold uppercase tracking-wider" onClick={() => handleEditClick(user)}><Edit size={14} className="mr-2" />{t('users.actions.edit')}</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-xs font-bold uppercase tracking-wider text-error focus:text-error focus:bg-error/5" onClick={() => handleDeleteClick(user)}><Trash2 size={14} className="mr-2" />{t('users.actions.delete')}</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
-          {/* Footer / Pagination */}
-          <div className="user-management__pagination">
-            <div className="user-management__pagination-info">
-              <span className="text-sm text-secondary">
-                {t('users.showing')} <span className="font-semibold text-primary">{(pagination.page - 1) * pagination.page_size + 1}-{Math.min(pagination.page * pagination.page_size, pagination.total_items)}</span> {t('users.of')} {pagination.total_items} {t('users.total').toLowerCase()}
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-secondary">{t('users.rowsPerPage')}</span>
-                <select 
-                    className="user-management__rows-select"
-                    value={pagination.page_size}
-                    onChange={(e) => setPageSize(parseInt(e.target.value))}
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div>
+        {/* Pagination */}
+        <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+            {t('users.showing')} <span className="text-text-main">{(pagination.page - 1) * pagination.page_size + 1}-{Math.min(pagination.page * pagination.page_size, pagination.total_items)}</span> {t('users.of')} {pagination.total_items} registros
+          </p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{t('users.rowsPerPage')}</span>
+              <select className="h-8 rounded border-border-subtle bg-white text-[10px] font-bold px-2" value={pagination.page_size} onChange={(e) => setPageSize(parseInt(e.target.value))}>
+                {[10, 20, 50, 100].map(v => <option key={v} value={v}>{v}</option>)}
+              </select>
             </div>
-            <div className="user-management__pagination-controls">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="size-9 text-secondary"
-                disabled={!pagination.has_prev}
-                onClick={() => setPage(1)}
-              >
-                <span className="material-symbols-outlined">first_page</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="size-9 text-secondary"
-                disabled={!pagination.has_prev}
-                onClick={() => setPage(pagination.page - 1)}
-              >
-                <span className="material-symbols-outlined">chevron_left</span>
-              </Button>
-              
-              <div className="flex gap-1 px-2 items-center text-sm font-medium">
-                {t('users.page')} {pagination.page} {t('users.of')} {pagination.total_pages}
-              </div>
-
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="size-9 text-secondary"
-                disabled={!pagination.has_next}
-                onClick={() => setPage(pagination.page + 1)}
-              >
-                <span className="material-symbols-outlined">chevron_right</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="size-9 text-secondary"
-                disabled={!pagination.has_next}
-                onClick={() => setPage(pagination.total_pages)}
-              >
-                <span className="material-symbols-outlined">last_page</span>
-              </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="icon" className="size-8 rounded-lg" disabled={!pagination.has_prev} onClick={() => setPage(1)}><ChevronsLeft size={14} /></Button>
+              <Button variant="outline" size="icon" className="size-8 rounded-lg" disabled={!pagination.has_prev} onClick={() => setPage(pagination.page - 1)}><ChevronLeft size={14} /></Button>
+              <div className="px-3 text-[10px] font-black uppercase tracking-widest">{t('users.page')} {pagination.page} / {pagination.total_pages}</div>
+              <Button variant="outline" size="icon" className="size-8 rounded-lg" disabled={!pagination.has_next} onClick={() => setPage(pagination.page + 1)}><ChevronRight size={14} /></Button>
+              <Button variant="outline" size="icon" className="size-8 rounded-lg" disabled={!pagination.has_next} onClick={() => setPage(pagination.total_pages)}><ChevronsRight size={14} /></Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Create User Modal */}
-      <CreateUserModal 
-        open={isCreateModalOpen} 
-        onOpenChange={setIsCreateModalOpen} 
-      />
-
-      {/* Edit User Modal */}
-      <EditUserModal 
-        user={userToEdit}
-        open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
-      />
+      <CreateUserModal open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen} />
+      <EditUserModal user={userToEdit} open={isEditModalOpen} onOpenChange={setIsEditModalOpen} />
     </div>
   );
 }

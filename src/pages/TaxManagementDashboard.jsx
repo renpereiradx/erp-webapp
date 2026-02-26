@@ -17,11 +17,11 @@ const TaxManagementDashboard = () => {
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-all text-slate-700 dark:text-slate-200">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all text-slate-700 dark:text-slate-200">
             <span className="material-symbols-outlined text-lg">file_download</span>
             Descargar Formulario 120
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg text-sm font-semibold hover:brightness-110 transition-all shadow-lg shadow-[#137fec]/20">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-xl text-sm font-semibold hover:brightness-110 transition-all shadow-lg shadow-[#137fec]/20">
             <span className="material-symbols-outlined text-lg">publish</span>
             Presentar Declaración
           </button>

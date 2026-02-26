@@ -20,7 +20,6 @@ import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
 import { clientService } from '@/services/clientService'
 import { useToast } from '@/hooks/useToast'
-import '@/styles/scss/pages/_sales-order-detail.scss'
 
 const SalesOrderDetail = () => {
   const { saleId } = useParams()

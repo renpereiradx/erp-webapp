@@ -8,7 +8,6 @@
 import React from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
-import '@/styles/scss/layouts/_price-adjustment-layout.scss';
 
 const PriceAdjustmentLayout = () => {
   const { t } = useI18n();

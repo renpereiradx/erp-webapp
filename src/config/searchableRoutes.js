@@ -130,6 +130,18 @@ export const distinctSearchableRoutes = [
     icon: FileText,
     category: 'Finanzas / Impuestos'
   },
+  {
+    name: 'Libros Legales de Ventas y Compras (Tax Compliance)',
+    href: '/finance/legal-books',
+    icon: FileText,
+    category: 'Finanzas / Impuestos'
+  },
+  {
+    name: 'Análisis de Rentabilidad y Márgenes por BI',
+    href: '/finance/profitability',
+    icon: BarChart3,
+    category: 'BI / Reportes Financieros'
+  },
   
   // Gestión de Usuarios y Perfil
   {

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Productos - Fluent ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .fluent-shadow { box-shadow: 0 2px 4px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.04); }
+        .sidebar-item-active { background-color: #dbeafe; color: #2563eb; }
+    </style>
+</head>
+<body class="bg-[#f3f4f6] text-[#323130] min-h-screen flex">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col hidden lg:flex">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-10 h-10 bg-[#004e8c] rounded-full flex items-center justify-center text-white font-bold text-xs">Fluent</div>
+            <div>
+                <h1 class="font-semibold text-sm leading-none">Fluent ERP</h1>
+                <p class="text-[11px] text-gray-500 mt-1">Admin Portal</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 px-3 space-y-1">
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Panel
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold sidebar-item-active rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                Productos
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                Pedidos
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 01-9-3.843M19 6.75a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path></svg>
+                Clientes
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Analítica
+            </a>
+        </nav>
+
+        <div class="p-3 border-t border-gray-100 space-y-1">
+            <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Configuración
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Ayuda y Soporte
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8 overflow-y-auto">
+        <!-- Breadcrumbs -->
+        <nav class="flex text-sm text-gray-500 mb-6">
+            <span class="hover:text-blue-600 cursor-pointer">Inicio</span>
+            <span class="mx-2">/</span>
+            <span class="font-semibold text-gray-800">Productos</span>
+        </nav>
+
+        <!-- Header Section -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold tracking-tight text-[#242424]">Gestión de Productos</h2>
+            <p class="text-[#616161] mt-1">Gestione, filtre y vea todos los productos del sistema.</p>
+        </div>
+
+        <!-- Filters and Actions -->
+        <div class="flex items-center justify-between mb-6 gap-4">
+            <div class="relative flex-1 max-w-xl">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </span>
+                <input type="text" placeholder="Buscar productos por nombre o SKU" class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+            </div>
+            
+            <div class="flex gap-2">
+                <button class="p-2.5 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                </button>
+                <button class="p-2.5 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                </button>
+                <button class="bg-[#106ebe] hover:bg-[#005a9e] text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Nuevo Producto
+                </button>
+            </div>
+        </div>
+
+        <!-- Products Table Card -->
+        <div class="bg-white border border-gray-200 rounded-xl fluent-shadow overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-[13px] text-gray-700 font-semibold border-b border-gray-100">
+                        <th class="py-4 px-6 w-10 text-center"><input type="checkbox" class="rounded border-gray-300"></th>
+                        <th class="py-4 px-4">Nombre del Producto</th>
+                        <th class="py-4 px-4">Categoría</th>
+                        <th class="py-4 px-4">Stock</th>
+                        <th class="py-4 px-4">Estado</th>
+                        <th class="py-4 px-4">Salud Financiera</th>
+                        <th class="py-4 px-4"></th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-[#242424]">
+                    <!-- Row 1 -->
+                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors group">
+                        <td class="py-4 px-6 text-center"><input type="checkbox" class="rounded border-gray-300"></td>
+                        <td class="py-4 px-4 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200 overflow-hidden">
+                                <img src="https://via.placeholder.com/40" alt="Surface" class="w-full h-full object-cover">
+                            </div>
+                            <span class="font-medium">Surface Pro 9</span>
+                        </td>
+                        <td class="py-4 px-4 text-gray-600">Electrónica</td>
+                        <td class="py-4 px-4 text-red-600 font-medium">5 (Bajo)</td>
+                        <td class="py-4 px-4">
+                            <span class="bg-[#dff6dd] text-[#107c10] px-3 py-1 rounded-full text-xs font-semibold">Activo</span>
+                        </td>
+                        <td class="py-4 px-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#107c10]"></span>
+                            Saludable
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <button class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg></button>
+                        </td>
+                    </tr>
+                    <!-- Row 2 -->
+                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                        <td class="py-4 px-6 text-center"><input type="checkbox" class="rounded border-gray-300"></td>
+                        <td class="py-4 px-4 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
+                                <img src="https://via.placeholder.com/40" alt="Office" class="w-full h-full object-cover">
+                            </div>
+                            <span class="font-medium">Office 365 Subscription</span>
+                        </td>
+                        <td class="py-4 px-4 text-gray-600">Software</td>
+                        <td class="py-4 px-4 font-medium">1,204</td>
+                        <td class="py-4 px-4">
+                            <span class="bg-[#dff6dd] text-[#107c10] px-3 py-1 rounded-full text-xs font-semibold">Activo</span>
+                        </td>
+                        <td class="py-4 px-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#107c10]"></span>
+                            Saludable
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <button class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg></button>
+                        </td>
+                    </tr>
+                    <!-- Row 3 -->
+                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                        <td class="py-4 px-6 text-center"><input type="checkbox" class="rounded border-gray-300"></td>
+                        <td class="py-4 px-4 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
+                                <img src="https://via.placeholder.com/40" alt="Mouse" class="w-full h-full object-cover">
+                            </div>
+                            <span class="font-medium">Ergonomic Mouse</span>
+                        </td>
+                        <td class="py-4 px-4 text-gray-600">Accesorios</td>
+                        <td class="py-4 px-4 font-medium">256</td>
+                        <td class="py-4 px-4">
+                            <span class="bg-[#fde7e9] text-[#a4262c] px-3 py-1 rounded-full text-xs font-semibold">Inactivo</span>
+                        </td>
+                        <td class="py-4 px-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#ffb900]"></span>
+                            En Riesgo
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <button class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg></button>
+                        </td>
+                    </tr>
+                    <!-- Row 4 -->
+                    <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                        <td class="py-4 px-6 text-center"><input type="checkbox" class="rounded border-gray-300"></td>
+                        <td class="py-4 px-4 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
+                                <img src="https://via.placeholder.com/40" alt="Monitor" class="w-full h-full object-cover">
+                            </div>
+                            <span class="font-medium">4K Monitor</span>
+                        </td>
+                        <td class="py-4 px-4 text-gray-600">Electrónica</td>
+                        <td class="py-4 px-4 font-medium">78</td>
+                        <td class="py-4 px-4">
+                            <span class="bg-[#dff6dd] text-[#107c10] px-3 py-1 rounded-full text-xs font-semibold">Activo</span>
+                        </td>
+                        <td class="py-4 px-4 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#107c10]"></span>
+                            Saludable
+                        </td>
+                        <td class="py-4 px-4 text-center">
+                            <button class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="px-6 py-4 flex items-center justify-between bg-[#fafafa]">
+                <p class="text-[13px] text-gray-500 font-medium">Mostrando 1 a 5 de 42 resultados</p>
+                <div class="flex items-center gap-4">
+                    <button class="p-1 hover:bg-gray-200 rounded text-gray-400 disabled:opacity-30"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg></button>
+                    <span class="text-sm font-semibold text-gray-700">1 / 9</span>
+                    <button class="p-1 hover:bg-gray-200 rounded text-gray-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

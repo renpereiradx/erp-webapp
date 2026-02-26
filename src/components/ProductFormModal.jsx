@@ -2,19 +2,13 @@ import { useState, useEffect } from 'react'
 import { useI18n } from '../lib/i18n'
 import useProductStore from '../store/useProductStore'
 import BusinessManagementAPI from '../services/BusinessManagementAPI'
-import { UNIT_CONFIGS, getGroupedUnitOptions } from '../constants/units'
+import { getGroupedUnitOptions } from '../constants/units'
+import { X, Save, Trash2, AlertTriangle, Package, Info, ChevronDown, CheckCircle2, Plus, RefreshCw } from 'lucide-react'
+import { Button } from './ui/button'
 
 /**
  * ProductFormModal Component
- *
- * Modal for creating and editing products following Fluent Design System 2
- * Handles validation and integrates with Zustand store
- * Supports PHYSICAL, SERVICE, and PRODUCTION product types
- *
- * @param {Object} props
- * @param {boolean} props.isOpen - Controls modal visibility
- * @param {Function} props.onClose - Callback when modal closes
- * @param {Object} props.product - Product to edit (null for create mode)
+ * Rediseñado con Tailwind CSS siguiendo fielmente Fluent Design System 2
  */
 export default function ProductFormModal({ isOpen, onClose, product = null }) {
   const { t } = useI18n()
@@ -32,7 +26,7 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
     barcode: '',
     brand: '',
     origin: '',
-    base_unit: 'unit', // Default to 'unit'
+    base_unit: 'unit',
   })
 
   const [errors, setErrors] = useState({})
@@ -42,176 +36,90 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
   const [categories, setCategories] = useState([])
   const [loadingCategories, setLoadingCategories] = useState(false)
 
-  // Load categories when modal opens
   useEffect(() => {
-    if (isOpen) {
-      loadCategories()
-    }
+    if (isOpen) loadCategories()
   }, [isOpen])
 
   const loadCategories = async () => {
     setLoadingCategories(true)
     try {
       const response = await apiClient.getCategories()
-
-      // La API devuelve { categories: [...] }
-      if (
-        response &&
-        response.categories &&
-        Array.isArray(response.categories)
-      ) {
-        setCategories(response.categories)
-      } else if (Array.isArray(response)) {
-        // Fallback: si devuelve array directo
-        setCategories(response)
-      } else if (response && response.data && Array.isArray(response.data)) {
-        // Fallback adicional: por si viene en response.data
-        setCategories(response.data)
-      } else {
-        setCategories([])
-      }
+      if (response && response.categories) setCategories(response.categories)
+      else if (Array.isArray(response)) setCategories(response)
+      else setCategories([])
     } catch (error) {
-      console.error('Error loading categories:', error)
       setCategories([])
     } finally {
       setLoadingCategories(false)
     }
   }
 
-  // Initialize form with product data in edit mode
   useEffect(() => {
     if (isOpen) {
       if (product) {
-        // El objeto product del search YA tiene todos los campos que necesitamos
-        // No necesitamos hacer otra llamada al API
-        const newFormData = {
+        setFormData({
           name: product.product_name || product.name || '',
-          category:
-            product.category_id?.toString() ||
-            product.id_category?.toString() ||
-            '',
+          category: product.category_id?.toString() || product.id_category?.toString() || '',
           productType: product.product_type || 'PHYSICAL',
           description: product.description || '',
           barcode: product.barcode || '',
           brand: product.brand || '',
           origin: product.origin || '',
           base_unit: product.base_unit || 'unit',
-        }
-
-        setFormData(newFormData)
+        })
       } else {
-        // Reset form for create mode
         setFormData({
-          name: '',
-          category: '',
-          productType: 'PHYSICAL',
-          description: '',
-          barcode: '',
-          brand: '',
-          origin: '',
-          base_unit: 'unit',
+          name: '', category: '', productType: 'PHYSICAL', description: '',
+          barcode: '', brand: '', origin: '', base_unit: 'unit',
         })
       }
       setErrors({})
     }
   }, [isOpen, product])
 
-  // Handle input changes
   const handleChange = e => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
-
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }))
-    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }))
   }
 
-  // Validate form
   const validate = () => {
     const newErrors = {}
-
-    if (!formData.name.trim()) {
-      newErrors.name = t('products.modal.error.name_required')
-    }
-
-    if (!formData.category) {
-      newErrors.category = t('products.modal.error.category_required')
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'La descripción es requerida'
-    }
-
-    if (formData.barcode && formData.barcode.length > 50) {
-      newErrors.barcode = t('products.modal.error.barcode_too_long')
-    }
-
-    if (formData.brand && formData.brand.length > 100) {
-      newErrors.brand = t('products.modal.error.brand_too_long')
-    }
-
+    if (!formData.name.trim()) newErrors.name = t('products.modal.error.name_required')
+    if (!formData.category) newErrors.category = t('products.modal.error.category_required')
+    if (!formData.description.trim()) newErrors.description = 'La descripción es requerida'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  // Handle form submission
   const handleSubmit = async e => {
     e.preventDefault()
-
-    if (!validate()) {
-      return
-    }
-
+    if (!validate()) return
     setIsSubmitting(true)
-
     try {
-      // Formato esperado por el backend (Swagger v3.0.0)
       const productData = {
         name: formData.name.trim(),
         category_id: parseInt(formData.category),
-        description: formData.description.trim(), // Requerido
+        description: formData.description.trim(),
         product_type: formData.productType,
+        barcode: formData.barcode?.trim() || undefined,
+        brand: formData.brand?.trim() || undefined,
+        origin: formData.origin || undefined,
+        base_unit: formData.base_unit || 'unit',
       }
-
-      // Campos opcionales - solo agregar si tienen valor
-      if (formData.barcode?.trim()) {
-        productData.barcode = formData.barcode.trim()
-      }
-      if (formData.brand?.trim()) {
-        productData.brand = formData.brand.trim()
-      }
-      if (formData.origin) {
-        productData.origin = formData.origin
-      }
-
-      // Siempre enviar base_unit (si no está, usar 'unit' como default seguro)
-      productData.base_unit = formData.base_unit || 'unit'
-
-      let response
-      // En modo edición, agregar state
-      if (isEditMode) {
-        productData.state = true // Siempre mantener activo al editar
-        // Usar product_id (del API financiero) o id (del API estándar)
-        const productId = product.product_id || product.id
-        response = await updateProduct(productId, productData)
-      } else {
-        response = await createProduct(productData)
-      }
-
+      const productId = product?.product_id || product?.id
+      if (isEditMode) await updateProduct(productId, productData)
+      else await createProduct(productData)
       onClose()
     } catch (error) {
-      console.error('Error saving product:', error)
-      // TODO: Show error notification
+      console.error(error)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // Handle delete
   const handleDelete = async () => {
     if (!isEditMode) return
-
     setIsDeleting(true)
     try {
       const productId = product.product_id || product.id
@@ -219,411 +127,259 @@ export default function ProductFormModal({ isOpen, onClose, product = null }) {
       setShowDeleteConfirm(false)
       onClose()
     } catch (error) {
-      console.error('Error deleting product:', error)
-      // TODO: Show error notification
+      console.error(error)
     } finally {
       setIsDeleting(false)
     }
   }
 
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = e => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose()
-      }
-    }
-
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [isOpen, onClose])
-
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [isOpen])
-
   if (!isOpen) return null
 
+  const labelClass = "text-xs font-semibold text-[#616161] mb-1.5 flex items-center gap-1 uppercase tracking-wider"
+  const inputClass = "w-full h-10 px-3 bg-white border border-[#d1d1d1] rounded-[4px] text-sm text-[#242424] outline-none focus:border-[#106ebe] focus:ring-[1px] focus:ring-[#106ebe] transition-all placeholder:text-[#bdbdbd]"
+  const selectClass = "w-full h-10 px-3 bg-white border border-[#d1d1d1] rounded-[4px] text-sm text-[#242424] outline-none focus:border-[#106ebe] focus:ring-[1px] focus:ring-[#106ebe] transition-all appearance-none cursor-pointer"
+
   return (
-    <div
-      className='product-form-modal__backdrop'
-      onClick={e => e.target === e.currentTarget && onClose()}
-      role='dialog'
-      aria-modal='true'
-      aria-labelledby='product-form-modal-title'
-    >
-      <div className='product-form-modal__container'>
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/30 backdrop-blur-[2px] animate-in fade-in duration-200">
+      <div 
+        className="bg-[#fafafa] rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-200"
+        onClick={e => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className='product-form-modal__header'>
-          <div className='product-form-modal__header-content'>
-            <h2
-              id='product-form-modal-title'
-              className='product-form-modal__title'
-            >
-              {isEditMode
-                ? t('products.modal.edit.title')
-                : t('products.modal.create.title')}
-            </h2>
-            <p className='product-form-modal__subtitle'>
-              {isEditMode
-                ? t('products.modal.edit.subtitle')
-                : t('products.modal.create.subtitle')}
-            </p>
+        <div className="px-8 py-5 border-b border-gray-200 flex items-center justify-between bg-white">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#eff6fc] rounded-lg flex items-center justify-center text-[#106ebe]">
+              {isEditMode ? <Package size={22} /> : <Plus size={22} />}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-[#242424] tracking-tight">
+                {isEditMode ? t('products.modal.edit.title') : t('products.modal.create.title')}
+              </h2>
+              <p className="text-[11px] text-[#616161] font-medium uppercase tracking-wide">
+                {isEditMode ? t('products.modal.edit.subtitle') : t('products.modal.create.subtitle')}
+              </p>
+            </div>
           </div>
-          <button
-            type='button'
-            className='product-form-modal__close-button'
-            onClick={onClose}
-            aria-label={t('products.modal.action.close')}
-          >
-            <svg width='20' height='20' viewBox='0 0 20 20' fill='currentColor'>
-              <path d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z' />
-            </svg>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-md text-gray-400 transition-colors">
+            <X size={20} />
           </button>
         </div>
 
-        {/* Body */}
-        <form onSubmit={handleSubmit}>
-          <div className='product-form-modal__body'>
-            <div className='product-form-modal__main-layout'>
-              {/* Main Column: Basic Info & Description */}
-              <div className='product-form-modal__main-column'>
-                <div className='product-form-modal__section'>
-                  <h3 className='product-form-modal__section-title'>
-                    {t('products.modal.section.product_info')}
-                  </h3>
-                  <div className='product-form-modal__form-grid'>
-                    {/* Product Name */}
-                    <div className='product-form-modal__form-field product-form-modal__form-field--full-width'>
-                      <label
-                        htmlFor='product-name'
-                        className='product-form-modal__label'
-                      >
-                        {t('products.modal.field.product_name')}
-                        <span className='product-form-modal__required'>*</span>
+        {/* Form Body */}
+        <div className="flex-1 overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+          <form id="product-form" onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Seccion Principal (Información Básica) */}
+              <div className="lg:col-span-2 space-y-8">
+                <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-2 mb-6 pb-2 border-b border-gray-50">
+                    <Info size={16} className="text-[#106ebe]" />
+                    <h3 className="text-sm font-bold text-[#242424] uppercase tracking-widest">{t('products.modal.section.product_info')}</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-6">
+                    {/* Nombre */}
+                    <div className="space-y-1">
+                      <label className={labelClass}>
+                        {t('products.modal.field.product_name')} <span className="text-red-500">*</span>
                       </label>
                       <input
-                        id='product-name'
-                        name='name'
-                        type='text'
-                        className='product-form-modal__input'
-                        placeholder={t(
-                          'products.modal.placeholder.product_name',
-                        )}
+                        name="name"
                         value={formData.name}
                         onChange={handleChange}
-                        aria-required='true'
-                        aria-invalid={!!errors.name}
+                        placeholder={t('products.modal.placeholder.product_name')}
+                        className={`${inputClass} ${errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                       />
-                      {errors.name && (
-                        <p
-                          className='product-form-modal__error-text'
-                          role='alert'
-                        >
-                          {errors.name}
-                        </p>
-                      )}
+                      {errors.name && <p className="text-[10px] text-red-600 font-bold mt-1">{errors.name}</p>}
                     </div>
 
-                    {/* Category */}
-                    <div className='product-form-modal__form-field'>
-                      <label
-                        htmlFor='product-category'
-                        className='product-form-modal__label'
-                      >
-                        {t('products.modal.field.category')}
-                        <span className='product-form-modal__required'>*</span>
-                      </label>
-                      <select
-                        id='product-category'
-                        name='category'
-                        className='product-form-modal__select'
-                        value={formData.category}
-                        onChange={handleChange}
-                        aria-required='true'
-                        aria-invalid={!!errors.category}
-                        disabled={loadingCategories}
-                      >
-                        <option value=''>
-                          {loadingCategories
-                            ? 'Cargando categorías...'
-                            : t('products.modal.placeholder.category')}
-                        </option>
-                        {categories.map(cat => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.category && (
-                        <p
-                          className='product-form-modal__error-text'
-                          role='alert'
-                        >
-                          {errors.category}
-                        </p>
-                      )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Categoria */}
+                      <div className="space-y-1 relative">
+                        <label className={labelClass}>
+                          {t('products.modal.field.category')} <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            name="category"
+                            value={formData.category}
+                            onChange={handleChange}
+                            className={`${selectClass} ${errors.category ? 'border-red-500' : ''}`}
+                            disabled={loadingCategories}
+                          >
+                            <option value="">{loadingCategories ? 'Cargando...' : t('products.modal.placeholder.category')}</option>
+                            {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                          </select>
+                          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        </div>
+                        {errors.category && <p className="text-[10px] text-red-600 font-bold mt-1">{errors.category}</p>}
+                      </div>
+
+                      {/* Tipo */}
+                      <div className="space-y-1 relative">
+                        <label className={labelClass}>{t('products.modal.field.product_type')}</label>
+                        <div className="relative">
+                          <select
+                            name="productType"
+                            value={formData.productType}
+                            onChange={handleChange}
+                            className={selectClass}
+                          >
+                            <option value="PHYSICAL">{t('products.type.physical')}</option>
+                            <option value="SERVICE">{t('products.type.service')}</option>
+                            <option value="PRODUCTION">MANUFACTURADO</option>
+                          </select>
+                          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Product Type */}
-                    <div className='product-form-modal__form-field'>
-                      <label
-                        htmlFor='product-type'
-                        className='product-form-modal__label'
-                      >
-                        {t('products.modal.field.product_type')}
-                      </label>
-                      <select
-                        id='product-type'
-                        name='productType'
-                        className='product-form-modal__select'
-                        value={formData.productType}
-                        onChange={handleChange}
-                      >
-                        <option value='PHYSICAL'>
-                          {t('products.type.physical')}
-                        </option>
-                        <option value='SERVICE'>
-                          {t('products.type.service')}
-                        </option>
-                        <option value='PRODUCTION'>
-                          Producto Manufacturado
-                        </option>
-                      </select>
-                    </div>
-
-                    {/* Description */}
-                    <div className='product-form-modal__form-field product-form-modal__form-field--full-width'>
-                      <label
-                        htmlFor='product-description'
-                        className='product-form-modal__label'
-                      >
-                        {t('products.modal.field.description')}
-                        <span className='product-form-modal__required'>*</span>
+                    {/* Descripcion */}
+                    <div className="space-y-1">
+                      <label className={labelClass}>
+                        {t('products.modal.field.description')} <span className="text-red-500">*</span>
                       </label>
                       <textarea
-                        id='product-description'
-                        name='description'
-                        className='product-form-modal__textarea'
-                        style={{ minHeight: '120px' }}
-                        placeholder={t(
-                          'products.modal.placeholder.description',
-                        )}
+                        name="description"
                         value={formData.description}
                         onChange={handleChange}
-                        aria-required='true'
-                        aria-invalid={!!errors.description}
+                        rows={3}
+                        placeholder={t('products.modal.placeholder.description')}
+                        className={`${inputClass} h-auto py-2 resize-none ${errors.description ? 'border-red-500' : ''}`}
                       />
-                      {errors.description && (
-                        <p
-                          className='product-form-modal__error-text'
-                          role='alert'
-                        >
-                          {errors.description}
-                        </p>
-                      )}
+                      {errors.description && <p className="text-[10px] text-red-600 font-bold mt-1">{errors.description}</p>}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Side Column: Technical Details */}
-              <div className='product-form-modal__side-column'>
-                <div className='product-form-modal__section'>
-                  <h3 className='product-form-modal__section-title'>
-                    {t('products.modal.section.additional_details')}
-                  </h3>
-                  <div
-                    className='product-form-modal__form-grid'
-                    style={{ gridTemplateColumns: '1fr' }}
-                  >
-                    {/* Barcode */}
-                    <div className='product-form-modal__form-field'>
-                      <label
-                        htmlFor='product-barcode'
-                        className='product-form-modal__label'
-                      >
-                        {t('products.modal.field.barcode')}
-                      </label>
-                      <input
-                        id='product-barcode'
-                        name='barcode'
-                        type='text'
-                        className='product-form-modal__input'
-                        placeholder={t('products.modal.placeholder.barcode')}
-                        value={formData.barcode}
-                        onChange={handleChange}
+              {/* Sidebar (Detalles Técnicos) */}
+              <div className="lg:col-span-1 space-y-6">
+                <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm h-full">
+                  <div className="flex items-center gap-2 mb-6 pb-2 border-b border-gray-50 text-gray-600">
+                    <Package size={16} />
+                    <h3 className="text-sm font-bold uppercase tracking-widest">{t('products.modal.section.additional_details')}</h3>
+                  </div>
+
+                  <div className="space-y-5">
+                    <div className="space-y-1">
+                      <label className={labelClass}>{t('products.modal.field.barcode')}</label>
+                      <input name="barcode" value={formData.barcode} onChange={handleChange} placeholder="779..." className={inputClass} />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className={labelClass}>{t('products.modal.field.brand')}</label>
+                      <input name="brand" value={formData.brand} onChange={handleChange} placeholder="Marca..." className={inputClass} />
+                    </div>
+
+                    <div className="space-y-1 relative">
+                      <label className={labelClass}>{t('products.modal.field.origin')}</label>
+                      <div className="relative">
+                        <select name="origin" value={formData.origin} onChange={handleChange} className={selectClass}>
+                          <option value="">{t('products.modal.placeholder.origin')}</option>
+                          <option value="NACIONAL">{t('products.origin.national')}</option>
+                          <option value="IMPORTADO">{t('products.origin.imported')}</option>
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 relative">
+                      <label className={labelClass}>Unidad de Medida</label>
+                      <div className="relative">
+                        <select name="base_unit" value={formData.base_unit} onChange={handleChange} className={selectClass}>
+                          {getGroupedUnitOptions().map(group => (
+                            <optgroup key={group.label} label={group.label}>
+                              {group.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                            </optgroup>
+                          ))}
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Healthy Status Check (Visual Only) */}
+                  <div className="mt-8 pt-6 border-t border-gray-100 space-y-3">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      <span>Estado de completitud</span>
+                      <span className="text-[#107c10] flex items-center gap-1"><CheckCircle2 size={10} /> Auto-save</span>
+                    </div>
+                    <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-[#107c10] h-full transition-all duration-500" 
+                        style={{ width: `${(Object.values(formData).filter(v => v !== '').length / 8) * 100}%` }}
                       />
-                    </div>
-
-                    {/* Brand */}
-                    <div className='product-form-modal__form-field'>
-                      <label
-                        htmlFor='product-brand'
-                        className='product-form-modal__label'
-                      >
-                        {t('products.modal.field.brand')}
-                      </label>
-                      <input
-                        id='product-brand'
-                        name='brand'
-                        type='text'
-                        className='product-form-modal__input'
-                        placeholder={t('products.modal.placeholder.brand')}
-                        value={formData.brand}
-                        onChange={handleChange}
-                      />
-                    </div>
-
-                    {/* Origin */}
-                    <div className='product-form-modal__form-field'>
-                      <label
-                        htmlFor='product-origin'
-                        className='product-form-modal__label'
-                      >
-                        {t('products.modal.field.origin')}
-                      </label>
-                      <select
-                        id='product-origin'
-                        name='origin'
-                        className='product-form-modal__select'
-                        value={formData.origin}
-                        onChange={handleChange}
-                      >
-                        <option value=''>
-                          {t('products.modal.placeholder.origin')}
-                        </option>
-                        <option value='NACIONAL'>
-                          {t('products.origin.national')}
-                        </option>
-                        <option value='IMPORTADO'>
-                          {t('products.origin.imported')}
-                        </option>
-                      </select>
-                    </div>
-
-                    {/* Base Unit */}
-                    <div className='product-form-modal__form-field'>
-                      <label
-                        htmlFor='product-base-unit'
-                        className='product-form-modal__label'
-                      >
-                        Unidad de Medida
-                      </label>
-                      <select
-                        id='product-base-unit'
-                        name='base_unit'
-                        className='product-form-modal__select'
-                        value={formData.base_unit}
-                        onChange={handleChange}
-                      >
-                        {getGroupedUnitOptions().map(group => (
-                          <optgroup key={group.label} label={group.label}>
-                            {group.options.map(option => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </optgroup>
-                        ))}
-                      </select>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </form>
+        </div>
 
-          {/* Footer */}
-          <div className='product-form-modal__footer'>
-            <div className='product-form-modal__footer-left'>
-              {isEditMode && (
-                <button
-                  type='button'
-                  className='product-form-modal__button product-form-modal__button--danger'
-                  onClick={() => setShowDeleteConfirm(true)}
-                  disabled={isSubmitting || isDeleting}
-                >
-                  {t('products.modal.action.delete')}
-                </button>
-              )}
-            </div>
-            <div className='product-form-modal__footer-right'>
-              <button
-                type='button'
-                className='product-form-modal__button product-form-modal__button--secondary'
-                onClick={onClose}
+        {/* Footer */}
+        <div className="px-8 py-5 border-t border-gray-200 flex items-center justify-between bg-[#f3f2f1]">
+          <div>
+            {isEditMode && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-[#a4262c] hover:text-[#82191f] hover:bg-red-50 font-bold text-xs uppercase tracking-wider"
+                onClick={() => setShowDeleteConfirm(true)}
                 disabled={isSubmitting || isDeleting}
               >
-                {t('products.modal.action.cancel')}
-              </button>
-              <button
-                type='submit'
-                className='product-form-modal__button product-form-modal__button--primary'
-                disabled={isSubmitting || isDeleting}
-              >
-                {isSubmitting
-                  ? t('products.modal.action.saving')
-                  : t('products.modal.action.save')}
-              </button>
-            </div>
+                <Trash2 size={16} className="mr-2" />
+                {t('products.modal.action.delete')}
+              </Button>
+            )}
           </div>
-        </form>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting || isDeleting}
+              className="bg-white border-[#d1d1d1] text-[#323130] font-bold text-xs uppercase tracking-wider px-6 h-10 hover:bg-[#f3f2f1]"
+            >
+              {t('products.modal.action.cancel')}
+            </Button>
+            <Button
+              type="submit"
+              form="product-form"
+              disabled={isSubmitting || isDeleting}
+              className="bg-[#106ebe] hover:bg-[#005a9e] text-white font-bold text-xs uppercase tracking-wider px-8 h-10 shadow-lg shadow-blue-500/20"
+            >
+              {isSubmitting ? <RefreshCw size={16} className="animate-spin mr-2" /> : <Save size={16} className="mr-2" />}
+              {isSubmitting ? t('products.modal.action.saving') : t('products.modal.action.save')}
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation (Fluent Style) */}
       {showDeleteConfirm && (
-        <div className='product-form-modal__backdrop' style={{ zIndex: 1001 }}>
-          <div className='product-form-modal__dialog'>
-            <div className='product-form-modal__container product-form-modal__container--compact'>
-              <div className='product-form-modal__header'>
-                <h2 className='product-form-modal__title'>
-                  {t('products.modal.delete.title')}
-                </h2>
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8 animate-in zoom-in-95 border border-gray-200">
+            <div className="flex items-center gap-4 text-[#a4262c] mb-6">
+              <div className="p-3 bg-[#fde7e9] rounded-full">
+                <AlertTriangle size={28} />
               </div>
-
-              <div className='product-form-modal__body'>
-                <p className='product-form-modal__delete-message'>
-                  {t('products.modal.delete.message', {
-                    name: product?.product_name || product?.name || '',
-                  })}
-                </p>
-                <p className='product-form-modal__delete-warning'>
-                  {t('products.modal.delete.warning')}
-                </p>
-              </div>
-
-              <div className='product-form-modal__footer'>
-                <div className='product-form-modal__footer-right'>
-                  <button
-                    type='button'
-                    className='product-form-modal__button product-form-modal__button--secondary'
-                    onClick={() => setShowDeleteConfirm(false)}
-                    disabled={isDeleting}
-                  >
-                    {t('products.modal.action.cancel')}
-                  </button>
-                  <button
-                    type='button'
-                    className='product-form-modal__button product-form-modal__button--danger'
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting
-                      ? t('products.modal.action.deleting')
-                      : t('products.modal.action.confirmDelete')}
-                  </button>
-                </div>
-              </div>
+              <h2 className="text-xl font-bold tracking-tight">{t('products.modal.delete.title')}</h2>
+            </div>
+            <p className="text-sm text-[#242424] mb-2 leading-relaxed">
+              {t('products.modal.delete.message', { name: product?.product_name || product?.name || '' })}
+            </p>
+            <p className="text-xs text-[#616161] mb-8 italic">{t('products.modal.delete.warning')}</p>
+            <div className="flex items-center gap-3 justify-end">
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting} className="font-bold text-xs uppercase tracking-wider">
+                {t('products.modal.action.cancel')}
+              </Button>
+              <Button onClick={handleDelete} disabled={isDeleting} className="bg-[#a4262c] hover:bg-[#82191f] text-white font-bold text-xs uppercase tracking-wider">
+                {isDeleting ? <RefreshCw size={16} className="animate-spin mr-2" /> : <Trash2 size={16} className="mr-2" />}
+                {isDeleting ? t('products.modal.action.deleting') : t('products.modal.action.confirmDelete')}
+              </Button>
             </div>
           </div>
         </div>

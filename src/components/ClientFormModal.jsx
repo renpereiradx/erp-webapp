@@ -153,11 +153,17 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
   if (!isOpen) return null;
 
   return (
-    <div className="dialog-overlay" onClick={handleClose}>
-      <div className="dialog dialog--medium" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity"
+      onClick={handleClose}
+    >
+      <div 
+        className="w-full max-w-xl bg-white rounded-xl shadow-fluent-16 overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="dialog__header">
-          <h2 className="dialog__title">
+        <div className="flex items-center justify-between p-6 border-b border-[#d1d1d1]">
+          <h2 className="text-xl font-black text-[#323130] uppercase tracking-tighter">
             {isEditMode 
               ? t('clients.modal.title.edit', 'Editar Cliente') 
               : t('clients.modal.title.create', 'Nuevo Cliente')
@@ -165,7 +171,7 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
           </h2>
           <button
             type="button"
-            className="dialog__close"
+            className="p-2 text-[#616161] hover:bg-[#f3f4f6] hover:text-[#323130] rounded-md transition-all"
             onClick={handleClose}
             disabled={isSubmitting}
             aria-label={t('action.close', 'Cerrar')}
@@ -175,80 +181,80 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="dialog__content">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-200px)] custom-scrollbar">
           {/* Nombre y Apellido - Grid de 2 columnas */}
-          <div className="form-field-group form-field-group--grid-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Nombre */}
-            <div className="form-field">
-              <label htmlFor="name" className="form-field__label">
-                {t('clients.modal.field.name', 'Nombre')} <span className="form-field__required">*</span>
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-[10px] font-black text-[#616161] uppercase tracking-widest block">
+                {t('clients.modal.field.name', 'Nombre')} <span className="text-[#a4262c]">*</span>
               </label>
               <input
                 id="name"
                 name="name"
                 type="text"
-                className={`form-field__input ${errors.name ? 'form-field__input--error' : ''}`}
+                className={`w-full h-10 px-3 bg-white border ${errors.name ? 'border-[#a4262c] ring-1 ring-[#a4262c]' : 'border-[#d1d1d1]'} rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none`}
                 value={formData.name}
                 onChange={handleChange}
                 disabled={isSubmitting}
                 placeholder={t('clients.modal.placeholder.name', 'Ingrese el nombre')}
               />
               {errors.name && (
-                <span className="form-field__error">{errors.name}</span>
+                <span className="text-[10px] font-bold text-[#a4262c] uppercase">{errors.name}</span>
               )}
             </div>
 
             {/* Apellido */}
-            <div className="form-field">
-              <label htmlFor="last_name" className="form-field__label">
-                {t('clients.modal.field.last_name', 'Apellido')} <span className="form-field__required">*</span>
+            <div className="space-y-2">
+              <label htmlFor="last_name" className="text-[10px] font-black text-[#616161] uppercase tracking-widest block">
+                {t('clients.modal.field.last_name', 'Apellido')} <span className="text-[#a4262c]">*</span>
               </label>
               <input
                 id="last_name"
                 name="last_name"
                 type="text"
-                className={`form-field__input ${errors.last_name ? 'form-field__input--error' : ''}`}
+                className={`w-full h-10 px-3 bg-white border ${errors.last_name ? 'border-[#a4262c] ring-1 ring-[#a4262c]' : 'border-[#d1d1d1]'} rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none`}
                 value={formData.last_name}
                 onChange={handleChange}
                 disabled={isSubmitting}
                 placeholder={t('clients.modal.placeholder.last_name', 'Ingrese el apellido')}
               />
               {errors.last_name && (
-                <span className="form-field__error">{errors.last_name}</span>
+                <span className="text-[10px] font-bold text-[#a4262c] uppercase">{errors.last_name}</span>
               )}
             </div>
           </div>
 
           {/* Documento */}
-          <div className="form-field">
-            <label htmlFor="document_id" className="form-field__label">
-              {t('clients.modal.field.document', 'Documento de Identidad')} <span className="form-field__required">*</span>
+          <div className="space-y-2">
+            <label htmlFor="document_id" className="text-[10px] font-black text-[#616161] uppercase tracking-widest block">
+              {t('clients.modal.field.document', 'Documento de Identidad')} <span className="text-[#a4262c]">*</span>
             </label>
             <input
               id="document_id"
               name="document_id"
               type="text"
-              className={`form-field__input ${errors.document_id ? 'form-field__input--error' : ''}`}
+              className={`w-full h-10 px-3 bg-white border ${errors.document_id ? 'border-[#a4262c] ring-1 ring-[#a4262c]' : 'border-[#d1d1d1]'} rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none`}
               value={formData.document_id}
               onChange={handleChange}
               disabled={isSubmitting}
               placeholder={t('clients.modal.placeholder.document', 'CI, RUC, etc.')}
             />
             {errors.document_id && (
-              <span className="form-field__error">{errors.document_id}</span>
+              <span className="text-[10px] font-bold text-[#a4262c] uppercase">{errors.document_id}</span>
             )}
           </div>
 
           {/* Contacto */}
-          <div className="form-field">
-            <label htmlFor="contact" className="form-field__label">
+          <div className="space-y-2">
+            <label htmlFor="contact" className="text-[10px] font-black text-[#616161] uppercase tracking-widest block">
               {t('clients.modal.field.contact', 'Contacto')}
             </label>
             <input
               id="contact"
               name="contact"
               type="text"
-              className="form-field__input"
+              className="w-full h-10 px-3 bg-white border border-[#d1d1d1] rounded text-sm focus:border-[#106ebe] focus:ring-1 focus:ring-[#106ebe] transition-all outline-none"
               value={formData.contact}
               onChange={handleChange}
               disabled={isSubmitting}
@@ -258,16 +264,16 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
 
           {/* Error general */}
           {errors.submit && (
-            <div className="dialog__error">
+            <div className="p-3 bg-[#a4262c]/10 border-l-4 border-[#a4262c] rounded text-[#a4262c] text-xs font-bold uppercase">
               {errors.submit}
             </div>
           )}
 
           {/* Footer */}
-          <div className="dialog__footer">
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-[#f3f4f6]">
             <button
               type="button"
-              className="btn btn--secondary"
+              className="px-5 py-2 border border-[#d1d1d1] text-[#323130] text-xs font-bold uppercase rounded hover:bg-[#f3f4f6] transition-all"
               onClick={handleClose}
               disabled={isSubmitting}
             >
@@ -275,7 +281,7 @@ export default function ClientFormModal({ isOpen, onClose, client = null }) {
             </button>
             <button
               type="submit"
-              className="btn btn--primary"
+              className="px-5 py-2 bg-[#106ebe] text-white text-xs font-black uppercase rounded shadow-sm hover:bg-[#005a9e] active:scale-[0.98] transition-all disabled:opacity-50"
               disabled={isSubmitting}
             >
               {isSubmitting 

@@ -17,7 +17,6 @@ import { useToast } from '@/hooks/useToast'
 import { useI18n } from '@/lib/i18n'
 import { purchasePaymentsMvpService } from '@/services/purchasePaymentsMvpService'
 import usePurchasePaymentsMvpStore from '@/store/usePurchasePaymentsMvpStore'
-import '@/styles/scss/pages/_purchase-payments.scss'
 
 const DEFAULT_CURRENCY_CODE = 'PYG'
 const CURRENCY_ID_MAP = {

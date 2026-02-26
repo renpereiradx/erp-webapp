@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Libros Legales - ERP Business Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-primary">
+<span class="material-symbols-outlined text-3xl">account_balance</span>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">ERP Business Intelligence</h2>
+</div>
+<div class="relative w-64">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+<span class="material-symbols-outlined text-xl">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-2 border-none bg-slate-100 dark:bg-slate-800 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:outline-none placeholder-slate-500" placeholder="Search reports..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<nav class="flex items-center gap-6">
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Accounting</a>
+<a class="text-primary text-sm font-semibold border-b-2 border-primary pb-1" href="#">Reports</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Settings</a>
+</nav>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200">
+<span class="material-symbols-outlined text-xl">notifications</span>
+</button>
+<button class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200">
+<span class="material-symbols-outlined text-xl">help</span>
+</button>
+</div>
+<div class="h-8 w-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="h-full w-full object-cover" data-alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_-jII6p-gv1MlnHr3X7vbJ2giQqssDo6UCtLdkL_cRPWL2R9L-wzzRJhoK6f3tGRTKfEDeU1whedE-TckDk01SDXd1Oz1x3zjEH5M4woUZbVm5YE4RXLxKVVC2zoSQGY2q4n7jAMBD_8obhfG_zyZuIRaIgXORV34yjEZe8lzNnuN2niYMFnaIZk1EIyxR1MKwvN5iReqovyGzIr-a9ve9RaMvjjOr8TbXCkSAPbGlAdC3SoSAMQLvNwC-Hq24iQeKCGBxlPZbg"/>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-y-auto hidden lg:block">
+<div class="p-6">
+<h3 class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-4">Financial Reports</h3>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm font-medium" href="#">
+<span class="material-symbols-outlined text-xl">menu_book</span> General Ledger
+                    </a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg text-sm font-semibold" href="#">
+<span class="material-symbols-outlined text-xl">receipt_long</span> Libros Legales
+                    </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm font-medium" href="#">
+<span class="material-symbols-outlined text-xl">calculate</span> Tax Summary
+                    </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-sm font-medium" href="#">
+<span class="material-symbols-outlined text-xl">inventory_2</span> Purchase Ledger
+                    </a>
+</div>
+<div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+<p class="text-slate-400 text-xs font-semibold mb-2">COMPLIANCE</p>
+<p class="text-slate-600 dark:text-slate-400 text-xs px-3">Paraguay (SET)</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto p-8">
+<div class="max-w-7xl mx-auto">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+<div>
+<nav aria-label="Breadcrumb" class="flex mb-2">
+<ol class="flex items-center space-x-2 text-xs text-slate-500">
+<li>Reports</li>
+<li><span class="material-symbols-outlined text-xs mx-1">chevron_right</span></li>
+<li>Compliance</li>
+<li><span class="material-symbols-outlined text-xs mx-1">chevron_right</span></li>
+<li class="text-primary font-semibold">Libros Legales</li>
+</ol>
+</nav>
+<h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Libros Legales</h1>
+<p class="text-slate-500 dark:text-slate-400">Ventas y Compras - Tax Compliance Paraguay</p>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50">
+<span class="material-symbols-outlined text-xl">file_download</span> Export XLS
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-md hover:bg-primary/90 transition-all">
+<span class="material-symbols-outlined text-xl">print</span> Print Ledger
+                        </button>
+</div>
+</div>
+<!-- Tabs & Filters -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6">
+<div class="border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between">
+<div class="flex gap-8">
+<button class="py-4 border-b-2 border-primary text-primary text-sm font-bold">Libro Ventas</button>
+<button class="py-4 border-b-2 border-transparent text-slate-500 text-sm font-medium hover:text-slate-700">Libro Compras</button>
+</div>
+<div class="flex items-center gap-4 py-2">
+<div class="flex items-center gap-2 text-sm text-slate-500">
+<span class="material-symbols-outlined text-base">calendar_month</span>
+<span>Period: <strong>October 2023</strong></span>
+</div>
+<button class="p-1.5 rounded-md border border-slate-200 text-slate-600">
+<span class="material-symbols-outlined text-base">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Date Selection Filter -->
+<div class="p-6 bg-slate-50/50 dark:bg-slate-800/20 grid grid-cols-1 md:grid-cols-4 gap-6">
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-slate-500 uppercase">From Date</label>
+<input class="border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg text-sm focus:ring-primary" type="date" value="2023-10-01"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-slate-500 uppercase">To Date</label>
+<input class="border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg text-sm focus:ring-primary" type="date" value="2023-10-31"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-bold text-slate-500 uppercase">Client RUC (Filter)</label>
+<input class="border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg text-sm focus:ring-primary" placeholder="e.g. 80012345-0" type="text"/>
+</div>
+<div class="flex items-end">
+<button class="w-full bg-primary/10 text-primary px-4 py-2 rounded-lg text-sm font-bold border border-primary/20 hover:bg-primary hover:text-white transition-all">
+                                Update Report
+                            </button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-bold border-b border-slate-200 dark:border-slate-800">
+<th class="px-6 py-4">Date</th>
+<th class="px-6 py-4">Invoice No</th>
+<th class="px-6 py-4">Timbrado</th>
+<th class="px-6 py-4">RUC</th>
+<th class="px-6 py-4">Client</th>
+<th class="px-6 py-4 text-right">Exento</th>
+<th class="px-6 py-4 text-right">IVA 5%</th>
+<th class="px-6 py-4 text-right">IVA 10%</th>
+<th class="px-6 py-4 text-right">Gross Amount</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4 text-slate-600 dark:text-slate-400">05/10/2023</td>
+<td class="px-6 py-4 font-medium">001-001-0004512</td>
+<td class="px-6 py-4">12345678</td>
+<td class="px-6 py-4">80023412-5</td>
+<td class="px-6 py-4">Distribuidora Nacional S.A.</td>
+<td class="px-6 py-4 text-right">0</td>
+<td class="px-6 py-4 text-right">0</td>
+<td class="px-6 py-4 text-right">250.000</td>
+<td class="px-6 py-4 text-right font-bold text-slate-900 dark:text-white">2.750.000</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4 text-slate-600 dark:text-slate-400">12/10/2023</td>
+<td class="px-6 py-4 font-medium">001-002-0000891</td>
+<td class="px-6 py-4">15822941</td>
+<td class="px-6 py-4">1245678-3</td>
+<td class="px-6 py-4">Juan Pérez Garcia</td>
+<td class="px-6 py-4 text-right">500.000</td>
+<td class="px-6 py-4 text-right">0</td>
+<td class="px-6 py-4 text-right">0</td>
+<td class="px-6 py-4 text-right font-bold text-slate-900 dark:text-white">500.000</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4 text-slate-600 dark:text-slate-400">18/10/2023</td>
+<td class="px-6 py-4 font-medium">002-001-0000054</td>
+<td class="px-6 py-4">16733211</td>
+<td class="px-6 py-4">80102231-0</td>
+<td class="px-6 py-4">Constructora del Este S.R.L.</td>
+<td class="px-6 py-4 text-right">0</td>
+<td class="px-6 py-4 text-right">75.000</td>
+<td class="px-6 py-4 text-right">0</td>
+<td class="px-6 py-4 text-right font-bold text-slate-900 dark:text-white">1.575.000</td>
+</tr>
+<!-- Repeatable rows for mockup -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4 text-slate-600 dark:text-slate-400">22/10/2023</td>
+<td class="px-6 py-4 font-medium">001-001-0004513</td>
+<td class="px-6 py-4">12345678</td>
+<td class="px-6 py-4">80000123-4</td>
+<td class="px-6 py-4">Agro Industrial Par</td>
+<td class="px-6 py-4 text-right">0</td>
+<td class="px-6 py-4 text-right">0</td>
+<td class="px-6 py-4 text-right">100.000</td>
+<td class="px-6 py-4 text-right font-bold text-slate-900 dark:text-white">1.100.000</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4 text-slate-600 dark:text-slate-400">25/10/2023</td>
+<td class="px-6 py-4 font-medium">001-001-0004514</td>
+<td class="px-6 py-4">12345678</td>
+<td class="px-6 py-4">3567891-2</td>
+<td class="px-6 py-4">Maria Lopez Benitez</td>
+<td class="px-6 py-4 text-right">0</td>
+<td class="px-6 py-4 text-right">0</td>
+<td class="px-6 py-4 text-right">15.000</td>
+<td class="px-6 py-4 text-right font-bold text-slate-900 dark:text-white">165.000</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="bg-primary/5 font-bold border-t-2 border-primary/20">
+<td class="px-6 py-4 text-right uppercase text-xs tracking-wider text-slate-500" colspan="5">Total Period Summary</td>
+<td class="px-6 py-4 text-right text-primary">500.000</td>
+<td class="px-6 py-4 text-right text-primary">75.000</td>
+<td class="px-6 py-4 text-right text-primary">365.000</td>
+<td class="px-6 py-4 text-right text-primary text-base">6.090.000</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="text-sm text-slate-500">
+                            Showing <span class="font-semibold text-slate-900 dark:text-white">1</span> to <span class="font-semibold text-slate-900 dark:text-white">50</span> of <span class="font-semibold text-slate-900 dark:text-white">1,248</span> records
+                        </div>
+<div class="flex items-center gap-2">
+<label class="text-sm text-slate-500 mr-2">Rows per page:</label>
+<select class="border-slate-200 dark:border-slate-700 dark:bg-slate-800 rounded-lg text-sm px-2 py-1 focus:ring-primary mr-4">
+<option>20</option>
+<option selected="">50</option>
+<option>100</option>
+</select>
+<div class="flex gap-1">
+<button class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-sm">first_page</span>
+</button>
+<button class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-400 hover:bg-slate-50 disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold">1</button>
+<button class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-600 hover:bg-slate-50">2</button>
+<button class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-600 hover:bg-slate-50">3</button>
+<span class="px-2 text-slate-400 self-center">...</span>
+<button class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-600 hover:bg-slate-50">25</button>
+<button class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 hover:bg-slate-50">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+<button class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 hover:bg-slate-50">
+<span class="material-symbols-outlined text-sm">last_page</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- BI Summary Widgets -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-bold text-slate-400 uppercase">Total Sales Tax</span>
+<span class="text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded text-[10px] font-bold">+12.5%</span>
+</div>
+<div class="text-2xl font-black text-slate-900 dark:text-white">440.000 ₲</div>
+<p class="text-slate-500 text-xs mt-1">IVA 5% + 10% calculated</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-bold text-slate-400 uppercase">Active Timbrados</span>
+<span class="material-symbols-outlined text-primary text-lg">verified</span>
+</div>
+<div class="text-2xl font-black text-slate-900 dark:text-white">3 Active</div>
+<p class="text-slate-500 text-xs mt-1">Nearest expiry: Dec 20, 2023</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="text-xs font-bold text-slate-400 uppercase">Compliance Score</span>
+<span class="material-symbols-outlined text-emerald-500 text-lg">check_circle</span>
+</div>
+<div class="text-2xl font-black text-slate-900 dark:text-white">98%</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2">
+<div class="bg-emerald-500 h-1.5 rounded-full w-[98%]"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer Status -->
+<footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-2 px-6 flex items-center justify-between text-[10px] text-slate-400">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5">
+<span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                API Connected: SET Marangatu v2
+            </div>
+<div>Last Sync: 2 minutes ago</div>
+</div>
+<div>
+            © 2023 ERP Business Intelligence • Paraguay Compliance Module
+        </div>
+</footer>
+</body></html>

@@ -55,22 +55,22 @@ const AgingReport = () => {
             </div>
           </div>
           <div className='flex flex-wrap items-center gap-2 md:gap-3'>
-            <button className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-medium border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
+            <button className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-medium border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
               <span className='material-icons-round text-sm'>filter_list</span>{' '}
               <span className='hidden sm:inline'>Filtrar</span>
             </button>
-            <button className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-medium border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
+            <button className='flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-medium border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
               <span className='material-icons-round text-sm'>
                 file_download
               </span>{' '}
               <span className='hidden sm:inline'>Exportar</span>
             </button>
-            <button className='hidden md:flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
+            <button className='hidden md:flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
               <span className='material-icons-round text-sm'>print</span>{' '}
               Imprimir
             </button>
             <div className='hidden lg:block w-px h-6 bg-slate-300 dark:bg-slate-700 mx-2'></div>
-            <button className='w-full sm:w-auto bg-[#137fec] hover:opacity-90 text-white px-5 py-2 rounded text-xs md:text-sm font-semibold transition-all shadow-sm'>
+            <button className='w-full sm:w-auto bg-[#137fec] hover:opacity-90 text-white px-5 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all shadow-sm'>
               Nuevo Pago
             </button>
           </div>

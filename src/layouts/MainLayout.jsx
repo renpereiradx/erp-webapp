@@ -193,6 +193,16 @@ const MainLayout = ({ children }) => {
                 icon: FileText,
               },
               {
+                name: 'Libros Legales (Ventas y Compras)',
+                href: '/finance/legal-books',
+                icon: BookOpen,
+              },
+              {
+                name: 'Análisis de Rentabilidad y Márgenes',
+                href: '/finance/profitability',
+                icon: BarChart3,
+              },
+              {
                 name: 'Estado de Resultados (P&L)',
                 href: '/finance/profit-and-loss',
                 icon: BarChart3,
@@ -268,17 +278,6 @@ const MainLayout = ({ children }) => {
   )
 
   // Global Search Logic
-  // Import extra routes dynamically or use predefined ones
-  // We need to import distinctSearchableRoutes inside the component or outside?
-  // Since it's a static file, we should import it at the top, but since I'm using replace_file_content 
-  // and avoiding moving imports around too much, I'll assume I can add the import statement separately 
-  // or just inline the logic if I can't easily add top-level imports without context.
-  // actually, let's try to add the import at the top first in a separate call or handle it here if possible.
-  // Wait, I can only replace a contiguous block. I should probably add the import first at the top.
-  // I will skip adding the import here and do it in 2 steps: 1. Add import, 2. Update logic.
-
-  // This step: updating the logic to use the variable (which I will import in the next step).
-
   const allNavigationItems = useMemo(() => {
     const items = []
 
@@ -302,7 +301,6 @@ const MainLayout = ({ children }) => {
     traverse(navigation)
 
     // Process extra routes from config
-    // Note: distinctSearchableRoutes will be imported
     if (typeof distinctSearchableRoutes !== 'undefined') {
       distinctSearchableRoutes.forEach(route => {
         items.push({
@@ -335,10 +333,6 @@ const MainLayout = ({ children }) => {
 
     const term = normalizeText(globalSearchTerm)
 
-    // Debug info
-    // console.log('Searching for:', term)
-    // console.log('Total items:', allNavigationItems.length)
-
     const results = allNavigationItems.filter(item => {
       const name = normalizeText(item.name)
       const parent = item.parent ? normalizeText(item.parent) : ''
@@ -351,7 +345,6 @@ const MainLayout = ({ children }) => {
       return matchName || matchParent || matchCategory
     })
 
-    // console.log('Results:', results)
     setGlobalSearchResults(results)
     setSelectedIndex(-1)
   }, [globalSearchTerm, allNavigationItems])
@@ -453,8 +446,6 @@ const MainLayout = ({ children }) => {
 
 
   // Auto-expandir menús con sub-items activos
-  // Soporta hasta 2 niveles de anidamiento y usa startsWith
-  // para que rutas hijas (ej: /receivables/detail/123) expandan el grupo padre
   useEffect(() => {
     const matchesPath = (href) =>
       location.pathname === href || location.pathname.startsWith(href + '/')
@@ -475,7 +466,6 @@ const MainLayout = ({ children }) => {
           if (prev[item.name]) return prev
           return { ...prev, [item.name]: true }
         })
-        // También expandir el sub-grupo hijo que coincide
         item.children.forEach(child => {
           if (!child.children) return
           const childMatches = child.children.some(grandchild =>
@@ -562,406 +552,392 @@ const MainLayout = ({ children }) => {
     navigate('/login')
   }
 
-  // Render navigation item
+  // Render navigation item (Refactored with Tailwind for consistency)
   const renderNavItem = (item, isMobile = false) => {
-    const Icon = item.icon
     const hasChildren = item.children && item.children.length > 0
     const isExpanded = expandedMenus[item.name]
     const active = hasChildren ? isParentActive(item) : isActive(item.href)
-    const labelVisible = !isLargeScreen || isSidebarExpanded || isMobile
-    const itemAriaLabel = labelVisible ? undefined : item.name
 
-    return (
-      <div key={item.name} className='nav__item-wrapper'>
-        {hasChildren ? (
-          <button
-            onClick={() => toggleMenu(item.name)}
-            className={`nav__item ${active ? 'nav__item--active' : ''}`}
-            aria-expanded={isExpanded}
-            aria-label={itemAriaLabel}
-            title={item.name}
-          >
-            <Icon className='nav__icon' />
-            <span className='nav__text' aria-hidden={!labelVisible}>
-              {item.name}
-            </span>
-            {isExpanded ? (
-              <ChevronDown
-                className='nav__chevron'
-                aria-hidden={!labelVisible}
-              />
-            ) : (
-              <ChevronRight
-                className='nav__chevron'
-                aria-hidden={!labelVisible}
-              />
-            )}
-          </button>
-        ) : (
-          <Link
-            to={item.href}
-            onClick={() => isMobile && setSidebarOpen(false)}
-            className={`nav__item ${active ? 'nav__item--active' : ''}`}
-            aria-label={itemAriaLabel}
-            title={item.name}
-          >
-            <Icon className='nav__icon' />
-            <span className='nav__text' aria-hidden={!labelVisible}>
-              {item.name}
-            </span>
-          </Link>
-        )}
+    if (hasChildren) {
+      return (
+        <div key={item.name} className="space-y-1">
+          <div className="px-3 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+            {item.name}
+          </div>
+          {item.children.map((child) => {
+            const childActive = child.children ? isParentActive(child) : isActive(child.href)
+            const isChildExpanded = expandedMenus[child.name]
 
-        {/* Submenu */}
-        {hasChildren && isExpanded && (
-          <div className='nav__submenu'>
-            {item.children.map(child => {
-              const ChildIcon = child.icon
-              const childHasChildren = child.children && child.children.length > 0
-              const childIsExpanded = expandedMenus[child.name]
-              const childActive = childHasChildren
-                ? isParentActive(child)
-                : isActive(child.href)
-              const childLabelVisible =
-                !isLargeScreen || isSidebarExpanded || isMobile
-              const childAriaLabel = childLabelVisible ? undefined : child.name
-
-              if (childHasChildren) {
-                return (
-                  <div key={child.name} className='nav__item-wrapper'>
+            return (
+              <div key={child.name} className="space-y-1">
+                {child.children ? (
+                  <>
                     <button
                       onClick={() => toggleMenu(child.name)}
-                      className={`nav__subitem ${childActive ? 'nav__subitem--active' : ''}`}
-                      aria-expanded={childIsExpanded}
-                      aria-label={childAriaLabel}
-                      title={child.name}
+                      className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${
+                        childActive ? 'bg-primary/10 text-primary font-bold' : 'text-text-secondary hover:bg-slate-50'
+                      }`}
                     >
-                      <ChildIcon className='nav__icon' />
-                      <span className='nav__text' aria-hidden={!childLabelVisible}>
-                        {child.name}
+                      <div className="flex items-center gap-3">
+                        {child.icon && <child.icon className="size-4" />}
+                        <span>{child.name}</span>
+                      </div>
+                      <span className={`material-symbols-outlined text-xs transition-transform ${isChildExpanded ? 'rotate-180' : ''}`}>
+                        expand_more
                       </span>
-                      {childIsExpanded ? (
-                        <ChevronDown className='nav__chevron' aria-hidden={!childLabelVisible} />
-                      ) : (
-                        <ChevronRight className='nav__chevron' aria-hidden={!childLabelVisible} />
-                      )}
                     </button>
-                    {childIsExpanded && (
-                      <div className='nav__submenu nav__submenu--nested'>
-                        {child.children.map(grandchild => {
-                          const GrandchildIcon = grandchild.icon
-                          const grandchildActive = isActive(grandchild.href)
-                          const gcLabelVisible = !isLargeScreen || isSidebarExpanded || isMobile
-                          const gcAriaLabel = gcLabelVisible ? undefined : grandchild.name
-
-                          return (
-                            <Link
-                              key={grandchild.name}
-                              to={grandchild.href}
-                              onClick={() => isMobile && setSidebarOpen(false)}
-                              className={`nav__subitem nav__subitem--nested ${grandchildActive ? 'nav__subitem--active' : ''}`}
-                              aria-label={gcAriaLabel}
-                              title={grandchild.name}
-                            >
-                              <GrandchildIcon className='nav__icon' />
-                              <span className='nav__text' aria-hidden={!gcLabelVisible}>
-                                {grandchild.name}
-                              </span>
-                            </Link>
-                          )
-                        })}
+                    {isChildExpanded && (
+                      <div className="ml-9 space-y-1 border-l border-slate-100 pl-2">
+                        {child.children.map((grandchild) => (
+                          <Link
+                            key={grandchild.name}
+                            to={grandchild.href}
+                            onClick={() => isMobile && setSidebarOpen(false)}
+                            className={`block px-3 py-1.5 rounded-md text-xs transition-colors ${
+                              isActive(grandchild.href) ? 'text-primary font-bold' : 'text-text-secondary hover:text-text-main'
+                            }`}
+                          >
+                            {grandchild.name}
+                          </Link>
+                        ))}
                       </div>
                     )}
-                  </div>
-                )
-              }
+                  </>
+                ) : (
+                  <Link
+                    to={child.href}
+                    onClick={() => isMobile && setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${
+                      childActive ? 'bg-primary/10 text-primary font-bold' : 'text-text-secondary hover:bg-slate-50'
+                    }`}
+                  >
+                    {child.icon && <child.icon className="size-4" />}
+                    <span>{child.name}</span>
+                  </Link>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )
+    }
 
-              return (
-                <Link
-                  key={child.name}
-                  to={child.href}
-                  onClick={() => isMobile && setSidebarOpen(false)}
-                  className={`nav__subitem ${childActive ? 'nav__subitem--active' : ''}`}
-                  aria-label={childAriaLabel}
-                  title={child.name}
-                >
-                  <ChildIcon className='nav__icon' />
-                  <span className='nav__text' aria-hidden={!childLabelVisible}>
-                    {child.name}
-                  </span>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </div>
+    return (
+      <Link
+        key={item.name}
+        to={item.href}
+        onClick={() => isMobile && setSidebarOpen(false)}
+        className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${
+          active ? 'bg-primary/10 text-primary font-bold' : 'text-text-secondary hover:bg-slate-50'
+        }`}
+      >
+        {item.icon && <item.icon className="size-4" />}
+        <span>{item.name}</span>
+      </Link>
     )
   }
 
   return (
-    <div className='layout'>
+    <div className='min-h-screen bg-background-light flex'>
       {/* Sidebar Desktop */}
       {isClient && isLargeScreen && (
         <aside
           ref={sidebarRef}
-          className={`sidebar sidebar--desktop ${isSidebarExpanded ? 'sidebar--expanded' : 'sidebar--collapsed'
-            }`}
-          onMouseEnter={handleSidebarMouseEnter}
-          onMouseLeave={handleSidebarMouseLeave}
-          onFocusCapture={handleSidebarFocus}
-          onBlurCapture={handleSidebarBlur}
+          className="w-72 flex-shrink-0 border-r border-border-subtle bg-white flex flex-col sticky top-0 h-screen z-[60] transition-all duration-300"
         >
-          <div className='sidebar__header'>
-            <div className='sidebar__logo'>
-              <div className='sidebar__logo-icon'>
-                <LayoutDashboard className='sidebar__logo-icon-svg' />
-              </div>
-              <h1 className='sidebar__logo-text'>ERP System</h1>
+          <div className="p-6 flex items-center gap-3">
+            <div className="size-9 bg-primary rounded flex items-center justify-center text-white shadow-lg shadow-primary/20">
+              <span className="material-symbols-outlined text-xl font-bold">architecture</span>
+            </div>
+            <div onClick={() => navigate('/dashboard')} className="cursor-pointer">
+              <h1 className="font-black text-base tracking-tighter uppercase leading-none">ERP System</h1>
+              <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest leading-none mt-1">Fluent ERP v2.0</p>
             </div>
           </div>
+          
+          <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar pb-6">
+            {navigation.map((item) => {
+              const hasChildren = item.children && item.children.length > 0;
+              const isExpanded = expandedMenus[item.name];
+              const active = hasChildren ? isParentActive(item) : isActive(item.href);
+              
+              if (hasChildren) {
+                return (
+                  <div key={item.name} className="space-y-1 pt-4 first:pt-0">
+                    <div className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                      {item.name}
+                    </div>
+                    {item.children.map((child) => {
+                      const childActive = child.children ? isParentActive(child) : isActive(child.href);
+                      const isChildExpanded = expandedMenus[child.name];
 
-          <nav className='sidebar__nav'>
-            {navigation.map(item => renderNavItem(item))}
+                      return (
+                        <div key={child.name} className="space-y-1">
+                          {child.children ? (
+                            <>
+                              <button
+                                onClick={() => toggleMenu(child.name)}
+                                className={`w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${
+                                  childActive ? 'bg-primary/10 text-primary font-bold' : 'text-text-secondary hover:bg-slate-50'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  {child.icon && <child.icon className="size-4" />}
+                                  <span>{child.name}</span>
+                                </div>
+                                <span className={`material-symbols-outlined text-xs transition-transform ${isChildExpanded ? 'rotate-180' : ''}`}>
+                                  expand_more
+                                </span>
+                              </button>
+                              {isChildExpanded && (
+                                <div className="ml-9 space-y-1 border-l border-slate-100 pl-2">
+                                  {child.children.map((grandchild) => (
+                                    <Link
+                                      key={grandchild.name}
+                                      to={grandchild.href}
+                                      className={`block px-3 py-1.5 rounded-md text-xs transition-colors ${
+                                        isActive(grandchild.href) ? 'text-primary font-bold' : 'text-text-secondary hover:text-text-main'
+                                      }`}
+                                    >
+                                      {grandchild.name}
+                                    </Link>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <Link
+                              to={child.href}
+                              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium ${
+                                childActive ? 'bg-primary/10 text-primary font-bold' : 'text-text-secondary hover:bg-slate-50'
+                              }`}
+                            >
+                              {child.icon && <child.icon className="size-4" />}
+                              <span>{child.name}</span>
+                            </Link>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-sm font-medium mt-1 ${
+                    active ? 'bg-primary/10 text-primary font-bold' : 'text-text-secondary hover:bg-slate-50'
+                  }`}
+                >
+                  {item.icon && <item.icon className="size-4" />}
+                  <span>{item.name}</span>
+                </Link>
+              );
+            })}
           </nav>
+
+          <div className="p-4 border-t border-slate-100">
+            <div className="bg-slate-50 p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => navigate('/perfil')}>
+              <div className="size-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs overflow-hidden">
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  user?.first_name?.charAt(0) || 'U'
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold truncate text-text-main">{user?.first_name || 'Usuario'}</p>
+                <p className="text-[10px] text-text-secondary truncate">{user?.email || 'Ver perfil'}</p>
+              </div>
+            </div>
+          </div>
         </aside>
       )}
 
-      {/* Sidebar Mobile */}
-      {sidebarOpen && (
-        <div className='sidebar-overlay'>
-          <div
-            className='sidebar-overlay__backdrop'
-            onClick={() => setSidebarOpen(false)}
-          />
-          <aside className='sidebar sidebar--mobile'>
+      {/* Sidebar Mobile Overlay */}
+      {sidebarOpen && !isLargeScreen && (
+        <div className="fixed inset-0 z-[70] flex lg:hidden">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+          <aside className="relative w-72 max-w-[80vw] bg-white flex flex-col h-full animate-in slide-in-from-left duration-300">
             <button
-              className='sidebar__close'
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600"
               onClick={() => setSidebarOpen(false)}
-              aria-label='Cerrar menú'
             >
-              <X className='sidebar__close-icon' />
+              <X className="size-5" />
             </button>
-
-            <div className='sidebar__header'>
-              <div className='sidebar__logo'>
-                <div className='sidebar__logo-icon'>
-                  <LayoutDashboard className='sidebar__logo-icon-svg' />
-                </div>
-                <h1 className='sidebar__logo-text'>ERP System</h1>
+            <div className="p-6 flex items-center gap-3">
+              <div className="size-9 bg-primary rounded flex items-center justify-center text-white">
+                <span className="material-symbols-outlined text-xl font-bold">architecture</span>
+              </div>
+              <div>
+                <h1 className="font-black text-base tracking-tighter uppercase leading-none">ERP System</h1>
               </div>
             </div>
-
-            <nav className='sidebar__nav'>
-              {navigation.map(item => renderNavItem(item, true))}
+            <nav className="flex-1 px-4 space-y-1 overflow-y-auto pb-6">
+              {navigation.map((item) => renderNavItem(item, true))}
             </nav>
           </aside>
         </div>
       )}
 
-      {/* Main Content */}
-      <div
-        className={`layout__main ${isClient && isLargeScreen ? 'layout__main--with-sidebar' : ''
-          } ${isClient && isLargeScreen && isSidebarExpanded
-            ? 'layout__main--sidebar-expanded'
-            : ''
-          }`}
-      >
-        {/* Navbar */}
-        <header className='navbar'>
-          <button
-            className='navbar__menu-btn'
-            onClick={() => setSidebarOpen(true)}
-            aria-label='Abrir menú'
-            style={{ display: isLargeScreen ? 'none' : 'flex' }}
-          >
-            <Menu className='navbar__menu-icon' />
-          </button>
-
-          <div className='navbar__content'>
-            {/* Global Search */}
-            <div className='navbar__search' ref={searchContainerRef} style={{ position: 'relative', flex: 1, maxWidth: '400px', margin: '0 20px' }}>
-              <div className='search-input-wrapper' style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <Search className='search-icon' size={18} style={{ position: 'absolute', left: '12px', color: '#64748b' }} />
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Sticky Header (Command Bar) */}
+        <header className="h-16 border-b border-border-subtle bg-white/80 backdrop-blur-md sticky top-0 z-[40] flex items-center justify-between px-6 md:px-10 shadow-sm">
+          <div className="flex items-center gap-4 flex-1">
+            {!isLargeScreen && (
+              <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-slate-600 lg:hidden">
+                <Menu className="size-6" />
+              </button>
+            )}
+            
+            {/* Global Search integrated in Header */}
+            <div className="relative flex-1 max-w-md hidden md:block" ref={searchContainerRef}>
+              <div className="relative group">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 group-focus-within:text-primary transition-colors">
+                  <Search className="size-4" />
+                </span>
                 <input
                   ref={globalSearchInputRef}
-                  type='text'
-                  className='search-input'
-                  placeholder='Buscar páginas (Ctrl+K)...'
+                  type="text"
+                  placeholder="Buscar páginas o comandos (Ctrl+K)..."
+                  className="w-full pl-10 pr-4 py-2 bg-slate-100/50 border-none rounded-lg text-xs font-medium focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none transition-all h-9"
                   value={globalSearchTerm}
                   onChange={(e) => {
                     setGlobalSearchTerm(e.target.value)
                     setShowGlobalSearch(true)
                   }}
                   onFocus={() => setShowGlobalSearch(true)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px 8px 36px',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    backgroundColor: '#f8fafc',
-                    fontSize: '0.875rem',
-                    outline: 'none',
-                    transition: 'all 0.2s'
-                  }}
                 />
                 {globalSearchTerm && (
                   <button
-                    onClick={() => {
-                      setGlobalSearchTerm('')
-                      setGlobalSearchResults([])
-                      globalSearchInputRef.current?.focus()
-                    }}
-                    style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                    onClick={() => { setGlobalSearchTerm(''); setGlobalSearchResults([]); }}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
                   >
-                    <X size={14} />
+                    <X className="size-3" />
                   </button>
                 )}
               </div>
 
               {/* Search Results Dropdown */}
               {showGlobalSearch && globalSearchTerm && (
-                <div className='search-results' style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  marginTop: '8px',
-                  backgroundColor: 'white',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                  border: '1px solid #e2e8f0',
-                  maxHeight: '300px',
-                  overflowY: 'auto',
-                  zIndex: 9999
-                }}>
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-fluent-16 border border-border-subtle overflow-hidden z-[100] max-h-96 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
                   {globalSearchResults.length > 0 ? (
-                    globalSearchResults.map((item, index) => {
-                      const Icon = item.icon || Search
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => handleSearchResultClick(item.href)}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            width: '100%',
-                            padding: '10px 16px',
-                            border: 'none',
-                            borderLeft: index === selectedIndex ? '3px solid #3b82f6' : '3px solid transparent',
-                            background: index === selectedIndex ? '#f1f5f9' : 'transparent',
-                            cursor: 'pointer',
-                            textAlign: 'left',
-                            borderBottom: '1px solid #f1f5f9'
-                          }}
-                          onMouseEnter={(e) => {
-                            setSelectedIndex(index)
-                            e.currentTarget.style.backgroundColor = '#f8fafc'
-                          }}
-                          onMouseLeave={(e) => {
-                            if (index !== selectedIndex) {
-                              e.currentTarget.style.backgroundColor = 'transparent'
-                            }
-                          }}
-                        >
-                          <Icon size={16} style={{ marginRight: '10px', color: '#64748b' }} />
-                          <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>{item.name}</span>
-                            {item.parent && <span style={{ fontSize: '0.75rem', color: '#64748b' }}>en {item.parent}</span>}
-                          </div>
-                        </button>
-                      )
-                    })
+                    <div className="py-2">
+                      {globalSearchResults.map((item, index) => {
+                        const Icon = item.icon || Search
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => handleSearchResultClick(item.href)}
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                              index === selectedIndex ? 'bg-primary/5 border-l-4 border-primary' : 'hover:bg-slate-50 border-l-4 border-transparent'
+                            }`}
+                            onMouseEnter={() => setSelectedIndex(index)}
+                          >
+                            <div className={`p-1.5 rounded-md ${index === selectedIndex ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400'}`}>
+                              <Icon className="size-4" />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-xs font-bold text-text-main truncate">{item.name}</span>
+                              <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{item.category}</span>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
                   ) : (
-                    <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>
-                      No se encontraron resultados
+                    <div className="p-8 text-center">
+                      <div className="size-10 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Search className="size-5 text-slate-300" />
+                      </div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No hay resultados</p>
                     </div>
                   )}
                 </div>
               )}
             </div>
-
-            {/* User Menu */}
-            <div className='navbar__actions'>
-              <button
-                ref={profileBtnRef}
-                className='navbar__settings-btn'
-                onClick={e => {
-                  const rect = e.currentTarget.getBoundingClientRect()
-                  setMenuPos({
-                    top: rect.bottom + window.scrollY,
-                    right: rect.right + window.scrollX,
-                    width: 288,
-                  })
-                  setShowUserMenu(prev => !prev)
-                }}
-                aria-label='Abrir ajustes'
-              >
-                <Settings className='navbar__settings-icon' />
-                <span className='navbar__settings-text'>{t('settings.title', 'Ajustes')}</span>
-              </button>
-
-              {showUserMenu &&
-                profileBtnRef.current &&
-                createPortal(
-                  <div
-                    className='user-menu'
-                    style={{
-                      top: `${menuPos.top}px`,
-                      left: `${menuPos.right - menuPos.width}px`,
-                      width: '18rem',
-                    }}
-                  >
-                    <div className='user-menu__header'>
-                      <Link to='/perfil' className='user-menu__avatar' onClick={() => setShowUserMenu(false)}>
-                        {user?.avatar_url ? (
-                          <img src={user.avatar_url} alt={user.first_name || 'User'} className='user-menu__avatar-img' style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                        ) : (
-                          <User className='user-menu__avatar-icon' />
-                        )}
-                      </Link>
-                      <Link to='/perfil' className='user-menu__info' onClick={() => setShowUserMenu(false)} style={{ textDecoration: 'none' }}>
-                        <p className='user-menu__name'>
-                          {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user?.username || t('common.user', 'Usuario')}
-                        </p>
-                        <p className='user-menu__email'>
-                          {user?.email || t('common.no_email', 'Sin correo')}
-                        </p>
-                      </Link>
-                    </div>
-                    <div className='user-menu__body'>
-                      <Link
-                        to='/configuracion'
-                        className='user-menu__item'
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        <Settings className='user-menu__item-icon' />
-                        {t('settings.title', 'Configuración')}
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className='user-menu__item user-menu__item--danger'
-                      >
-                        <LogOut className='user-menu__item-icon' />
-                        {t('action.logout', 'Cerrar Sesión')}
-                      </button>
-                    </div>
-                  </div>,
-                  document.body
-                )}
-            </div>
           </div>
 
-          {/* Overlay for user menu */}
-          {showUserMenu && (
-            <div
-              className='user-menu-overlay'
-              onClick={() => setShowUserMenu(false)}
-            />
-          )}
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
+              <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded hover:bg-primary-hover shadow-md transition-all active:scale-95">
+                <span className="material-symbols-outlined text-sm font-bold">download</span> 
+                <span className="hidden lg:inline">Descargar Reporte</span>
+              </button>
+              <div className="w-px h-6 bg-slate-200 mx-2"></div>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button className="p-2 text-text-secondary hover:bg-slate-100 rounded-lg transition-colors relative group">
+                <span className="material-symbols-outlined">notifications</span>
+                <span className="absolute top-2 right-2 size-2 bg-error rounded-full border-2 border-white"></span>
+                <span className="absolute top-full right-0 mt-2 px-2 py-1 bg-text-main text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">Notificaciones</span>
+              </button>
+              
+              <div className="relative" ref={profileBtnRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className={`flex items-center gap-2 p-1.5 rounded-lg transition-all ${showUserMenu ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
+                >
+                  <div className="size-8 rounded bg-primary/10 flex items-center justify-center text-primary font-bold text-xs overflow-hidden">
+                    {user?.avatar_url ? (
+                      <img src={user.avatar_url} alt="User" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="material-symbols-outlined">person</span>
+                    )}
+                  </div>
+                  <span className="material-symbols-outlined text-slate-400 text-lg transition-transform duration-200" style={{ transform: showUserMenu ? 'rotate(180deg)' : 'none' }}>
+                    expand_more
+                  </span>
+                </button>
+
+                {/* User Menu Dropdown */}
+                {showUserMenu && (
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-fluent-16 border border-border-subtle overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
+                    <div className="p-4 border-b border-slate-50 bg-slate-50/50">
+                      <p className="text-xs font-black text-text-main truncate uppercase tracking-tighter">{user?.first_name || 'Usuario'}</p>
+                      <p className="text-[10px] text-text-secondary truncate font-medium">{user?.email || 'No email'}</p>
+                    </div>
+                    <div className="p-2">
+                      <button 
+                        onClick={() => { navigate('/perfil'); setShowUserMenu(false); }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-text-secondary hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-lg">account_circle</span>
+                        Mi Perfil
+                      </button>
+                      <button 
+                        onClick={() => { navigate('/configuracion'); setShowUserMenu(false); }}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-text-secondary hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-lg">settings</span>
+                        Configuración
+                      </button>
+                      <div className="my-1 border-t border-slate-50"></div>
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-xs font-bold text-error hover:bg-error/5 rounded-md transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-lg">logout</span>
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </header>
 
         {/* Page Content */}
-        <main className='layout__content'>{children}</main>
+        <main className="flex-1 overflow-y-auto bg-background-light p-6 md:p-10 custom-scrollbar">
+          <div className="max-w-[1800px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   )

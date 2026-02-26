@@ -40,7 +40,6 @@ import {
 import usePurchasePaymentsMvpStore from '@/store/usePurchasePaymentsMvpStore'
 import { useToast } from '@/hooks/useToast'
 import { classifySupplierSearchTerm } from '@/services/purchasePaymentsMvpService'
-import '@/styles/scss/pages/_purchase-payments.scss'
 
 const currencyFormatter = (lang, currency) =>
   new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {

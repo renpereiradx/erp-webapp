@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Design System &amp; Component Library (Extended)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#137fec",
+                        secondary: "#eff6fc",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e293b",
+                        "neutral-50": "#f8fafc",
+                        "neutral-100": "#f1f5f9",
+                        "neutral-200": "#e2e8f0",
+                        "neutral-300": "#cbd5e1",
+                        "neutral-400": "#94a3b8",
+                        "neutral-500": "#64748b",
+                        "neutral-600": "#475569",
+                        "neutral-700": "#334155",
+                        "neutral-800": "#1e293b",
+                        "neutral-900": "#0f172a",
+                        success: "#10b981",
+                        warning: "#f59e0b",
+                        error: "#ef4444",
+                        info: "#0ea5e9",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'elevation-1': '0 2px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1)',
+                        'elevation-2': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'elevation-3': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        'elevation-4': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }@keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .animate-shimmer {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        .dark .animate-shimmer {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-neutral-800 dark:text-neutral-100 font-body antialiased min-h-screen flex flex-col">
+<header class="sticky top-0 z-50 bg-surface-light dark:bg-surface-dark border-b border-neutral-200 dark:border-neutral-700 h-16 px-6 flex items-center justify-between shadow-elevation-1">
+<div class="flex items-center gap-4">
+<div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-sm">
+<span class="material-symbols-outlined text-xl">dataset</span>
+</div>
+<h1 class="text-lg font-semibold tracking-tight text-neutral-900 dark:text-white">Fluent 2 Extended Kit</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative w-80 hidden md:block group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-[20px] group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full h-9 pl-10 pr-16 bg-neutral-100 dark:bg-neutral-800 border border-transparent focus:border-primary focus:ring-1 focus:ring-primary rounded-md text-sm transition-all hover:bg-neutral-200 dark:hover:bg-neutral-700 placeholder-neutral-500" placeholder="Buscar componentes (Cmd+K)" type="text"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-neutral-400 font-mono border border-neutral-300 dark:border-neutral-600 rounded px-1.5 py-0.5">⌘K</span>
+</div>
+<div class="flex items-center gap-2 border-l border-neutral-200 dark:border-neutral-700 pl-6">
+<button class="relative p-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-colors" title="Settings">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+</button>
+<button class="relative p-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-colors" title="Help">
+<span class="material-symbols-outlined text-[20px]">help</span>
+</button>
+<div class="h-6 w-px bg-neutral-200 dark:bg-neutral-700 mx-1"></div>
+<button class="flex items-center gap-2 pl-1 group">
+<div class="size-8 rounded-full bg-cover bg-center ring-2 ring-transparent group-hover:ring-primary/20 transition-all" data-alt="Portrait of a user" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDZ_5SLIvx8B2OMuOptmRR04f4H3i7VHVhy8BHIP5IrB7m0W5LgYVDSdgBhXPWgIxjMj1ojiJVpyAqutaQRAbdQrK03HdSrcGmsPNcFyMrLnaJOpbGxl9tO27HNMpuAwQ08BEZ73zd9l2bHTG4W0z_lOdn-KbPJlYVMvA-zt2srTdCsmEJPnHxq2cdXOOje_wea-52-T5rhaOorKAF3Z9Chv9IZU9SiU5Fujbu2RFT3nuW6CDkzR6oGLx7SuBtVmBhHNkAkXGHg-Q');">
+<span class="absolute bottom-0 right-0 size-2.5 bg-success border-2 border-white dark:border-surface-dark rounded-full"></span>
+</div>
+</button>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<aside class="w-64 bg-surface-light dark:bg-surface-dark border-r border-neutral-200 dark:border-neutral-700 flex flex-col hidden md:flex overflow-y-auto">
+<div class="p-2 space-y-0.5">
+<div class="px-3 py-2 text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Components</div>
+<div class="space-y-0.5">
+<button class="w-full flex items-center justify-between px-3 py-2 text-neutral-900 dark:text-white bg-neutral-100 dark:bg-neutral-800 rounded-md font-medium text-sm transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px] text-primary">input</span>
+                        Inputs
+                    </div>
+<span class="material-symbols-outlined text-[16px] text-neutral-500">expand_less</span>
+</button>
+<div class="pl-10 space-y-0.5">
+<a class="block px-3 py-1.5 text-sm font-medium text-primary bg-primary/5 rounded-md" href="#buttons">Buttons &amp; Toggles</a>
+<a class="block px-3 py-1.5 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 rounded-md transition-colors" href="#fields">Text &amp; Numbers</a>
+<a class="block px-3 py-1.5 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 rounded-md transition-colors" href="#selection">Selection Controls</a>
+<a class="block px-3 py-1.5 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 rounded-md transition-colors" href="#pickers">Date &amp; Time</a>
+</div>
+</div>
+<div>
+<button class="w-full flex items-center justify-between px-3 py-2 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-md font-medium text-sm transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px] group-hover:text-neutral-900 dark:group-hover:text-white">view_quilt</span>
+                        Surfaces
+                    </div>
+<span class="material-symbols-outlined text-[16px] text-neutral-400 group-hover:text-neutral-600">expand_more</span>
+</button>
+</div>
+<div>
+<button class="w-full flex items-center justify-between px-3 py-2 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-md font-medium text-sm transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px] group-hover:text-neutral-900 dark:group-hover:text-white">monitoring</span>
+                        Data Viz
+                    </div>
+<span class="material-symbols-outlined text-[16px] text-neutral-400 group-hover:text-neutral-600">expand_more</span>
+</button>
+</div>
+<div>
+<button class="w-full flex items-center justify-between px-3 py-2 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-md font-medium text-sm transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px] group-hover:text-neutral-900 dark:group-hover:text-white">feedback</span>
+                        Feedback
+                    </div>
+<span class="material-symbols-outlined text-[16px] text-neutral-400 group-hover:text-neutral-600">expand_more</span>
+</button>
+</div>
+</div>
+<div class="mt-auto p-4 border-t border-neutral-200 dark:border-neutral-700">
+<div class="flex items-center gap-3 px-2 py-2">
+<div class="w-8 h-8 rounded bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-neutral-900 dark:text-white">Version 2.4.0</span>
+<span class="text-[10px] text-neutral-500">Updated today</span>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 overflow-y-auto bg-neutral-50 dark:bg-background-dark p-6 pb-20 scroll-smooth">
+<div class="max-w-7xl mx-auto space-y-10">
+<div class="space-y-4">
+<nav aria-label="Breadcrumb" class="flex text-sm text-neutral-500">
+<ol class="flex items-center space-x-1">
+<li><a class="hover:text-primary transition-colors hover:underline" href="#">Design System</a></li>
+<li><span class="text-neutral-300 mx-1">/</span></li>
+<li aria-current="page" class="font-medium text-neutral-900 dark:text-neutral-100">Components</li>
+</ol>
+</nav>
+<div class="flex justify-between items-end pb-4 border-b border-neutral-200 dark:border-neutral-700">
+<div>
+<h2 class="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white mb-2">Component Library</h2>
+<p class="text-neutral-500 dark:text-neutral-400 max-w-2xl">
+                            Comprehensive collection of reusable UI elements following Fluent 2 design principles. High density, neutral palette, and accessible interactions.
+                        </p>
+</div>
+<div class="flex space-x-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-lg">
+<button class="px-4 py-1.5 text-sm font-medium bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white rounded shadow-sm transition-all">Preview</button>
+<button class="px-4 py-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 transition-all">Code</button>
+<button class="px-4 py-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 transition-all">Props</button>
+</div>
+</div>
+</div>
+<section class="space-y-6" id="inputs">
+<div class="flex items-center gap-2 pb-2">
+<span class="material-symbols-outlined text-primary text-2xl">input</span>
+<h3 class="text-xl font-bold text-neutral-900 dark:text-white">Inputs &amp; Forms Extended</h3>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<div class="bg-surface-light dark:bg-surface-dark p-8 rounded-xl shadow-elevation-1 border border-neutral-200 dark:border-neutral-700 space-y-6">
+<h4 class="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-4">Text &amp; Selection</h4>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-neutral-700 dark:text-neutral-200">Username <span class="text-error">*</span></label>
+<input class="w-full h-9 px-3 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder-neutral-400 text-sm transition-all" placeholder="Enter username" type="text"/>
+<p class="text-[11px] text-neutral-500">Must be unique.</p>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-neutral-700 dark:text-neutral-200">Quantity</label>
+<div class="relative">
+<input class="w-full h-9 px-3 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all text-right pr-8" type="number" value="1"/>
+<div class="absolute right-1 top-1 bottom-1 flex flex-col w-6 border-l border-neutral-200 dark:border-neutral-700">
+<button class="h-1/2 hover:bg-neutral-100 flex items-center justify-center text-neutral-500"><span class="material-symbols-outlined text-[12px]">expand_less</span></button>
+<button class="h-1/2 hover:bg-neutral-100 flex items-center justify-center text-neutral-500"><span class="material-symbols-outlined text-[12px]">expand_more</span></button>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-1.5 relative">
+<label class="text-sm font-medium text-neutral-700 dark:text-neutral-200">Assignee (Combobox)</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 text-[18px]">person_search</span>
+<input class="w-full h-9 pl-9 pr-8 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all" placeholder="Search user..." type="text"/>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 text-[18px] cursor-pointer">arrow_drop_down</span>
+</div>
+</div>
+<div class="space-y-3 pt-2">
+<div class="flex justify-between">
+<label class="text-sm font-medium text-neutral-700 dark:text-neutral-200">Opacity Range</label>
+<span class="text-xs font-mono text-neutral-500">75%</span>
+</div>
+<div class="relative w-full h-1 bg-neutral-200 dark:bg-neutral-700 rounded-full">
+<div class="absolute left-0 top-0 h-full bg-primary rounded-full" style="width: 75%"></div>
+<div class="absolute top-1/2 -translate-y-1/2 bg-white border-2 border-primary w-4 h-4 rounded-full shadow-sm cursor-pointer hover:scale-110 transition-transform" style="left: 75%"></div>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-neutral-700 dark:text-neutral-200">Description</label>
+<textarea class="w-full p-3 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all min-h-[80px] resize-y" placeholder="Add detailed notes..."></textarea>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark p-8 rounded-xl shadow-elevation-1 border border-neutral-200 dark:border-neutral-700 space-y-6">
+<h4 class="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-4">Pickers &amp; Booleans</h4>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-neutral-700 dark:text-neutral-200">Start Date</label>
+<div class="relative">
+<input class="w-full h-9 pl-3 pr-9 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all" type="text" value="Oct 24, 2023"/>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 text-[18px]">calendar_today</span>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-neutral-700 dark:text-neutral-200">Due Time</label>
+<div class="relative">
+<input class="w-full h-9 pl-3 pr-9 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all" type="text" value="14:30 PM"/>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 text-[18px]">schedule</span>
+</div>
+</div>
+</div>
+<hr class="border-neutral-100 dark:border-neutral-700"/>
+<div class="space-y-4">
+<div class="flex items-start gap-8">
+<div class="space-y-2">
+<span class="text-xs font-medium text-neutral-500 uppercase">Multi-select</span>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="size-4.5 text-primary border-neutral-300 rounded focus:ring-primary focus:ring-offset-0 transition-colors" type="checkbox"/>
+<span class="text-sm text-neutral-700 dark:text-neutral-200">Email</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4.5 text-primary border-neutral-300 rounded focus:ring-primary focus:ring-offset-0 transition-colors" type="checkbox"/>
+<span class="text-sm text-neutral-700 dark:text-neutral-200">SMS</span>
+</label>
+<label class="flex items-center gap-3 cursor-not-allowed group opacity-50">
+<input checked="" class="size-4.5 text-primary border-neutral-300 rounded focus:ring-primary focus:ring-offset-0" disabled="" type="checkbox"/>
+<span class="text-sm text-neutral-700 dark:text-neutral-200">Push (Disabled)</span>
+</label>
+</div>
+<div class="space-y-2">
+<span class="text-xs font-medium text-neutral-500 uppercase">Single-select</span>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="size-4.5 text-primary border-neutral-300 focus:ring-primary focus:ring-offset-0 transition-colors" name="role" type="radio"/>
+<span class="text-sm text-neutral-700 dark:text-neutral-200">Admin</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="size-4.5 text-primary border-neutral-300 focus:ring-primary focus:ring-offset-0 transition-colors" name="role" type="radio"/>
+<span class="text-sm text-neutral-700 dark:text-neutral-200">Editor</span>
+</label>
+</div>
+</div>
+<div class="pt-2">
+<span class="text-xs font-medium text-neutral-500 uppercase block mb-2">Toggles</span>
+<div class="flex gap-6">
+<label class="inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="relative w-9 h-5 bg-neutral-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 dark:peer-focus:ring-primary/40 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary shadow-sm"></div>
+<span class="ms-2 text-sm text-neutral-700 dark:text-neutral-200">Notifications</span>
+</label>
+<label class="inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="relative w-9 h-5 bg-neutral-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/30 dark:peer-focus:ring-primary/40 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary shadow-sm"></div>
+<span class="ms-2 text-sm text-neutral-700 dark:text-neutral-200">Dark Mode</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="space-y-6" id="data">
+<div class="flex items-center gap-2 pb-2">
+<span class="material-symbols-outlined text-primary text-2xl">table_chart</span>
+<h3 class="text-xl font-bold text-neutral-900 dark:text-white">Data Visualization</h3>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-elevation-1 border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+<div class="p-3 border-b border-neutral-200 dark:border-neutral-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-neutral-50/30 dark:bg-neutral-800/20">
+<div class="flex items-center gap-2">
+<h3 class="font-semibold text-neutral-900 dark:text-white mr-2">Employee Directory</h3>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-600">
+                                425 Total
+                            </span>
+</div>
+<div class="flex gap-2 w-full sm:w-auto">
+<div class="relative flex-grow sm:flex-grow-0">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400 text-[18px]">filter_list</span>
+<input class="w-full sm:w-48 h-8 pl-9 pr-3 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded text-sm placeholder-neutral-500 focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Filter list..." type="text"/>
+</div>
+<button class="h-8 px-3 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors flex items-center gap-2 shadow-sm text-neutral-700 dark:text-neutral-200">
+<span class="material-symbols-outlined text-[18px]">view_column</span>
+                                Columns
+                            </button>
+<button class="h-8 px-3 bg-primary text-white border border-transparent rounded text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                                Add New
+                            </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 text-xs uppercase tracking-wider text-neutral-500 font-semibold">
+<th class="p-4 w-12 text-center">
+<input class="size-4 text-primary border-neutral-300 rounded focus:ring-primary focus:ring-offset-0" type="checkbox"/>
+</th>
+<th class="p-4 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+<div class="flex items-center gap-1">Employee <span class="material-symbols-outlined text-[14px]">arrow_downward</span></div>
+</th>
+<th class="p-4 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">Role</th>
+<th class="p-4">Status</th>
+<th class="p-4">Performance</th>
+<th class="p-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-neutral-200 dark:divide-neutral-700">
+<tr class="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors bg-blue-50/30 dark:bg-blue-900/10">
+<td class="p-4 text-center border-l-2 border-l-primary">
+<input checked="" class="size-4 text-primary border-neutral-300 rounded focus:ring-primary focus:ring-offset-0" type="checkbox"/>
+</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="size-9 rounded-full bg-cover bg-center border border-neutral-200 dark:border-neutral-700" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDRjkEk6mC18HpSh5cZmPu78UEymSuJ1kAjc_heDCD2kZuO-EsaRgeRRF1Oblen_DsLL_WHPcdSo2i9IcOEylRETVL5In2flR1Grqz6vo6_79H4xp_LMxlPvBJ9b3w1xOTiuEG93TT-ULS26s9hr1q3papCST6XdCl741Jqzv_I5v5gYeQjxddpuLbW8LQyj-LczDynQb2CQq8HpPpvyRKZz7X4cpVkF0igIwTu_OXUj-X6ZkoMjaC5S2OguiZL6Oh2-BihET6m5w');"></div>
+<div class="absolute -bottom-0.5 -right-0.5 size-3 bg-success border-2 border-white dark:border-surface-dark rounded-full"></div>
+</div>
+<div>
+<p class="text-sm font-semibold text-neutral-900 dark:text-white">Sarah Connor</p>
+<p class="text-xs text-neutral-500">sarah@skynet.com</p>
+</div>
+</div>
+</td>
+<td class="p-4 text-sm text-neutral-600 dark:text-neutral-300">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-neutral-400">code</span>
+                                            Senior Dev
+                                        </div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-success/10 text-success border border-success/20">
+                                            Active
+                                        </span>
+</td>
+<td class="p-4 w-48">
+<div class="flex items-center gap-3">
+<div class="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded-full h-1.5">
+<div class="bg-primary h-1.5 rounded-full" style="width: 85%"></div>
+</div>
+<span class="text-xs font-medium text-neutral-600 dark:text-neutral-400">85%</span>
+</div>
+</td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-1">
+<button class="size-8 flex items-center justify-center rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="size-8 flex items-center justify-center rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-500 hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+<td class="p-4 text-center border-l-2 border-l-transparent">
+<input class="size-4 text-primary border-neutral-300 rounded focus:ring-primary focus:ring-offset-0" type="checkbox"/>
+</td>
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="size-9 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-neutral-600 dark:text-neutral-300 text-xs font-bold border border-neutral-200 dark:border-neutral-700">MR</div>
+<div class="absolute -bottom-0.5 -right-0.5 size-3 bg-warning border-2 border-white dark:border-surface-dark rounded-full"></div>
+</div>
+<div>
+<p class="text-sm font-semibold text-neutral-900 dark:text-white">Michael Ross</p>
+<p class="text-xs text-neutral-500">mike@pearson.com</p>
+</div>
+</div>
+</td>
+<td class="p-4 text-sm text-neutral-600 dark:text-neutral-300">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-neutral-400">gavel</span>
+                                            Legal Aid
+                                        </div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-warning/10 text-warning border border-warning/20">
+                                            Away
+                                        </span>
+</td>
+<td class="p-4 w-48">
+<div class="flex items-center gap-3">
+<div class="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded-full h-1.5">
+<div class="bg-warning h-1.5 rounded-full" style="width: 60%"></div>
+</div>
+<span class="text-xs font-medium text-neutral-600 dark:text-neutral-400">60%</span>
+</div>
+</td>
+<td class="p-4 text-right">
+<button class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 p-1">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-4 py-3 border-t border-neutral-200 dark:border-neutral-700 flex items-center justify-between bg-neutral-50/30 dark:bg-neutral-800/20">
+<span class="text-xs text-neutral-500">Showing 1 to 2 of 425 entries</span>
+<div class="flex gap-1">
+<button class="size-8 flex items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-500 disabled:opacity-50"><span class="material-symbols-outlined text-[16px]">chevron_left</span></button>
+<button class="size-8 flex items-center justify-center rounded bg-primary text-white text-xs font-medium">1</button>
+<button class="size-8 flex items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 text-xs font-medium">2</button>
+<button class="size-8 flex items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 text-xs font-medium">...</button>
+<button class="size-8 flex items-center justify-center rounded border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-500"><span class="material-symbols-outlined text-[16px]">chevron_right</span></button>
+</div>
+</div>
+</div>
+</section>
+<section class="space-y-6" id="feedback">
+<div class="flex items-center gap-2 pb-2">
+<span class="material-symbols-outlined text-primary text-2xl">notifications_active</span>
+<h3 class="text-xl font-bold text-neutral-900 dark:text-white">Feedback &amp; Surfaces</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-6">
+<h4 class="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-2">System Feedback</h4>
+<div class="flex items-start gap-3 p-4 bg-info/10 border border-info/20 rounded-lg">
+<span class="material-symbols-outlined text-info mt-0.5">info</span>
+<div class="flex-1">
+<h5 class="text-sm font-semibold text-neutral-900 dark:text-white">Update Available</h5>
+<p class="text-xs text-neutral-600 dark:text-neutral-300 mt-1">A new version of the dashboard is available. Please refresh to apply changes.</p>
+</div>
+<button class="text-neutral-500 hover:text-neutral-900 dark:hover:text-white"><span class="material-symbols-outlined text-[18px]">close</span></button>
+</div>
+<div class="flex items-start gap-3 p-4 bg-error/10 border border-error/20 rounded-lg">
+<span class="material-symbols-outlined text-error mt-0.5">error</span>
+<div class="flex-1">
+<h5 class="text-sm font-semibold text-neutral-900 dark:text-white">Connection Error</h5>
+<p class="text-xs text-neutral-600 dark:text-neutral-300 mt-1">Unable to connect to the server. Check your internet connection.</p>
+</div>
+</div>
+<div class="p-6 bg-surface-light dark:bg-surface-dark rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm">
+<div class="flex items-center gap-4 mb-4">
+<div class="size-12 rounded-full animate-shimmer"></div>
+<div class="space-y-2">
+<div class="h-4 w-32 rounded animate-shimmer"></div>
+<div class="h-3 w-20 rounded animate-shimmer"></div>
+</div>
+</div>
+<div class="space-y-3">
+<div class="h-3 w-full rounded animate-shimmer"></div>
+<div class="h-3 w-full rounded animate-shimmer"></div>
+<div class="h-3 w-3/4 rounded animate-shimmer"></div>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<h4 class="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-2">Overlays</h4>
+<div class="relative bg-neutral-100 dark:bg-neutral-800 p-6 rounded-xl border border-dashed border-neutral-300 dark:border-neutral-600 h-64 flex items-center justify-center">
+<div class="absolute top-4 left-4">
+<button class="px-3 py-1.5 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded text-sm font-medium shadow-sm peer focus:ring-2 focus:ring-primary/20">Popover Trigger</button>
+<div class="absolute top-full left-0 mt-2 w-48 bg-surface-light dark:bg-surface-dark rounded-lg shadow-elevation-3 border border-neutral-200 dark:border-neutral-700 p-3 z-10 hidden peer-focus:block hover:block">
+<h5 class="text-sm font-semibold mb-1">Quick Info</h5>
+<p class="text-xs text-neutral-500">This is a popover with some helpful context.</p>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-lg shadow-elevation-4 w-80 overflow-hidden relative z-0">
+<div class="p-5">
+<div class="size-10 bg-error/10 rounded-full flex items-center justify-center text-error mb-4">
+<span class="material-symbols-outlined">delete_forever</span>
+</div>
+<h3 class="text-lg font-bold text-neutral-900 dark:text-white">Delete Account</h3>
+<p class="text-sm text-neutral-500 mt-2">Are you sure you want to deactivate your account? This action cannot be undone.</p>
+</div>
+<div class="bg-neutral-50 dark:bg-neutral-800/50 px-5 py-3 flex justify-end gap-3 border-t border-neutral-100 dark:border-neutral-700">
+<button class="px-3 py-1.5 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-600 transition-colors">Cancel</button>
+<button class="px-3 py-1.5 bg-error text-white rounded text-sm font-medium hover:bg-error/90 transition-colors shadow-sm">Deactivate</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-8 bg-surface-light dark:bg-surface-dark rounded-xl border border-neutral-200 dark:border-neutral-700 p-12 flex flex-col items-center justify-center text-center">
+<div class="size-16 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-neutral-400 text-3xl">folder_off</span>
+</div>
+<h3 class="text-lg font-bold text-neutral-900 dark:text-white">No Projects Found</h3>
+<p class="text-neutral-500 max-w-sm mt-2 mb-6 text-sm">You haven't created any projects yet. Get started by creating your first project from the dashboard.</p>
+<button class="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-md font-semibold text-sm transition-all shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        Create Project
+                    </button>
+</div>
+</section>
+</div>
+</main>
+</div>
+
+</body></html>

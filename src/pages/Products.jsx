@@ -1,7 +1,7 @@
 // ===========================================================================
-// Products Page - MVP Implementation
-// Patrón: Fluent Design System 2 + BEM + Zustand
-// Basado en: docs/GUIA_MVP_DESARROLLO.md
+// Products Page - Fluent Design System 2 + Tailwind CSS
+// Patrón: Zustand + Tailwind
+// Basado en el rediseño de Stitch: b924dd75a6f1443ab01d2164934bd635
 // ===========================================================================
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
@@ -14,9 +14,12 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreHorizontal,
-  X,
-  Calendar,
   RefreshCw,
+  MoreVertical,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  Package,
 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import useProductStore from '@/store/useProductStore'
@@ -26,7 +29,6 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import StatusBadge from '@/components/ui/StatusBadge'
-import PageHeader from '@/components/ui/PageHeader'
 import {
   Select,
   SelectContent,
@@ -34,22 +36,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination'
-import {
-  Breadcrumb,
-  BreadcrumbList,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbSeparator,
-  BreadcrumbPage,
-} from '@/components/ui/breadcrumb'
 import {
   Table,
   TableHeader,
@@ -61,12 +47,9 @@ import {
 import { Card } from '@/components/ui/card'
 import ProductFormModal from '@/components/ProductFormModal'
 import ProductDetailsModal from '@/components/ProductDetailsModal'
-import '@/styles/scss/pages/_products.scss'
 
 /**
  * Custom hook para debounce
- * @param {Function} callback - Función a ejecutar después del debounce
- * @param {number} delay - Retraso en milisegundos
  */
 const useDebounce = (callback, delay) => {
   const timeoutRef = useRef(null)
@@ -84,7 +67,6 @@ const useDebounce = (callback, delay) => {
     [callback, delay],
   )
 
-  // Cleanup al desmontar
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -123,7 +105,7 @@ const Products = () => {
   const [selectedIds, setSelectedIds] = useState([])
   const [isSearching, setIsSearching] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
-  const [viewMode, setViewMode] = useState('paginated') // 'paginated' o 'search'
+  const [viewMode, setViewMode] = useState('paginated')
   const [showFilters, setShowFilters] = useState(false)
   const [localFilters, setLocalFilters] = useState({
     category: 'all',
@@ -141,12 +123,11 @@ const Products = () => {
     fetchCategories()
   }, [fetchProductsPaginated, fetchCategories])
 
-  // Función de búsqueda con validación de mínimo 4 caracteres
+  // Función de búsqueda
   const performSearch = useCallback(
     term => {
       const trimmedTerm = term.trim()
 
-      // Si el término está vacío, volver a modo paginado
       if (!trimmedTerm) {
         setIsSearching(false)
         setHasSearched(false)
@@ -155,13 +136,11 @@ const Products = () => {
         return
       }
 
-      // Validar mínimo 4 caracteres
       if (trimmedTerm.length < 4) {
         setIsSearching(false)
         return
       }
 
-      // Realizar búsqueda
       setIsSearching(true)
       setHasSearched(true)
       setViewMode('search')
@@ -172,10 +151,8 @@ const Products = () => {
     [fetchProducts, fetchProductsPaginated],
   )
 
-  // Debounce de 500ms para la búsqueda
   const debouncedSearch = useDebounce(performSearch, 500)
 
-  // Handlers
   const handleSearch = e => {
     const value = e.target.value
     setSearchTerm(value)
@@ -187,7 +164,6 @@ const Products = () => {
       e.preventDefault()
       const value = searchTerm.trim()
       if (value.length >= 4) {
-        // Cancelar el debounce pendiente y buscar inmediatamente
         performSearch(value)
       }
     }
@@ -215,7 +191,6 @@ const Products = () => {
     }
   }
 
-  // Handler para aplicar filtros
   const handleApplyFilters = () => {
     setFilters(localFilters)
     setShowFilters(false)
@@ -224,7 +199,6 @@ const Products = () => {
     }
   }
 
-  // Handler para limpiar filtros
   const handleClearFilters = () => {
     const clearedFilters = { category: 'all', status: 'all' }
     setLocalFilters(clearedFilters)
@@ -234,28 +208,11 @@ const Products = () => {
     }
   }
 
-  // Handler para refrescar datos
   const handleRefresh = () => {
     if (viewMode === 'search' && searchTerm) {
       fetchProducts(currentPage, 10, searchTerm)
     } else {
       fetchProductsPaginated(currentPage, 10)
-    }
-  }
-
-  // Formatear fecha para mostrar
-  const formatDate = dateString => {
-    if (!dateString || dateString.startsWith('0001')) return '-'
-    try {
-      const date = new Date(dateString)
-      if (isNaN(date.getTime())) return '-'
-      return date.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      })
-    } catch {
-      return '-'
     }
   }
 
@@ -276,7 +233,6 @@ const Products = () => {
   }
 
   const getStockDisplay = product => {
-    // Handle both financial API format (stock_quantity) and standard format (stock, quantity)
     const stock =
       product.stock_quantity ?? product.stock ?? product.quantity ?? 0
     const isLow = stock < 10
@@ -289,7 +245,6 @@ const Products = () => {
     }
   }
 
-  // Modal handlers
   const handleOpenCreateModal = () => {
     setSelectedProduct(null)
     setIsFormModalOpen(true)
@@ -303,12 +258,7 @@ const Products = () => {
   const handleCloseFormModal = () => {
     setIsFormModalOpen(false)
     setSelectedProduct(null)
-    // Reload products after modal closes to get updated data
-    if (viewMode === 'search' && searchTerm) {
-      fetchProducts(currentPage, 10, searchTerm)
-    } else {
-      fetchProductsPaginated(currentPage, 10)
-    }
+    handleRefresh()
   }
 
   const handleOpenDetailsModal = product => {
@@ -328,31 +278,27 @@ const Products = () => {
   }
 
   const getHealthIndicator = product => {
-    // Use financial health data from API if available, otherwise use simple logic
     const stock =
       product.stock_quantity ?? product.stock ?? product.quantity ?? 0
     const isActive = product.state !== false && product.is_active !== false
 
-    // If financial_health data is available from the API, use it
     if (product.financial_health) {
       const { has_prices, has_costs, has_stock } = product.financial_health
-
       if (!has_prices || !has_costs || !has_stock) {
-        return { level: 'poor', text: t('products.health.poor') }
+        return { level: 'poor', text: t('products.health.poor'), color: 'bg-red-500' }
       } else if (stock < 10) {
-        return { level: 'at-risk', text: t('products.health.at_risk') }
+        return { level: 'at-risk', text: t('products.health.at_risk'), color: 'bg-yellow-500' }
       } else {
-        return { level: 'healthy', text: t('products.health.healthy') }
+        return { level: 'healthy', text: t('products.health.healthy'), color: 'bg-green-500' }
       }
     }
 
-    // Fallback to simple logic
     if (!isActive || stock === 0) {
-      return { level: 'poor', text: t('products.health.poor') }
+      return { level: 'poor', text: t('products.health.poor'), color: 'bg-red-500' }
     } else if (stock < 10) {
-      return { level: 'at-risk', text: t('products.health.at_risk') }
+      return { level: 'at-risk', text: t('products.health.at_risk'), color: 'bg-yellow-500' }
     } else {
-      return { level: 'healthy', text: t('products.health.healthy') }
+      return { level: 'healthy', text: t('products.health.healthy'), color: 'bg-green-500' }
     }
   }
 
@@ -360,106 +306,86 @@ const Products = () => {
   const endIndex = Math.min(currentPage * 10, totalProducts)
 
   return (
-    <div className='products-page'>
-      <div className='products-page__content'>
+    <div className='min-h-screen bg-[#f3f4f6] text-[#323130] p-8 overflow-y-auto'>
+      <div className='max-w-[1600px] mx-auto'>
+        
         {/* Breadcrumbs */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink
-                onClick={() => navigate('/dashboard')}
-                className='cursor-pointer'
-              >
-                {t('products.breadcrumb.home', 'Inicio')}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>
-                {t('products.breadcrumb.inventory', 'Inventario')}
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{t('products.page.title')}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <nav className="flex text-sm text-gray-500 mb-6">
+          <span onClick={() => navigate('/dashboard')} className="hover:text-[#106ebe] cursor-pointer transition-colors">
+            {t('products.breadcrumb.home', 'Inicio')}
+          </span>
+          <span className="mx-2">/</span>
+          <span className="text-gray-400">
+            {t('products.breadcrumb.inventory', 'Inventario')}
+          </span>
+          <span className="mx-2">/</span>
+          <span className="font-semibold text-gray-800">{t('products.page.title')}</span>
+        </nav>
 
         {/* Page Header */}
-        <div className='products-page__header'>
+        <div className='flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4'>
           <div>
-            <h1 className='products-page__title'>{t('products.page.title')}</h1>
-            <p className='products-page__subtitle'>
-              {t('products.page.subtitle')}
-            </p>
+            <h1 className='text-3xl font-bold tracking-tight text-[#242424]'>{t('products.page.title')}</h1>
+            <p className='text-[#616161] mt-1'>{t('products.page.subtitle')}</p>
           </div>
-          <div className='products-page__actions'>
+          <div className='flex items-center gap-2'>
             <Button
-              variant='secondary'
+              variant='outline'
               onClick={handleRefresh}
               disabled={loading}
+              className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
             >
-              <RefreshCw className={`size-4 ${loading ? 'spin' : ''}`} />
-              <span className='hidden sm:inline'>
-                {t('products.action.refresh', 'Refrescar')}
-              </span>
+              <RefreshCw className={`size-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <span className='hidden sm:inline'>{t('products.action.refresh', 'Refrescar')}</span>
             </Button>
-            <Button variant='secondary'>
-              <Share className='size-4' />
-              <span className='hidden sm:inline'>
-                {t('products.action.export')}
-              </span>
+            <Button variant='outline' className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700">
+              <Share className='size-4 mr-2' />
+              <span className='hidden sm:inline'>{t('products.action.export')}</span>
             </Button>
-            <Button variant='primary' onClick={handleOpenCreateModal}>
-              <Plus className='size-4' />
+            <Button 
+              className='bg-[#106ebe] hover:bg-[#005a9e] text-white px-5 shadow-sm border-none'
+              onClick={handleOpenCreateModal}
+            >
+              <Plus className='size-4 mr-2' />
               <span>{t('products.action.new_product')}</span>
             </Button>
           </div>
         </div>
 
-        {/* Toolbar & Filters Container */}
-        <Card className='products-page__toolbar-card'>
-          <div className='toolbar'>
+        {/* Toolbar Card */}
+        <Card className='bg-white border-gray-200 rounded-xl shadow-sm p-6 mb-6'>
+          <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
             {/* Search */}
-            <div className='toolbar__search'>
-              <div className='search-box'>
-                <div className='search-box__icon-wrapper'>
-                  {isSearching ? (
-                    <div className='spinner spinner--small' />
-                  ) : (
-                    <Search className='search-box__icon' aria-hidden='true' />
-                  )}
-                </div>
-                <Input
-                  type='search'
-                  className='search-box__input'
-                  placeholder={t('products.search.by_name_sku')}
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  onKeyDown={handleSearchKeyDown}
-                />
-              </div>
-              {searchTerm &&
-                searchTerm.trim().length > 0 &&
-                searchTerm.trim().length < 4 && (
-                  <p className='search-box__helper'>
-                    {t(
-                      'products.search.min_chars',
-                      'Escribe al menos 4 caracteres',
-                    )}{' '}
-                    ({searchTerm.trim().length}/4)
-                  </p>
+            <div className='relative flex-1 max-w-xl'>
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                {isSearching ? (
+                  <RefreshCw className="size-5 animate-spin" />
+                ) : (
+                  <Search className="size-5" />
                 )}
+              </span>
+              <Input
+                type='search'
+                className='block w-full pl-10 pr-3 py-2.5 border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-[#106ebe] focus:border-transparent outline-none transition-all h-11'
+                placeholder={t('products.search.by_name_sku')}
+                value={searchTerm}
+                onChange={handleSearch}
+                onKeyDown={handleSearchKeyDown}
+              />
+              {searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < 4 && (
+                <p className='absolute -bottom-6 left-0 text-xs text-orange-600'>
+                  {t('products.search.min_chars', 'Escribe al menos 4 caracteres')} ({searchTerm.trim().length}/4)
+                </p>
+              )}
             </div>
 
-            {/* Quick Filters Toggle */}
-            <div className='toolbar__filters'>
+            {/* Filters Toggle */}
+            <div className='flex items-center gap-2'>
               <Button
-                variant='secondary'
+                variant={showFilters ? 'default' : 'outline'}
                 size='sm'
-                className={showFilters ? 'btn--active' : ''}
                 onClick={() => setShowFilters(!showFilters)}
+                className={`h-11 px-4 ${showFilters ? 'bg-[#106ebe] text-white' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
               >
                 <Filter className='size-4 mr-2' />
                 {t('products.action.filter')}
@@ -469,132 +395,106 @@ const Products = () => {
 
           {/* Advanced Filters Panel */}
           {showFilters && (
-            <div className='filters-panel'>
-              <div className='filters-panel__grid'>
-                {/* Filtro por categoría */}
-                <div className='filters-panel__field'>
-                  <label className='filters-panel__label'>
-                    {t('products.filter.category', 'Categoría')}
-                  </label>
-                  <Select
-                    value={localFilters.category}
-                    onValueChange={value =>
-                      setLocalFilters(prev => ({ ...prev, category: value }))
-                    }
-                  >
-                    <SelectTrigger className='filters-panel__select'>
-                      <SelectValue
-                        placeholder={t('products.filter.all_categories')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='all'>
-                        {t('products.filter.all_categories')}
-                      </SelectItem>
-                      {categories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id.toString()}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className='mt-6 pt-6 border-t border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-2'>
+              {/* Category Filter */}
+              <div className='space-y-2'>
+                <label className='text-xs font-semibold text-gray-500 uppercase tracking-wider'>
+                  {t('products.filter.category', 'Categoría')}
+                </label>
+                <Select
+                  value={localFilters.category}
+                  onValueChange={value =>
+                    setLocalFilters(prev => ({ ...prev, category: value }))
+                  }
+                >
+                  <SelectTrigger className='w-full border-gray-200 bg-white h-10'>
+                    <SelectValue placeholder={t('products.filter.all_categories')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>{t('products.filter.all_categories')}</SelectItem>
+                    {categories.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* Filtro por estado */}
-                <div className='filters-panel__field'>
-                  <label className='filters-panel__label'>
-                    {t('products.filter.status', 'Estado')}
-                  </label>
-                  <Select
-                    value={localFilters.status}
-                    onValueChange={value =>
-                      setLocalFilters(prev => ({ ...prev, status: value }))
-                    }
-                  >
-                    <SelectTrigger className='filters-panel__select'>
-                      <SelectValue
-                        placeholder={t('products.filter.all_statuses')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='all'>
-                        {t('products.filter.all_statuses')}
-                      </SelectItem>
-                      <SelectItem value='active'>
-                        {t('products.state.active')}
-                      </SelectItem>
-                      <SelectItem value='inactive'>
-                        {t('products.state.inactive')}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Status Filter */}
+              <div className='space-y-2'>
+                <label className='text-xs font-semibold text-gray-500 uppercase tracking-wider'>
+                  {t('products.filter.status', 'Estado')}
+                </label>
+                <Select
+                  value={localFilters.status}
+                  onValueChange={value =>
+                    setLocalFilters(prev => ({ ...prev, status: value }))
+                  }
+                >
+                  <SelectTrigger className='w-full border-gray-200 bg-white h-10'>
+                    <SelectValue placeholder={t('products.filter.all_statuses')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='all'>{t('products.filter.all_statuses')}</SelectItem>
+                    <SelectItem value='active'>{t('products.state.active')}</SelectItem>
+                    <SelectItem value='inactive'>{t('products.state.inactive')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* Botones de acción */}
-                <div className='filters-panel__actions'>
-                  <Button
-                    variant='primary'
-                    onClick={handleApplyFilters}
-                    size='sm'
-                  >
-                    {t('products.filter.apply', 'Aplicar')}
-                  </Button>
-                  <Button
-                    variant='secondary'
-                    onClick={handleClearFilters}
-                    size='sm'
-                  >
-                    {t('products.filter.clear', 'Limpiar')}
-                  </Button>
-                </div>
+              {/* Action Buttons */}
+              <div className='flex items-end gap-2'>
+                <Button
+                  className='flex-1 bg-[#106ebe] hover:bg-[#005a9e] text-white h-10'
+                  onClick={handleApplyFilters}
+                >
+                  {t('products.filter.apply', 'Aplicar')}
+                </Button>
+                <Button
+                  variant='outline'
+                  className='flex-1 border-gray-200 text-gray-700 h-10 hover:bg-gray-50'
+                  onClick={handleClearFilters}
+                >
+                  {t('products.filter.clear', 'Limpiar')}
+                </Button>
               </div>
             </div>
           )}
         </Card>
 
-        {/* Products Table */}
-        <div className='products-table-container'>
+        {/* Table Container */}
+        <div className='bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden'>
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className='w-[50px]'>
+            <TableHeader className="bg-gray-50/50 border-b border-gray-100">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className='w-[60px] text-center px-6'>
                   <Checkbox
-                    checked={
-                      selectedIds.length === products.length &&
-                      products.length > 0
-                    }
+                    checked={selectedIds.length === products.length && products.length > 0}
                     onCheckedChange={toggleSelectAll}
+                    className="border-gray-300 data-[state=checked]:bg-[#106ebe] data-[state=checked]:border-[#106ebe]"
                   />
                 </TableHead>
-                <TableHead>{t('products.table.product_name')}</TableHead>
-                <TableHead>{t('products.table.category')}</TableHead>
-                <TableHead>{t('products.table.stock')}</TableHead>
-                <TableHead>{t('products.table.state')}</TableHead>
-                <TableHead>{t('products.table.financial_health')}</TableHead>
-                <TableHead>
+                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">{t('products.table.product_name')}</TableHead>
+                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">{t('products.table.category')}</TableHead>
+                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">{t('products.table.stock')}</TableHead>
+                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">{t('products.table.state')}</TableHead>
+                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">{t('products.table.financial_health')}</TableHead>
+                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">
                   {t('products.table.created_at', 'Creado')}
                 </TableHead>
-                <TableHead className='text-right'>
-                  {t('products.table.actions')}
-                </TableHead>
+                <TableHead className='text-right py-4 px-6'></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* Estado: Cargando */}
+              {/* States: Loading, Error, Empty, Data */}
               {loading && products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8}>
-                    <DataState
-                      variant='loading'
-                      skeletonVariant='list'
-                      skeletonProps={{ count: 10 }}
-                    />
+                  <TableCell colSpan={8} className="py-20">
+                    <DataState variant='loading' skeletonVariant='list' skeletonProps={{ count: 10 }} />
                   </TableCell>
                 </TableRow>
-              ) : /* Estado: Error */
-              error ? (
+              ) : error ? (
                 <TableRow>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={8} className="py-20">
                     <DataState
                       variant='error'
                       title={t('products.error.title')}
@@ -606,86 +506,90 @@ const Products = () => {
                     />
                   </TableCell>
                 </TableRow>
-              ) : /* Estado: Sin productos */
-              products.length === 0 ? (
+              ) : products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={8} className="py-20">
                     <DataState
                       variant='empty'
-                      title={
-                        viewMode === 'search'
-                          ? t('products.empty.no_results')
-                          : t('products.empty.title')
-                      }
-                      description={
-                        viewMode === 'search'
-                          ? `No se encontraron productos con "${searchTerm}"`
-                          : t('products.empty.description')
-                      }
+                      title={viewMode === 'search' ? t('products.empty.no_results') : t('products.empty.title')}
+                      description={viewMode === 'search' ? `No se encontraron productos con "${searchTerm}"` : t('products.empty.description')}
                       actionLabel={t('products.action.new_product')}
                       onAction={handleOpenCreateModal}
                     />
                   </TableCell>
                 </TableRow>
               ) : (
-                /* Estado: Productos encontrados */
                 products.map(product => {
                   const productId = product.product_id || product.id
-                  const productName =
-                    product.product_name || product.name || t('field.no_name')
-                  const categoryName =
-                    product.category_name || product.category?.name || '-'
+                  const productName = product.product_name || product.name || t('field.no_name')
+                  const categoryName = product.category_name || product.category?.name || '-'
                   const isSelected = selectedIds.includes(productId)
                   const stockInfo = getStockDisplay(product)
                   const healthInfo = getHealthIndicator(product)
-                  const isActive =
-                    product.state !== false && product.is_active !== false
+                  const isActive = product.state !== false && product.is_active !== false
 
                   return (
-                    <TableRow key={productId} selected={isSelected}>
-                      <TableCell>
+                    <TableRow 
+                      key={productId} 
+                      selected={isSelected}
+                      className="border-b border-gray-50 hover:bg-gray-50 transition-colors group"
+                    >
+                      <TableCell className="px-6 text-center">
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={() => toggleSelectProduct(productId)}
+                          className="border-gray-300 data-[state=checked]:bg-[#106ebe] data-[state=checked]:border-[#106ebe]"
                         />
                       </TableCell>
-                      <TableCell
-                        className='font-medium cursor-pointer hover:underline'
-                        onClick={() => handleOpenDetailsModal(product)}
-                      >
-                        {productName}
-                      </TableCell>
-                      <TableCell>{categoryName}</TableCell>
-                      <TableCell
-                        className={
-                          stockInfo.isLow
-                            ? 'text-destructive font-semibold'
-                            : ''
-                        }
-                      >
-                        {stockInfo.display}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge active={isActive} />
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex items-center gap-2'>
-                          <div
-                            className={`size-2 rounded-full health-dot--${healthInfo.level}`}
-                          />
-                          <span className='text-sm'>{healthInfo.text}</span>
+                      <TableCell className='py-4 px-4'>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200 overflow-hidden text-gray-400">
+                            {product.image_url ? (
+                              <img src={product.image_url} alt={productName} className="w-full h-full object-cover" />
+                            ) : (
+                              <Package size={20} />
+                            )}
+                          </div>
+                          <span 
+                            className='font-medium text-[#242424] cursor-pointer hover:text-[#106ebe] hover:underline'
+                            onClick={() => handleOpenDetailsModal(product)}
+                          >
+                            {productName}
+                          </span>
                         </div>
                       </TableCell>
-                      <TableCell className='text-muted-foreground tabular-nums'>
-                        {formatDate(product.created_at)}
+                      <TableCell className="text-gray-600 px-4">{categoryName}</TableCell>
+                      <TableCell className="px-4">
+                        <span className={stockInfo.isLow ? 'text-red-600 font-medium' : 'text-[#242424]'}>
+                          {stockInfo.display}
+                        </span>
                       </TableCell>
-                      <TableCell className='text-right'>
+                      <TableCell className="px-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          isActive 
+                            ? 'bg-[#dff6dd] text-[#107c10]' 
+                            : 'bg-[#fde7e9] text-[#a4262c]'
+                        }`}>
+                          {isActive ? t('products.state.active') : t('products.state.inactive')}
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-4">
+                        <div className='flex items-center gap-2'>
+                          <div className={`size-2 rounded-full ${healthInfo.color}`} />
+                          <span className='text-sm text-[#242424]'>{healthInfo.text}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className='text-gray-500 tabular-nums px-4 text-[13px]'>
+                        {product.created_at ? new Date(product.created_at).toLocaleDateString('es-ES') : '-'}
+                      </TableCell>
+                      <TableCell className='text-right px-6'>
                         <Button
                           variant='ghost'
                           size='icon'
+                          className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
                           onClick={() => handleOpenEditModal(product)}
                         >
-                          <MoreHorizontal className='size-4' />
+                          <MoreVertical className='size-5' />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -694,37 +598,39 @@ const Products = () => {
               )}
             </TableBody>
           </Table>
-        </div>
 
-        {/* Pagination */}
-        <div className='pagination'>
-          <span className='pagination__info'>
-            {t('products.pagination.showing', {
-              start: startIndex,
-              end: endIndex,
-              total: totalProducts,
-            })}
-          </span>
-          <div className='pagination__controls'>
-            <Button
-              variant='ghost'
-              size='icon'
-              onClick={handlePreviousPage}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className='size-4' />
-            </Button>
-            <span className='pagination__page-info'>
-              {currentPage} / {totalPages || 1}
-            </span>
-            <Button
-              variant='ghost'
-              size='icon'
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages || totalPages === 0}
-            >
-              <ChevronRight className='size-4' />
-            </Button>
+          {/* Pagination Footer */}
+          <div className='px-6 py-4 flex items-center justify-between bg-[#fafafa] border-t border-gray-100'>
+            <p className='text-[13px] text-gray-500 font-medium'>
+              {t('products.pagination.showing', {
+                start: startIndex,
+                end: endIndex,
+                total: totalProducts,
+              })}
+            </p>
+            <div className='flex items-center gap-4'>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1 || loading}
+                className="p-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30 h-8 w-8"
+              >
+                <ChevronLeft className='size-5' />
+              </Button>
+              <span className='text-sm font-semibold text-gray-700'>
+                {currentPage} / {totalPages || 1}
+              </span>
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages || totalPages === 0 || loading}
+                className="p-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30 h-8 w-8"
+              >
+                <ChevronRight className='size-5' />
+              </Button>
+            </div>
           </div>
         </div>
 

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Showcase de Componentes UI (Fluent 2)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .fluent-shadow { box-shadow: 0 2px 4px rgba(0,0,0,0.04), 0 0 2px rgba(0,0,0,0.06); }
+        .fluent-shadow-lg { box-shadow: 0 8px 16px rgba(0,0,0,0.08), 0 0 2px rgba(0,0,0,0.06); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<!-- Header Section -->
+<header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
+<div class="px-4 py-2 flex items-center gap-2 text-xs text-slate-500">
+<span>Inicio</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>Design</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-medium">Showcase</span>
+</div>
+<div class="px-4 pb-4">
+<h1 class="text-2xl font-bold tracking-tight">Biblioteca de Componentes Maestros</h1>
+</div>
+<!-- Command Bar -->
+<div class="flex items-center gap-1 px-2 pb-2 overflow-x-auto no-scrollbar">
+<button class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary rounded hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Nuevo</span>
+</button>
+<button class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+<span>Filtrar</span>
+</button>
+<button class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Exportar</span>
+</button>
+</div>
+</header>
+<main class="p-4 space-y-8 pb-24">
+<!-- Section 1: Data Entry -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+<span class="material-symbols-outlined text-primary">edit_note</span>
+<h2 class="text-lg font-semibold">Entrada de Datos</h2>
+</div>
+<div class="grid grid-cols-1 gap-6 bg-white dark:bg-slate-900 p-4 rounded-lg fluent-shadow">
+<!-- Buttons -->
+<div class="space-y-3">
+<p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Botones</p>
+<div class="flex flex-wrap gap-2">
+<button class="bg-primary text-white px-4 py-2 rounded text-sm font-medium">Principal</button>
+<button class="border border-slate-300 dark:border-slate-600 px-4 py-2 rounded text-sm font-medium">Contorno</button>
+<button class="text-primary px-4 py-2 rounded text-sm font-medium hover:bg-primary/10">Fantasma</button>
+</div>
+</div>
+<!-- Inputs -->
+<div class="space-y-4">
+<div class="space-y-1">
+<label class="text-sm font-medium">Nombre del Componente</label>
+<input class="w-full border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded px-3 py-2 text-sm focus:ring-primary focus:border-primary" placeholder="Escribe aquí..." type="text"/>
+</div>
+<div class="space-y-1">
+<label class="text-sm font-medium">Descripción</label>
+<textarea class="w-full border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded px-3 py-2 text-sm focus:ring-primary focus:border-primary" placeholder="Detalles adicionales..." rows="3"></textarea>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="text-sm font-medium">Categoría</label>
+<select class="w-full border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded px-3 py-2 text-sm">
+<option>Finanzas</option>
+<option>Sistemas</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="text-sm font-medium">Fecha</label>
+<div class="relative">
+<input class="w-full border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded px-3 py-2 text-sm" type="date"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Toggles & Checks -->
+<div class="grid grid-cols-2 gap-4 pt-2">
+<div class="flex items-center gap-3">
+<div class="relative inline-flex h-5 w-9 items-center rounded-full bg-primary">
+<span class="inline-block h-3 w-3 translate-x-5 transform rounded-full bg-white transition"></span>
+</div>
+<span class="text-sm">Activo</span>
+</div>
+<div class="flex items-center gap-3">
+<input checked="" class="rounded text-primary focus:ring-primary border-slate-300" type="checkbox"/>
+<span class="text-sm">Habilitado</span>
+</div>
+</div>
+<!-- Search Box -->
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary" placeholder="Buscar componentes..." type="search"/>
+</div>
+</div>
+</section>
+<!-- Section 2: Data Visualization -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+<h2 class="text-lg font-semibold">Visualización de Datos</h2>
+</div>
+<!-- Mini Data Grid -->
+<div class="bg-white dark:bg-slate-900 rounded-lg fluent-shadow overflow-hidden">
+<table class="w-full text-left text-sm">
+<thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+<tr>
+<th class="px-4 py-3 font-semibold">Item</th>
+<th class="px-4 py-3 font-semibold text-right">Estado</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr>
+<td class="px-4 py-3">Nómina Q1</td>
+<td class="px-4 py-3 text-right">
+<span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500 mr-1"></span>
+<span class="text-xs text-slate-500 uppercase font-bold">Saludable</span>
+</td>
+</tr>
+<tr>
+<td class="px-4 py-3">Inversión I+D</td>
+<td class="px-4 py-3 text-right">
+<span class="inline-block w-2.5 h-2.5 rounded-full bg-yellow-500 mr-1"></span>
+<span class="text-xs text-slate-500 uppercase font-bold">Riesgo</span>
+</td>
+</tr>
+<tr>
+<td class="px-4 py-3">Gastos Legales</td>
+<td class="px-4 py-3 text-right">
+<span class="inline-block w-2.5 h-2.5 rounded-full bg-red-500 mr-1"></span>
+<span class="text-xs text-slate-500 uppercase font-bold">Crítico</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Persona & Chips -->
+<div class="grid grid-cols-1 gap-4">
+<div class="bg-white dark:bg-slate-900 p-4 rounded-lg fluent-shadow flex items-center gap-3">
+<div class="relative">
+<div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
+                            JD
+                        </div>
+<div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white dark:border-slate-900 rounded-full"></div>
+</div>
+<div>
+<p class="font-semibold leading-none">Juan Delgado</p>
+<p class="text-xs text-slate-500 mt-1">Administrador Senior</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-primary/10 text-primary text-xs font-semibold rounded uppercase">Etiqueta</span>
+<span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-semibold rounded uppercase">Sistema</span>
+<span class="px-2 py-1 bg-red-100 text-red-600 text-xs font-semibold rounded uppercase">Urgente</span>
+</div>
+</div>
+<!-- Accordion -->
+<div class="bg-white dark:bg-slate-900 rounded-lg fluent-shadow divide-y divide-slate-100 dark:divide-slate-800">
+<div class="p-4 flex items-center justify-between">
+<span class="font-medium text-sm">Configuración Avanzada</span>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</div>
+<div class="p-4 bg-slate-50 dark:bg-slate-800/30">
+<p class="text-sm text-slate-600 dark:text-slate-400 italic">Contenido expandido con detalles técnicos y opciones secundarias del sistema ERP.</p>
+</div>
+</div>
+</section>
+<!-- Section 3: Feedback & Overlays -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+<span class="material-symbols-outlined text-primary">notification_important</span>
+<h2 class="text-lg font-semibold">Feedback y Estados</h2>
+</div>
+<!-- Message Bars -->
+<div class="space-y-3">
+<div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-3 flex gap-3">
+<span class="material-symbols-outlined text-blue-500">info</span>
+<p class="text-sm text-blue-700 dark:text-blue-300">Hay una nueva actualización disponible.</p>
+</div>
+<div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-3 flex gap-3">
+<span class="material-symbols-outlined text-green-500">check_circle</span>
+<p class="text-sm text-green-700 dark:text-green-300">Cambios guardados exitosamente.</p>
+</div>
+</div>
+<!-- Progress & Skeleton -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-lg fluent-shadow space-y-6">
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-medium">
+<span>Cargando archivos...</span>
+<span>65%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 65%"></div>
+</div>
+</div>
+<div class="space-y-3">
+<p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Esqueleto (Shimmer)</p>
+<div class="animate-pulse space-y-2">
+<div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+<div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+</div>
+</div>
+</div>
+<!-- Empty State -->
+<div class="flex flex-col items-center justify-center py-10 text-center">
+<div class="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-slate-400 text-[48px]">folder_off</span>
+</div>
+<h3 class="font-semibold">Sin resultados</h3>
+<p class="text-sm text-slate-500 max-w-[240px] mt-1">Intenta ajustar tus filtros para encontrar lo que buscas.</p>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-4 pb-6 pt-2 z-50">
+<div class="flex justify-around items-end max-w-lg mx-auto">
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-[24px] text-slate-400 group-hover:text-primary">home</span>
+<span class="text-[10px] font-medium text-slate-500">Inicio</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-[24px] text-primary fill-current">grid_view</span>
+<span class="text-[10px] font-medium text-primary">Librería</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-[24px] text-slate-400 group-hover:text-primary">notifications</span>
+<span class="text-[10px] font-medium text-slate-500">Alertas</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-[24px] text-slate-400 group-hover:text-primary">account_circle</span>
+<span class="text-[10px] font-medium text-slate-500">Perfil</span>
+</a>
+</div>
+</nav>
+</body></html>

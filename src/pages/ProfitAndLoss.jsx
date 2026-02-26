@@ -15,11 +15,11 @@ const ProfitAndLoss = () => {
           <p className="text-slate-500 text-base font-medium">Period: current month vs previous period</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 text-sm font-bold shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-300 text-sm font-bold shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
             <span className="material-symbols-outlined text-lg">calendar_today</span>
             May 2024
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg text-sm font-bold shadow-md hover:bg-[#137fec]/90 transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-xl text-sm font-bold shadow-md hover:bg-[#137fec]/90 transition-colors">
             <span className="material-symbols-outlined text-lg">download</span>
             Exportar PDF
           </button>

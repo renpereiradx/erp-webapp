@@ -12,7 +12,6 @@ import { useI18n } from '@/lib/i18n';
 import usePriceAdjustmentNewStore from '@/store/usePriceAdjustmentNewStore';
 import { priceAdjustmentService } from '@/services/priceAdjustmentService';
 import { useNavigate, useLocation } from 'react-router-dom';
-import '@/styles/scss/pages/_price-adjustment-detail.scss';
 
 const PriceAdjustmentDetail = () => {
   const { t } = useI18n();

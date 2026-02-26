@@ -8,7 +8,6 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import DataState from '@/components/ui/DataState';
-import '@/styles/scss/pages/_price-adjustment-history-detail.scss';
 
 const PriceAdjustmentHistoryDetail = () => {
   const navigate = useNavigate();

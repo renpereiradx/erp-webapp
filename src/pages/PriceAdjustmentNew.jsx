@@ -12,7 +12,6 @@ import DataState from '@/components/ui/DataState';
 import { useI18n } from '@/lib/i18n';
 import usePriceAdjustmentNewStore from '@/store/usePriceAdjustmentNewStore';
 import { useNavigate } from 'react-router-dom';
-import '@/styles/scss/pages/_price-adjustment-new.scss';
 
 const PriceAdjustmentNew = () => {
   const { t } = useI18n();

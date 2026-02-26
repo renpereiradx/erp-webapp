@@ -11,6 +11,18 @@ export default {
         'xs': '480px',
       },
       colors: {
+        "primary": "#106ebe", // Fluent Blue corporativo
+        "primary-hover": "#005a9e",
+        "background-light": "#f3f4f6",
+        "background-dark": "#101922",
+        "surface": "#ffffff",
+        "border-subtle": "#e5e7eb",
+        "text-main": "#242424",
+        "text-secondary": "#616161",
+        "success": "#107c10",
+        "error": "#a4262c",
+        "warning": "#ffb900",
+        "info": "#0078d4",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -49,6 +61,12 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        "fluent-2": "0 2px 4px rgba(0,0,0,0.04), 0 0 2px rgba(0,0,0,0.06)",
+        "fluent-8": "0 4px 8px rgba(0,0,0,0.12), 0 0 2px rgba(0,0,0,0.06)",
+        "fluent-16": "0 8px 16px rgba(0,0,0,0.14), 0 0 2px rgba(0,0,0,0.06)",
+        "fluent-shadow": "0 2px 4px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.04)"
       },
     },
   },

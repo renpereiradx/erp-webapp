@@ -78,6 +78,9 @@ export const clients = {
   'clients.modal.error.last_name_required': 'El apellido es requerido',
   'clients.modal.error.document_required': 'El documento es requerido',
   'clients.modal.error.generic': 'Error al guardar el cliente',
+  'clients.modal.success.save': 'Cliente guardado exitosamente',
+  'clients.modal.success.update': 'Cliente actualizado exitosamente',
+  'clients.modal.success.create': 'Cliente creado exitosamente',
 
   // Eliminar cliente
   'clients.confirm_delete': '¿Está seguro de eliminar este cliente?',

@@ -1,3 +1,8 @@
+// ===========================================================================
+// Suppliers Page - Refactored with Tailwind CSS & Fluent Design System 2
+// Consistent with Products and Clients page design
+// ===========================================================================
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
@@ -12,6 +17,9 @@ import {
   Eye,
   Copy,
   TrendingUp,
+  RefreshCw,
+  MoreVertical,
+  Truck
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
@@ -21,7 +29,19 @@ import SupplierDirectoryFormModal from '@/components/suppliers-directory/Supplie
 import SupplierDirectoryDetailsModal from '@/components/suppliers-directory/SupplierDirectoryDetailsModal'
 import { ConfirmationModal } from '@/components/ui/EnhancedModal'
 import { telemetry } from '@/utils/telemetry'
-import '@/styles/scss/pages/_suppliers.scss'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Card } from '@/components/ui/card'
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table'
+import ToastContainer from '@/components/ui/ToastContainer'
 
 const useDebounce = (callback, delay) => {
   const timeoutRef = useRef(null)
@@ -104,28 +124,45 @@ const SupplierActionsMenu = ({
   const menu = (
     <div
       ref={menuRef}
-      className='dropdown-menu dropdown-menu--portaled'
+      className='bg-white border border-[#e5e7eb] rounded-lg shadow-fluent-16 py-1 min-w-[180px] animate-in fade-in zoom-in-95 duration-100'
       style={style}
     >
-      <button className='dropdown-menu__item' type='button' onClick={onView}>
-        <Eye size={16} />
+      <button 
+        className='flex items-center gap-3 w-full px-4 py-2 text-sm text-[#242424] hover:bg-gray-50 transition-colors text-left' 
+        type='button' 
+        onClick={onView}
+      >
+        <Eye size={16} className="text-gray-500" />
         {t('supplier.action.view', 'Ver detalle')}
       </button>
-      <button className='dropdown-menu__item' type='button' onClick={onAnalyze}>
-        <TrendingUp size={16} />
+      <button 
+        className='flex items-center gap-3 w-full px-4 py-2 text-sm text-[#242424] hover:bg-gray-50 transition-colors text-left' 
+        type='button' 
+        onClick={onAnalyze}
+      >
+        <TrendingUp size={16} className="text-gray-500" />
         {t('supplier.action.analyze', 'Análisis de Deuda')}
       </button>
-      <button className='dropdown-menu__item' type='button' onClick={onEdit}>
-        <Pencil size={16} />
+      <button 
+        className='flex items-center gap-3 w-full px-4 py-2 text-sm text-[#242424] hover:bg-gray-50 transition-colors text-left' 
+        type='button' 
+        onClick={onEdit}
+      >
+        <Pencil size={16} className="text-gray-500" />
         {t('supplier.action.edit', 'Editar')}
       </button>
-      <button className='dropdown-menu__item' type='button' onClick={onCopy}>
-        <Copy size={16} />
+      <button 
+        className='flex items-center gap-3 w-full px-4 py-2 text-sm text-[#242424] hover:bg-gray-50 transition-colors text-left' 
+        type='button' 
+        onClick={onCopy}
+      >
+        <Copy size={16} className="text-gray-500" />
         {t('supplier.action.copy_id', 'Copiar ID')}
       </button>
+      <hr className="my-1 border-gray-100" />
       {supplier.status ? (
         <button
-          className='dropdown-menu__item dropdown-menu__item--danger'
+          className='flex items-center gap-3 w-full px-4 py-2 text-sm text-[#a4262c] hover:bg-red-50 transition-colors text-left'
           type='button'
           onClick={onDeactivate}
         >
@@ -134,7 +171,7 @@ const SupplierActionsMenu = ({
         </button>
       ) : (
         <button
-          className='dropdown-menu__item'
+          className='flex items-center gap-3 w-full px-4 py-2 text-sm text-[#107c10] hover:bg-green-50 transition-colors text-left'
           type='button'
           onClick={onReactivate}
         >
@@ -301,7 +338,7 @@ const SuppliersPage = () => {
   }
 
   const handleSelectAll = () => {
-    if (selectedIds.length === dataset.length) {
+    if (selectedIds.length === dataset.length && dataset.length > 0) {
       setSelectedIds([])
     } else {
       setSelectedIds(dataset.map(supplier => supplier.id))
@@ -389,223 +426,232 @@ const SuppliersPage = () => {
   }, [pendingAction, t])
 
   return (
-    <div className='suppliers-page'>
-      <div className='suppliers-page__header'>
-        <div className='suppliers-page__header-left'>
-          <h1 className='suppliers-page__title'>
-            {t('supplier.title', 'Gestión de Proveedores')}
-          </h1>
-          <p className='suppliers-page__subtitle'>
-            {t(
-              'supplier.subtitle',
-              'Crea, administra y consulta proveedores clave del negocio.'
-            )}
-          </p>
+    <div className='min-h-screen bg-[#f3f4f6] text-[#323130] p-8 overflow-y-auto'>
+      <div className='max-w-[1600px] mx-auto'>
+        
+        {/* Breadcrumbs */}
+        <nav className="flex items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest gap-2 mb-6">
+          <span onClick={() => navigate('/dashboard')} className="hover:text-[#106ebe] cursor-pointer transition-colors">
+            {t('supplier.breadcrumb.home', 'Inicio')}
+          </span>
+          <span className="material-symbols-outlined text-[10px]">chevron_right</span>
+          <span className="text-[#242424] font-bold">{t('supplier.title', 'Proveedores')}</span>
+        </nav>
+
+        {/* Header Section */}
+        <div className='flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-l-4 border-[#106ebe] pl-4'>
+          <div>
+            <h1 className='text-3xl font-black tracking-tighter uppercase text-[#242424]'>
+              {t('supplier.title', 'Gestión de Proveedores')}
+            </h1>
+            <p className='text-[#616161] text-sm font-medium mt-1'>
+              {t('supplier.subtitle', 'Crea, administra y consulta proveedores clave del negocio.')}
+            </p>
+          </div>
+          <div className='flex items-center gap-2'>
+            <Button
+              variant='outline'
+              onClick={() => refreshAfterMutation()}
+              disabled={isLoading}
+              className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700"
+            >
+              <RefreshCw className={`size-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              <span className='hidden sm:inline'>{t('action.refresh', 'Refrescar')}</span>
+            </Button>
+            <Button variant='outline' className="bg-white border-gray-200 hover:bg-gray-50 text-gray-700">
+              <Share className='size-4 mr-2' />
+              <span className='hidden sm:inline'>{t('action.export', 'Exportar')}</span>
+            </Button>
+            <Button 
+              className='bg-[#106ebe] hover:bg-[#005a9e] text-white px-5 shadow-sm border-none'
+              onClick={openCreateModal}
+            >
+              <Plus className='size-4 mr-2' />
+              <span>{t('supplier.action.create', 'Nuevo proveedor')}</span>
+            </Button>
+          </div>
         </div>
 
-        <button
-          className='btn btn--primary'
-          onClick={openCreateModal}
-          aria-label={t('supplier.action.create', 'Nuevo proveedor')}
-        >
-          <Plus className='btn__icon' size={20} />
-          {t('supplier.action.create', 'Nuevo proveedor')}
-        </button>
-      </div>
+        {/* Toolbar Card */}
+        <Card className='bg-white border-gray-200 rounded-xl shadow-sm p-6 mb-6'>
+          <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
+            {/* Search */}
+            <div className='relative flex-1 max-w-xl'>
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                {isLoading ? (
+                  <RefreshCw className="size-5 animate-spin" />
+                ) : (
+                  <Search className="size-5" />
+                )}
+              </span>
+              <Input
+                type='search'
+                className='block w-full pl-10 pr-3 py-2.5 border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-[#106ebe] focus:border-transparent outline-none transition-all h-11'
+                placeholder={t('supplier.search.placeholder', 'Buscar por nombre o ID...')}
+                value={searchTerm}
+                onChange={handleSearchChange}
+                onKeyDown={handleSearchKeyDown}
+              />
+            </div>
 
-      <div className='suppliers-page__toolbar'>
-        <div className='search-box search-box--with-icon'>
-          <Search className='search-box__icon' size={20} />
-          <input
-            type='text'
-            className='search-box__input'
-            placeholder={t(
-              'supplier.search.placeholder',
-              'Buscar por nombre o ID...'
-            )}
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onKeyDown={handleSearchKeyDown}
-            aria-label={t('supplier.search.label', 'Buscar proveedores')}
-          />
-        </div>
+            {/* Filters */}
+            <div className='flex items-center gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                className="h-11 px-4 bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+              >
+                <Filter className='size-4 mr-2' />
+                {t('action.filter', 'Filtrar')}
+              </Button>
+            </div>
+          </div>
+        </Card>
 
-        <div className='suppliers-page__toolbar-actions'>
-          <button
-            className='btn btn--secondary btn--icon'
-            aria-label={t('action.filter', 'Filtrar')}
-            title={t('action.filter', 'Filtrar')}
-          >
-            <Filter size={20} />
-          </button>
-          <button
-            className='btn btn--secondary btn--icon'
-            aria-label={t('action.export', 'Exportar')}
-            title={t('action.export', 'Exportar')}
-          >
-            <Share size={20} />
-          </button>
-        </div>
-      </div>
+        {/* Table Container */}
+        <div className='bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden'>
+          <Table>
+            <TableHeader className="bg-gray-50/50 border-b border-gray-100">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className='w-[60px] text-center px-6'>
+                  <Checkbox
+                    checked={dataset.length > 0 && selectedIds.length === dataset.length}
+                    onCheckedChange={handleSelectAll}
+                    className="border-gray-300 data-[state=checked]:bg-[#106ebe] data-[state=checked]:border-[#106ebe]"
+                  />
+                </TableHead>
+                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">
+                  {t('supplier.table.name', 'Proveedor')}
+                </TableHead>
+                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">
+                  {t('supplier.table.contact', 'Contacto')}
+                </TableHead>
+                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">
+                  {t('supplier.table.tax', 'RFC / Tax ID')}
+                </TableHead>
+                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">
+                  {t('supplier.table.created', 'Creado')}
+                </TableHead>
+                <TableHead className="text-[13px] text-gray-700 font-semibold py-4 px-4">
+                  {t('supplier.table.status', 'Estado')}
+                </TableHead>
+                <TableHead className='w-16 py-4 px-6'></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading && dataset.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-20 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="size-10 border-4 border-[#106ebe]/20 border-t-[#106ebe] rounded-full animate-spin"></div>
+                      <span className="text-sm text-[#616161] font-bold uppercase tracking-widest">
+                        {t('supplier.loading', 'Buscando proveedores...')}
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : error && hasSearched ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-20 text-center">
+                    <div className="text-[#a4262c] font-black uppercase tracking-wider">{error}</div>
+                  </TableCell>
+                </TableRow>
+              ) : dataset.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-20 text-center text-[#616161]">
+                    <div className="max-w-md mx-auto font-medium">
+                      {hasSearched
+                        ? t('supplier.search.no_results', 'No se encontraron proveedores con ese criterio')
+                        : t('supplier.empty.prompt', 'Utiliza la barra de búsqueda para comenzar')}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                dataset.map(supplier => {
+                  const contact = supplier.contact || {}
+                  const contactSummary = [contact.email, contact.phone]
+                    .filter(Boolean)
+                    .join(' • ')
+                  const createdAt = supplier.created_at || supplier.createdAt
+                  const isSelected = selectedIds.includes(supplier.id)
+                  const isActive = supplier.status !== false
 
-      <div className='suppliers-page__table-container'>
-        <table className='suppliers-table'>
-          <thead className='suppliers-table__header'>
-            <tr>
-              <th className='suppliers-table__header-cell suppliers-table__header-cell--checkbox'>
-                <input
-                  type='checkbox'
-                  checked={
-                    dataset.length > 0 && selectedIds.length === dataset.length
-                  }
-                  onChange={handleSelectAll}
-                  aria-label={t('action.select_all', 'Seleccionar todos')}
-                />
-              </th>
-              <th className='suppliers-table__header-cell'>
-                {t('supplier.table.name', 'Proveedor')}
-              </th>
-              <th className='suppliers-table__header-cell'>
-                {t('supplier.table.contact', 'Contacto')}
-              </th>
-              <th className='suppliers-table__header-cell'>
-                {t('supplier.table.tax', 'RFC / Tax ID')}
-              </th>
-              <th className='suppliers-table__header-cell'>
-                {t('supplier.table.created', 'Creado')}
-              </th>
-              <th className='suppliers-table__header-cell suppliers-table__header-cell--status'>
-                {t('supplier.table.status', 'Estado')}
-              </th>
-              <th className='suppliers-table__header-cell suppliers-table__header-cell--actions' />
-            </tr>
-          </thead>
-
-          <tbody className='suppliers-table__body'>
-            {isLoading ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className='suppliers-table__cell suppliers-table__cell--loading'
-                >
-                  {t('supplier.loading', 'Buscando proveedores...')}
-                </td>
-              </tr>
-            ) : error && hasSearched ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className='suppliers-table__cell suppliers-table__cell--error'
-                >
-                  {error}
-                </td>
-              </tr>
-            ) : dataset.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className='suppliers-table__cell suppliers-table__cell--empty'
-                >
-                  {hasSearched
-                    ? t(
-                        'supplier.search.no_results',
-                        'No se encontraron proveedores con ese criterio'
-                      )
-                    : t(
-                        'supplier.empty.prompt',
-                        'Utiliza la barra de búsqueda para comenzar'
-                      )}
-                </td>
-              </tr>
-            ) : (
-              dataset.map(supplier => {
-                const contact = supplier.contact || {}
-                const contactSummary = [contact.email, contact.phone]
-                  .filter(Boolean)
-                  .join(' • ')
-                const createdAt = supplier.created_at || supplier.createdAt
-                return (
-                  <tr
-                    key={supplier.id || supplier._key}
-                    className='suppliers-table__row'
-                    onClick={() => handleViewSupplier(supplier)}
-                  >
-                    <td
-                      className='suppliers-table__cell suppliers-table__cell--checkbox'
-                      onClick={event => event.stopPropagation()}
+                  return (
+                    <TableRow
+                      key={supplier.id || supplier._key}
+                      selected={isSelected}
+                      className='border-b border-gray-50 hover:bg-gray-50 transition-colors group cursor-pointer'
+                      onClick={() => handleViewSupplier(supplier)}
                     >
-                      <input
-                        type='checkbox'
-                        checked={selectedIds.includes(supplier.id)}
-                        onChange={() => handleSelectSupplier(supplier.id)}
-                        aria-label={t(
-                          'action.select_item',
-                          'Seleccionar proveedor'
-                        )}
-                      />
-                    </td>
-                    <td className='suppliers-table__cell suppliers-table__cell--name'>
-                      <span className='suppliers-table__name'>
-                        {supplier.name}
-                      </span>
-                      {contact.address && (
-                        <span className='suppliers-table__meta'>
-                          {contact.address}
-                        </span>
-                      )}
-                    </td>
-                    <td className='suppliers-table__cell'>
-                      <span className='suppliers-table__contact'>
-                        {contactSummary || '-'}
-                      </span>
-                    </td>
-                    <td className='suppliers-table__cell'>
-                      <span className='suppliers-table__tax'>
-                        {supplier.taxId || supplier.tax_id || '-'}
-                      </span>
-                    </td>
-                    <td className='suppliers-table__cell'>
-                      <span className='suppliers-table__date'>
-                        {createdAt
-                          ? new Date(createdAt).toLocaleDateString()
-                          : '-'}
-                      </span>
-                    </td>
-                    <td className='suppliers-table__cell suppliers-table__cell--status'>
-                      <span
-                        className={`badge badge--${
-                          supplier.status ? 'success' : 'default'
-                        }`}
+                      <TableCell 
+                        className='px-6 text-center'
+                        onClick={event => event.stopPropagation()}
                       >
-                        {supplier.status
-                          ? t('supplier.status.active', 'Activo')
-                          : t('supplier.status.inactive', 'Inactivo')}
-                      </span>
-                    </td>
-                    <td
-                      className='suppliers-table__cell suppliers-table__cell--actions'
-                      onClick={event => event.stopPropagation()}
-                    >
-                      <div className='suppliers-table__actions'>
-                        <button
-                          className='action-btn'
-                          type='button'
-                          onClick={event => toggleActionMenu(event, supplier)}
-                          aria-label={t(
-                            'action.open_menu',
-                            'Abrir menú de acciones'
-                          )}
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => handleSelectSupplier(supplier.id)}
+                          className="border-gray-300 data-[state=checked]:bg-[#106ebe] data-[state=checked]:border-[#106ebe]"
+                        />
+                      </TableCell>
+                      <TableCell className='py-4 px-4'>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200 overflow-hidden text-[#106ebe]">
+                            <Truck size={20} />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-[#242424] group-hover:text-[#106ebe] group-hover:underline transition-colors">
+                              {supplier.name}
+                            </span>
+                            {contact.address && (
+                              <span className='text-[11px] text-[#616161] line-clamp-1'>
+                                {contact.address}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className='py-4 px-4 text-xs text-[#616161] font-medium'>
+                        {contactSummary || '-'}
+                      </TableCell>
+                      <TableCell className='py-4 px-4 text-xs font-mono font-bold text-[#616161]'>
+                        {supplier.taxId || supplier.tax_id || '-'}
+                      </TableCell>
+                      <TableCell className='py-4 px-4 text-xs text-[#616161] font-medium'>
+                        {createdAt ? new Date(createdAt).toLocaleDateString() : '-'}
+                      </TableCell>
+                      <TableCell className='py-4 px-4'>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            isActive
+                              ? 'bg-[#dff6dd] text-[#107c10]'
+                              : 'bg-[#f3f4f6] text-[#616161]'
+                          }`}
                         >
-                          <MoreHorizontal className='action-btn__icon' />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
+                          {isActive
+                            ? t('supplier.status.active', 'Activo')
+                            : t('supplier.status.inactive', 'Inactivo')}
+                        </span>
+                      </TableCell>
+                      <TableCell
+                        className='text-right px-6'
+                        onClick={event => event.stopPropagation()}
+                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                          onClick={event => toggleActionMenu(event, supplier)}
+                        >
+                          <MoreVertical className="size-5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <SupplierDirectoryFormModal
@@ -653,6 +699,9 @@ const SuppliersPage = () => {
           t={t}
         />
       )}
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>
   )
 }

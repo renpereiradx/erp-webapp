@@ -71,6 +71,8 @@ import OverdueAccounts from '@/pages/OverdueAccounts'
 import ClientCreditProfile from '@/pages/ClientCreditProfile'
 import AgingReport from '@/pages/AgingReport'
 import ProfitAndLoss from '@/pages/ProfitAndLoss'
+import LegalBooks from '@/pages/LegalBooks'
+import ProfitabilityAnalysis from '@/pages/ProfitabilityAnalysis'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -150,6 +152,8 @@ function AppContent() {
                       <Route path='/finance/analytical-cash-flow' element={<CashFlowAnalysisDashboard />} />
                       <Route path='/finance/tax-management' element={<TaxManagementDashboard />} />
                       <Route path='/finance/profit-and-loss' element={<ProfitAndLoss />} />
+                      <Route path='/finance/legal-books' element={<LegalBooks />} />
+                      <Route path='/finance/profitability' element={<ProfitabilityAnalysis />} />
                       <Route path='/receivables' element={<ReceivablesDashboard />} />
                       <Route path='/receivables/list' element={<ReceivablesMasterList />} />
                       <Route path='/receivables/detail/:id' element={<ReceivableDetail />} />

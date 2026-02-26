@@ -28,7 +28,6 @@ import {
 } from '@/components/ui/select'
 import { cashRegisterService } from '@/services/cashRegisterService'
 import { calculateCashRegisterBalance } from '@/utils/cashRegisterUtils'
-import '@/styles/scss/components/_register-sale-payment-modal.scss'
 
 const CASH_REGISTER_NONE_VALUE = '__none__'
 
