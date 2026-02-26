@@ -107,35 +107,26 @@ export interface ProductFinancialEnriched {
 
 export interface CreateProductRequest {
   name: string;
-  categoryId: number;
-  id_category?: number; // Legacy support
+  description: string;
+  category_id: number;
+  product_type?: 'PHYSICAL' | 'SERVICE';
+  barcode?: string | null;
+  origin?: 'NACIONAL' | 'IMPORTADO' | null;
+  brand?: string | null;
+  base_unit?: string | null;
 }
 
 export interface UpdateProductRequest {
   name?: string;
+  description?: string;
   state?: boolean;
   is_active?: boolean;
-  categoryId?: number;
-  id_category?: number; // Legacy support
-  price?: number;
-  stock_quantity?: number;
-  description?: string;
-}
-
-// ============================================================================
-// PRODUCT DESCRIPTION TYPES
-// ============================================================================
-
-export interface ProductDescription {
-  id: number;
-  product_id: string;
-  description: string;
-  effective_date: string; // ISO 8601 date string
-  id_user: string;
-}
-
-export interface CreateProductDescriptionRequest {
-  description: string;
+  category_id?: number;
+  product_type?: 'PHYSICAL' | 'SERVICE';
+  barcode?: string | null;
+  origin?: 'NACIONAL' | 'IMPORTADO' | null;
+  brand?: string | null;
+  base_unit?: string | null;
 }
 
 // ============================================================================
@@ -807,12 +798,19 @@ export const API_ENDPOINTS = {
   CATEGORIES: '/categories',
   PRODUCTS: '/products',
   PRODUCTS_BY_ID: (id: string) => `/products/${id}`,
-  PRODUCTS_BY_NAME: (name: string) => `/products/products/name/${name}`,
-  PRODUCTS_PAGINATED: (page: number, pageSize: number) => `/products/products/${page}/${pageSize}`,
-  PRODUCTS_UPDATE: (id: string) => `/products/products/${id}`,
-  PRODUCTS_DELETE: (id: string) => `/products/products/delete/${id}`,
-  PRODUCT_DESCRIPTION_CREATE: (productId: string) => `/product_description/${productId}`,
-  PRODUCT_DESCRIPTION_BY_ID: (id: number) => `/product_description/${id}`,
+  PRODUCTS_BY_NAME: (name: string) => `/products/search/${name}`,
+  PRODUCTS_PAGINATED: (page: number, pageSize: number) => `/products/list/${page}/${pageSize}`,
+  PRODUCTS_UPDATE: (id: string) => `/products/${id}`,
+  PRODUCTS_DELETE: (id: string) => `/products/${id}`,
+  PRODUCTS_ALL: '/products/all',
+  PRODUCTS_BY_BARCODE: (barcode: string) => `/products/barcode/${barcode}`,
+  PRODUCTS_SERVICE_COURTS: '/products/service-courts',
+  PRODUCTS_BY_CATEGORY: '/products/by-category',
+  PRODUCTS_FINANCIAL: (id: string) => `/products/${id}/financial`,
+  PRODUCTS_FINANCIAL_BARCODE: (barcode: string) => `/products/financial/barcode/${barcode}`,
+  PRODUCTS_FINANCIAL_SEARCH: (name: string) => `/products/financial/search/${name}`,
+  PRODUCTS_PRICING_INFO: (id: string) => `/products/${id}/pricing-info`,
+  PRODUCTS_UNITS: (id: string) => `/products/${id}/units`,
   PRODUCT_PRICE_CREATE: (productId: string) => `/product_price/product_id/${productId}`,
   PRODUCT_PRICE_BY_PRODUCT_ID: (productId: string) => `/product_price/product_id/${productId}`,
   STOCK_CREATE: (productId: string) => `/stock/${productId}`,

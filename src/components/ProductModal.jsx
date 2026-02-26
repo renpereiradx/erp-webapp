@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useThemeStyles } from '@/hooks/useThemeStyles'
 import { useI18n } from '@/lib/i18n'
 import useProductStore from '@/store/useProductStore'
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -84,7 +84,7 @@ const ProductModal = ({
 
   const isEditing = useMemo(
     () => !!product && !!(product.id || product.product_id),
-    [product]
+    [product],
   )
 
   useEffect(() => {
@@ -153,7 +153,7 @@ const ProductModal = ({
 
       const payload = {
         name: formData.name.trim(),
-        id_category: isNaN(Number(formData.id_category))
+        category_id: isNaN(Number(formData.id_category))
           ? formData.id_category
           : Number(formData.id_category),
         state: !!formData.state,
@@ -179,7 +179,7 @@ const ProductModal = ({
         } catch (refreshError) {
           console.warn(
             'No se pudo refrescar la lista de productos:',
-            refreshError
+            refreshError,
           )
         }
       }
@@ -204,7 +204,7 @@ const ProductModal = ({
   if (!isOpen) return null
 
   const activeType = PRODUCT_TYPE_CARDS.find(
-    card => card.value === formData.product_type
+    card => card.value === formData.product_type,
   )
   const ActiveTypeIcon = activeType?.icon
 
@@ -228,7 +228,7 @@ const ProductModal = ({
             <div className='flex flex-wrap items-center gap-3'>
               <h2
                 className={`${styles.header(
-                  'h2'
+                  'h2',
                 )} text-xl font-semibold tracking-tight`}
               >
                 {isEditing ? t('products.edit_title') : t('products.new_title')}
@@ -268,7 +268,7 @@ const ProductModal = ({
 
             <div
               className={`rounded-xl border p-4 sm:p-5 ${styles.card(
-                'subtle'
+                'subtle',
               )} space-y-4`}
             >
               <div className='grid gap-4 md:grid-cols-12'>

@@ -107,7 +107,7 @@ class BusinessManagementAPI {
         this.handleUnauthorized()
         throw new ApiError(
           'UNAUTHORIZED',
-          'Sesión expirada o token inválido. Por favor, inicie sesión nuevamente.'
+          'Sesión expirada o token inválido. Por favor, inicie sesión nuevamente.',
         )
       }
 
@@ -117,23 +117,12 @@ class BusinessManagementAPI {
           throw new ApiError(
             'ENDPOINT_NOT_IMPLEMENTED',
             'El endpoint de productos no está implementado en el servidor. ' +
-              'Contacte al administrador del sistema para configurar la API de productos.'
+              'Contacte al administrador del sistema para configurar la API de productos.',
           )
         }
-        if (endpoint.includes('/descriptions')) {
-          throw new ApiError(
-            'NOT_FOUND',
-            'No hay descripciones disponibles para este producto'
-          )
-        }
-        if (endpoint.includes('/details')) {
-          throw new ApiError(
-            'NOT_FOUND',
-            'Detalles del producto no disponibles'
-          )
-        }
+
         if (
-          endpoint.includes('/products/') &&
+          endpoint.startsWith('/products') &&
           !endpoint.includes('/products/products/')
         ) {
           throw new ApiError('NOT_FOUND', 'Producto no encontrado')
@@ -145,21 +134,21 @@ class BusinessManagementAPI {
           throw new ApiError(
             'ENDPOINT_NOT_IMPLEMENTED',
             'El sistema de reservas aún no está implementado en el servidor. ' +
-              'Contacte al administrador para configurar la API de reservas.'
+              'Contacte al administrador para configurar la API de reservas.',
           )
         }
         if (endpoint.includes('/schedules/')) {
           throw new ApiError(
             'ENDPOINT_NOT_IMPLEMENTED',
             'El sistema de horarios aún no está implementado en el servidor. ' +
-              'Contacte al administrador para configurar la API de horarios.'
+              'Contacte al administrador para configurar la API de horarios.',
           )
         }
         // Endpoint genérico no encontrado
         throw new ApiError(
           'ENDPOINT_NOT_FOUND',
           `El endpoint ${endpoint} no está disponible en el servidor. ` +
-            'Verifique que la API esté correctamente configurada.'
+            'Verifique que la API esté correctamente configurada.',
         )
       }
 
@@ -168,18 +157,18 @@ class BusinessManagementAPI {
         if (endpoint.includes('/search')) {
           throw new ApiError(
             'INTERNAL',
-            'Error interno del servidor al buscar. Intenta con términos diferentes o contacta al administrador.'
+            'Error interno del servidor al buscar. Intenta con términos diferentes o contacta al administrador.',
           )
         }
         if (endpoint.includes('/categories')) {
           throw new ApiError(
             'INTERNAL',
-            'Error interno del servidor al cargar categorías. Intenta recargar la página.'
+            'Error interno del servidor al cargar categorías. Intenta recargar la página.',
           )
         }
         throw new ApiError(
           'INTERNAL',
-          `Error interno del servidor (${response.status}). Contacta al administrador.`
+          `Error interno del servidor (${response.status}). Contacta al administrador.`,
         )
       }
 
@@ -189,11 +178,11 @@ class BusinessManagementAPI {
         try {
           const errorResponse = JSON.parse(rawErrorBody)
           // More robust message extraction
-          const payload = errorResponse.error || errorResponse;
+          const payload = errorResponse.error || errorResponse
           if (typeof payload === 'string') {
-            errorDetails = payload;
+            errorDetails = payload
           } else if (payload && typeof payload === 'object') {
-            errorDetails = payload.message || payload.error || errorDetails;
+            errorDetails = payload.message || payload.error || errorDetails
           }
         } catch (jsonParseError) {
           errorDetails = rawErrorBody.trim()
@@ -235,7 +224,7 @@ class BusinessManagementAPI {
       window.dispatchEvent(
         new CustomEvent('api:unauthorized', {
           detail: { message: 'Token expirado o inválido' },
-        })
+        }),
       )
     }
   }
@@ -310,7 +299,7 @@ class BusinessManagementAPI {
 
   // Crear producto
   async createProduct(productData) {
-    return this.makeRequest('/products/', {
+    return this.makeRequest('/products', {
       method: 'POST',
       body: JSON.stringify(productData),
     })
@@ -326,8 +315,8 @@ class BusinessManagementAPI {
 
   // Eliminar producto (eliminación lógica)
   async deleteProduct(id) {
-    return this.makeRequest(`/products/delete/${id}`, {
-      method: 'PUT',
+    return this.makeRequest(`/products/${id}`, {
+      method: 'DELETE',
     })
   }
 
@@ -341,7 +330,7 @@ class BusinessManagementAPI {
    * @returns {Promise} Producto con datos financieros enriquecidos
    */
   async getProductFinancialById(id) {
-    return this.makeRequest(`/products/financial/${id}`)
+    return this.makeRequest(`/products/${id}/financial`)
   }
 
   /**
@@ -351,7 +340,7 @@ class BusinessManagementAPI {
    */
   async getProductFinancialByBarcode(barcode) {
     return this.makeRequest(
-      `/products/financial/barcode/${encodeURIComponent(barcode)}`
+      `/products/financial/barcode/${encodeURIComponent(barcode)}`,
     )
   }
 
@@ -360,7 +349,7 @@ class BusinessManagementAPI {
    * @returns {Promise} Array de productos de tipo SERVICE
    */
   async getServiceProducts() {
-    return this.makeRequest('/products/financial/name/cancha?limit=100')
+    return this.makeRequest('/products/service-courts')
   }
 
   /**
@@ -373,8 +362,8 @@ class BusinessManagementAPI {
    */
   async searchProductsFinancialByName(name, options = {}) {
     const { limit = 50, signal } = options
-    const url = `/products/financial/name/${encodeURIComponent(
-      name
+    const url = `/products/financial/search/${encodeURIComponent(
+      name,
     )}?limit=${limit}`
     return this.makeRequest(url, { signal })
   }
@@ -476,7 +465,7 @@ class BusinessManagementAPI {
   }
 
   async createClient(clientData) {
-    return this.makeRequest('/client/', {
+    return this.makeRequest('/client', {
       method: 'POST',
       body: JSON.stringify({
         name: clientData.name,
@@ -522,7 +511,7 @@ class BusinessManagementAPI {
   async searchSuppliersByName(name) {
     try {
       return await this.makeRequest(
-        `/supplier/name/${encodeURIComponent(name)}`
+        `/supplier/name/${encodeURIComponent(name)}`,
       )
     } catch (error) {
       if (error.message && error.message.includes('404')) {
@@ -533,7 +522,7 @@ class BusinessManagementAPI {
   }
 
   async createSupplier(supplierData) {
-    return this.makeRequest('/supplier/', {
+    return this.makeRequest('/supplier', {
       method: 'POST',
       body: JSON.stringify({
         name: supplierData.name,
@@ -567,7 +556,7 @@ class BusinessManagementAPI {
   // ============================================================================
 
   async createSale(saleData) {
-    return this.makeRequest('/sale/', {
+    return this.makeRequest('/sale', {
       method: 'POST',
       body: JSON.stringify({
         client_id: saleData.clientId || saleData.client_id,
@@ -587,7 +576,7 @@ class BusinessManagementAPI {
 
   async getSalesByClientName(clientName) {
     return this.makeRequest(
-      `/sale/client_name/${encodeURIComponent(clientName)}`
+      `/sale/client_name/${encodeURIComponent(clientName)}`,
     )
   }
 
@@ -602,7 +591,7 @@ class BusinessManagementAPI {
   // ============================================================================
 
   async createInventory(inventoryItems) {
-    return this.makeRequest('/inventory/', {
+    return this.makeRequest('/inventory', {
       method: 'POST',
       body: JSON.stringify(inventoryItems),
     })

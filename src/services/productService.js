@@ -49,7 +49,6 @@ const retryWithBackoff = async (fn, maxRetries = 2, baseDelay = 1000) => {
 
 /**
  * @typedef {import('@/types').Product} Product
- * @typedef {import('@/types').ProductDescription} ProductDescription
  * @typedef {import('@/types').ProductPrice} ProductPrice
  * @typedef {import('@/types').Stock} Stock
  */
@@ -105,13 +104,13 @@ export const productService = {
         `No se pudo cargar el producto con ID ${productId}. Verifique la conexión a la API.`,
         'API_UNAVAILABLE',
         503,
-        { originalError: error.message, productId }
+        { originalError: error.message, productId },
       )
     } finally {
       const endTime = performance.now()
       telemetryService?.recordMetric(
         'get_product_by_id_duration',
-        endTime - startTime
+        endTime - startTime,
       )
     }
   },
@@ -125,22 +124,6 @@ export const productService = {
     try {
       // Use financial endpoint which includes enriched data
       const product = await apiClient.getProductFinancialById(productId)
-
-      // Si el producto no está marcado como enriquecido pero tiene datos enriquecidos, usar getProductWithDetails
-      if (product && !product._enriched) {
-        const hasEnrichedData =
-          product.has_unit_pricing !== undefined ||
-          product.stock_status !== undefined ||
-          product.price_formatted !== undefined ||
-          product.has_valid_price !== undefined ||
-          product.unit_prices !== undefined
-
-        if (!hasEnrichedData) {
-          // Solo usar getProductWithDetails si no hay datos enriquecidos
-          return await apiClient.getProductWithDetails(productId)
-        }
-      }
-
       return product
     } catch (error) {
       const norm = toApiError(error, 'Error al obtener producto enriquecido')
@@ -188,7 +171,7 @@ export const productService = {
     } catch (error) {
       throw toApiError(
         error,
-        'Error al obtener servicios de canchas de beach tennis'
+        'Error al obtener servicios de canchas de beach tennis',
       )
     }
   },
@@ -205,7 +188,7 @@ export const productService = {
     } catch (error) {
       throw toApiError(
         error,
-        'Error al obtener servicios de canchas enriquecidos'
+        'Error al obtener servicios de canchas enriquecidos',
       )
     }
   },
@@ -225,7 +208,7 @@ export const productService = {
     } catch (error) {
       throw toApiError(
         error,
-        'Error al obtener producto financieramente enriquecido'
+        'Error al obtener producto financieramente enriquecido',
       )
     }
   },
@@ -243,7 +226,7 @@ export const productService = {
     } catch (error) {
       throw toApiError(
         error,
-        'Error al buscar producto financiero por código de barras'
+        'Error al buscar producto financiero por código de barras',
       )
     }
   },
@@ -268,7 +251,7 @@ export const productService = {
       if (error?.name === 'AbortError') throw error
       throw toApiError(
         error,
-        'Error al buscar productos financieros por nombre'
+        'Error al buscar productos financieros por nombre',
       )
     }
   },
@@ -348,93 +331,6 @@ export const productService = {
       }
     } catch (error) {
       throw toApiError(error, 'Error al reactivar producto')
-    }
-  },
-
-  // =================== DESCRIPCIONES ===================
-
-  // Crear descripción de producto
-  /**
-   * @param {string} productId
-   * @param {string} description
-   * @returns {Promise<ProductDescription|any>}
-   */
-  createProductDescription: async (productId, description) => {
-    try {
-      return await apiClient.createProductDescription(productId, description)
-    } catch (error) {
-      throw toApiError(error, 'Error al crear descripción')
-    }
-  },
-
-  // Obtener descripción por ID
-  /**
-   * @param {number} descId
-   * @returns {Promise<ProductDescription|any>}
-   */
-  getDescriptionById: async descId => {
-    try {
-      return await apiClient.getProductDescription(descId)
-    } catch (error) {
-      throw toApiError(error, 'Error al obtener descripción')
-    }
-  },
-
-  // Actualizar descripción
-  /**
-   * @param {number} descId
-   * @param {string} description
-   * @returns {Promise<ProductDescription|any>}
-   */
-  updateDescription: async (descId, description) => {
-    try {
-      return await apiClient.updateProductDescription(descId, description)
-    } catch (error) {
-      throw toApiError(error, 'Error al actualizar descripción')
-    }
-  },
-
-  // =================== PRODUCTO CON DETALLES ===================
-
-  // Obtener producto con detalles completos
-  /**
-   * @param {string} productId
-   * @returns {Promise<Product|any>}
-   */
-  getProductWithDetails: async productId => {
-    try {
-      return await apiClient.getProductWithDetails(productId)
-    } catch (error) {
-      throw toApiError(error, 'Error al obtener producto con detalles')
-    }
-  },
-
-  // Obtener descripciones de un producto por Product ID
-  /**
-   * @param {string} productId
-   * @returns {Promise<ProductDescription[]|any[]>}
-   */
-  getProductDescriptions: async productId => {
-    try {
-      // Intentar obtener todas las descripciones del producto
-      return await apiClient.makeRequest(`/products/${productId}/descriptions`)
-    } catch (error) {
-      const norm = error instanceof ApiError ? error : toApiError(error)
-      // Si es NOT_FOUND, significa que no hay descripciones para este producto
-      if (norm.code === 'NOT_FOUND') {
-        console.log(
-          'ℹ️ No hay descripciones disponibles para el producto:',
-          productId
-        )
-        return []
-      }
-      // Para otros errores, registrar pero no romper flujo
-      console.warn(
-        '⚠️ Error obteniendo descripciones para producto:',
-        productId,
-        norm.message
-      )
-      return []
     }
   },
 
@@ -587,13 +483,6 @@ export const productService = {
   validateStockData: stockData => {
     if (!stockData.quantity && stockData.quantity !== 0) {
       throw new Error('quantity es requerido')
-    }
-    return true
-  },
-
-  validateDescriptionData: descriptionData => {
-    if (!descriptionData.description) {
-      throw new Error('description es requerido')
     }
     return true
   },
