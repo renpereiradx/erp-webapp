@@ -1,42 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import useDashboardStore from '@/store/useDashboardStore'
-import { 
-  Download, 
-  ChevronLeft, 
-  ChevronRight, 
-  DollarSign, 
-  TrendingUp, 
-  Clock, 
-  Receipt, 
-  Store, 
-  AlertTriangle,
-  TrendingDown,
-  Flag,
-  UserPlus,
-  Package,
-  Activity,
-  RefreshCw
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import DashboardNav from '@/components/business-intelligence/DashboardNav'
+import { formatPYG } from '@/utils/currencyUtils';
 
 const hours = [
   '8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM', '6PM', '7PM', '8PM', '9PM'
 ]
 
-const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'] // API Day 0 = Sunday usually, checking doc... implicit standard. Assuming 0=Sunday or Monday. Let's assume 0=Sunday for now based on common SQL standards, or 0=Monday.
-// Doc example: day: 0. "peak_times" example says "Lunes". Let's assume 0=Monday based on "Lunes" being first in example list often.
-// Wait, doc peak_times example: {"day": "Lunes"}. Heatmap data has "day": 0.
-// Standard Go time.Weekday is Sunday=0. Let's assume Sunday=0.
-// BUT, the UI Mock days array was ['Lun', ... 'Dom'].
-// I will adjust `days` array to standard 0-6 index if needed. Let's stick to UI order 'Lun'-'Dom' (1-0 inverted? or 0=Mon?).
-// Let's assume 0=Sunday, 1=Monday. The UI starts with Monday.
 const uiDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 // Map UI index 0 (Mon) to API day 1 (Mon). UI index 6 (Dom) to API day 0 (Sun).
 const uiIndexToApiDay = (index) => (index + 1) % 7; 
-
 
 const SalesHeatmap = () => {
     const { 
@@ -48,7 +21,8 @@ const SalesHeatmap = () => {
         loading 
     } = useDashboardStore();
 
-    const [selectedLocation, setSelectedLocation] = useState('all')
+    const [selectedLocation, setSelectedLocation] = useState('All Locations')
+    const [selectedCategory, setSelectedCategory] = useState('All Categories')
 
     useEffect(() => {
         fetchSalesHeatmap();
@@ -63,7 +37,6 @@ const SalesHeatmap = () => {
     const maxSales = Math.max(...heatmapData.map(d => d.sales_count), 1);
 
     const getIntensity = (uiDayIndex, hourLabel) => {
-        // Parse hour label to 24h int (8AM -> 8, 1PM -> 13)
         let hour = parseInt(hourLabel);
         if (hourLabel.includes('PM') && hour !== 12) hour += 12;
         if (hourLabel.includes('AM') && hour === 12) hour = 0;
@@ -71,7 +44,7 @@ const SalesHeatmap = () => {
         const apiDay = uiIndexToApiDay(uiDayIndex);
         
         const cell = heatmapData.find(d => d.day === apiDay && d.hour === hour);
-        if (!cell) return { opacity: 0.05, label: '' };
+        if (!cell) return { ratio: 0, sales: 0, label: '', total_amount: 0 };
 
         const ratio = cell.sales_count / maxSales;
         let label = '';
@@ -79,208 +52,276 @@ const SalesHeatmap = () => {
         else if (ratio > 0.5) label = '$$';
         
         return {
-            opacity: 0.1 + (ratio * 0.9), // Min 0.1 opacity
-            label
+            ratio,
+            sales: cell.sales_count,
+            label,
+            total_amount: cell.total_amount
         };
     };
 
     const formatCurrency = (val) => {
         if (!val) return '$0';
-        return new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG' }).format(val);
+        return formatPYG(val);
+    };
+
+    const getIntensityClasses = (ratio) => {
+        if (ratio === 0) return "bg-primary/5 dark:bg-primary/10";
+        if (ratio <= 0.1) return "bg-primary/10 dark:bg-primary/20";
+        if (ratio <= 0.2) return "bg-primary/20 dark:bg-primary/30";
+        if (ratio <= 0.3) return "bg-primary/30";
+        if (ratio <= 0.4) return "bg-primary/40";
+        if (ratio <= 0.5) return "bg-primary/50";
+        if (ratio <= 0.6) return "bg-primary/60";
+        if (ratio <= 0.7) return "bg-primary/70";
+        if (ratio <= 0.8) return "bg-primary/80";
+        if (ratio <= 0.9) return "bg-primary/90";
+        return "bg-primary text-white shadow-lg transform hover:scale-105 z-10 font-black"; // Peak
     };
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">Mapa de Calor de Ventas por Hora</h1>
-          <p className="text-sm text-text-secondary font-medium">Visualizando picos de actividad e intensidad de ventas.</p>
+    <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+        <div className="max-w-[1440px] mx-auto flex flex-col gap-6">
+            
+            {/* Page Heading & Context */}
+            <div className="flex flex-wrap justify-between items-end gap-4">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-[#111418] dark:text-white text-3xl font-black tracking-tight">Mapa de Calor de Ventas por Hora</h1>
+                    <p className="text-[#617589] dark:text-gray-400 text-base">Visualizando picos de actividad e intensidad de ventas.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">
+                        {loading ? 'Actualizando...' : 'Última actualización: Justo ahora'}
+                    </span>
+                    <button 
+                        onClick={() => fetchSalesHeatmap()}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                    >
+                        <span className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`}>sync</span>
+                        Actualizar
+                    </button>
+                    <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                        <span className="material-symbols-outlined text-lg">download</span>
+                        Exportar Reporte
+                    </button>
+                </div>
+            </div>
+
+            <DashboardNav />
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                {/* Ingresos Totales */}
+                <div className="bg-white dark:bg-[#1a2632] p-5 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-2">
+                        <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">Ingresos Totales (Día)</p>
+                        <span className="material-symbols-outlined text-primary bg-primary/10 p-1 rounded text-lg">payments</span>
+                    </div>
+                    <p className="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">{formatCurrency(summary?.sales?.total || 0)}</p>
+                    <div className="flex items-center gap-1 mt-1 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+                        <span className="material-symbols-outlined text-base">trending_up</span>
+                        <span>0%</span>
+                        <span className="text-gray-400 ml-1 font-normal">vs periodo anterior</span>
+                    </div>
+                </div>
+
+                {/* Hora Punta */}
+                <div className="bg-white dark:bg-[#1a2632] p-5 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                     <div className="flex justify-between items-start mb-2">
+                        <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">Hora Punta (Promedio)</p>
+                        <span className="material-symbols-outlined text-orange-500 bg-orange-100 dark:bg-orange-500/20 p-1 rounded text-lg">schedule</span>
+                    </div>
+                    <p className="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">
+                        {peakTime.day} {peakTime.hour}:00
+                    </p>
+                    <div className="flex items-center gap-1 mt-1 text-[#617589] dark:text-gray-400 text-sm font-medium">
+                        <span>Mayor afluencia promedio</span>
+                    </div>
+                </div>
+
+                {/* Ticket Promedio */}
+                <div className="bg-white dark:bg-[#1a2632] p-5 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-2">
+                        <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">Ticket Promedio</p>
+                        <span className="material-symbols-outlined text-purple-500 bg-purple-100 dark:bg-purple-500/20 p-1 rounded text-lg">receipt_long</span>
+                    </div>
+                    <p className="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">{formatCurrency(summary?.sales?.average_ticket || 0)}</p>
+                    <div className="flex items-center gap-1 mt-1 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+                        <span className="material-symbols-outlined text-base">trending_up</span>
+                        <span>0%</span>
+                    </div>
+                </div>
+
+                {/* Cajas Activas */}
+                <div className="bg-white dark:bg-[#1a2632] p-5 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                     <div className="flex justify-between items-start mb-2">
+                        <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">Cajas Activas</p>
+                        <span className="material-symbols-outlined text-blue-500 bg-blue-100 dark:bg-blue-500/20 p-1 rounded text-lg">storefront</span>
+                    </div>
+                    <p className="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">{summary?.cash_registers?.open_count || 0}</p>
+                    <div className="flex items-center gap-1 mt-1 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+                         <span className="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>En operación ahora</span>
+                    </div>
+                </div>
+
+            </div>
+
+            {/* Main Dashboard Layout */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                 {/* Heatmap Section (Span 9) */}
+                 <div className="xl:col-span-9 flex flex-col gap-4">
+                     
+                     {/* Heatmap Controls */}
+                    <div className="bg-white dark:bg-[#1a2632] p-4 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center bg-[#f0f2f4] dark:bg-gray-800 rounded-lg p-1">
+                            <button className="p-1 hover:bg-white dark:hover:bg-gray-700 rounded shadow-sm transition-all text-[#617589] hover:text-primary">
+                                <span className="material-symbols-outlined">chevron_left</span>
+                            </button>
+                            <span className="px-4 text-sm font-bold text-[#111418] dark:text-white">Análisis de últimas 4 semanas</span>
+                            <button className="p-1 hover:bg-white dark:hover:bg-gray-700 rounded shadow-sm transition-all text-[#617589] hover:text-primary">
+                                <span className="material-symbols-outlined">chevron_right</span>
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <select 
+                                    className="appearance-none bg-[#f0f2f4] dark:bg-gray-800 border-none text-[#111418] dark:text-white text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 pr-8 cursor-pointer font-medium"
+                                    value={selectedLocation}
+                                    onChange={(e) => setSelectedLocation(e.target.value)}
+                                >
+                                    <option value="All Locations">Todas las Sucursales</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#617589]">
+                                    <span className="material-symbols-outlined text-lg">expand_more</span>
+                                </div>
+                            </div>
+                            <div className="relative">
+                                <select 
+                                    className="appearance-none bg-[#f0f2f4] dark:bg-gray-800 border-none text-[#111418] dark:text-white text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 pr-8 cursor-pointer font-medium"
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                >
+                                    <option value="All Categories">Todas las Categorías</option>
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#617589]">
+                                    <span className="material-symbols-outlined text-lg">expand_more</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Heatmap Visualization */}
+                    <div className="bg-white dark:bg-[#1a2632] p-6 rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm overflow-x-auto">
+                        <div className="min-w-[800px]">
+                            {/* Legend */}
+                            <div className="flex justify-end items-center gap-2 mb-4 text-xs font-medium text-[#617589] dark:text-gray-400">
+                                <span>Baja Intensidad</span>
+                                <div className="h-2 w-24 rounded-full bg-gradient-to-r from-blue-50 to-[#137fec] dark:from-blue-900/20 dark:to-[#137fec]"></div>
+                                <span>Alta Intensidad</span>
+                            </div>
+
+                            {/* Grid */}
+                            <div className="grid grid-cols-[auto_repeat(14,_minmax(0,_1fr))] gap-1">
+                                {/* Header Row */}
+                                <div className="h-8"></div> {/* Empty corner */}
+                                {/* Hours */}
+                                {hours.map(hour => (
+                                    <div key={`header-${hour}`} className="text-center text-xs font-medium text-[#617589] dark:text-gray-400">{hour}</div>
+                                ))}
+
+                                {/* Day Rows */}
+                                {uiDays.map((day, dIndex) => (
+                                    <React.Fragment key={`row-${day}`}>
+                                        <div className="flex items-center text-xs font-bold text-[#111418] dark:text-white pr-2 h-10">{day}</div>
+                                        {hours.map(hour => {
+                                            const { ratio, sales, label, total_amount } = getIntensity(dIndex, hour);
+                                            const isPeak = ratio >= 0.95 && ratio > 0;
+                                            const bgClass = getIntensityClasses(ratio);
+                                            
+                                            return (
+                                                <div 
+                                                    key={`cell-${day}-${hour}`}
+                                                    className={`${bgClass} rounded h-10 group relative hover:border-2 hover:border-primary cursor-pointer transition-all ${isPeak ? 'text-white flex items-center justify-center text-xs font-bold' : ''}`}
+                                                >
+                                                    {ratio >= 0.6 && !isPeak && <span className="text-white flex items-center justify-center h-full w-full text-xs font-bold">{label}</span>}
+                                                    {isPeak && "Peak"}
+                                                    
+                                                    {/* Tooltip */}
+                                                    {ratio > 0 && (
+                                                        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-[#1a2632] dark:bg-white text-white dark:text-[#1a2632] p-3 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-xs font-normal">
+                                                            <div className="font-bold border-b border-gray-600 dark:border-gray-300 pb-1 mb-1">{day} {hour}</div>
+                                                            <div className="flex justify-between"><span>Revenue:</span> <span className="font-bold">{formatCurrency(total_amount)}</span></div>
+                                                            <div className="flex justify-between"><span>Transacciones:</span> <span className="font-bold">{sales}</span></div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+
+                 {/* Side Panel (Span 3) */}
+                 <div className="xl:col-span-3 flex flex-col gap-6">
+                     
+                     {/* Activity Feed */}
+                     <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm flex flex-col h-full">
+                        <div className="p-4 border-b border-[#f0f2f4] dark:border-gray-700 flex justify-between items-center">
+                            <h3 className="font-bold text-[#111418] dark:text-white">Actividad Reciente</h3>
+                            <button className="text-primary text-sm font-medium hover:underline">Ver Todo</button>
+                        </div>
+                        <div className="p-4 flex flex-col gap-5 overflow-y-auto max-h-[500px]">
+                            {activities && activities.map((item, index) => {
+                                const isAlert = index % 3 === 0;
+                                const bgClass = isAlert ? 'bg-red-100 dark:bg-red-900/30' : 'bg-emerald-100 dark:bg-emerald-900/30';
+                                const textClass = isAlert ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400';
+                                const icon = isAlert ? 'trending_down' : 'flag';
+                                
+                                return (
+                                    <div key={item.id} className="flex gap-3">
+                                        <div className={`size-8 rounded-full ${bgClass} ${textClass} flex items-center justify-center flex-shrink-0`}>
+                                            <span className="material-symbols-outlined text-sm">{icon}</span>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <p className="text-sm font-medium text-[#111418] dark:text-white leading-snug break-words line-clamp-2">{item.description}</p>
+                                            <p className="text-xs text-[#617589] dark:text-gray-500">{new Date(item.timestamp).toLocaleTimeString()}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {(!activities || activities.length === 0) && (
+                                <div className="p-8 text-center text-sm font-medium text-[#617589] dark:text-gray-500">
+                                    Sin actividad reciente
+                                </div>
+                            )}
+                        </div>
+                     </div>
+
+                     {/* Mini Map Widget */}
+                     <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-[#e5e7eb] dark:border-gray-700 shadow-sm overflow-hidden flex flex-col">
+                        <div className="p-4 border-b border-[#f0f2f4] dark:border-gray-700">
+                            <h3 className="font-bold text-[#111418] dark:text-white">Active Regions</h3>
+                        </div>
+                        <div className="h-48 bg-gray-100 dark:bg-gray-800 relative group flex items-center justify-center">
+                            <span className="material-symbols-outlined text-5xl text-gray-300 dark:text-gray-600">map</span>
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/5 dark:bg-white/5">
+                                <button className="px-4 py-2 bg-white dark:bg-gray-800 text-[#111418] dark:text-white text-sm font-bold rounded shadow hover:scale-105 transition-transform border border-gray-200 dark:border-gray-700">
+                                    Mapa no disponible
+                                </button>
+                            </div>
+                        </div>
+                     </div>
+
+                 </div>
+
+            </div>
+
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="md" className="shadow-sm border-border-subtle bg-surface" onClick={() => fetchSalesHeatmap()}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Actualizar
-          </Button>
-        </div>
-      </div>
-
-      <DashboardNav />
-
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-         {/* Ingresos (from Summary) */}
-         <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
-            <div className="flex items-start justify-between mb-4">
-              <div className="size-12 rounded-lg bg-blue-50 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <DollarSign size={24} />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Ingresos del Día</p>
-              <h3 className="text-2xl font-black text-text-main tracking-tight">{formatCurrency(summary?.sales?.total || 0)}</h3>
-            </div>
-          </div>
-
-        {/* Hora Punta (from Heatmap API) */}
-          <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
-            <div className="flex items-start justify-between mb-4">
-              <div className="size-12 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform">
-                <Clock size={24} />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Hora Punta (Promedio)</p>
-              <h3 className="text-2xl font-black text-text-main tracking-tight">
-                {peakTime.day} {peakTime.hour}:00
-              </h3>
-              <p className="text-[10px] font-bold text-text-secondary opacity-60 uppercase tracking-wider">Mayor afluencia promedio</p>
-            </div>
-          </div>
-
-        {/* Ticket Promedio (from Summary) */}
-          <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
-              <div className="flex items-start justify-between mb-4">
-                <div className="size-12 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
-                  <Receipt size={24} />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Ticket Promedio</p>
-                <h3 className="text-2xl font-black text-text-main tracking-tight">{formatCurrency(summary?.sales?.average_ticket || 0)}</h3>
-              </div>
-          </div>
-
-        {/* Cajas Activas (from Summary) */}
-          <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
-               <div className="flex items-start justify-between mb-4">
-                  <div className="size-12 rounded-lg bg-green-50 flex items-center justify-center text-success group-hover:scale-110 transition-transform">
-                    <Store size={24} />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Cajas Activas</p>
-                  <h3 className="text-2xl font-black text-text-main tracking-tight">{summary?.cash_registers?.open_count || 0}</h3>
-                  <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-success">
-                    <span className="size-2 rounded-full bg-success animate-pulse"></span>
-                    <span>En operación ahora</span>
-                  </div>
-                </div>
-          </div>
-      </div>
-
-      {/* Main Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 pb-10">
-        
-        {/* Heatmap Section */}
-        <div className="xl:col-span-3 bg-surface rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden flex flex-col">
-          
-          {/* Controls */}
-          <div className="px-8 py-6 border-b border-border-subtle bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-               <div className="size-2 rounded-full bg-primary animate-pulse"></div>
-               <span className="text-sm font-black text-text-main uppercase tracking-tight">Análisis de últimas 4 semanas</span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                <SelectTrigger className="w-[200px] h-10 rounded-lg border-border-subtle bg-white text-sm font-bold uppercase tracking-wider">
-                  <SelectValue placeholder="Todas las Sucursales" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las Sucursales</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Visualization */}
-          <div className="p-8 space-y-8 overflow-x-auto">
-            <div className="flex items-center justify-end gap-4 text-[10px] font-black uppercase tracking-widest text-text-secondary mb-2">
-              <span>Baja Intensidad</span>
-              <div className="w-32 h-2 bg-gradient-to-r from-blue-50 to-primary rounded-full"></div>
-              <span>Alta Intensidad</span>
-            </div>
-
-            <div className="min-w-[800px] grid grid-cols-[100px_repeat(14,1fr)] gap-2">
-              {/* Header Row */}
-              <div className="h-8"></div> {/* Empty corner */}
-              {hours.map(hour => (
-                <div key={hour} className="text-[10px] font-black uppercase tracking-widest text-text-secondary text-center flex items-center justify-center">{hour}</div>
-              ))}
-
-              {/* Data Rows */}
-              {uiDays.map((day, dIndex) => (
-                <React.Fragment key={day}>
-                  <div className="h-10 text-[10px] font-black uppercase tracking-widest text-text-main flex items-center pr-4 border-r border-border-subtle">{day}</div>
-                  {hours.map((hour, hIndex) => {
-                    const { opacity, label } = getIntensity(dIndex, hour)
-                    return (
-                      <div 
-                        key={`${day}-${hIndex}`} 
-                        className="h-10 rounded-md transition-all hover:scale-105 hover:shadow-md cursor-help flex items-center justify-center text-[10px] font-black text-white"
-                        style={{ 
-                          backgroundColor: `rgba(16, 110, 190, ${opacity})`, 
-                        }}
-                        title={`${day} @ ${hour}`}
-                      >
-                        {label}
-                      </div>
-                    )
-                  })}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        {/* Sidebar Section */}
-        <div className="flex flex-col gap-8">
-          
-          {/* Activity Feed */}
-          <div className="bg-surface rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col overflow-hidden">
-            <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50">
-              <h3 className="text-sm font-black text-text-main uppercase tracking-tight">Actividad Reciente</h3>
-            </div>
-            <div className="divide-y divide-border-subtle">
-              {activities && activities.slice(0, 5).map(item => (
-                <div key={item.id} className="p-4 flex gap-3 group hover:bg-slate-50 transition-colors cursor-pointer">
-                  <div className="size-8 rounded-lg bg-blue-50 flex-shrink-0 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <Activity size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold text-text-main truncate group-hover:text-primary transition-colors">{item.description}</p>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">{new Date(item.timestamp).toLocaleTimeString()}</span>
-                  </div>
-                </div>
-              ))}
-              {(!activities || activities.length === 0) && (
-                  <div className="p-8 text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">Sin actividad reciente</p>
-                  </div>
-              )}
-            </div>
-          </div>
-
-          {/* Map Widget Placeholder */}
-          <div className="bg-surface rounded-xl shadow-fluent-2 border border-border-subtle flex flex-col overflow-hidden">
-            <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50">
-              <h3 className="text-sm font-black text-text-main uppercase tracking-tight">Cobertura</h3>
-            </div>
-            <div className="p-8 flex flex-col items-center justify-center text-center space-y-4">
-                <div className="size-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
-                  <Flag size={32} />
-                </div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 leading-relaxed">
-                    Visualización de mapa no disponible en API v1
-                </p>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
     </div>
   )
 }
