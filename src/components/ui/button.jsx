@@ -47,7 +47,7 @@ function Button({
   const sizeClass = sizeClasses[size] || sizeClasses.default
   
   const classes = cn(
-    "inline-flex items-center justify-center rounded-[4px] text-sm font-semibold transition-all duration-200 outline-none focus:ring-2 focus:ring-[#0078d4] focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none border select-none cursor-pointer",
+    "inline-flex items-center justify-center rounded-md text-sm font-semibold transition-all duration-200 outline-none focus:ring-2 focus:ring-[#0078d4] focus:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none border select-none cursor-pointer",
     variantClass,
     sizeClass,
     block && "w-full",
@@ -80,7 +80,7 @@ function Button({
 const buttonVariants = ({ variant = "default", size = "default", className = "" } = {}) => {
   const variantClass = variantClasses[variant] || variantClasses.default
   const sizeClass = sizeClasses[size] || sizeClasses.default
-  return cn("inline-flex items-center justify-center rounded-[4px] text-sm font-semibold transition-all border", variantClass, sizeClass, className)
+  return cn("inline-flex items-center justify-center rounded-md text-sm font-semibold transition-all border", variantClass, sizeClass, className)
 }
 
 export { Button, buttonVariants }

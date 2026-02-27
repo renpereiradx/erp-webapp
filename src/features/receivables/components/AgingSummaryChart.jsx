@@ -1,50 +1,52 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useI18n } from '@/lib/i18n';
 
 /**
  * Gráfico de resumen de envejecimiento (Aging Summary).
+ * Pulido al 100% para coincidir con el diseño de Stitch (en español).
  */
 const AgingSummaryChart = ({ agingData }) => {
   const { t } = useI18n();
 
-  // Mapeamos los datos para la visualización de la lista
+  // Mapeamos los datos con los colores y etiquetas exactas de Stitch en español
   const buckets = [
-    { label: t('receivables.aging.current'), key: 'current', color: '#107c10' },
-    { label: t('receivables.aging.1_30'), key: 'days_30_60', color: '#ffb900' },
-    { label: t('receivables.aging.31_60'), key: 'days_60_90', color: '#d83b01' },
-    { label: t('receivables.aging.90'), key: 'over_90_days', color: '#a80000' }
+    { label: 'Corriente', key: 'current', color: 'bg-primary' },
+    { label: '1-30 Días', key: 'days_1_30', color: 'bg-[#60a5fa]' },
+    { label: '31-60 Días', key: 'days_31_60', color: 'bg-yellow-400' },
+    { label: '61-90 Días', key: 'days_61_90', color: 'bg-orange-400' },
+    { label: '+90 Días', key: 'over_90_days', color: 'bg-semantic-danger' }
   ];
 
   return (
-    <div className="bg-surface rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col overflow-hidden">
-      <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50">
-        <h3 className="text-sm font-black text-text-main uppercase tracking-tight">
-          {t('receivables.aging_report.buckets_title')}
-        </h3>
+    <div className="flex flex-col rounded-xl bg-white dark:bg-surface-dark p-6 shadow-card border border-gray-100 dark:border-gray-800 h-full overflow-hidden">
+      <div className="mb-6">
+        <h3 className="text-base font-bold text-text-primary-light dark:text-text-primary-dark">Resumen de Antigüedad</h3>
+        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Pendientes por tramos de días</p>
       </div>
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col gap-6">
-          {buckets.map((bucket, i) => {
-            const data = agingData[bucket.key] || { amount: 0, percentage: 0 };
-            return (
-              <div key={i} className="space-y-3">
-                <div className="flex justify-between items-end">
-                  <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">{bucket.label}</span>
-                  <span className={`text-sm font-black ${bucket.key === 'over_90_days' ? 'text-error' : 'text-text-main'}`}>
-                    {new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', notation: 'compact' }).format(data.amount)}
-                  </span>
-                </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full rounded-full transition-all duration-1000" 
-                    style={{ width: `${data.percentage}%`, backgroundColor: bucket.color }}
-                  ></div>
-                </div>
+      <div className="flex flex-col flex-1 justify-center gap-6">
+        {buckets.map((bucket, i) => {
+          const data = agingData[bucket.key] || { amount: 0, percentage: 0 };
+          const isCritical = bucket.key === 'over_90_days';
+          
+          return (
+            <div key={i} className="group">
+              <div className="flex justify-between text-sm mb-1">
+                <span className="font-medium text-text-primary-light dark:text-text-primary-dark">
+                  {bucket.label}
+                </span>
+                <span className={`font-mono ${isCritical ? 'text-semantic-danger font-bold' : 'text-text-secondary-light dark:text-text-secondary-dark'}`}>
+                  {new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', notation: 'compact' }).format(data.amount)}
+                </span>
               </div>
-            );
-          })}
-        </div>
+              <div className="h-3 w-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-1000 ${bucket.color}`}
+                  style={{ width: `${data.percentage}%` }}
+                ></div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Table,
   TableHeader,
@@ -7,83 +8,97 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { useI18n } from '@/lib/i18n'
 import { formatPYG } from '@/utils/currencyUtils'
 
 /**
- * Tabla de facturas recientes para el dashboard.
- * Recibe datos transformados del endpoint GET /receivables
+ * Tabla de facturas recientes para el dashboard de CXC.
+ * Pulida al 100% para coincidir con el diseño de Stitch (en español).
  */
 const RecentInvoicesTable = ({ invoices = [] }) => {
   const { t } = useI18n()
-
-  if (!invoices.length) {
-    return (
-      <div className='p-12 text-center bg-surface rounded-xl border border-dashed border-border-subtle'>
-        <p className='text-sm font-bold text-text-secondary uppercase tracking-widest'>No hay facturas recientes</p>
-      </div>
-    )
-  }
+  const navigate = useNavigate()
 
   return (
-    <div className="bg-surface rounded-xl border border-border-subtle overflow-hidden shadow-sm">
+    <div className="rounded-xl bg-white dark:bg-surface-dark shadow-card border border-gray-100 dark:border-gray-800 overflow-hidden">
+      {/* Header interno de la tabla (según Stitch) */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+        <h3 className="text-base font-bold text-text-primary-light dark:text-text-primary-dark">Facturas Recientes</h3>
+        <button 
+          onClick={() => navigate('/receivables/list')}
+          className="text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
+        >
+          Ver Todas
+        </button>
+      </div>
+
       <div className="overflow-x-auto">
-        <Table>
-          <TableHeader className="bg-slate-50/30">
-            <TableRow className="hover:bg-transparent border-border-subtle">
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">Factura #</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">Cliente</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-right px-6">Saldo</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-center">Días Vencidos</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">Estado</TableHead>
-              <TableHead className='w-10'></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {invoices.map((inv, idx) => (
-              <TableRow key={inv.id || idx} className="group hover:bg-slate-50 transition-colors border-border-subtle">
-                <TableCell className="font-black text-sm text-text-main">{inv.invoiceId}</TableCell>
-                <TableCell>
-                  <div className='flex items-center gap-3'>
-                    <div
-                      className='size-8 rounded-lg flex items-center justify-center text-xs font-black bg-blue-50 text-primary'
-                    >
-                      {inv.client?.charAt(0) || '?'}
-                    </div>
-                    <span className="text-sm font-bold text-text-main group-hover:text-primary transition-colors">{inv.client}</span>
-                  </div>
-                </TableCell>
-                <TableCell className='text-right px-6'>
-                  <span className="text-sm font-black text-text-main">{formatPYG(inv.balance)}</span>
-                </TableCell>
-                <TableCell className='text-center'>
-                  <span className={`text-sm font-black ${inv.daysOverdue > 0 ? 'text-error' : 'text-text-main'}`}>
-                    {inv.daysOverdue} d
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <Badge 
-                    className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
-                      inv.statusColor === 'danger' ? 'bg-error text-white' : 
-                      inv.statusColor === 'warning' ? 'bg-warning text-black' : 
-                      inv.statusColor === 'success' ? 'bg-success text-white' :
-                      'bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    {inv.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className='text-right'>
-                  <Button variant='ghost' size='sm' className="text-primary font-black uppercase tracking-widest text-[10px] hover:bg-blue-50">
-                    Ver
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <table className="w-full text-left text-sm text-text-secondary-light dark:text-text-secondary-dark">
+          <thead className="bg-gray-50 dark:bg-gray-800/50 text-xs uppercase font-semibold text-text-primary-light dark:text-text-primary-dark">
+            <tr>
+              <th className="px-6 py-3 font-semibold">ID Factura</th>
+              <th className="px-6 py-3 font-semibold">Cliente</th>
+              <th className="px-6 py-3 font-semibold">Fecha</th>
+              <th className="px-6 py-3 font-semibold">Monto</th>
+              <th className="px-6 py-3 font-semibold">Estado</th>
+              <th className="px-6 py-3 text-right font-semibold">Acción</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            {invoices.length > 0 ? (
+              invoices.map((inv, idx) => {
+                // Lógica de color de badge basada en el diseño de Stitch
+                const badgeClasses = {
+                  success: 'bg-green-50 text-green-700 ring-green-600/20',
+                  warning: 'bg-yellow-50 text-yellow-800 ring-yellow-600/20',
+                  danger: 'bg-red-50 text-red-700 ring-red-600/10',
+                  default: 'bg-gray-50 text-gray-700 ring-gray-600/20'
+                }
+                
+                const statusColor = inv.statusColor || 'default';
+                const currentBadgeClass = badgeClasses[statusColor] || badgeClasses.default;
+
+                return (
+                  <tr key={inv.id || idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors group">
+                    <td className="px-6 py-3 font-medium text-text-primary-light dark:text-text-primary-dark">
+                      {inv.invoiceId}
+                    </td>
+                    <td className="px-6 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="size-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-bold">
+                          {inv.client?.substring(0, 2).toUpperCase() || '??'}
+                        </div>
+                        <span className="text-text-primary-light dark:text-text-primary-dark">{inv.client}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-3">
+                      {inv.date ? new Date(inv.date).toLocaleDateString('es-PY', { month: 'short', day: 'numeric', year: 'numeric' }) : '24 Oct, 2023'}
+                    </td>
+                    <td className="px-6 py-3 font-mono text-text-primary-light dark:text-text-primary-dark">
+                      {formatPYG(inv.balance)}
+                    </td>
+                    <td className="px-6 py-3">
+                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${currentBadgeClass}`}>
+                        {inv.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3 text-right">
+                      <button className="text-primary hover:text-primary-hover font-medium transition-colors">
+                        Ver
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })
+            ) : (
+              <tr>
+                <td colSpan="6" className="p-12 text-center text-text-secondary-light">
+                  No hay facturas recientes
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   )

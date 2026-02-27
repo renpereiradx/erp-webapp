@@ -862,16 +862,8 @@ const MainLayout = ({ children }) => {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2">
-              <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded hover:bg-primary-hover shadow-md transition-all active:scale-95">
-                <span className="material-symbols-outlined text-sm font-bold">download</span> 
-                <span className="hidden lg:inline">Descargar Reporte</span>
-              </button>
-              <div className="w-px h-6 bg-slate-200 mx-2"></div>
-            </div>
-
             <div className="flex items-center gap-1">
-              <button className="p-2 text-text-secondary hover:bg-slate-100 rounded-lg transition-colors relative group">
+              <button className="p-2 text-text-secondary hover:bg-slate-100 !rounded-lg transition-colors relative group">
                 <span className="material-symbols-outlined">notifications</span>
                 <span className="absolute top-2 right-2 size-2 bg-error rounded-full border-2 border-white"></span>
                 <span className="absolute top-full right-0 mt-2 px-2 py-1 bg-text-main text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">Notificaciones</span>
@@ -880,7 +872,7 @@ const MainLayout = ({ children }) => {
               <div className="relative" ref={profileBtnRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className={`flex items-center gap-2 p-1.5 rounded-lg transition-all ${showUserMenu ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
+                  className={`flex items-center gap-2 p-1.5 !rounded-lg transition-all ${showUserMenu ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
                 >
                   <div className="size-8 rounded bg-primary/10 flex items-center justify-center text-primary font-bold text-xs overflow-hidden">
                     {user?.avatar_url ? (

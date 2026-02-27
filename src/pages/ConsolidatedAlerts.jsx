@@ -1,30 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useDashboardStore from '@/store/useDashboardStore';
-import { 
-  Search, 
-  CheckCheck, 
-  RefreshCw, 
-  List, 
-  AlertCircle, 
-  AlertTriangle, 
-  Info, 
-  Server, 
-  Clock, 
-  ChevronUp, 
-  ChevronDown, 
-  ArrowRight, 
-  BellOff, 
-  DollarSign, 
-  ShieldAlert,
-  Package,
-  ShoppingCart,
-  Activity,
-  X
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import DashboardNav from '@/components/business-intelligence/DashboardNav';
 
 const ConsolidatedAlerts = () => {
@@ -32,10 +8,9 @@ const ConsolidatedAlerts = () => {
   const { alerts, fetchDashboardData, loading } = useDashboardStore();
   const [expandedAlertId, setExpandedAlertId] = useState(null);
   const [filterSeverity, setFilterSeverity] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Cargar datos si no hay (o forzar refresh si se desea explícito, pero asumimos caché de store)
-    // Para asegurar datos frescos al entrar a la página:
     fetchDashboardData();
   }, [fetchDashboardData]);
 
@@ -43,33 +18,18 @@ const ConsolidatedAlerts = () => {
     setExpandedAlertId(expandedAlertId === id ? null : id);
   };
 
-  // Helper para iconos por categoría
+  // Icon mapping by category (Material Symbols)
   const getCategoryIcon = (category) => {
-    if (!category) return Activity;
-    switch (category.toLowerCase()) {
-      case 'inventory': return Package;
-      case 'financial': return DollarSign;
-      case 'sales': return ShoppingCart;
-      case 'security': return ShieldAlert;
-      case 'infrastructure': return Server;
-      default: return Activity;
-    }
+    const cat = category?.toLowerCase() || '';
+    if (cat.includes('inv')) return 'inventory_2';
+    if (cat.includes('fin')) return 'payments';
+    if (cat.includes('sal')) return 'shopping_cart';
+    if (cat.includes('sec')) return 'shield';
+    if (cat.includes('infra')) return 'dns';
+    return 'notifications';
   };
 
-  const getSeverityIconColor = (severity) => {
-    switch (severity) {
-      case 'critical': return 'alert-item__header-icon--critical';
-      case 'warning': return 'alert-item__header-icon--warning';
-      case 'info': return 'alert-item__header-icon--info';
-      default: return '';
-    }
-  };
-
-  const getSeverityClass = (severity) => {
-    return `alert-item--${severity}`;
-  };
-
-  // KPI Calculations
+  // Metrics calculation
   const metrics = useMemo(() => {
     if (!alerts) return { total: 0, critical: 0, warning: 0, info: 0 };
     return {
@@ -80,231 +40,302 @@ const ConsolidatedAlerts = () => {
     };
   }, [alerts]);
 
+  // Filtering logic
   const filteredAlerts = useMemo(() => {
       if (!alerts) return [];
-      if (filterSeverity === 'all') return alerts;
-      return alerts.filter(a => a.severity === filterSeverity);
-  }, [alerts, filterSeverity]);
-
-  const renderKPI = (title, icon, value, type = 'neutral') => {
-    const colors = {
-      neutral: 'bg-blue-50 text-primary border-blue-100',
-      critical: 'bg-red-50 text-error border-red-100',
-      warning: 'bg-amber-50 text-amber-600 border-amber-100',
-      info: 'bg-blue-50 text-info border-blue-100'
-    };
-    
-    return (
-      <div className={`p-6 rounded-xl border shadow-fluent-2 hover:shadow-fluent-8 transition-all group ${colors[type]}`}>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-black uppercase tracking-widest opacity-80 group-hover:opacity-100 transition-opacity">
-            {title}
-          </span>
-          <div className="group-hover:scale-110 transition-transform">
-            {icon}
-          </div>
-        </div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-black tracking-tight">{value}</span>
-        </div>
-      </div>
-    );
-  };
+      let result = alerts;
+      
+      if (filterSeverity !== 'all') {
+        result = result.filter(a => a.severity === filterSeverity);
+      }
+      
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        result = result.filter(a => 
+          a.title?.toLowerCase().includes(query) || 
+          a.message?.toLowerCase().includes(query) ||
+          String(a.id).includes(query)
+        );
+      }
+      
+      return result;
+  }, [alerts, filterSeverity, searchQuery]);
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="flex flex-col gap-6 font-display animate-in fade-in duration-500">
+      
+      {/* Page Heading & Actions */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">Alertas Consolidadas</h1>
-          <p className="text-sm text-text-secondary font-medium">
-            Monitoreo en tiempo real de eventos críticos del sistema.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-[#111418] dark:text-white leading-none">Consolidated Alerts</h1>
+          <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">Real-time monitoring of critical system events. Last updated: Just now</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="secondary" size="md" className="shadow-sm border-border-subtle bg-surface">
-            <CheckCheck size={18} className="mr-2" />
-            Marcar Todo Leído
-          </Button>
-          <Button variant="primary" size="md" className="shadow-md" onClick={() => fetchDashboardData()}>
-            <RefreshCw size={18} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Actualizar Datos
-          </Button>
+        <div className="flex gap-3">
+          <button className="flex items-center gap-2 h-9 px-4 rounded-lg bg-white dark:bg-[#1b2631] border border-slate-200 dark:border-[#374151] text-[#111418] dark:text-white text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
+            <span className="material-symbols-outlined text-[18px]">done_all</span>
+            Mark All Read
+          </button>
+          <button 
+            className="flex items-center gap-2 h-9 px-4 rounded-lg bg-[#106ebe] text-white text-sm font-medium hover:bg-[#005a9e] transition-colors shadow-sm disabled:opacity-50"
+            onClick={() => fetchDashboardData()}
+            disabled={loading}
+          >
+            <span className={`material-symbols-outlined text-[18px] ${loading ? 'animate-spin' : ''}`}>refresh</span>
+            Refresh Data
+          </button>
         </div>
-      </header>
+      </div>
 
       <DashboardNav />
 
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {renderKPI(
-            'Total Activas', 
-            <List size={20} />, 
-            metrics.total, 
-            'neutral'
-        )}
-        {renderKPI(
-            'Críticas', 
-            <AlertCircle size={20} />, 
-            metrics.critical, 
-            'critical'
-        )}
-        {renderKPI(
-            'Advertencias', 
-            <AlertTriangle size={20} />, 
-            metrics.warning, 
-            'warning'
-        )}
-        {renderKPI(
-            'Información', 
-            <Info size={20} />, 
-            metrics.info, 
-            'info'
-        )}
+      {/* KPI Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Active */}
+        <div className="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1b2631] border border-slate-200 dark:border-[#374151] shadow-fluent-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-[#617589] dark:text-gray-400">Total Active</span>
+            <span className="material-symbols-outlined text-[#617589] text-[20px]">list_alt</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-[#111418] dark:text-white">{metrics.total}</span>
+            <span className="text-xs font-medium text-green-600 flex items-center">
+              <span className="material-symbols-outlined text-[14px]">trending_down</span>
+              12%
+            </span>
+          </div>
+        </div>
+
+        {/* Critical */}
+        <div className="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1b2631] border border-slate-200 dark:border-[#374151] border-l-4 border-l-red-500 shadow-fluent-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-red-600">Critical</span>
+            <span className="material-symbols-outlined text-red-600 text-[20px] fill-current">error</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-[#111418] dark:text-white">{metrics.critical}</span>
+            <span className="text-xs text-[#617589] dark:text-gray-400 font-medium">Needs attention</span>
+          </div>
+        </div>
+
+        {/* Warnings */}
+        <div className="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1b2631] border border-slate-200 dark:border-[#374151] border-l-4 border-l-orange-500 shadow-fluent-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-orange-600">Warnings</span>
+            <span className="material-symbols-outlined text-orange-600 text-[20px]">warning</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-[#111418] dark:text-white">{metrics.warning}</span>
+            <span className="text-xs font-medium text-red-500 flex items-center">
+              <span className="material-symbols-outlined text-[14px]">trending_up</span>
+              +2
+            </span>
+          </div>
+        </div>
+
+        {/* Information */}
+        <div className="flex flex-col p-4 rounded-xl bg-white dark:bg-[#1b2631] border border-slate-200 dark:border-[#374151] border-l-4 border-l-[#106ebe] shadow-fluent-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-[#106ebe]">Information</span>
+            <span className="material-symbols-outlined text-[#106ebe] text-[20px]">info</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-[#111418] dark:text-white">{metrics.info}</span>
+            <span className="text-xs text-[#617589] dark:text-gray-400 font-medium">Routine logs</span>
+          </div>
+        </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="bg-surface p-4 rounded-xl border border-border-subtle shadow-sm flex flex-col md:flex-row items-center gap-4">
-        <div className="relative flex-1 w-full">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">
-            <Search size={18} />
+      {/* Filters & Toolbar */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-[#1b2631] p-2 rounded-xl border border-slate-200 dark:border-[#374151] shadow-sm">
+        {/* Left: Search and Chips */}
+        <div className="flex flex-1 w-full md:w-auto items-center gap-3 overflow-x-auto no-scrollbar py-1 px-1">
+          <div className="relative min-w-[200px]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#617589]">
+              <span className="material-symbols-outlined text-[20px]">search</span>
+            </span>
+            <input 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-9 w-full rounded-lg border border-slate-200 dark:border-[#374151] bg-[#f6f7f8] dark:bg-[#101922] pl-9 pr-3 text-sm focus:border-[#106ebe] focus:outline-none focus:ring-1 focus:ring-[#106ebe] dark:text-white placeholder:text-[#617589] font-medium" 
+              placeholder="Filter alerts..."
+            />
           </div>
-          <Input className="pl-10 h-10 border-border-subtle rounded-lg bg-background-light/50 focus:bg-white transition-all" placeholder="Filtrar alertas..." />
-        </div>
-        
-        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          <Badge 
-            variant={filterSeverity === 'all' ? 'default' : 'outline'} 
-            className={`px-4 py-1.5 cursor-pointer whitespace-nowrap text-[10px] font-black uppercase tracking-widest ${filterSeverity === 'all' ? 'bg-primary' : 'border-border-subtle'}`}
+          <div className="h-6 w-px bg-slate-200 dark:bg-[#374151] mx-1 shrink-0"></div>
+          
+          <button 
+            className={`flex shrink-0 h-8 items-center gap-2 rounded-full px-3 text-xs font-medium transition-colors ${
+              filterSeverity === 'all' 
+                ? 'bg-[#106ebe]/10 text-[#106ebe] border border-[#106ebe]/20 font-bold' 
+                : 'bg-[#f6f7f8] dark:bg-[#101922] border border-slate-200 dark:border-[#374151] hover:bg-gray-100 dark:hover:bg-gray-700 text-[#111418] dark:text-white'
+            }`}
             onClick={() => setFilterSeverity('all')}
           >
-            Todas
-          </Badge>
-          <Badge 
-             variant={filterSeverity === 'critical' ? 'destructive' : 'outline'}
-             className={`px-4 py-1.5 cursor-pointer whitespace-nowrap text-[10px] font-black uppercase tracking-widest ${filterSeverity === 'critical' ? 'bg-error text-white border-transparent' : 'border-border-subtle'}`}
-             onClick={() => setFilterSeverity(filterSeverity === 'critical' ? 'all' : 'critical')}
+            Status: Open
+            {filterSeverity === 'all' && <span className="material-symbols-outlined text-[16px] ml-1 font-bold">close</span>}
+          </button>
+
+          <button 
+            className={`flex shrink-0 h-8 items-center gap-2 rounded-full border border-slate-200 dark:border-[#374151] hover:bg-gray-100 dark:hover:bg-gray-700 px-3 text-xs font-medium text-[#111418] dark:text-white transition-colors ${
+              filterSeverity !== 'all' ? 'bg-[#106ebe]/10 border-[#106ebe]/20 font-bold text-[#106ebe]' : 'bg-[#f6f7f8] dark:bg-[#101922]'
+            }`}
           >
-             Críticas
-          </Badge>
-           <Badge 
-             variant={filterSeverity === 'warning' ? 'warning' : 'outline'}
-             className={`px-4 py-1.5 cursor-pointer whitespace-nowrap text-[10px] font-black uppercase tracking-widest ${filterSeverity === 'warning' ? 'bg-warning text-black border-transparent' : 'border-border-subtle'}`}
-             onClick={() => setFilterSeverity(filterSeverity === 'warning' ? 'all' : 'warning')}
+            Severity
+            <span className="material-symbols-outlined text-[16px]">expand_more</span>
+          </button>
+
+          <button 
+            className="flex shrink-0 h-8 items-center gap-2 rounded-full bg-[#f6f7f8] dark:bg-[#101922] border border-slate-200 dark:border-[#374151] hover:bg-gray-100 dark:hover:bg-gray-700 px-3 text-xs font-medium text-[#111418] dark:text-white transition-colors"
           >
-             Advertencias
-          </Badge>
+            Category
+            <span className="material-symbols-outlined text-[16px]">expand_more</span>
+          </button>
+        </div>
+
+        {/* Right: View Options */}
+        <div className="flex items-center gap-2 shrink-0 pr-2">
+          <span className="text-xs text-[#617589] font-medium hidden sm:block mr-2">Sort by: Severity (High to Low)</span>
+          <button className="p-2 text-[#617589] hover:text-[#106ebe] rounded-lg hover:bg-[#f6f7f8] dark:hover:bg-gray-800 transition-colors">
+            <span className="material-symbols-outlined text-[20px]">sort</span>
+          </button>
+          <button className="p-2 text-[#617589] hover:text-[#106ebe] rounded-lg hover:bg-[#f6f7f8] dark:hover:bg-gray-800 transition-colors">
+            <span className="material-symbols-outlined text-[20px]">tune</span>
+          </button>
         </div>
       </div>
 
-      {/* Alert List */}
-      <div className="space-y-4 pb-10">
-        {!loading && filteredAlerts.length === 0 && (
-             <div className="p-12 text-center bg-surface rounded-xl border border-dashed border-border-subtle">
-                 <p className="text-sm font-bold text-text-secondary uppercase tracking-widest">No hay alertas activas que coincidan con los filtros.</p>
-             </div>
+      {/* Alerts List Container */}
+      <div className="flex flex-col gap-3 pb-10">
+        {filteredAlerts.length === 0 && !loading && (
+          <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-[#1b2631] rounded-xl border border-dashed border-slate-300 dark:border-[#374151]">
+            <span className="material-symbols-outlined text-6xl text-[#617589] mb-4">notifications_off</span>
+            <p className="text-[#617589] font-bold uppercase tracking-widest text-xs">Clear System Status</p>
+            <p className="text-[#617589] text-xs opacity-60 mt-1">No active alerts found.</p>
+          </div>
         )}
 
         {filteredAlerts.map((alert) => {
           const isExpanded = expandedAlertId === alert.id;
-          const AlertIcon = getCategoryIcon(alert.category);
+          const severityColorClass = alert.severity === 'critical' ? 'bg-red-500' : alert.severity === 'warning' ? 'bg-orange-500' : 'bg-[#106ebe]';
+          const severityBg = alert.severity === 'critical' ? 'bg-red-100 dark:bg-red-900/30' : alert.severity === 'warning' ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-blue-100 dark:bg-blue-900/30';
+          const severityText = alert.severity === 'critical' ? 'text-red-600' : alert.severity === 'warning' ? 'text-orange-600' : 'text-[#106ebe]';
+          const badgeClass = alert.severity === 'critical' ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 ring-red-600/10' : 
+                             alert.severity === 'warning' ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 ring-orange-600/10' : 
+                             'bg-blue-50 dark:bg-blue-900/20 text-[#106ebe] dark:text-blue-300 ring-[#106ebe]/20';
           
-          const severityColors = {
-            critical: 'border-l-error bg-red-50/10 hover:bg-red-50/20',
-            warning: 'border-l-warning bg-amber-50/10 hover:bg-amber-50/20',
-            info: 'border-l-info bg-blue-50/10 hover:bg-blue-50/20'
-          };
-
-          const iconColors = {
-            critical: 'bg-red-50 text-error',
-            warning: 'bg-amber-50 text-amber-600',
-            info: 'bg-blue-50 text-primary'
-          };
-
           return (
             <div 
-                key={alert.id} 
-                className={`bg-surface rounded-xl border border-border-subtle border-l-4 shadow-sm transition-all overflow-hidden ${severityColors[alert.severity]} ${isExpanded ? 'shadow-md' : 'hover:shadow-fluent-2'}`}
+              key={alert.id}
+              className={`group relative flex flex-col rounded-xl bg-white dark:bg-[#1b2631] border border-slate-200 dark:border-[#374151] shadow-fluent-shadow transition-all duration-300 ${isExpanded ? 'ring-1 ring-[#106ebe]/20' : 'hover:shadow-[0_4px_12px_rgba(0,0,0,0.08),_0_8px_16px_rgba(0,0,0,0.08)]'}`}
             >
-              <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer" onClick={() => toggleAlert(alert.id)}>
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className={`size-12 rounded-lg flex-shrink-0 flex items-center justify-center transition-transform group-hover:scale-110 ${iconColors[alert.severity]}`}>
-                    <AlertIcon size={24} />
+              {/* Color Strip Indicator */}
+              <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${severityColorClass} rounded-l-xl z-10`}></div>
+              
+              {/* Header / Summary Row */}
+              <div 
+                className="flex flex-col sm:flex-row items-start sm:items-center p-4 pl-6 gap-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                onClick={() => toggleAlert(alert.id)}
+              >
+                {/* Icon & Title */}
+                <div className="flex items-center gap-4 flex-1">
+                  <div className={`size-10 rounded-full ${severityBg} flex items-center justify-center shrink-0 ${severityText}`}>
+                    <span className="material-symbols-outlined">{getCategoryIcon(alert.category)}</span>
                   </div>
-                  <div className="min-w-0 space-y-1">
-                    <h3 className="text-base font-black text-text-main truncate group-hover:text-primary transition-colors uppercase tracking-tight">{alert.title}</h3>
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70">
-                      <span>#{alert.id}</span>
-                      <span className="size-1 rounded-full bg-slate-300"></span>
-                      <span>{alert.category}</span>
-                    </div>
+                  <div className="flex flex-col">
+                    <h3 className="text-base font-bold text-[#111418] dark:text-white leading-tight">{alert.title || alert.message}</h3>
+                    <span className="text-sm text-[#617589] dark:text-gray-400 font-medium">ID: #{alert.id} • {alert.category || 'System'}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <Badge 
-                    className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest ${
-                      alert.severity === 'critical' ? 'bg-error text-white' : 
-                      alert.severity === 'warning' ? 'bg-warning text-black' : 
-                      'bg-info text-white'
-                    }`}
-                  >
-                    {alert.severity === 'critical' ? 'Crítica' : alert.severity === 'warning' ? 'Advertencia' : 'Info'}
-                  </Badge>
-                  
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-secondary whitespace-nowrap opacity-60">
-                    <Clock size={14} />
-                    <span>{new Date(alert.created_at).toLocaleDateString()} {new Date(alert.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                {/* Meta Tags */}
+                <div className="flex flex-wrap items-center gap-3 mt-2 sm:mt-0">
+                  <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ring-1 ring-inset ${badgeClass}`}>
+                    {alert.severity}
+                  </span>
+                  <div className="flex items-center gap-1 text-xs text-[#617589] font-bold">
+                    <span className="material-symbols-outlined text-[16px]">schedule</span>
+                    {new Date(alert.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                   </div>
-
-                  <div className="hidden sm:block">
-                    <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary">
-                      {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                    </Button>
+                  <div className="size-8 rounded-full bg-slate-200 dark:bg-slate-700 border border-white dark:border-gray-800 shadow-sm ml-2 hidden sm:flex items-center justify-center text-[10px] font-bold text-slate-500">
+                    AD
                   </div>
+                  <button className="p-1 text-[#617589] hover:text-[#111418] dark:hover:text-white transition-colors">
+                    <span className={`material-symbols-outlined transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+                  </button>
                 </div>
               </div>
 
+              {/* Expanded Detail View */}
               {isExpanded && (
-                <div className="px-5 pb-5 pt-0 animate-in slide-in-from-top-2 duration-200">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-5 border-t border-border-subtle/50">
-                    <div className="md:col-span-2 space-y-4">
-                      <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2">Detalle del Evento</h4>
-                        <p className="text-sm text-text-secondary leading-relaxed font-medium">
-                          {alert.message}
-                        </p>
+                <div className="flex flex-col gap-6 border-t border-slate-200 dark:border-[#374151] bg-[#f6f7f8]/50 dark:bg-[#101922]/30 p-6 animate-in slide-in-from-top-2 duration-200">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Details Text */}
+                    <div className="lg:col-span-2 space-y-3">
+                      <h4 className="text-sm font-semibold text-[#111418] dark:text-white uppercase tracking-wider">Issue Description</h4>
+                      <p className="text-sm text-[#617589] dark:text-gray-300 leading-relaxed font-medium">
+                        {alert.message}
+                      </p>
+                      <div className="flex gap-4 pt-2">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-bold text-[#617589] uppercase tracking-wider">Diagnostic ID</span>
+                          <span className="text-xs font-mono bg-white dark:bg-black/20 px-2 py-1 rounded-lg border border-slate-200 dark:border-[#374151] font-bold text-[#111418] dark:text-white">ERR_ALT_{alert.id}</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-bold text-[#617589] uppercase tracking-wider">Affected Node</span>
+                          <span className="text-xs font-bold dark:text-white capitalize">{alert.category || 'General'}</span>
+                        </div>
                       </div>
                       
                       {alert.details && Object.keys(alert.details).length > 0 && (
-                          <div className="p-4 bg-background-light/50 rounded-lg border border-border-subtle">
-                              <h5 className="text-[10px] font-black text-text-secondary mb-4 uppercase tracking-widest">Datos Técnicos</h5>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                  {Object.entries(alert.details).map(([key, val]) => (
-                                      <div key={key} className="space-y-1">
-                                          <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest opacity-60 capitalize">{key.replace(/_/g, ' ')}</span>
-                                          <p className="text-xs font-black text-text-main break-all">
-                                              {typeof val === 'object' ? JSON.stringify(val) : String(val)}
-                                          </p>
-                                      </div>
-                                  ))}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-[#374151] mt-2">
+                           {Object.entries(alert.details).map(([key, val]) => (
+                              <div key={key} className="flex flex-col gap-1">
+                                 <span className="text-[10px] font-bold text-[#617589] uppercase tracking-tighter">{key.replace(/_/g, ' ')}</span>
+                                 <span className="text-xs font-mono bg-white dark:bg-black/20 px-2 py-1 rounded-lg border border-slate-200 dark:border-[#374151] break-all font-bold text-slate-700 dark:text-slate-200">
+                                   {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                                 </span>
                               </div>
-                          </div>
+                           ))}
+                        </div>
                       )}
                     </div>
-                    
-                    <div className="flex flex-col justify-end gap-3">
-                      <Button variant="secondary" className="w-full h-11 shadow-sm border-border-subtle bg-surface hover:bg-slate-50 font-black uppercase tracking-widest text-xs" onClick={(e) => { e.stopPropagation(); }}>
-                          <BellOff size={18} className="mr-2" />
-                          Silenciar
-                      </Button>
-                      {alert.action_url && (
-                          <Button variant="primary" className="w-full h-11 shadow-md font-black uppercase tracking-widest text-xs" onClick={(e) => { e.stopPropagation(); navigate(alert.action_url); }}>
-                              Resolver
-                              <ArrowRight size={18} className="ml-2" />
-                          </Button>
-                      )}
+                    {/* Mini Chart / Visual */}
+                    <div className="lg:col-span-1 flex flex-col justify-end bg-white dark:bg-[#1b2631] rounded-xl p-4 border border-slate-200 dark:border-[#374151] shadow-sm h-full min-h-[120px]">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-xs font-semibold text-[#617589]">Latency (ms) - Last 1h</span>
+                        <span className={`text-xs font-bold ${alert.severity === 'critical' ? 'text-red-600' : 'text-orange-600'}`}>842ms Peak</span>
+                      </div>
+                      <div className="flex items-end justify-between gap-1.5 h-24 w-full px-1">
+                        <div className="w-full bg-[#106ebe]/20 rounded-full h-[20%]"></div>
+                        <div className="w-full bg-[#106ebe]/20 rounded-full h-[25%]"></div>
+                        <div className="w-full bg-[#106ebe]/20 rounded-full h-[22%]"></div>
+                        <div className="w-full bg-[#106ebe]/30 rounded-full h-[35%]"></div>
+                        <div className="w-full bg-[#106ebe]/40 rounded-full h-[45%]"></div>
+                        <div className="w-full bg-orange-300 rounded-full h-[60%]"></div>
+                        <div className="w-full bg-red-400 dark:bg-red-500/80 rounded-full h-[85%]"></div>
+                        <div className="w-full bg-red-500 dark:bg-red-500 rounded-full h-[95%]"></div>
+                      </div>
                     </div>
+                  </div>
+                  {/* Action Bar */}
+                  <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-[#374151] mt-4 px-2 pb-2">
+                    <button className="flex items-center gap-2 h-9 px-4 rounded-lg text-[#617589] hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium">
+                      <span className="material-symbols-outlined text-[18px]">notifications_off</span>
+                      Mute Alert
+                    </button>
+                    <button className="flex items-center gap-2 h-9 px-4 rounded-lg bg-white dark:bg-[#1b2631] border border-slate-200 dark:border-[#374151] text-[#111418] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm font-medium shadow-sm">
+                      <span className="material-symbols-outlined text-[18px]">visibility</span>
+                      View Logs
+                    </button>
+                    <button 
+                      className="flex items-center gap-2 h-9 px-6 rounded-lg bg-[#106ebe] text-white hover:bg-[#005a9e] transition-colors text-sm font-bold shadow-md"
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if(alert.action_url) navigate(alert.action_url); 
+                      }}
+                    >
+                      Investigate
+                      <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    </button>
                   </div>
                 </div>
               )}

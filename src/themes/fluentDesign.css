@@ -91,10 +91,10 @@
   
   /* Corner Radius */
   --fluent-corner-radius-none: 0px;
-  --fluent-corner-radius-small: 2px;
-  --fluent-corner-radius-medium: 4px;
-  --fluent-corner-radius-large: 6px;
-  --fluent-corner-radius-xlarge: 8px;
+  --fluent-corner-radius-small: 4px;
+  --fluent-corner-radius-medium: 8px;
+  --fluent-corner-radius-large: 12px;
+  --fluent-corner-radius-xlarge: 16px;
   --fluent-corner-radius-circular: 10000px;
   
   /* Spacing Tokens */
@@ -300,10 +300,10 @@
   
   /* Corner Radius */
   --fluent-corner-radius-none: 0px;
-  --fluent-corner-radius-small: 2px;
-  --fluent-corner-radius-medium: 4px;
-  --fluent-corner-radius-large: 6px;
-  --fluent-corner-radius-xlarge: 8px;
+  --fluent-corner-radius-small: 4px;
+  --fluent-corner-radius-medium: 8px;
+  --fluent-corner-radius-large: 12px;
+  --fluent-corner-radius-xlarge: 16px;
   --fluent-corner-radius-circular: 10000px;
   
   /* Spacing Tokens (same as light theme) */

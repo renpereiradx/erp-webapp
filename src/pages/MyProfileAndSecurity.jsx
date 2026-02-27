@@ -68,7 +68,7 @@ export default function MyProfileAndSecurity() {
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Page Heading */}
-        <header className="flex flex-col gap-1 border-l-4 border-primary pl-4">
+        <header className="flex flex-col gap-1 border-l-4 border-[#106ebe] pl-4">
           <h1 className="text-3xl font-black text-text-main tracking-tighter uppercase leading-none">{t('profile.title')}</h1>
           <p className="text-text-secondary text-sm font-medium mt-1">{t('profile.subtitle')}</p>
         </header>
@@ -76,27 +76,27 @@ export default function MyProfileAndSecurity() {
         {/* Profile Summary Card */}
         <Card className="border-none shadow-fluent-8 bg-white overflow-hidden rounded-2xl">
           <CardContent className="p-0">
-            <div className="bg-gradient-to-r from-primary to-indigo-600 h-32 w-full opacity-10"></div>
+            <div className="bg-gradient-to-r from-[#106ebe] to-indigo-600 h-32 w-full opacity-10"></div>
             <div className="px-8 pb-8 -mt-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
                 <div className="relative group">
                   <Avatar className="size-32 border-4 border-white shadow-fluent-16 ring-1 ring-slate-100">
                     {userData.avatar_url && <AvatarImage src={userData.avatar_url} />}
-                    <AvatarFallback className="bg-primary text-white text-4xl font-black">{userData.first_name?.[0]}{userData.last_name?.[0]}</AvatarFallback>
+                    <AvatarFallback className="bg-[#106ebe] text-white text-4xl font-black">{userData.first_name?.[0]}{userData.last_name?.[0]}</AvatarFallback>
                   </Avatar>
-                  <button className="absolute bottom-1 right-1 size-9 rounded-full bg-primary text-white shadow-lg border-2 border-white flex items-center justify-center hover:scale-110 transition-transform"><Camera size={18} /></button>
+                  <button className="absolute bottom-1 right-1 size-9 rounded-full bg-[#106ebe] text-white shadow-lg border-2 border-white flex items-center justify-center hover:scale-110 transition-transform"><Camera size={18} /></button>
                 </div>
                 <div className="space-y-2 pb-2">
                   <h3 className="text-2xl font-black text-text-main uppercase tracking-tighter leading-none">{userData.first_name} {userData.last_name}</h3>
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                     <span className="text-xs font-bold text-text-secondary">@{userData.username} • {userData.email}</span>
-                    <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase tracking-wider h-5">{userData.roles?.[0]?.name}</Badge>
+                    <Badge className="bg-[#106ebe]/10 text-[#106ebe] border-none text-[9px] font-black uppercase tracking-wider h-5">{userData.roles?.[0]?.name}</Badge>
                     <Badge className="bg-success/10 text-success border-none text-[9px] font-black uppercase tracking-wider h-5">Activo</Badge>
                   </div>
                 </div>
               </div>
               <div className="flex justify-center pb-2">
-                <Button onClick={handleProfileUpdate} className="bg-primary hover:bg-primary-hover font-black uppercase tracking-widest px-8 h-11 shadow-lg shadow-primary/20">{t('profile.update_profile_btn')}</Button>
+                <Button onClick={handleProfileUpdate} className="bg-[#106ebe] text-white hover:bg-[#005a9e] font-black uppercase tracking-widest px-8 h-11 shadow-lg shadow-[#106ebe]/20">{t('profile.update_profile_btn')}</Button>
               </div>
             </div>
           </CardContent>
@@ -107,7 +107,7 @@ export default function MyProfileAndSecurity() {
           <Card className="border-border-subtle shadow-fluent-2 rounded-2xl overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b border-slate-50">
               <CardTitle className="flex items-center gap-3 text-sm font-black uppercase tracking-[0.2em] text-slate-400">
-                <Contact size={18} className="text-primary" />{t('profile.personal_info')}
+                <Contact size={18} className="text-[#106ebe]" />{t('profile.personal_info')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -130,7 +130,7 @@ export default function MyProfileAndSecurity() {
                   <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('profile.phone')}</label>
                   <Input value={profileForm.phone} onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})} className="h-11 font-bold" />
                 </div>
-                <Button type="submit" className="w-full bg-slate-100 text-slate-600 hover:bg-primary hover:text-white font-black uppercase tracking-widest h-11 transition-all">{t('profile.update_profile')}</Button>
+                <Button type="submit" className="w-full bg-slate-100 text-slate-600 hover:bg-[#106ebe] hover:text-white font-black uppercase tracking-widest h-11 transition-all">{t('profile.update_profile')}</Button>
               </form>
             </CardContent>
           </Card>
@@ -139,7 +139,7 @@ export default function MyProfileAndSecurity() {
           <Card className="border-border-subtle shadow-fluent-2 rounded-2xl overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b border-slate-50">
               <CardTitle className="flex items-center gap-3 text-sm font-black uppercase tracking-[0.2em] text-slate-400">
-                <Shield size={18} className="text-primary" />{t('profile.security_settings')}
+                <Shield size={18} className="text-[#106ebe]" />{t('profile.security_settings')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -157,7 +157,7 @@ export default function MyProfileAndSecurity() {
                   <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('profile.confirm_password')}</label>
                   <Input type="password" value={passwordForm.confirm_password} onChange={(e) => setPasswordForm({...passwordForm, confirm_password: e.target.value})} className="h-11 font-mono" />
                 </div>
-                <Button type="submit" className="w-full bg-slate-900 text-white hover:bg-primary font-black uppercase tracking-widest h-11 transition-all">{t('profile.update_password')}</Button>
+                <Button type="submit" className="w-full bg-slate-900 text-white hover:bg-[#106ebe] font-black uppercase tracking-widest h-11 transition-all">{t('profile.update_password')}</Button>
               </form>
             </CardContent>
           </Card>
@@ -167,7 +167,7 @@ export default function MyProfileAndSecurity() {
         <Card className="border-border-subtle shadow-fluent-2 rounded-2xl overflow-hidden">
           <CardHeader className="bg-white border-b border-slate-50 flex flex-row items-center justify-between py-6">
             <CardTitle className="flex items-center gap-3 text-sm font-black uppercase tracking-[0.2em] text-slate-400 m-0">
-              <History size={18} className="text-primary" />{t('profile.active_sessions')}
+              <History size={18} className="text-[#106ebe]" />{t('profile.active_sessions')}
             </CardTitle>
             <Button variant="ghost" className="text-[10px] font-black uppercase text-error hover:bg-error/5 h-8 tracking-widest">{t('profile.sign_out_all')}</Button>
           </CardHeader>
@@ -179,7 +179,7 @@ export default function MyProfileAndSecurity() {
             ].map((s, i) => (
               <div key={i} className="flex items-center justify-between p-6 hover:bg-slate-50/50 transition-colors">
                 <div className="flex items-center gap-4">
-                  <div className={`size-10 rounded-xl flex items-center justify-center ${s.current ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400'}`}><s.icon size={20} /></div>
+                  <div className={`size-10 rounded-xl flex items-center justify-center ${s.current ? 'bg-[#106ebe]/10 text-[#106ebe]' : 'bg-slate-100 text-slate-400'}`}><s.icon size={20} /></div>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-text-main">{s.device}</span>

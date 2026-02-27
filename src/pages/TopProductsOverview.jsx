@@ -1,32 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import useDashboardStore from '@/store/useDashboardStore';
 import { formatPYG } from '@/utils/currencyUtils';
-import { 
-  TrendingUp, 
-  Award, 
-  AlertTriangle, 
-  Filter, 
-  Columns, 
-  ArrowUpDown, 
-  Share2, 
-  Download, 
-  MoreVertical,
-  Package,
-  RefreshCw
-} from 'lucide-react';
-// ... (rest of lucide-react imports remain same)
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table';
 import DashboardNav from '@/components/business-intelligence/DashboardNav';
 
 const TopProductsOverview = () => {
@@ -58,218 +34,226 @@ const TopProductsOverview = () => {
         return alerts.filter(a => a.category === 'inventory').length;
     }, [alerts]);
 
-    // Trend helper
-    const getTrendIcon = (trend) => {
-        // API returns "up", "down", "stable"
-        // UI expects styling logic.
-        // For simplicity, store doesn't seem to pass mapped icon but string.
-        return trend; // Not strictly used for icon rendering in table yet, just prop pass
+    // Mapping stock status to Stitch styles
+    const getStatusStyle = (status) => {
+        switch(status?.toLowerCase()) {
+            case 'in_stock':
+            case 'in stock':
+                return { color: 'text-[#111418] dark:text-white', dot: 'bg-green-500', text: 'En Stock' };
+            case 'low_stock':
+            case 'low stock':
+                return { color: 'text-orange-600 dark:text-orange-400 font-medium', dot: 'bg-orange-500 animate-pulse', text: 'Stock Bajo' };
+            case 'out_of_stock':
+            case 'out of stock':
+                return { color: 'text-red-600 dark:text-red-400 font-medium', dot: 'bg-red-500', text: 'Sin Stock' };
+            default:
+                return { color: 'text-[#111418] dark:text-white', dot: 'bg-gray-400', text: status || 'Desconocido' };
+        }
     };
 
-    // Placeholder image logic since API doesn't return images
-    const ProductImagePlaceholder = () => (
-        <div className="w-10 h-10 rounded bg-slate-100 flex items-center justify-center text-slate-400">
-            <Package size={20} />
-        </div>
-    );
-
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">Rendimiento de Productos Top</h1>
-          <p className="text-sm text-text-secondary font-medium">Resumen de SKUs con mejor desempeño (Últimos 7 días)</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="md" className="shadow-sm border-border-subtle bg-surface" onClick={() => fetchTopProducts()}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Actualizar
-          </Button>
-        </div>
-      </header>
-
+    <div className="flex-1 w-full max-w-[1400px] mx-auto space-y-6">
+      {/* Top Navigation */}
       <DashboardNav />
 
-      {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Total Revenue */}
-        <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
-          <div className="flex items-start justify-between mb-4">
-            <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Ingresos Totales (Top 10)</p>
-            <div className="size-10 rounded-lg bg-green-50 flex items-center justify-center text-success group-hover:scale-110 transition-transform">
-              <TrendingUp size={20} />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-2xl font-black text-text-main tracking-tight">
-                {formatCurrency(topProductsMetrics?.total_revenue || 0)}
-            </h3>
-            <p className="text-[10px] font-bold text-text-secondary opacity-60 uppercase tracking-wider">
-               Generado por los productos listados
-            </p>
-          </div>
-        </div>
-
-        {/* Top Performer */}
-        <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
-          <div className="flex items-start justify-between mb-4">
-            <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Producto Estrella</p>
-            <div className="size-10 rounded-lg bg-blue-50 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-              <Award size={20} />
-            </div>
-          </div>
-          <div className="space-y-1">
-             <h3 className="text-xl font-black text-text-main tracking-tight truncate" title={topPerformer?.name || '-'}>
-                 {topPerformer ? topPerformer.name : '-'}
-             </h3>
-             <p className="text-[10px] font-bold text-text-secondary opacity-60 uppercase tracking-wider">
-                 {topPerformer ? `${formatNumber(topPerformer.quantity_sold)} Unidades Vendidas` : 'Sin datos'}
-             </p>
-          </div>
-        </div>
-
-        {/* Inventory Alerts */}
-        <div className="bg-surface p-6 rounded-xl shadow-fluent-2 border border-border-subtle hover:shadow-fluent-8 transition-all group">
-          <div className="flex items-start justify-between mb-4">
-            <p className="text-xs font-black uppercase tracking-widest text-text-secondary">Alertas de Inventario</p>
-            <div className="size-10 rounded-lg bg-amber-50 flex items-center justify-center text-warning group-hover:scale-110 transition-transform">
-              <AlertTriangle size={20} />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-2xl font-black text-text-main tracking-tight">{inventoryAlertsCount} Alertas</h3>
-            <div className="flex items-center gap-2">
-              <span className="flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest">Activas</span>
-              <p className="text-[10px] font-bold text-text-secondary opacity-60 uppercase tracking-wider">Verifica el módulo de inventario</p>
-            </div>
-          </div>
+      {/* Page Heading */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pt-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-[#111418] dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Rendimiento de Productos Top</h1>
+          <p className="text-[#617589] dark:text-gray-400 text-base font-normal leading-normal">Últimos 30 Días | Resumen de los SKUs con mejor desempeño</p>
         </div>
       </div>
 
-      {/* Table Section */}
-      <div className="bg-surface rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden flex flex-col">
-        {/* Toolbar */}
-        <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="h-9 px-3 text-[11px] font-black uppercase tracking-widest text-text-secondary hover:text-primary hover:bg-blue-50">
-                <Filter size={16} className="mr-2" />
-                Filtrar
-            </Button>
-            <Button variant="ghost" size="sm" className="h-9 px-3 text-[11px] font-black uppercase tracking-widest text-text-secondary hover:text-primary hover:bg-blue-50">
-                <Columns size={16} className="mr-2" />
-                Columnas
-            </Button>
-            <Button variant="ghost" size="sm" className="h-9 px-3 text-[11px] font-black uppercase tracking-widest text-text-secondary hover:text-primary hover:bg-blue-50">
-                <ArrowUpDown size={16} className="mr-2" />
-                Ordenar
-            </Button>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {/* Total Revenue Card */}
+        <div className="flex flex-col gap-2 !rounded-[12px] p-6 bg-white dark:bg-[#1e2832] border border-[#dbe0e6] dark:border-[#2a3642] shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-start">
+            <p className="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Ingresos Totales</p>
+            <span className="material-symbols-outlined text-green-600 bg-green-100 dark:bg-green-900/30 !rounded-full p-1 text-[16px]">trending_up</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="size-9 rounded-full text-text-secondary hover:text-primary hover:bg-blue-50">
-                <Share2 size={18} />
-            </Button>
-            <Button variant="primary" size="md" className="h-10 px-4 shadow-md font-black uppercase tracking-widest text-[11px]">
-                <Download size={18} className="mr-2" />
-                Exportar a Excel
-            </Button>
+          <div className="flex items-baseline gap-2">
+            <p className="text-[#111418] dark:text-white tracking-tight text-3xl font-bold leading-tight">
+                {formatCurrency(topProductsMetrics?.total_revenue || 0)}
+            </p>
+            <span className="text-[#078838] text-sm font-medium bg-green-50 dark:bg-green-900/20 px-2 py-0.5 !rounded-[6px]">+12% vs prev</span>
+          </div>
+          <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 !rounded-full mt-2 overflow-hidden">
+            <div className="bg-[#137fec] h-1.5 rounded-full w-[75%]" ></div>
           </div>
         </div>
 
-        {/* Table */}
+        {/* Top Performer Card */}
+        <div className="flex flex-col gap-2 !rounded-[12px] p-6 bg-white dark:bg-[#1e2832] border border-[#dbe0e6] dark:border-[#2a3642] shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-start">
+            <p className="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Producto Estrella</p>
+            <span className="material-symbols-outlined text-[#137fec] bg-blue-100 dark:bg-blue-900/30 !rounded-full p-1 text-[16px]">emoji_events</span>
+          </div>
+          <p className="text-[#111418] dark:text-white tracking-tight text-2xl font-bold leading-tight truncate" title={topPerformer?.name}>
+            {topPerformer ? topPerformer.name : 'Cargando...'}
+          </p>
+          <p className="text-[#617589] dark:text-gray-400 text-sm">
+            {topPerformer ? `${topPerformer.category || 'General'} • ${formatNumber(topPerformer.quantity_sold)} Unidades` : '-'}
+          </p>
+        </div>
+
+        {/* Inventory Alerts Card */}
+        <div className="flex flex-col gap-2 !rounded-[12px] p-6 bg-white dark:bg-[#1e2832] border border-[#dbe0e6] dark:border-[#2a3642] shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-start">
+            <p className="text-[#617589] dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Alertas de Stock</p>
+            <span className="material-symbols-outlined text-orange-600 bg-orange-100 dark:bg-orange-900/30 rounded-full p-1 text-[16px]">warning</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <p className="text-[#111418] dark:text-white tracking-tight text-3xl font-bold leading-tight">{inventoryAlertsCount} Productos</p>
+            <span className="text-orange-600 text-sm font-medium">Stock Bajo</span>
+          </div>
+          <p className="text-[#617589] dark:text-gray-400 text-sm">Requiere reabastecimiento inmediato</p>
+        </div>
+      </div>
+
+      {/* ToolBar & Table Container */}
+      <div className="flex flex-col bg-white dark:bg-[#1e2832] !rounded-[12px] border border-[#dbe0e6] dark:border-[#2a3642] shadow-sm overflow-hidden">
+        {/* Toolbar */}
+        <div className="flex flex-wrap justify-between gap-4 p-4 border-b border-[#f0f2f4] dark:border-[#2a3642]">
+          <div className="flex gap-2">
+            <button className="flex items-center gap-2 px-3 py-2 text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-white/5 !rounded-[8px] border border-transparent transition-colors">
+              <span className="material-symbols-outlined text-[20px]">filter_list</span>
+              <span className="text-sm font-medium">Filtrar</span>
+            </button>
+            <button className="flex items-center gap-2 px-3 py-2 text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-white/5 !rounded-[8px] border border-transparent transition-colors">
+              <span className="material-symbols-outlined text-[20px]">view_column</span>
+              <span className="text-sm font-medium">Columnas</span>
+            </button>
+            <button className="flex items-center gap-2 px-3 py-2 text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-white/5 !rounded-[8px] border border-transparent transition-colors">
+              <span className="material-symbols-outlined text-[20px]">sort</span>
+              <span className="text-sm font-medium">Ordenar</span>
+            </button>
+          </div>
+          <div className="flex gap-3">
+            <button className="flex items-center gap-2 px-3 py-2 text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-white/5 !rounded-[8px] border border-transparent transition-colors">
+              <span className="material-symbols-outlined text-[20px]">share</span>
+            </button>
+            <button className="flex cursor-pointer items-center justify-center overflow-hidden !rounded-[8px] h-9 bg-[#137fec] hover:bg-blue-600 text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] px-4 shadow-sm transition-colors">
+              <span className="material-symbols-outlined text-[18px]">download</span>
+              <span className="truncate">Exportar a Excel</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Data Table */}
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-slate-50/30">
-              <TableRow className="hover:bg-transparent border-border-subtle">
-                <TableHead className="w-12 text-center">
-                  <Checkbox className="rounded-sm border-slate-300" />
-                </TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">Producto</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">Categoría</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-right px-6">Und. Vendidas</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-right px-6">Ingresos</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-right px-6">Margen %</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-center px-6">Tendencia</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topProducts && topProducts.map((product) => (
-                <TableRow key={product.id} className="group hover:bg-slate-50 transition-colors border-border-subtle">
-                  <TableCell className="text-center">
-                    <Checkbox className="rounded-sm border-slate-300" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-4">
-                      <div className="size-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform">
-                        <Package size={24} />
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 dark:bg-black/20 border-b border-[#f0f2f4] dark:border-[#2a3642]">
+                <th className="p-4 w-12 text-center">
+                  <Checkbox className="!rounded-[4px] border-gray-300 text-[#137fec] focus:ring-[#137fec] h-4 w-4 bg-white dark:bg-[#1e2832] dark:border-gray-600" />
+                </th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nombre del Producto</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Categoría</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Precio Prom.</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Und. Vendidas</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Ingresos</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                <th className="p-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Tendencia (7d)</th>
+                <th className="p-4 w-12"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#f0f2f4] dark:divide-[#2a3642]">
+              {topProducts && topProducts.map((product) => {
+                const statusInfo = getStatusStyle(product.stock_status);
+                const avgPrice = product.quantity_sold > 0 ? product.revenue / product.quantity_sold : 0;
+                
+                return (
+                  <tr key={product.id} className="group hover:bg-[#f0f2f4]/50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+                    <td className="p-4 text-center">
+                      <Checkbox className="!rounded-[4px] border-gray-300 text-[#137fec] focus:ring-[#137fec] h-4 w-4 bg-white dark:bg-[#1e2832] dark:border-gray-600" />
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 !rounded-[8px] bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-slate-400 border border-gray-200 dark:border-gray-600 flex-shrink-0">
+                          <span className="material-symbols-outlined text-[24px]">package_2</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-semibold text-[#111418] dark:text-white group-hover:text-[#137fec] transition-colors">{product.name}</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">SKU-{product.id}</span>
+                        </div>
                       </div>
-                      <div className="min-w-0 space-y-0.5">
-                        <p className="text-sm font-black text-text-main truncate group-hover:text-primary transition-colors">{product.name}</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">#{product.id}</p>
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 !rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                        {product.category || 'General'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">
+                        {formatCurrency(avgPrice)}
+                    </td>
+                    <td className="p-4 text-sm text-[#111418] dark:text-white font-medium text-right font-mono">
+                        {formatNumber(product.quantity_sold)}
+                    </td>
+                    <td className="p-4 text-sm text-[#111418] dark:text-white font-bold text-right font-mono">
+                        {formatCurrency(product.revenue)}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <div className={`h-2 w-2 !rounded-full ${statusInfo.dot}`}></div>
+                        <span className={`text-sm ${statusInfo.color}`}>{statusInfo.text}</span>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="bg-slate-100 text-slate-700 hover:bg-slate-200 border-transparent text-[10px] font-black uppercase tracking-widest px-2 py-0.5">
-                      {product.category || 'General'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right px-6">
-                    <span className="text-sm font-black text-text-main">{formatNumber(product.quantity_sold)}</span>
-                  </TableCell>
-                  <TableCell className="text-right px-6">
-                    <span className="text-sm font-black text-text-main">{formatCurrency(product.revenue)}</span>
-                  </TableCell>
-                  <TableCell className="text-right px-6">
-                    <span className={`text-sm font-black ${product.margin_percentage >= 30 ? 'text-success' : 'text-text-main'}`}>
-                      {product.margin_percentage ? `${product.margin_percentage}%` : '-'}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center px-6">
-                    <div className={`inline-flex items-center text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
-                        product.trend === 'up' ? 'text-success bg-green-50' : 
-                        product.trend === 'down' ? 'text-error bg-red-50' : 'text-slate-500 bg-slate-50'
-                    }`}>
-                        {product.trend === 'up' && <TrendingUp size={14} className="mr-1.5" />}
-                        {product.trend === 'down' && <TrendingUp size={14} className="mr-1.5 rotate-180" />}
-                        <span>{product.trend_percentage ? `${product.trend_percentage}%` : product.trend}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary opacity-0 group-hover:opacity-100 transition-all hover:bg-slate-200">
-                      <MoreVertical size={18} />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="flex justify-center items-center h-8">
+                        {product.trend === 'up' ? (
+                            <svg fill="none" height="20" stroke="#137fec" strokeWidth="2" viewBox="0 0 60 20" width="60">
+                                <path d="M0 15 L10 12 L20 18 L30 8 L40 10 L50 5 L60 2" strokeLinecap="round" strokeLinejoin="round"></path>
+                            </svg>
+                        ) : product.trend === 'down' ? (
+                            <svg fill="none" height="20" stroke="#ef4444" strokeWidth="2" viewBox="0 0 60 20" width="60">
+                                <path d="M0 5 L10 8 L20 6 L30 10 L40 12 L50 15 L60 18" strokeLinecap="round" strokeLinejoin="round"></path>
+                            </svg>
+                        ) : (
+                            <svg fill="none" height="20" stroke="#6b7280" strokeWidth="2" viewBox="0 0 60 20" width="60">
+                                <path d="M0 10 L10 10 L20 10 L30 10 L40 10 L50 10 L60 10" strokeDasharray="2 2"></path>
+                            </svg>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <button className="text-gray-400 hover:text-[#111418] dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity !rounded-full p-1">
+                        <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
               
               {!loading && (!topProducts || topProducts.length === 0) && (
-                  <TableRow>
-                      <TableCell colSpan={8} className="p-12 text-center">
-                          <p className="text-sm font-bold text-text-secondary uppercase tracking-widest">
-                            No se encontraron productos para el período seleccionado.
-                          </p>
-                      </TableCell>
-                  </TableRow>
+                  <tr>
+                      <td colSpan={9} className="p-12 text-center border-none">
+                          <div className="flex flex-col items-center justify-center gap-2">
+                            <span className="material-symbols-outlined text-slate-300 text-[48px]">inventory_2</span>
+                            <p className="text-sm font-bold text-text-secondary uppercase tracking-widest">
+                                No se encontraron productos para el período seleccionado.
+                            </p>
+                          </div>
+                      </td>
+                  </tr>
               )}
-            </TableBody>
-          </Table>
+            </tbody>
+          </table>
         </div>
 
-        {/* Footer / Pagination */}
-        <div className="px-6 py-4 bg-slate-50/50 border-t border-border-subtle flex items-center justify-between">
-            <div className="text-[10px] font-black uppercase tracking-widest text-text-secondary">
-                Mostrando {topProducts?.length || 0} resultados
-            </div>
-            <div className="flex items-center gap-2">
-                <Button variant="secondary" size="sm" className="h-8 px-4 text-[10px] font-black uppercase tracking-widest border-border-subtle disabled:opacity-30" disabled>
-                    Anterior
-                </Button>
-                <Button variant="secondary" size="sm" className="h-8 px-4 text-[10px] font-black uppercase tracking-widest border-border-subtle disabled:opacity-30" disabled>
-                    Siguiente
-                </Button>
-            </div>
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-4 py-3 border-t border-[#f0f2f4] dark:border-[#2a3642] bg-gray-50 dark:bg-black/10">
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <span>Mostrando 1 a {topProducts?.length || 0} de {topProducts?.length || 0} resultados</span>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="px-3 py-1 !rounded-[8px] border border-[#dbe0e6] dark:border-[#2a3642] bg-white dark:bg-[#1e2832] text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-30" disabled>
+                Anterior
+            </Button>
+            <Button variant="outline" size="sm" className="px-3 py-1 !rounded-[8px] border border-[#dbe0e6] dark:border-[#2a3642] bg-white dark:bg-[#1e2832] text-sm text-[#111418] dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-30" disabled>
+                Siguiente
+            </Button>
+          </div>
         </div>
       </div>
     </div>

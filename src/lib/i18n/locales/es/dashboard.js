@@ -97,6 +97,17 @@ export const dashboard = {
     loading: 'Cargando dashboard...',
     error: {
       title: 'Error al cargar el Dashboard'
+    },
+    nav: {
+      summary: 'Resumen',
+      kpis: 'Indicadores (KPIs)',
+      heatmap: 'Mapa de Calor',
+      topProducts: 'Productos Top',
+      alerts: 'Alertas',
+      receivables: 'Dashboard CXC',
+      list: 'Listado Facturas',
+      overdue: 'Cuentas Vencidas',
+      aging: 'Reporte Antigüedad'
     }
   }
 };

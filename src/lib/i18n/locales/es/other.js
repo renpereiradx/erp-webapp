@@ -25,6 +25,7 @@ export const other = {
   'login.loading': 'Iniciando Sesión...',
   'login.processing': 'Iniciando...',
   'login.forgot_password': '¿Olvidaste tu contraseña?',
+  'login.demo_mode': 'Modo Demo Activo',
   'login.no_account': '¿No tienes cuenta?',
   'login.register': 'Regístrate',
   'login.footer.rights': 'Todos los derechos reservados.',
