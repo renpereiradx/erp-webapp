@@ -39,6 +39,7 @@ const getStatusColor = status => {
  */
 const transformReceivableItem = item => ({
   id: item.id || item.sale_order_id,
+  clientId: item.client_id,
   clientName: item.client_name,
   clientInitial: item.client_name?.charAt(0) || '?',
   clientColor: getAvatarColor(item.client_name),

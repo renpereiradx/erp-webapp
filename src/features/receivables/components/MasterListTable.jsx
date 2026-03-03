@@ -43,84 +43,94 @@ const MasterListTable = ({
 
   const getStatusVariant = (statusColor) => {
     const colorMap = {
-      red: 'bg-error text-white',
-      yellow: 'bg-warning text-black',
-      blue: 'bg-info text-white',
-      green: 'bg-success text-white',
-      gray: 'bg-slate-100 text-slate-700'
+      red: 'bg-red-100 text-red-800 border-red-200',
+      yellow: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      orange: 'bg-orange-100 text-orange-800 border-orange-200',
+      blue: 'bg-blue-100 text-blue-800 border-blue-200',
+      green: 'bg-green-100 text-green-800 border-green-200',
+      gray: 'bg-gray-100 text-gray-800 border-gray-200'
     };
-    return colorMap[statusColor] || 'bg-slate-100 text-slate-700';
+    return colorMap[statusColor] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
   return (
-    <div className="bg-surface rounded-xl border border-border-subtle overflow-hidden shadow-sm flex flex-col">
-      <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70">
-          {t('common.pagination.showing', 'Mostrando')} <strong className="text-text-main">{startItem}-{endItem}</strong> {t('common.pagination.of', 'de')} <strong className="text-text-main">{totalItems || safeInvoices.length}</strong> items
+    <div className="bg-white dark:bg-[#1a202c] rounded-xl border border-[#e5e7eb] dark:border-gray-800 shadow-sm overflow-hidden flex flex-col flex-1">
+      {/* Toolbar inside Grid */}
+      <div className="px-4 py-3 border-b border-[#f0f2f4] dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-900/50">
+        <div className="text-sm text-[#617589] font-medium">
+          Mostrando <span className="text-[#111418] dark:text-white font-bold">{startItem}-{endItem}</span> de <span className="text-[#111418] dark:text-white font-bold">{totalItems || safeInvoices.length}</span> registros
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="size-9 rounded-full text-text-secondary hover:text-primary hover:bg-blue-50" title="Actualizar" onClick={onRefresh}>
-            <RefreshCw className="size-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="size-9 rounded-full text-text-secondary hover:text-primary hover:bg-blue-50" title="Columnas">
-            <Columns className="size-4" />
-          </Button>
+        <div className="flex gap-2">
+          <button className="p-1.5 text-[#617589] hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors" title="Actualizar" onClick={onRefresh}>
+            <span className="material-symbols-outlined text-[20px]">refresh</span>
+          </button>
+          <button className="p-1.5 text-[#617589] hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors" title="Columnas">
+            <span className="material-symbols-outlined text-[20px]">view_column</span>
+          </button>
         </div>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto">
-        <Table>
-          <TableHeader className="bg-slate-50/30">
-            <TableRow className="hover:bg-transparent border-border-subtle">
-              <TableHead className="w-12 text-center">
-                <input type="checkbox" className="rounded-sm border-slate-300" />
-              </TableHead>
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-white dark:bg-[#1a202c] border-b border-[#e5e7eb] dark:border-gray-700">
+              <th className="py-3 px-4 w-12 text-center">
+                <input className="fluent-checkbox cursor-pointer" type="checkbox" />
+              </th>
               {SORTABLE_COLUMNS.map((col) => (
-                <TableHead key={col.key} className={`${col.align || ''} text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary`}>
-                  <div
-                    className="cursor-pointer select-none hover:text-primary transition-colors flex items-center gap-1"
-                    onClick={() => onSort?.(col.key)}
-                  >
+                <th
+                  key={col.key}
+                  className={`py-3 px-4 text-xs font-semibold text-[#617589] uppercase tracking-wider cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${col.align === 'text-right' ? 'text-right' : col.align === 'text-center' ? 'text-center' : ''}`}
+                  onClick={() => onSort?.(col.key)}
+                >
+                  <div className={`flex items-center gap-1 ${col.align === 'text-right' ? 'justify-end' : col.align === 'text-center' ? 'justify-center' : ''}`}>
                     {t(col.label)}
                     {sortBy === col.key && (
-                      <span className="material-symbols-outlined text-[14px]">
+                      <span className="material-symbols-outlined text-[16px]">
                         {sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward'}
                       </span>
                     )}
                   </div>
-                </TableHead>
+                </th>
               ))}
-              <TableHead className="w-12"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+              <th className="py-3 px-4 w-12"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f0f2f4] dark:divide-gray-800">
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center py-12">
+              <tr>
+                <td colSpan={9} className="text-center py-12">
                   <div className="flex flex-col items-center gap-3">
                     <RefreshCw className="size-8 animate-spin text-primary opacity-50" />
-                    <p className="text-xs font-black uppercase tracking-widest text-text-secondary opacity-60">{t('receivables.loading.generic')}</p>
+                    <p className="text-sm font-semibold text-[#617589]">{t('receivables.loading.generic', 'Cargando...')}</p>
                   </div>
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
+             ) : safeInvoices.length === 0 ? (
+               <tr>
+                 <td colSpan={9} className="text-center py-12">
+                   <p className="text-sm text-[#617589] font-medium">{t('receivables.empty', 'No se encontraron registros')}</p>
+                 </td>
+               </tr>
             ) : (
               safeInvoices.map((inv) => (
-                <TableRow key={inv.id} className="group hover:bg-slate-50 transition-colors border-border-subtle">
-                  <TableCell className="text-center">
-                    <input type="checkbox" className="rounded-sm border-slate-300" />
-                  </TableCell>
-                  <TableCell>
+                <tr key={inv.id} className="group hover:bg-[#f8faff] dark:hover:bg-gray-800/50 transition-colors">
+                  <td className="py-3 px-4 text-center">
+                    <input className="fluent-checkbox cursor-pointer mx-auto" type="checkbox" />
+                  </td>
+                  <td className="py-3 px-4">
                     <button
-                      className="text-sm font-black text-primary hover:underline uppercase tracking-tight"
+                      className="text-primary font-medium hover:underline text-sm"
                       onClick={(e) => { e.preventDefault(); navigate(`/receivables/detail/${inv.id}`); }}
                     >
                       #{inv.id}
                     </button>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2">
                       <div
-                        className="size-8 rounded-lg flex items-center justify-center text-[10px] font-black"
+                        className="h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold"
                         style={{
                           backgroundColor: inv.clientColor || '#eff6ff',
                           color: '#1d4ed8'
@@ -128,67 +138,68 @@ const MasterListTable = ({
                       >
                         {inv.clientInitial || inv.clientName?.charAt(0)}
                       </div>
-                      <span className="text-sm font-bold text-text-main group-hover:text-primary transition-colors">{inv.clientName}</span>
+                      <button 
+                        className="text-[#111418] dark:text-white text-sm font-medium hover:text-primary hover:underline transition-colors text-left"
+                        onClick={(e) => { e.preventDefault(); navigate(`/receivables/client-profile/${inv.clientId || 'CLI-001'}`); }}
+                      >
+                        {inv.clientName}
+                      </button>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-xs font-black uppercase tracking-widest text-text-secondary">{inv.issueDate}</TableCell>
-                  <TableCell className="text-xs font-black uppercase tracking-widest text-text-secondary">{inv.dueDate}</TableCell>
-                  <TableCell className="text-right px-6 text-sm font-black text-text-main opacity-60">{formatPYG(inv.originalAmt)}</TableCell>
-                  <TableCell className="text-right px-6 text-sm font-black text-text-main">{formatPYG(inv.pendingAmt)}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest ${getStatusVariant(inv.statusColor)}`}>
+                  </td>
+                  <td className="py-3 px-4 text-[#617589] text-sm">{inv.issueDate}</td>
+                  <td className="py-3 px-4 text-[#617589] text-sm">{inv.dueDate}</td>
+                  <td className="py-3 px-4 text-[#617589] text-sm text-right tabular-nums font-mono">{formatPYG(inv.originalAmt)}</td>
+                  <td className="py-3 px-4 text-[#111418] dark:text-white text-sm font-semibold text-right tabular-nums font-mono">{formatPYG(inv.pendingAmt)}</td>
+                  <td className="py-3 px-4 text-center">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusVariant(inv.statusColor)}`}>
                       {inv.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary opacity-0 group-hover:opacity-100 transition-all hover:bg-slate-200">
-                      <MoreHorizontal className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <button className="text-[#617589] hover:text-[#111418] dark:hover:text-white p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-all">
+                      <span className="material-symbols-outlined text-[20px]">more_horiz</span>
+                    </button>
+                  </td>
+                </tr>
               ))
             )}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
 
-      <div className="px-6 py-4 bg-slate-50/50 border-t border-border-subtle flex items-center justify-between">
-        <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-text-secondary">
-          <span>{t('receivables.master.pagination.rows_per_page')}</span>
-          <Select value={String(pageSize)} onValueChange={(val) => onPageSizeChange?.(val)}>
-            <SelectTrigger className="h-8 min-w-[70px] border-border-subtle bg-white text-[10px] font-black">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10" className="text-[10px] font-black">10</SelectItem>
-              <SelectItem value="20" className="text-[10px] font-black">20</SelectItem>
-              <SelectItem value="50" className="text-[10px] font-black">50</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* Footer / Pagination */}
+      <div className="border-t border-[#f0f2f4] dark:border-gray-800 bg-white dark:bg-[#1a202c] p-3 flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-[#617589]">
+          <span>{t('receivables.master.pagination.rows_per_page', 'Filas por página:')}</span>
+          <select 
+            className="bg-transparent font-medium text-[#111418] dark:text-white focus:outline-none cursor-pointer"
+            value={String(pageSize)}
+            onChange={(e) => onPageSizeChange?.(e.target.value)}
+          >
+            <option>10</option>
+            <option>20</option>
+            <option>50</option>
+          </select>
         </div>
-        <div className="flex items-center gap-6">
-          <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">
-            {t('receivables.master.pagination.page_info', { page, total: totalPages || 1 })}
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-[#617589]">
+            {t('receivables.master.pagination.page_info', { page, total: totalPages || 1 }, `Página ${page} de ${totalPages || 1}`)}
           </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="secondary"
-              size="icon"
-              className="size-8 rounded-lg border border-border-subtle bg-white disabled:opacity-30"
+          <div className="flex items-center">
+            <button 
+              className="p-1 rounded-md text-[#111418] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={page <= 1}
               onClick={() => onPageChange?.(page - 1)}
             >
-              <ChevronLeft className="size-4" />
-            </Button>
-            <Button
-              variant="secondary"
-              size="icon"
-              className="size-8 rounded-lg border border-border-subtle bg-white disabled:opacity-30"
+              <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+            </button>
+            <button 
+              className="p-1 rounded-md text-[#111418] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={page >= totalPages}
               onClick={() => onPageChange?.(page + 1)}
             >
-              <ChevronRight className="size-4" />
-            </Button>
+              <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+            </button>
           </div>
         </div>
       </div>

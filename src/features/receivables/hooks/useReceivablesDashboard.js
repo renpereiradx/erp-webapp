@@ -34,6 +34,7 @@ const transformRecentInvoices = items => {
   return items.map(item => ({
     id: item.id || item.sale_order_id,
     invoiceId: `#${item.id || item.sale_order_id}`,
+    clientId: item.client_id || 'CLI-001',
     client: item.client_name,
     balance: item.pending_amount || 0,
     daysOverdue: item.days_overdue || 0,

@@ -48,42 +48,32 @@ const ReceivableDetail = () => {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="max-w-[1600px] mx-auto space-y-8">
+    <div className="bg-background-light dark:bg-background-dark text-[#111418] dark:text-gray-100 flex flex-col min-h-screen font-display">
+      <div className="flex-1 w-full max-w-[1280px] mx-auto px-4 lg:px-10 py-6">
         {/* Breadcrumbs */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink onClick={() => navigate('/dashboard')} className="cursor-pointer text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 hover:text-primary transition-colors">
-                {t('receivables.breadcrumb.home')}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator className="opacity-20" />
-            <BreadcrumbItem>
-              <BreadcrumbLink onClick={() => navigate('/receivables/list')} className="cursor-pointer text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 hover:text-primary transition-colors">
-                {t('receivables.master.title')}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator className="opacity-20" />
-            <BreadcrumbItem>
-              <span className="text-[10px] font-black uppercase tracking-widest text-text-main">{t('receivables.detail.title', { id: data.id })}</span>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <div className="flex flex-wrap gap-2 mb-6 text-sm">
+          <a className="text-[#617589] dark:text-gray-400 font-medium hover:text-primary transition-colors cursor-pointer" onClick={() => navigate('/receivables/list')}>
+            {t('receivables.master.title', 'Cuentas por Cobrar')}
+          </a>
+          <span className="text-[#617589] dark:text-gray-500 font-medium">/</span>
+          <span className="text-[#617589] dark:text-gray-400 font-medium">Activas</span>
+          <span className="text-[#617589] dark:text-gray-500 font-medium">/</span>
+          <span className="text-[#111418] dark:text-white font-medium">{t('receivables.detail.title', { id: data.id }, `Factura #${data.id}`)}</span>
+        </div>
 
         {/* Header Section */}
-        <DetailHeader
-          id={data.id}
-          client={data.client || {}}
-          transaction={data.transaction || {}}
-        />
-
-        <DashboardNav />
+        <div className="mb-6">
+          <DetailHeader
+            id={data.id}
+            client={data.client || {}}
+            transaction={data.transaction || {}}
+          />
+        </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 pb-10">
-          {/* Left Column: Payment History */}
-          <div className="xl:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Payment History (2/3 width) */}
+          <div className="lg:col-span-2 flex flex-col gap-6">
             <PaymentHistoryTable
               history={data.paymentHistory || []}
               totalPaid={data.transaction?.rawPaid || 0}
@@ -91,8 +81,8 @@ const ReceivableDetail = () => {
             />
           </div>
 
-          {/* Right Column: Actions & Contact */}
-          <div className="xl:col-span-1">
+          {/* Right Column: Actions & Contact (1/3 width) */}
+          <div className="flex flex-col gap-6">
             <DetailSidebar client={data.client || {}} />
           </div>
         </div>

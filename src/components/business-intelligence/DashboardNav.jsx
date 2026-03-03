@@ -10,7 +10,8 @@ import {
   WalletCards,
   AlertCircle,
   History,
-  FileText
+  FileText,
+  UserCheck
 } from 'lucide-react';
 
 /**
@@ -87,6 +88,12 @@ const DashboardNav = () => {
       path: '/receivables/aging-report',
       label: t('dashboard.nav.aging', 'Reporte Antigüedad'),
       icon: History
+    },
+    {
+      id: 'client-profile',
+      path: '/receivables/client-profile/CLI-001',
+      label: t('dashboard.nav.clientProfile', 'Análisis de Riesgo'),
+      icon: UserCheck
     }
   ];
 

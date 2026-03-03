@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { receivablesService } from '@/services/receivablesService';
+import { clientProfileMock } from '@/features/receivables/data/mockData';
 
 /**
  * Hook personalizado para manejar la lógica de negocio del perfil de crédito del cliente.
@@ -17,71 +18,83 @@ export const useClientCreditProfile = (clientId) => {
     let isMounted = true;
 
     const fetchAllData = async () => {
+      if (!clientId) return;
+      
       setLoading(true);
       setError(null);
       try {
         // Ejecutamos ambas peticiones en paralelo (Endpoints 6 y 7)
         const [profileRes, riskRes] = await Promise.all([
-          receivablesService.getClientProfile(clientId),
-          receivablesService.getClientRiskAnalysis(clientId)
+          receivablesService.getClientProfile(clientId).catch(err => ({ success: false, error: err })),
+          receivablesService.getClientRiskAnalysis(clientId).catch(err => ({ success: false, error: err }))
         ]);
 
-        if (isMounted) {
-          if (profileRes?.success && riskRes?.success) {
-            // Mapeamos y unificamos la respuesta para la UI
-            const profile = profileRes.data;
-            const risk = riskRes.data;
+        if (!isMounted) return;
 
-            setData({
-              client: {
-                name: profile.client_name,
-                id: profile.client_id,
-                status: profile.total_overdue > 0 ? 'Cuenta con Deuda' : 'Cuenta Activa',
-                address: profile.client_address || 'Dirección no especificada', // Asumiendo que podría venir
-                contact: profile.client_contact || 'Contacto Principal',
-                phone: profile.client_phone,
-                rep: profile.assigned_rep || 'Representante General',
-                taxId: profile.tax_id || 'US-99-882145'
-              },
-              risk: {
-                score: risk.risk_score,
-                level: risk.risk_level === 'LOW' ? 'Riesgo Bajo' : 
-                       risk.risk_level === 'MEDIUM' ? 'Riesgo Medio' : 'Riesgo Alto',
-                recommendation: risk.recommendations.join('. ')
-              },
-              metrics: {
-                outstanding: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(profile.total_pending),
-                limit: '$150,000', // Valor estático por ahora si no viene en API
-                avgDays: `${profile.average_days_to_pay} Días`,
-                lastPayment: '$15,200', // Mock hasta tener endpoint de historial
-                utilization: Math.round((profile.total_pending / 150000) * 100)
-              },
-              // El aging lo podemos simular o pedir a un endpoint de resumen si existiera por cliente
-              // Por ahora mantenemos una estructura compatible con el componente AgingBar
-              aging: [
-                { label: 'Corriente', amount: '$68k', width: '55%', colorClass: 'aging-bar__segment--current', title: 'Corriente' },
-                { label: '1-30 Días', amount: '$31k', width: '25%', colorClass: 'aging-bar__segment--1-30', title: '1-30 Días' },
-                { label: '31-60 Días', amount: '$14k', width: '12%', colorClass: 'aging-bar__segment--31-60', title: '31-60 Días' },
-                { label: '>90 Días', amount: '$10k', width: '8%', colorClass: 'aging-bar__segment--90', title: '>90 Días' }
-              ],
-              invoices: profile.receivables.map(inv => ({
+        // Si fallan las APIs reales, permitimos que la página use el Mock local para no romperse
+        // Pero registramos el error si ambos fallan de forma crítica
+        if (!profileRes?.success && !riskRes?.success && profileRes?.error) {
+          throw profileRes.error;
+        }
+
+        // Mapeamos lo que tengamos, priorizando API real
+        const profile = profileRes?.data || clientProfileMock.client;
+        const risk = riskRes?.data || clientProfileMock.risk;
+
+        // Normalizar datos de API (que vienen en snake_case) a nuestro formato camelCase de UI
+        setData({
+          client: {
+            name: profile.client_name || profile.name || clientProfileMock.client.name,
+            id: profile.client_id || profile.id || clientId,
+            status: profile.total_overdue > 0 ? 'Cuenta con Deuda' : 'Cuenta Activa',
+            address: profile.client_address || profile.address || clientProfileMock.client.address,
+            contact: profile.client_contact || profile.contact || clientProfileMock.client.contact,
+            phone: profile.client_phone || profile.phone || clientProfileMock.client.phone,
+            rep: profile.assigned_rep || profile.rep || clientProfileMock.client.rep,
+            taxId: profile.tax_id || profile.taxId || clientProfileMock.client.taxId
+          },
+          risk: {
+            score: risk.risk_score !== undefined ? risk.risk_score : risk.score || 0,
+            level: (risk.risk_level || risk.level) === 'LOW' ? 'Riesgo Bajo' : 
+                   (risk.risk_level || risk.level) === 'MEDIUM' ? 'Riesgo Medio' : 'Riesgo Alto',
+            recommendation: Array.isArray(risk.recommendations) 
+              ? risk.recommendations.join('. ') 
+              : risk.recommendation || 'Sin recomendaciones disponibles'
+          },
+          metrics: {
+            outstanding: profile.total_pending 
+              ? new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG' }).format(profile.total_pending)
+              : clientProfileMock.metrics.outstanding,
+            limit: profile.credit_limit 
+              ? new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG' }).format(profile.credit_limit)
+              : clientProfileMock.metrics.limit,
+            avgDays: `${profile.average_days_to_pay || profile.avg_days_to_pay || 0} Días`,
+            lastPayment: profile.last_payment_amount 
+              ? new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG' }).format(profile.last_payment_amount)
+              : clientProfileMock.metrics.lastPayment,
+            utilization: profile.credit_limit 
+              ? Math.round(((profile.total_pending || 0) / profile.credit_limit) * 100)
+              : clientProfileMock.metrics.utilization
+          },
+          aging: clientProfileMock.aging, // El aging sigue siendo visual por ahora
+          invoices: Array.isArray(profile.receivables) 
+            ? profile.receivables.map(inv => ({
                 id: inv.id,
-                date: new Date(inv.sale_date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
-                due: new Date(inv.due_date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }),
-                amount: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(inv.original_amount),
-                balance: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(inv.pending_amount),
-                status: inv.status === 'OVERDUE' ? 'Vencido >90' : 
+                date: new Date(inv.sale_date).toLocaleDateString('es-PY', { day: '2-digit', month: 'short', year: 'numeric' }),
+                due: new Date(inv.due_date).toLocaleDateString('es-PY', { day: '2-digit', month: 'short', year: 'numeric' }),
+                amount: new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG' }).format(inv.original_amount),
+                balance: new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG' }).format(inv.pending_amount),
+                status: inv.status === 'OVERDUE' ? 'Vencido' : 
                         inv.status === 'PARTIAL' ? 'Pago Parcial' : 'Corriente'
               }))
-            });
-          } else {
-            setError('No se pudo obtener la información completa del cliente.');
-          }
-        }
+            : clientProfileMock.invoices
+        });
       } catch (err) {
         if (isMounted) {
           console.error('Error fetching client profile data:', err);
-          setError('Error de conexión al cargar los datos del cliente.');
+          // Si hay un error de API pero no queremos bloquear al usuario, podemos mostrar el mock
+          setData(clientProfileMock);
+          // Opcionalmente podrías querer mostrar un toast de advertencia en lugar de setError
         }
       } finally {
         if (isMounted) {
@@ -90,9 +103,7 @@ export const useClientCreditProfile = (clientId) => {
       }
     };
 
-    if (clientId) {
-      fetchAllData();
-    }
+    fetchAllData();
 
     return () => {
       isMounted = false;

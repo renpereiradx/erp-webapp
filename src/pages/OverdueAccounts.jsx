@@ -45,39 +45,47 @@ const OverdueAccounts = () => {
   }
 
   return (
-    <div className='space-y-8'>
-      <div className="max-w-[1600px] mx-auto space-y-8">
-        {/* Header */}
-        <header className='flex flex-col md:flex-row md:items-center justify-between gap-6'>
-          <div className="space-y-1">
-            <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">{t('receivables.overdue.title')}</h1>
-            <p className="text-sm text-text-secondary font-medium">{t('receivables.overdue.subtitle')}</p>
+    <div className='bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 flex flex-col min-h-screen overflow-x-hidden font-display'>
+      <div className="flex-1 w-full max-w-[1440px] mx-auto p-6 md:p-8">
+        
+        {/* Page Header & Actions */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+              {t('receivables.overdue.title', 'Cuentas Vencidas y Cobranzas')}
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-base">
+              {t('receivables.overdue.subtitle', 'Gestione deudas pendientes, asigne prioridad a cuentas y ejecute tareas de cobranza eficientemente.')}
+            </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="secondary" size="md" className="shadow-sm border-border-subtle bg-surface">
-              <Download className="mr-2 size-4" />
-              <span>{t('action.export', 'Exportar')}</span>
-            </Button>
-            <Button variant="primary" size="md" className="shadow-md">
-              <span className="material-symbols-outlined text-[18px] mr-2">add_task</span>
-              <span>{t('receivables.overdue.action.create_task')}</span>
-            </Button>
+          <div className="flex gap-3">
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1A2633] border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
+              <span className="material-symbols-outlined !text-lg">download</span>
+              {t('action.export_report', 'Exportar Reporte')}
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
+              <span className="material-symbols-outlined !text-lg">add_task</span>
+              {t('receivables.overdue.action.create_task', 'Crear Tarea')}
+            </button>
           </div>
-        </header>
+        </div>
 
-        <DashboardNav />
+        {/* Dashboard Nav (If needed, although Stitch does not have it here explicitly, we can keep it if it's application logic) */}
+        {/* <DashboardNav /> */}
 
         {/* KPI Grid */}
         <OverdueKpiGrid stats={stats} />
 
-        {/* Main Content: Table & Sidebar */}
-        <div className='grid grid-cols-1 xl:grid-cols-4 gap-8 pb-10'>
-          <div className="xl:col-span-3">
+        {/* Main Content Area */}
+        <div className="flex flex-col lg:flex-row gap-6 mt-8">
+          {/* Left Column: Filters & Data Grid */}
+          <div className="w-full lg:w-3/4 flex flex-col gap-6">
             <OverdueTable accounts={accounts} />
           </div>
-          <div className="xl:col-span-1">
+          {/* Right Column: Sidebar Widgets */}
+          <aside className="w-full lg:w-1/4 flex flex-col gap-6">
             <OverdueSidebar />
-          </div>
+          </aside>
         </div>
       </div>
     </div>

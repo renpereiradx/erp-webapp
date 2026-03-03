@@ -55,6 +55,7 @@ const DICTIONARY = {
     'products.breadcrumb.home': 'Inicio',
     'products.breadcrumb.products': 'Productos',
     'products.search.by_name_sku': 'Buscar productos por nombre o SKU',
+    'products.search.min_chars': 'Escribe al menos 3 caracteres',
     'products.action.filter': 'Filtrar',
     'products.action.export': 'Exportar',
     'products.action.new_product': 'Nuevo Producto',

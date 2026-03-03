@@ -92,15 +92,15 @@ const ClientCreditProfile = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="secondary" size="md" className="shadow-sm border-border-subtle bg-surface font-black uppercase tracking-widest text-[11px]">
+              <Button variant="secondary" size="md" className="shadow-sm border border-border-subtle bg-white dark:bg-slate-800 text-text-main font-semibold text-sm hover:bg-slate-100 transition-colors">
                 <span className="material-symbols-outlined text-[18px] mr-2">edit_note</span>
                 <span>{t('receivables.profile.actions.add_note')}</span>
               </Button>
-              <Button variant="secondary" size="md" className="shadow-sm border-error/20 bg-white text-error hover:bg-red-50 font-black uppercase tracking-widest text-[11px]">
+              <Button variant="secondary" size="md" className="shadow-sm border border-border-subtle bg-white dark:bg-slate-800 text-error hover:bg-red-50 dark:hover:bg-red-900/20 font-semibold text-sm transition-colors">
                 <span className="material-symbols-outlined text-[18px] mr-2">block</span>
                 <span>{t('receivables.profile.actions.suspend_credit')}</span>
               </Button>
-              <Button variant="primary" size="md" className="shadow-md font-black uppercase tracking-widest text-[11px]">
+              <Button variant="primary" size="md" className="shadow-sm font-semibold text-sm">
                 <Download size={18} className="mr-2" />
                 <span>{t('receivables.profile.actions.export')}</span>
               </Button>
@@ -108,12 +108,10 @@ const ClientCreditProfile = () => {
           </div>
         </div>
 
-        <DashboardNav />
-
         {/* Dashboard Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 pb-10">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 pb-10">
           {/* Left Column: Risk & Info */}
-          <aside className="xl:col-span-1 space-y-8">
+          <aside className="xl:col-span-4 space-y-6">
             <RiskGauge 
               score={data.risk.score} 
               level={data.risk.level} 
@@ -129,7 +127,7 @@ const ClientCreditProfile = () => {
           </aside>
 
           {/* Right Column: Metrics & Data */}
-          <main className="xl:col-span-3 space-y-8">
+          <main className="xl:col-span-8 flex flex-col gap-6">
             <KPIStatsGrid metrics={data.metrics} />
             
             <AgingBar 

@@ -136,7 +136,7 @@ const Products = () => {
         return
       }
 
-      if (trimmedTerm.length < 4) {
+      if (trimmedTerm.length < 3) {
         setIsSearching(false)
         return
       }
@@ -163,7 +163,7 @@ const Products = () => {
     if (e.key === 'Enter') {
       e.preventDefault()
       const value = searchTerm.trim()
-      if (value.length >= 4) {
+      if (value.length >= 3) {
         performSearch(value)
       }
     }
@@ -372,9 +372,9 @@ const Products = () => {
                 onChange={handleSearch}
                 onKeyDown={handleSearchKeyDown}
               />
-              {searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < 4 && (
+              {searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < 3 && (
                 <p className='absolute -bottom-6 left-0 text-xs text-orange-600'>
-                  {t('products.search.min_chars', 'Escribe al menos 4 caracteres')} ({searchTerm.trim().length}/4)
+                  {t('products.search.min_chars', 'Escribe al menos 3 caracteres')} ({searchTerm.trim().length}/3)
                 </p>
               )}
             </div>

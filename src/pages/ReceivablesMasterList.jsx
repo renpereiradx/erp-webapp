@@ -34,65 +34,60 @@ const ReceivablesMasterList = () => {
   } = useReceivablesMasterList();
 
   return (
-    <div className="space-y-8">
-      <div className="max-w-[1600px] mx-auto space-y-8">
-        
-        {/* Header & Breadcrumbs */}
-        <div className="flex flex-col gap-4">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink onClick={() => navigate('/dashboard')} className="cursor-pointer text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 hover:text-primary transition-colors">
-                  {t('receivables.breadcrumb.home')}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="opacity-20" />
-              <BreadcrumbItem>
-                <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">Finanzas</span>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="opacity-20" />
-              <BreadcrumbItem>
-                <span className="text-[10px] font-black uppercase tracking-widest text-text-main">{t('receivables.master.title')}</span>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+    <div className="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden font-display">
+      <div className="layout-container flex h-full grow flex-col">
+        <div className="px-4 md:px-10 lg:px-20 flex flex-1 justify-center py-6">
+          <div className="layout-content-container flex flex-col w-full max-w-[1400px] flex-1 gap-6">
+            
+            {/* Breadcrumbs */}
+            <div className="flex flex-wrap gap-2 px-1">
+              <a className="text-[#617589] hover:text-primary text-sm font-medium leading-normal transition-colors cursor-pointer" onClick={() => navigate('/dashboard')}>
+                {t('receivables.breadcrumb.home')}
+              </a>
+              <span className="text-[#617589] text-sm font-medium leading-normal">/</span>
+              <span className="text-[#617589] text-sm font-medium leading-normal">Finanzas</span>
+              <span className="text-[#617589] text-sm font-medium leading-normal">/</span>
+              <span className="text-[#111418] dark:text-white text-sm font-medium leading-normal">{t('receivables.master.title')}</span>
+            </div>
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-1">
-              <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">{t('receivables.master.title')}</h1>
-              <p className="text-sm text-text-secondary font-medium">{t('receivables.master.subtitle')}</p>
+            {/* Header & Main Actions */}
+            <div className="flex flex-wrap justify-between gap-4 items-end px-1">
+              <div className="flex min-w-72 flex-col gap-2">
+                <h1 className="text-[#111418] dark:text-white text-3xl font-bold leading-tight tracking-[-0.02em]">Cuentas por Cobrar</h1>
+                <p className="text-[#617589] text-sm font-normal leading-normal">Gestiona pagos pendientes y recaudo de clientes.</p>
+              </div>
+              <div className="flex gap-3">
+                <button className="flex items-center justify-center rounded-lg h-9 bg-white dark:bg-gray-800 border border-[#d1d5db] dark:border-gray-700 text-[#111418] dark:text-white gap-2 text-sm font-medium px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm">
+                  <span className="material-symbols-outlined text-[20px]">ios_share</span>
+                  <span className="hidden sm:inline">Exportar CSV</span>
+                </button>
+                <button className="flex items-center justify-center rounded-lg h-9 bg-primary text-white gap-2 text-sm font-bold px-4 hover:bg-blue-600 transition-colors shadow-sm">
+                  <span className="material-symbols-outlined text-[20px]">add</span>
+                  <span>Nuevo Cobro</span>
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="secondary" size="md" className="shadow-sm border-border-subtle bg-surface">
-                <FileDown className="mr-2 size-4" />
-                <span>Exportar CSV</span>
-              </Button>
-              <Button variant="primary" size="md" className="shadow-md">
-                <Plus className="mr-2 size-4" />
-                <span>{t('receivables.master.action.new')}</span>
-              </Button>
-            </div>
+
+            {/* Panel de Filtros */}
+            <MasterListFilters 
+              filters={filters} 
+              onFilterChange={handleFilterChange} 
+              onReset={resetFilters} 
+            />
+
+            {/* Grid de Datos */}
+            <MasterListTable
+              invoices={invoices}
+              loading={loading}
+              pagination={pagination}
+              sorting={sorting}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              onSort={handleSort}
+              onRefresh={refresh}
+            />
           </div>
         </div>
-
-        {/* Panel de Filtros */}
-        <MasterListFilters 
-          filters={filters} 
-          onFilterChange={handleFilterChange} 
-          onReset={resetFilters} 
-        />
-
-        {/* Grid de Datos */}
-        <MasterListTable
-          invoices={invoices}
-          loading={loading}
-          pagination={pagination}
-          sorting={sorting}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          onSort={handleSort}
-          onRefresh={refresh}
-        />
       </div>
     </div>
   );

@@ -54,7 +54,7 @@ export const distinctSearchableRoutes = [
   },
   {
     name: 'Perfil Crediticio de Cliente y Análisis de Riesgo',
-    href: '/receivables/list',
+    href: '/receivables/client-profile/CLI-001',
     icon: UserCheck,
     category: 'BI / Cuentas por Cobrar'
   },

@@ -1,4 +1,5 @@
-import { X } from 'lucide-react';
+import { X, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 
 /**
@@ -14,6 +15,7 @@ import { useI18n } from '@/lib/i18n';
  */
 export default function ClientDetailsModal({ isOpen, onClose, client }) {
   const { t } = useI18n();
+  const navigate = useNavigate();
 
   if (!isOpen || !client) return null;
 
@@ -141,13 +143,25 @@ export default function ClientDetailsModal({ isOpen, onClose, client }) {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-center pt-8 border-t border-[#f3f4f6]">
+          <div className="flex items-center justify-between pt-8 border-t border-[#f3f4f6]">
             <button
               type="button"
-              className="px-10 py-2 border border-[#d1d1d1] text-[#323130] text-xs font-bold uppercase rounded shadow-sm hover:bg-[#f3f4f6] active:scale-[0.98] transition-all"
+              className="px-8 py-2 border border-[#d1d1d1] text-[#323130] text-[11px] font-bold uppercase rounded shadow-sm hover:bg-[#f3f4f6] active:scale-[0.98] tracking-widest transition-all"
               onClick={onClose}
             >
               {t('action.close', 'Cerrar')}
+            </button>
+            
+            <button
+              type="button"
+              className="flex items-center gap-2 px-8 py-2 bg-[#106ebe] text-white text-[11px] font-bold uppercase rounded shadow-sm hover:bg-[#005a9e] active:scale-[0.98] tracking-widest transition-all"
+              onClick={() => {
+                onClose();
+                navigate(`/receivables/client-profile/${client.id || client._key || 'CLI-001'}`);
+              }}
+            >
+              <ExternalLink size={14} />
+              Análisis de Riesgo
             </button>
           </div>
         </div>

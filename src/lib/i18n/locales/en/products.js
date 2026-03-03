@@ -22,6 +22,7 @@ export const products = {
   'products.search.help1': 'You can search by name (e.g. "Puma") or by full ID (e.g. "bcYdWdKNR")',
   'products.search.help2': 'Auto-search: minimum {minChars} characters. Shortcut: "/" to focus.',
   'products.search.by_name_sku': 'Search products by name or SKU',
+  'products.search.min_chars': 'Type at least 3 characters',
 
   // Actions
   'products.clear': 'Clear',

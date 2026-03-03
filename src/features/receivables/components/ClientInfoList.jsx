@@ -9,45 +9,46 @@ const ClientInfoList = ({ address, contact, phone, rep, taxId }) => {
   const { t } = useI18n();
 
   return (
-    <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-6">
-      <h3 className="text-sm font-black text-text-main uppercase tracking-tight">{t('receivables.info.title')}</h3>
-      <div className="space-y-6">
-        <div className="flex gap-4 group">
-          <div className="size-10 rounded-lg bg-slate-50 flex items-center justify-center text-text-secondary opacity-60 flex-shrink-0 group-hover:text-primary group-hover:bg-blue-50 transition-colors">
-            <span className="material-symbols-outlined text-[20px]">location_on</span>
+    <div className="bg-white dark:bg-[#1e293b] rounded-xl border border-[#f0f2f4] dark:border-gray-800 p-6 shadow-sm flex-1">
+      <h2 className="text-lg font-bold text-[#111418] dark:text-white mb-4">{t('receivables.info.title', 'Información del Cliente')}</h2>
+      
+      <div className="space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="size-8 rounded-lg bg-[#f0f2f4] dark:bg-gray-800 flex items-center justify-center text-gray-500 shrink-0">
+            <span className="material-symbols-outlined text-[18px]">location_on</span>
           </div>
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">{t('receivables.info.billing_address')}</p>
-            <p className="text-sm font-bold text-text-main leading-snug">{address}</p>
+          <div>
+            <p className="text-xs font-medium text-gray-500 uppercase">{t('receivables.info.billing_address', 'Dirección de Facturación')}</p>
+            <p className="text-sm font-medium text-[#111418] dark:text-white mt-0.5 whitespace-pre-line">{address}</p>
           </div>
         </div>
         
-        <div className="flex gap-4 group">
-          <div className="size-10 rounded-lg bg-slate-50 flex items-center justify-center text-text-secondary opacity-60 flex-shrink-0 group-hover:text-primary group-hover:bg-blue-50 transition-colors">
-            <span className="material-symbols-outlined text-[20px]">call</span>
+        <div className="flex items-start gap-3">
+          <div className="size-8 rounded-lg bg-[#f0f2f4] dark:bg-gray-800 flex items-center justify-center text-gray-500 shrink-0">
+            <span className="material-symbols-outlined text-[18px]">call</span>
           </div>
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">{t('receivables.info.primary_contact')}</p>
-            <p className="text-sm font-bold text-text-main leading-snug">{contact}</p>
-            <a href={`tel:${phone}`} className="block text-xs font-black text-primary hover:underline transition-all">{phone}</a>
-          </div>
-        </div>
-
-        <div className="flex gap-4 group">
-          <div className="size-10 rounded-lg bg-slate-50 flex items-center justify-center text-text-secondary opacity-60 flex-shrink-0 group-hover:text-primary group-hover:bg-blue-50 transition-colors">
-            <span className="material-symbols-outlined text-[20px]">badge</span>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">{t('receivables.info.assigned_rep')}</p>
-            <p className="text-sm font-bold text-text-main leading-snug">{rep}</p>
+          <div>
+            <p className="text-xs font-medium text-gray-500 uppercase">{t('receivables.info.primary_contact', 'Contacto Principal')}</p>
+            <p className="text-sm font-medium text-[#111418] dark:text-white mt-0.5">{contact}</p>
+            <p className="text-sm text-primary hover:underline cursor-pointer">{phone}</p>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-border-subtle/50 space-y-2">
-          <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">{t('receivables.info.tax_id')}</p>
-          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-border-subtle/50 group cursor-pointer hover:bg-white transition-all">
-            <span className="text-sm font-black text-text-main tracking-tight uppercase">{taxId}</span>
-            <span className="material-symbols-outlined text-[18px] text-text-secondary opacity-40 group-hover:text-primary group-hover:opacity-100 transition-all">content_copy</span>
+        <div className="flex items-start gap-3">
+          <div className="size-8 rounded-lg bg-[#f0f2f4] dark:bg-gray-800 flex items-center justify-center text-gray-500 shrink-0">
+            <span className="material-symbols-outlined text-[18px]">badge</span>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-gray-500 uppercase">{t('receivables.info.assigned_rep', 'Representante Asignado')}</p>
+            <p className="text-sm font-medium text-[#111418] dark:text-white mt-0.5">{rep}</p>
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-[#f0f2f4] dark:border-gray-800">
+          <p className="text-xs font-medium text-gray-500 mb-2">{t('receivables.info.tax_id', 'RUC / Identificación Fiscal')}</p>
+          <div className="flex items-center justify-between p-2 bg-[#f0f2f4] dark:bg-gray-800 rounded text-sm font-mono text-[#111418] dark:text-white group">
+            <span>{taxId}</span>
+            <span className="material-symbols-outlined text-gray-400 text-[16px] cursor-pointer hover:text-primary transition-colors">content_copy</span>
           </div>
         </div>
       </div>

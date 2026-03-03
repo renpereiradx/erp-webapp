@@ -15,149 +15,119 @@ const MasterListFilters = ({ filters, onFilterChange, onReset }) => {
     return labels[value] || value;
   };
 
-  const hasActiveFilters = filters.status !== 'all' || filters.dateStart || filters.dateEnd
-    || filters.minAmount || filters.maxAmount || filters.daysOverdue;
+  const hasActiveFilters = filters.status !== 'all' || filters.dateStart || filters.dateEnd;
 
   return (
-    <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-sm space-y-6">
-      {/* Row 1: Search | Status | Date range */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70" htmlFor="search-client">{t('receivables.master.filter.search_client')}</Label>
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">
-              <Search size={18} />
+    <div className="bg-white dark:bg-[#1a202c] rounded-xl border border-[#e5e7eb] dark:border-gray-800 shadow-sm p-4">
+      <div className="flex flex-col lg:flex-row gap-4 lg:items-end">
+        {/* Search Client */}
+        <div className="flex-1 min-w-[200px]">
+          <Label className="text-[#111418] dark:text-white text-xs font-semibold leading-normal pb-1.5 block" htmlFor="search-client">
+            {t('receivables.master.filter.search_client', 'Buscar Cliente')}
+          </Label>
+          <div className="flex w-full items-stretch rounded-lg h-10 bg-white dark:bg-gray-800 border border-[#d1d5db] dark:border-gray-600 hover:border-primary focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+            <div className="text-[#617589] flex items-center justify-center pl-3">
+              <span className="material-symbols-outlined text-[20px]">search</span>
             </div>
             <Input
               id="search-client"
               type="text"
-              className="pl-10 h-11 border-border-subtle bg-slate-50/50 focus:bg-white transition-all rounded-lg"
-              placeholder={t('receivables.master.filter.company_placeholder')}
+              className="flex-1 bg-transparent border-none focus-visible:ring-0 text-[#111418] dark:text-white text-sm placeholder:text-[#9ca3af] px-2 shadow-none"
+              placeholder={t('receivables.master.filter.company_placeholder', 'Empresa o Nombre')}
               value={filters.search}
               onChange={(e) => onFilterChange('search', e.target.value)}
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70">{t('receivables.master.filter.status')}</Label>
-          <Select value={filters.status} onValueChange={(v) => onFilterChange('status', v)}>
-            <SelectTrigger className="h-11 border-border-subtle bg-slate-50/50 rounded-lg font-bold text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('receivables.master.filter.all_statuses')}</SelectItem>
-              <SelectItem value="pending">Pendiente</SelectItem>
-              <SelectItem value="overdue">Vencido</SelectItem>
-              <SelectItem value="partial">Pago Parcial</SelectItem>
-              <SelectItem value="paid">Pagado</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70">{t('receivables.master.filter.date_range')}</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="date"
-              className="h-11 border-border-subtle bg-slate-50/50 rounded-lg font-bold text-xs"
-              value={filters.dateStart}
-              onChange={(e) => onFilterChange('dateStart', e.target.value)}
-            />
-            <span className="text-text-secondary font-black opacity-30">—</span>
-            <Input
-              type="date"
-              className="h-11 border-border-subtle bg-slate-50/50 rounded-lg font-bold text-xs"
-              value={filters.dateEnd}
-              onChange={(e) => onFilterChange('dateEnd', e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Row 2: Amount range | Days overdue | Clear */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70">{t('receivables.master.filter.amount_range')}</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              className="h-11 border-border-subtle bg-slate-50/50 rounded-lg font-bold text-sm"
-              placeholder={t('receivables.master.filter.min_amount')}
-              value={filters.minAmount}
-              onChange={(e) => onFilterChange('minAmount', e.target.value)}
-              min="0"
-            />
-            <span className="text-text-secondary font-black opacity-30">—</span>
-            <Input
-              type="number"
-              className="h-11 border-border-subtle bg-slate-50/50 rounded-lg font-bold text-sm"
-              placeholder={t('receivables.master.filter.max_amount')}
-              value={filters.maxAmount}
-              onChange={(e) => onFilterChange('maxAmount', e.target.value)}
-              min="0"
-            />
+        {/* Status Filter */}
+        <div className="flex-1 min-w-[200px]">
+          <Label className="text-[#111418] dark:text-white text-xs font-semibold leading-normal pb-1.5 block">
+            {t('receivables.master.filter.status', 'Estado')}
+          </Label>
+          <div className="relative">
+            <Select value={filters.status} onValueChange={(v) => onFilterChange('status', v)}>
+              <SelectTrigger className="w-full h-10 rounded-lg bg-white dark:bg-gray-800 border border-[#d1d5db] dark:border-gray-600 text-[#111418] dark:text-white text-sm px-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-none font-normal">
+                <SelectValue placeholder={t('receivables.master.filter.all_statuses', 'Todos los estados')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('receivables.master.filter.all_statuses', 'Todos los estados')}</SelectItem>
+                <SelectItem value="pending">Pendiente</SelectItem>
+                <SelectItem value="overdue">Vencido</SelectItem>
+                <SelectItem value="partial">Pago Parcial</SelectItem>
+                <SelectItem value="paid">Pagado</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-70">{t('receivables.master.filter.days_overdue')}</Label>
-          <Input
-            type="number"
-            className="h-11 border-border-subtle bg-slate-50/50 rounded-lg font-bold text-sm"
-            placeholder={t('receivables.master.filter.days_overdue_placeholder')}
-            value={filters.daysOverdue}
-            onChange={(e) => onFilterChange('daysOverdue', e.target.value)}
-            min="0"
-          />
+        {/* Date Range */}
+        <div className="flex-1 min-w-[240px]">
+          <Label className="text-[#111418] dark:text-white text-xs font-semibold leading-normal pb-1.5 block">
+            {t('receivables.master.filter.date_range', 'Rango de Fechas')}
+          </Label>
+          <div className="flex gap-2 items-center">
+            <div className="relative flex-1">
+              <Input
+                type="date"
+                className="w-full h-10 rounded-lg bg-white dark:bg-gray-800 border-[#d1d5db] dark:border-gray-600 text-[#111418] dark:text-white text-sm px-3 focus-visible:ring-primary shadow-none"
+                value={filters.dateStart}
+                onChange={(e) => onFilterChange('dateStart', e.target.value)}
+              />
+            </div>
+            <span className="text-[#617589]">-</span>
+            <div className="relative flex-1">
+              <Input
+                type="date"
+                className="w-full h-10 rounded-lg bg-white dark:bg-gray-800 border-[#d1d5db] dark:border-gray-600 text-[#111418] dark:text-white text-sm px-3 focus-visible:ring-primary shadow-none"
+                value={filters.dateEnd}
+                onChange={(e) => onFilterChange('dateEnd', e.target.value)}
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-end">
-          <Button variant="outline" size="md" onClick={onReset} className="w-full h-11 border-border-subtle bg-white hover:bg-slate-50 text-xs font-black uppercase tracking-widest">
-            {t('receivables.master.filter.clear')}
-          </Button>
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <button 
+            onClick={onReset}
+            className="h-10 px-4 rounded-lg bg-[#f0f2f4] dark:bg-gray-700 text-[#111418] dark:text-white text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            {t('receivables.master.filter.clear', 'Limpiar')}
+          </button>
+          <button className="h-10 px-4 rounded-lg bg-primary text-white text-sm font-medium hover:bg-blue-600 shadow-sm transition-colors flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">filter_list</span>
+            {t('common.apply', 'Aplicar')}
+          </button>
         </div>
       </div>
 
-      {/* Active filter tags */}
+      {/* Active Filters Tags */}
       {hasActiveFilters && (
-        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border-subtle/50">
-          <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 mr-2">Filtros Activos:</span>
+        <div className="flex flex-wrap gap-2 mt-3">
           {filters.status !== 'all' && (
-            <Badge variant="secondary" className="gap-1.5 bg-blue-50 text-primary border-blue-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full">
+            <div className="flex items-center gap-1 bg-[#e3f2fd] text-primary text-xs font-medium px-2 py-1 rounded-md border border-blue-100">
               {t('receivables.master.filter.status')}: {statusLabel(filters.status)}
-              <X className="size-3 cursor-pointer hover:text-error transition-colors" onClick={() => onFilterChange('status', 'all')} />
-            </Badge>
+              <button className="hover:text-blue-800 ml-1 flex items-center" onClick={() => onFilterChange('status', 'all')}>
+                <span className="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            </div>
           )}
           {filters.dateStart && (
-            <Badge variant="secondary" className="gap-1.5 bg-blue-50 text-primary border-blue-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full">
+            <div className="flex items-center gap-1 bg-[#e3f2fd] text-primary text-xs font-medium px-2 py-1 rounded-md border border-blue-100">
               Desde: {filters.dateStart}
-              <X className="size-3 cursor-pointer hover:text-error transition-colors" onClick={() => onFilterChange('dateStart', '')} />
-            </Badge>
+              <button className="hover:text-blue-800 ml-1 flex items-center" onClick={() => onFilterChange('dateStart', '')}>
+                <span className="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            </div>
           )}
           {filters.dateEnd && (
-            <Badge variant="secondary" className="gap-1.5 bg-blue-50 text-primary border-blue-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full">
+            <div className="flex items-center gap-1 bg-[#e3f2fd] text-primary text-xs font-medium px-2 py-1 rounded-md border border-blue-100">
               Hasta: {filters.dateEnd}
-              <X className="size-3 cursor-pointer hover:text-error transition-colors" onClick={() => onFilterChange('dateEnd', '')} />
-            </Badge>
-          )}
-          {filters.minAmount && (
-            <Badge variant="secondary" className="gap-1.5 bg-blue-50 text-primary border-blue-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full">
-              Min: {Number(filters.minAmount).toLocaleString()}
-              <X className="size-3 cursor-pointer hover:text-error transition-colors" onClick={() => onFilterChange('minAmount', '')} />
-            </Badge>
-          )}
-          {filters.maxAmount && (
-            <Badge variant="secondary" className="gap-1.5 bg-blue-50 text-primary border-blue-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full">
-              Max: {Number(filters.maxAmount).toLocaleString()}
-              <X className="size-3 cursor-pointer hover:text-error transition-colors" onClick={() => onFilterChange('maxAmount', '')} />
-            </Badge>
-          )}
-          {filters.daysOverdue && (
-            <Badge variant="secondary" className="gap-1.5 bg-blue-50 text-primary border-blue-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full">
-              {filters.daysOverdue}+ días
-              <X className="size-3 cursor-pointer hover:text-error transition-colors" onClick={() => onFilterChange('daysOverdue', '')} />
-            </Badge>
+              <button className="hover:text-blue-800 ml-1 flex items-center" onClick={() => onFilterChange('dateEnd', '')}>
+                <span className="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            </div>
           )}
         </div>
       )}
