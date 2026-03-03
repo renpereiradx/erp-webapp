@@ -2,15 +2,13 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
-import { RefreshCw, AlertCircle, Download } from 'lucide-react';
-import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { RefreshCw, AlertCircle, Download, ChevronRight, Home, Edit3, Ban } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import DashboardNav from '@/components/business-intelligence/DashboardNav';
 
 // Hooks y Datos
 import { useClientCreditProfile } from '@/features/receivables/hooks/useClientCreditProfile';
 
-// Sub-componentes modulares
+// Sub-componentes modulares (Refactorizados para fidelidad Stitch)
 import RiskGauge from '@/features/receivables/components/RiskGauge';
 import ClientInfoList from '@/features/receivables/components/ClientInfoList';
 import KPIStatsGrid from '@/features/receivables/components/KPIStatsGrid';
@@ -18,8 +16,8 @@ import AgingBar from '@/features/receivables/components/AgingBar';
 import InvoicesTable from '@/features/receivables/components/InvoicesTable';
 
 /**
- * Client Credit Profile & Risk Analysis
- * Página principal que orquesta los componentes modulares del perfil de crédito.
+ * Perfil de Crédito del Cliente y Análisis de Riesgo
+ * Página principal refactorizada para fidelidad 100% con Stitch.
  */
 const ClientCreditProfile = () => {
   const { clientId } = useParams();
@@ -32,7 +30,7 @@ const ClientCreditProfile = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <RefreshCw className="animate-spin text-primary" size={48} />
-        <p className="text-lg font-medium text-text-secondary">{t('receivables.loading.profile')}</p>
+        <p className="text-lg font-medium text-text-secondary">Cargando perfil del cliente...</p>
       </div>
     );
   }
@@ -43,101 +41,89 @@ const ClientCreditProfile = () => {
         <div className="p-4 bg-red-100 rounded-full text-error mb-4">
           <AlertCircle size={48} />
         </div>
-        <h2 className="text-2xl font-bold mb-2 text-text-main">{t('receivables.error.loading')}</h2>
+        <h2 className="text-2xl font-bold mb-2 text-text-main">Error al cargar el perfil</h2>
         <Button variant="primary" onClick={() => window.location.reload()}>
-          {t('receivables.error.retry')}
+          Reintentar
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div className="max-w-[1600px] mx-auto space-y-8">
-        {/* Header & Breadcrumbs */}
-        <div className="flex flex-col gap-4">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink onClick={() => navigate('/receivables')} className="cursor-pointer text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60 hover:text-primary transition-colors">
-                  {t('receivables.breadcrumb.home')}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="opacity-20" />
-              <BreadcrumbItem>
-                <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">{t('receivables.breadcrumb.clients')}</span>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="opacity-20" />
-              <BreadcrumbItem>
-                <span className="text-[10px] font-black uppercase tracking-widest text-text-main">{data.client.name}</span>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex items-center gap-6">
-              <div className="size-16 rounded-xl bg-blue-50 flex items-center justify-center text-primary font-black text-2xl shadow-sm border border-blue-100">
-                {data.client.name?.charAt(0)}
-              </div>
-              <div className="space-y-1">
-                <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">{data.client.name}</h1>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-text-secondary opacity-60 uppercase tracking-widest">{t('receivables.profile.client_id')}: #{data.client.id}</span>
-                  <Badge className="bg-success text-white px-3 py-0.5 text-[10px] font-black uppercase tracking-widest">
-                    {t('receivables.profile.status.active')}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="secondary" size="md" className="shadow-sm border border-border-subtle bg-white dark:bg-slate-800 text-text-main font-semibold text-sm hover:bg-slate-100 transition-colors">
-                <span className="material-symbols-outlined text-[18px] mr-2">edit_note</span>
-                <span>{t('receivables.profile.actions.add_note')}</span>
-              </Button>
-              <Button variant="secondary" size="md" className="shadow-sm border border-border-subtle bg-white dark:bg-slate-800 text-error hover:bg-red-50 dark:hover:bg-red-900/20 font-semibold text-sm transition-colors">
-                <span className="material-symbols-outlined text-[18px] mr-2">block</span>
-                <span>{t('receivables.profile.actions.suspend_credit')}</span>
-              </Button>
-              <Button variant="primary" size="md" className="shadow-sm font-semibold text-sm">
-                <Download size={18} className="mr-2" />
-                <span>{t('receivables.profile.actions.export')}</span>
-              </Button>
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+      {/* Breadcrumbs & Heading */}
+      <div className="flex flex-col gap-4">
+        <nav className="flex items-center gap-2 text-sm text-[#617589]">
+          <a className="hover:text-primary transition-colors flex items-center gap-1" href="#" onClick={() => navigate('/dashboard')}>
+            <Home size={14} /> Inicio
+          </a>
+          <ChevronRight size={14} className="text-slate-300" />
+          <a className="hover:text-primary transition-colors" href="#" onClick={() => navigate('/clientes')}>Clientes</a>
+          <ChevronRight size={14} className="text-slate-300" />
+          <span className="text-[#111418] dark:text-white font-medium">{data.client.name}</span>
+        </nav>
+
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-[#111418] dark:text-white tracking-tight uppercase">
+              {data.client.name}
+            </h1>
+            <div className="flex items-center gap-3 mt-1">
+              <span className="text-[#617589] font-medium text-sm">ID de Cliente: #{data.client.id}</span>
+              <span className="size-1 bg-gray-300 rounded-full"></span>
+              <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-none px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider">
+                Cuenta Activa
+              </Badge>
             </div>
           </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 rounded-lg text-sm font-bold text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-gray-700 transition-colors shadow-sm h-10">
+              <Edit3 size={18} />
+              Añadir Nota
+            </Button>
+            <Button variant="outline" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 rounded-lg text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shadow-sm h-10">
+              <Ban size={18} />
+              Suspender Crédito
+            </Button>
+            <Button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-600 transition-all shadow-md h-10 active:scale-95">
+              <Download size={18} />
+              Exportar Reporte
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Dashboard Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* Left Column: Risk & Info (Reducida a 3/12) */}
+        <div className="xl:col-span-3 flex flex-col gap-6">
+          <RiskGauge 
+            score={data.risk.score} 
+            level={data.risk.level} 
+            recommendation={data.risk.recommendation} 
+          />
+          <ClientInfoList 
+            address={data.client.address}
+            contact={data.client.contact}
+            phone={data.client.phone}
+            rep={data.client.rep}
+            taxId={data.client.taxId}
+          />
         </div>
 
-        {/* Dashboard Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 pb-10">
-          {/* Left Column: Risk & Info */}
-          <aside className="xl:col-span-4 space-y-6">
-            <RiskGauge 
-              score={data.risk.score} 
-              level={data.risk.level} 
-              recommendation={data.risk.recommendation} 
-            />
-            <ClientInfoList 
-              address={data.client.address}
-              contact={data.client.contact}
-              phone={data.client.phone}
-              rep={data.client.rep}
-              taxId={data.client.taxId}
-            />
-          </aside>
+        {/* Right Column: Metrics & Data (Ampliada a 9/12) */}
+        <div className="xl:col-span-9 flex flex-col gap-6">
+          <KPIStatsGrid metrics={data.metrics} />
+          
+          <AgingBar 
+            aging={data.aging} 
+            totalAR={data.metrics.outstanding} 
+          />
 
-          {/* Right Column: Metrics & Data */}
-          <main className="xl:col-span-8 flex flex-col gap-6">
-            <KPIStatsGrid metrics={data.metrics} />
-            
-            <AgingBar 
-              aging={data.aging} 
-              totalAR={data.metrics.outstanding} 
-            />
-
-            <InvoicesTable 
-              invoices={data.invoices} 
-              outstandingAmount={data.metrics.outstanding} 
-            />
-          </main>
+          <InvoicesTable 
+            invoices={data.invoices} 
+            outstandingAmount={data.metrics.outstanding} 
+          />
         </div>
       </div>
     </div>

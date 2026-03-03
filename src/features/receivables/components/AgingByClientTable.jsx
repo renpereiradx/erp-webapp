@@ -1,5 +1,4 @@
 import React from 'react';
-import { Search, Filter, MoreVertical, ArrowForward } from 'lucide-react';
 
 /**
  * Tabla de deudores principales.

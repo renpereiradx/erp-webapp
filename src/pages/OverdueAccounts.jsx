@@ -46,44 +46,41 @@ const OverdueAccounts = () => {
 
   return (
     <div className='bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 flex flex-col min-h-screen overflow-x-hidden font-display'>
-      <div className="flex-1 w-full max-w-[1440px] mx-auto p-6 md:p-8">
+      <div className="flex-1 w-full max-w-[1600px] mx-auto p-6 md:p-8">
         
-        {/* Page Header & Actions */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+        {/* Page Header & Actions al estilo Stitch */}
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-[28px] font-bold tracking-tight text-slate-900 dark:text-white">
               {t('receivables.overdue.title', 'Cuentas Vencidas y Cobranzas')}
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-base">
+            <p className="text-slate-400 dark:text-slate-500 text-sm font-medium">
               {t('receivables.overdue.subtitle', 'Gestione deudas pendientes, asigne prioridad a cuentas y ejecute tareas de cobranza eficientemente.')}
             </p>
           </div>
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1A2633] border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
-              <span className="material-symbols-outlined !text-lg">download</span>
+            <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1A2632] border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
+              <span className="material-symbols-outlined !text-lg">ios_share</span>
               {t('action.export_report', 'Exportar Reporte')}
             </button>
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
-              <span className="material-symbols-outlined !text-lg">add_task</span>
+            <button className="flex items-center gap-2 px-5 py-2 bg-primary text-white rounded-lg text-xs font-bold hover:bg-blue-600 transition-all shadow-md shadow-blue-100 dark:shadow-none active:scale-95">
+              <span className="material-symbols-outlined !text-lg">add</span>
               {t('receivables.overdue.action.create_task', 'Crear Tarea')}
             </button>
           </div>
         </div>
 
-        {/* Dashboard Nav (If needed, although Stitch does not have it here explicitly, we can keep it if it's application logic) */}
-        {/* <DashboardNav /> */}
-
         {/* KPI Grid */}
         <OverdueKpiGrid stats={stats} />
 
-        {/* Main Content Area */}
-        <div className="flex flex-col lg:flex-row gap-6 mt-8">
-          {/* Left Column: Filters & Data Grid */}
-          <div className="w-full lg:w-3/4 flex flex-col gap-6">
+        {/* Main Content Area - Grid 9/12 para la tabla */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
+          {/* Left Column: Filters & Data Grid (9 de 12 columnas) */}
+          <div className="lg:col-span-9 flex flex-col gap-6 animate-in fade-in slide-in-from-left-4 duration-700">
             <OverdueTable accounts={accounts} />
           </div>
-          {/* Right Column: Sidebar Widgets */}
-          <aside className="w-full lg:w-1/4 flex flex-col gap-6">
+          {/* Right Column: Sidebar Widgets (3 de 12 columnas) */}
+          <aside className="lg:col-span-3 flex flex-col gap-6 animate-in fade-in slide-in-from-right-4 duration-700">
             <OverdueSidebar />
           </aside>
         </div>

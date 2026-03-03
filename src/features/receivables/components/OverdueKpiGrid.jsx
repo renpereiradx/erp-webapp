@@ -14,7 +14,7 @@ const OverdueKpiGrid = ({ stats }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       {/* Card 1: Total Overdue */}
-      <div className="bg-white dark:bg-[#1A2633] p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
+      <div className="bg-white dark:bg-[#1A2633] p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
         <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
           {t('receivables.overdue.kpi.total_overdue', 'Total Vencido')}
         </p>
@@ -28,7 +28,7 @@ const OverdueKpiGrid = ({ stats }) => {
       </div>
 
       {/* Card 2: Accounts at Risk */}
-      <div className="bg-white dark:bg-[#1A2633] p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
+      <div className="bg-white dark:bg-[#1A2633] p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
         <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
           {t('receivables.overdue.kpi.at_risk', 'Cuentas en Riesgo (>90 Días)')}
         </p>
@@ -42,7 +42,7 @@ const OverdueKpiGrid = ({ stats }) => {
       </div>
 
       {/* Card 3: Collection Efficiency */}
-      <div className="bg-white dark:bg-[#1A2633] p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
+      <div className="bg-white dark:bg-[#1A2633] p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
         <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
           {t('receivables.overdue.kpi.efficiency', 'Eficiencia de Cobro')}
         </p>
@@ -56,7 +56,7 @@ const OverdueKpiGrid = ({ stats }) => {
       </div>
 
       {/* Card 4: Promises to Pay */}
-      <div className="bg-white dark:bg-[#1A2633] p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
+      <div className="bg-white dark:bg-[#1A2633] p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
         <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
           {t('receivables.overdue.kpi.promises_to_pay', 'Promesas de Pago')}
         </p>

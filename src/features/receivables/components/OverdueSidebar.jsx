@@ -1,157 +1,121 @@
-import React, { useState, useEffect } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { RefreshCw } from 'lucide-react'
-import { useI18n } from '@/lib/i18n'
-import { formatPYG } from '@/utils/currencyUtils'
-import { receivablesService } from '@/services/receivablesService'
+import React from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n';
+import { Calendar, Play, ChevronRight, Sparkles, MoreHorizontal } from 'lucide-react';
 
 /**
- * Obtiene el color según el comportamiento de pago
- */
-const getColorByBehavior = (behavior, index) => {
-  switch (behavior) {
-    case 'POOR':
-      return '#ef4444' // rojo
-    case 'REGULAR':
-      return '#f59e0b' // naranja
-    case 'GOOD':
-      return '#3b82f6' // azul
-    case 'EXCELLENT':
-      return '#22c55e' // verde
-    default:
-      // Colores por posición si no hay behavior
-      return index < 2 ? '#ef4444' : index < 4 ? '#f59e0b' : '#3b82f6'
-  }
-}
-
-/**
- * Sidebar con ranking de principales deudores.
- * Conecta con GET /receivables/top-debtors
+ * Widgets laterales para la página de Cuentas Vencidas.
+ * Fiel al diseño de Stitch y todo en español.
  */
 const OverdueSidebar = () => {
-  const { t } = useI18n()
-  const [debtors, setDebtors] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [maxAmount, setMaxAmount] = useState(0)
-
-  useEffect(() => {
-    const loadDebtors = async () => {
-      try {
-        const response = await receivablesService.getTopDebtors(5)
-        const data = response.data || response || []
-
-        // Encontrar el monto máximo para calcular porcentajes
-        const max = Math.max(...data.map(d => d.total_pending || 0), 1)
-        setMaxAmount(max)
-        setDebtors(data)
-      } catch (error) {
-        console.error('Error loading top debtors:', error)
-        setDebtors([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadDebtors()
-  }, [])
+  const { t } = useI18n();
 
   return (
-    <>
-      {/* 1. Task Summary Widget */}
-      <div className="bg-white dark:bg-[#1A2633] p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-slate-900 dark:text-white">{t('receivables.overdue.sidebar.tasks_today', 'Tareas de Hoy')}</h3>
-          <button className="text-primary text-xs font-medium hover:underline">{t('receivables.overdue.sidebar.view_calendar', 'Ver Calendario')}</button>
+    <div className="flex flex-col gap-6">
+      
+      {/* Widget 1: Tareas de Hoy */}
+      <div className="bg-white dark:bg-[#1A2633] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 flex flex-col">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-tight">Tareas de Hoy</h3>
+          <button className="text-[10px] font-bold text-[#137fec] hover:underline uppercase tracking-wider">Ver Calendario</button>
         </div>
-        <div className="flex items-center justify-center py-4 relative">
-          {/* Donut chart approximation using CSS conic-gradient */}
-          <div className="size-32 rounded-full flex items-center justify-center" style={{ background: 'conic-gradient(#137fec 50%, #f1f5f9 0)' }}>
-            <div className="size-24 bg-white dark:bg-[#1A2633] rounded-full flex flex-col items-center justify-center">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">28</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">Total</span>
+        
+        {/* Mockup de Círculo de Progreso */}
+        <div className="flex flex-col items-center justify-center py-4">
+          <div className="relative size-32">
+            <svg className="size-full" viewBox="0 0 36 36">
+              <path
+                className="text-slate-100 dark:text-slate-800 stroke-current"
+                strokeWidth="3"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path
+                className="text-[#137fec] stroke-current"
+                strokeWidth="3"
+                strokeDasharray="50, 100"
+                strokeLinecap="round"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-2xl font-black text-slate-800 dark:text-white">28</span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total</span>
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2 mt-4">
-          <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('common.completed', 'Completadas')}</p>
-            <p className="font-bold text-primary text-lg">14</p>
+
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg text-center border border-slate-100 dark:border-slate-800">
+            <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Completadas</p>
+            <p className="text-lg font-black text-slate-800 dark:text-white">14</p>
           </div>
-          <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('common.pending', 'Pendientes')}</p>
-            <p className="font-bold text-slate-900 dark:text-white text-lg">14</p>
+          <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg text-center border border-slate-100 dark:border-slate-800">
+            <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Pendientes</p>
+            <p className="text-lg font-black text-slate-800 dark:text-white">14</p>
           </div>
         </div>
-        <button className="w-full mt-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-sm font-semibold transition-colors">
-          {t('receivables.overdue.sidebar.start_calling', 'Iniciar Sesión de Llamadas')}
+
+        <Button className="w-full mt-6 bg-[#137fec]/10 hover:bg-[#137fec]/20 text-[#137fec] border-none shadow-none text-xs font-bold h-10 rounded-lg">
+          <Play className="size-3 mr-2 fill-current" />
+          Iniciar Sesión de Llamadas
+        </Button>
+      </div>
+
+      {/* Widget 2: Mayores Deudores */}
+      <div className="bg-white dark:bg-[#1A2633] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 flex flex-col">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-tight">Mayores Deudores</h3>
+          <button className="text-slate-400 hover:text-slate-600 transition-colors">
+            <MoreHorizontal size={16} />
+          </button>
+        </div>
+
+        <div className="space-y-5">
+          {[
+            { name: 'Industrias Globales', amount: '$52k', color: 'bg-red-500', width: '90%' },
+            { name: 'Blue Moon Ltd', amount: '$38k', color: 'bg-orange-500', width: '70%' },
+            { name: 'Acme Corp', amount: '$25k', color: 'bg-[#137fec]', width: '50%' },
+            { name: 'Zenith Partners', amount: '$12k', color: 'bg-[#137fec]', width: '30%' }
+          ].map((debtor, i) => (
+            <div key={i} className="flex flex-col gap-1.5">
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{i+1}. {debtor.name}</span>
+                <span className="text-[11px] font-black text-slate-900 dark:text-white">{debtor.amount}</span>
+              </div>
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div className={`${debtor.color} h-full rounded-full transition-all duration-1000`} style={{ width: debtor.width }}></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button className="w-full mt-6 text-[10px] font-bold text-[#137fec] hover:underline uppercase tracking-wider flex items-center justify-center">
+          Ver Ranking Completo <ChevronRight size={12} className="ml-1" />
         </button>
       </div>
 
-      {/* 2. Top Debtors Widget */}
-      <div className="bg-white dark:bg-[#1A2633] p-5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-slate-900 dark:text-white">{t('receivables.overdue.sidebar.top_debtors', 'Principales Deudores')}</h3>
-          <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-            <span className="material-symbols-outlined !text-xl">more_horiz</span>
-          </button>
+      {/* Widget 3: AI Insights */}
+      <div className="bg-[#137fec] rounded-xl shadow-lg p-6 text-white relative overflow-hidden group border border-[#137fec]">
+        <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:scale-110 transition-transform duration-500">
+          <Sparkles size={48} />
         </div>
-        <div className="flex flex-col gap-5">
-          {loading ? (
-            <div className='flex items-center justify-center py-6'>
-              <RefreshCw className='size-6 animate-spin text-primary opacity-50' />
-            </div>
-          ) : debtors.length === 0 ? (
-            <div className='text-center py-6 text-sm text-slate-500'>
-              {t('receivables.overdue.sidebar.no_debtors', 'Sin deudores pendientes')}
-            </div>
-          ) : (
-            debtors.slice(0, 4).map((debtor, i) => {
-              const widthPercent = Math.round((debtor.total_pending / maxAmount) * 100);
-              // Asignar colores como en Stitch
-              const progressColor = i === 0 ? 'bg-red-500' : i === 1 ? 'bg-amber-500' : 'bg-primary';
-              
-              return (
-                <div key={debtor.client_id} className="flex flex-col gap-1.5">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-semibold text-slate-700 dark:text-slate-200 truncate pr-2 max-w-[70%]">
-                      {i + 1}. {debtor.client_name}
-                    </span>
-                    <span className="font-bold text-slate-900 dark:text-white">
-                      {formatPYG(debtor.total_pending, { compact: true })}
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                    <div className={`${progressColor} h-full rounded-full transition-all duration-1000`} style={{ width: `${widthPercent}%` }}></div>
-                  </div>
-                </div>
-              );
-            })
-          )}
+        <div className="size-10 bg-white/20 rounded-lg flex items-center justify-center mb-4 backdrop-blur-sm border border-white/10">
+          <Sparkles size={20} className="text-white" />
         </div>
-        <a className="mt-5 text-center text-sm text-primary font-medium hover:underline cursor-pointer">
-          {t('receivables.overdue.sidebar.full_ranking', 'Ver Ranking Completo')}
-        </a>
+        <h3 className="text-base font-bold mb-2">Análisis Predictivo</h3>
+        <p className="text-xs text-blue-100/80 mb-6 leading-relaxed font-medium">
+          Optimiza tu estrategia de cobranza con análisis predictivo impulsado por IA.
+        </p>
+        <button className="px-4 py-2 bg-white text-[#137fec] rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 transition-all active:scale-95 shadow-md shadow-blue-900/20">
+          Probar Beta
+        </button>
       </div>
 
-      {/* 3. Ad/Promo or Tip */}
-      <div className="bg-gradient-to-br from-primary to-blue-600 rounded-lg p-5 text-white shadow-lg shadow-blue-200 dark:shadow-none relative overflow-hidden group cursor-pointer mt-auto">
-        <div className="absolute -right-4 -top-4 size-24 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all"></div>
-        <div className="relative z-10">
-          <div className="size-10 bg-white/20 rounded-lg flex items-center justify-center mb-3 backdrop-blur-sm">
-            <span className="material-symbols-outlined">auto_awesome</span>
-          </div>
-          <h4 className="font-bold text-lg mb-1">{t('receivables.overdue.promo.title', 'Insights de IA')}</h4>
-          <p className="text-blue-100 text-sm mb-3">
-            {t('receivables.overdue.promo.body', 'Optimiza tu estrategia de cobranza con analítica predictiva.')}
-          </p>
-          <button className="text-xs font-bold bg-white text-primary px-3 py-1.5 rounded shadow-sm hover:bg-blue-50 transition-colors">
-            {t('receivables.overdue.promo.button', 'Probar Beta')}
-          </button>
-        </div>
-      </div>
-    </>
-  )
-}
+    </div>
+  );
+};
 
-export default OverdueSidebar
+export default OverdueSidebar;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, AccountBalance, Schedule, PieChart } from 'lucide-react';
+import { Landmark, Clock, PieChart } from 'lucide-react';
 
 /**
  * Tarjetas de KPIs para el reporte de antigüedad.
