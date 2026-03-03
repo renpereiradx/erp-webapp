@@ -9,13 +9,13 @@ import { useI18n } from '@/lib/i18n';
 import { formatPYG } from '@/utils/currencyUtils';
 
 const SORTABLE_COLUMNS = [
-  { key: 'id', label: 'receivables.master.table.id' },
-  { key: 'client', label: 'receivables.master.table.client' },
-  { key: 'sale_date', label: 'receivables.master.table.sale_date' },
-  { key: 'due_date', label: 'receivables.master.table.due_date' },
-  { key: 'original_amt', label: 'receivables.master.table.original_amt', align: 'text-right' },
-  { key: 'pending_amt', label: 'receivables.master.table.pending_amt', align: 'text-right' },
-  { key: 'status', label: 'receivables.master.table.status', align: 'text-center' },
+  { key: 'id', label: 'receivables.master.table.id', fallback: 'ID' },
+  { key: 'client', label: 'receivables.master.table.client', fallback: 'Cliente' },
+  { key: 'sale_date', label: 'receivables.master.table.sale_date', fallback: 'Fecha Emisión' },
+  { key: 'due_date', label: 'receivables.master.table.due_date', fallback: 'Vencimiento' },
+  { key: 'original_amt', label: 'receivables.master.table.original_amt', align: 'text-right', fallback: 'Monto Original' },
+  { key: 'pending_amt', label: 'receivables.master.table.pending_amt', align: 'text-right', fallback: 'Saldo Pendiente' },
+  { key: 'status', label: 'receivables.master.table.status', align: 'text-center', fallback: 'Estado' },
 ];
 
 /**
@@ -85,7 +85,7 @@ const MasterListTable = ({
                   onClick={() => onSort?.(col.key)}
                 >
                   <div className={`flex items-center gap-1 ${col.align === 'text-right' ? 'justify-end' : col.align === 'text-center' ? 'justify-center' : ''}`}>
-                    {t(col.label)}
+                    {t(col.label, col.fallback)}
                     {sortBy === col.key && (
                       <span className="material-symbols-outlined text-[16px]">
                         {sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward'}

@@ -37,19 +37,22 @@ const getStatusColor = status => {
 /**
  * Transforma un item del API al formato esperado por la tabla
  */
-const transformReceivableItem = item => ({
-  id: item.id || item.sale_order_id,
-  clientId: item.client_id,
-  clientName: item.client_name,
-  clientInitial: item.client_name?.charAt(0) || '?',
-  clientColor: getAvatarColor(item.client_name),
-  issueDate: item.sale_date?.split('T')[0] || '',
-  dueDate: item.due_date?.split('T')[0] || '',
-  originalAmt: item.original_amount || 0,
-  pendingAmt: item.pending_amount || 0,
-  status: item.status,
-  statusColor: getStatusColor(item.status),
-})
+const transformReceivableItem = item => {
+  const clientName = item.client_name || item.clientName || 'Cliente Desconocido';
+  return {
+    id: item.id || item.sale_order_id,
+    clientId: item.client_id || 'CLI-001',
+    clientName: clientName,
+    clientInitial: clientName.charAt(0).toUpperCase(),
+    clientColor: getAvatarColor(clientName),
+    issueDate: item.sale_date ? new Date(item.sale_date).toLocaleDateString('es-PY') : '',
+    dueDate: item.due_date ? new Date(item.due_date).toLocaleDateString('es-PY') : '',
+    originalAmt: item.original_amount || 0,
+    pendingAmt: item.pending_amount || 0,
+    status: item.status,
+    statusColor: getStatusColor(item.status),
+  }
+}
 
 /**
  * Hook para manejar la lista maestra de cuentas por cobrar.
@@ -120,11 +123,18 @@ export const useReceivablesMasterList = (initialFilters = {}) => {
             totalItems:
               paginationData.total_items ??
               paginationData.totalItems ??
-              prev.totalItems,
+              transformedItems.length,
             totalPages:
               paginationData.total_pages ??
               paginationData.totalPages ??
-              prev.totalPages,
+              Math.ceil((paginationData.total_items || transformedItems.length) / prev.pageSize),
+          }))
+        } else {
+          // Fallback calculation
+          setPagination(prev => ({
+            ...prev,
+            totalItems: transformedItems.length,
+            totalPages: Math.ceil(transformedItems.length / prev.pageSize) || 1
           }))
         }
       }

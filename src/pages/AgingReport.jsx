@@ -1,103 +1,97 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { useI18n } from '@/lib/i18n'
-import { Download, Printer, Filter, RefreshCw, Clock } from 'lucide-react'
-import DashboardNav from '@/components/business-intelligence/DashboardNav'
+import { 
+  Download, 
+  Calendar as CalendarIcon, 
+  Globe, 
+  ChevronDown,
+  RefreshCw,
+  Search,
+  Home
+} from 'lucide-react'
 
-// Sub-componentes Receivables
+// Sub-componentes
 import AgingOverviewCards from '@/features/receivables/components/AgingOverviewCards'
 import AgingSummaryChart from '@/features/receivables/components/AgingSummaryChart'
 import AgingByClientTable from '@/features/receivables/components/AgingByClientTable'
-import AgingTrendChart from '@/features/receivables/components/AgingTrendChart'
+import BillingVsCollectionChart from '@/features/receivables/components/BillingVsCollectionChart'
 
-// Hooks
 import { useAgingReport } from '@/features/receivables/hooks/useAgingReport'
 
 /**
- * Aging Report Page - Receivables Optimized
+ * Reporte de Antigüedad y Estadísticas de Cobranza.
+ * Estilo 100% fiel al diseño de Stitch (Fluent 2).
  */
 const AgingReport = () => {
-  const navigate = useNavigate()
-  const { t } = useI18n()
-  const [period, setPeriod] = useState('month')
-  const { data, loading, error } = useAgingReport(period)
+  const { data, loading, error } = useAgingReport('month')
 
   if (loading && !data) {
     return (
       <div className='flex flex-col items-center justify-center min-h-[60vh] gap-4'>
-        <RefreshCw className='animate-spin text-primary' size={48} />
-        <p className='text-lg font-medium text-text-secondary'>Generando Reporte Analítico...</p>
-      </div>
-    )
-  }
-
-  if (error || !data) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
-        <div className="p-4 bg-red-100 rounded-full text-error mb-4">
-          <Clock size={48} />
-        </div>
-        <h2 className="text-2xl font-bold mb-2 text-text-main">Error al generar reporte</h2>
-        <p className="text-text-secondary mb-6 max-w-md">{error}</p>
-        <Button variant="primary" onClick={() => window.location.reload()}>
-          Reintentar
-        </Button>
+        <RefreshCw className='animate-spin text-[#137fec]' size={48} strokeWidth={1.5} />
+        <p className='text-lg font-medium text-slate-500'>Cargando Reporte Analítico...</p>
       </div>
     )
   }
 
   return (
-    <div className='space-y-8'>
-      <div className="max-w-[1600px] mx-auto space-y-8">
-        {/* Header */}
-        <header className='flex flex-col md:flex-row md:items-center justify-between gap-6'>
-          <div className="flex items-center gap-6">
-            <div className="size-14 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-              <Clock size={32} strokeWidth={2.5} />
-            </div>
-            <div className="space-y-1">
-              <h1 className='text-3xl font-black text-text-main tracking-tight uppercase'>
-                Reporte de Antigüedad
-              </h1>
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">
-                <span>Corte al:</span>
-                <strong className="text-text-main opacity-100">Hoy, {new Date().toLocaleDateString()}</strong>
-              </div>
-            </div>
+    <div className='flex flex-1 justify-center py-6 px-4 lg:px-8 bg-slate-50/50 dark:bg-background-dark min-h-screen font-display'>
+      <div className="flex flex-col max-w-[1200px] flex-1 w-full gap-6">
+        
+        {/* Breadcrumbs & Header */}
+        <div className="flex flex-col gap-4 animate-in fade-in duration-500">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-[#617589]">
+            <a className="hover:text-[#137fec] transition-colors flex items-center gap-1" href="#"><Home size={14} /> Inicio</a>
+            <span>/</span>
+            <a className="hover:text-[#137fec] transition-colors" href="#">Finanzas</a>
+            <span>/</span>
+            <span className="text-[#111418] dark:text-white font-medium tracking-tight">Reporte de Antigüedad</span>
           </div>
-
-          <div className='flex items-center gap-3'>
-            <Button variant="secondary" size="md" className="shadow-sm border-border-subtle bg-surface font-black uppercase tracking-widest text-[11px]">
-              <Filter size={18} className="mr-2" />
-              <span>Filtrar</span>
-            </Button>
-            <Button variant="secondary" size="md" className="shadow-sm border-border-subtle bg-surface font-black uppercase tracking-widest text-[11px]">
-              <Printer size={18} className="mr-2" />
-              <span>Imprimir</span>
-            </Button>
-            <Button variant='primary' size='md' className="shadow-md font-black uppercase tracking-widest text-[11px]">
-              <Download size={18} className="mr-2" />
-              <span>Exportar Reporte</span>
-            </Button>
-          </div>
-        </header>
-
-        <DashboardNav />
-
-        {/* Main Content Area */}
-        <div className="space-y-8">
-          <AgingOverviewCards stats={data.statistics?.summary || {}} />
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <AgingSummaryChart agingData={data.summary || {}} />
-            <AgingTrendChart trendData={data.statistics?.trends || []} />
-          </div>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <h1 className="text-[#111418] dark:text-white text-3xl font-black leading-tight tracking-tight uppercase">
+                Reporte de Antigüedad y Estadísticas
+              </h1>
+              <p className="text-[#617589] dark:text-gray-400 text-base font-medium">
+                Análisis detallado de cuentas por cobrar y rendimiento de cobranza.
+              </p>
+            </div>
 
-          <div className="pb-10">
-            <AgingByClientTable clientsData={data.detailed || []} />
+            {/* Global Controls */}
+            <div className="flex flex-wrap items-center gap-3">
+              <button className="flex items-center gap-2 h-10 px-4 bg-white dark:bg-[#1a2632] border border-[#dbe0e6] dark:border-[#3e4a56] rounded-lg text-sm font-bold text-[#111418] dark:text-white hover:bg-[#f8f9fa] dark:hover:bg-[#25303d] transition-colors shadow-sm">
+                <CalendarIcon size={18} className="text-[#617589]" />
+                <span>Oct 1, 2023 - Oct 31, 2023</span>
+                <ChevronDown size={18} className="text-[#617589]" />
+              </button>
+              
+              <button className="flex items-center gap-2 h-10 px-4 bg-white dark:bg-[#1a2632] border border-[#dbe0e6] dark:border-[#3e4a56] rounded-lg text-sm font-bold text-[#111418] dark:text-white hover:bg-[#f8f9fa] dark:hover:bg-[#25303d] transition-colors shadow-sm">
+                <Globe size={18} className="text-[#617589]" />
+                <span>Entidad Global</span>
+                <ChevronDown size={18} className="text-[#617589]" />
+              </button>
+
+              <Button className="h-10 px-5 bg-[#137fec] hover:bg-[#137fec]/90 text-white text-sm font-black rounded-lg shadow-md transition-all active:scale-95 flex items-center gap-2">
+                <Download size={18} />
+                <span>Exportar Reporte</span>
+              </Button>
+            </div>
           </div>
         </div>
+
+        {/* Contenido Principal */}
+        <div className="flex flex-col gap-6 animate-in slide-in-from-bottom-4 duration-700">
+          <AgingOverviewCards stats={data?.statistics?.summary} />
+          
+          <AgingSummaryChart agingData={data?.summary} />
+
+          <div className="flex flex-col xl:flex-row gap-6">
+            <AgingByClientTable clientsData={data?.detailed?.by_client} />
+            <BillingVsCollectionChart trendData={data?.statistics?.collection_trend} />
+          </div>
+        </div>
+        
       </div>
     </div>
   )

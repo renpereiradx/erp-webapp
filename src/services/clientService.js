@@ -1,9 +1,17 @@
 // src/services/clientService.js
 import apiService from './api';
 import { telemetry } from '../utils/telemetry';
+import { clientListData } from './mocks/clientMock';
 
 // Según docs/api/CLIENT_API.md los endpoints usan prefijo singular `/client`
 const API_PREFIX = '/client';
+const USE_MOCK = import.meta.env.VITE_USE_DEMO === 'true';
+
+// Helper to simulate API delay
+const _mockRes = (data, delay = 500) =>
+  new Promise(resolve =>
+    setTimeout(() => resolve(data), delay),
+  );
 
 // Helper con retry simple (máx 2 reintentos)
 const _fetchWithRetry = async (requestFn, maxRetries = 2) => {
@@ -31,6 +39,15 @@ export const clientService = {
   async searchByName(name) {
     const startTime = Date.now();
     try {
+      if (USE_MOCK) {
+        const term = name.toLowerCase();
+        const filtered = clientListData.filter(c => 
+          (c.name || '').toLowerCase().includes(term) || 
+          (c.last_name || '').toLowerCase().includes(term) ||
+          (c.document_id || '').toLowerCase().includes(term)
+        );
+        return _mockRes(filtered);
+      }
       const endpoint = `${API_PREFIX}/name/${encodeURIComponent(name)}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       // Parsear si la respuesta es string JSON
@@ -53,6 +70,10 @@ export const clientService = {
   async getById(id) {
     const startTime = Date.now();
     try {
+      if (USE_MOCK) {
+        const client = clientListData.find(c => c.id === id);
+        return _mockRes(client || null);
+      }
       const endpoint = `${API_PREFIX}/${id}`;
       const result = await _fetchWithRetry(async () => apiService.get(endpoint));
       // Parsear si la respuesta es string JSON
@@ -75,6 +96,12 @@ export const clientService = {
   async getAll(page = 1, pageSize = 10) {
     const startTime = Date.now();
     try {
+      if (USE_MOCK) {
+        return _mockRes({
+          clients: clientListData.slice((page - 1) * pageSize, page * pageSize),
+          total: clientListData.length
+        });
+      }
       const result = await _fetchWithRetry(async () => apiService.getClients({ page, pageSize }));
       telemetry.record('client.service.getAll', { duration: Date.now() - startTime, page, pageSize });
       return result;

@@ -49,9 +49,10 @@ const RecentInvoicesTable = ({ invoices = [] }) => {
               invoices.map((inv, idx) => {
                 // Lógica de color de badge basada en el diseño de Stitch
                 const badgeClasses = {
-                  success: 'bg-green-50 text-green-700 ring-green-600/20',
-                  warning: 'bg-yellow-50 text-yellow-800 ring-yellow-600/20',
-                  danger: 'bg-red-50 text-red-700 ring-red-600/10',
+                  green: 'bg-green-50 text-green-700 ring-green-600/20',
+                  yellow: 'bg-yellow-50 text-yellow-800 ring-yellow-600/20',
+                  red: 'bg-red-50 text-red-700 ring-red-600/10',
+                  blue: 'bg-blue-50 text-blue-700 ring-blue-600/20',
                   default: 'bg-gray-50 text-gray-700 ring-gray-600/20'
                 }
                 
@@ -61,29 +62,32 @@ const RecentInvoicesTable = ({ invoices = [] }) => {
                 return (
                   <tr key={inv.id || idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors group">
                     <td className="px-6 py-3 font-medium text-text-primary-light dark:text-text-primary-dark">
-                      {inv.invoiceId}
+                      #{inv.id}
                     </td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-2">
                         <div className="size-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-bold">
-                          {inv.client?.substring(0, 2).toUpperCase() || '??'}
+                          {inv.client?.charAt(0).toUpperCase() || '??'}
                         </div>
                         <span className="text-text-primary-light dark:text-text-primary-dark">{inv.client}</span>
                       </div>
                     </td>
                     <td className="px-6 py-3">
-                      {inv.date ? new Date(inv.date).toLocaleDateString('es-PY', { month: 'short', day: 'numeric', year: 'numeric' }) : '24 Oct, 2023'}
+                      {inv.issueDate || 'Hoy'}
                     </td>
                     <td className="px-6 py-3 font-mono text-text-primary-light dark:text-text-primary-dark">
                       {formatPYG(inv.balance)}
                     </td>
                     <td className="px-6 py-3">
-                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${currentBadgeClass}`}>
-                        {inv.status}
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ring-inset ${currentBadgeClass}`}>
+                        {inv.status === 'OVERDUE' ? 'VENCIDO' : inv.status === 'PARTIAL' ? 'PARCIAL' : inv.status === 'PAID' ? 'PAGADO' : 'PENDIENTE'}
                       </span>
                     </td>
                     <td className="px-6 py-3 text-right">
-                      <button className="text-primary hover:text-primary-hover font-medium transition-colors">
+                      <button 
+                        onClick={() => navigate(`/receivables/detail/${inv.id}`)}
+                        className="text-primary hover:text-primary-hover font-medium transition-colors"
+                      >
                         Ver
                       </button>
                     </td>

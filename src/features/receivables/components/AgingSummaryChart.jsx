@@ -1,52 +1,65 @@
 import React from 'react';
-import { useI18n } from '@/lib/i18n';
 
 /**
- * Gráfico de resumen de envejecimiento (Aging Summary).
- * Pulido al 100% para coincidir con el diseño de Stitch (en español).
+ * Gráfico de barra de antigüedad apilada.
+ * Estilo 100% fiel al diseño de Stitch.
  */
 const AgingSummaryChart = ({ agingData }) => {
-  const { t } = useI18n();
-
-  // Mapeamos los datos con los colores y etiquetas exactas de Stitch en español
-  const buckets = [
-    { label: 'Corriente', key: 'current', color: 'bg-primary' },
-    { label: '1-30 Días', key: 'days_1_30', color: 'bg-[#60a5fa]' },
-    { label: '31-60 Días', key: 'days_31_60', color: 'bg-yellow-400' },
-    { label: '61-90 Días', key: 'days_61_90', color: 'bg-orange-400' },
-    { label: '+90 Días', key: 'over_90_days', color: 'bg-semantic-danger' }
-  ];
-
   return (
-    <div className="flex flex-col rounded-xl bg-white dark:bg-surface-dark p-6 shadow-card border border-gray-100 dark:border-gray-800 h-full overflow-hidden">
-      <div className="mb-6">
-        <h3 className="text-base font-bold text-text-primary-light dark:text-text-primary-dark">Resumen de Antigüedad</h3>
-        <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Pendientes por tramos de días</p>
+    <div className="bg-white dark:bg-[#1a2632] rounded-lg border border-[#e5e7eb] dark:border-[#2e3640] shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="p-5 pb-2 border-b border-[#f0f2f4] dark:border-[#2e3640] flex justify-between items-center">
+        <h3 className="text-[#111418] dark:text-white text-lg font-bold">Desglose de Tramos de Antigüedad</h3>
+        <button className="text-[#137fec] text-sm font-medium hover:underline">Ver Detalles</button>
       </div>
-      <div className="flex flex-col flex-1 justify-center gap-6">
-        {buckets.map((bucket, i) => {
-          const data = agingData[bucket.key] || { amount: 0, percentage: 0 };
-          const isCritical = bucket.key === 'over_90_days';
-          
-          return (
-            <div key={i} className="group">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-text-primary-light dark:text-text-primary-dark">
-                  {bucket.label}
-                </span>
-                <span className={`font-mono ${isCritical ? 'text-semantic-danger font-bold' : 'text-text-secondary-light dark:text-text-secondary-dark'}`}>
-                  {new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', notation: 'compact' }).format(data.amount)}
-                </span>
-              </div>
-              <div className="h-3 w-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
-                <div 
-                  className={`h-full rounded-full transition-all duration-1000 ${bucket.color}`}
-                  style={{ width: `${data.percentage}%` }}
-                ></div>
-              </div>
-            </div>
-          );
-        })}
+      <div className="p-6">
+        {/* Leyenda */}
+        <div className="flex flex-wrap gap-6 mb-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#137fec]"></span>
+            <span className="text-[#617589] dark:text-gray-400">Corriente</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#38bdf8]"></span>
+            <span className="text-[#617589] dark:text-gray-400">1-30 Días</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#fbbf24]"></span>
+            <span className="text-[#617589] dark:text-gray-400">31-60 Días</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#f97316]"></span>
+            <span className="text-[#617589] dark:text-gray-400">61-90 Días</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-[#dc2626]"></span>
+            <span className="text-[#617589] dark:text-gray-400">&gt; 90 Días</span>
+          </div>
+        </div>
+        {/* Barra Apilada */}
+        <div className="relative w-full h-12 flex rounded-lg overflow-hidden cursor-pointer group">
+          <div className="h-full bg-[#137fec] flex items-center justify-center text-white text-xs font-bold hover:brightness-95 transition-all w-[45%]" title="Corriente: $562,500 (45%)">
+            45%
+          </div>
+          <div className="h-full bg-[#38bdf8] flex items-center justify-center text-white text-xs font-bold hover:brightness-95 transition-all w-[25%]" title="1-30 Días: $312,500 (25%)">
+            25%
+          </div>
+          <div className="h-full bg-[#fbbf24] flex items-center justify-center text-white text-xs font-bold hover:brightness-95 transition-all w-[15%]" title="31-60 Días: $187,500 (15%)">
+            15%
+          </div>
+          <div className="h-full bg-[#f97316] flex items-center justify-center text-white text-xs font-bold hover:brightness-95 transition-all w-[10%]" title="61-90 Días: $125,000 (10%)">
+            10%
+          </div>
+          <div className="h-full bg-[#dc2626] flex items-center justify-center text-white text-xs font-bold hover:brightness-95 transition-all w-[5%]" title=">90 Días: $62,500 (5%)">
+            5%
+          </div>
+        </div>
+        <div className="mt-2 flex justify-between text-xs text-[#617589] dark:text-gray-500 font-mono">
+          <span className="w-[45%]">$562,500</span>
+          <span className="w-[25%]">$312,500</span>
+          <span className="w-[15%]">$187,500</span>
+          <span className="w-[10%]">$125,000</span>
+          <span className="w-[5%] text-right text-red-600 font-bold">$62,500</span>
+        </div>
       </div>
     </div>
   );

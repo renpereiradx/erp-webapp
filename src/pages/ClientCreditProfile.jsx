@@ -9,7 +9,6 @@ import DashboardNav from '@/components/business-intelligence/DashboardNav';
 
 // Hooks y Datos
 import { useClientCreditProfile } from '@/features/receivables/hooks/useClientCreditProfile';
-import { clientProfileMock } from '@/features/receivables/data/mockData';
 
 // Sub-componentes modulares
 import RiskGauge from '@/features/receivables/components/RiskGauge';
@@ -27,10 +26,9 @@ const ClientCreditProfile = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   
-  const { data: remoteData, loading, error } = useClientCreditProfile(clientId);
-  const data = remoteData || clientProfileMock;
+  const { data, loading, error } = useClientCreditProfile(clientId);
 
-  if (loading && !remoteData) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <RefreshCw className="animate-spin text-primary" size={48} />
@@ -39,7 +37,7 @@ const ClientCreditProfile = () => {
     );
   }
 
-  if (error && !remoteData) {
+  if (error || !data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
         <div className="p-4 bg-red-100 rounded-full text-error mb-4">

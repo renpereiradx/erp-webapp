@@ -88,22 +88,25 @@ const ReceivablesDashboard = () => {
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h3 className="text-base font-bold text-text-primary-light dark:text-text-primary-dark">Tendencia de Cobranza</h3>
-                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Rendimiento de los últimos 6 meses</p>
+                <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Rendimiento de las últimas semanas</p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-text-primary-light dark:text-text-primary-dark">Gs.&nbsp;4200&nbsp;M</p>
-                <p className="text-xs font-medium text-semantic-success">Total Cobrado</p>
+                <p className="text-2xl font-bold text-text-primary-light dark:text-text-primary-dark">
+                  Gs.&nbsp;{(summary.collectionTrend?.reduce((acc, curr) => acc + curr.collected, 0) / 1000000).toFixed(0)}&nbsp;M
+                </p>
+                <p className="text-xs font-medium text-semantic-success">Total Cobrado (Periodo)</p>
               </div>
             </div>
             
             <div className="relative h-[300px] w-full mt-4">
-              <div className="absolute inset-0 flex flex-col justify-between text-xs text-text-secondary-light dark:text-text-secondary-dark opacity-50">
-                <div className="w-full border-b border-gray-100 dark:border-gray-800 pb-1">1000k</div>
-                <div className="w-full border-b border-gray-100 dark:border-gray-800 pb-1">750k</div>
-                <div className="w-full border-b border-gray-100 dark:border-gray-800 pb-1">500k</div>
-                <div className="w-full border-b border-gray-100 dark:border-gray-800 pb-1">250k</div>
+              <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-text-secondary-light dark:text-text-secondary-dark opacity-50">
+                <div className="w-full border-b border-gray-100 dark:border-gray-800 pb-1">200M</div>
+                <div className="w-full border-b border-gray-100 dark:border-gray-800 pb-1">150M</div>
+                <div className="w-full border-b border-gray-100 dark:border-gray-800 pb-1">100M</div>
+                <div className="w-full border-b border-gray-100 dark:border-gray-800 pb-1">50M</div>
                 <div className="w-full border-b border-gray-100 dark:border-gray-800 pb-1">0</div>
               </div>
+              {/* Gráfico SVG dinámico simplificado */}
               <svg className="absolute inset-0 h-full w-full pt-6 pb-6 pr-4" preserveAspectRatio="none" viewBox="0 0 100 100">
                 <defs>
                   <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
@@ -111,18 +114,26 @@ const ReceivablesDashboard = () => {
                     <stop offset="100%" stopColor="#137fec" stopOpacity="0" />
                   </linearGradient>
                 </defs>
-                <path d="M0,80 Q10,75 20,60 T40,55 T60,30 T80,35 T100,10 V100 H0 Z" fill="url(#chartGradient)" />
-                <path d="M0,80 Q10,75 20,60 T40,55 T60,30 T80,35 T100,10" fill="none" stroke="#137fec" strokeWidth="2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-                <circle cx="0" cy="80" fill="#ffffff" r="3" stroke="#137fec" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                <circle cx="20" cy="60" fill="#ffffff" r="3" stroke="#137fec" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                <circle cx="40" cy="55" fill="#ffffff" r="3" stroke="#137fec" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                <circle cx="60" cy="30" fill="#ffffff" r="3" stroke="#137fec" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                <circle cx="80" cy="35" fill="#ffffff" r="3" stroke="#137fec" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                <circle cx="100" cy="10" fill="#ffffff" r="3" stroke="#137fec" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+                <path 
+                  d={`M0,${100 - (summary.collectionTrend[0]?.collected / 200000000 * 80 || 20)} 
+                     Q15,${100 - (summary.collectionTrend[1]?.collected / 200000000 * 80 || 40)} 33,${100 - (summary.collectionTrend[1]?.collected / 200000000 * 80 || 40)} 
+                     T66,${100 - (summary.collectionTrend[2]?.collected / 200000000 * 80 || 60)} 
+                     T100,${100 - (summary.collectionTrend[3]?.collected / 200000000 * 80 || 80)} V100 H0 Z`} 
+                  fill="url(#chartGradient)" 
+                />
+                <path 
+                  d={`M0,${100 - (summary.collectionTrend[0]?.collected / 200000000 * 80 || 20)} 
+                     L33,${100 - (summary.collectionTrend[1]?.collected / 200000000 * 80 || 40)} 
+                     L66,${100 - (summary.collectionTrend[2]?.collected / 200000000 * 80 || 60)} 
+                     L100,${100 - (summary.collectionTrend[3]?.collected / 200000000 * 80 || 80)}`} 
+                  fill="none" stroke="#137fec" strokeWidth="2" strokeLinecap="round" vectorEffect="non-scaling-stroke" 
+                />
               </svg>
             </div>
-            <div className="flex justify-between px-2 mt-2 text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-widest">
-              <span>May</span><span>Jun</span><span>Jul</span><span>Ago</span><span>Sep</span><span>Oct</span>
+            <div className="flex justify-between px-2 mt-2 text-[10px] font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-widest">
+              {summary.collectionTrend?.map((item, idx) => (
+                <span key={idx}>{item.date}</span>
+              )) || <span>Semana 1</span>}
             </div>
           </div>
         </div>

@@ -75,14 +75,7 @@ export const receivablesService = {
   async getAgingSummary() {
     const startTime = Date.now()
     try {
-      if (USE_MOCK) {
-        return _mockRes({
-          current: { amount: 8500000, count: 25, percentage: 55.92 },
-          days_30_60: { amount: 3200000, count: 12, percentage: 21.05 },
-          days_60_90: { amount: 2000000, count: 5, percentage: 13.16 },
-          over_90_days: { amount: 1500000, count: 3, percentage: 9.87 },
-        })
-      }
+      if (USE_MOCK) return _mockRes(summaryData.aging_summary)
 
       const endpoint = `${API_PREFIX}/aging/summary`
       const result = await _fetchWithRetry(async () => apiService.get(endpoint))
@@ -132,43 +125,17 @@ export const receivablesService = {
     try {
       if (USE_MOCK) {
         return _mockRes({
-          generated_at: '2026-01-03T10:30:00Z',
-          summary: {
-            current: { amount: 8500000, count: 25, percentage: 55.92 },
-            days_30_60: { amount: 3200000, count: 12, percentage: 21.05 },
-            days_60_90: { amount: 2000000, count: 5, percentage: 13.16 },
-            over_90_days: { amount: 1500000, count: 3, percentage: 9.87 },
-          },
-          by_client: [
-            {
-              client_id: 'client_123',
-              client_name: 'Empresa ABC',
-              current: 500000,
-              days_30_60: 300000,
-              days_60_90: 0,
-              over_90_days: 0,
-              total: 800000,
-            },
-            {
-              client_id: 'client_456',
-              client_name: 'Logística Nacional',
-              current: 1200000,
-              days_30_60: 450000,
-              days_60_90: 200000,
-              over_90_days: 100000,
-              total: 1950000,
-            },
-            {
-              client_id: 'client_789',
-              client_name: 'Distribuidora del Este',
-              current: 800000,
-              days_30_60: 0,
-              days_60_90: 0,
-              over_90_days: 500000,
-              total: 1300000,
-            },
-          ],
-          total_amount: 15200000,
+          generated_at: new Date().toISOString(),
+          summary: summaryData.aging_summary,
+          by_client: debtorsData.map(d => ({
+            client_id: d.client_id,
+            client_name: d.client_name,
+            total: d.total_pending,
+            over_90_days: d.total_overdue,
+            behavior: d.payment_behavior,
+            last_payment: d.last_payment_date
+          })),
+          total_amount: summaryData.total_pending,
         })
       }
 
@@ -197,37 +164,17 @@ export const receivablesService = {
     try {
       if (USE_MOCK) {
         return _mockRes({
-          period: '2025-12-01 - 2025-12-31',
-          total_billed: 25000000,
-          total_collected: 19625000,
-          collection_rate: 78.5,
-          average_dso: 28.5,
-          overdue_percentage: 23.03,
+          period: 'Último mes',
+          total_billed: summaryData.total_pending * 1.2,
+          total_collected: summaryData.total_pending * 0.8,
+          collection_rate: summaryData.collection_rate,
+          average_dso: summaryData.average_days_to_collect,
+          overdue_percentage: (summaryData.total_overdue / summaryData.total_pending) * 100,
           collection_trend: [
-            {
-              date: '2025-12-01',
-              billed: 5000000,
-              collected: 4000000,
-              balance: 1000000,
-            },
-            {
-              date: '2025-12-08',
-              billed: 6000000,
-              collected: 5500000,
-              balance: 500000,
-            },
-            {
-              date: '2025-12-15',
-              billed: 7000000,
-              collected: 4500000,
-              balance: 2500000,
-            },
-            {
-              date: '2025-12-22',
-              billed: 7000000,
-              collected: 5625000,
-              balance: 1375000,
-            },
+            { date: 'Semana 1', billed: 150000000, collected: 120000000, balance: 30000000 },
+            { date: 'Semana 2', billed: 180000000, collected: 140000000, balance: 40000000 },
+            { date: 'Semana 3', billed: 120000000, collected: 110000000, balance: 10000000 },
+            { date: 'Semana 4', billed: 200000000, collected: 160000000, balance: 40000000 },
           ],
         })
       }
@@ -423,54 +370,7 @@ export const receivablesService = {
   async getClientProfile(clientId) {
     const startTime = Date.now()
     try {
-      if (USE_MOCK) {
-        // Return structured mock matching Endpoint 6
-        return _mockRes({
-          client_id: clientId,
-          client_name: 'Acme Corp Logistics',
-          client_phone: '+1 (619) 555-0123',
-          total_pending: 124500,
-          total_overdue: 25000,
-          pending_count: 4,
-          oldest_debt: '2023-10-12T10:00:00Z',
-          payment_behavior: 'REGULAR',
-          average_days_to_pay: 45,
-          receivables: [
-            {
-              id: 'INV-2023-001',
-              sale_date: '2023-10-12T10:00:00Z',
-              due_date: '2023-11-12T10:00:00Z',
-              original_amount: 10000,
-              pending_amount: 10000,
-              status: 'OVERDUE',
-            },
-            {
-              id: 'INV-2023-045',
-              sale_date: '2023-12-01T10:00:00Z',
-              due_date: '2024-01-01T10:00:00Z',
-              original_amount: 14940,
-              pending_amount: 14940,
-              status: 'OVERDUE',
-            },
-            {
-              id: 'INV-2024-002',
-              sale_date: '2024-01-15T10:00:00Z',
-              due_date: '2024-02-15T10:00:00Z',
-              original_amount: 45000,
-              pending_amount: 31125,
-              status: 'PARTIAL',
-            },
-            {
-              id: 'INV-2024-012',
-              sale_date: '2024-02-10T10:00:00Z',
-              due_date: '2024-03-10T10:00:00Z',
-              original_amount: 68475,
-              pending_amount: 68475,
-              status: 'PENDING',
-            },
-          ],
-        })
-      }
+      if (USE_MOCK) return _mockRes(clientProfileData.client)
 
       const endpoint = `${API_PREFIX}/client/${clientId}`
       const result = await _fetchWithRetry(async () => apiService.get(endpoint))
@@ -499,17 +399,14 @@ export const receivablesService = {
       if (USE_MOCK) {
         return _mockRes({
           client_id: clientId,
-          client_name: 'Acme Corp Logistics',
-          risk_score: 72,
-          risk_level: 'MEDIUM',
+          client_name: clientProfileData.client.name,
+          risk_score: clientProfileData.risk.score,
+          risk_level: clientProfileData.risk.level,
           payment_behavior: 'REGULAR',
-          total_pending: 124500,
-          total_overdue: 25000,
-          avg_days_to_pay: 45,
-          recommendations: [
-            'Monitorear de cerca',
-            'Solicitar pago parcial antes de liberar el próximo envío',
-          ],
+          total_pending: summaryData.total_pending,
+          total_overdue: summaryData.total_overdue,
+          avg_days_to_pay: summaryData.average_days_to_collect,
+          recommendations: [clientProfileData.risk.recommendation],
         })
       }
 
@@ -538,38 +435,16 @@ export const receivablesService = {
     const startTime = Date.now()
     try {
       if (USE_MOCK) {
-        const mockReminders = [
-          {
-            receivable_id: 'sale_001',
-            client_id: 'client_123',
-            client_name: 'Juan Pérez',
-            client_phone: '0981234567',
-            pending_amount: 300000,
-            days_overdue: 15,
-            due_date: '2025-12-15T10:00:00Z',
-            priority: 'MEDIUM',
-          },
-          {
-            receivable_id: 'sale_045',
-            client_id: 'client_456',
-            client_name: 'María García',
-            client_phone: '0991234567',
-            pending_amount: 850000,
-            days_overdue: 75,
-            due_date: '2025-10-20T10:00:00Z',
-            priority: 'HIGH',
-          },
-          {
-            receivable_id: 'sale_089',
-            client_id: 'client_789',
-            client_name: 'Carlos López',
-            client_phone: '0971234567',
-            pending_amount: 125000,
-            days_overdue: 8,
-            due_date: '2026-01-05T10:00:00Z',
-            priority: 'LOW',
-          },
-        ]
+        const mockReminders = overdueData.items.map(item => ({
+          receivable_id: item.id,
+          client_id: 'client_001',
+          client_name: item.client_name,
+          client_phone: '+595 981 123 456',
+          pending_amount: item.pending_amount,
+          days_overdue: item.days_overdue,
+          due_date: '2023-12-15T10:00:00Z',
+          priority: item.status === 'CRITICAL' ? 'HIGH' : 'MEDIUM',
+        }))
 
         // Filter by priority if provided
         const filtered = priority
@@ -607,18 +482,20 @@ export const receivablesService = {
     const startTime = Date.now()
     try {
       if (USE_MOCK) {
-        return _mockRes([
-          {
-            receivable_id: 'sale_045',
-            client_id: 'client_456',
-            client_name: 'María García',
-            client_phone: '0991234567',
-            pending_amount: 850000,
-            days_overdue: 75,
-            due_date: '2025-10-20T10:00:00Z',
-            priority: 'HIGH',
-          },
-        ])
+        return _mockRes(
+          overdueData.items
+            .filter(i => i.status === 'CRITICAL')
+            .map(item => ({
+              receivable_id: item.id,
+              client_id: 'client_001',
+              client_name: item.client_name,
+              client_phone: '+595 981 123 456',
+              pending_amount: item.pending_amount,
+              days_overdue: item.days_overdue,
+              due_date: '2023-12-15T10:00:00Z',
+              priority: 'HIGH',
+            }))
+        )
       }
 
       const endpoint = `${API_PREFIX}/collection/high-priority`
@@ -648,25 +525,18 @@ export const receivablesService = {
       if (USE_MOCK) {
         return _mockRes({
           period: `${startDate} - ${endDate}`,
-          total_billed: 18500000,
-          total_collected: 14200000,
-          collection_rate: 76.8,
-          average_dso: 32.5,
+          total_billed: summaryData.total_pending,
+          total_collected: summaryData.total_pending * 0.7,
+          collection_rate: summaryData.collection_rate,
+          average_dso: summaryData.average_days_to_collect,
           overdue_percentage: 28.7,
-          top_debtors: [
-            {
-              client_id: 'client_123',
-              client_name: 'Empresa ABC',
-              total_pending: 1850000,
-              payment_behavior: 'REGULAR',
-            },
-          ],
+          top_debtors: debtorsData.slice(0, 3),
           collection_trend: [
             {
               date: startDate,
-              billed: 4500000,
-              collected: 3200000,
-              balance: 1300000,
+              billed: 45000000,
+              collected: 32000000,
+              balance: 13000000,
             },
           ],
         })

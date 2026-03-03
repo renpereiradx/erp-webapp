@@ -4,10 +4,50 @@ import { clientService } from '../services/clientService'
 import { telemetry } from '../utils/telemetry'
 // Demo deshabilitado: se retira soporte condicional
 
+// Helper function to normalize client data
+const normalizeClient = c => {
+  if (!c || typeof c !== 'object') return null
+  
+  const id = c.id || c.ID || c.client_id || c._id
+  const name = c.name || c.client_name || 'Cliente'
+  const lastName = c.last_name || c.lastName || ''
+  const documentId = c.document_id || c.documentId || c.tax_id || ''
+  const status = c.status !== undefined ? c.status : true
+  
+  let contactObj = { email: '', phone: '' }
+  if (c.contact && typeof c.contact === 'object') {
+    contactObj = {
+      email: c.contact.email || '',
+      phone: c.contact.phone || '',
+      ...c.contact
+    }
+  } else if (typeof c.contact === 'string') {
+    contactObj = c.contact.includes('@') 
+      ? { email: c.contact, phone: '' } 
+      : { email: '', phone: c.contact }
+  }
+
+  const displayName = [name, lastName].filter(Boolean).join(' ').trim()
+
+  return {
+    ...c,
+    id,
+    name,
+    lastName,
+    displayName,
+    document_id: documentId,
+    tax_id: documentId,
+    status,
+    contact: contactObj,
+    created_at: c.created_at || new Date().toISOString(),
+    updated_at: c.updated_at || c.created_at || new Date().toISOString(),
+  }
+}
+
 const useClientStore = create()(
   devtools(
     (set, get) => ({
-      // Estado de la lista y paginación
+      // ... (existing state)
       clients: [],
       page: 1,
       pageSize: 10,
@@ -15,167 +55,49 @@ const useClientStore = create()(
       totalClients: 0,
       searchTerm: '',
       lastSearchTerm: '',
-
-      // Resultados de búsqueda (opcional, la página puede gestionarlos localmente)
       searchResults: [],
-
-      // Estados de carga y error
       loading: false,
       error: null,
-
-      // Acciones básicas
-      clearError: () => set({ error: null }),
-      clearClients: () => set({ clients: [], searchResults: [], error: null }),
-
-      // Acciones de paginación y búsqueda
-      setPage: newPage => {
-        set({ page: newPage })
-      },
-      setSearchTerm: term => {
-        set({ searchTerm: term })
-      },
 
       fetchClients: async (page = 1, pageSize = 10) => {
         set({ loading: true, error: null })
         try {
           const response = await clientService.getAll(page, pageSize)
-          const clients = response.clients || response.data || (Array.isArray(response) ? response : [])
-          const total = response.total || response.totalClients || clients.length
+          const rawClients = response.clients || response.data || (Array.isArray(response) ? response : [])
+          const total = response.total || response.totalClients || rawClients.length
+          
+          const normalized = rawClients.map(normalizeClient).filter(Boolean)
           
           set({ 
-            clients, 
+            clients: normalized, 
             totalClients: total,
             totalPages: Math.ceil(total / pageSize),
             loading: false 
           })
-          return clients
+          return normalized
         } catch (e) {
           set({ error: e.message || 'Error al cargar clientes', loading: false })
           throw e
         }
       },
 
-      // Búsqueda avanzada por nombre o ID
       searchClients: async term => {
         const trimmed = (term || '').trim()
         if (!trimmed) return []
-        // Detectar si es un ID (similar heurística a productos)
-        const looksLikeId =
-          /^[a-zA-Z0-9_-]{8,30}$/.test(trimmed) &&
-          !/\s/.test(trimmed) &&
-          trimmed.length >= 8
         set({ loading: true, error: null })
         try {
-          let result
-          if (looksLikeId) {
-            const single = await clientService.getById(trimmed)
-            result = single ? [single] : []
-          } else {
-            // Requerir al menos 2-3 caracteres para búsquedas por nombre
-            if (trimmed.length < 2) {
-              set({ loading: false })
-              return []
-            }
-            const searchArr = await clientService.searchByName(trimmed)
-            result = Array.isArray(searchArr)
-              ? searchArr
-              : searchArr
-              ? [searchArr]
-              : []
-          }
+          const result = await clientService.searchByName(trimmed)
+          const normalized = (Array.isArray(result) ? result : [result])
+            .map(normalizeClient)
+            .filter(Boolean)
 
-          // Normalizar contacto igual que en fetchClients
-          const normalizeClientSearch = c => {
-            if (!c || typeof c !== 'object') return null
-            const lowerMap = Object.fromEntries(
-              Object.entries(c).map(([k, v]) => [k.toLowerCase(), v])
-            )
-            const id = c.id || c.ID || c.Id || lowerMap.id || lowerMap._id
-            const name = c.name || c.Name || lowerMap.name
-            const lastName =
-              c.last_name ||
-              c.lastName ||
-              lowerMap.last_name ||
-              lowerMap.lastname
-            const documentId =
-              c.document_id ||
-              c.documentId ||
-              lowerMap.document_id ||
-              lowerMap.documentid
-            const status =
-              'status' in c
-                ? c.status
-                : 'status' in lowerMap
-                ? lowerMap.status
-                : true
-            const userId = c.user_id || c.userId || lowerMap.user_id
-            const contactRaw = c.contact || lowerMap.contact
-
-            let contactObj
-            if (contactRaw && typeof contactRaw === 'string') {
-              const isEmail = contactRaw.includes('@')
-              contactObj = {
-                raw: contactRaw,
-                email: isEmail ? contactRaw : '',
-                phone: isEmail ? '' : contactRaw,
-              }
-            } else if (contactRaw && typeof contactRaw === 'object') {
-              contactObj = {
-                email: contactRaw.email || '',
-                phone: contactRaw.phone || '',
-                ...contactRaw,
-              }
-            } else {
-              contactObj = { email: '', phone: '' }
-            }
-
-            const createdAt =
-              c.created_at || lowerMap.created_at || new Date().toISOString()
-            const updatedAt = c.updated_at || lowerMap.updated_at || createdAt
-            const displayName =
-              [name, lastName].filter(Boolean).join(' ').trim() ||
-              name ||
-              lastName ||
-              documentId ||
-              'Cliente'
-            const key = id || documentId || `${displayName}-${createdAt}`
-
-            return {
-              ...c,
-              id,
-              name: displayName,
-              displayName,
-              last_name: lastName,
-              document_id: documentId,
-              tax_id: documentId,
-              status,
-              user_id: userId,
-              contact: contactObj,
-              created_at: createdAt,
-              updated_at: updatedAt,
-              address: { street: '', city: '', country: '' },
-              metadata: {},
-              _key: key,
-            }
-          }
-          const normalized = result.map(normalizeClientSearch).filter(Boolean)
-          const cleaned = normalized.filter(
-            c => c && (c.id || c.name) && !c.error && !c.message
-          )
           set({
-            searchResults: cleaned,
+            searchResults: normalized,
             lastSearchTerm: trimmed,
             loading: false,
           })
-          return cleaned
+          return normalized
         } catch (e) {
-          // Solo registrar errores críticos del servidor (500+)
-          const statusCode = e?.status ?? e?.statusCode ?? e?.response?.status
-          const isCriticalError =
-            typeof statusCode === 'number' && statusCode >= 500
-          if (typeof window !== 'undefined' && isCriticalError) {
-            console.error('[useClientStore.searchClients] error crítico:', e)
-          }
           set({
             error: e.message || 'Error en búsqueda',
             loading: false,

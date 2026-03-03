@@ -1,78 +1,79 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardAction } from '@/components/ui/card';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useI18n } from '@/lib/i18n';
+import { Search, Filter, MoreVertical, ArrowForward } from 'lucide-react';
 
 /**
- * Tabla detallada de antigüedad por cliente.
+ * Tabla de deudores principales.
+ * Estilo 100% fiel al diseño de Stitch.
  */
 const AgingByClientTable = ({ clientsData }) => {
-  const { t } = useI18n();
+  const debtors = [
+    { name: 'Acme Corp', id: '#9201', total: 124500.00, over90: 12000.00, risk: 'Medio', riskColor: 'bg-orange-100 text-orange-700', avatar: 'AC', avatarBg: 'bg-blue-100 text-blue-700' },
+    { name: 'Globex Inc.', id: '#8821', total: 89200.00, over90: 0.00, risk: 'Bajo', riskColor: 'bg-green-100 text-green-700', avatar: 'GI', avatarBg: 'bg-purple-100 text-purple-700' },
+    { name: 'Soylent Ind.', id: '#7732', total: 215000.00, over90: 45000.00, risk: 'Alto', riskColor: 'bg-red-100 text-red-700', avatar: 'SI', avatarBg: 'bg-red-100 text-red-700' },
+    { name: 'Umbrella Corp', id: '#1002', total: 54320.00, over90: 0.00, risk: 'Bajo', riskColor: 'bg-green-100 text-green-700', avatar: 'UM', avatarBg: 'bg-teal-100 text-teal-700' },
+    { name: 'Massive Ind.', id: '#5512', total: 32100.00, over90: 5400.00, risk: 'Medio', riskColor: 'bg-orange-100 text-orange-700', avatar: 'MI', avatarBg: 'bg-indigo-100 text-indigo-700' },
+  ];
 
   return (
-    <div className="bg-surface rounded-xl border border-border-subtle overflow-hidden shadow-fluent-2 flex flex-col h-fit">
-      <div className="px-6 py-4 border-b border-border-subtle bg-slate-50/50 flex items-center justify-between">
-        <h3 className="text-sm font-black text-text-main uppercase tracking-tight">{t('receivables.aging_report.top_debtors')}</h3>
-        <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary hover:text-primary">
-          <span className="material-symbols-outlined text-[18px]">filter_list</span>
-        </Button>
+    <div className="flex-1 bg-white dark:bg-[#1a2632] rounded-lg border border-[#e5e7eb] dark:border-[#2e3640] shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.06)] flex flex-col overflow-hidden min-h-[400px]">
+      <div className="p-5 border-b border-[#f0f2f4] dark:border-[#2e3640] flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <h3 className="text-[#111418] dark:text-white text-lg font-bold">Principales Deudores</h3>
+          <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">Riesgo Alto</span>
+        </div>
+        <div className="flex gap-2">
+          <button className="p-1 hover:bg-gray-100 dark:hover:bg-[#2e3640] rounded text-[#617589]">
+            <span className="material-symbols-outlined text-[20px]">filter_list</span>
+          </button>
+          <button className="p-1 hover:bg-gray-100 dark:hover:bg-[#2e3640] rounded text-[#617589]">
+            <span className="material-symbols-outlined text-[20px]">more_vert</span>
+          </button>
+        </div>
       </div>
       <div className="overflow-x-auto">
-        <Table>
-          <TableHeader className="bg-slate-50/30">
-            <TableRow className="hover:bg-transparent border-border-subtle">
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">{t('receivables.aging_report.table.client')}</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-right px-6">{t('receivables.aging_report.table.total')}</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-error text-right px-6">{t('receivables.aging.90')}</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary text-center">{t('receivables.aging_report.table.risk')}</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary">{t('receivables.aging_report.table.last_payment')}</TableHead>
-              <TableHead className="w-12"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {clientsData.map((client, idx) => {
-              // Calculamos riesgo ficticio basado en over_90_days
-              const hasHighRisk = client.over_90_days > 0;
-              
-              return (
-                <TableRow key={idx} className="group hover:bg-slate-50 transition-colors border-border-subtle">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-lg bg-blue-50 flex items-center justify-center text-[10px] font-black text-primary">
-                        {client.client_name?.charAt(0)}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-bold text-text-main truncate group-hover:text-primary transition-colors uppercase tracking-tight">{client.client_name}</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">ID: {client.client_id}</span>
-                      </div>
+        <table className="w-full text-left text-sm whitespace-nowrap">
+          <thead className="bg-[#f8f9fa] dark:bg-[#25303d] text-[#617589] dark:text-gray-400 font-medium">
+            <tr>
+              <th className="px-5 py-3 font-medium">Nombre del Cliente</th>
+              <th className="px-5 py-3 font-medium text-right">Pendiente Total</th>
+              <th className="px-5 py-3 font-medium text-right text-red-600">&gt; 90 Días</th>
+              <th className="px-5 py-3 font-medium text-center">Score de Riesgo</th>
+              <th className="px-5 py-3 font-medium">Último Pago</th>
+              <th className="px-5 py-3 font-medium">Acción</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f0f2f4] dark:divide-[#2e3640]">
+            {debtors.map((debtor, idx) => (
+              <tr key={idx} className="hover:bg-[#f8f9fa] dark:hover:bg-[#25303d] transition-colors group text-[#111418] dark:text-white">
+                <td className="px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${debtor.avatarBg}`}>
+                      {debtor.avatar}
                     </div>
-                  </TableCell>
-                  <TableCell className="text-right px-6 text-sm font-black text-text-main">
-                    {new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG' }).format(client.total)}
-                  </TableCell>
-                  <TableCell className="text-right px-6 text-sm font-black text-error">
-                    {new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG' }).format(client.over_90_days)}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest ${hasHighRisk ? 'bg-error text-white' : 'bg-success text-white'}`}>
-                      {hasHighRisk ? 'Alto' : 'Bajo'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs font-bold text-text-secondary opacity-60 uppercase tracking-widest">
-                    Oct 12, 2023 
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="size-8 rounded-full text-text-secondary opacity-0 group-hover:opacity-100 transition-all hover:bg-slate-200">
-                      <span className="material-symbols-outlined text-[18px]">visibility</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                    <div className="flex flex-col">
+                      <span className="font-semibold">{debtor.name}</span>
+                      <span className="text-xs text-[#617589]">ID: {debtor.id}</span>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-5 py-4 text-right font-mono font-medium">${debtor.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td className="px-5 py-4 text-right font-mono text-red-600 font-bold">${debtor.over90.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td className="px-5 py-4 text-center">
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${debtor.riskColor}`}>{debtor.risk}</span>
+                </td>
+                <td className="px-5 py-4 text-[#617589] dark:text-gray-400">Oct 12, 2023</td>
+                <td className="px-5 py-4">
+                  <button className="text-[#137fec] hover:text-[#137fec]/80 font-medium text-xs uppercase tracking-wider">Ver</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="p-4 border-t border-[#f0f2f4] dark:border-[#2e3640] flex justify-center">
+        <button className="text-sm font-medium text-[#617589] hover:text-[#137fec] flex items-center gap-1 transition-colors">
+          Ver todos los clientes <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+        </button>
       </div>
     </div>
   );
