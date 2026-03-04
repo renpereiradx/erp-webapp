@@ -10,6 +10,8 @@ import { currencies } from './currencies.js'
 import { exchangeRates } from './exchangeRates.js'
 import { dashboard } from './dashboard.js'
 import { receivables } from './receivables.js'
+import { reservations } from './reservations.js'
+import { purchasePaymentsMvp } from './purchasePaymentsMvp.js'
 import { es } from '../es/index.js'
 
 /**
@@ -32,12 +34,12 @@ export const en = {
   ...exchangeRates,
   ...dashboard,
   ...receivables,
-  // TODO: Add English translations for new modules:
-  // - clients
+  ...reservations,
+  ...purchasePaymentsMvp,
+  // TODO: Add English translations for new modules:  // - clients
   // - suppliers
   // - sales
   // - inventory
-  // - reservations
   // - booking
   // - priceAdjustments
   // - other (login, dashboard, settings)

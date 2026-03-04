@@ -1306,18 +1306,26 @@ const useProductStore = create()(
         set({ loading: true, error: null })
 
         try {
-          const result = await get()._withRetry(
-            async () => {
-              return await apiClient.get('/products/enriched/service-courts')
-            },
-            { telemetryKey: 'products.fetch_service_courts' }
-          )
-
+          const { default: API_CONFIG } = await import('@/config/api.config')
+          
           let services = []
-          if (Array.isArray(result)) {
-            services = result
-          } else if (result?.data && Array.isArray(result.data)) {
-            services = result.data
+          
+          if (API_CONFIG.useDemo) {
+            const { DEMO_PRODUCT_DATA } = await import('@/config/demoData')
+            services = DEMO_PRODUCT_DATA.filter(p => p.product_type === 'SERVICE')
+          } else {
+            const result = await get()._withRetry(
+              async () => {
+                return await apiClient.get('/products/enriched/service-courts')
+              },
+              { telemetryKey: 'products.fetch_service_courts' }
+            )
+
+            if (Array.isArray(result)) {
+              services = result
+            } else if (result?.data && Array.isArray(result.data)) {
+              services = result.data
+            }
           }
 
           // Enriquecer servicios con información de precios y datos procesados

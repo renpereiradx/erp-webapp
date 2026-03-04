@@ -6,6 +6,7 @@
 
 import { apiClient } from '@/services/api';
 import { telemetry } from '@/utils/telemetry';
+import { DEMO_SALES_RESPONSE, DEMO_SALES_PAYMENTS, IS_DEMO_MODE } from '@/config/demoSalePayments';
 
 const API_ENDPOINTS = {
   // API v3.0 - Nuevo endpoint unificado de pagos
@@ -169,6 +170,10 @@ export const salePaymentService = {
    * @returns {Promise<SalePaymentWithCashRegisterResponse>}
    */
   async processSalePaymentWithCashRegister(paymentData) {
+    if (IS_DEMO_MODE) {
+      console.log('[DEMO MODE] Registering sale payment:', paymentData);
+      return { success: true, payment_details: paymentData };
+    }
     const startTime = Date.now();
 
     try {
@@ -465,6 +470,10 @@ export const salePaymentService = {
    * @returns {Promise<SalePaymentStatusResponse>}
    */
   async getSalePaymentStatus(saleId) {
+    if (IS_DEMO_MODE) {
+      const sale = DEMO_SALES_PAYMENTS.find(s => String(s.id) === String(saleId)) || DEMO_SALES_PAYMENTS[0];
+      return sale;
+    }
     const startTime = Date.now();
 
     try {
@@ -496,6 +505,9 @@ export const salePaymentService = {
    * @returns {Promise<PaginatedSalesPaymentStatusResponse>}
    */
   async getSalesByDateRangeWithPaymentStatus(filters = {}) {
+    if (IS_DEMO_MODE) {
+      return DEMO_SALES_RESPONSE;
+    }
     const startTime = Date.now();
 
     try {

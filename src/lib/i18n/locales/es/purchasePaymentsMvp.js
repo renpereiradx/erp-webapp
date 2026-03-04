@@ -80,6 +80,7 @@ export const purchasePaymentsMvp = {
   'PurchasePaymentsMvp.Status.Cancelled': 'Cancelado',
 
   // Errores y estados vacíos
+  'purchasePaymentsMvp.error.title': 'Error en la operación',
   'purchasePaymentsMvp.data.error.title': 'Error al cargar pagos',
   'purchasePaymentsMvp.data.error.description':
     'No pudimos obtener las órdenes seleccionadas. Intenta nuevamente.',

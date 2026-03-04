@@ -1,5 +1,6 @@
 import purchaseService from '@/services/purchaseService'
 import { purchasePaymentService } from '@/services/purchasePaymentService'
+import { DEMO_PURCHASE_ORDERS, IS_DEMO_MODE } from '@/config/demoPurchasePayments'
 
 const DEFAULT_PAGE_SIZE = 10
 const DEFAULT_FETCH_LIMIT = 200
@@ -746,6 +747,9 @@ export const fetchPurchasesBySupplierTerm = async (term, options = {}) => {
 }
 
 const fetchOrdersFromApi = async filters => {
+  if (IS_DEMO_MODE) {
+    return DEMO_PURCHASE_ORDERS
+  }
   const { search, dateFrom, dateTo } = filters
   const commonOptions = { showInactiveSuppliers: true }
 
@@ -860,6 +864,14 @@ export const purchasePaymentsMvpService = {
   },
 
   async registerPayment(orderId, payload = {}) {
+    if (IS_DEMO_MODE) {
+      console.log('[DEMO MODE] Registering payment for order:', orderId, payload)
+      return {
+        success: true,
+        order: normalizeOrder(DEMO_PURCHASE_ORDERS[0]),
+        payment: payload,
+      }
+    }
     const purchaseOrderId = Number(orderId)
     if (!Number.isFinite(purchaseOrderId)) {
       throw new Error('Invalid purchase order identifier')
@@ -937,6 +949,12 @@ export const purchasePaymentsMvpService = {
   },
 
   async fetchOrder(orderId) {
+    if (IS_DEMO_MODE) {
+      const order = DEMO_PURCHASE_ORDERS.find(o => String(o.id) === String(orderId)) || DEMO_PURCHASE_ORDERS[0]
+      return {
+        order: normalizeOrder(order),
+      }
+    }
     const purchaseOrderId = Number(orderId)
     if (!Number.isFinite(purchaseOrderId)) {
       throw new Error('Invalid purchase order identifier')

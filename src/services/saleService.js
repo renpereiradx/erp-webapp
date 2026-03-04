@@ -5,6 +5,7 @@
  */
 
 import { apiClient } from './api';
+import { DEMO_SALES_RESPONSE, IS_DEMO_MODE } from '@/config/demoSalePayments';
 
 export const saleService = {
   // ============ GESTIÓN DE SESIONES ============
@@ -99,6 +100,9 @@ export const saleService = {
   },
 
   async getSalesByDateRange(params = {}) {
+    if (IS_DEMO_MODE) {
+      return DEMO_SALES_RESPONSE;
+    }
     try {
       // Normalizar parámetros según SALE_GET_BY_RANGE_API.md
       const queryParams = {
@@ -134,6 +138,9 @@ export const saleService = {
   },
 
   async getSalesByClientId(clientId, params = {}) {
+    if (IS_DEMO_MODE) {
+      return DEMO_SALES_RESPONSE;
+    }
     try {
       const response = await apiClient.makeRequest(`/sale/client_id/${clientId}`, {
         method: 'GET',
@@ -154,6 +161,9 @@ export const saleService = {
   },
 
   async getSalesByClientName(name, params = {}) {
+    if (IS_DEMO_MODE) {
+      return DEMO_SALES_RESPONSE;
+    }
     try {
       const response = await apiClient.makeRequest(`/sale/client_name/${encodeURIComponent(name)}`, {
         method: 'GET',

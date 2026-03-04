@@ -35,6 +35,7 @@ const usePurchasePaymentsMvpStore = create(
       appliedFilters: buildFilters(),
       meta: buildMeta(),
       statuses: [],
+      currentOrder: null,
       loading: false,
       error: null,
       processingPayment: false,
@@ -118,6 +119,25 @@ const usePurchasePaymentsMvpStore = create(
       },
 
       changePage: async nextPage => get().fetchOrders({ page: nextPage }),
+
+      fetchOrder: async orderId => {
+        set({ loading: true, error: null })
+        try {
+          const result = await purchasePaymentsMvpService.fetchOrder(orderId)
+          set({
+            currentOrder: result?.order || null,
+            loading: false,
+            error: null,
+          })
+          return result
+        } catch (error) {
+          set({
+            loading: false,
+            error: error?.message || 'No se pudo cargar el detalle de la orden',
+          })
+          throw error
+        }
+      },
 
       refresh: async () => {
         const { meta } = get()

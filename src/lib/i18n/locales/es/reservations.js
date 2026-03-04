@@ -5,10 +5,18 @@
 
 export const reservations = {
   // Títulos y navegación
-  'reservations.title': 'Reservas',
-  'reservations.subtitle': 'Gestiona reservas y horarios de servicios',
+  'reservations.title': 'Gestión de Reservas y Horarios',
+  'reservations.subtitle': 'Seleccione una acción para administrar su establecimiento y servicios',
   'reservations.new_reservation': 'Nueva Reserva',
   'reservations.calendar': 'Calendario de Reservas',
+
+  // Tarjetas de navegación (ReservationsAndSchedules page)
+  'reservations.cards.reservations.title': 'Reservas',
+  'reservations.cards.reservations.description': 'Gestione las citas de sus clientes en tiempo real. Vea disponibilidad, administre servicios y coordine cancelaciones de manera eficiente.',
+  'reservations.cards.reservations.button': 'Gestionar Reservas',
+  'reservations.cards.schedules.title': 'Horarios',
+  'reservations.cards.schedules.description': 'Configure turnos de trabajo, horarios de apertura y cierres especiales. Administre excepciones para festivos y ajuste la capacidad de servicio.',
+  'reservations.cards.schedules.button': 'Gestionar Horarios',
 
   // Formulario
   'reservations.service': 'Servicio',

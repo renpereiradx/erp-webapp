@@ -6,6 +6,7 @@
 
 import { apiService as apiClient } from '@/services/api'
 import { telemetryService } from '@/services/telemetryService'
+import { DEMO_RESERVATIONS, IS_DEMO_MODE } from '@/config/demoReservations'
 // Removed MockDataService import - using real API only
 import { telemetry } from '@/utils/telemetry'
 
@@ -30,6 +31,16 @@ const withRetry = async (fn, attempts = RETRY_ATTEMPTS) => {
 export const reservationService = {
   // Método unificado para todas las operaciones de reserva
   async manageReservation(action, data) {
+    if (IS_DEMO_MODE) {
+      console.log(`[DEMO MODE] Intercepted reservation action: ${action}`, data);
+      return { 
+        data: { 
+          success: true, 
+          message: `Acción ${action} simulada exitosamente en modo demo`,
+          id: data.id || Math.floor(Math.random() * 1000)
+        } 
+      };
+    }
     const startTime = Date.now()
 
     try {
@@ -111,6 +122,10 @@ export const reservationService = {
 
   // Get service courts for reservations
   async getServiceCourts() {
+    if (IS_DEMO_MODE) {
+      const { DEMO_PRODUCT_DATA } = await import('@/config/demoData');
+      return DEMO_PRODUCT_DATA.filter(p => p.product_type === 'SERVICE');
+    }
     const startTime = Date.now()
 
     try {
@@ -247,6 +262,9 @@ export const reservationService = {
   },
 
   async getReservationReport(params = {}) {
+    if (IS_DEMO_MODE) {
+      return DEMO_RESERVATIONS;
+    }
     const startTime = Date.now()
 
     try {
@@ -284,6 +302,9 @@ export const reservationService = {
    * @returns {Promise<Array>} Array de ReserveRiched con información completa
    */
   async getReservationsByDateRange(startDate, endDate) {
+    if (IS_DEMO_MODE) {
+      return DEMO_RESERVATIONS;
+    }
     const startTime = Date.now()
 
     try {

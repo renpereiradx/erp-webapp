@@ -5,10 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import DataState from '@/components/ui/DataState';
+import { Search, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import usePriceAdjustmentNewStore from '@/store/usePriceAdjustmentNewStore';
 import { useNavigate } from 'react-router-dom';
@@ -66,7 +63,7 @@ const PriceAdjustmentNew = () => {
 
       return () => clearTimeout(timeoutId);
     }
-  }, [localSearchTerm, searchProducts, pagination.page_size]);
+  }, [localSearchTerm, searchProducts, pagination.page_size, setSearchTerm]);
 
   // Manejar búsqueda manual (al presionar Enter)
   const handleSearch = (e) => {
@@ -103,41 +100,38 @@ const PriceAdjustmentNew = () => {
   };
 
   return (
-    <div className="price-adjustment-new">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       {/* Barra de búsqueda */}
-      <div className="price-adjustment-new__search">
-        <form onSubmit={handleSearch} className="search-form">
-          <div className="search-form__input-wrapper">
-            <Search className="search-form__icon" />
-            <Input
-              type="search"
-              placeholder={t('priceAdjustmentNew.search.placeholder', 'Buscar por nombre o ID de producto...')}
-              value={localSearchTerm}
-              onChange={handleInputChange}
-              className="search-form__input"
-            />
-          </div>
+      <div className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle">
+        <form onSubmit={handleSearch} className="relative max-w-2xl">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+          <input
+            type="search"
+            placeholder={t('priceAdjustmentNew.search.placeholder', 'Buscar por nombre o ID de producto...')}
+            value={localSearchTerm}
+            onChange={handleInputChange}
+            className="w-full pl-12 pr-4 h-12 border border-border-subtle rounded-xl text-sm bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all shadow-sm"
+          />
+          {loading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-primary" size={20} />}
         </form>
         {/* Mensaje de ayuda para búsqueda */}
         {localSearchTerm.length > 0 && localSearchTerm.length < 4 && (
-          <div className="search-form__hint">
-            <p className="search-form__hint-text">
-              💡 {t('priceAdjustmentNew.search.hint', 'Escribe al menos 4 caracteres para buscar')} ({localSearchTerm.length}/4)
-            </p>
+          <div className="mt-2 text-[10px] font-bold text-amber-600 uppercase tracking-widest flex items-center gap-1">
+            <span className='text-sm'>💡</span> {t('priceAdjustmentNew.search.hint', 'Escribe al menos 4 caracteres para buscar')} ({localSearchTerm.length}/4)
           </div>
         )}
       </div>
 
       {/* Mensaje de error si existe */}
       {error && (
-        <div className="error-message">
-          <p className="error-message__text">{error}</p>
+        <div className="p-4 bg-error/10 border-l-4 border-error rounded-r-lg flex items-center justify-between">
+          <p className="text-sm text-error font-bold">{error}</p>
           <button
             onClick={() => {
               clearError();
               searchProducts(searchTerm, pagination.page, pagination.page_size);
             }}
-            className="error-message__retry"
+            className="px-4 py-1.5 bg-error text-white text-[10px] font-black uppercase rounded hover:bg-red-700 transition-all"
           >
             {t('priceAdjustmentNew.action.retry', 'Reintentar')}
           </button>
@@ -145,110 +139,99 @@ const PriceAdjustmentNew = () => {
       )}
 
       {/* Tabla de productos */}
-      <div className="price-adjustment-new__table-container">
-        {loading && products.length === 0 ? (
-          <div className="loading-state">
-            <div className="loading-state__spinner" />
-            <p className="loading-state__text">{t('priceAdjustmentNew.loading', 'Cargando productos...')}</p>
-          </div>
-        ) : (
-          <div className="product-table-wrapper">
-            <table className="product-table">
-              <thead className="product-table__head">
+      <div className="bg-white rounded-xl shadow-fluent-shadow border border-border-subtle overflow-hidden">
+        <div className='overflow-x-auto'>
+          <table className="w-full text-left">
+            <thead className="bg-gray-50/50 border-b border-border-subtle text-[13px] font-semibold text-gray-700">
+              <tr>
+                <th className="py-4 px-6">
+                  {t('priceAdjustmentNew.table.name', 'Nombre del Producto')}
+                </th>
+                <th className="py-4 px-4">
+                  {t('priceAdjustmentNew.table.id', 'ID del Producto')}
+                </th>
+                <th className="py-4 px-4">
+                  {t('priceAdjustmentNew.table.price', 'Precio Actual')}
+                </th>
+                <th className="py-4 px-6 text-right"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50 text-sm text-text-main">
+              {loading && products.length === 0 ? (
                 <tr>
-                  <th className="product-table__th">
-                    {t('priceAdjustmentNew.table.name', 'Nombre del Producto')}
-                  </th>
-                  <th className="product-table__th">
-                    {t('priceAdjustmentNew.table.id', 'ID del Producto')}
-                  </th>
-                  <th className="product-table__th">
-                    {t('priceAdjustmentNew.table.price', 'Precio Actual')}
-                  </th>
-                  <th className="product-table__th">
-                    {t('priceAdjustmentNew.table.actions', 'Acción')}
-                  </th>
+                  <td colSpan="4" className="py-20 text-center italic text-slate-400">
+                    <div className='flex flex-col items-center gap-3'>
+                      <Loader2 size={32} className='animate-spin text-primary' />
+                      {t('priceAdjustmentNew.loading', 'Cargando productos...')}
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="product-table__body">
-                {products.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="product-table__empty">
-                      <div className="empty-state">
-                        <Search className="empty-state__icon" />
-                        <p className="empty-state__title">
-                          {t('priceAdjustmentNew.empty.title', 'No se encontraron productos')}
-                        </p>
-                        <p className="empty-state__message">
-                          {t('priceAdjustmentNew.empty.message', 'Intente con otra búsqueda')}
-                        </p>
-                      </div>
+              ) : products.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="py-20 text-center text-slate-400 opacity-50 italic">
+                    <div className='flex flex-col items-center gap-2'>
+                      <Search size={48} />
+                      {t('priceAdjustmentNew.empty.title', 'No se encontraron productos')}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                products.map((product) => (
+                  <tr key={product.product_id || product.id} className="hover:bg-gray-50 transition-colors group">
+                    <td className="py-4 px-6 font-bold text-text-main">
+                      {product.product_name || product.name || t('field.no_name', 'Sin nombre')}
+                    </td>
+                    <td className="py-4 px-4 font-mono text-xs text-primary font-bold">
+                      {product.product_id || product.id}
+                    </td>
+                    <td className="py-4 px-4 font-black">
+                      PYG {(product.unit_prices?.[0]?.price_per_unit || product.current_price || product.price || 0).toLocaleString('es-PY')}
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <button
+                        onClick={() => handleSelectProduct(product)}
+                        className="px-4 py-2 bg-primary text-white text-[10px] font-black uppercase rounded shadow-sm hover:bg-primary-hover active:scale-[0.98] transition-all"
+                      >
+                        {t('priceAdjustmentNew.action.select', 'Seleccionar')}
+                      </button>
                     </td>
                   </tr>
-                ) : (
-                  products.map((product) => (
-                    <tr key={product.product_id || product.id} className="product-table__row">
-                      <td className="product-table__td product-table__td--name">
-                        {product.product_name || product.name || t('field.no_name', 'Sin nombre')}
-                      </td>
-                      <td className="product-table__td product-table__td--id">
-                        {product.product_id || product.id}
-                      </td>
-                      <td className="product-table__td product-table__td--price">
-                        PYG {(product.unit_prices?.[0]?.price_per_unit || product.current_price || product.price || 0).toLocaleString('es-PY')}
-                      </td>
-                      <td className="product-table__td product-table__td--actions">
-                        <Button
-                          onClick={() => handleSelectProduct(product)}
-                          className="btn btn--primary btn--sm"
-                        >
-                          {t('priceAdjustmentNew.action.select', 'Seleccionar')}
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Paginación */}
+        {products.length > 0 && (
+          <div className='px-6 py-4 border-t border-border-subtle flex flex-col md:flex-row justify-between items-center gap-4 bg-[#fafafa]'>
+            <div className='text-[13px] text-gray-500 font-medium'>
+              {t('priceAdjustmentNew.pagination.showing', 'Mostrando')} <span className="font-bold text-text-main">{((pagination.page - 1) * pagination.page_size) + 1}</span> a <span className="font-bold text-text-main">{Math.min(pagination.page * pagination.page_size, pagination.total)}</span> de <span className="font-bold text-text-main">{pagination.total}</span> resultados
+            </div>
+            <div className='flex items-center gap-3'>
+              <button
+                onClick={handlePreviousPage}
+                disabled={pagination.page <= 1}
+                className="flex items-center gap-1 px-3 py-1.5 border border-border-subtle rounded-lg text-xs font-bold uppercase text-text-secondary hover:bg-white hover:text-text-main disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+              >
+                <ChevronLeft size={16} />
+                {t('priceAdjustmentNew.pagination.previous', 'Anterior')}
+              </button>
+              <div className='text-sm font-bold text-primary'>
+                {pagination.page} / {pagination.total_pages}
+              </div>
+              <button
+                onClick={handleNextPage}
+                disabled={pagination.page >= pagination.total_pages}
+                className="flex items-center gap-1 px-3 py-1.5 border border-border-subtle rounded-lg text-xs font-bold uppercase text-text-secondary hover:bg-white hover:text-text-main disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+              >
+                {t('priceAdjustmentNew.pagination.next', 'Siguiente')}
+                <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Paginación */}
-      {products.length > 0 && (
-        <nav className="pagination" aria-label="Pagination">
-          <div className="pagination__info">
-            <p className="pagination__text">
-              {t('priceAdjustmentNew.pagination.showing', 'Mostrando')} <span className="pagination__emphasis">{((pagination.page - 1) * pagination.page_size) + 1}</span> {t('priceAdjustmentNew.pagination.to', 'a')} <span className="pagination__emphasis">{Math.min(pagination.page * pagination.page_size, pagination.total)}</span> {t('priceAdjustmentNew.pagination.of', 'de')} <span className="pagination__emphasis">{pagination.total}</span> {t('priceAdjustmentNew.pagination.results', 'resultados')}
-            </p>
-          </div>
-          <div className="pagination__controls">
-            <button
-              onClick={handlePreviousPage}
-              disabled={pagination.page <= 1}
-              className="pagination__btn"
-              aria-label={t('priceAdjustmentNew.pagination.previous', 'Anterior')}
-            >
-              {t('priceAdjustmentNew.pagination.previous', 'Anterior')}
-            </button>
-            <button
-              onClick={handleNextPage}
-              disabled={pagination.page >= pagination.total_pages}
-              className="pagination__btn"
-              aria-label={t('priceAdjustmentNew.pagination.next', 'Siguiente')}
-            >
-              {t('priceAdjustmentNew.pagination.next', 'Siguiente')}
-            </button>
-          </div>
-        </nav>
-      )}
-
-      {/* Indicador de carga durante búsqueda */}
-      {loading && products.length > 0 && (
-        <div className="loading-overlay">
-          <div className="loading-overlay__spinner" />
-        </div>
-      )}
     </div>
   );
 };

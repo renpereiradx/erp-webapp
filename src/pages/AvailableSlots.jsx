@@ -1,458 +1,224 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CalendarDays, Search } from 'lucide-react'
-import { useI18n } from '@/lib/i18n'
-import useAvailableSlotsStore from '@/store/useAvailableSlotsStore'
-import DataState from '@/components/ui/DataState'
+/**
+ * AvailableSlots Page - Refactored to Tailwind (Fluent 2.0)
+ */
+
+import React, { useState, useEffect, useCallback } from 'react'
+import {
+  Search,
+  Calendar as CalendarIcon,
+  Clock,
+  RefreshCw,
+  ChevronDown,
+  ChevronRight,
+  Info,
+  Layers,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import availableSlotsService from '@/services/availableSlotsService'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { useI18n } from '@/lib/i18n'
+import useReservationStore from '@/store/useReservationStore'
+import useProductStore from '@/store/useProductStore'
 
-// Solo horas completas: 1h, 2h, 3h, 4h, 5h, 6h, 7h, 8h (en minutos)
-const DURATION_OPTIONS = [60, 120, 180, 240, 300, 360, 420, 480]
-
-const AvailableSlots = ({ onReserveClick }) => {
-  const { t, lang } = useI18n()
-  const products = useAvailableSlotsStore(state => state.products)
-  const slots = useAvailableSlotsStore(state => state.slots)
-  const loading = useAvailableSlotsStore(state => state.loading)
-  const productsLoading = useAvailableSlotsStore(state => state.productsLoading)
-  const error = useAvailableSlotsStore(state => state.error)
-  const productsError = useAvailableSlotsStore(state => state.productsError)
-  const fetchProducts = useAvailableSlotsStore(state => state.fetchProducts)
-  const searchSlots = useAvailableSlotsStore(state => state.searchSlots)
-  const clearError = useAvailableSlotsStore(state => state.clearError)
-
-  const autoSearchRef = useRef(false)
-  const [allSlots, setAllSlots] = useState([])
-  const [filteredSlots, setFilteredSlots] = useState([])
-
-  const defaultSearchDate = useMemo(() => {
-    return availableSlotsService.getDefaultSearchDate()
-  }, [])
-
-  const minimumSearchDate = useMemo(() => {
-    return availableSlotsService.getMinimumSearchDate()
-  }, [])
-
-  const [filters, setFilters] = useState({
-    productId: '',
-    date: defaultSearchDate,
-    duration: String(DURATION_OPTIONS[0]),
-  })
-
-  const timeFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-MX', {
+const formatTime = isoString => {
+  if (!isoString) return '--:--'
+  try {
+    if (isoString.includes('T')) {
+      const date = new Date(isoString)
+      return date.toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false,
-      }),
-    [lang]
-  )
-
-  const formatSlotRange = useCallback(
-    slot => {
-      if (!slot?.start_time || !slot?.end_time) {
-        return '—'
-      }
-
-      try {
-        // Remover la 'Z' para que JavaScript interprete como hora local
-        const startTimeLocal = slot.start_time.replace('Z', '')
-        const endTimeLocal = slot.end_time.replace('Z', '')
-
-        const startDate = new Date(startTimeLocal)
-        const endDate = new Date(endTimeLocal)
-
-        return `${timeFormatter.format(startDate)} - ${timeFormatter.format(
-          endDate
-        )}`
-      } catch {
-        return `${slot?.start_time ?? ''} - ${slot?.end_time ?? ''}`
-      }
-    },
-    [timeFormatter]
-  )
-
-  useEffect(() => {
-    fetchProducts().catch(() => {
-      // El estado de error se maneja en el store
-    })
-  }, [fetchProducts])
-
-  useEffect(() => {
-    if (products.length > 0 && !filters.productId) {
-      setFilters(prev => ({ ...prev, productId: String(products[0].id) }))
-    }
-  }, [products, filters.productId])
-
-  useEffect(() => {
-    if (
-      autoSearchRef.current ||
-      !filters.productId ||
-      !filters.date ||
-      products.length === 0
-    ) {
-      return
-    }
-
-    autoSearchRef.current = true
-    searchSlots({
-      productId: filters.productId,
-      date: filters.date,
-      duration: Number(filters.duration),
-    })
-  }, [filters, products.length, searchSlots])
-
-  const handleSearch = useCallback(
-    async event => {
-      event?.preventDefault()
-      if (!filters.productId || !filters.date) {
-        return
-      }
-
-      clearError()
-
-      // Buscar con la duración mínima (1 hora) para obtener todos los slots
-      const result = await searchSlots({
-        productId: filters.productId,
-        date: filters.date,
-        duration: 60, // Siempre buscar con 1 hora para obtener todos los slots
+        timeZone: 'UTC',
       })
+    }
+    return isoString.slice(0, 5)
+  } catch (e) {
+    return '--:--'
+  }
+}
 
-      // Guardar todos los slots para filtrado dinámico
-      if (result?.success && result?.data) {
-        setAllSlots(result.data)
-      }
-    },
-    [filters.productId, filters.date, clearError, searchSlots]
-  )
+const AvailableSlots = ({ onReserveClick }) => {
+  const { t } = useI18n()
 
-  const handleFilterChange = useCallback((field, value) => {
-    setFilters(prev => ({ ...prev, [field]: value }))
-  }, [])
+  // Stores
+  const { loading, fetchAvailableSchedules } = useReservationStore()
+  const { products, fetchServiceCourts } = useProductStore()
 
-  // Filtrar slots dinámicamente cuando cambia la duración
+  // Local State
+  const [filters, setFilters] = useState({
+    productId: 'all',
+    date: new Date().toISOString().split('T')[0],
+  })
+  const [availableSlots, setAvailableSlots] = useState([])
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
+
+  // Load initial data
   useEffect(() => {
-    if (allSlots.length === 0) {
-      setFilteredSlots(slots)
+    const init = async () => {
+      await fetchServiceCourts()
+      setIsInitialLoading(false)
+    }
+    init()
+  }, [fetchServiceCourts])
+
+  const loadAvailableSlots = useCallback(async () => {
+    if (filters.productId === 'all') {
+      // In a real app, we might want to fetch for all products
+      // For now, let's clear if all is selected or handle specifically
+      setAvailableSlots([])
       return
     }
 
-    const durationMinutes = Number(filters.duration)
-    const durationHours = durationMinutes / 60
-
-    // Generar TODOS los slots posibles con la duración solicitada
-    // No solo consecutivos, sino cada hora de inicio posible
-    const newSlots = []
-
-    // Crear un Set de horas disponibles para búsqueda rápida
-    const availableHours = new Set()
-    allSlots.forEach(slot => {
-      const startDate = new Date(slot.start_time.replace('Z', ''))
-      availableHours.add(startDate.getTime())
-    })
-
-    // Para cada slot de 1 hora, verificar si hay disponibilidad consecutiva
-    // para la duración completa
-    allSlots.forEach(slot => {
-      const startDate = new Date(slot.start_time.replace('Z', ''))
-      const startTimeMs = startDate.getTime()
-      const oneHourMs = 60 * 60 * 1000
-
-      // Verificar si todas las horas necesarias están disponibles
-      let allHoursAvailable = true
-      const slotsInRange = []
-
-      for (let i = 0; i < durationHours; i++) {
-        const checkTimeMs = startTimeMs + i * oneHourMs
-        const slotInHour = allSlots.find(s => {
-          const sTime = new Date(s.start_time.replace('Z', '')).getTime()
-          return sTime === checkTimeMs
-        })
-
-        if (!slotInHour) {
-          allHoursAvailable = false
-          break
-        }
-
-        slotsInRange.push(slotInHour)
-      }
-
-      if (allHoursAvailable && slotsInRange.length > 0) {
-        const endTimeMs = startTimeMs + durationMinutes * 60 * 1000
-        const slotEnd = new Date(endTimeMs)
-
-        // Formatear como ISO local (sin conversión UTC)
-        const year = slotEnd.getFullYear()
-        const month = String(slotEnd.getMonth() + 1).padStart(2, '0')
-        const day = String(slotEnd.getDate()).padStart(2, '0')
-        const hours = String(slotEnd.getHours()).padStart(2, '0')
-        const minutes = String(slotEnd.getMinutes()).padStart(2, '0')
-        const seconds = String(slotEnd.getSeconds()).padStart(2, '0')
-        const endTimeFormatted = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}Z`
-
-        // El slot combinado solo está disponible si TODOS los slots del rango están disponibles
-        const isRangeAvailable = slotsInRange.every(s => s.is_available !== false)
-
-        newSlots.push({
-          id: null,
-          product_id: slot.product_id,
-          product_name: slot.product_name,
-          start_time: slot.start_time, // Ya tiene formato correcto
-          end_time: endTimeFormatted,
-          duration_minutes: durationMinutes,
-          available_consecutive_hours: durationHours,
-          is_available: isRangeAvailable,
-        })
-      }
-    })
-
-    setFilteredSlots(newSlots)
-  }, [filters.duration, allSlots, slots])
-
-  const renderResults = () => {
-    if (loading) {
-      return (
-        <DataState
-          variant='loading'
-          skeletonVariant='list'
-          skeletonProps={{ count: 4 }}
-          testId='available-slots-loading'
-        />
-      )
+    try {
+      const data = await fetchAvailableSchedules(filters.productId, filters.date)
+      setAvailableSlots(data || [])
+    } catch (error) {
+      console.error('Error loading available slots:', error)
+      setAvailableSlots([])
     }
+  }, [filters, fetchAvailableSchedules])
 
-    if (error) {
-      return (
-        <DataState
-          variant='error'
-          title={t('availableSlots.error.title')}
-          message={error || t('availableSlots.error.generic')}
-          onRetry={handleSearch}
-          testId='available-slots-error'
-        />
-      )
-    }
+  useEffect(() => {
+    loadAvailableSlots()
+  }, [loadAvailableSlots])
 
-    const slotsToShow = filteredSlots.length > 0 ? filteredSlots : slots
-
-    if (!slotsToShow.length) {
-      return (
-        <DataState
-          variant='empty'
-          title={t('availableSlots.empty.title')}
-          description={t('availableSlots.empty.message')}
-          testId='available-slots-empty'
-        />
-      )
-    }
-
-    return (
-      <div className='available-slots__grid' role='list'>
-        {slotsToShow.map((slot, index) => {
-          const isAvailable = slot.is_available !== false
-          const uniqueKey = slot.id || `${slot.start_time}-${slot.end_time}-${index}`
-
-          return (
-            <div
-              key={uniqueKey}
-              className='available-slots__slot-card'
-              role='listitem'
-              style={{
-                position: 'relative',
-                backgroundColor: isAvailable ? '#ffffff' : '#f9fafb',
-                borderColor: isAvailable ? '#e5e7eb' : '#e5e7eb',
-                opacity: isAvailable ? 1 : 1,
-                cursor: isAvailable ? 'default' : 'not-allowed',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {!isAvailable && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '0.75rem',
-                    right: '0.75rem',
-                    padding: '0.25rem 0.625rem',
-                    fontSize: '0.6875rem',
-                    fontWeight: '700',
-                    color: '#dc2626',
-                    backgroundColor: '#fee2e2',
-                    borderRadius: '0.375rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.025em',
-                    border: '1px solid #fecaca'
-                  }}
-                >
-                  Reservado
-                </div>
-              )}
-              <p
-                className='available-slots__slot-time'
-                style={{
-                  color: isAvailable ? '#111827' : '#6b7280',
-                  fontWeight: isAvailable ? '600' : '500'
-                }}
-              >
-                {formatSlotRange(slot)}
-              </p>
-              {isAvailable && (
-                <Button
-                  type='button'
-                  size='sm'
-                  variant='outline'
-                  className='available-slots__reserve-button'
-                  onClick={() => {
-                    if (onReserveClick) {
-                      // Convertir duration de minutos a horas para la API
-                      const durationInHours = slot.duration_minutes ? slot.duration_minutes / 60 : 1
-
-                      // Encontrar el producto seleccionado para obtener su nombre
-                      const selectedProduct = products.find(p => p.id === filters.productId)
-
-                      onReserveClick({
-                        product_id: filters.productId,
-                        product_name: selectedProduct?.name || '',
-                        start_time: slot.start_time,
-                        duration: durationInHours,
-                        date: filters.date
-                      })
-                    }
-                  }}
-                >
-                  {t('availableSlots.action.reserve')}
-                </Button>
-              )}
-            </div>
-          )
-        })}
-      </div>
-    )
-  }
+  // Get current product name
+  const currentProductName = products.find(p => p.id == filters.productId)?.name || 'Seleccione un servicio'
 
   return (
-    <div className='available-slots'>
-      <div className='available-slots__container'>
-        <div className='available-slots__header'>
-          <h1 className='available-slots__title'>
-            {t('availableSlots.title')}
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+      {/* Search and Filters Header */}
+      <section className="available-slots-header-container">
+        <header className="flex flex-col gap-2 border-l-4 border-primary pl-6 py-2 mb-6">
+          <h1 className="text-2xl font-black text-text-primary-light dark:text-text-primary-dark tracking-tighter uppercase leading-none font-display">
+            Disponibilidad de Servicios
           </h1>
-        </div>
+          <p className="text-text-secondary-light dark:text-text-secondary-dark text-xs font-medium uppercase tracking-widest font-display">
+            Consulte y reserve horarios en tiempo real
+          </p>
+        </header>
 
-        {!!productsError && (
-          <Alert variant='destructive'>
-            <AlertTitle>{t('availableSlots.error.products')}</AlertTitle>
-            <AlertDescription>{productsError}</AlertDescription>
-          </Alert>
-        )}
-
-        <form className='available-slots__filters' onSubmit={handleSearch}>
-          <div className='available-slots__filters-grid'>
-            <label className='available-slots__filter-group'>
-              <span className='available-slots__label'>
-                {t('availableSlots.filter.product')}
-              </span>
-              <Select
-                value={filters.productId}
-                onValueChange={value => handleFilterChange('productId', value)}
-                disabled={productsLoading || !products.length}
-              >
-                <SelectTrigger className='available-slots__input-field'>
-                  <SelectValue
-                    placeholder={t('availableSlots.filter.productPlaceholder')}
-                  />
-                </SelectTrigger>
-                <SelectContent className='available-slots__select-content'>
-                  {products.map(product => (
-                    <SelectItem
-                      key={product.id}
-                      value={String(product.id)}
-                      className='available-slots__select-item'
-                    >
-                      {product.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
-
-            <label className='available-slots__filter-group'>
-              <span className='available-slots__label'>
-                {t('availableSlots.filter.date')}
-              </span>
-              <div className='available-slots__input-wrapper'>
-                <Input
-                  type='date'
-                  value={filters.date}
-                  min={minimumSearchDate}
-                  onChange={event =>
-                    handleFilterChange('date', event.target.value)
-                  }
-                  className='available-slots__input-field'
-                />
-                <span className='available-slots__input-icon'>
-                  <CalendarDays className='size-4' aria-hidden='true' />
-                </span>
+        <Card className="rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block ml-1">Servicio / Recurso</label>
+                <div className="relative">
+                  <Layers className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+                  <select
+                    value={filters.productId}
+                    onChange={e => setFilters(prev => ({ ...prev, productId: e.target.value }))}
+                    className="w-full h-11 pl-10 pr-10 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold focus:ring-2 focus:ring-primary outline-none appearance-none cursor-pointer"
+                  >
+                    <option value="all">Seleccionar servicio...</option>
+                    {products.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+                </div>
               </div>
-            </label>
 
-            <label className='available-slots__filter-group'>
-              <span className='available-slots__label'>
-                {t('availableSlots.filter.duration')}
-              </span>
-              <Select
-                value={filters.duration}
-                onValueChange={value => handleFilterChange('duration', value)}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block ml-1">Fecha de Consulta</label>
+                <div className="relative">
+                  <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none" />
+                  <Input
+                    type="date"
+                    value={filters.date}
+                    onChange={e => setFilters(prev => ({ ...prev, date: e.target.value }))}
+                    className="h-11 pl-10 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 font-semibold"
+                  />
+                </div>
+              </div>
+
+              <Button
+                onClick={loadAvailableSlots}
+                disabled={loading || filters.productId === 'all'}
+                className="h-11 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95"
               >
-                <SelectTrigger className='available-slots__input-field'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className='available-slots__select-content'>
-                  {DURATION_OPTIONS.map(option => {
-                    const hours = option / 60
-                    return (
-                      <SelectItem
-                        key={option}
-                        value={String(option)}
-                        className='available-slots__select-item'
-                      >
-                        {hours === 1 ? '1 hora' : `${hours} horas`}
-                      </SelectItem>
-                    )
-                  })}
-                </SelectContent>
-              </Select>
-            </label>
-          </div>
+                {loading ? <RefreshCw size={16} className="animate-spin mr-2" /> : <Search size={16} className="mr-2" />}
+                Ver Disponibilidad
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
-          <div className='available-slots__actions'>
-            <Button
-              type='submit'
-              size='sm'
-              disabled={loading || productsLoading || !filters.productId}
-              className='available-slots__search-button'
-            >
-              <Search className='size-4' aria-hidden='true' />
-              <span>{t('availableSlots.action.search')}</span>
-            </Button>
-          </div>
-        </form>
-
-        <div className='available-slots__results' aria-live='polite'>
-          <h2 className='available-slots__results-title'>
-            {t('availableSlots.results.title')}
+      {/* Slots Grid */}
+      <div className="flex flex-col gap-4 mt-2">
+        <div className="flex items-center justify-between px-2">
+          <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+            <Clock size={16} className="text-primary" />
+            Horarios para {currentProductName}
           </h2>
-          {renderResults()}
+          {availableSlots.length > 0 && (
+            <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none font-black px-3 py-1">
+              {availableSlots.length} Disponibles
+            </Badge>
+          )}
         </div>
+
+        {loading || isInitialLoading ? (
+          <div className="py-32 flex flex-col items-center justify-center gap-4 bg-white/50 dark:bg-slate-900/20 rounded-2xl border border-slate-100 dark:border-slate-800">
+            <RefreshCw className="w-10 h-10 animate-spin text-primary opacity-40" />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Consultando agenda...</span>
+          </div>
+        ) : filters.productId === 'all' ? (
+          <div className="py-24 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900/30 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 px-6">
+            <div className="size-16 bg-white dark:bg-surface-dark rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-700 mb-4 shadow-sm">
+              <Layers size={32} />
+            </div>
+            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter">Seleccione un servicio</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 max-w-[240px]">Debe elegir un producto o cancha para ver los horarios que tiene disponibles.</p>
+          </div>
+        ) : availableSlots.length === 0 ? (
+          <div className="py-24 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-900/30 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 px-6">
+            <div className="size-16 bg-white dark:bg-surface-dark rounded-2xl flex items-center justify-center text-amber-300 dark:text-amber-700 mb-4 shadow-sm">
+              <Info size={32} />
+            </div>
+            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter">Sin disponibilidad</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 max-w-[240px]">No se encontraron horarios libres para este servicio en la fecha seleccionada.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {availableSlots.map((slot, index) => (
+              <Card 
+                key={slot.id || `slot-${index}`}
+                className="group relative overflow-hidden rounded-xl border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-fluent-8 hover:border-primary/40 transition-all duration-300 bg-white dark:bg-surface-dark"
+              >
+                <CardContent className="p-5 flex flex-col justify-between h-full min-h-[140px]">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Horario Libre</p>
+                      <h3 className="text-xl font-black tabular-nums tracking-tighter text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                        {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                      </h3>
+                    </div>
+                    <div className="size-8 bg-green-500/10 rounded-lg flex items-center justify-center text-green-600">
+                      <Clock size={16} />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between gap-3">
+                     <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                       {slot.product_name}
+                     </div>
+                     <Button
+                      onClick={() => onReserveClick && onReserveClick(slot)}
+                      className="bg-slate-900 dark:bg-slate-800 hover:bg-primary text-white font-black uppercase tracking-widest text-[9px] h-9 px-4 rounded-lg shadow-sm group-hover:shadow-md group-hover:shadow-primary/20 transition-all active:scale-95 flex items-center gap-2"
+                     >
+                       Reservar
+                       <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

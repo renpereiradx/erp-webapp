@@ -1,3 +1,7 @@
+/**
+ * PurchasePayments Page - Refactored to Tailwind (Fluent 2.0)
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -8,10 +12,19 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Filter,
+  ArrowLeft,
+  Calendar,
+  MoreVertical,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  CircleDollarSign,
 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n'
 import RegisterPaymentModal from '@/components/purchase-payments/RegisterPaymentModal'
 import DataState from '@/components/ui/DataState'
+import ToastContainer from '@/components/ui/ToastContainer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -37,6 +50,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Badge } from '@/components/ui/badge'
 import usePurchasePaymentsMvpStore from '@/store/usePurchasePaymentsMvpStore'
 import { useToast } from '@/hooks/useToast'
 import { classifySupplierSearchTerm } from '@/services/purchasePaymentsMvpService'
@@ -85,7 +105,7 @@ const normalizeOrderForModal = order => {
 const PurchasePaymentsPage = () => {
   const { t, lang } = useI18n()
   const navigate = useNavigate()
-  const { info: showInfo, success: showSuccess, error: showError } = useToast()
+  const { toasts, removeToast, info: showInfo, success: showSuccess, error: showError } = useToast()
 
   const [selectedOrders, setSelectedOrders] = useState(() => new Set())
   const [isRegisterModalOpen, setRegisterModalOpen] = useState(false)
@@ -98,1110 +118,450 @@ const PurchasePaymentsPage = () => {
     statuses,
     loading,
     error,
-    appliedFilters,
-    updateFilters,
-    resetFilters,
     fetchOrders,
-    applyFilters,
-    changePage,
-    refresh,
-    registerPayment,
-    processingPayment,
-    clearResults,
-    clearError,
+    setFilter,
+    resetFilters,
   } = usePurchasePaymentsMvpStore()
 
-  const dateFormatter = useMemo(() => dateFormatterFactory(lang), [lang])
-  const formatAmount = useCallback(
-    (amount, currency) =>
-      currencyFormatter(lang, currency).format(Number(amount || 0)),
-    [lang]
-  )
-
-  const translate = useCallback(
-    (key, params, fallback) => {
-      const translated = t(key, params)
-      if (translated === key) {
-        if (typeof fallback === 'function') {
-          return fallback(params ?? {}, lang)
-        }
-        if (fallback !== undefined) {
-          return fallback
-        }
-      }
-      return translated
-    },
-    [t, lang]
-  )
+  useEffect(() => {
+    fetchOrders()
+  }, [fetchOrders])
 
   const statusOptions = useMemo(() => buildStatusOptions(statuses), [statuses])
+  const dateFormatter = useMemo(() => dateFormatterFactory(lang), [lang])
 
-  const hasSearch = Boolean(filters.search?.trim())
-  const hasDateRange = Boolean(filters.dateFrom || filters.dateTo)
-
-  // Cargar automáticamente los últimos 10 días al montar el componente
-  useEffect(() => {
-    const today = new Date()
-    const tenDaysAgo = new Date()
-    tenDaysAgo.setDate(today.getDate() - 10)
-
-    const formatDate = date => date.toISOString().split('T')[0]
-    const dateFrom = formatDate(tenDaysAgo)
-    const dateTo = formatDate(today)
-
-    updateFilters({ dateFrom, dateTo })
-    fetchOrders({
-      page: 1,
-      filters: { dateFrom, dateTo, search: '', orderId: '', status: 'all' },
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const handleInputChange = event => {
-    const { name, value, type, checked } = event.target
-    const nextValue = type === 'checkbox' ? checked : value
-    let updates = {
-      [name]: nextValue,
-    }
-
-    if (name === 'search') {
-      const trimmed = nextValue
-      updates = {
-        ...updates,
-        search: trimmed,
-      }
-
-      if (trimmed) {
-        updates.dateFrom = ''
-        updates.dateTo = ''
-      }
-    }
-
-    if ((name === 'dateFrom' || name === 'dateTo') && nextValue) {
-      updates = {
-        ...updates,
-        search: '',
-      }
-    }
-
-    updateFilters(updates)
+  const handleSearchChange = e => {
+    const value = e.target.value
+    setFilter('search', value)
   }
 
-  const handleApplyFilters = async () => {
-    if (!hasDateRange && filters.search?.trim()) {
-      const classification = classifySupplierSearchTerm(filters.search)
-      if (classification.type === 'invalid') {
-        // Usar el mensaje específico de la clasificación si está disponible
-        const errorMessage =
-          classification.message ||
-          translate(
-            'purchasePaymentsMvp.filters.search.invalid',
-            undefined,
-            () =>
-              lang === 'en'
-                ? 'Enter a valid supplier ID (numbers only) or name (letters only). Do not mix both.'
-                : 'Ingresá un ID de proveedor (solo números) o un nombre (solo letras). No mezcles ambos.'
-          )
-        showInfo(errorMessage)
-        return
-      }
-    }
-
-    await applyFilters()
+  const handleStatusChange = value => {
+    setFilter('status', value)
   }
 
-  const handleReset = async () => {
-    await resetFilters()
-    setSelectedOrders(new Set())
+  const handleDateChange = (field, value) => {
+    setFilter(field, value)
   }
 
   const handleRefresh = () => {
-    clearResults()
-    setSelectedOrders(new Set())
+    fetchOrders()
+    showInfo(t('purchasePaymentsMvp.messages.refreshing'))
   }
 
-  const handleRetry = async () => {
-    clearError()
-    await fetchOrders({ page: 1 })
+  const handleReset = () => {
+    resetFilters()
+    fetchOrders()
   }
 
-  const handlePageChange = async direction => {
-    const nextPage = meta.page + direction
-    if (nextPage >= 1 && nextPage <= meta.totalPages) {
-      await changePage(nextPage)
-    }
-  }
-
-  const handleDirectPageChange = async page => {
-    if (page === meta.page || page < 1 || page > meta.totalPages) return
-    await changePage(page)
-  }
-
-  const handleSelectAll = value => {
-    if (!orders || orders.length === 0) {
-      setSelectedOrders(new Set())
-      return
-    }
-
-    if (value === true || value === 'indeterminate') {
-      setSelectedOrders(new Set(orders.map(order => order.id)))
+  const handleSelectAll = checked => {
+    if (checked) {
+      setSelectedOrders(new Set(orders.map(o => o.id)))
     } else {
       setSelectedOrders(new Set())
     }
   }
 
-  const handleSelectOrder = (orderId, value) => {
-    setSelectedOrders(prev => {
-      const next = new Set(prev)
-      if (value) {
-        next.add(orderId)
-      } else {
-        next.delete(orderId)
-      }
-      return next
-    })
+  const handleSelectOrder = (id, checked) => {
+    const next = new Set(selectedOrders)
+    if (checked) {
+      next.add(id)
+    } else {
+      next.delete(id)
+    }
+    setSelectedOrders(next)
   }
 
-  useEffect(() => {
-    setSelectedOrders(prev => {
-      if (!prev.size) return prev
-      const currentIds = new Set((orders || []).map(order => order.id))
-      const filtered = new Set()
-      prev.forEach(id => {
-        if (currentIds.has(id)) {
-          filtered.add(id)
-        }
-      })
-      return filtered.size === prev.size ? prev : filtered
-    })
-  }, [orders])
-
-  const renderStatusBadge = status => {
-    const fallbackLabels = {
-      completed: lang === 'en' ? 'Completed' : 'Completado',
-    }
-
-    const defaultLabel =
-      fallbackLabels[status] ||
-      (status
-        ? status
-            .toString()
-            .replace(/[_-]/g, ' ')
-            .replace(/\b\w/g, char => char.toUpperCase())
-        : '')
-
-    const label = translate(
-      `purchasePaymentsMvp.status.${status}`,
-      { status },
-      () => defaultLabel || status || ''
-    )
-
-    return (
-      <span
-        className={`purchase-payments-mvp__status-badge purchase-payments-mvp__status-badge--${status}`}
-      >
-        {label}
-      </span>
-    )
+  const handleRegisterPayment = order => {
+    setModalOrder(normalizeOrderForModal(order))
+    setRegisterModalOpen(true)
   }
 
-  const exclusiveFiltersHint = useMemo(() => {
-    if (hasSearch) {
-      return translate(
-        'purchasePaymentsMvp.filters.hints.searchMode',
-        undefined,
-        () =>
-          lang === 'en'
-            ? 'Supplier search is active. Clear it to filter by date range.'
-            : 'La búsqueda por proveedor está activa. Limpiá el campo para usar el rango de fechas.'
-      )
+  const handleViewDetail = id => {
+    navigate(`/pagos-compras/${id}`)
+  }
+
+  const handlePaymentSuccess = result => {
+    setRegisterModalOpen(false)
+    fetchOrders()
+    showSuccess(t('purchasePaymentsMvp.messages.paymentRegistered'))
+  }
+
+  const getStatusBadge = status => {
+    const s = status?.toLowerCase()
+    switch (s) {
+      case 'completed':
+      case 'paid':
+        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1">Pagado</Badge>
+      case 'partial':
+        return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1">Parcial</Badge>
+      case 'overdue':
+        return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1">Vencido</Badge>
+      default:
+        return <Badge className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1">Pendiente</Badge>
     }
+  }
 
-    if (hasDateRange) {
-      return translate(
-        'purchasePaymentsMvp.filters.hints.dateMode',
-        undefined,
-        () =>
-          lang === 'en'
-            ? 'Date range is active. Clear the dates to search by supplier.'
-            : 'El rango de fechas está activo. Borrá las fechas para buscar por proveedor.'
-      )
+  const getPriorityBadge = priority => {
+    const p = priority?.toLowerCase()
+    switch (p) {
+      case 'high':
+        return <Badge variant="outline" className="border-red-200 text-red-600 bg-red-50/50 dark:bg-red-900/10 dark:border-red-900/30 text-[9px] font-black uppercase px-2">Alta</Badge>
+      case 'medium':
+        return <Badge variant="outline" className="border-amber-200 text-amber-600 bg-amber-50/50 dark:bg-amber-900/10 dark:border-amber-900/30 text-[9px] font-black uppercase px-2">Media</Badge>
+      default:
+        return <Badge variant="outline" className="border-slate-200 text-slate-500 bg-slate-50/50 dark:bg-slate-800 dark:border-slate-700 text-[9px] font-black uppercase px-2">Baja</Badge>
     }
+  }
 
-    return translate(
-      'purchasePaymentsMvp.filters.hints.default',
-      undefined,
-      () =>
-        lang === 'en'
-          ? 'Use supplier search or date range (the API does not allow combining both).'
-          : 'Usá la búsqueda por proveedor o el rango de fechas (la API no permite combinarlos).'
-    )
-  }, [hasSearch, hasDateRange, lang, translate])
-
-  const activeFilterDescriptions = useMemo(() => {
-    const descriptions = []
-
-    if (appliedFilters?.search) {
-      descriptions.push(
-        translate(
-          'purchasePaymentsMvp.filters.badge.supplier',
-          { value: appliedFilters.search },
-          ({ value }) =>
-            lang === 'en' ? `Supplier: ${value}` : `Proveedor: ${value}`
-        )
-      )
-    }
-
-    if (appliedFilters?.orderId) {
-      descriptions.push(
-        translate(
-          'purchasePaymentsMvp.filters.badge.orderId',
-          { value: appliedFilters.orderId },
-          ({ value }) =>
-            lang === 'en' ? `Order ID: ${value}` : `ID Orden: ${value}`
-        )
-      )
-    }
-
-    if (appliedFilters?.dateFrom || appliedFilters?.dateTo) {
-      const from = appliedFilters.dateFrom || '—'
-      const to = appliedFilters.dateTo || '—'
-      descriptions.push(
-        translate(
-          'purchasePaymentsMvp.filters.badge.date',
-          { from, to },
-          ({ from: fromLabel, to: toLabel }) =>
-            lang === 'en'
-              ? `Date range: ${fromLabel} → ${toLabel}`
-              : `Rango: ${fromLabel} → ${toLabel}`
-        )
-      )
-    }
-
-    if (appliedFilters?.status && appliedFilters.status !== 'all') {
-      descriptions.push(
-        translate(
-          'purchasePaymentsMvp.filters.badge.status',
-          { value: appliedFilters.status },
-          ({ value }) =>
-            lang === 'en' ? `Status: ${value}` : `Estado: ${value}`
-        )
-      )
-    }
-
-    return descriptions
-  }, [appliedFilters, lang, translate])
-
-  const allSelected =
-    orders && orders.length > 0 && selectedOrders.size === orders.length
-  const someSelected =
-    orders && orders.length > 0 && selectedOrders.size > 0 && !allSelected
-  const headerCheckboxState = allSelected
-    ? true
-    : someSelected
-    ? 'indeterminate'
-    : false
-
-  const isRegisterEnabled = selectedOrders.size === 1
-
-  const handleViewOrder = useCallback(
-    orderId => {
-      if (!orderId) return
-      navigate(`/pagos-compras/${encodeURIComponent(orderId)}`)
-    },
-    [navigate]
-  )
-
-  const handleRowDoubleClick = useCallback(
-    (event, orderId) => {
-      if (!orderId) return
-      const target = event.target
-      if (target instanceof Element) {
-        const interactiveTarget = target.closest('[data-stop-row-nav="true"]')
-        if (interactiveTarget) return
-      }
-      handleViewOrder(orderId)
-    },
-    [handleViewOrder]
-  )
-
-  const handleRowClick = useCallback((event, orderId) => {
-    if (!orderId) return
-    const target = event.target
-    if (target instanceof Element) {
-      const interactiveTarget = target.closest('[data-stop-row-nav="true"]')
-      if (interactiveTarget) return
-    }
-
-    setSelectedOrders(prev => {
-      const next = new Set(prev)
-      const isOnlySelected = next.size === 1 && next.has(orderId)
-
-      if (isOnlySelected) {
-        next.delete(orderId)
-        return next
-      }
-
-      next.clear()
-      next.add(orderId)
-      return next
-    })
-  }, [])
-
-  const handleRegisterPaymentSubmit = useCallback(
-    async payload => {
-      try {
-        await registerPayment(payload)
-        showSuccess(
-          t('purchasePaymentsMvp.registerModal.feedback.success', {
-            orderId: payload.orderId,
-          })
-        )
-        await refresh()
-        setSelectedOrders(new Set())
-      } catch (error) {
-        showError(
-          error?.message ||
-            t('purchasePaymentsMvp.registerModal.feedback.error')
-        )
-        throw error
-      }
-    },
-    [refresh, registerPayment, showError, showSuccess, t]
-  )
-
-  const handleModalOpenChange = useCallback(nextOpen => {
-    setRegisterModalOpen(nextOpen)
-    if (!nextOpen) {
-      setModalOrder(null)
-    }
-  }, [])
-
-  const renderTable = () => {
-    if (loading) {
-      return (
-        <div className='purchase-payments-mvp__state'>
-          <DataState
-            variant='loading'
-            skeletonVariant='list'
-            skeletonProps={{ count: 5 }}
-          />
-        </div>
-      )
-    }
-
-    if (error) {
-      return (
-        <div className='purchase-payments-mvp__state'>
-          <DataState
-            variant='error'
-            title={t('purchasePaymentsMvp.data.error.title')}
-            message={t('purchasePaymentsMvp.data.error.description')}
-            onRetry={handleRetry}
-          />
-        </div>
-      )
-    }
-    const hasOrders = Boolean(orders && orders.length > 0)
-    const columnCount = 7
-
+  if (error) {
     return (
-      <div role='region' aria-live='polite'>
-        <div className='purchase-payments-mvp__table-wrapper'>
-          <Table className='purchase-payments-mvp__table'>
-            <TableHeader className='purchase-payments-mvp__table-head'>
-              <TableRow className='purchase-payments-mvp__table-row purchase-payments-mvp__table-row--head'>
-                <TableHead className='purchase-payments-mvp__column purchase-payments-mvp__column--checkbox'>
-                  <Checkbox
-                    aria-label={translate(
-                      'purchasePaymentsMvp.selection.all',
-                      undefined,
-                      () =>
-                        lang === 'en'
-                          ? 'Select all purchase orders'
-                          : 'Seleccionar todas las órdenes'
-                    )}
-                    checked={headerCheckboxState}
-                    onCheckedChange={handleSelectAll}
-                    disabled={loading || !hasOrders}
-                    data-stop-row-nav='true'
-                  />
-                </TableHead>
-                <TableHead className='purchase-payments-mvp__column'>
-                  {translate('purchasePaymentsMvp.table.id', undefined, () =>
-                    lang === 'en' ? 'ID' : 'ID'
-                  )}
-                </TableHead>
-                <TableHead className='purchase-payments-mvp__column'>
-                  {t('purchasePaymentsMvp.table.supplier')}
-                </TableHead>
-                <TableHead className='purchase-payments-mvp__column'>
-                  {t('purchasePaymentsMvp.table.issueDate')}
-                </TableHead>
-                <TableHead className='purchase-payments-mvp__column purchase-payments-mvp__column--numeric'>
-                  {t('purchasePaymentsMvp.table.total')}
-                </TableHead>
-                <TableHead className='purchase-payments-mvp__column purchase-payments-mvp__column--numeric'>
-                  {t('purchasePaymentsMvp.table.pending')}
-                </TableHead>
-                <TableHead className='purchase-payments-mvp__column'>
-                  {t('purchasePaymentsMvp.table.status')}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className='purchase-payments-mvp__table-body'>
-              {hasOrders ? (
-                orders.map(order => {
-                  const issued = order.issue_date
-                    ? dateFormatter.format(new Date(order.issue_date))
-                    : translate(
-                        'purchasePaymentsMvp.table.noIssueDate',
-                        undefined,
-                        () => (lang === 'en' ? 'No date' : 'Sin fecha')
-                      )
-                  const pendingAmount = Number(order.pendingAmount)
-                  const isPending = pendingAmount > 0
-                  const isSelected = selectedOrders.has(order.id)
-                  const priorityClass = order.priority
-                    ? `purchase-payments-mvp__table-row--priority-${order.priority}`
-                    : ''
-                  const rowClassName = [
-                    'purchase-payments-mvp__table-row',
-                    'purchase-payments-mvp__table-row--interactive',
-                    priorityClass,
-                    isSelected
-                      ? 'purchase-payments-mvp__table-row--selected'
-                      : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')
-
-                  return (
-                    <TableRow
-                      key={order.id}
-                      className={rowClassName}
-                      aria-selected={isSelected}
-                      data-selected={isSelected ? 'true' : 'false'}
-                      onClick={event => handleRowClick(event, order.id)}
-                      onDoubleClick={event =>
-                        handleRowDoubleClick(event, order.id)
-                      }
-                      data-order-id={order.id}
-                    >
-                      <TableCell className='purchase-payments-mvp__cell purchase-payments-mvp__cell--checkbox'>
-                        <Checkbox
-                          aria-label={translate(
-                            'purchasePaymentsMvp.selection.row',
-                            { id: order.id },
-                            ({ id }) =>
-                              lang === 'en'
-                                ? `Select order ${id}`
-                                : `Seleccionar orden ${id}`
-                          )}
-                          checked={isSelected}
-                          onCheckedChange={value =>
-                            handleSelectOrder(order.id, value === true)
-                          }
-                          data-stop-row-nav='true'
-                        />
-                      </TableCell>
-                      <TableCell className='purchase-payments-mvp__cell'>
-                        <div className='purchase-payments-mvp__order-cell'>
-                          <button
-                            type='button'
-                            className='purchase-payments-mvp__order-link'
-                            onClick={() => handleViewOrder(order.id)}
-                            data-stop-row-nav='true'
-                          >
-                            {order.id}
-                          </button>
-                        </div>
-                      </TableCell>
-                      <TableCell className='purchase-payments-mvp__cell'>
-                        <div className='purchase-payments-mvp__supplier'>
-                          <span className='purchase-payments-mvp__supplier-name'>
-                            {order.supplier?.name}
-                          </span>
-                          {order.supplier?.contact && (
-                            <span className='purchase-payments-mvp__supplier-contact'>
-                              {order.supplier.contact}
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className='purchase-payments-mvp__cell'>
-                        <span className='purchase-payments-mvp__date'>
-                          {issued}
-                        </span>
-                      </TableCell>
-                      <TableCell className='purchase-payments-mvp__cell purchase-payments-mvp__cell--amount'>
-                        <span className='purchase-payments-mvp__amount-value'>
-                          {formatAmount(order.total_amount, order.currency)}
-                        </span>
-                      </TableCell>
-                      <TableCell
-                        className={`purchase-payments-mvp__cell purchase-payments-mvp__cell--amount ${
-                          isPending
-                            ? 'purchase-payments-mvp__cell--pending'
-                            : 'purchase-payments-mvp__cell--settled'
-                        }`}
-                      >
-                        <span className='purchase-payments-mvp__amount-value'>
-                          {formatAmount(order.pendingAmount, order.currency)}
-                        </span>
-                      </TableCell>
-                      <TableCell className='purchase-payments-mvp__cell'>
-                        {renderStatusBadge(order.status)}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-              ) : (
-                <TableRow className='purchase-payments-mvp__table-row purchase-payments-mvp__table-row--empty'>
-                  <TableCell
-                    colSpan={columnCount}
-                    className='purchase-payments-mvp__cell purchase-payments-mvp__cell--empty'
-                  >
-                    {t('purchasePaymentsMvp.table.emptyMessage')}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+      <div className="animate-in fade-in duration-500 h-[60vh] flex items-center justify-center">
+        <DataState
+          variant="error"
+          title={t('purchasePaymentsMvp.error.title')}
+          message={error}
+          onRetry={handleRefresh}
+        />
       </div>
     )
   }
 
-  const from = useMemo(
-    () => (meta.page - 1) * meta.pageSize + 1,
-    [meta.page, meta.pageSize]
-  )
-  const to = useMemo(
-    () => Math.min(meta.page * meta.pageSize, meta.total),
-    [meta.page, meta.pageSize, meta.total]
-  )
-
-  const paginationPages = useMemo(() => {
-    const totalPages = meta.totalPages || 1
-    const pages = []
-
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i += 1) {
-        pages.push(i)
-      }
-      return pages
-    }
-
-    if (meta.page <= 3) {
-      pages.push(1, 2, 3, 4, 'ellipsis', totalPages)
-      return pages
-    }
-
-    if (meta.page >= totalPages - 2) {
-      pages.push(
-        1,
-        'ellipsis',
-        totalPages - 3,
-        totalPages - 2,
-        totalPages - 1,
-        totalPages
-      )
-      return pages
-    }
-
-    pages.push(
-      1,
-      'ellipsis',
-      meta.page - 1,
-      meta.page,
-      meta.page + 1,
-      'ellipsis',
-      totalPages
-    )
-    return pages
-  }, [meta.page, meta.totalPages])
-
-  const handleExport = useCallback(() => {}, [])
-
-  const handleCreatePayment = useCallback(() => {
-    if (!orders || orders.length === 0) {
-      showInfo(t('purchasePaymentsMvp.registerModal.feedback.selectOrder'))
-      return
-    }
-
-    if (selectedOrders.size === 0) {
-      showInfo(t('purchasePaymentsMvp.registerModal.feedback.selectOrder'))
-      return
-    }
-
-    if (selectedOrders.size > 1) {
-      showInfo(t('purchasePaymentsMvp.registerModal.feedback.singleOrder'))
-      return
-    }
-
-    const [orderId] = Array.from(selectedOrders)
-    const order = orders.find(item => item.id === orderId)
-
-    if (!order) {
-      showError(t('purchasePaymentsMvp.registerModal.feedback.missingOrder'))
-      return
-    }
-
-    const normalized = normalizeOrderForModal(order)
-
-    if (
-      !normalized ||
-      normalized.pendingAmount === null ||
-      normalized.pendingAmount <= 0
-    ) {
-      showInfo(
-        t('purchasePaymentsMvp.registerModal.feedback.noPending', { orderId })
-      )
-      return
-    }
-
-    setModalOrder(normalized)
-    setRegisterModalOpen(true)
-  }, [orders, selectedOrders, showError, showInfo, t])
-
   return (
-    <div className='purchase-payments-mvp'>
-      <div className='purchase-payments-mvp__container'>
-        <header className='purchase-payments-mvp__header'>
-          <div className='purchase-payments-mvp__heading'>
-            <h1 className='purchase-payments-mvp__title'>
-              {t('purchasePaymentsMvp.title')}
-            </h1>
-            <p className='purchase-payments-mvp__description'>
-              {t('purchasePaymentsMvp.subtitle')}
-            </p>
-          </div>
-          <div className='purchase-payments-mvp__header-utilities'>
-            <div className='purchase-payments-mvp__actions'>
-              <div className='purchase-payments-mvp__icon-actions'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='icon'
-                  onClick={handleRefresh}
-                  className='purchase-payments-mvp__icon-button'
-                  aria-label={translate(
-                    'purchasePaymentsMvp.actions.refresh',
-                    undefined,
-                    () =>
-                      lang === 'en' ? 'Clear results' : 'Limpiar resultados'
-                  )}
-                >
-                  {loading ? (
-                    <Loader2 className='purchase-payments-mvp__icon--spin' />
-                  ) : (
-                    <RefreshCw className='purchase-payments-mvp__icon' />
-                  )}
-                </Button>
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='icon'
-                  onClick={handleExport}
-                  className='purchase-payments-mvp__icon-button'
-                  aria-label={translate(
-                    'purchasePaymentsMvp.actions.export',
-                    undefined,
-                    () => (lang === 'en' ? 'Export' : 'Exportar')
-                  )}
-                >
-                  <Download className='purchase-payments-mvp__icon' />
-                </Button>
-              </div>
-              <Button
-                type='button'
-                size='lg'
-                onClick={handleCreatePayment}
-                disabled={!isRegisterEnabled || processingPayment}
-                className='purchase-payments-mvp__primary-action'
-              >
-                <PlusCircle className='purchase-payments-mvp__primary-icon' />
-                {t('purchasePaymentsMvp.actions.registerPayment')}
-              </Button>
-              {!isRegisterEnabled && (
-                <p className='purchase-payments-mvp__selection-hint'>
-                  {translate(
-                    'purchasePaymentsMvp.selection.helper',
-                    undefined,
-                    () =>
-                      lang === 'en'
-                        ? 'Seleccioná una orden para habilitar el registro de pago.'
-                        : 'Seleccioná una orden para habilitar el registro de pago.'
-                  )}
-                </p>
-              )}
-            </div>
-          </div>
-        </header>
+    <div className="flex flex-col gap-8 animate-in fade-in duration-500 max-w-[1600px] mx-auto py-2">
+      {/* Page Header */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2">
+        <div className="space-y-1">
+          <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none font-display">
+            {t('purchasePaymentsMvp.title', 'Pagos a Proveedores')}
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base font-medium font-display">
+            {t('purchasePaymentsMvp.subtitle', 'Gestione y registre pagos de órdenes de compra')}
+          </p>
+        </div>
 
-        <div className='purchase-payments-mvp__content'>
-          <Card
-            className='purchase-payments-mvp__filters-card'
-            aria-label={t('purchasePaymentsMvp.filters.sectionLabel')}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            className="h-12 border-slate-200 dark:border-slate-800 font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
           >
-            <CardHeader className='purchase-payments-mvp__filters-header'>
-              <CardTitle className='purchase-payments-mvp__filters-title'>
-                {translate('purchasePaymentsMvp.filters.title', undefined, () =>
-                  lang === 'en' ? 'Filters' : 'Filtros'
-                )}
-              </CardTitle>
-              <p className='purchase-payments-mvp__filters-description'>
-                {translate(
-                  'purchasePaymentsMvp.filters.helper',
-                  undefined,
-                  () =>
-                    lang === 'en'
-                      ? 'Refine the list using supplier, date and status filters.'
-                      : 'Refiná la lista con proveedor, fechas y estado.'
-                )}
-              </p>
-            </CardHeader>
-            <CardContent className='purchase-payments-mvp__filters-content'>
-              <div className='purchase-payments-mvp__filters-form'>
-                <div className='purchase-payments-mvp__field'>
-                  <label
-                    className='purchase-payments-mvp__field-label'
-                    htmlFor='purchase-payments-search'
-                  >
-                    {translate(
-                      'purchasePaymentsMvp.filters.search.label',
-                      undefined,
-                      () => (lang === 'en' ? 'Supplier' : 'Proveedor')
-                    )}
-                  </label>
-                  <div className='purchase-payments-mvp__input-wrapper'>
-                    <Search
-                      className='purchase-payments-mvp__input-icon'
-                      aria-hidden='true'
-                    />
+            <RefreshCw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Actualizar
+          </Button>
+          <Button
+            className="h-12 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+          >
+            <PlusCircle size={18} className="mr-2" />
+            Nueva Compra
+          </Button>
+        </div>
+      </header>
+
+      {/* Stats Overview (Optional Refinement) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+            <CardContent className="p-6 flex items-center gap-5">
+               <div className="size-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
+                  <Clock size={28} />
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pendientes de Pago</p>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {orders.filter(o => o.status === 'pending').length} Órdenes
+                  </h2>
+               </div>
+            </CardContent>
+         </Card>
+         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+            <CardContent className="p-6 flex items-center gap-5">
+               <div className="size-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                  <CircleDollarSign size={28} />
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pagos Parciales</p>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {orders.filter(o => o.status === 'partial').length} Órdenes
+                  </h2>
+               </div>
+            </CardContent>
+         </Card>
+         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+            <CardContent className="p-6 flex items-center gap-5">
+               <div className="size-14 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform">
+                  <CheckCircle2 size={28} />
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Completadas hoy</p>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {orders.filter(o => o.status === 'completed').length} Órdenes
+                  </h2>
+               </div>
+            </CardContent>
+         </Card>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="space-y-6">
+        {/* Advanced Filters */}
+        <Card className="rounded-2xl border-slate-200 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
+          <CardContent className="p-8">
+            <div className="flex flex-col gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="space-y-2 lg:col-span-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Buscar Proveedor u Orden</label>
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <Input
-                      id='purchase-payments-search'
-                      name='search'
-                      type='search'
-                      className='purchase-payments-mvp__input purchase-payments-mvp__input--with-icon'
-                      placeholder={translate(
-                        'purchasePaymentsMvp.filters.search.placeholder',
-                        undefined,
-                        () =>
-                          lang === 'en'
-                            ? 'ID or supplier name'
-                            : 'ID o nombre de proveedor'
-                      )}
+                      placeholder={t('purchasePaymentsMvp.filters.search.placeholder')}
                       value={filters.search}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <p className='purchase-payments-mvp__filters-hint'>
-                    {translate(
-                      'purchasePaymentsMvp.filters.search.hint',
-                      undefined,
-                      () =>
-                        lang === 'en'
-                          ? 'Enter only numbers (ID) or only letters (name).'
-                          : 'Ingresá solo números (ID) o solo letras (nombre).'
-                    )}
-                  </p>
-                </div>
-
-                <div className='purchase-payments-mvp__field'>
-                  <label
-                    className='purchase-payments-mvp__field-label'
-                    htmlFor='purchase-payments-order-id'
-                  >
-                    {translate(
-                      'purchasePaymentsMvp.filters.orderId.label',
-                      undefined,
-                      () => (lang === 'en' ? 'Order ID' : 'ID de Orden')
-                    )}
-                  </label>
-                  <div className='purchase-payments-mvp__input-wrapper'>
-                    <Search
-                      className='purchase-payments-mvp__input-icon'
-                      aria-hidden='true'
-                    />
-                    <Input
-                      id='purchase-payments-order-id'
-                      name='orderId'
-                      type='search'
-                      className='purchase-payments-mvp__input purchase-payments-mvp__input--with-icon'
-                      placeholder={translate(
-                        'purchasePaymentsMvp.filters.orderId.placeholder',
-                        undefined,
-                        () =>
-                          lang === 'en'
-                            ? 'Filter by order ID'
-                            : 'Filtrar por ID de orden'
-                      )}
-                      value={filters.orderId}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <p className='purchase-payments-mvp__filters-hint'>
-                    {translate(
-                      'purchasePaymentsMvp.filters.orderId.hint',
-                      undefined,
-                      () =>
-                        lang === 'en'
-                          ? 'Local filter for loaded results.'
-                          : 'Filtro local sobre resultados cargados.'
-                    )}
-                  </p>
-                </div>
-
-                <div className='purchase-payments-mvp__field'>
-                  <span className='purchase-payments-mvp__field-label'>
-                    {translate(
-                      'purchasePaymentsMvp.filters.dateRange.label',
-                      undefined,
-                      () => (lang === 'en' ? 'Date range' : 'Rango de fechas')
-                    )}
-                  </span>
-                  <div className='purchase-payments-mvp__date-range'>
-                    <Input
-                      id='purchase-payments-date-from'
-                      name='dateFrom'
-                      type='date'
-                      className='purchase-payments-mvp__input purchase-payments-mvp__input--date'
-                      aria-label={t(
-                        'purchasePaymentsMvp.filters.dateFrom.label'
-                      )}
-                      value={filters.dateFrom}
-                      onChange={handleInputChange}
-                    />
-                    <span className='purchase-payments-mvp__date-separator'>
-                      &ndash;
-                    </span>
-                    <Input
-                      id='purchase-payments-date-to'
-                      name='dateTo'
-                      type='date'
-                      className='purchase-payments-mvp__input purchase-payments-mvp__input--date'
-                      aria-label={t('purchasePaymentsMvp.filters.dateTo.label')}
-                      value={filters.dateTo}
-                      onChange={handleInputChange}
+                      onChange={handleSearchChange}
+                      className="h-12 pl-12 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 font-medium transition-all focus:ring-2 focus:ring-primary shadow-inner"
                     />
                   </div>
                 </div>
 
-                {exclusiveFiltersHint && (
-                  <p className='purchase-payments-mvp__filters-hint'>
-                    {exclusiveFiltersHint}
-                  </p>
-                )}
-
-                <div className='purchase-payments-mvp__field'>
-                  <label
-                    className='purchase-payments-mvp__field-label'
-                    htmlFor='purchase-payments-status'
-                  >
-                    {translate(
-                      'purchasePaymentsMvp.filters.status.label',
-                      undefined,
-                      () => (lang === 'en' ? 'Status' : 'Estado')
-                    )}
-                  </label>
-                  <Select
-                    value={filters.status}
-                    onValueChange={value => updateFilters({ status: value })}
-                  >
-                    <SelectTrigger
-                      id='purchase-payments-status'
-                      data-testid='purchase-payments-filter-status'
-                      className='purchase-payments-mvp__select-trigger'
-                    >
-                      <SelectValue
-                        placeholder={translate(
-                          'purchasePaymentsMvp.filters.status.placeholder',
-                          undefined,
-                          () => (lang === 'en' ? 'All statuses' : 'Todos')
-                        )}
-                      />
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Estado de Pago</label>
+                  <Select value={filters.status} onValueChange={handleStatusChange}>
+                    <SelectTrigger className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 font-bold uppercase text-[10px] tracking-widest shadow-inner transition-all">
+                      <SelectValue placeholder={t('purchasePaymentsMvp.filters.status.all')} />
                     </SelectTrigger>
-                    <SelectContent className='purchase-payments-mvp__select-content'>
-                      {statusOptions.map(option => (
-                        <SelectItem
-                          key={option.value}
-                          value={option.value}
-                          className='purchase-payments-mvp__select-item'
-                        >
-                          {t(option.label, { value: option.value })}
+                    <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-16 p-1">
+                      {statusOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value} className="rounded-lg font-bold uppercase text-[10px] tracking-widest py-3">
+                          {t(opt.label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-            </CardContent>
-            <CardFooter className='purchase-payments-mvp__filters-footer'>
-              <div className='purchase-payments-mvp__filters-actions'>
-                <Button
-                  type='button'
-                  onClick={handleApplyFilters}
-                  disabled={loading}
-                  className='purchase-payments-mvp__filters-button purchase-payments-mvp__filters-button--primary'
-                >
-                  {t('purchasePaymentsMvp.filters.apply')}
-                </Button>
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={handleReset}
-                  disabled={loading}
-                  className='purchase-payments-mvp__filters-button purchase-payments-mvp__filters-button--secondary'
-                >
-                  {t('purchasePaymentsMvp.filters.reset')}
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
 
-          <Card className='purchase-payments-mvp__table-card'>
-            <CardHeader className='purchase-payments-mvp__table-header'>
-              <div className='purchase-payments-mvp__table-heading'>
-                <div className='purchase-payments-mvp__table-heading-text'>
-                  <CardTitle className='purchase-payments-mvp__table-title'>
-                    {t('purchasePaymentsMvp.results.sectionLabel')}
-                  </CardTitle>
-                  <p className='purchase-payments-mvp__table-description'>
-                    {translate(
-                      'purchasePaymentsMvp.results.subtitle',
-                      undefined,
-                      () =>
-                        lang === 'en'
-                          ? 'Review outstanding, partial and paid purchase orders.'
-                          : 'Revisá órdenes pendientes, parciales y pagadas.'
-                    )}
-                  </p>
-                </div>
-                {meta.total > 0 && (
-                  <div className='purchase-payments-mvp__headline'>
-                    {t('purchasePaymentsMvp.pagination.range', {
-                      from,
-                      to,
-                      total: meta.total,
-                    })}
-                  </div>
-                )}
-              </div>
-              {activeFilterDescriptions.length > 0 && (
-                <div className='purchase-payments-mvp__active-filters'>
-                  {activeFilterDescriptions.map(label => (
-                    <span
-                      className='purchase-payments-mvp__filter-pill'
-                      key={label}
-                    >
-                      {label}
-                    </span>
-                  ))}
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='sm'
-                    className='purchase-payments-mvp__filters-clear'
+                <div className="flex items-end gap-2">
+                   <Button 
+                    variant="secondary" 
+                    onClick={handleRefresh}
+                    className="h-12 flex-1 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
+                   >
+                     <Filter size={16} className="mr-2" />
+                     Filtrar
+                   </Button>
+                   <Button 
+                    variant="ghost" 
                     onClick={handleReset}
-                  >
-                    {translate(
-                      'purchasePaymentsMvp.filters.clearAll',
-                      undefined,
-                      () =>
-                        lang === 'en' ? 'Clear filters' : 'Limpiar filtros'
-                    )}
-                  </Button>
+                    className="h-12 px-4 rounded-xl text-slate-400 hover:text-red-500 transition-all"
+                   >
+                     <RefreshCw size={18} />
+                   </Button>
                 </div>
-              )}
-            </CardHeader>
-            <CardContent className='purchase-payments-mvp__table-content'>
-              {renderTable()}
-            </CardContent>
-            <CardFooter
-              className='purchase-payments-mvp__pagination'
-              aria-live='polite'
-            >
-              <div className='purchase-payments-mvp__pagination-info'>
-                {meta.total > 0 ? (
-                  <span>
-                    {translate(
-                      'purchasePaymentsMvp.pagination.results',
-                      { count: orders?.length || 0, total: meta.total },
-                      ({ count, total }) =>
-                        lang === 'en'
-                          ? `Showing ${count} of ${total} results`
-                          : `Mostrando ${count} de ${total} resultados`
-                    )}
-                  </span>
-                ) : (
-                  <span>{t('purchasePaymentsMvp.pagination.empty')}</span>
-                )}
               </div>
-              <div className='purchase-payments-mvp__pagination-controls'>
-                <button
-                  type='button'
-                  className='purchase-payments-mvp__nav-button'
-                  onClick={() => handlePageChange(-1)}
-                  aria-label={t('purchasePaymentsMvp.pagination.previous')}
-                  disabled={loading || meta.page <= 1}
-                >
-                  <ChevronLeft />
-                </button>
-                <div className='purchase-payments-mvp__page-list'>
-                  {paginationPages.map((page, index) => {
-                    if (page === 'ellipsis') {
-                      return (
-                        <span
-                          key={`ellipsis-${index}`}
-                          className='purchase-payments-mvp__page-ellipsis'
-                        >
-                          …
+
+              {/* Secondary Filters (Dates) */}
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 flex items-center gap-2">
+                      <Calendar size={12} /> Desde Fecha
+                    </label>
+                    <Input 
+                      type="date" 
+                      value={filters.dateFrom} 
+                      onChange={e => handleDateChange('dateFrom', e.target.value)}
+                      className="h-11 rounded-lg bg-transparent border-slate-200 dark:border-slate-800 font-semibold"
+                    />
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 flex items-center gap-2">
+                      <Calendar size={12} /> Hasta Fecha
+                    </label>
+                    <Input 
+                      type="date" 
+                      value={filters.dateTo} 
+                      onChange={e => handleDateChange('dateTo', e.target.value)}
+                      className="h-11 rounded-lg bg-transparent border-slate-200 dark:border-slate-800 font-semibold"
+                    />
+                 </div>
+                 <div className="flex justify-end pt-4">
+                    <div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">
+                      Visualizando {orders.length} de {meta.total} registros
+                    </div>
+                 </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Data Table */}
+        <div className="bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-fluent-shadow overflow-hidden">
+          {loading && orders.length === 0 ? (
+            <div className="py-40 flex flex-col items-center justify-center gap-4">
+               <RefreshCw className="w-12 h-12 animate-spin text-primary opacity-20" />
+               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Sincronizando órdenes...</p>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="py-40 flex flex-col items-center justify-center text-center px-6">
+               <div className="size-24 bg-slate-50 dark:bg-slate-900/50 rounded-full flex items-center justify-center text-slate-200 dark:text-slate-800 mb-6 border-4 border-white dark:border-slate-800 shadow-inner">
+                  <Search size={48} />
+               </div>
+               <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Sin resultados</h3>
+               <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm mt-2 font-medium">No se encontraron órdenes de compra que coincidan con los criterios de búsqueda.</p>
+               <Button variant="outline" onClick={handleReset} className="mt-8 rounded-xl font-bold uppercase tracking-widest text-[10px]">Limpiar Filtros</Button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+              <Table className="min-w-[1200px]">
+                <TableHeader>
+                  <TableRow className="bg-slate-50/80 dark:bg-slate-800/50 hover:bg-slate-50/80 border-b border-slate-100 dark:border-slate-800">
+                    <TableHead className="w-14 py-5 px-6">
+                      <Checkbox
+                        checked={selectedOrders.size === orders.length && orders.length > 0}
+                        onCheckedChange={handleSelectAll}
+                        className="rounded border-slate-300"
+                      />
+                    </TableHead>
+                    <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-500 px-4">Orden ID</TableHead>
+                    <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-500 px-4">Proveedor</TableHead>
+                    <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-500 px-4">Fecha Emisión</TableHead>
+                    <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-500 px-4">Estado Pago</TableHead>
+                    <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-500 px-4">Prioridad</TableHead>
+                    <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-500 px-4 text-right">Monto Total</TableHead>
+                    <TableHead className="text-[11px] font-black uppercase tracking-widest text-slate-500 px-4 text-right">Saldo Pendiente</TableHead>
+                    <TableHead className="w-20 px-6"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-slate-50 dark:divide-slate-800">
+                  {orders.map(order => (
+                    <TableRow key={order.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group cursor-pointer" onClick={() => handleViewDetail(order.id)}>
+                      <TableCell className="py-5 px-6" onClick={e => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedOrders.has(order.id)}
+                          onCheckedChange={checked => handleSelectOrder(order.id, checked)}
+                          className="rounded border-slate-300"
+                        />
+                      </TableCell>
+                      <TableCell className="px-4">
+                        <span className="font-black text-slate-900 dark:text-white text-sm">#{order.id}</span>
+                      </TableCell>
+                      <TableCell className="px-4">
+                        <div className="flex items-center gap-3">
+                           <div className="size-9 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-slate-500 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                              <PlusCircle size={18} />
+                           </div>
+                           <div className="flex flex-col">
+                              <span className="font-bold text-slate-900 dark:text-white text-sm truncate max-w-[200px]">
+                                {order.supplier?.name}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-medium uppercase tracking-widest truncate max-w-[180px]">
+                                {order.supplier?.contact || 'Sin contacto'}
+                              </span>
+                           </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4">
+                        <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                          {order.issue_date ? dateFormatter.format(new Date(order.issue_date)) : '-'}
                         </span>
-                      )
-                    }
+                      </TableCell>
+                      <TableCell className="px-4">
+                        {getStatusBadge(order.status)}
+                      </TableCell>
+                      <TableCell className="px-4">
+                        {getPriorityBadge(order.priority)}
+                      </TableCell>
+                      <TableCell className="px-4 text-right font-bold text-slate-900 dark:text-white tabular-nums">
+                        {currencyFormatter(lang, order.currency).format(order.total_amount)}
+                      </TableCell>
+                      <TableCell className="px-4 text-right font-black text-primary dark:text-primary-foreground tabular-nums">
+                        {currencyFormatter(lang, order.currency).format(order.pendingAmount)}
+                      </TableCell>
+                      <TableCell className="px-6 text-right" onClick={e => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-9 rounded-full text-slate-400 hover:text-primary hover:bg-primary/5 transition-all">
+                              <MoreVertical size={18} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-16">
+                            <DropdownMenuItem onClick={() => handleViewDetail(order.id)} className="gap-3 py-3 font-bold rounded-lg focus:bg-slate-50">
+                              <Search size={18} /> Ver Detalle
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleRegisterPayment(order)}
+                              disabled={order.status === 'completed' || order.status === 'paid'}
+                              className="gap-3 py-3 font-bold rounded-lg focus:bg-green-50 focus:text-green-600 dark:focus:bg-green-900/30"
+                            >
+                              <CircleDollarSign size={18} /> Registrar Pago
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-3 py-3 font-bold rounded-lg text-slate-400 focus:bg-slate-50">
+                              <Download size={18} /> Exportar PDF
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
-                    const pageNumber = Number(page)
-                    const isActive = pageNumber === meta.page
-
-                    return (
-                      <button
-                        key={pageNumber}
-                        type='button'
-                        className={`purchase-payments-mvp__page-button${
-                          isActive
-                            ? ' purchase-payments-mvp__page-button--active'
-                            : ''
-                        }`}
-                        onClick={() => handleDirectPageChange(pageNumber)}
-                        disabled={loading}
-                      >
-                        {pageNumber}
-                      </button>
-                    )
-                  })}
-                </div>
-                <button
-                  type='button'
-                  className='purchase-payments-mvp__nav-button'
-                  onClick={() => handlePageChange(1)}
-                  aria-label={t('purchasePaymentsMvp.pagination.next')}
-                  disabled={loading || meta.page >= meta.totalPages}
-                >
-                  <ChevronRight />
-                </button>
+          {/* Pagination */}
+          <div className="px-8 py-5 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+              Página {meta.page} de {meta.totalPages} ({meta.total} registros totales)
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilter('page', meta.page - 1)}
+                disabled={!meta.hasPrevious || loading}
+                className="h-10 rounded-lg border-slate-200 dark:border-slate-700 font-bold px-4"
+              >
+                <ChevronLeft size={16} className="mr-2" /> Anterior
+              </Button>
+              <div className="flex items-center gap-1 px-4">
+                 {[...Array(meta.totalPages)].map((_, i) => {
+                   const p = i + 1;
+                   // Show only first, last and near current page
+                   if (p === 1 || p === meta.totalPages || (p >= meta.page - 1 && p <= meta.page + 1)) {
+                     return (
+                       <Button
+                        key={p}
+                        variant={p === meta.page ? "default" : "ghost"}
+                        size="sm"
+                        className={`size-10 rounded-lg font-black ${p === meta.page ? 'bg-primary text-white shadow-md' : 'text-slate-500'}`}
+                        onClick={() => setFilter('page', p)}
+                       >
+                         {p}
+                       </Button>
+                     )
+                   }
+                   if (p === meta.page - 2 || p === meta.page + 2) return <span key={p} className="px-1 text-slate-300">...</span>
+                   return null;
+                 })}
               </div>
-            </CardFooter>
-          </Card>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilter('page', meta.page + 1)}
+                disabled={!meta.hasNext || loading}
+                className="h-10 rounded-lg border-slate-200 dark:border-slate-700 font-bold px-4"
+              >
+                Siguiente <ChevronRight size={16} className="ml-2" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
+
       <RegisterPaymentModal
-        open={isRegisterModalOpen}
-        onOpenChange={handleModalOpenChange}
+        isOpen={isRegisterModalOpen}
+        onClose={() => setRegisterModalOpen(false)}
         order={modalOrder}
-        onSubmit={handleRegisterPaymentSubmit}
+        onSuccess={handlePaymentSuccess}
       />
+
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   )
 }

@@ -1,78 +1,107 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calendar, Clock } from 'lucide-react'
+import { Calendar, Clock, ChevronRight } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
 
+/**
+ * ReservationsAndSchedules Component
+ * Refactored to Tailwind CSS following Fluent 2.0 Design System.
+ * Provides a high-level navigation entry for Reservations and Schedules management.
+ */
 const ReservationsAndSchedules = () => {
   const navigate = useNavigate()
+  const { t } = useI18n()
 
   return (
-    <div className='reservations-schedules-page'>
-      <header className='reservations-schedules-page__header'>
-        <h1 className='reservations-schedules-page__title'>
-          Gestión de Reservas y Horarios
+    <div className="flex flex-col gap-8 animate-in fade-in duration-500 max-w-7xl mx-auto py-4">
+      {/* Header Section */}
+      <header className="flex flex-col gap-2 border-l-4 border-primary pl-6 py-2">
+        <h1 className="text-3xl md:text-4xl font-black text-text-primary-light dark:text-text-primary-dark tracking-tighter uppercase leading-none font-display">
+          {t('reservations.title', 'Gestión de Reservas y Horarios')}
         </h1>
-        <p className='reservations-schedules-page__subtitle'>
-          Seleccione una acción para comenzar
+        <p className="text-text-secondary-light dark:text-text-secondary-dark text-sm md:text-base font-medium font-display">
+          {t('reservations.subtitle', 'Seleccione una acción para administrar su establecimiento y servicios')}
         </p>
       </header>
 
-      <section className='reservations-schedules-page__cards'>
+      {/* Cards Grid */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
         {/* Reservations Card */}
-        <div className='reservation-card' onClick={() => navigate('/reservas')}>
-          <div className='reservation-card__content'>
-            <div className='reservation-card__icon-container'>
-              <Calendar
-                className='reservation-card__icon'
-                size={32}
-                strokeWidth={2}
-              />
+        <div 
+          className="group relative flex flex-col justify-between p-8 md:p-10 bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-2 hover:shadow-fluent-16 transition-all duration-500 cursor-pointer overflow-hidden min-h-[400px]"
+          onClick={() => navigate('/reservas')}
+        >
+          {/* Subtle Background Pattern (Icon) */}
+          <div className="absolute top-0 right-0 p-8 text-primary/5 group-hover:text-primary/10 transition-colors pointer-events-none transform group-hover:scale-110 group-hover:rotate-12 duration-700">
+            <Calendar size={180} strokeWidth={1} />
+          </div>
+
+          <div className="relative z-10 space-y-8">
+            <div className="size-16 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center text-primary shadow-sm border border-primary/5 group-hover:scale-110 transition-transform duration-500">
+              <Calendar size={36} strokeWidth={2.5} />
             </div>
-            <div className='reservation-card__info'>
-              <h2 className='reservation-card__title'>Reservas</h2>
-              <p className='reservation-card__description'>
-                Gestionar las reservas de los clientes, ver disponibilidad y
-                administrar citas.
+            
+            <div className="space-y-4">
+              <h2 className="text-2xl md:text-3xl font-black text-text-primary-light dark:text-text-primary-dark tracking-tight uppercase font-display">
+                {t('reservations.cards.reservations.title', 'Reservas')}
+              </h2>
+              <p className="text-text-secondary-light dark:text-text-secondary-dark text-base md:text-lg leading-relaxed font-medium max-w-md font-display">
+                {t('reservations.cards.reservations.description', 'Gestione las citas de sus clientes en tiempo real. Vea disponibilidad, administre servicios y coordine cancelaciones de manera eficiente.')}
               </p>
             </div>
           </div>
-          <button
-            className='btn btn--primary reservation-card__button'
-            onClick={e => {
-              e.stopPropagation()
-              navigate('/reservas')
-            }}
-          >
-            Gestionar Reservas
-          </button>
+          
+          <div className="mt-12 relative z-10">
+            <button
+              className="w-full h-14 bg-primary text-white text-xs font-black uppercase tracking-[0.2em] rounded-lg shadow-lg shadow-primary/20 hover:bg-primary-hover active:scale-[0.98] transition-all flex items-center justify-center gap-3 group/btn font-display"
+              onClick={e => {
+                e.stopPropagation()
+                navigate('/reservas')
+              }}
+            >
+              {t('reservations.cards.reservations.button', 'Gestionar Reservas')}
+              <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+            </button>
+          </div>
         </div>
 
         {/* Schedules Card */}
-        <div className='reservation-card' onClick={() => navigate('/horarios')}>
-          <div className='reservation-card__content'>
-            <div className='reservation-card__icon-container'>
-              <Clock
-                className='reservation-card__icon'
-                size={32}
-                strokeWidth={2}
-              />
+        <div 
+          className="group relative flex flex-col justify-between p-8 md:p-10 bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-2 hover:shadow-fluent-16 transition-all duration-500 cursor-pointer overflow-hidden min-h-[400px]"
+          onClick={() => navigate('/horarios')}
+        >
+          {/* Subtle Background Pattern (Icon) */}
+          <div className="absolute top-0 right-0 p-8 text-blue-500/5 group-hover:text-blue-500/10 transition-colors pointer-events-none transform group-hover:scale-110 group-hover:rotate-12 duration-700">
+            <Clock size={180} strokeWidth={1} />
+          </div>
+
+          <div className="relative z-10 space-y-8">
+            <div className="size-16 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-sm border border-blue-100 dark:border-blue-800 group-hover:scale-110 transition-transform duration-500">
+              <Clock size={36} strokeWidth={2.5} />
             </div>
-            <div className='reservation-card__info'>
-              <h2 className='reservation-card__title'>Horarios</h2>
-              <p className='reservation-card__description'>
-                Configurar y administrar los horarios disponibles, turnos y
-                excepciones.
+            
+            <div className="space-y-4">
+              <h2 className="text-2xl md:text-3xl font-black text-text-primary-light dark:text-text-primary-dark tracking-tight uppercase font-display">
+                {t('reservations.cards.schedules.title', 'Horarios')}
+              </h2>
+              <p className="text-text-secondary-light dark:text-text-secondary-dark text-base md:text-lg leading-relaxed font-medium max-w-md font-display">
+                {t('reservations.cards.schedules.description', 'Configure turnos de trabajo, horarios de apertura y cierres especiales. Administre excepciones para festivos y ajuste la capacidad de servicio.')}
               </p>
             </div>
           </div>
-          <button
-            className='btn btn--primary reservation-card__button'
-            onClick={e => {
-              e.stopPropagation()
-              navigate('/horarios')
-            }}
-          >
-            Gestionar Horarios
-          </button>
+          
+          <div className="mt-12 relative z-10">
+            <button
+              className="w-full h-14 bg-primary text-white text-xs font-black uppercase tracking-[0.2em] rounded-lg shadow-lg shadow-primary/20 hover:bg-primary-hover active:scale-[0.98] transition-all flex items-center justify-center gap-3 group/btn font-display"
+              onClick={e => {
+                e.stopPropagation()
+                navigate('/horarios')
+              }}
+            >
+              {t('reservations.cards.schedules.button', 'Gestionar Horarios')}
+              <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+            </button>
+          </div>
         </div>
       </section>
     </div>

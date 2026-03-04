@@ -5,9 +5,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, RefreshCw, X, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useI18n } from '@/lib/i18n';
 import usePriceAdjustmentNewStore from '@/store/usePriceAdjustmentNewStore';
 import { priceAdjustmentService } from '@/services/priceAdjustmentService';
@@ -112,31 +111,32 @@ const PriceAdjustmentDetail = () => {
     };
   }, [resetState]);
 
+  // Función para cargar el historial de ajustes (compartida entre montaje y actualización)
+  const loadHistory = useCallback(async () => {
+    if (!product || !product.product_id) return;
+
+    setLoadingHistory(true);
+    setHistoryError(null);
+
+    try {
+      const result = await priceAdjustmentService.getProductHistory(product.product_id, 10, 0);
+      // Filtrar solo ajustes de precio
+      const priceAdjustments = (result.history || []).filter(
+        adj => adj.adjustment_type === 'price'
+      );
+      setHistory(priceAdjustments);
+    } catch (error) {
+      console.error('Error loading history:', error);
+      setHistoryError(error.message || t('priceAdjustmentDetail.history.error', 'Error al cargar historial'));
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [product, t]);
+
   // Cargar historial de ajustes al montar el componente
   useEffect(() => {
-    const loadHistory = async () => {
-      if (!product || !product.product_id) return;
-
-      setLoadingHistory(true);
-      setHistoryError(null);
-
-      try {
-        const result = await priceAdjustmentService.getProductHistory(product.product_id, 10, 0);
-        // Filtrar solo ajustes de precio
-        const priceAdjustments = (result.history || []).filter(
-          adj => adj.adjustment_type === 'price'
-        );
-        setHistory(priceAdjustments);
-      } catch (error) {
-        console.error('Error loading history:', error);
-        setHistoryError(error.message || t('priceAdjustmentDetail.history.error', 'Error al cargar historial'));
-      } finally {
-        setLoadingHistory(false);
-      }
-    };
-
     loadHistory();
-  }, [product, t]);
+  }, [loadHistory]);
 
   // Validar formulario
   const validateForm = () => {
@@ -154,7 +154,7 @@ const PriceAdjustmentDetail = () => {
     if (formData.metadata.trim()) {
       try {
         JSON.parse(formData.metadata);
-      } catch (e) {
+      } catch {
         errors.metadata = t('priceAdjustmentDetail.error.metadata', 'JSON inválido');
       }
     }
@@ -199,15 +199,7 @@ const PriceAdjustmentDetail = () => {
 
     if (result.success) {
       // Recargar historial después de crear el ajuste
-      try {
-        const historyResult = await priceAdjustmentService.getProductHistory(product.product_id, 10, 0);
-        const priceAdjustments = (historyResult.history || []).filter(
-          adj => adj.adjustment_type === 'price'
-        );
-        setHistory(priceAdjustments);
-      } catch (err) {
-        console.error('Error reloading history:', err);
-      }
+      await loadHistory();
 
       // Redirigir de vuelta a la página de búsqueda después de un breve delay
       setTimeout(() => {
@@ -225,106 +217,108 @@ const PriceAdjustmentDetail = () => {
   const isFormValid = formData.new_price && formData.reason.trim().length >= 10 && Object.keys(formErrors).length === 0;
 
   return (
-    <div className="price-adjustment-detail">
-      {/* Header con navegación */}
-      <div className="price-adjustment-detail__header">
-        <button
-          onClick={() => navigate('/ajustes-precios')}
-          className="back-button"
-          aria-label={t('action.back', 'Volver')}
-        >
-          <ArrowLeft className="back-button__icon" />
-          <span className="back-button__text">{t('action.back', 'Volver')}</span>
-        </button>
-        <h1 className="price-adjustment-detail__title">
-          {t('priceAdjustmentDetail.title', 'Ajuste de Precio para')}: {product.product_name || product.name} / {product.product_id || product.id}
-        </h1>
-      </div>
-
-      <div className="price-adjustment-detail__content">
-        {/* Columna izquierda - Precio actual y formulario */}
-        <div className="price-adjustment-detail__left">
-          {/* Card de precio actual */}
-          <div className="current-price-card">
-            <h2 className="current-price-card__label">
-              {t('priceAdjustmentDetail.currentPrice', 'Precio Actual')}
-            </h2>
-            <p className="current-price-card__value">
-              ${currentPrice.toFixed(2)}
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+      <header className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
+        <div className='flex items-center gap-4'>
+          <button
+            onClick={() => navigate('/ajustes-precios')}
+            className="p-2 text-text-secondary hover:bg-slate-100 rounded-lg transition-colors"
+            aria-label={t('action.back', 'Volver')}
+          >
+            <ArrowLeft size={20} strokeWidth={2} />
+          </button>
+          <div className='flex flex-col gap-1 border-l-4 border-primary pl-4'>
+            <h1 className="text-2xl font-black text-text-main tracking-tighter uppercase leading-tight">
+              {product.product_name || product.name}
+            </h1>
+            <p className='text-xs font-mono text-primary font-bold uppercase tracking-widest'>
+              ID: {product.product_id || product.id}
             </p>
+          </div>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Columna izquierda - Precio actual y formulario */}
+        <div className="lg:col-span-5 flex flex-col gap-6">
+          {/* Card de precio actual */}
+          <div className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle flex items-center justify-between overflow-hidden">
+            <div className='flex-1 min-w-0'>
+              <p className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1'>
+                {t('priceAdjustmentDetail.currentPrice', 'Precio Actual')}
+              </p>
+              <h2 className='text-3xl font-black text-text-main break-words'>
+                PYG {currentPrice.toLocaleString('es-PY')}
+              </h2>
+            </div>
+            <div className='flex-shrink-0 size-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center'>
+              <TrendingUp size={24} />
+            </div>
           </div>
 
           {/* Formulario de ajuste */}
-          <div className="adjustment-form-card">
-            <h2 className="adjustment-form-card__title">
+          <div className="bg-white p-6 rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden">
+            <h2 className='text-sm font-black uppercase text-text-main tracking-widest mb-6 border-b border-slate-100 pb-3'>
               {t('priceAdjustmentDetail.formTitle', 'Registrar Nuevo Ajuste')}
             </h2>
 
             {error && (
-              <div className="form-error">
-                <p className="form-error__text">{error}</p>
-                <button
-                  onClick={clearError}
-                  className="form-error__close"
-                  aria-label={t('action.close', 'Cerrar')}
-                >
-                  ×
+              <div className="mb-6 p-4 bg-error/10 border-l-4 border-error rounded-r-lg flex items-center justify-between">
+                <p className="text-xs text-error font-bold">{error}</p>
+                <button onClick={clearError} className="text-error hover:text-red-700 transition-colors">
+                  <X size={16} />
                 </button>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="adjustment-form">
-              {/* Nuevo precio */}
-              <div className="form-field">
-                <label htmlFor="new_price" className="form-field__label">
-                  {t('priceAdjustmentDetail.field.newPrice', 'Nuevo Precio ($)')}
-                </label>
-                <Input
-                  id="new_price"
-                  name="new_price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.new_price}
-                  onChange={handleChange}
-                  placeholder={t('priceAdjustmentDetail.field.newPrice.placeholder', 'ej., 21.50')}
-                  className={formErrors.new_price ? 'form-field__input--error' : ''}
-                />
-                {formErrors.new_price && (
-                  <p className="form-field__error">{formErrors.new_price}</p>
-                )}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className='flex flex-col gap-1.5'>
+                  <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">
+                    {t('priceAdjustmentDetail.field.newPrice', 'Nuevo Precio (PYG)')}
+                  </label>
+                  <input
+                    name="new_price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.new_price}
+                    onChange={handleChange}
+                    placeholder="ej. 25000"
+                    className={`h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-bold ${formErrors.new_price ? 'border-error ring-1 ring-error' : ''}`}
+                  />
+                  {formErrors.new_price && (
+                    <p className="text-error text-[10px] font-bold uppercase">{formErrors.new_price}</p>
+                  )}
+                </div>
+
+                <div className='flex flex-col gap-1.5'>
+                  <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">
+                    {t('priceAdjustmentDetail.field.unit', 'Unidad')}
+                  </label>
+                  <select
+                    name="unit"
+                    value={formData.unit}
+                    onChange={handleChange}
+                    className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  >
+                    <option value="UNIT">{t('priceAdjustmentDetail.unit.unit', 'unidad')}</option>
+                    <option value="kg">{t('priceAdjustmentDetail.unit.kg', 'kg')}</option>
+                    <option value="meter">{t('priceAdjustmentDetail.unit.meter', 'metro')}</option>
+                    <option value="pack">{t('priceAdjustmentDetail.unit.pack', 'paquete')}</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Unidad de medida */}
-              <div className="form-field">
-                <label htmlFor="unit" className="form-field__label">
-                  {t('priceAdjustmentDetail.field.unit', 'Unidad de Medida')}
-                </label>
-                <select
-                  id="unit"
-                  name="unit"
-                  value={formData.unit}
-                  onChange={handleChange}
-                  className="form-field__select"
-                >
-                  <option value="UNIT">{t('priceAdjustmentDetail.unit.unit', 'unidad')}</option>
-                  <option value="kg">{t('priceAdjustmentDetail.unit.kg', 'kg')}</option>
-                  <option value="meter">{t('priceAdjustmentDetail.unit.meter', 'metro')}</option>
-                  <option value="pack">{t('priceAdjustmentDetail.unit.pack', 'paquete')}</option>
-                </select>
-              </div>
-
-              {/* Plantilla de Razón */}
-              <div className="form-field">
-                <label htmlFor="reasonTemplate" className="form-field__label">
+              <div className='flex flex-col gap-1.5'>
+                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">
                   {t('priceAdjustmentDetail.field.reasonTemplate', 'Plantilla de Razón')}
                 </label>
                 <select
-                  id="reasonTemplate"
                   name="reasonTemplate"
                   value={formData.reasonTemplate}
                   onChange={(e) => handleReasonTemplateChange(e.target.value)}
-                  className="form-field__select"
+                  className="h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                 >
                   {reasonTemplates.map((template) => (
                     <option key={template.value} value={template.value}>
@@ -334,69 +328,63 @@ const PriceAdjustmentDetail = () => {
                 </select>
               </div>
 
-              {/* Razón del ajuste */}
-              <div className="form-field">
-                <label htmlFor="reason" className="form-field__label">
+              <div className='flex flex-col gap-1.5'>
+                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider flex items-center justify-between">
                   {t('priceAdjustmentDetail.field.reason', 'Razón del Ajuste')}
-                  <span className="form-field__label-hint">
+                  <span className='text-[9px] px-1.5 py-0.5 rounded bg-slate-100'>
                     {formData.reasonTemplate === 'CUSTOM'
-                      ? t('priceAdjustmentDetail.field.reason.hintCustom', '(Personalizada)')
-                      : t('priceAdjustmentDetail.field.reason.hintAuto', '(Generada automáticamente)')}
+                      ? t('priceAdjustmentDetail.field.reason.hintCustom', 'Personalizada')
+                      : t('priceAdjustmentDetail.field.reason.hintAuto', 'Automática')}
                   </span>
                 </label>
                 {formData.reasonTemplate === 'CUSTOM' ? (
                   <>
                     <textarea
-                      id="reason"
                       name="reason"
                       value={formData.reason}
                       onChange={handleChange}
                       rows={3}
                       maxLength={500}
-                      placeholder={t('priceAdjustmentDetail.field.reason.placeholder', 'Escriba la razón personalizada del ajuste de precio...')}
-                      className={formErrors.reason ? 'form-field__textarea form-field__textarea--error' : 'form-field__textarea'}
+                      className={`p-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all ${formErrors.reason ? 'border-error ring-1 ring-error' : ''}`}
+                      placeholder={t('priceAdjustmentDetail.field.reason.placeholder', 'Escriba la razón personalizada...')}
                     />
-                    <p className="form-field__char-count">
+                    <p className="text-right text-[9px] text-slate-400 font-bold uppercase">
                       {formData.reason.length}/500 {t('priceAdjustmentDetail.field.reason.characters', 'caracteres')}
                     </p>
                   </>
                 ) : (
-                  <div className="form-field__readonly">
-                    <p className="form-field__readonly-text">
-                      {formData.reason || t('priceAdjustmentDetail.field.reason.selectTemplate', 'Seleccione una plantilla arriba para generar la razón automáticamente')}
-                    </p>
+                  <div className="p-3 bg-slate-50 border border-border-subtle rounded-lg text-sm text-text-secondary italic min-h-[80px]">
+                    {formData.reason || t('priceAdjustmentDetail.field.reason.selectTemplate', 'Seleccione una plantilla arriba')}
                   </div>
                 )}
                 {formErrors.reason && (
-                  <p className="form-field__error">{formErrors.reason}</p>
+                  <p className="text-error text-[10px] font-bold uppercase">{formErrors.reason}</p>
                 )}
               </div>
 
-              {/* Metadata adicional */}
-              <div className="form-field">
-                <label htmlFor="metadata" className="form-field__label">
+              <div className='flex flex-col gap-1.5'>
+                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">
                   {t('priceAdjustmentDetail.field.metadata', 'Metadata Adicional (JSON)')}
                 </label>
                 <textarea
-                  id="metadata"
                   name="metadata"
                   value={formData.metadata}
                   onChange={handleChange}
-                  rows={3}
-                  placeholder='{ "campaign_id": "SUMMER2024", "approved_by": "manager" }'
-                  className="form-field__textarea form-field__textarea--code"
+                  rows={2}
+                  className={`p-3 border border-border-subtle rounded-lg bg-white text-xs font-mono focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all ${formErrors.metadata ? 'border-error ring-1 ring-error' : ''}`}
+                  placeholder='{ "source": "market_analysis" }'
                 />
                 {formErrors.metadata && (
-                  <p className="form-field__error">{formErrors.metadata}</p>
+                  <p className="text-error text-[10px] font-bold uppercase">{formErrors.metadata}</p>
                 )}
               </div>
 
-              {/* Botón de envío */}
               <Button
                 type="submit"
                 disabled={!isFormValid || creating}
-                className="submit-button"
+                className="w-full h-12 bg-primary text-white text-xs font-black uppercase rounded shadow-sm hover:bg-primary-hover active:scale-[0.98] transition-all flex items-center justify-center gap-2"
               >
+                {creating ? <RefreshCw className='animate-spin' size={16} /> : null}
                 {creating
                   ? t('priceAdjustmentDetail.action.saving', 'Guardando...')
                   : t('priceAdjustmentDetail.action.submit', 'Registrar Cambio')
@@ -407,95 +395,99 @@ const PriceAdjustmentDetail = () => {
         </div>
 
         {/* Columna derecha - Historial de ajustes */}
-        <div className="price-adjustment-detail__right">
-          <div className="history-card">
-            <h2 className="history-card__title">
-              {t('priceAdjustmentDetail.historyTitle', 'Historial de Ajustes de Precio')}
-            </h2>
+        <div className="lg:col-span-7">
+          <div className="bg-white rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden h-full flex flex-col">
+            <div className='px-6 py-4 border-b border-border-subtle flex justify-between items-center bg-[#fafafa]'>
+              <h3 className='text-[13px] font-bold text-gray-700 uppercase tracking-widest'>
+                {t('priceAdjustmentDetail.historyTitle', 'Historial de Ajustes')}
+              </h3>
+              <Info size={16} className='text-slate-400' />
+            </div>
 
-            {loadingHistory ? (
-              <div className="history-loading">
-                <div className="loading-spinner" />
-                <p>{t('priceAdjustmentDetail.history.loading', 'Cargando historial...')}</p>
-              </div>
-            ) : historyError ? (
-              <div className="history-error">
-                <p className="history-error__text">{historyError}</p>
-              </div>
-            ) : (
-              <div className="history-table-wrapper">
-                <table className="history-table">
-                  <thead className="history-table__head">
-                    <tr>
-                      <th className="history-table__th">{t('priceAdjustmentDetail.table.date', 'Fecha')}</th>
-                      <th className="history-table__th">{t('priceAdjustmentDetail.table.oldPrice', 'Precio Anterior')}</th>
-                      <th className="history-table__th">{t('priceAdjustmentDetail.table.newPrice', 'Nuevo Precio')}</th>
-                      <th className="history-table__th">{t('priceAdjustmentDetail.table.change', 'Cambio')}</th>
-                      <th className="history-table__th">{t('priceAdjustmentDetail.table.reason', 'Razón')}</th>
-                      <th className="history-table__th">{t('priceAdjustmentDetail.table.actions', 'Acciones')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="history-table__body">
-                    {history.length === 0 ? (
+            <div className="flex-1 overflow-auto custom-scrollbar">
+              {loadingHistory ? (
+                <div className="py-20 flex flex-col items-center gap-3">
+                  <RefreshCw className="animate-spin text-primary" size={32} />
+                  <p className='text-xs font-bold text-slate-400 uppercase tracking-widest'>Cargando historial...</p>
+                </div>
+              ) : historyError ? (
+                <div className="p-12 text-center text-error italic text-sm">{historyError}</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-gray-50/50 border-b border-border-subtle text-[11px] font-black uppercase text-slate-500 tracking-wider sticky top-0 z-10">
                       <tr>
-                        <td colSpan="6" className="history-table__empty">
-                          <p className="history-empty-message">
-                            {t('priceAdjustmentDetail.history.empty', 'No hay historial de ajustes de precio para este producto')}
-                          </p>
-                        </td>
+                        <th className="py-3 px-6 text-center">{t('priceAdjustmentDetail.table.date', 'Fecha')}</th>
+                        <th className="py-3 px-4 text-center">{t('priceAdjustmentDetail.table.prices', 'Precios')}</th>
+                        <th className="py-3 px-4 text-center">{t('priceAdjustmentDetail.table.change', 'Cambio')}</th>
+                        <th className="py-3 px-4">{t('priceAdjustmentDetail.table.reason', 'Razón')}</th>
+                        <th className="py-3 px-6 text-right"></th>
                       </tr>
-                    ) : (
-                      history.map((adjustment) => {
-                        const changePercent = adjustment.old_value > 0
-                          ? ((adjustment.value_change / adjustment.old_value) * 100).toFixed(2)
-                          : 0;
-                        const isIncrease = adjustment.value_change > 0;
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 text-xs">
+                      {history.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="py-20 text-center italic text-slate-400">
+                            {t('priceAdjustmentDetail.history.empty', 'No hay historial de ajustes')}
+                          </td>
+                        </tr>
+                      ) : (
+                        history.map((adj) => {
+                          const changePercent = adj.old_value > 0
+                            ? ((adj.value_change / adj.old_value) * 100).toFixed(1)
+                            : 0;
+                          const isIncrease = adj.value_change > 0;
 
-                        return (
-                          <tr key={adjustment.adjustment_id} className="history-table__row">
-                            <td className="history-table__td">
-                              {new Date(adjustment.adjustment_date).toLocaleString('es-PY', {
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </td>
-                            <td className="history-table__td">
-                              PYG {adjustment.old_value.toLocaleString('es-PY')}
-                            </td>
-                            <td className="history-table__td">
-                              PYG {adjustment.new_value.toLocaleString('es-PY')}
-                            </td>
-                            <td className={`history-table__td history-table__td--${isIncrease ? 'increase' : 'decrease'}`}>
-                              {isIncrease ? '↑' : '↓'} PYG {Math.abs(adjustment.value_change).toLocaleString('es-PY')}
-                              <span className="change-percent">({isIncrease ? '+' : ''}{changePercent}%)</span>
-                            </td>
-                            <td className="history-table__td history-table__td--reason" title={adjustment.reason}>
-                              {adjustment.reason.length > 50
-                                ? `${adjustment.reason.substring(0, 50)}...`
-                                : adjustment.reason}
-                            </td>
-                            <td className="history-table__td history-table__td--actions">
-                              <button
-                                className="btn btn--sm btn--secondary"
-                                onClick={() => navigate(`/ajustes-precios/historial/${adjustment.adjustment_id}`, {
-                                  state: { adjustment, product }
-                                })}
-                                aria-label={t('priceAdjustmentDetail.action.viewDetails', 'Ver detalles')}
-                              >
-                                {t('priceAdjustmentDetail.action.viewDetails', 'Ver Detalles')}
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                          return (
+                            <tr key={adj.adjustment_id} className="hover:bg-slate-50 transition-colors">
+                              <td className="py-4 px-6 text-center">
+                                <span className='font-medium block'>
+                                  {new Date(adj.adjustment_date).toLocaleDateString('es-PY')}
+                                </span>
+                                <span className='text-[9px] text-slate-400 font-bold uppercase'>
+                                  {new Date(adj.adjustment_date).toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4 text-center">
+                                <div className='flex flex-col items-center gap-0.5'>
+                                  <span className='text-slate-400 line-through'>
+                                    PYG {adj.old_value.toLocaleString('es-PY')}
+                                  </span>
+                                  <span className='font-black text-text-main'>
+                                    PYG {adj.new_value.toLocaleString('es-PY')}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 text-center">
+                                <div className={`flex items-center justify-center gap-1 font-black ${isIncrease ? 'text-success' : 'text-error'}`}>
+                                  {isIncrease ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                                  {isIncrease ? '+' : ''}{changePercent}%
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 max-w-[200px]">
+                                <p className='truncate italic text-slate-500' title={adj.reason}>
+                                  {adj.reason}
+                                </p>
+                              </td>
+                              <td className="py-4 px-6 text-right">
+                                <button
+                                  className="px-3 py-1 bg-white border border-border-subtle rounded text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-colors"
+                                  onClick={() => navigate(`/ajustes-precios/historial/${adj.adjustment_id}`, {
+                                    state: { adjustment: adj, product }
+                                  })}
+                                >
+                                  {t('priceAdjustmentDetail.action.viewDetails', 'Detalles')}
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

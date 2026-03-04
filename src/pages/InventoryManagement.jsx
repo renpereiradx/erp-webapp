@@ -1,9 +1,3 @@
-/**
- * Página de Gestión de Inventarios (Ajuste Masivo)
- * Permite ver, crear y gestionar inventarios masivos
- * Patrón: MVP - UI First (endpoints se implementarán después)
- */
-
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
@@ -15,6 +9,7 @@ import ToastContainer from '@/components/ui/ToastContainer'
 
 // Iconos de Lucide React
 import {
+  ArrowLeft,
   Filter,
   Calendar,
   Download,
@@ -26,6 +21,7 @@ import {
   Trash2,
   Search,
   Loader2,
+  Package,
 } from 'lucide-react'
 
 const InventoryManagement = () => {
@@ -44,7 +40,6 @@ const InventoryManagement = () => {
     fetchInventories,
     fetchInventoryDetails,
     invalidateInventory,
-    clearError,
     setPage,
     createInventory,
     clearSelectedInventory,
@@ -148,10 +143,6 @@ const InventoryManagement = () => {
   // Handler para seleccionar un producto del dropdown
   const handleSelectProduct = product => {
     // Agregar producto a la lista con toda su información
-    // Nota: searchProducts devuelve productos con estructura financial que usa:
-    // - product_id (no id)
-    // - product_name (no name)
-    // - stock_quantity (no quantity ni stock)
     const newItem = {
       product_id: product.product_id,
       product_name: product.product_name || 'N/A',
@@ -195,15 +186,10 @@ const InventoryManagement = () => {
     }
   }, [])
 
-  // Cargar inventarios al montar el componente
+  // Cargar inventarios al montar y cuando cambia la paginación
   useEffect(() => {
     fetchInventories(pagination.page, pagination.pageSize)
-  }, [])
-
-  // Recargar cuando cambia la página
-  useEffect(() => {
-    fetchInventories(pagination.page, pagination.pageSize)
-  }, [pagination.page])
+  }, [fetchInventories, pagination.page, pagination.pageSize])
 
   // Calcular índices para paginación
   const startIndex = (pagination.page - 1) * pagination.pageSize
@@ -300,7 +286,6 @@ const InventoryManagement = () => {
     }
 
     // Preparar datos para la API con sanitización
-    // IMPORTANTE: Sanitizar quantity_checked para asegurar que siempre sea número
     const inventoryData = {
       items: inventoryForm.items.map(item => ({
         product_id: String(item.product_id).trim(),
@@ -340,7 +325,6 @@ const InventoryManagement = () => {
       setProductSearch('')
       setSearchResults([])
       setShowDropdown(false)
-      // El store ya recargará los datos automáticamente
     } else {
       // Mostrar notificación de error
       toast.error(result.error || 'Error al crear el inventario', 5000)
@@ -429,10 +413,7 @@ const InventoryManagement = () => {
     setOpenMenuId(null)
   }
 
-  const handleEdit = id => {
-    // TODO: Implementar edición de inventario
-    setOpenMenuId(null)
-  }
+  const handleEdit = () => setOpenMenuId(null)
 
   const handleDelete = async id => {
     setShowDeleteConfirm(id)
@@ -483,13 +464,13 @@ const InventoryManagement = () => {
     return { label: 'Inválido', type: 'invalid' }
   }
 
-  const getStatusClass = statusType => {
-    const statusMap = {
-      active: 'inventory-management__badge--active',
-      invalid: 'inventory-management__badge--invalid',
-      reverted: 'inventory-management__badge--reverted',
+  const getStatusColorClass = statusType => {
+    switch (statusType) {
+      case 'active': return 'bg-[#dff6dd] text-[#107c10]'
+      case 'reverted': return 'bg-amber-100 text-amber-700'
+      case 'invalid': return 'bg-red-100 text-red-700'
+      default: return 'bg-gray-100 text-gray-700'
     }
-    return statusMap[statusType] || ''
   }
 
   // Obtener origen desde metadata
@@ -566,31 +547,39 @@ const InventoryManagement = () => {
   }
 
   return (
-    <div className='inventory-management'>
+    <div className='flex flex-col gap-6 animate-in fade-in duration-500'>
       {/* Header */}
-      <header className='inventory-management__header'>
-        <div className='inventory-management__header-content'>
-          <h1 className='inventory-management__title'>
-            {t('inventoryManagement.title')}
-          </h1>
-          <p className='inventory-management__subtitle'>
-            {t('inventoryManagement.subtitle')}
-          </p>
+      <header className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
+        <div className='flex items-center gap-4'>
+          <button
+            className='p-2 text-text-secondary hover:bg-slate-100 rounded-lg transition-colors'
+            onClick={() => navigate('/ajustes-inventario')}
+          >
+            <ArrowLeft size={20} strokeWidth={2} />
+          </button>
+          <div className='flex flex-col gap-1 border-l-4 border-primary pl-4'>
+            <h1 className='text-3xl font-black text-text-main tracking-tighter uppercase'>
+              {t('inventoryManagement.title')}
+            </h1>
+            <p className='text-text-secondary text-sm font-medium leading-none mt-1'>
+              {t('inventoryManagement.subtitle')}
+            </p>
+          </div>
         </div>
       </header>
 
       {/* Toolbar */}
-      <div className='inventory-management__toolbar'>
-        <div className='inventory-management__toolbar-left'>
+      <div className='flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-fluent-2 border border-border-subtle'>
+        <div className='flex items-center gap-2'>
           <button
-            className='inventory-management__toolbar-button'
+            className={`p-2.5 rounded-lg border border-border-subtle transition-all ${showFilters ? 'bg-primary text-white' : 'bg-white hover:bg-slate-50 text-text-secondary'}`}
             onClick={handleFilter}
             title={t('inventoryManagement.toolbar.filter')}
           >
             <Filter size={20} />
           </button>
           <button
-            className='inventory-management__toolbar-button'
+            className='p-2.5 bg-white border border-border-subtle rounded-lg hover:bg-slate-50 text-text-secondary transition-all'
             onClick={handleDownload}
             title={t('inventoryManagement.toolbar.download')}
           >
@@ -598,9 +587,9 @@ const InventoryManagement = () => {
           </button>
         </div>
 
-        <div className='inventory-management__toolbar-right'>
+        <div className='flex items-center gap-2'>
           <button
-            className='inventory-management__button inventory-management__button--primary'
+            className='flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-xs font-black uppercase rounded shadow-sm hover:bg-primary-hover active:scale-[0.98] transition-all'
             onClick={handleCreateNew}
           >
             <Plus size={16} />
@@ -611,90 +600,65 @@ const InventoryManagement = () => {
 
       {/* Filters Panel */}
       {showFilters && (
-        <div className='inventory-management__filters'>
-          <div className='inventory-management__filters-header'>
-            <h3 className='inventory-management__filters-title'>
+        <div className='bg-white p-6 rounded-xl shadow-fluent-8 border border-border-subtle animate-in slide-in-from-top-4 duration-300'>
+          <div className='flex items-center justify-between mb-6'>
+            <h3 className='text-sm font-black uppercase text-text-main tracking-widest'>
               {t('inventoryManagement.filters.title')}
             </h3>
+            <button onClick={() => setShowFilters(false)} className='text-slate-400 hover:text-text-main'><X size={18} /></button>
           </div>
-          <div className='inventory-management__filters-grid'>
-            <div className='inventory-management__filter-group'>
-              <label className='inventory-management__filter-label'>
-                {t('inventoryManagement.filters.dateFrom')}
-              </label>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+            <div className='flex flex-col gap-1.5'>
+              <label className='text-[10px] font-black uppercase text-slate-400 tracking-wider'>{t('inventoryManagement.filters.dateFrom')}</label>
               <input
                 type='date'
-                className='inventory-management__filter-input'
+                className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
                 value={filters.dateFrom}
-                onChange={e =>
-                  setFilters({ ...filters, dateFrom: e.target.value })
-                }
+                onChange={e => setFilters({ ...filters, dateFrom: e.target.value })}
               />
             </div>
-            <div className='inventory-management__filter-group'>
-              <label className='inventory-management__filter-label'>
-                {t('inventoryManagement.filters.dateTo')}
-              </label>
+            <div className='flex flex-col gap-1.5'>
+              <label className='text-[10px] font-black uppercase text-slate-400 tracking-wider'>{t('inventoryManagement.filters.dateTo')}</label>
               <input
                 type='date'
-                className='inventory-management__filter-input'
+                className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
                 value={filters.dateTo}
-                onChange={e =>
-                  setFilters({ ...filters, dateTo: e.target.value })
-                }
+                onChange={e => setFilters({ ...filters, dateTo: e.target.value })}
               />
             </div>
-            <div className='inventory-management__filter-group'>
-              <label className='inventory-management__filter-label'>
-                {t('inventoryManagement.filters.status')}
-              </label>
+            <div className='flex flex-col gap-1.5'>
+              <label className='text-[10px] font-black uppercase text-slate-400 tracking-wider'>{t('inventoryManagement.filters.status')}</label>
               <select
-                className='inventory-management__filter-select'
+                className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
                 value={filters.status}
-                onChange={e =>
-                  setFilters({ ...filters, status: e.target.value })
-                }
+                onChange={e => setFilters({ ...filters, status: e.target.value })}
               >
-                <option value='all'>
-                  {t('inventoryManagement.filters.statusAll')}
-                </option>
-                <option value='active'>
-                  {t('inventoryManagement.filters.statusActive')}
-                </option>
-                <option value='invalid'>
-                  {t('inventoryManagement.filters.statusInvalid')}
-                </option>
-                <option value='reverted'>
-                  {t('inventoryManagement.filters.statusReverted')}
-                </option>
+                <option value='all'>{t('inventoryManagement.filters.statusAll')}</option>
+                <option value='active'>{t('inventoryManagement.filters.statusActive')}</option>
+                <option value='invalid'>{t('inventoryManagement.filters.statusInvalid')}</option>
+                <option value='reverted'>{t('inventoryManagement.filters.statusReverted')}</option>
               </select>
             </div>
-            <div className='inventory-management__filter-group'>
-              <label className='inventory-management__filter-label'>
-                {t('inventoryManagement.filters.location')}
-              </label>
+            <div className='flex flex-col gap-1.5'>
+              <label className='text-[10px] font-black uppercase text-slate-400 tracking-wider'>{t('inventoryManagement.filters.location')}</label>
               <input
                 type='text'
-                className='inventory-management__filter-input'
-                placeholder={t(
-                  'inventoryManagement.filters.locationPlaceholder'
-                )}
+                className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
+                placeholder={t('inventoryManagement.filters.locationPlaceholder')}
                 value={filters.location}
-                onChange={e =>
-                  setFilters({ ...filters, location: e.target.value })
-                }
+                onChange={e => setFilters({ ...filters, location: e.target.value })}
               />
             </div>
           </div>
-          <div className='inventory-management__filters-actions'>
+          <div className='flex justify-end gap-3 mt-8 pt-6 border-t border-slate-50'>
             <button
-              className='inventory-management__button inventory-management__button--secondary'
+              className='px-5 py-2.5 border border-border-subtle text-text-main text-xs font-bold uppercase rounded hover:bg-slate-50 transition-all'
               onClick={handleClearFilters}
             >
               {t('inventoryManagement.filters.clear')}
             </button>
             <button
-              className='inventory-management__button inventory-management__button--primary'
+              className='px-5 py-2.5 bg-primary text-white text-xs font-black uppercase rounded shadow-sm hover:bg-primary-hover active:scale-[0.98] transition-all'
               onClick={handleApplyFilters}
             >
               {t('inventoryManagement.filters.apply')}
@@ -703,293 +667,235 @@ const InventoryManagement = () => {
         </div>
       )}
 
-      {/* Table */}
-      <div className='inventory-management__table-container'>
-        <table className='inventory-management__table'>
-          <thead>
-            <tr>
-              <th>{t('inventoryManagement.table.id')}</th>
-              <th>{t('inventoryManagement.table.status')}</th>
-              <th>{t('inventoryManagement.table.createdAt')}</th>
-              <th>{t('inventoryManagement.table.location')}</th>
-              <th>{t('inventoryManagement.table.operator')}</th>
-              <th>{t('inventoryManagement.table.origin')}</th>
-              <th>{t('inventoryManagement.table.actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
+      {/* Table Section */}
+      <div className='bg-white rounded-xl shadow-fluent-shadow border border-border-subtle overflow-hidden'>
+        <div className='overflow-x-auto'>
+          <table className='w-full text-left'>
+            <thead className='bg-gray-50/50 border-b border-border-subtle text-[13px] font-semibold text-gray-700'>
               <tr>
-                <td colSpan='7' className='inventory-management__empty'>
-                  {t('inventoryManagement.table.loading') ||
-                    'Cargando inventarios...'}
-                </td>
+                <th className='py-4 px-6'>{t('inventoryManagement.table.id')}</th>
+                <th className='py-4 px-4'>{t('inventoryManagement.table.status')}</th>
+                <th className='py-4 px-4'>{t('inventoryManagement.table.createdAt')}</th>
+                <th className='py-4 px-4'>{t('inventoryManagement.table.location')}</th>
+                <th className='py-4 px-4'>{t('inventoryManagement.table.operator')}</th>
+                <th className='py-4 px-4'>{t('inventoryManagement.table.origin')}</th>
+                <th className='py-4 px-6'></th>
               </tr>
-            ) : error ? (
-              <tr>
-                <td colSpan='7' className='inventory-management__empty'>
-                  {error}
-                </td>
-              </tr>
-            ) : getFilteredInventories().length === 0 ? (
-              <tr>
-                <td colSpan='7' className='inventory-management__empty'>
-                  {inventories.length === 0
-                    ? t('inventoryManagement.table.noData')
-                    : t('inventoryManagement.table.noResults')}
-                </td>
-              </tr>
-            ) : (
-              getFilteredInventories().map(inventory => {
-                const status = getInventoryStatus(
-                  inventory.state,
-                  inventory.metadata
-                )
-                return (
-                  <tr key={inventory.id}>
-                    <td className='inventory-management__cell inventory-management__cell--id'>
-                      {inventory.id}
-                    </td>
-                    <td className='inventory-management__cell'>
-                      <span
-                        className={`inventory-management__badge ${getStatusClass(
-                          status.type
-                        )}`}
-                      >
-                        {status.label}
-                      </span>
-                    </td>
-                    <td className='inventory-management__cell'>
-                      {formatDate(inventory.check_date)}
-                    </td>
-                    <td className='inventory-management__cell'>
-                      {inventory.metadata?.location || 'N/A'}
-                    </td>
-                    <td className='inventory-management__cell'>
-                      {inventory.metadata?.operator || 'N/A'}
-                    </td>
-                    <td className='inventory-management__cell'>
-                      {getOrigin(inventory.metadata)}
-                    </td>
-                    <td className='inventory-management__cell inventory-management__cell--actions'>
-                      <div className='inventory-management__actions-wrapper'>
-                        <button
-                          className='inventory-management__menu-button'
-                          onClick={() => handleMenuToggle(inventory.id)}
-                          title={t('inventoryManagement.actions.menu')}
-                        >
-                          <MoreHorizontal size={20} />
-                        </button>
-                        {openMenuId === inventory.id && (
-                          <div className='inventory-management__menu'>
-                            <button
-                              className='inventory-management__menu-item'
-                              onClick={() => handleView(inventory.id)}
-                            >
-                              {t('inventoryManagement.actions.view')}
-                            </button>
-                            <button
-                              className='inventory-management__menu-item'
-                              onClick={() => handleEdit(inventory.id)}
-                            >
-                              {t('inventoryManagement.actions.edit')}
-                            </button>
-                            <button
-                              className='inventory-management__menu-item inventory-management__menu-item--danger'
-                              onClick={() => handleDelete(inventory.id)}
-                            >
-                              {t('inventoryManagement.actions.delete')}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-          {/* Pagination dentro de la tabla */}
-          <tfoot>
-            <tr>
-              <td colSpan='7' className='inventory-management__pagination-cell'>
-                <div className='inventory-management__pagination'>
-                  <div className='inventory-management__pagination-info'>
-                    {t('inventoryManagement.pagination.showing', {
-                      start: startIndex + 1,
-                      end: Math.min(endIndex, pagination.total),
-                      total: pagination.total,
-                    })}
-                  </div>
-                  <div className='inventory-management__pagination-controls'>
-                    <button
-                      className='inventory-management__pagination-button'
-                      onClick={() => setPage(Math.max(1, pagination.page - 1))}
-                      disabled={pagination.page === 1}
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    {getPageNumbers().map((page, index) =>
-                      page === '...' ? (
-                        <span
-                          key={`ellipsis-${index}`}
-                          className='inventory-management__pagination-ellipsis'
-                        >
-                          ...
+            </thead>
+            <tbody className='divide-y divide-gray-50 text-sm text-text-main'>
+              {loading ? (
+                <tr>
+                  <td colSpan='7' className='py-20 text-center text-text-secondary italic'>
+                    <div className='flex flex-col items-center gap-3'>
+                      <Loader2 size={32} className='animate-spin text-primary' />
+                      {t('inventoryManagement.table.loading') || 'Cargando inventarios...'}
+                    </div>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr><td colSpan='7' className='py-20 text-center text-error font-bold'>{error}</td></tr>
+              ) : getFilteredInventories().length === 0 ? (
+                <tr>
+                  <td colSpan='7' className='py-20 text-center text-text-secondary opacity-50'>
+                    <div className='flex flex-col items-center gap-2'>
+                      <Package size={48} className='text-slate-200' />
+                      {inventories.length === 0 ? t('inventoryManagement.table.noData') : t('inventoryManagement.table.noResults')}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                getFilteredInventories().map(inventory => {
+                  const status = getInventoryStatus(inventory.state, inventory.metadata)
+                  return (
+                    <tr key={inventory.id} className='hover:bg-gray-50 transition-colors group'>
+                      <td className='py-4 px-6 font-mono text-xs text-primary font-bold'>{inventory.id}</td>
+                      <td className='py-4 px-4'>
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${getStatusColorClass(status.type)}`}>
+                          {status.label}
                         </span>
-                      ) : (
-                        <button
-                          key={page}
-                          className={`inventory-management__pagination-number ${
-                            pagination.page === page
-                              ? 'inventory-management__pagination-number--active'
-                              : ''
-                          }`}
-                          onClick={() => setPage(page)}
-                        >
-                          {page}
-                        </button>
-                      )
-                    )}
-                    <button
-                      className='inventory-management__pagination-button'
-                      onClick={() =>
-                        setPage(
-                          Math.min(pagination.totalPages, pagination.page + 1)
-                        )
-                      }
-                      disabled={pagination.page === pagination.totalPages}
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+                      </td>
+                      <td className='py-4 px-4 text-text-secondary'>{formatDate(inventory.check_date)}</td>
+                      <td className='py-4 px-4 font-medium'>{inventory.metadata?.location || 'N/A'}</td>
+                      <td className='py-4 px-4'>{inventory.metadata?.operator || 'N/A'}</td>
+                      <td className='py-4 px-4 italic text-slate-500 text-xs'>{getOrigin(inventory.metadata)}</td>
+                      <td className='py-4 px-6 text-right relative'>
+                        <div className='flex justify-end'>
+                          <button
+                            className={`p-2 rounded-lg transition-all ${openMenuId === inventory.id ? 'bg-primary text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100 opacity-0 group-hover:opacity-100'}`}
+                            onClick={() => handleMenuToggle(inventory.id)}
+                          >
+                            <MoreHorizontal size={20} />
+                          </button>
+                          {openMenuId === inventory.id && (
+                            <div className='absolute right-16 top-1/2 -translate-y-1/2 bg-white rounded-lg shadow-fluent-16 border border-border-subtle py-2 w-48 z-20 animate-in fade-in zoom-in-95 duration-150'>
+                              <button className='w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2' onClick={() => handleView(inventory.id)}>
+                                {t('inventoryManagement.actions.view')}
+                              </button>
+                              <button className='w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2' onClick={() => handleEdit(inventory.id)}>
+                                {t('inventoryManagement.actions.edit')}
+                              </button>
+                              <div className='h-px bg-slate-100 my-1'></div>
+                              <button className='w-full text-left px-4 py-2 text-sm text-error hover:bg-red-50 flex items-center gap-2' onClick={() => handleDelete(inventory.id)}>
+                                {t('inventoryManagement.actions.delete')}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Section */}
+        <div className='px-6 py-4 border-t border-border-subtle flex flex-col md:flex-row justify-between items-center gap-4 bg-[#fafafa]'>
+          <div className='text-[13px] text-gray-500 font-medium'>
+            {t('inventoryManagement.pagination.showing', {
+              start: startIndex + 1,
+              end: Math.min(endIndex, pagination.total),
+              total: pagination.total,
+            })}
+          </div>
+          <div className='flex items-center gap-1'>
+            <button
+              className='p-1.5 hover:bg-gray-200 rounded text-gray-400 disabled:opacity-30 transition-colors'
+              onClick={() => setPage(Math.max(1, pagination.page - 1))}
+              disabled={pagination.page === 1}
+            >
+              <ChevronLeft size={20} />
+            </button>
+            {getPageNumbers().map((page, index) =>
+              page === '...' ? (
+                <span key={`ellipsis-${index}`} className='px-2 text-slate-400 font-bold'>...</span>
+              ) : (
+                <button
+                  key={page}
+                  className={`min-w-[32px] h-8 rounded text-sm font-bold transition-all ${pagination.page === page ? 'bg-primary text-white shadow-sm' : 'text-slate-600 hover:bg-gray-200'}`}
+                  onClick={() => setPage(page)}
+                >
+                  {page}
+                </button>
+              )
+            )}
+            <button
+              className='p-1.5 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30 transition-colors'
+              onClick={() => setPage(Math.min(pagination.totalPages, pagination.page + 1))}
+              disabled={pagination.page === pagination.totalPages}
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Modal de Confirmación de Eliminación */}
+      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div
-          className='inventory-management__modal-overlay'
-          onClick={() => setShowDeleteConfirm(null)}
-        >
-          <div
-            className='inventory-management__modal'
-            onClick={e => e.stopPropagation()}
-          >
-            <div className='inventory-management__modal-header'>
-              <h2 className='inventory-management__modal-title'>
+        <div className='fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200'>
+          <div className='bg-white w-full max-w-md rounded-xl shadow-fluent-16 overflow-hidden animate-in zoom-in-95 duration-200'>
+            <div className='p-6'>
+              <h2 className='text-xl font-black text-text-main tracking-tighter uppercase mb-4'>
                 {t('inventoryManagement.deleteModal.title')}
               </h2>
-            </div>
-            <div className='inventory-management__modal-body'>
-              <p className='inventory-management__delete-message'>
+              <p className='text-sm text-text-secondary leading-relaxed mb-6'>
                 {t('inventoryManagement.deleteModal.message')}
               </p>
-              <div className='inventory-management__delete-info'>
-                <div className='inventory-management__delete-info-label'>
+              <div className='bg-red-50 p-4 rounded-lg border border-red-100 mb-6'>
+                <div className='text-[10px] font-black uppercase text-red-400 tracking-wider mb-1'>
                   {t('inventoryManagement.deleteModal.inventoryId')}
                 </div>
-                <div className='inventory-management__delete-info-value'>
-                  {showDeleteConfirm}
-                </div>
+                <div className='font-mono text-sm text-red-700 font-bold'>{showDeleteConfirm}</div>
               </div>
             </div>
-            <div className='inventory-management__modal-footer'>
+            <div className='px-6 py-4 bg-slate-50 flex justify-end gap-3'>
               <button
-                className='inventory-management__button inventory-management__button--secondary'
+                className='px-5 py-2.5 border border-border-subtle text-text-main text-xs font-bold uppercase rounded hover:bg-white transition-all'
                 onClick={() => setShowDeleteConfirm(null)}
               >
                 {t('inventoryManagement.deleteModal.cancel')}
               </button>
               <button
-                className='inventory-management__button inventory-management__button--danger'
+                className='px-5 py-2.5 bg-error text-white text-xs font-black uppercase rounded shadow-sm hover:bg-red-700 active:scale-[0.98] transition-all'
                 onClick={confirmDelete}
                 disabled={loading}
               >
-                {loading
-                  ? 'Procesando...'
-                  : t('inventoryManagement.deleteModal.confirm')}
+                {loading ? '...' : t('inventoryManagement.deleteModal.confirm')}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal de Creación de Nuevo Inventario */}
+      {/* Create Modal */}
       {showCreateModal && (
-        <div
-          className='inventory-management__modal-overlay'
-          onClick={() => setShowCreateModal(false)}
-        >
-          <div
-            className='inventory-management__modal inventory-management__modal--large'
-            onClick={e => e.stopPropagation()}
-          >
-            <div className='inventory-management__modal-header'>
-              <h2 className='inventory-management__modal-title'>
-                {t('inventoryManagement.createModal.title')}
-              </h2>
-              <p className='inventory-management__modal-subtitle'>
-                {t('inventoryManagement.createModal.subtitle')}
-              </p>
-            </div>
-            <div className='inventory-management__modal-body'>
-              {/* Errores de validación */}
+        <div className='fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200'>
+          <div className='bg-white w-full max-w-5xl rounded-xl shadow-fluent-16 overflow-hidden flex flex-col max-h-[90vh] scale-100 animate-in zoom-in-95 duration-200'>
+            <header className='p-6 border-b border-border-subtle flex items-center justify-between bg-white sticky top-0 z-10'>
+              <div>
+                <h2 className='text-2xl font-black text-text-main tracking-tighter uppercase'>
+                  {t('inventoryManagement.createModal.title')}
+                </h2>
+                <p className='text-xs text-text-secondary font-medium uppercase tracking-widest leading-none mt-1'>
+                  {t('inventoryManagement.createModal.subtitle')}
+                </p>
+              </div>
+              <button onClick={() => setShowCreateModal(false)} className='p-2 hover:bg-slate-100 rounded-full transition-colors'>
+                <X size={24} className='text-text-secondary' />
+              </button>
+            </header>
+
+            <div className='flex-1 overflow-auto p-6 custom-scrollbar'>
               {formErrors.length > 0 && (
-                <div className='inventory-management__form-errors'>
-                  {formErrors.map((error, index) => (
-                    <div
-                      key={index}
-                      className='inventory-management__form-error'
-                    >
-                      {error}
-                    </div>
-                  ))}
+                <div className='mb-6 p-4 bg-error/10 border-l-4 border-error rounded-r-lg'>
+                  <div className='flex items-center gap-2 text-error font-black uppercase text-xs mb-2'>
+                    <X size={16} /> Errores detectados
+                  </div>
+                  <ul className='list-disc list-inside text-xs text-error font-medium space-y-1'>
+                    {formErrors.map((error, index) => <li key={index}>{error}</li>)}
+                  </ul>
                 </div>
               )}
 
-              <div className="inventory-management__create-layout">
-                {/* Left Column: Configuration */}
-                <div className="inventory-management__config-column">
-                  <div className='inventory-management__details-section'>
-                    <h3 className='inventory-management__details-section-title'>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Configuration Column */}
+                <div className="lg:col-span-4 space-y-6">
+                  <div className='bg-slate-50 p-6 rounded-xl border border-border-subtle space-y-4'>
+                    <h3 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4'>
                       {t('inventoryManagement.createModal.metadata')}
                     </h3>
                     <div className='flex flex-col gap-4'>
-                      <div className='inventory-management__form-group'>
-                        <label className='inventory-management__form-label'>
+                      <div className='flex flex-col gap-1.5'>
+                        <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>
                           {t('inventoryManagement.createModal.operator')} *
                         </label>
                         <input
                           type='text'
-                          className='inventory-management__form-input'
+                          className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
                           placeholder={t('inventoryManagement.createModal.operatorPlaceholder')}
                           value={inventoryForm.metadata.operator}
                           onChange={e => handleMetadataChange('operator', e.target.value)}
                         />
                       </div>
-                      <div className='inventory-management__form-group'>
-                        <label className='inventory-management__form-label'>
+                      <div className='flex flex-col gap-1.5'>
+                        <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>
                           {t('inventoryManagement.createModal.location')} *
                         </label>
                         <input
                           type='text'
-                          className='inventory-management__form-input'
+                          className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
                           placeholder={t('inventoryManagement.createModal.locationPlaceholder')}
                           value={inventoryForm.metadata.location}
                           onChange={e => handleMetadataChange('location', e.target.value)}
                         />
                       </div>
-                      <div className='inventory-management__form-group'>
-                        <label className='inventory-management__form-label'>
+                      <div className='flex flex-col gap-1.5'>
+                        <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>
                           {t('inventoryManagement.createModal.countingMethod')}
                         </label>
                         <select
-                          className='inventory-management__form-select'
+                          className='h-11 px-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
                           value={inventoryForm.metadata.counting_method}
                           onChange={e => handleMetadataChange('counting_method', e.target.value)}
                         >
@@ -998,10 +904,10 @@ const InventoryManagement = () => {
                           <option value='rfid'>{t('inventoryManagement.createModal.methodRFID')}</option>
                         </select>
                       </div>
-                      <div className='inventory-management__form-group'>
-                        <label className='inventory-management__form-label'>Notas</label>
+                      <div className='flex flex-col gap-1.5'>
+                        <label className='text-xs font-bold text-text-secondary uppercase tracking-wider'>Notas</label>
                         <textarea
-                          className='inventory-management__form-textarea'
+                          className='p-3 border border-border-subtle rounded-lg bg-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all min-h-[120px]'
                           placeholder='Observaciones del inventario...'
                           value={inventoryForm.metadata.notes}
                           onChange={e => handleMetadataChange('notes', e.target.value)}
@@ -1012,21 +918,23 @@ const InventoryManagement = () => {
                   </div>
                 </div>
 
-                {/* Right Column: Search & Items */}
-                <div className="inventory-management__items-column">
-                  <div className='inventory-management__details-section'>
-                    <h3 className='inventory-management__details-section-title'>
-                      {t('inventoryManagement.createModal.products')} ({inventoryForm.items.length})
-                    </h3>
+                {/* Items Column */}
+                <div className="lg:col-span-8 space-y-6 flex flex-col min-h-0">
+                  <div className='flex-1 flex flex-col h-full min-h-0'>
+                    <div className='flex items-center justify-between mb-4'>
+                      <h3 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]'>
+                        {t('inventoryManagement.createModal.products')} ({inventoryForm.items.length})
+                      </h3>
+                    </div>
 
-                    {/* Sistema de búsqueda inteligente */}
-                    <div className='inventory-management__product-search-container'>
-                      <div className='inventory-management__search-input-wrapper'>
-                        <Search size={20} className='inventory-management__search-icon' />
+                    {/* Search Bar */}
+                    <div className='relative mb-6'>
+                      <div className='relative'>
+                        <Search className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400' size={20} />
                         <input
                           ref={searchInputRef}
                           type='text'
-                          className='inventory-management__search-input'
+                          className='w-full pl-12 pr-12 h-14 border border-border-subtle rounded-xl text-lg bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all shadow-sm'
                           placeholder={t('inventoryManagement.createModal.searchProduct')}
                           value={productSearch}
                           onChange={e => {
@@ -1034,55 +942,37 @@ const InventoryManagement = () => {
                             handleProductSearch(e.target.value)
                             setHighlightedIndex(-1)
                           }}
-                          onFocus={() => {
-                            if (searchResults.length > 0) setShowDropdown(true)
-                          }}
+                          onFocus={() => { if (searchResults.length > 0) setShowDropdown(true) }}
                           onKeyDown={e => {
                             const itemCount = searchResults.length
                             if (itemCount === 0) return
                             switch (e.key) {
-                              case 'ArrowDown':
-                                e.preventDefault()
-                                setHighlightedIndex(prev => prev < itemCount - 1 ? prev + 1 : 0)
-                                break
-                              case 'ArrowUp':
-                                e.preventDefault()
-                                setHighlightedIndex(prev => prev > 0 ? prev - 1 : itemCount - 1)
-                                break
-                              case 'Enter':
-                                e.preventDefault()
-                                if (highlightedIndex >= 0 && highlightedIndex < itemCount) {
-                                  handleSelectProduct(searchResults[highlightedIndex])
-                                } else if (itemCount > 0) {
-                                  handleSelectProduct(searchResults[0])
-                                }
-                                break
-                              case 'Escape':
-                                e.preventDefault()
-                                setShowDropdown(false)
-                                break
+                              case 'ArrowDown': e.preventDefault(); setHighlightedIndex(prev => prev < itemCount - 1 ? prev + 1 : 0); break
+                              case 'ArrowUp': e.preventDefault(); setHighlightedIndex(prev => prev > 0 ? prev - 1 : itemCount - 1); break
+                              case 'Enter': e.preventDefault(); if (highlightedIndex >= 0 && highlightedIndex < itemCount) handleSelectProduct(searchResults[highlightedIndex]); else if (itemCount > 0) handleSelectProduct(searchResults[0]); break
+                              case 'Escape': e.preventDefault(); setShowDropdown(false); break
                             }
                           }}
                         />
-                        {searchLoading && <Loader2 size={20} className='inventory-management__search-loader' />}
+                        {searchLoading && <Loader2 size={20} className='absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-primary' />}
                       </div>
 
                       {showDropdown && (
-                        <div ref={dropdownRef} className='inventory-management__search-dropdown'>
+                        <div ref={dropdownRef} className='absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-fluent-16 border border-border-subtle overflow-hidden z-50 max-h-[300px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-150'>
                           {searchResults.length === 0 ? (
-                            <div className='inventory-management__search-dropdown-item--empty'>Sin resultados</div>
+                            <div className='p-6 text-center text-slate-400 italic text-sm'>Sin resultados</div>
                           ) : (
                             searchResults.map((product, index) => (
                               <div
                                 key={product.product_id}
-                                className={`inventory-management__search-dropdown-item ${highlightedIndex === index ? 'inventory-management__search-dropdown-item--highlighted' : ''}`}
+                                className={`p-4 flex justify-between items-center cursor-pointer border-b border-slate-50 last:border-0 transition-all ${highlightedIndex === index ? 'bg-primary text-white' : 'hover:bg-slate-50'}`}
                                 onClick={() => handleSelectProduct(product)}
                               >
-                                <div className='inventory-management__search-dropdown-item-main'>
-                                  <span className='inventory-management__search-dropdown-item-name'>{product.product_name}</span>
-                                  <span className='inventory-management__search-dropdown-item-id'>ID: {product.product_id}</span>
+                                <div>
+                                  <span className='block font-bold text-sm leading-tight'>{product.product_name}</span>
+                                  <span className={`text-[10px] font-mono font-bold uppercase ${highlightedIndex === index ? 'text-white/70' : 'text-primary'}`}>ID: {product.product_id}</span>
                                 </div>
-                                <span className='inventory-management__search-dropdown-item-stock'>Stock: {product.stock_quantity || 0}</span>
+                                <span className={`text-[10px] font-black uppercase ${highlightedIndex === index ? 'text-white/90' : 'text-slate-400'}`}>Stock: {product.stock_quantity || 0}</span>
                               </div>
                             ))
                           )}
@@ -1090,187 +980,169 @@ const InventoryManagement = () => {
                       )}
                     </div>
 
-                    <div className='inventory-management__products-table-wrapper' style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                    <div className='flex-1 min-h-[400px] bg-slate-50 rounded-xl border border-border-subtle overflow-hidden flex flex-col'>
                       {inventoryForm.items.length === 0 ? (
-                        <div className='inventory-management__empty-products'>Agregue productos para comenzar el conteo</div>
+                        <div className='flex-1 flex flex-col items-center justify-center text-slate-300 gap-2 opacity-50'>
+                          <Package size={64} strokeWidth={1} />
+                          <p className='text-sm font-medium italic'>Agregue productos para comenzar el conteo</p>
+                        </div>
                       ) : (
-                        <table className='inventory-management__products-table'>
-                          <thead>
-                            <tr>
-                              <th>Producto</th>
-                              <th className="text-center">Actual</th>
-                              <th className="text-center">Contado</th>
-                              <th style={{ width: '50px' }}></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {inventoryForm.items.map((item, index) => (
-                              <tr key={index}>
-                                <td>
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{item.product_name}</span>
-                                    <span className="text-[10px] text-muted-foreground uppercase">{item.product_id}</span>
-                                  </div>
-                                </td>
-                                <td className="text-center tabular-nums">{item.current_quantity}</td>
-                                <td>
-                                  <input
-                                    type='number'
-                                    className='inventory-management__form-input text-center h-8'
-                                    min='0'
-                                    value={item.quantity_checked}
-                                    onChange={e => handleProductChange(index, 'quantity_checked', e.target.value)}
-                                  />
-                                </td>
-                                <td className="text-right">
-                                  <button
-                                    className='inventory-management__remove-button'
-                                    onClick={() => handleRemoveProduct(index)}
-                                    type='button'
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </td>
+                        <div className='flex-1 overflow-auto custom-scrollbar'>
+                          <table className='w-full text-left text-sm'>
+                            <thead className='bg-white/80 backdrop-blur-sm border-b border-border-subtle text-[11px] font-black uppercase text-slate-500 tracking-wider sticky top-0 z-10'>
+                              <tr>
+                                <th className='py-3 px-4'>Producto</th>
+                                <th className="py-3 px-4 text-center">Actual</th>
+                                <th className="py-3 px-4 text-center">Contado</th>
+                                <th className='py-3 px-4 w-12'></th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody className='divide-y divide-slate-100'>
+                              {inventoryForm.items.map((item, index) => (
+                                <tr key={index} className='bg-white hover:bg-slate-50/50 transition-colors'>
+                                  <td className='py-3 px-4'>
+                                    <div className="flex flex-col min-w-0">
+                                      <span className="font-bold text-text-main truncate">{item.product_name}</span>
+                                      <span className="text-[10px] text-primary font-mono font-bold uppercase">{item.product_id}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-center tabular-nums font-medium text-slate-500">{item.current_quantity}</td>
+                                  <td className="py-3 px-4">
+                                    <input
+                                      type='number'
+                                      className='w-24 mx-auto h-8 text-center border border-border-subtle rounded bg-white text-sm font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all'
+                                      min='0'
+                                      value={item.quantity_checked}
+                                      onChange={e => handleProductChange(index, 'quantity_checked', e.target.value)}
+                                    />
+                                  </td>
+                                  <td className="py-3 px-4 text-right">
+                                    <button
+                                      className='p-1.5 text-slate-300 hover:text-error hover:bg-red-50 rounded transition-all'
+                                      onClick={() => handleRemoveProduct(index)}
+                                      type='button'
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className='inventory-management__modal-footer'>
+            <div className='p-6 bg-slate-50 border-t border-border-subtle flex justify-end gap-3'>
               <button
-                className='inventory-management__button inventory-management__button--secondary'
+                className='px-5 py-2.5 border border-border-subtle text-text-main text-xs font-bold uppercase rounded hover:bg-white transition-all'
                 onClick={() => setShowCreateModal(false)}
                 disabled={loading}
               >
                 {t('inventoryManagement.createModal.cancel')}
               </button>
               <button
-                className='inventory-management__button inventory-management__button--primary'
+                className='px-5 py-2.5 bg-primary text-white text-xs font-black uppercase rounded shadow-sm hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50'
                 onClick={handleSubmitInventory}
-                disabled={
-                  loading ||
-                  !inventoryForm.metadata.operator?.trim() ||
-                  !inventoryForm.metadata.location?.trim() ||
-                  !inventoryForm.items ||
-                  inventoryForm.items.length === 0
-                }
-                title={
-                  inventoryForm.items.length === 0
-                    ? 'Agrega al menos un producto al inventario'
-                    : !inventoryForm.metadata.operator?.trim() ||
-                      !inventoryForm.metadata.location?.trim()
-                    ? 'Completa los campos requeridos'
-                    : ''
-                }
+                disabled={loading || !inventoryForm.metadata.operator?.trim() || !inventoryForm.metadata.location?.trim() || inventoryForm.items.length === 0}
               >
-                {loading
-                  ? 'Procesando...'
-                  : t('inventoryManagement.createModal.create')}
+                {loading ? '...' : t('inventoryManagement.createModal.create')}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal de Vista de Detalles */}
+      {/* Details Modal */}
       {showDetailsModal && selectedInventory && (
-        <div
-          className='inventory-management__modal-overlay'
-          onClick={() => {
-            setShowDetailsModal(false)
-            clearSelectedInventory()
-          }}
-        >
-          <div
-            className='inventory-management__modal inventory-management__modal--large'
-            onClick={e => e.stopPropagation()}
-          >
-            <div className='inventory-management__modal-header'>
-              <h2 className='inventory-management__modal-title'>
+        <div className='fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200'>
+          <div className='bg-white w-full max-w-4xl rounded-xl shadow-fluent-16 overflow-hidden flex flex-col max-h-[85vh] scale-100 animate-in zoom-in-95 duration-200'>
+            <header className='p-6 border-b border-border-subtle flex items-center justify-between bg-white'>
+              <h2 className='text-xl font-black text-text-main tracking-tighter uppercase'>
                 {t('inventoryManagement.viewModal.title')}
               </h2>
-            </div>
-            <div className='inventory-management__modal-body'>
-              {/* Información General */}
-              <div className='inventory-management__details-section'>
-                <h3 className='inventory-management__details-section-title'>
+              <button onClick={() => { setShowDetailsModal(false); clearSelectedInventory(); }} className='p-2 hover:bg-slate-100 rounded-full transition-colors'>
+                <X size={24} className='text-text-secondary' />
+              </button>
+            </header>
+
+            <div className='flex-1 overflow-auto p-8 custom-scrollbar'>
+              <div className='mb-8'>
+                <h3 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4'>
                   {t('inventoryManagement.viewModal.generalInfo')}
                 </h3>
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4 bg-secondary/30 rounded-lg border border-default'>
-                  <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.id')}</div>
-                    <div className='inventory-management__details-value inventory-management__details-value--monospace text-xs'>{selectedInventory.inventory.id}</div>
+                <div className='grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-slate-50 rounded-xl border border-border-subtle'>
+                  <div className='space-y-1'>
+                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.id')}</p>
+                    <p className='font-mono text-xs text-primary font-bold'>{selectedInventory.inventory.id}</p>
                   </div>
-                  <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.status')}</div>
-                    <div className='inventory-management__details-value'>
-                      <span className={`inventory-management__badge ${getStatusClass(getInventoryStatus(selectedInventory.inventory.state, selectedInventory.inventory.metadata).type)}`}>
+                  <div className='space-y-1'>
+                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.status')}</p>
+                    <div>
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${getStatusColorClass(getInventoryStatus(selectedInventory.inventory.state, selectedInventory.inventory.metadata).type)}`}>
                         {getInventoryStatus(selectedInventory.inventory.state, selectedInventory.inventory.metadata).label}
                       </span>
                     </div>
                   </div>
-                  <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.date')}</div>
-                    <div className='inventory-management__details-value'>{formatDate(selectedInventory.inventory.check_date)}</div>
+                  <div className='space-y-1'>
+                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.date')}</p>
+                    <p className='text-sm font-bold text-text-main'>{formatDate(selectedInventory.inventory.check_date)}</p>
                   </div>
-                  <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.location')}</div>
-                    <div className='inventory-management__details-value'>{selectedInventory.inventory.metadata?.location || 'N/A'}</div>
+                  <div className='space-y-1'>
+                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.location')}</p>
+                    <p className='text-sm font-bold text-text-main'>{selectedInventory.inventory.metadata?.location || 'N/A'}</p>
                   </div>
-                  <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.operator')}</div>
-                    <div className='inventory-management__details-value'>{selectedInventory.inventory.metadata?.operator || 'N/A'}</div>
+                  <div className='space-y-1 pt-2'>
+                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.operator')}</p>
+                    <p className='text-sm font-bold text-text-main'>{selectedInventory.inventory.metadata?.operator || 'N/A'}</p>
                   </div>
-                  <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.origin')}</div>
-                    <div className='inventory-management__details-value'>{getOrigin(selectedInventory.inventory.metadata)}</div>
+                  <div className='space-y-1 pt-2'>
+                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.origin')}</p>
+                    <p className='text-sm font-bold text-text-main'>{getOrigin(selectedInventory.inventory.metadata)}</p>
                   </div>
-                  <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.method')}</div>
-                    <div className='inventory-management__details-value capitalize'>{selectedInventory.inventory.metadata?.counting_method?.replace('_', ' ') || 'N/A'}</div>
+                  <div className='space-y-1 pt-2'>
+                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.method')}</p>
+                    <p className='text-sm font-bold text-text-main capitalize'>{selectedInventory.inventory.metadata?.counting_method?.replace('_', ' ') || 'N/A'}</p>
                   </div>
-                  <div className='inventory-management__details-item'>
-                    <div className='inventory-management__details-label'>{t('inventoryManagement.viewModal.verification')}</div>
-                    <div className='inventory-management__details-value capitalize'>{selectedInventory.inventory.metadata?.verification?.replace('_', ' ') || 'N/A'}</div>
+                  <div className='space-y-1 pt-2'>
+                    <p className='text-[10px] font-black uppercase text-slate-400'>{t('inventoryManagement.viewModal.verification')}</p>
+                    <p className='text-sm font-bold text-text-main capitalize'>{selectedInventory.inventory.metadata?.verification?.replace('_', ' ') || 'N/A'}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Productos Inventariados */}
               {selectedInventory.items && selectedInventory.items.length > 0 && (
-                <div className='inventory-management__details-section'>
-                  <h3 className='inventory-management__details-section-title'>
+                <div>
+                  <h3 className='text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-4'>
                     {t('inventoryManagement.viewModal.items')} ({selectedInventory.items.length})
                   </h3>
-                  <div className="inventory-management__table-container">
-                    <table className='inventory-management__items-table'>
-                      <thead>
+                  <div className="bg-white rounded-xl border border-border-subtle overflow-hidden">
+                    <table className='w-full text-left'>
+                      <thead className='bg-gray-50/50 border-b border-border-subtle text-[11px] font-black uppercase text-slate-500 tracking-wider'>
                         <tr>
-                          <th>{t('inventoryManagement.viewModal.product')}</th>
-                          <th className="text-center">{t('inventoryManagement.viewModal.previousQuantity')}</th>
-                          <th className="text-center">{t('inventoryManagement.viewModal.quantityChecked')}</th>
-                          <th className="text-right">{t('inventoryManagement.viewModal.difference')}</th>
+                          <th className='py-3 px-6'>{t('inventoryManagement.viewModal.product')}</th>
+                          <th className="py-3 px-4 text-center">{t('inventoryManagement.viewModal.previousQuantity')}</th>
+                          <th className="py-3 px-4 text-center">{t('inventoryManagement.viewModal.quantityChecked')}</th>
+                          <th className="py-3 px-6 text-right">{t('inventoryManagement.viewModal.difference')}</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        {selectedInventory.items.map(item => {
+                      <tbody className='divide-y divide-gray-50 text-sm'>
+                        {selectedInventory.items.map((item, idx) => {
                           const diff = item.quantity_checked - item.previous_quantity;
                           return (
-                            <tr key={item.id}>
-                              <td>
+                            <tr key={idx} className='hover:bg-slate-50 transition-colors'>
+                              <td className='py-4 px-6'>
                                 <div className="flex flex-col">
-                                  <span className="font-medium text-sm">Producto ID</span>
-                                  <span className="text-[10px] text-muted-foreground font-mono">{item.product_id}</span>
+                                  <span className="font-bold text-text-main">ID de Producto</span>
+                                  <span className="text-[10px] text-primary font-mono font-bold uppercase">{item.product_id}</span>
                                 </div>
                               </td>
-                              <td className="text-center tabular-nums">{item.previous_quantity}</td>
-                              <td className="text-center tabular-nums font-semibold">{item.quantity_checked}</td>
-                              <td className={`text-right tabular-nums font-bold ${diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : 'text-muted-foreground'}`}>
+                              <td className="py-4 px-4 text-center tabular-nums text-slate-500">{item.previous_quantity}</td>
+                              <td className="py-4 px-4 text-center tabular-nums font-black text-text-main">{item.quantity_checked}</td>
+                              <td className={`py-4 px-6 text-right tabular-nums font-black ${diff > 0 ? 'text-success' : diff < 0 ? 'text-error' : 'text-slate-400'}`}>
                                 {diff > 0 ? `+${diff}` : diff}
                               </td>
                             </tr>
@@ -1282,13 +1154,10 @@ const InventoryManagement = () => {
                 </div>
               )}
             </div>
-            <div className='inventory-management__modal-footer'>
+            <div className='p-6 bg-slate-50 border-t border-border-subtle flex justify-end'>
               <button
-                className='inventory-management__button inventory-management__button--secondary'
-                onClick={() => {
-                  setShowDetailsModal(false)
-                  clearSelectedInventory()
-                }}
+                className='px-5 py-2.5 bg-white border border-border-subtle text-text-main text-xs font-bold uppercase rounded hover:bg-slate-100 transition-all shadow-sm'
+                onClick={() => { setShowDetailsModal(false); clearSelectedInventory(); }}
               >
                 {t('inventoryManagement.viewModal.close')}
               </button>

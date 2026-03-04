@@ -1,3 +1,7 @@
+/**
+ * SalesPaymentHistory Page - Refactored to Tailwind (Fluent 2.0)
+ */
+
 import React, { useEffect, useState, useCallback } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
@@ -6,8 +10,19 @@ import {
   Download,
   Plus,
   AlertCircle,
+  Receipt,
+  User,
+  Calendar,
+  CreditCard,
+  RefreshCw,
+  Clock,
+  History,
+  CircleDollarSign,
+  FileText
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import DataState from '@/components/ui/DataState'
 import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal'
 import { useI18n } from '@/lib/i18n'
@@ -19,7 +34,7 @@ import { useToast } from '@/hooks/useToast'
 const SalesPaymentHistory = () => {
   const { saleId } = useParams()
   const navigate = useNavigate()
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const { error: showError, success: showSuccess } = useToast()
 
   const [sale, setSale] = useState(null)
@@ -36,26 +51,23 @@ const SalesPaymentHistory = () => {
 
     try {
       // PASO 1: Obtener estado de pago con historial de pagos
-      const paymentStatusResponse =
-        await salePaymentService.getSalePaymentStatus(saleId)
+      const paymentStatusResponse = await salePaymentService.getSalePaymentStatus(saleId)
 
       if (!paymentStatusResponse) {
         setError('Sale not found')
         return
       }
 
-      // PASO 2: Obtener detalles completos de la venta (con items/productos)
+      // PASO 2: Obtener detalles completos de la venta
       let saleDetails = null
-
       try {
-        const clientSalesResponse = await saleService.getSalesByClient(
-          paymentStatusResponse.client_id
-        )
+        const clientId = paymentStatusResponse.client_id || paymentStatusResponse.client?.id
+        const clientSalesResponse = await saleService.getSalesByClient(clientId)
 
         if (clientSalesResponse?.data && Array.isArray(clientSalesResponse.data)) {
           const saleItem = clientSalesResponse.data.find(item => {
             const itemSaleId = item.sale_id || item.id || item.sale?.sale_id
-            return itemSaleId === saleId
+            return String(itemSaleId) === String(saleId)
           })
 
           if (saleItem) {
@@ -68,10 +80,10 @@ const SalesPaymentHistory = () => {
 
       // PASO 3: Obtener datos completos del cliente
       let clientDetails = null
-
       try {
-        if (paymentStatusResponse.client_id) {
-          clientDetails = await clientService.getById(paymentStatusResponse.client_id)
+        const clientId = paymentStatusResponse.client_id || paymentStatusResponse.client?.id
+        if (clientId) {
+          clientDetails = await clientService.getById(clientId)
         }
       } catch (err) {
         console.warn('Error loading client details:', err)
@@ -79,52 +91,48 @@ const SalesPaymentHistory = () => {
 
       // PASO 4: Combinar datos
       const balanceDue = paymentStatusResponse.balance_due || 0
-      let correctedStatus = paymentStatusResponse.status
+      let correctedStatus = paymentStatusResponse.status || paymentStatusResponse.payment_status
 
-      // CORRECCIÓN: Si balance_due = 0, el estado debe ser PAID, no PARTIAL_PAYMENT
-      if (balanceDue === 0 && correctedStatus === 'PARTIAL_PAYMENT') {
+      if (balanceDue === 0 && (correctedStatus === 'PARTIAL_PAYMENT' || correctedStatus === 'partial')) {
         correctedStatus = 'PAID'
       }
 
       const saleData = {
         ...paymentStatusResponse,
-        id: paymentStatusResponse.sale_id,
-        sale_id: paymentStatusResponse.sale_id,
-        // Estado corregido
+        id: paymentStatusResponse.sale_id || paymentStatusResponse.id,
+        sale_id: paymentStatusResponse.sale_id || paymentStatusResponse.id,
         status: correctedStatus,
         balance_due: balanceDue,
         items:
           saleDetails?.details ||
           saleDetails?.items ||
           saleDetails?.sale?.details ||
+          paymentStatusResponse.items ||
           [],
         user_name:
           saleDetails?.sale?.user_name ||
-          saleDetails?.user_name,
-        client_document: clientDetails?.document_id,
-        client_contact: clientDetails?.contact,
+          saleDetails?.user_name ||
+          paymentStatusResponse.user_name || 'Vendedor',
+        client_name: paymentStatusResponse.client_name || paymentStatusResponse.client?.name || clientDetails?.name,
+        client_document: clientDetails?.document_id || paymentStatusResponse.client?.document_id,
+        client_contact: clientDetails?.contact || paymentStatusResponse.client?.contact,
         client_last_name: clientDetails?.last_name,
+        date: paymentStatusResponse.issue_date || paymentStatusResponse.created_at || paymentStatusResponse.date
       }
 
       setSale(saleData)
 
-      // Los pagos vienen en paymentStatusResponse.payments
-      if (
-        paymentStatusResponse.payments &&
-        Array.isArray(paymentStatusResponse.payments)
-      ) {
+      if (paymentStatusResponse.payments && Array.isArray(paymentStatusResponse.payments)) {
         setPayments(paymentStatusResponse.payments)
       }
     } catch (err) {
       console.error('Error loading payment history:', err)
-
       const statusCode = err?.status ?? err?.statusCode ?? err?.response?.status
       if (statusCode === 404) {
         setError('Sale not found')
       } else {
         setError(err.message || 'Error loading payment history')
       }
-
       showError('Error loading payment history')
     } finally {
       setLoading(false)
@@ -140,7 +148,6 @@ const SalesPaymentHistory = () => {
   }
 
   const handleDownload = () => {
-    // TODO: Implementar descarga de reporte
     console.log('Descargar reporte de pagos')
   }
 
@@ -155,358 +162,255 @@ const SalesPaymentHistory = () => {
         t('common.success'),
         t('sales.registerPaymentModal.successMessage', 'Pago registrado exitosamente')
       )
-      // Reload data to update balance and payment history
       await loadData()
     } catch (error) {
       console.error('Error registering payment:', error)
-      throw error // Re-throw so modal can handle it
+      throw error
     }
+  }
+
+  const formatCurrency = amount => {
+    return new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
+      style: 'currency',
+      currency: sale?.currency || 'PYG',
+      minimumFractionDigits: sale?.currency === 'PYG' ? 0 : 2,
+      maximumFractionDigits: sale?.currency === 'PYG' ? 0 : 2,
+    }).format(amount || 0)
   }
 
   const formatDate = dateString => {
     if (!dateString) return '-'
     const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const year = date.getFullYear()
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    return `${day} de ${getMonthName(date.getMonth())}, ${year} ${hours}:${minutes}`
+    return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-PY', {
+      dateStyle: 'long',
+      timeStyle: 'short',
+    }).format(date)
   }
 
-  const getMonthName = monthIndex => {
-    const months = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ]
-    return months[monthIndex]
+  const getStatusBadge = status => {
+    const s = status?.toLowerCase()
+    switch (s) {
+      case 'completed':
+      case 'paid':
+        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Totalmente Pagado</Badge>
+      case 'partial':
+      case 'partial_payment':
+        return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Pago Parcial</Badge>
+      case 'overdue':
+        return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Pago Vencido</Badge>
+      default:
+        return <Badge className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Pendiente</Badge>
+    }
   }
-
-  const formatCurrency = amount => {
-    return new Intl.NumberFormat('es-PY', {
-      style: 'currency',
-      currency: 'PYG',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount || 0)
-  }
-
-  const items = sale?.items || sale?.details || []
 
   const totalAmount = sale?.total_amount ?? sale?.total ?? 0
-  const paidAmount = sale?.paid_amount ?? sale?.total_paid ?? 0
-  const balanceDue =
-    sale?.balance_due ?? sale?.balance ?? Math.max(totalAmount - paidAmount, 0)
+  const paidAmount = sale?.paid_amount ?? sale?.total_paid ?? sale?.amount_paid ?? 0
+  const balanceDue = sale?.balance_due ?? Math.max(totalAmount - paidAmount, 0)
+  const paymentProgress = totalAmount > 0 ? Math.min(100, Math.round((paidAmount / totalAmount) * 100)) : 0
 
-  const paymentProgress =
-    totalAmount > 0 ? ((paidAmount / totalAmount) * 100).toFixed(1) : 0
-
-  // Normalizar pagos
   const normalizedPayments = payments.length
     ? payments.map(payment => ({
         id: payment.payment_id || payment.id,
-        date: payment.payment_date,
-        user: payment.processed_by_name || '—',
-        amount: payment.amount_paid || payment.amount_received || 0,
+        date: payment.payment_date || payment.registered_at,
+        user: payment.processed_by_name || payment.recorded_by || '—',
+        amount: payment.amount_paid || payment.amount_received || payment.amount || 0,
+        change: payment.change_amount || 0,
         method: payment.payment_method_code || payment.payment_method || 'CASH',
+        reference: payment.payment_reference || payment.reference || '—',
+        notes: payment.payment_notes || payment.notes || '',
         status: (payment.status || 'COMPLETED').toLowerCase(),
       }))
     : []
 
-  const getStatusColor = status => {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'warning'
-      case 'partial_payment':
-        return 'info'
-      case 'paid':
-      case 'completed':
-        return 'success'
-      case 'cancelled':
-      case 'reversed':
-      case 'failed':
-        return 'error'
-      default:
-        return 'default'
-    }
-  }
-
-  const getStatusLabel = status => {
-    const statusKey = status?.toLowerCase()
-    return t(`sales.paymentHistory.status.${statusKey}`, status)
-  }
-
   if (loading) {
     return (
-      <div className='payment-history'>
-        <DataState variant='loading' />
+      <div className="flex flex-col items-center justify-center h-[70vh] gap-4 animate-in fade-in duration-700">
+        <RefreshCw className="w-12 h-12 animate-spin text-primary opacity-20" />
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Cargando historial...</p>
       </div>
     )
   }
 
   if (error || !sale) {
     return (
-      <div className='payment-history'>
+      <div className="animate-in fade-in duration-500 h-[70vh] flex items-center justify-center">
         <DataState
-          variant='error'
+          variant="error"
           title={t('common.error')}
-          description={error || t('sales.paymentHistory.notFound')}
-          action={
-            <Button onClick={() => navigate('/cobros-ventas')}>
-              {t('action.back')}
-            </Button>
-          }
+          message={error || 'No se pudo cargar el historial de pagos.'}
+          onRetry={loadData}
         />
       </div>
     )
   }
 
   return (
-    <div className='payment-history'>
-      {/* Breadcrumbs */}
-      <div className='payment-history__breadcrumbs'>
-        <Link to='/cobros-ventas' className='payment-history__breadcrumb-link'>
-          {t('sales.paymentHistory.breadcrumb.sales', 'Ventas')}
-        </Link>
-        <span className='payment-history__breadcrumb-separator'>/</span>
-        <Link to='/cobros-ventas' className='payment-history__breadcrumb-link'>
-          {t('sales.paymentHistory.breadcrumb.orders', 'Órdenes')}
-        </Link>
-        <span className='payment-history__breadcrumb-separator'>/</span>
-        <Link
-          to={`/cobros-ventas/${saleId}`}
-          className='payment-history__breadcrumb-link'
-        >
-          SO-{sale.id}
-        </Link>
-        <span className='payment-history__breadcrumb-separator'>/</span>
-        <span className='payment-history__breadcrumb-current'>
-          {t('sales.paymentHistory.breadcrumb.current', 'Historial de Pagos')}
-        </span>
-      </div>
-
+    <div className="flex flex-col gap-8 animate-in fade-in duration-500 max-w-[1200px] mx-auto py-2">
       {/* Header */}
-      <div className='payment-history__header'>
-        <h1 className='payment-history__title'>
-          {t('sales.paymentHistory.title', 'Historial de Pagos para')} SO-{sale.id}
-        </h1>
-        <div className='payment-history__actions'>
-          <button
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2">
+        <div className="flex items-center gap-5">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/cobros-ventas')}
+            className="size-12 rounded-full hover:bg-primary/10 text-primary transition-all"
+          >
+            <ArrowLeft size={24} />
+          </Button>
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+               <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none font-display">
+                 Historial de Cobros
+               </h1>
+            </div>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium font-display flex items-center gap-2">
+              Venta #{sale.id} • {sale.client_name || 'Cliente Ocasional'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
             onClick={handlePrint}
-            className='payment-history__action-btn'
-            title={t('action.print', 'Imprimir')}
+            className="h-12 border-slate-200 dark:border-slate-800 font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800"
           >
-            <Printer className='payment-history__action-icon' />
-          </button>
-          <button
+            <Printer size={16} className="mr-2" /> Imprimir
+          </Button>
+          <Button
+            variant="outline"
             onClick={handleDownload}
-            className='payment-history__action-btn'
-            title={t('action.download', 'Descargar')}
+            className="h-12 border-slate-200 dark:border-slate-800 font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800"
           >
-            <Download className='payment-history__action-icon' />
-          </button>
-          <Button onClick={handleAddPayment} className='btn btn--primary'>
-            <Plus className='btn__icon' />
-            {t('sales.paymentHistory.action.addPayment', 'Añadir Nuevo Pago')}
+            <Download size={16} className="mr-2" /> Exportar
           </Button>
         </div>
+      </header>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+            <CardContent className="p-6">
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Venta</p>
+               <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{formatCurrency(totalAmount)}</h2>
+            </CardContent>
+         </Card>
+         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+            <CardContent className="p-6">
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Cobrado</p>
+               <h2 className="text-2xl font-bold text-green-600 tracking-tight">{formatCurrency(paidAmount)}</h2>
+            </CardContent>
+         </Card>
+         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+            <CardContent className="p-6">
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Saldo Restante</p>
+               <h2 className="text-2xl font-black text-primary tracking-tight">{formatCurrency(balanceDue)}</h2>
+            </CardContent>
+         </Card>
+         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+            <CardContent className="p-6">
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estado</p>
+               <div className="mt-1">{getStatusBadge(sale.status)}</div>
+            </CardContent>
+         </Card>
       </div>
 
-      <div className='payment-history__layout'>
-        {/* Main Content */}
-        <div className='payment-history__main'>
-          {/* Estado de la Orden */}
-          {sale.status !== 'PAID' && (
-            <div className='payment-history__alert payment-history__alert--warning'>
-              <AlertCircle className='payment-history__alert-icon' />
-              <div className='payment-history__alert-content'>
-                <p className='payment-history__alert-title'>
-                  {t('sales.paymentHistory.orderStatus', 'Estado de la Orden')}: {getStatusLabel(sale.status)}
-                </p>
-                <p className='payment-history__alert-message'>
-                  {t('sales.paymentHistory.orderStatusMessage', 'Esta orden de venta tiene un saldo pendiente. Esperando pago completo.')}
-                </p>
+      {/* Progress Bar */}
+      <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
+        <CardContent className="p-6 flex items-center gap-6">
+           <div className="flex-1 space-y-2">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                 <span className="text-slate-400">Progreso de Cobro</span>
+                 <span className="text-primary">{paymentProgress}% Completado</span>
               </div>
-              <Link
-                to={`/cobros-ventas/${saleId}`}
-                className='payment-history__alert-link'
+              <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                 <div 
+                  className="h-full bg-primary transition-all duration-1000 ease-out" 
+                  style={{ width: `${paymentProgress}%` }}
+                 />
+              </div>
+           </div>
+           {balanceDue > 0 && (
+             <Button
+                onClick={handleAddPayment}
+                className="h-12 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
               >
-                {t('sales.paymentHistory.viewOrderDetails', 'Ver Detalles de la Orden')}
-                <ArrowLeft className='payment-history__alert-link-icon' />
-              </Link>
-            </div>
-          )}
+                <Plus size={18} className="mr-2" />
+                Registrar Cobro
+              </Button>
+           )}
+        </CardContent>
+      </Card>
 
-          {/* Progreso del Pago */}
-          <div className='payment-history__card'>
-            <div className='payment-history__progress-header'>
-              <p className='payment-history__progress-label'>
-                {t('sales.paymentHistory.paymentProgress', 'Progreso del Pago')}
-              </p>
-              <p className='payment-history__progress-percentage'>{paymentProgress}%</p>
-            </div>
-            <div className='payment-history__progress-bar'>
-              <div
-                className='payment-history__progress-fill'
-                style={{ width: `${paymentProgress}%` }}
-              />
-            </div>
-            <div className='payment-history__progress-stats'>
-              <div className='payment-history__progress-stat'>
-                <span className='payment-history__progress-stat-value'>
-                  {formatCurrency(paidAmount)}
-                </span>
-                <span className='payment-history__progress-stat-label'>
-                  {t('sales.paymentHistory.paid', 'Pagado')}
-                </span>
-              </div>
-              <div className='payment-history__progress-stat'>
-                <span className='payment-history__progress-stat-value'>
-                  {formatCurrency(balanceDue)}
-                </span>
-                <span className='payment-history__progress-stat-label'>
-                  {t('sales.paymentHistory.balanceDue', 'Saldo Pendiente')}
-                </span>
-              </div>
-              <div className='payment-history__progress-stat'>
-                <span className='payment-history__progress-stat-value'>
-                  {formatCurrency(totalAmount)}
-                </span>
-                <span className='payment-history__progress-stat-label'>
-                  {t('sales.paymentHistory.total', 'Total')}
-                </span>
-              </div>
-            </div>
-          </div>
+      {/* Timeline */}
+      <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
+        <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 py-5 px-8">
+           <CardTitle className="text-[13px] font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-3">
+              <History size={18} className="text-primary" /> Línea de Tiempo de Cobros
+           </CardTitle>
+        </CardHeader>
+        <CardContent className="p-8">
+           {normalizedPayments.length === 0 ? (
+             <div className="py-16 flex flex-col items-center justify-center text-center opacity-40">
+                <CreditCard size={48} className="mb-4 text-slate-300" />
+                <h3 className="text-lg font-black uppercase tracking-tighter text-slate-500 mb-1">Sin Registros</h3>
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Esta venta aún no tiene cobros asociados.</p>
+             </div>
+           ) : (
+             <div className="space-y-8">
+                {normalizedPayments.map((payment, idx) => (
+                  <div key={payment.id || idx} className="relative pl-8 border-l-2 border-slate-100 dark:border-slate-800 space-y-3 group">
+                     <div className="absolute -left-[11px] top-0 size-5 bg-white dark:bg-surface-dark border-4 border-primary rounded-full group-hover:bg-primary transition-colors" />
+                     
+                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/30 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 group-hover:shadow-sm transition-all">
+                        <div className="space-y-2 flex-1">
+                           <div className="flex items-center gap-3">
+                             <Badge className="bg-green-500/10 text-green-600 border-none text-[9px] font-black px-2 py-0.5">COBRO APLICADO</Badge>
+                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                               <Clock size={12} /> {formatDate(payment.date)}
+                             </span>
+                           </div>
+                           
+                           <h3 className="text-xl font-black text-slate-900 dark:text-white tabular-nums tracking-tighter">
+                             {formatCurrency(payment.amount)}
+                           </h3>
+                           
+                           <div className="flex flex-wrap gap-4 pt-2">
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
+                                <User size={12} className="text-slate-400" /> Cajero: {payment.user}
+                              </p>
+                              {payment.reference && payment.reference !== '—' && (
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
+                                  <FileText size={12} className="text-slate-400" /> Ref: {payment.reference}
+                                </p>
+                              )}
+                           </div>
+                        </div>
 
-          {/* Tabla de Pagos */}
-          <div className='payment-history__card'>
-            {normalizedPayments.length > 0 ? (
-              <div className='payment-history__table-wrapper'>
-                <table className='payment-history__table'>
-                  <thead>
-                    <tr>
-                      <th>{t('sales.paymentHistory.table.date', 'FECHA')}</th>
-                      <th>{t('sales.paymentHistory.table.user', 'USUARIO')}</th>
-                      <th>{t('sales.paymentHistory.table.method', 'MÉTODO DE PAGO')}</th>
-                      <th className='text-right'>
-                        {t('sales.paymentHistory.table.amount', 'MONTO')}
-                      </th>
-                      <th className='text-center'>
-                        {t('sales.paymentHistory.table.status', 'ESTADO')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {normalizedPayments.map((payment, index) => (
-                      <tr key={payment.id || index}>
-                        <td>{formatDate(payment.date)}</td>
-                        <td>
-                          <div className='payment-history__user'>
-                            <div className='payment-history__user-avatar'>
-                              {payment.user.charAt(0).toUpperCase()}
-                            </div>
-                            <span>{payment.user}</span>
-                          </div>
-                        </td>
-                        <td>{payment.method}</td>
-                        <td className='text-right payment-history__amount'>
-                          {payment.status === 'reversed' ? '(' : ''}
-                          {formatCurrency(payment.amount)}
-                          {payment.status === 'reversed' ? ')' : ''}
-                        </td>
-                        <td className='text-center'>
-                          <span
-                            className={`payment-history__status payment-history__status--${getStatusColor(
-                              payment.status
-                            )}`}
-                          >
-                            <span className='payment-history__status-dot' />
-                            {getStatusLabel(payment.status)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className='payment-history__empty'>
-                <AlertCircle size={48} />
-                <p>{t('sales.paymentHistory.noPayments', 'No hay pagos registrados')}</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className='payment-history__sidebar'>
-          {/* Cliente */}
-          <div className='payment-history__sidebar-card'>
-            <h3 className='payment-history__sidebar-title'>
-              {t('sales.paymentHistory.customer', 'Cliente')}
-            </h3>
-            <div className='payment-history__customer'>
-              <div className='payment-history__customer-avatar'>
-                {(sale.client_name || 'C').charAt(0).toUpperCase()}
-              </div>
-              <div className='payment-history__customer-info'>
-                <p className='payment-history__customer-name'>
-                  {sale.client_name || '—'}
-                </p>
-                <p className='payment-history__customer-id'>
-                  {t('sales.paymentHistory.customerId', 'ID Cliente')}: {sale.client_id || '—'}
-                </p>
-              </div>
-            </div>
-            <Link
-              to={`/clientes/${sale.client_id}`}
-              className='payment-history__sidebar-link'
-            >
-              {t('sales.paymentHistory.viewFullProfile', 'Ver Perfil Completo')}
-              <ArrowLeft className='payment-history__sidebar-link-icon' />
-            </Link>
-          </div>
-
-          {/* Productos */}
-          <div className='payment-history__sidebar-card'>
-            <h3 className='payment-history__sidebar-title'>
-              {t('sales.paymentHistory.productsInOrder', 'Productos en la Orden')}
-            </h3>
-            {items.length > 0 ? (
-              <ul className='payment-history__product-list'>
-                {items.map((item, index) => (
-                  <li key={index} className='payment-history__product-item'>
-                    <Link
-                      to={`/productos/${item.product_id || item.id}`}
-                      className='payment-history__product-link'
-                    >
-                      {item.product_name || item.name || '—'}
-                    </Link>
-                    <span className='payment-history__product-quantity'>
-                      {t('sales.paymentHistory.quantity', 'Cant')}: {item.quantity || 0}
-                    </span>
-                  </li>
+                        {payment.notes && (
+                           <div className="md:w-1/3 bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Notas</p>
+                             <p className="text-xs text-slate-600 dark:text-slate-300 italic">"{payment.notes}"</p>
+                           </div>
+                        )}
+                     </div>
+                  </div>
                 ))}
-              </ul>
-            ) : (
-              <p className='payment-history__sidebar-empty'>
-                {t('sales.paymentHistory.noProducts', 'Sin productos')}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+             </div>
+           )}
+        </CardContent>
+      </Card>
 
-      {/* Modal de registro de pago */}
       <RegisterSalePaymentModal
-        open={isPaymentModalOpen}
-        onOpenChange={setIsPaymentModalOpen}
-        sale={sale}
-        onSubmit={handlePaymentSubmit}
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        saleId={saleId}
+        saleTotal={totalAmount}
+        balanceDue={balanceDue}
+        clientName={sale?.client_name || sale?.client?.name}
+        onSuccess={handlePaymentSubmit}
       />
     </div>
   )
 }
-
 export default SalesPaymentHistory

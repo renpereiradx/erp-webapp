@@ -1,13 +1,5 @@
 /**
- * Página de Gestión de Reservas - MVP
- * Implementación siguiendo GUIA_MVP_DESARROLLO.md y FLUENT_DESIGN_SYSTEM.md
- *
- * Funcionalidades:
- * - Header con navegación
- * - Sistema de tabs (Radix UI)
- * - Tab "Reservas": Listado, filtros, búsqueda, paginación
- * - Estados: Loading, Error, Empty (DataState)
- * - Integración con useReservationStore
+ * BookingManagement Page - Refactored to Tailwind (Fluent 2.0)
  */
 
 import React, { useState, useEffect, useMemo } from 'react'
@@ -22,9 +14,13 @@ import {
   ChevronRight,
   X,
   Check,
+  Calendar,
+  Filter,
+  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   DropdownMenu,
@@ -55,7 +51,7 @@ const BookingManagement = () => {
   const navigate = useNavigate()
   const { toasts, removeToast, success: showSuccess } = useToast()
 
-  // Estados del store
+  // Store States
   const {
     reservations,
     loading,
@@ -67,14 +63,13 @@ const BookingManagement = () => {
   } = useReservationStore()
 
   const { products, fetchProducts } = useProductStore()
-  const { searchResults: clients } = useClientStore()
 
-  // Estados locales para filtros
+  // Local States for Filters
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedProduct, setSelectedProduct] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
 
-  // Filtros de fecha - por defecto últimos 30 días
+  // Date Filters - Default last 30 days
   const getDefaultDates = () => {
     const today = new Date()
     const thirtyDaysAgo = new Date(today)
@@ -88,51 +83,45 @@ const BookingManagement = () => {
 
   const [dateRange, setDateRange] = useState(getDefaultDates())
 
-  // Estados de paginación
+  // Pagination State
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  // Estados del modal
+  // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingReservation, setEditingReservation] = useState(null)
   const [initialReservationData, setInitialReservationData] = useState(null)
 
-  // Estados para el explorador de horarios disponibles
+  // Schedule Explorer State
   const [showScheduleExplorer, setShowScheduleExplorer] = useState(false)
 
-  // Estados para cancelación de reservas
+  // Confirmation States
   const [cancellingReservation, setCancellingReservation] = useState(null)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
-
-  // Estados para confirmación de reservas
   const [confirmingReservation, setConfirmingReservation] = useState(null)
   const [showConfirmConfirm, setShowConfirmConfirm] = useState(false)
 
-  // Cargar datos al montar (solo una vez con fechas por defecto)
+  // Load initial data
   useEffect(() => {
     fetchReservations({
       startDate: dateRange.startDate,
       endDate: dateRange.endDate,
     })
     fetchProducts()
-    // Note: Clients are loaded on-demand via search, not pre-loaded
   }, [fetchReservations, fetchProducts])
 
-  // Filtrado local de reservas
+  // Local filtering
   const filteredReservations = useMemo(() => {
     return reservations.filter(reservation => {
-      // Filtro por búsqueda (nombre de cliente)
       const clientName = reservation.client_name || ''
       const matchesSearch = clientName
         .toLowerCase()
         .includes(searchTerm.toLowerCase())
 
-      // Filtro por producto
       const matchesProduct =
         selectedProduct === 'all' ||
         reservation.product_id === parseInt(selectedProduct)
 
-      // Filtro por estado
       const matchesStatus =
         selectedStatus === 'all' ||
         reservation.status?.toLowerCase() === selectedStatus.toLowerCase()
@@ -141,13 +130,13 @@ const BookingManagement = () => {
     })
   }, [reservations, searchTerm, selectedProduct, selectedStatus])
 
-  // Paginación local
+  // Local Pagination
   const totalPages = Math.ceil(filteredReservations.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const paginatedReservations = filteredReservations.slice(startIndex, endIndex)
 
-  // Resetear página al cambiar filtros
+  // Reset page on filter change
   useEffect(() => {
     setCurrentPage(1)
   }, [searchTerm, selectedProduct, selectedStatus])
@@ -158,7 +147,6 @@ const BookingManagement = () => {
   }
 
   const handleCreateReservation = () => {
-    // En lugar de abrir el modal, mostrar el explorador de horarios
     setShowScheduleExplorer(true)
   }
 
@@ -166,21 +154,16 @@ const BookingManagement = () => {
     setIsModalOpen(false)
     setEditingReservation(null)
     setInitialReservationData(null)
-    // Volver a mostrar el explorador de horarios
     setShowScheduleExplorer(true)
   }
 
   const handleModalSuccess = () => {
-    // Refresh reservations list after creating/updating
     fetchReservations()
-    // Cerrar explorador y volver a lista de reservas
     setShowScheduleExplorer(false)
-    // Mostrar notificación de éxito
     showSuccess('Reserva creada exitosamente')
   }
 
   const handleReserveSlot = slotData => {
-    // Cuando el usuario hace clic en "Reservar" en un slot
     setInitialReservationData(slotData)
     setShowScheduleExplorer(false)
     setIsModalOpen(true)
@@ -205,7 +188,6 @@ const BookingManagement = () => {
       )
       if (result && result.success) {
         showSuccess('Reserva cancelada exitosamente')
-        // Refrescar lista de reservas
         fetchReservations({
           startDate: dateRange.startDate,
           endDate: dateRange.endDate,
@@ -217,11 +199,6 @@ const BookingManagement = () => {
       setShowCancelConfirm(false)
       setCancellingReservation(null)
     }
-  }
-
-  const handleCancelCancel = () => {
-    setShowCancelConfirm(false)
-    setCancellingReservation(null)
   }
 
   const handleConfirmClick = reservation => {
@@ -238,7 +215,6 @@ const BookingManagement = () => {
       )
       if (result && result.success) {
         showSuccess('Reserva confirmada exitosamente')
-        // Refrescar lista de reservas
         fetchReservations({
           startDate: dateRange.startDate,
           endDate: dateRange.endDate,
@@ -252,38 +228,18 @@ const BookingManagement = () => {
     }
   }
 
-  const handleCancelConfirmDialog = () => {
-    setShowConfirmConfirm(false)
-    setConfirmingReservation(null)
-  }
-
   const getStatusBadgeClass = status => {
     const statusLower = status?.toLowerCase() || ''
     if (statusLower === 'confirmed' || statusLower === 'confirmada') {
-      return 'status-badge--confirmed'
+      return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
     }
     if (statusLower === 'pending' || statusLower === 'pendiente') {
-      return 'status-badge--pending'
+      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
     }
     if (statusLower === 'cancelled' || statusLower === 'cancelada') {
-      return 'status-badge--cancelled'
+      return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
     }
-    return ''
-  }
-
-  const getStatusLabel = status => {
-    const statusLower = status?.toLowerCase() || ''
-    if (statusLower === 'confirmed') return t('booking.status.confirmed')
-    if (statusLower === 'pending') return t('booking.status.pending')
-    if (statusLower === 'cancelled') return t('booking.status.cancelled')
-    if (statusLower === 'completed') return t('booking.status.completed')
-    return status || '-'
-  }
-
-  const formatDuration = duration => {
-    if (!duration) return '-'
-    // La duración viene en horas desde la API
-    return `${Math.round(parseFloat(duration))} hrs`
+    return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
   }
 
   const formatCurrency = amount => {
@@ -311,20 +267,19 @@ const BookingManagement = () => {
     }
   }
 
-  // Estados de UI
   if (loading && reservations.length === 0) {
     return (
-      <div className='booking-management-page'>
-        <DataState variant='loading' skeletonVariant='list' />
+      <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+        <DataState variant="loading" skeletonVariant="list" />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className='booking-management-page'>
+      <div className="flex flex-col gap-6 animate-in fade-in duration-500">
         <DataState
-          variant='error'
+          variant="error"
           title={t('booking.error.title')}
           message={error}
           onRetry={handleRetry}
@@ -334,28 +289,26 @@ const BookingManagement = () => {
   }
 
   return (
-    <div className='booking-management-page'>
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       {showScheduleExplorer ? (
-        /* Vista del Explorador de Horarios Disponibles */
-        <div className='schedule-explorer-wrapper'>
-          {/* Componente de Horarios Disponibles con botón integrado */}
-          <div className='available-slots-with-back'>
-            <div className='flex items-center gap-3 mb-6'>
-              <Button
-                variant='ghost'
-                size='icon'
-                onClick={() => setShowScheduleExplorer(false)}
-                className='w-10 h-10'
-              >
-                <ChevronLeft className='w-6 h-6' />
-              </Button>
-              <h1 className='text-3xl font-bold'>
-                Consultar Horarios Disponibles
-              </h1>
-            </div>
-            <div style={{ '--hide-available-slots-header': 'true' }}>
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowScheduleExplorer(false)}
+              className="rounded-full shadow-sm"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-2xl font-black text-text-primary-light dark:text-text-primary-dark tracking-tight uppercase font-display">
+              Consultar Horarios Disponibles
+            </h1>
+          </div>
+          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-2 overflow-hidden">
+             <div style={{ '--hide-available-slots-header': 'true' }}>
               <style>{`
-                .available-slots-with-back .available-slots__header {
+                .available-slots-header-container {
                   display: none;
                 }
               `}</style>
@@ -364,420 +317,245 @@ const BookingManagement = () => {
           </div>
         </div>
       ) : (
-        /* Vista normal de la página */
         <>
-          {/* Header con navegación */}
-          <header className='booking-management-page__header'>
-            <div className='booking-management-page__header-left'>
-              <button
-                className='booking-management-page__back-button'
+          {/* Header */}
+          <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-primary pl-6 py-2">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={handleBack}
-                aria-label={t('booking.action.back')}
+                className="rounded-full hover:bg-primary/10 text-primary"
               >
                 <ArrowLeft size={20} />
-              </button>
-              <h1 className='booking-management-page__title'>
-                {t('booking.title')}
+              </Button>
+              <h1 className="text-3xl font-black text-text-primary-light dark:text-text-primary-dark tracking-tighter uppercase font-display">
+                {t('booking.title', 'Listado de Reservas')}
               </h1>
             </div>
 
-            <div className='booking-management-page__header-actions'>
-              <Button
-                className='btn btn--primary'
-                onClick={handleCreateReservation}
-              >
-                <Plus size={20} />
-                {t('booking.action.create')}
-              </Button>
-            </div>
+            <Button
+              onClick={handleCreateReservation}
+              className="bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest px-6 py-6 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+            >
+              <Plus size={20} className="mr-2" />
+              {t('booking.action.create', 'Nueva Reserva')}
+            </Button>
           </header>
 
-          {/* Tabs */}
-          <Tabs
-            defaultValue='reservations'
-            className='booking-management-page__tabs'
-          >
-            <TabsList style={{ display: 'none' }}>
-              <TabsTrigger value='reservations'>
-                {t('booking.tab.reservations')}
-              </TabsTrigger>
-              {/* Tabs adicionales para futuro */}
-              {/* <TabsTrigger value="dashboard">
-            {t('booking.tab.dashboard')}
-          </TabsTrigger> */}
-            </TabsList>
-
-            {/* Tab: Reservas */}
-            <TabsContent
-              value='reservations'
-              className='booking-management-page__tab-content'
-            >
-              {/* Barra de filtros - Sección 1: Filtros de API (Fechas) */}
-              <div className='filters-bar' style={{ marginBottom: '12px' }}>
-                <div className='filters-bar__filters' style={{ gap: '12px' }}>
-                  {/* Filtro: Fecha Inicio */}
-                  <div className='filter-date-group'>
-                    <label className='filter-date-label'>Desde</label>
-                    <Input
-                      type='date'
-                      value={dateRange.startDate}
-                      onChange={e =>
-                        setDateRange(prev => ({
-                          ...prev,
-                          startDate: e.target.value,
-                        }))
-                      }
-                      className='filter-button'
-                      aria-label='Fecha inicio'
-                    />
-                  </div>
-
-                  {/* Filtro: Fecha Fin */}
-                  <div className='filter-date-group'>
-                    <label className='filter-date-label'>Hasta</label>
-                    <Input
-                      type='date'
-                      value={dateRange.endDate}
-                      onChange={e =>
-                        setDateRange(prev => ({
-                          ...prev,
-                          endDate: e.target.value,
-                        }))
-                      }
-                      className='filter-button'
-                      aria-label='Fecha fin'
-                    />
-                  </div>
-
-                  {/* Botón Buscar */}
-                  <Button
-                    className='btn btn--secondary'
-                    onClick={() =>
-                      fetchReservations({
-                        startDate: dateRange.startDate,
-                        endDate: dateRange.endDate,
-                      })
-                    }
-                    style={{ marginTop: '24px' }}
-                  >
-                    <Search size={20} />
-                    Buscar
-                  </Button>
+          {/* Filters Bar */}
+          <Card className="rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-2 overflow-hidden bg-white dark:bg-surface-dark">
+            <CardContent className="p-6 flex flex-col gap-6">
+              {/* API Filters (Dates) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 items-end gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">Desde</label>
+                  <Input
+                    type="date"
+                    value={dateRange.startDate}
+                    onChange={e => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                    className="h-11 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
+                  />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-400">Hasta</label>
+                  <Input
+                    type="date"
+                    value={dateRange.endDate}
+                    onChange={e => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="h-11 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"
+                  />
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => fetchReservations({ startDate: dateRange.startDate, endDate: dateRange.endDate })}
+                  className="h-11 font-bold uppercase tracking-widest text-xs border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <Search size={18} className="mr-2" />
+                  Actualizar Lista
+                </Button>
               </div>
 
-              {/* Barra de filtros - Sección 2: Filtros Locales */}
-              <div className='filters-bar'>
-                <div className='filters-bar__filters'>
-                  {/* Filtro: Producto */}
+              {/* Local Filters */}
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                   <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      className="w-full h-11 pl-10 pr-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                      placeholder={t('booking.search.placeholder', 'Buscar por cliente...')}
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+
                   <select
-                    className='filter-button'
+                    className="h-11 px-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary outline-none cursor-pointer min-w-[160px]"
                     value={selectedProduct}
                     onChange={e => setSelectedProduct(e.target.value)}
-                    aria-label={t('booking.filter.product')}
                   >
-                    <option key='all' value='all'>
-                      {t('booking.filter.all_products')}
-                    </option>
+                    <option value="all">{t('booking.filter.all_products', 'Todos los servicios')}</option>
                     {products.map(product => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
+                      <option key={product.id} value={product.id}>{product.name}</option>
                     ))}
                   </select>
 
-                  {/* Filtro: Estado */}
                   <select
-                    className='filter-button'
+                    className="h-11 px-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary outline-none cursor-pointer min-w-[160px]"
                     value={selectedStatus}
                     onChange={e => setSelectedStatus(e.target.value)}
-                    aria-label={t('booking.filter.status')}
                   >
-                    <option key='all' value='all'>
-                      {t('booking.filter.all_statuses')}
-                    </option>
-                    <option key='confirmed' value='confirmed'>
-                      {t('booking.status.confirmed')}
-                    </option>
-                    <option key='pending' value='pending'>
-                      {t('booking.status.pending')}
-                    </option>
-                    <option key='cancelled' value='cancelled'>
-                      {t('booking.status.cancelled')}
-                    </option>
+                    <option value="all">{t('booking.filter.all_statuses', 'Todos los estados')}</option>
+                    <option value="confirmed">{t('booking.status.confirmed', 'Confirmada')}</option>
+                    <option value="pending">{t('booking.status.pending', 'Pendiente')}</option>
+                    <option value="cancelled">{t('booking.status.cancelled', 'Cancelada')}</option>
                   </select>
                 </div>
 
-                {/* Búsqueda */}
-                <div className='filters-bar__search'>
-                  <div className='search-input'>
-                    <Search className='search-input__icon' size={20} />
-                    <input
-                      type='text'
-                      className='search-input__field'
-                      placeholder={t('booking.search.placeholder')}
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                      aria-label={t('booking.search.placeholder')}
-                    />
-                  </div>
+                <div className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full">
+                  {filteredReservations.length} Resultados
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Tabla de reservas */}
-              <div style={{ minHeight: '400px' }}>
-                {filteredReservations.length === 0 ? (
-                  <div
-                    className='flex items-center justify-center'
-                    style={{ minHeight: '400px' }}
-                  >
-                    {searchTerm ||
-                    selectedProduct !== 'all' ||
-                    selectedStatus !== 'all' ? (
-                      <DataState
-                        variant='empty'
-                        title={t('booking.empty.no_results')}
-                        message={t('booking.empty.message')}
-                      />
-                    ) : (
-                      <div className='text-center'>
-                        <h3 className='text-lg font-semibold mb-2'>
-                          Sin reservas
-                        </h3>
-                        <p className='text-muted-foreground'>
-                          No hay reservas en el rango de fechas seleccionado
-                        </p>
-                      </div>
-                    )}
+          {/* Table Container */}
+          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-shadow overflow-hidden">
+             {filteredReservations.length === 0 ? (
+               <div className="flex flex-col items-center justify-center py-24 text-center">
+                  <div className="size-20 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-4 border-4 border-white dark:border-slate-800 shadow-inner">
+                    <Calendar size={40} />
                   </div>
-                ) : (
-                  <>
-                    <div className='reservations-table'>
-                      <div className='reservations-table__wrapper'>
-                        <table
-                          className='reservations-table__table'
-                          role='table'
-                        >
-                          <thead className='reservations-table__thead'>
-                            <tr>
-                              <th
-                                className='reservations-table__th'
-                                scope='col'
-                              >
-                                {t('booking.table.product')}
-                              </th>
-                              <th
-                                className='reservations-table__th'
-                                scope='col'
-                              >
-                                {t('booking.table.client')}
-                              </th>
-                              <th
-                                className='reservations-table__th'
-                                scope='col'
-                              >
-                                {t('booking.table.user')}
-                              </th>
-                              <th
-                                className='reservations-table__th'
-                                scope='col'
-                              >
-                                {t('booking.table.created_date')}
-                              </th>
-                              <th
-                                className='reservations-table__th'
-                                scope='col'
-                              >
-                                {t('booking.table.status')}
-                              </th>
-                              <th
-                                className='reservations-table__th'
-                                scope='col'
-                              >
-                                {t('booking.table.duration')}
-                              </th>
-                              <th
-                                className='reservations-table__th reservations-table__th--right'
-                                scope='col'
-                              >
-                                {t('booking.table.total')}
-                              </th>
-                              <th
-                                className='reservations-table__th reservations-table__th--center'
-                                scope='col'
-                              >
-                                {t('booking.table.actions')}
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className='reservations-table__tbody'>
-                            {paginatedReservations.map(reservation => (
-                              <tr
-                                key={reservation.id || reservation.reserve_id}
-                                className='reservations-table__tr'
-                              >
-                                <td className='reservations-table__td reservations-table__td--product'>
-                                  {reservation.product_name || '-'}
-                                </td>
-                                <td className='reservations-table__td reservations-table__td--secondary'>
-                                  {reservation.client_name || '-'}
-                                </td>
-                                <td className='reservations-table__td reservations-table__td--secondary'>
-                                  {reservation.user_email ||
-                                    reservation.created_by ||
-                                    '-'}
-                                </td>
-                                <td className='reservations-table__td reservations-table__td--secondary'>
-                                  {formatDateTime(
-                                    reservation.reserve_date ||
-                                      reservation.created_at
-                                  )}
-                                </td>
-                                <td className='reservations-table__td'>
-                                  <div
-                                    className={`status-badge ${getStatusBadgeClass(
-                                      reservation.status
-                                    )}`}
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">Sin reservas</h3>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm max-w-xs mx-auto mt-1">No hay reservas registradas con los filtros actuales en el sistema.</p>
+               </div>
+             ) : (
+               <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                  <table className="w-full text-left border-collapse min-w-[1000px]">
+                    <thead>
+                      <tr className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Servicio</th>
+                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Cliente</th>
+                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Usuario</th>
+                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Fecha/Hora</th>
+                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Estado</th>
+                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500">Duración</th>
+                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500 text-right">Total</th>
+                        <th className="py-4 px-6 text-[11px] font-black uppercase tracking-widest text-slate-500 text-center w-20"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                      {paginatedReservations.map(reservation => (
+                        <tr key={reservation.id || reservation.reserve_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-3">
+                              <div className="size-9 bg-primary/10 rounded-lg flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                <Calendar size={18} />
+                              </div>
+                              <span className="font-bold text-slate-900 dark:text-white text-sm">{reservation.product_name || '-'}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6 text-sm font-medium text-slate-600 dark:text-slate-400">
+                            {reservation.client_name || '-'}
+                          </td>
+                          <td className="py-4 px-6 text-xs text-slate-500 dark:text-slate-500">
+                            {reservation.user_email || reservation.created_by || '-'}
+                          </td>
+                          <td className="py-4 px-6 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            {formatDateTime(reservation.reserve_date || reservation.created_at)}
+                          </td>
+                          <td className="py-4 px-6">
+                             <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusBadgeClass(reservation.status)}`}>
+                                <div className="size-1.5 rounded-full bg-current"></div>
+                                {reservation.status || '-'}
+                             </div>
+                          </td>
+                          <td className="py-4 px-6 text-sm text-slate-600 dark:text-slate-400">
+                            {Math.round(parseFloat(reservation.duration || 0))} hrs
+                          </td>
+                          <td className="py-4 px-6 text-right font-black text-slate-900 dark:text-white tabular-nums">
+                            {formatCurrency(reservation.total_amount)}
+                          </td>
+                          <td className="py-4 px-6 text-center">
+                             <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="size-9 rounded-full text-slate-400 hover:text-primary transition-colors">
+                                    <MoreVertical size={18} />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-16">
+                                  <DropdownMenuItem 
+                                    onClick={() => handleConfirmClick(reservation)}
+                                    disabled={['confirmed', 'confirmada', 'cancelled', 'cancelada'].includes(reservation.status?.toLowerCase())}
+                                    className="gap-3 py-3 font-bold rounded-lg focus:bg-green-50 focus:text-green-600 dark:focus:bg-green-900/30"
                                   >
-                                    <span className='status-badge__dot'></span>
-                                    {getStatusLabel(reservation.status)}
-                                  </div>
-                                </td>
-                                <td className='reservations-table__td reservations-table__td--secondary'>
-                                  {formatDuration(reservation.duration)}
-                                </td>
-                                <td className='reservations-table__td reservations-table__td--right'>
-                                  {formatCurrency(reservation.total_amount)}
-                                </td>
-                                <td className='reservations-table__td reservations-table__td--center'>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <button
-                                        className='actions-menu-button'
-                                        aria-label={t('booking.table.actions')}
-                                        title={t('booking.table.actions')}
-                                      >
-                                        <MoreVertical size={20} />
-                                      </button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align='end'>
-                                      <DropdownMenuItem
-                                        onClick={() =>
-                                          handleConfirmClick(reservation)
-                                        }
-                                        disabled={
-                                          reservation.status?.toLowerCase() ===
-                                            'confirmed' ||
-                                          reservation.status?.toLowerCase() ===
-                                            'confirmada' ||
-                                          reservation.status?.toLowerCase() ===
-                                            'cancelled' ||
-                                          reservation.status?.toLowerCase() ===
-                                            'cancelada'
-                                        }
-                                        className='dropdown-menu__item--success'
-                                      >
-                                        <Check size={16} />
-                                        Confirmar Reserva
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() =>
-                                          handleCancelClick(reservation)
-                                        }
-                                        disabled={
-                                          reservation.status?.toLowerCase() ===
-                                            'cancelled' ||
-                                          reservation.status?.toLowerCase() ===
-                                            'cancelada'
-                                        }
-                                        className='dropdown-menu__item--danger'
-                                      >
-                                        <X size={16} />
-                                        Cancelar Reserva
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                                    <Check size={18} /> Confirmar Reserva
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleCancelClick(reservation)}
+                                    disabled={['cancelled', 'cancelada'].includes(reservation.status?.toLowerCase())}
+                                    className="gap-3 py-3 font-bold rounded-lg focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-900/30"
+                                  >
+                                    <X size={18} /> Cancelar Reserva
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                             </DropdownMenu>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+               </div>
+             )}
+
+             {/* Pagination */}
+             {totalPages > 1 && (
+                <div className="px-6 py-4 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                    Mostrando {startIndex + 1} - {Math.min(endIndex, filteredReservations.length)} de {filteredReservations.length}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-9 rounded-lg border-slate-200 dark:border-slate-700"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft size={18} />
+                    </Button>
+                    
+                    <div className="flex items-center gap-1 px-2">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                        <Button
+                          key={page}
+                          variant={page === currentPage ? "default" : "ghost"}
+                          className={`size-9 rounded-lg font-bold text-sm ${page === currentPage ? 'bg-primary shadow-md' : 'text-slate-500'}`}
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </Button>
+                      ))}
                     </div>
 
-                    {/* Paginación */}
-                    {totalPages > 1 && (
-                      <div className='pagination'>
-                        <div className='pagination__info'>
-                          {t('booking.pagination.showing')}{' '}
-                          <span className='pagination__info-highlight'>
-                            {startIndex + 1}
-                            {t('booking.pagination.to')}
-                            {Math.min(endIndex, filteredReservations.length)}
-                          </span>{' '}
-                          {t('booking.pagination.of')}{' '}
-                          <span className='pagination__info-highlight'>
-                            {filteredReservations.length}
-                          </span>
-                        </div>
-
-                        <div className='pagination__controls'>
-                          <button
-                            className='pagination__button'
-                            onClick={() =>
-                              setCurrentPage(prev => Math.max(1, prev - 1))
-                            }
-                            disabled={currentPage === 1}
-                            aria-label={t('booking.pagination.previous')}
-                          >
-                            <ChevronLeft size={16} />
-                          </button>
-
-                          {Array.from(
-                            { length: totalPages },
-                            (_, i) => i + 1
-                          ).map(page => (
-                            <button
-                              key={page}
-                              className={`pagination__button ${
-                                page === currentPage
-                                  ? 'pagination__button--active'
-                                  : ''
-                              }`}
-                              onClick={() => setCurrentPage(page)}
-                              aria-label={`Página ${page}`}
-                              aria-current={
-                                page === currentPage ? 'page' : undefined
-                              }
-                            >
-                              {page}
-                            </button>
-                          ))}
-
-                          <button
-                            className='pagination__button'
-                            onClick={() =>
-                              setCurrentPage(prev =>
-                                Math.min(totalPages, prev + 1)
-                              )
-                            }
-                            disabled={currentPage === totalPages}
-                            aria-label={t('booking.pagination.next')}
-                          >
-                            <ChevronRight size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-9 rounded-lg border-slate-200 dark:border-slate-700"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight size={18} />
+                    </Button>
+                  </div>
+                </div>
+             )}
+          </div>
         </>
       )}
 
-      {/* Modal de crear/editar reserva */}
+      {/* Modal Section */}
       <BookingFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -786,121 +564,46 @@ const BookingManagement = () => {
         initialData={initialReservationData}
       />
 
-      {/* Modal de confirmación de cancelación */}
+      {/* Confirmation Dialogs */}
       <Dialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
-        <DialogContent className='booking-cancel-dialog'>
-          <DialogHeader>
-            <DialogTitle>Confirmar Cancelación</DialogTitle>
-            <DialogDescription>
-              ¿Está seguro que desea cancelar la reserva?
-            </DialogDescription>
+        <DialogContent className="rounded-2xl border-none shadow-fluent-16 max-w-md">
+          <DialogHeader className="gap-2">
+            <div className="size-14 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 mb-2">
+              <X size={30} />
+            </div>
+            <DialogTitle className="text-xl font-black uppercase tracking-tighter">Confirmar Cancelación</DialogTitle>
+            <DialogDescription className="text-slate-500">¿Está seguro que desea cancelar esta reserva? Esta acción no se puede deshacer.</DialogDescription>
           </DialogHeader>
           {cancellingReservation && (
-            <div className='booking-management-page__reservation-details'>
-              <p>
-                <strong>Producto:</strong> {cancellingReservation.product_name}
-              </p>
-              <p>
-                <strong>Cliente:</strong> {cancellingReservation.client_name}
-              </p>
-              <p>
-                <strong>Fecha:</strong>{' '}
-                {formatDateTime(cancellingReservation.start_time)}
-              </p>
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl space-y-2 border border-slate-100 dark:border-slate-800">
+              <p className="text-sm"><strong>Servicio:</strong> {cancellingReservation.product_name}</p>
+              <p className="text-sm"><strong>Cliente:</strong> {cancellingReservation.client_name}</p>
+              <p className="text-sm"><strong>Fecha:</strong> {formatDateTime(cancellingReservation.start_time || cancellingReservation.reserve_date)}</p>
             </div>
           )}
-          <DialogFooter style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-            <button
-              onClick={handleCancelCancel}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minWidth: '120px',
-                padding: '8px 16px',
-                backgroundColor: '#f3f4f6',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                color: '#111827',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#e5e7eb'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#f3f4f6'
-              }}
-            >
-              No, volver
-            </button>
-            <button
-              onClick={handleConfirmCancel}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minWidth: '120px',
-                padding: '8px 16px',
-                backgroundColor: '#dc2626',
-                border: '1px solid #dc2626',
-                borderRadius: '6px',
-                color: '#ffffff',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#b91c1c'
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#dc2626'
-              }}
-            >
-              Sí, cancelar reserva
-            </button>
+          <DialogFooter className="gap-3 sm:gap-0 mt-4">
+            <Button variant="ghost" onClick={() => setShowCancelConfirm(false)} className="font-bold uppercase tracking-widest text-xs">No, volver</Button>
+            <Button onClick={handleConfirmCancel} className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-xs rounded-xl px-6">Sí, cancelar reserva</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Modal de confirmación para confirmar reserva */}
       <Dialog open={showConfirmConfirm} onOpenChange={setShowConfirmConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmar Reserva</DialogTitle>
-            <DialogDescription>
-              ¿Está seguro que desea confirmar la reserva?
-            </DialogDescription>
-          </DialogHeader>
-          {confirmingReservation && (
-            <div className='booking-management-page__reservation-details'>
-              <p>
-                <strong>Producto:</strong> {confirmingReservation.product_name}
-              </p>
-              <p>
-                <strong>Cliente:</strong> {confirmingReservation.client_name}
-              </p>
-              <p>
-                <strong>Fecha:</strong>{' '}
-                {formatDateTime(confirmingReservation.start_time)}
-              </p>
+        <DialogContent className="rounded-2xl border-none shadow-fluent-16 max-w-md">
+          <DialogHeader className="gap-2">
+            <div className="size-14 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 mb-2">
+              <Check size={30} />
             </div>
-          )}
-          <DialogFooter>
-            <Button variant='ghost' onClick={handleCancelConfirmDialog}>
-              No, volver
-            </Button>
-            <Button className='btn btn--primary' onClick={handleConfirmConfirm}>
-              Sí, confirmar reserva
-            </Button>
+            <DialogTitle className="text-xl font-black uppercase tracking-tighter">Confirmar Reserva</DialogTitle>
+            <DialogDescription className="text-slate-500">¿Está seguro que desea confirmar esta reserva ahora?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-3 sm:gap-0 mt-4">
+            <Button variant="ghost" onClick={() => setShowConfirmConfirm(false)} className="font-bold uppercase tracking-widest text-xs">No, volver</Button>
+            <Button onClick={handleConfirmConfirm} className="bg-green-600 hover:bg-green-700 text-white font-black uppercase tracking-widest text-xs rounded-xl px-6">Sí, confirmar reserva</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Toast Container */}
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   )

@@ -6,6 +6,7 @@
 
 import { apiService } from '@/services/api'
 import { telemetry } from '@/utils/telemetry'
+import { DEMO_SCHEDULES, IS_DEMO_MODE } from '@/config/demoReservations'
 // Removed MockDataService import - using real API only
 
 const API_PREFIX = '/schedules' // Ajustar según API
@@ -234,6 +235,10 @@ export const scheduleService = {
   },
 
   async getAvailableSchedules(productId, date) {
+    if (IS_DEMO_MODE) {
+      const filtered = DEMO_SCHEDULES.filter(s => s.product_id == productId && s.is_available);
+      return { data: filtered, schedules: filtered, count: filtered.length };
+    }
     const startTime = Date.now()
 
     try {
@@ -282,6 +287,10 @@ export const scheduleService = {
 
   // 🆕 Obtener TODOS los horarios (disponibles y no disponibles) con info de reservas
   async getAllSchedulesByProductAndDate(productId, date) {
+    if (IS_DEMO_MODE) {
+      const filtered = DEMO_SCHEDULES.filter(s => s.product_id == productId);
+      return { data: filtered, schedules: filtered, count: filtered.length };
+    }
     const startTime = Date.now()
 
     try {
@@ -314,6 +323,9 @@ export const scheduleService = {
 
   // Obtener horarios de servicios para HOY
   async getTodaySchedules() {
+    if (IS_DEMO_MODE) {
+      return { data: DEMO_SCHEDULES, schedules: DEMO_SCHEDULES, count: DEMO_SCHEDULES.length };
+    }
     const startTime = Date.now()
 
     try {
@@ -339,6 +351,9 @@ export const scheduleService = {
 
   // Obtener horarios disponibles de todos los servicios
   async getAvailableSchedulesAll(params = {}) {
+    if (IS_DEMO_MODE) {
+      return { data: DEMO_SCHEDULES, schedules: DEMO_SCHEDULES, count: DEMO_SCHEDULES.length };
+    }
     const startTime = Date.now()
     const { date, limit = 50 } = params
 

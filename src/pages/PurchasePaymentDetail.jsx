@@ -1,1041 +1,410 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { Building2, Loader2, PlusCircle, RefreshCw } from 'lucide-react'
+/**
+ * PurchasePaymentDetail Page - Refactored to Tailwind (Fluent 2.0)
+ */
 
+import React, { useEffect, useMemo, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Download,
+  FileText,
+  Loader2,
+  RefreshCw,
+  User,
+  MapPin,
+  Mail,
+  Phone,
+  CircleDollarSign,
+  Package,
+  History,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+  MoreVertical,
+  Printer,
+  Share2,
+} from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
 import RegisterPaymentModal from '@/components/purchase-payments/RegisterPaymentModal'
 import DataState from '@/components/ui/DataState'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
-import { useToast } from '@/hooks/useToast'
-import { useI18n } from '@/lib/i18n'
-import { purchasePaymentsMvpService } from '@/services/purchasePaymentsMvpService'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import usePurchasePaymentsMvpStore from '@/store/usePurchasePaymentsMvpStore'
+import { useToast } from '@/hooks/useToast'
 
-const DEFAULT_CURRENCY_CODE = 'PYG'
-const CURRENCY_ID_MAP = {
-  1: DEFAULT_CURRENCY_CODE,
-}
-
-const isIsoCurrencyCode = value => /^[A-Z]{3}$/.test(value)
-
-const ensureCurrencyCode = raw => {
-  if (typeof raw === 'number' && Number.isFinite(raw)) {
-    return CURRENCY_ID_MAP[raw] || DEFAULT_CURRENCY_CODE
-  }
-
-  if (typeof raw === 'string') {
-    const trimmed = raw.trim()
-    if (!trimmed) {
-      return DEFAULT_CURRENCY_CODE
-    }
-
-    if (/^\d+$/.test(trimmed)) {
-      const numeric = Number(trimmed)
-      if (Number.isFinite(numeric)) {
-        return CURRENCY_ID_MAP[numeric] || DEFAULT_CURRENCY_CODE
-      }
-      return DEFAULT_CURRENCY_CODE
-    }
-
-    const upper = trimmed.toUpperCase()
-    return isIsoCurrencyCode(upper) ? upper : DEFAULT_CURRENCY_CODE
-  }
-
-  return DEFAULT_CURRENCY_CODE
-}
-
-const resolveStatusKey = status => {
-  if (!status) return 'pending'
-  switch (status) {
-    case 'completed':
-    case 'paid':
-      return 'paid'
-    case 'cancelled':
-      return 'cancelled'
-    case 'partial':
-      return 'partial'
-    case 'overdue':
-      return 'overdue'
-    default:
-      return status
-  }
-}
-
-const translateWithFallback = (t, key, params, fallback) => {
-  const translated = t(key, params)
-  if (translated === key) {
-    if (typeof fallback === 'function') {
-      return fallback(params)
-    }
-    if (fallback !== undefined) {
-      return fallback
-    }
-  }
-  return translated
-}
-
-const PurchasePaymentDetail = () => {
+const PurchasePaymentDetailPage = () => {
   const { orderId } = useParams()
   const { t, lang } = useI18n()
-  const refreshList = usePurchasePaymentsMvpStore(state => state.refresh)
-  const ordersFromStore = usePurchasePaymentsMvpStore(state => state.orders)
-  const { success: showSuccess, error: showError } = useToast()
+  const navigate = useNavigate()
+  const { success: showSuccess } = useToast()
 
-  const [order, setOrder] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [isRegisterOpen, setRegisterOpen] = useState(false)
+  const {
+    currentOrder: order,
+    loading,
+    error,
+    fetchOrder,
+  } = usePurchasePaymentsMvpStore()
 
-  const loadOrder = useCallback(async () => {
-    if (!orderId) {
-      setOrder(null)
-      setError(
-        lang === 'en'
-          ? 'Missing purchase order identifier.'
-          : 'Falta el identificador de la orden de compra.'
-      )
-      setLoading(false)
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      const response = await purchasePaymentsMvpService.fetchOrder(orderId)
-      setOrder(response.order)
-    } catch (err) {
-      setOrder(null)
-      setError(
-        err?.message ??
-          (lang === 'en'
-            ? 'Unable to load the purchase order details.'
-            : 'No se pudieron cargar los detalles de la orden de compra.')
-      )
-    } finally {
-      setLoading(false)
-    }
-  }, [orderId, lang])
+  const [isRegisterModalOpen, setRegisterModalOpen] = useState(false)
 
   useEffect(() => {
-    loadOrder()
-  }, [loadOrder])
+    if (orderId) {
+      fetchOrder(orderId)
+    }
+  }, [orderId, fetchOrder])
 
-  const cachedOrder = useMemo(() => {
-    if (!ordersFromStore || !orderId) return null
-    return (
-      ordersFromStore.find(
-        candidate => String(candidate.id) === String(orderId)
-      ) || null
-    )
-  }, [orderId, ordersFromStore])
-
-  useEffect(() => {
-    if (!cachedOrder) return
-    setOrder(prev => {
-      if (!prev) return cachedOrder
-      const prevHasPayments =
-        Array.isArray(prev.payments) && prev.payments.length > 0
-      if (prev.id === cachedOrder.id && prevHasPayments) {
-        return prev
-      }
-      return cachedOrder
-    })
-  }, [cachedOrder])
-
-  const handleRefresh = useCallback(async () => {
-    await loadOrder()
-  }, [loadOrder])
-
-  const handleModalOpenChange = useCallback(nextOpen => {
-    setRegisterOpen(nextOpen)
-  }, [])
-
-  const handleRegisterPayment = useCallback(
-    async payload => {
-      try {
-        const response = await purchasePaymentsMvpService.registerPayment(
-          payload.orderId,
-          payload
-        )
-        setOrder(response.order)
-        showSuccess(
-          translateWithFallback(
-            t,
-            'purchasePaymentsMvp.registerModal.feedback.success',
-            { orderId: payload.orderId },
-            ({ orderId: id }) =>
-              lang === 'en'
-                ? `Payment registered for order ${id}.`
-                : `Pago registrado para la orden ${id}.`
-          )
-        )
-
-        try {
-          await refreshList()
-        } catch (refreshError) {
-          console.warn('Unable to refresh purchase payments list', refreshError)
-        }
-      } catch (err) {
-        showError(
-          err?.message ??
-            translateWithFallback(
-              t,
-              'purchasePaymentsMvp.registerModal.feedback.error',
-              undefined,
-              () =>
-                lang === 'en'
-                  ? 'Unable to register the payment.'
-                  : 'No se pudo registrar el pago.'
-            )
-        )
-        throw err
-      }
-    },
-    [lang, refreshList, showError, showSuccess, t]
-  )
-
-  const orderIdentifier = order?.id ?? orderId ?? '—'
-
-  const orderDisplayCode = useMemo(() => {
-    if (!order) return orderIdentifier
-    return (
-      order.reference_code ||
-      order.reference ||
-      order.code ||
-      order.order_number ||
-      orderIdentifier
-    )
-  }, [order, orderIdentifier])
-
-  const headerTitle = useMemo(
+  const currencyFormatter = useMemo(
     () =>
-      translateWithFallback(
-        t,
-        'purchasePaymentsMvp.detail.heading',
-        { orderId: orderDisplayCode },
-        ({ orderId: id }) =>
-          lang === 'en' ? `Purchase order ${id}` : `Orden de compra #${id}`
-      ),
-    [lang, orderDisplayCode, t]
-  )
-
-  const headerDescription = useMemo(
-    () =>
-      translateWithFallback(
-        t,
-        'purchasePaymentsMvp.detail.description',
-        undefined,
-        () =>
-          lang === 'en'
-            ? 'Review payment progress, supplier information, and recorded activity.'
-            : 'Revisá el avance del pago, datos del proveedor y la actividad registrada.'
-      ),
-    [lang, t]
-  )
-
-  const registerLabel = useMemo(
-    () =>
-      translateWithFallback(
-        t,
-        'purchasePaymentsMvp.detail.registerPayment',
-        undefined,
-        () => (lang === 'en' ? 'Register payment' : 'Registrar nuevo pago')
-      ),
-    [lang, t]
-  )
-
-  const breadcrumbs = useMemo(
-    () => [
-      {
-        label: translateWithFallback(
-          t,
-          'purchasePaymentsMvp.detail.breadcrumb.home',
-          undefined,
-          () => (lang === 'en' ? 'Home' : 'Inicio')
-        ),
-        to: '/pagos-compras',
-      },
-    ],
-    [lang, t]
-  )
-
-  const amountFormatter = useMemo(() => {
-    const currency = ensureCurrencyCode(order?.currency)
-    const locale = lang === 'en' ? 'en-US' : 'es-PY'
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: currency === DEFAULT_CURRENCY_CODE ? 0 : 2,
-      maximumFractionDigits: currency === DEFAULT_CURRENCY_CODE ? 0 : 2,
-    })
-  }, [lang, order?.currency])
-
-  const formatAmount = useCallback(
-    value => amountFormatter.format(Number(value || 0)),
-    [amountFormatter]
+      new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
+        style: 'currency',
+        currency: order?.currency || 'PYG',
+        minimumFractionDigits: order?.currency === 'PYG' ? 0 : 2,
+        maximumFractionDigits: order?.currency === 'PYG' ? 0 : 2,
+      }),
+    [lang, order?.currency]
   )
 
   const dateFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-PY', {
-        dateStyle: 'medium',
-      }),
-    [lang]
-  )
-
-  const dateTimeFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-PY', {
-        dateStyle: 'medium',
+        dateStyle: 'long',
         timeStyle: 'short',
       }),
     [lang]
   )
 
-  const resolvePaymentTimestamp = payment => {
-    if (!payment) return null
-    return (
-      payment.registered_at ??
-      payment.registeredAt ??
-      payment.payment_date ??
-      payment.date ??
-      payment.created_at ??
-      payment.createdAt ??
-      payment.timestamp ??
-      null
-    )
+  const handleBack = () => {
+    navigate('/pagos-compras')
   }
 
-  const renderPaymentDate = payment => {
-    const timestamp = resolvePaymentTimestamp(payment)
-    if (!timestamp) {
-      return translateWithFallback(
-        t,
-        'purchasePaymentsMvp.detail.timeline.unknownDate',
-        undefined,
-        () => (lang === 'en' ? 'Unknown date' : 'Fecha desconocida')
-      )
+  const handlePaymentSuccess = () => {
+    setRegisterModalOpen(false)
+    fetchOrder(orderId)
+    showSuccess(t('purchasePaymentsMvp.messages.paymentRegistered'))
+  }
+
+  const getStatusBadge = status => {
+    const s = status?.toLowerCase()
+    switch (s) {
+      case 'completed':
+      case 'paid':
+        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Totalmente Pagado</Badge>
+      case 'partial':
+        return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Pago Parcial</Badge>
+      case 'overdue':
+        return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Pago Vencido</Badge>
+      default:
+        return <Badge className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-none font-black uppercase text-[10px] tracking-widest px-4 py-1.5 shadow-sm">Pendiente</Badge>
     }
-
-    const parsed = new Date(timestamp)
-    if (Number.isNaN(parsed.getTime())) {
-      return translateWithFallback(
-        t,
-        'purchasePaymentsMvp.detail.timeline.unknownDate',
-        undefined,
-        () => (lang === 'en' ? 'Unknown date' : 'Fecha desconocida')
-      )
-    }
-
-    return dateTimeFormatter.format(parsed)
   }
-
-  const renderPaymentUser = payment => {
-    if (!payment) return '—'
-    return (
-      payment.recorded_by ||
-      payment.recordedBy ||
-      payment.user_name ||
-      payment.user?.name ||
-      '—'
-    )
-  }
-
-  const progressPercent = useMemo(() => {
-    if (!order || !order.total_amount) return 0
-    if (Number.isFinite(order.paymentProgressPercent)) {
-      return Math.min(100, Math.max(0, order.paymentProgressPercent))
-    }
-    const total = Number(order.total_amount || 0)
-    const paid = Number(order.totalPaid || 0)
-    if (total <= 0) return 0
-    return Math.min(100, Math.round((paid / total) * 100))
-  }, [order])
-
-  const paidAmount = useMemo(() => {
-    if (!order) return 0
-    if (Number.isFinite(order.totalPaid)) return Number(order.totalPaid)
-    const pending = Number(order.pendingAmount || 0)
-    return Math.max(0, Number(order.total_amount || 0) - pending)
-  }, [order])
-
-  const issueDateLabel = useMemo(() => {
-    if (!order?.issue_date) return '—'
-    return dateFormatter.format(new Date(order.issue_date))
-  }, [dateFormatter, order?.issue_date])
-
-  const disableRegisterPayment = !order || Number(order.pendingAmount || 0) <= 0
-
-  const modalOrder = useMemo(() => {
-    if (!order) return null
-    const pending = Number(order.pendingAmount || 0)
-    return {
-      id: order.id,
-      pendingAmount: pending,
-      currency: ensureCurrencyCode(order.currency),
-      supplierName: order.supplier?.name || '',
-    }
-  }, [order])
-
-  const renderStatusChip = status => {
-    if (!status) return null
-    const normalized = resolveStatusKey(status)
-    const label = translateWithFallback(
-      t,
-      `purchasePaymentsMvp.status.${normalized}`,
-      undefined,
-      () => normalized.charAt(0).toUpperCase() + normalized.slice(1)
-    )
-
-    return (
-      <span
-        className={`purchase-payments-mvp-detail__status-chip purchase-payments-mvp-detail__status-chip--${normalized}`}
-      >
-        {label}
-      </span>
-    )
-  }
-
-  const renderPaymentStatus = status => {
-    if (!status) return '—'
-    const normalized = status.toLowerCase().replace(/\s+/g, '_')
-    return translateWithFallback(
-      t,
-      `purchasePaymentsMvp.detail.history.status.${normalized}`,
-      undefined,
-      () =>
-        normalized
-          .split('_')
-          .map(segment =>
-            segment ? segment.charAt(0).toUpperCase() + segment.slice(1) : ''
-          )
-          .join(' ')
-    )
-  }
-
-  const renderPaymentChip = status => {
-    if (!status) {
-      return (
-        <span className='purchase-payments-mvp-detail__chip purchase-payments-mvp-detail__chip--neutral'>
-          —
-        </span>
-      )
-    }
-
-    const normalized = status.toLowerCase().replace(/\s+/g, '_')
-    const modifier = normalized.replace(/_/g, '-')
-    return (
-      <span
-        className={`purchase-payments-mvp-detail__chip purchase-payments-mvp-detail__chip--${modifier}`}
-      >
-        {renderPaymentStatus(status)}
-      </span>
-    )
-  }
-
-  const historyEntries = useMemo(() => {
-    if (!Array.isArray(order?.history)) return []
-
-    return order.history
-      .map((entry, index) => {
-        const timestamp =
-          entry.timestamp ||
-          entry.recorded_at ||
-          entry.created_at ||
-          entry.date ||
-          null
-
-        const action =
-          entry.action || entry.event || entry.type || entry.status || 'update'
-
-        const actor =
-          entry.user ||
-          entry.actor ||
-          entry.performed_by ||
-          entry.user_name ||
-          null
-
-        const notes =
-          entry.notes ||
-          entry.description ||
-          entry.details ||
-          entry.comment ||
-          ''
-
-        return {
-          id: entry.id || `${action}-${timestamp || index}`,
-          timestamp,
-          action,
-          actor,
-          notes,
-        }
-      })
-      .sort((a, b) => {
-        const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0
-        const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0
-        return bTime - aTime
-      })
-  }, [order?.history])
 
   if (loading && !order) {
     return (
-      <div className='purchase-payments-mvp-detail'>
-        <div className='purchase-payments-mvp-detail__container'>
-          <div className='purchase-payments-mvp-detail__state'>
-            <DataState
-              variant='loading'
-              skeletonVariant='list'
-              skeletonProps={{ count: 4 }}
-            />
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center h-[70vh] gap-4 animate-in fade-in duration-700">
+        <RefreshCw className="w-12 h-12 animate-spin text-primary opacity-20" />
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Cargando expediente...</p>
       </div>
     )
   }
 
-  if (error) {
+  if (error || !order) {
     return (
-      <div className='purchase-payments-mvp-detail'>
-        <div className='purchase-payments-mvp-detail__container'>
-          <div className='purchase-payments-mvp-detail__state'>
-            <DataState
-              variant='error'
-              title={translateWithFallback(
-                t,
-                'purchasePaymentsMvp.data.error.title',
-                undefined,
-                () =>
-                  lang === 'en'
-                    ? 'Unable to load order'
-                    : 'No se pudo cargar la orden'
-              )}
-              message={error}
-              onRetry={handleRefresh}
-            />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!order) {
-    return (
-      <div className='purchase-payments-mvp-detail'>
-        <div className='purchase-payments-mvp-detail__container'>
-          <div className='purchase-payments-mvp-detail__state'>
-            <DataState
-              variant='empty'
-              title={translateWithFallback(
-                t,
-                'purchasePaymentsMvp.data.empty.title',
-                undefined,
-                () => (lang === 'en' ? 'No data' : 'Sin datos')
-              )}
-              description={translateWithFallback(
-                t,
-                'purchasePaymentsMvp.data.empty.description',
-                undefined,
-                () =>
-                  lang === 'en'
-                    ? 'The requested purchase order is not available.'
-                    : 'La orden de compra solicitada no está disponible.'
-              )}
-              actionLabel={translateWithFallback(
-                t,
-                'purchasePaymentsMvp.filters.refresh',
-                undefined,
-                () => (lang === 'en' ? 'Refresh' : 'Refrescar')
-              )}
-              onAction={handleRefresh}
-            />
-          </div>
-        </div>
+      <div className="animate-in fade-in duration-500 h-[70vh] flex items-center justify-center">
+        <DataState
+          variant="error"
+          title={t('purchasePaymentsMvp.error.title')}
+          message={error || 'No se pudo cargar la información de la orden.'}
+          onRetry={() => fetchOrder(orderId)}
+        />
       </div>
     )
   }
 
   return (
-    <div className='purchase-payments-mvp-detail'>
-      <div className='purchase-payments-mvp-detail__container'>
-        <header className='purchase-payments-mvp-detail__header'>
-          <Breadcrumb className='purchase-payments-mvp-detail__breadcrumb'>
-            <BreadcrumbList>
-              {breadcrumbs.map((crumb, index) => (
-                <React.Fragment key={crumb.to ?? crumb.label ?? index}>
-                  <BreadcrumbItem>
-                    {crumb.isCurrent ? (
-                      <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                    ) : (
-                      <BreadcrumbLink asChild>
-                        <Link to={crumb.to}>{crumb.label}</Link>
-                      </BreadcrumbLink>
-                    )}
-                  </BreadcrumbItem>
-                  {index < breadcrumbs.length - 1 ? (
-                    <BreadcrumbSeparator />
-                  ) : null}
-                </React.Fragment>
-              ))}
-            </BreadcrumbList>
-          </Breadcrumb>
-
-          <div className='purchase-payments-mvp-detail__heading'>
-            <div className='purchase-payments-mvp-detail__heading-text'>
-              <h1 className='purchase-payments-mvp-detail__title'>
-                {headerTitle}
-              </h1>
-              <p className='purchase-payments-mvp-detail__description'>
-                {headerDescription}
-              </p>
+    <div className="flex flex-col gap-8 animate-in fade-in duration-500 max-w-[1400px] mx-auto py-2">
+      {/* Navigation & Header */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2">
+        <div className="flex items-center gap-5">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleBack}
+            className="size-12 rounded-full hover:bg-primary/10 text-primary transition-all"
+          >
+            <ArrowLeft size={24} />
+          </Button>
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+               <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none font-display">
+                 Orden #{order.id}
+               </h1>
+               {getStatusBadge(order.status)}
             </div>
-            <div className='purchase-payments-mvp-detail__actions'>
-              <Button
-                type='button'
-                variant='ghost'
-                size='icon'
-                onClick={handleRefresh}
-                disabled={loading}
-                className='purchase-payments-mvp-detail__refresh'
-                aria-label={translateWithFallback(
-                  t,
-                  'purchasePaymentsMvp.filters.refresh',
-                  undefined,
-                  () => (lang === 'en' ? 'Refresh' : 'Actualizar')
-                )}
-              >
-                {loading ? (
-                  <Loader2 className='purchase-payments-mvp-detail__primary-icon animate-spin' />
-                ) : (
-                  <RefreshCw className='purchase-payments-mvp-detail__primary-icon' />
-                )}
-              </Button>
-
-              <Button
-                type='button'
-                className='purchase-payments-mvp-detail__primary-action'
-                onClick={() => setRegisterOpen(true)}
-                disabled={disableRegisterPayment}
-              >
-                <PlusCircle className='purchase-payments-mvp-detail__primary-icon' />
-                {registerLabel}
-              </Button>
-            </div>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium font-display flex items-center gap-2">
+              <Calendar size={14} /> Emitida el {order.issue_date ? new Date(order.issue_date).toLocaleDateString() : '-'}
+            </p>
           </div>
-        </header>
+        </div>
 
-        <div className='purchase-payments-mvp-detail__grid'>
-          <main className='purchase-payments-mvp-detail__main'>
-            <section className='purchase-payments-mvp-detail__card purchase-payments-mvp-detail__card--summary'>
-              <header className='purchase-payments-mvp-detail__card-header purchase-payments-mvp-detail__card-header--summary'>
-                <div className='purchase-payments-mvp-detail__summary-heading'>
-                  <p className='purchase-payments-mvp-detail__eyebrow'>
-                    {translateWithFallback(
-                      t,
-                      'purchasePaymentsMvp.detail.summary.eyebrow',
-                      undefined,
-                      () =>
-                        lang === 'en' ? 'Order overview' : 'Estado general'
-                    )}
-                  </p>
-                  <h2 className='purchase-payments-mvp-detail__card-title'>
-                    {translateWithFallback(
-                      t,
-                      'purchasePaymentsMvp.detail.summary.title',
-                      undefined,
-                      () =>
-                        lang === 'en' ? 'Payment progress' : 'Progreso del pago'
-                    )}
-                  </h2>
-                </div>
-                <div className='purchase-payments-mvp-detail__summary-status'>
-                  {renderStatusChip(order.status)}
-                </div>
-              </header>
-              <div className='purchase-payments-mvp-detail__card-content purchase-payments-mvp-detail__card-content--summary'>
-                <div className='purchase-payments-mvp-detail__summary-progress-block'>
-                  <div className='purchase-payments-mvp-detail__summary-progress-header'>
-                    <span className='purchase-payments-mvp-detail__summary-label'>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.summary.progress',
-                        undefined,
-                        () =>
-                          lang === 'en'
-                            ? 'Payment progress'
-                            : 'Progreso del pago'
-                      )}
-                    </span>
-                    <span className='purchase-payments-mvp-detail__summary-progress-value'>
-                      {progressPercent}%
-                    </span>
-                  </div>
-                  <div
-                    className='purchase-payments-mvp-detail__progress-track'
-                    role='progressbar'
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={progressPercent}
-                  >
-                    <span
-                      className='purchase-payments-mvp-detail__progress-fill'
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
-                </div>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            className="h-12 border-slate-200 dark:border-slate-800 font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            <Printer size={16} className="mr-2" /> Imprimir
+          </Button>
+          <Button
+            onClick={() => setRegisterModalOpen(true)}
+            disabled={order.status === 'completed' || order.status === 'paid'}
+            className="h-12 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+          >
+            <CircleDollarSign size={18} className="mr-2" />
+            Registrar Pago
+          </Button>
+        </div>
+      </header>
 
-                <div className='purchase-payments-mvp-detail__summary-grid'>
-                  <div className='purchase-payments-mvp-detail__summary-item'>
-                    <span className='purchase-payments-mvp-detail__summary-label'>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.summary.total',
-                        undefined,
-                        () => (lang === 'en' ? 'Total amount' : 'Monto total')
-                      )}
-                    </span>
-                    <span className='purchase-payments-mvp-detail__summary-value'>
-                      {formatAmount(order.total_amount)}
-                    </span>
-                  </div>
-                  <div className='purchase-payments-mvp-detail__summary-item'>
-                    <span className='purchase-payments-mvp-detail__summary-label'>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.summary.paid',
-                        undefined,
-                        () => (lang === 'en' ? 'Paid amount' : 'Monto abonado')
-                      )}
-                    </span>
-                    <span className='purchase-payments-mvp-detail__summary-value purchase-payments-mvp-detail__summary-value--success'>
-                      {formatAmount(paidAmount)}
-                    </span>
-                  </div>
-                  <div className='purchase-payments-mvp-detail__summary-item'>
-                    <span className='purchase-payments-mvp-detail__summary-label'>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.summary.pending',
-                        undefined,
-                        () =>
-                          lang === 'en' ? 'Pending balance' : 'Saldo pendiente'
-                      )}
-                    </span>
-                    <span
-                      className={`purchase-payments-mvp-detail__summary-value purchase-payments-mvp-detail__summary-value--danger${
-                        order.isOverdue
-                          ? ' purchase-payments-mvp-detail__summary-value--overdue'
-                          : ''
-                      }`}
-                    >
-                      {formatAmount(order.pendingAmount)}
-                    </span>
-                  </div>
-                  <div className='purchase-payments-mvp-detail__summary-item'>
-                    <span className='purchase-payments-mvp-detail__summary-label'>
-                      {translateWithFallback(
-                        t,
-                        'purchasePaymentsMvp.detail.summary.issueDate',
-                        undefined,
-                        () =>
-                          lang === 'en' ? 'Issue date' : 'Fecha de emisión'
-                      )}
-                    </span>
-                    <span className='purchase-payments-mvp-detail__summary-value'>
-                      {issueDateLabel}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className='purchase-payments-mvp-detail__card'>
-              <header className='purchase-payments-mvp-detail__card-header'>
-                <h2 className='purchase-payments-mvp-detail__card-title'>
-                  {translateWithFallback(
-                    t,
-                    'purchasePaymentsMvp.detail.history.title',
-                    undefined,
-                    () =>
-                      lang === 'en' ? 'Payment history' : 'Historial de pagos'
-                  )}
-                </h2>
-              </header>
-              <div className='purchase-payments-mvp-detail__card-content'>
-                {order.payments && order.payments.length > 0 ? (
-                  <div className='purchase-payments-mvp-detail__table-wrapper'>
-                    <table className='purchase-payments-mvp-detail__table'>
-                      <thead>
-                        <tr>
-                          <th>
-                            {translateWithFallback(
-                              t,
-                              'purchasePaymentsMvp.detail.history.columns.date',
-                              undefined,
-                              () => (lang === 'en' ? 'Date' : 'Fecha')
-                            )}
-                          </th>
-                          <th>
-                            {translateWithFallback(
-                              t,
-                              'purchasePaymentsMvp.detail.history.columns.user',
-                              undefined,
-                              () => (lang === 'en' ? 'User' : 'Usuario')
-                            )}
-                          </th>
-                          <th className='purchase-payments-mvp-detail__cell--numeric'>
-                            {translateWithFallback(
-                              t,
-                              'purchasePaymentsMvp.detail.history.columns.amount',
-                              undefined,
-                              () => (lang === 'en' ? 'Amount' : 'Monto')
-                            )}
-                          </th>
-                          <th className='purchase-payments-mvp-detail__cell--status'>
-                            {translateWithFallback(
-                              t,
-                              'purchasePaymentsMvp.detail.history.columns.status',
-                              undefined,
-                              () => (lang === 'en' ? 'Status' : 'Estado')
-                            )}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {order.payments.map(payment => (
-                          <tr key={payment.id}>
-                            <td>{renderPaymentDate(payment)}</td>
-                            <td>{renderPaymentUser(payment)}</td>
-                            <td className='purchase-payments-mvp-detail__cell--numeric'>
-                              {formatAmount(
-                                payment.amount ??
-                                  payment.amount_paid ??
-                                  payment.amountPaid ??
-                                  0
-                              )}
-                            </td>
-                            <td className='purchase-payments-mvp-detail__cell--status'>
-                              {renderPaymentChip(payment.status)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className='purchase-payments-mvp-detail__empty purchase-payments-mvp-detail__empty--subtle'>
-                    {translateWithFallback(
-                      t,
-                      'purchasePaymentsMvp.detail.history.empty',
-                      undefined,
-                      () =>
-                        lang === 'en'
-                          ? 'There are no payments recorded yet.'
-                          : 'No hay pagos registrados todavía.'
-                    )}
-                  </div>
-                )}
-              </div>
-            </section>
-
-            <section className='purchase-payments-mvp-detail__card'>
-              <header className='purchase-payments-mvp-detail__card-header'>
-                <h2 className='purchase-payments-mvp-detail__card-title'>
-                  {translateWithFallback(
-                    t,
-                    'purchasePaymentsMvp.detail.timeline.title',
-                    undefined,
-                    () =>
-                      lang === 'en' ? 'Recent activity' : 'Actividad reciente'
-                  )}
-                </h2>
-              </header>
-              <div className='purchase-payments-mvp-detail__card-content'>
-                {historyEntries.length > 0 ? (
-                  <ol className='purchase-payments-mvp-detail__timeline'>
-                    {historyEntries.map(entry => (
-                      <li
-                        key={entry.id}
-                        className='purchase-payments-mvp-detail__timeline-entry'
-                      >
-                        <div className='purchase-payments-mvp-detail__timeline-meta'>
-                          <span className='purchase-payments-mvp-detail__timeline-date'>
-                            {entry.timestamp
-                              ? dateTimeFormatter.format(
-                                  new Date(entry.timestamp)
-                                )
-                              : translateWithFallback(
-                                  t,
-                                  'purchasePaymentsMvp.detail.timeline.unknownDate',
-                                  undefined,
-                                  () =>
-                                    lang === 'en'
-                                      ? 'Unknown date'
-                                      : 'Fecha desconocida'
-                                )}
-                          </span>
-                          <span className='purchase-payments-mvp-detail__timeline-action'>
-                            {entry.action}
-                          </span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Order Info & Items */}
+        <div className="lg:col-span-8 space-y-8">
+          {/* Main Info Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             {/* Supplier Info */}
+             <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
+                <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 py-4">
+                   <CardTitle className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                      <User size={14} className="text-primary" /> Información del Proveedor
+                   </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                   <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">{order.supplier?.name}</h3>
+                   <div className="space-y-3">
+                      {order.supplier?.contact && (
+                        <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 text-sm font-medium">
+                           <User size={16} className="text-slate-300" /> {order.supplier.contact}
                         </div>
-                        <div className='purchase-payments-mvp-detail__timeline-body'>
-                          <span className='purchase-payments-mvp-detail__timeline-actor'>
-                            {entry.actor ||
-                              translateWithFallback(
-                                t,
-                                'purchasePaymentsMvp.detail.timeline.unknownActor',
-                                undefined,
-                                () => (lang === 'en' ? 'System' : 'Sistema')
-                              )}
-                          </span>
-                          {entry.notes ? (
-                            <p className='purchase-payments-mvp-detail__timeline-notes'>
-                              {entry.notes}
-                            </p>
-                          ) : null}
+                      )}
+                      {order.supplier?.email && (
+                        <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 text-sm font-medium">
+                           <Mail size={16} className="text-slate-300" /> {order.supplier.email}
                         </div>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <div className='purchase-payments-mvp-detail__empty purchase-payments-mvp-detail__empty--subtle'>
-                    {translateWithFallback(
-                      t,
-                      'purchasePaymentsMvp.detail.timeline.empty',
-                      undefined,
-                      () =>
-                        lang === 'en'
-                          ? 'There is no recorded activity for this order yet.'
-                          : 'Todavía no hay actividad registrada para esta orden.'
-                    )}
-                  </div>
-                )}
-              </div>
-            </section>
-          </main>
-
-          <aside className='purchase-payments-mvp-detail__sidebar'>
-            <section className='purchase-payments-mvp-detail__card'>
-              <header className='purchase-payments-mvp-detail__card-header'>
-                <h2 className='purchase-payments-mvp-detail__card-title'>
-                  {translateWithFallback(
-                    t,
-                    'purchasePaymentsMvp.detail.supplier.title',
-                    undefined,
-                    () => (lang === 'en' ? 'Supplier' : 'Proveedor')
-                  )}
-                </h2>
-              </header>
-              <div className='purchase-payments-mvp-detail__card-content purchase-payments-mvp-detail__card-content--supplier'>
-                <div className='purchase-payments-mvp-detail__supplier-heading'>
-                  <div className='purchase-payments-mvp-detail__supplier-icon'>
-                    <Building2 />
-                  </div>
-                  <div className='purchase-payments-mvp-detail__supplier'>
-                    <span className='purchase-payments-mvp-detail__supplier-name'>
-                      {order.supplier?.name || '—'}
-                    </span>
-                    <span className='purchase-payments-mvp-detail__supplier-meta'>
-                      {order.supplier?.id
-                        ? `ID: ${order.supplier.id}`
-                        : 'ID: —'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className='purchase-payments-mvp-detail__card'>
-              <header className='purchase-payments-mvp-detail__card-header'>
-                <h2 className='purchase-payments-mvp-detail__card-title'>
-                  {translateWithFallback(
-                    t,
-                    'purchasePaymentsMvp.detail.products.title',
-                    undefined,
-                    () =>
-                      lang === 'en'
-                        ? 'Included products'
-                        : 'Productos incluidos'
-                  )}
-                </h2>
-              </header>
-              <div className='purchase-payments-mvp-detail__card-content'>
-                {order.items && order.items.length > 0 ? (
-                  <ul className='purchase-payments-mvp-detail__product-list'>
-                    {order.items.map(item => (
-                      <li
-                        key={item.id}
-                        className='purchase-payments-mvp-detail__product-row'
-                      >
-                        <div className='purchase-payments-mvp-detail__product-details'>
-                          <span className='purchase-payments-mvp-detail__product-name'>
-                            {item.name}
-                          </span>
-                          <span className='purchase-payments-mvp-detail__product-meta'>
-                            {item.productId
-                              ? translateWithFallback(
-                                  t,
-                                  'purchasePaymentsMvp.detail.products.labels.sku',
-                                  { code: item.productId },
-                                  ({ code }) =>
-                                    `${
-                                      lang === 'en' ? 'SKU' : 'Codigo'
-                                    }: ${code}`
-                                )
-                              : '—'}
-                          </span>
-                          <span className='purchase-payments-mvp-detail__product-quantity'>
-                            {translateWithFallback(
-                              t,
-                              'purchasePaymentsMvp.detail.products.labels.quantity',
-                              { quantity: item.quantity },
-                              ({ quantity }) =>
-                                `${
-                                  lang === 'en' ? 'Quantity' : 'Cantidad'
-                                }: ${quantity}`
-                            )}
-                          </span>
+                      )}
+                      {order.supplier?.phone && (
+                        <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 text-sm font-medium">
+                           <Phone size={16} className="text-slate-300" /> {order.supplier.phone}
                         </div>
-                        <span className='purchase-payments-mvp-detail__product-total'>
-                          {formatAmount(item.total ?? item.amount ?? 0)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className='purchase-payments-mvp-detail__empty purchase-payments-mvp-detail__empty--subtle'>
-                    {translateWithFallback(
-                      t,
-                      'purchasePaymentsMvp.detail.products.empty',
-                      undefined,
-                      () =>
-                        lang === 'en'
-                          ? 'No products are associated with this order.'
-                          : 'No hay productos asociados a esta orden.'
-                    )}
-                  </div>
-                )}
-              </div>
-            </section>
-          </aside>
+                      )}
+                      {order.supplier?.address && (
+                        <div className="flex items-start gap-3 text-slate-600 dark:text-slate-400 text-sm font-medium">
+                           <MapPin size={16} className="text-slate-300 mt-0.5" /> 
+                           <span>
+                             {order.supplier.address.street}
+                             {order.supplier.address.city && `, ${order.supplier.address.city}`}
+                           </span>
+                        </div>
+                      )}
+                   </div>
+                </CardContent>
+             </Card>
+
+             {/* Financial Summary */}
+             <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
+                <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 py-4">
+                   <CardTitle className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2">
+                      <CircleDollarSign size={14} className="text-primary" /> Resumen Financiero
+                   </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                   <div className="flex justify-between items-end border-b border-slate-50 dark:border-slate-800 pb-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Monto Total</p>
+                      <h2 className="text-2xl font-black text-slate-900 dark:text-white tabular-nums tracking-tighter">
+                        {currencyFormatter.format(order.total_amount)}
+                      </h2>
+                   </div>
+                   <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pagado</p>
+                         <p className="text-lg font-bold text-green-600 tabular-nums tracking-tight">
+                           {currencyFormatter.format(order.totalPaid || 0)}
+                         </p>
+                      </div>
+                      <div className="space-y-1">
+                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pendiente</p>
+                         <p className="text-lg font-black text-primary tabular-nums tracking-tight">
+                           {currencyFormatter.format(order.pendingAmount || 0)}
+                         </p>
+                      </div>
+                   </div>
+                   {/* Progress Bar */}
+                   <div className="space-y-2">
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                         <span className="text-slate-400">Progreso de Pago</span>
+                         <span className="text-primary">{order.paymentProgressPercent}%</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                         <div 
+                          className="h-full bg-primary transition-all duration-1000 ease-out" 
+                          style={{ width: `${order.paymentProgressPercent}%` }}
+                         />
+                      </div>
+                   </div>
+                </CardContent>
+             </Card>
+          </div>
+
+          {/* Items Table */}
+          <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
+             <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 py-5 px-8">
+                <CardTitle className="text-[13px] font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-3">
+                   <Package size={18} className="text-primary" /> Detalle de Productos
+                </CardTitle>
+             </CardHeader>
+             <CardContent className="p-0">
+                <Table>
+                   <TableHeader>
+                      <TableRow className="bg-slate-50/30 dark:bg-slate-900/20 border-none">
+                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4 px-8">Producto</TableHead>
+                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Cantidad</TableHead>
+                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">P. Unitario</TableHead>
+                         <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-right px-8">Subtotal</TableHead>
+                      </TableRow>
+                   </TableHeader>
+                   <TableBody className="divide-y divide-slate-50 dark:divide-slate-800">
+                      {order.items?.map((item, idx) => (
+                        <TableRow key={item.id || idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-none transition-colors">
+                           <TableCell className="py-5 px-8 font-bold text-slate-900 dark:text-white text-sm">{item.name}</TableCell>
+                           <TableCell className="text-center font-medium text-slate-600 dark:text-slate-400 tabular-nums">x{item.quantity}</TableCell>
+                           <TableCell className="text-right font-medium text-slate-600 dark:text-slate-400 tabular-nums">{currencyFormatter.format(item.unitPrice)}</TableCell>
+                           <TableCell className="text-right font-black text-slate-900 dark:text-white tabular-nums px-8">{currencyFormatter.format(item.total)}</TableCell>
+                        </TableRow>
+                      ))}
+                   </TableBody>
+                </Table>
+             </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Payments & Timeline */}
+        <div className="lg:col-span-4 space-y-8">
+           {/* Payment History */}
+           <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
+              <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 py-5 px-6">
+                 <CardTitle className="text-[13px] font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-3">
+                    <History size={18} className="text-primary" /> Historial de Pagos
+                 </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                 {!order.payments || order.payments.length === 0 ? (
+                   <div className="py-12 flex flex-col items-center justify-center text-center opacity-40">
+                      <CircleDollarSign size={40} className="mb-3 text-slate-300" />
+                      <p className="text-xs font-black uppercase tracking-widest text-slate-400">Sin pagos registrados</p>
+                   </div>
+                 ) : (
+                   <div className="space-y-6">
+                      {order.payments.map((payment, idx) => (
+                        <div key={payment.id || idx} className="relative pl-6 border-l-2 border-slate-100 dark:border-slate-800 space-y-2 group">
+                           <div className="absolute -left-[9px] top-0 size-4 bg-white dark:bg-surface-dark border-2 border-primary rounded-full group-hover:bg-primary transition-colors" />
+                           <div className="flex justify-between items-start">
+                              <p className="text-sm font-black text-slate-900 dark:text-white tabular-nums">
+                                {currencyFormatter.format(payment.amount)}
+                              </p>
+                              <Badge className="bg-green-500/10 text-green-600 border-none text-[8px] font-black px-2 py-0">EXITOSO</Badge>
+                           </div>
+                           <div className="space-y-1">
+                              <p className="text-[10px] text-slate-400 font-medium flex items-center gap-2">
+                                <Clock size={10} /> {payment.registered_at ? dateFormatter.format(new Date(payment.registered_at)) : '-'}
+                              </p>
+                              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2">
+                                <User size={10} /> Por: {payment.recorded_by || 'Sistema'}
+                              </p>
+                           </div>
+                           {payment.notes && (
+                             <p className="text-[10px] italic text-slate-400 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                               "{payment.notes}"
+                             </p>
+                           )}
+                        </div>
+                      ))}
+                   </div>
+                 )}
+              </CardContent>
+           </Card>
+
+           {/* Activity Log / History */}
+           <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
+              <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 py-5 px-6">
+                 <CardTitle className="text-[13px] font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-3">
+                    <FileText size={18} className="text-primary" /> Bitácora de Eventos
+                 </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                 {!order.history || order.history.length === 0 ? (
+                   <div className="py-12 flex flex-col items-center justify-center text-center opacity-40">
+                      <History size={40} className="mb-3 text-slate-300" />
+                      <p className="text-xs font-black uppercase tracking-widest text-slate-400">Sin eventos recientes</p>
+                   </div>
+                 ) : (
+                   <div className="space-y-6">
+                      {order.history.map((entry, idx) => (
+                        <div key={entry.id || idx} className="flex gap-4">
+                           <div className="mt-1">
+                              {entry.action?.toLowerCase().includes('create') ? <PlusCircle size={16} className="text-blue-500" /> : 
+                               entry.action?.toLowerCase().includes('pay') ? <CheckCircle2 size={16} className="text-green-500" /> :
+                               <AlertCircle size={16} className="text-amber-500" />}
+                           </div>
+                           <div className="space-y-1 min-w-0">
+                              <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">
+                                {entry.action}
+                              </p>
+                              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                                {entry.notes}
+                              </p>
+                              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                                {entry.timestamp ? new Date(entry.timestamp).toLocaleDateString() : '-'} • {entry.actor || 'Sistema'}
+                              </p>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                 )}
+              </CardContent>
+           </Card>
         </div>
       </div>
 
       <RegisterPaymentModal
-        open={isRegisterOpen}
-        onOpenChange={handleModalOpenChange}
-        order={modalOrder}
-        onSubmit={handleRegisterPayment}
+        isOpen={isRegisterModalOpen}
+        onClose={() => setRegisterModalOpen(false)}
+        order={{
+          id: order.id,
+          pendingAmount: order.pendingAmount,
+          currency: order.currency,
+          supplierName: order.supplier?.name,
+          supplierId: order.supplier?.id,
+          priority: order.priority
+        }}
+        onSuccess={handlePaymentSuccess}
       />
     </div>
   )
 }
 
-export default PurchasePaymentDetail
+export default PurchasePaymentDetailPage

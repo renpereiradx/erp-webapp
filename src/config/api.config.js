@@ -14,6 +14,9 @@ const API_CONFIG = {
   // Modo actual
   environment: import.meta.env.VITE_ENV || import.meta.env.MODE || 'development',
 
+  // Modo demo (datos mock)
+  useDemo: import.meta.env.VITE_USE_DEMO === 'true' || import.meta.env.VITE_USE_DEMO === true,
+
   // Helper para determinar si estamos en producción
   isProduction() {
     return this.environment === 'production';

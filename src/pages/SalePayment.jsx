@@ -1,4 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react'
+/**
+ * SalePayment Page - Refactored to Tailwind (Fluent 2.0)
+ */
+
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Receipt,
@@ -7,6 +11,18 @@ import {
   CreditCard,
   X,
   User,
+  Filter,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  CircleDollarSign,
+  Clock,
+  CheckCircle2,
+  Calendar,
+  MoreVertical,
+  PlusCircle,
+  Eye,
+  List
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,53 +42,63 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import DataState from '@/components/ui/DataState'
+import ToastContainer from '@/components/ui/ToastContainer'
 import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal'
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
 import useClientStore from '@/store/useClientStore'
 import { salePaymentService } from '@/services/salePaymentService'
-import { saleService } from '@/services/saleService'
 
 const formatDocumentId = value => {
   if (!value) return ''
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
+const currencyFormatter = (lang, currency) =>
+  new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
+    style: 'currency',
+    currency: currency || 'PYG',
+    minimumFractionDigits: currency === 'PYG' ? 0 : 2,
+    maximumFractionDigits: currency === 'PYG' ? 0 : 2,
+  })
+
+const dateFormatterFactory = lang =>
+  new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-PY', {
+    dateStyle: 'medium',
+  })
+
 const SalePayment = () => {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const navigate = useNavigate()
-  const { error: showError, success: showSuccess } = useToast()
+  const { toasts, removeToast, error: showError, success: showSuccess, info: showInfo } = useToast()
 
   // Zustand stores
   const { searchResults, searchClients, loading: clientsLoading } = useClientStore()
 
-  // Local state para ventas y filtros
-  const [rawSales, setRawSales] = useState([]) // Datos sin filtrar de la API
+  // Local state
+  const [rawSales, setRawSales] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  // Filtros
+  // Filters
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedClient, setSelectedClient] = useState('') // ID del cliente
-  const [selectedClientName, setSelectedClientName] = useState('') // Nombre del cliente para API
-  const [selectedStatus, setSelectedStatus] = useState('')
+  const [selectedClient, setSelectedClient] = useState('')
+  const [selectedClientName, setSelectedClientName] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState('all')
 
-  // Estado para dropdown de clientes (mismo patrón que modal de productos en SalesNew)
-  const [clientSearchTerm, setClientSearchTerm] = useState('')
-  const [showClientDropdown, setShowClientDropdown] = useState(false)
-  const [highlightedClientIndex, setHighlightedClientIndex] = useState(-1)
-  const clientSearchContainerRef = useRef(null)
-  const clientDropdownRef = useRef(null)
-  const startDateRef = useRef(null)
-  const endDateRef = useRef(null)
-
-  // Inicializar con fechas del último mes por defecto
+  // Date Filters
   const getDefaultDateRange = () => {
     const today = new Date()
     const lastMonth = new Date(today)
     lastMonth.setMonth(today.getMonth() - 1)
-
     return {
       start_date: lastMonth.toISOString().split('T')[0],
       end_date: today.toISOString().split('T')[0],
@@ -81,7 +107,7 @@ const SalePayment = () => {
 
   const [dateRange, setDateRange] = useState(getDefaultDateRange())
 
-  // Paginación
+  // Pagination
   const [pagination, setPagination] = useState({
     page: 1,
     page_size: 10,
@@ -89,908 +115,421 @@ const SalePayment = () => {
     total_pages: 0,
   })
 
-  // Venta seleccionada para procesar pago (solo una a la vez)
+  // Modal State
   const [selectedSaleId, setSelectedSaleId] = useState(null)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
-  // Cargar datos iniciales (solo al montar)
-  useEffect(() => {
-    handleLoadSales()
-  }, [])
+  // Formatters
+  const formatCurrency = value => currencyFormatter(lang, 'PYG').format(value || 0)
+  const formatDate = dateStr => dateStr ? dateFormatterFactory(lang).format(new Date(dateStr)) : '-'
 
-  // Cargar clientes mediante búsqueda
-  // Handler robusto para cambios de fecha
-  // Usa ref para deduplicar llamadas de onChange/onInput/onBlur
-  const lastDateFetchRef = useRef({ start_date: '', end_date: '' })
-  const handleDateChange = (field, value) => {
-    if (!value || value === lastDateFetchRef.current[field]) return
-    lastDateFetchRef.current[field] = value
-    const newRange = { ...dateRange, [field]: value }
-    setDateRange(newRange)
-    setPagination(prev => ({ ...prev, page: 1 }))
-    handleLoadSales({ dateRange: newRange })
-  }
-
-  // Alias searchResults as clients for the dropdown
-  const clients = searchResults
-
-  // Cargar ventas con lógica inteligente según filtros
-  // Acepta overrides para evitar problemas de stale closures
-  const handleLoadSales = async (overrides = {}) => {
+  const handleLoadSales = async (page = 1) => {
     setIsLoading(true)
     setError(null)
 
-    // Usar overrides si vienen, sino el estado actual
-    const effectiveDateRange = overrides.dateRange || dateRange
-    const effectiveClientName = overrides.clientName !== undefined
-      ? overrides.clientName
-      : selectedClientName
-    const effectiveClient = overrides.client !== undefined
-      ? overrides.client
-      : selectedClient
-
     try {
-      let response
+      let result;
+      const filters = {
+        page,
+        page_size: pagination.page_size,
+        start_date: dateRange.start_date,
+        end_date: dateRange.end_date,
+      }
 
-      // LÓGICA DE FILTROS:
-      // 1. Si hay cliente seleccionado -> usar GET /sale/client_name/{name}/payment-status
-      // 2. Si NO hay cliente pero SÍ hay fechas -> usar GET /sale/date_range/payment-status
+      // Add status filter if not all
+      if (selectedStatus && selectedStatus !== 'all') {
+        filters.payment_status = selectedStatus;
+      }
 
-      const hasValidDateRange = effectiveDateRange.start_date && effectiveDateRange.end_date
-      const hasValidClient =
-        effectiveClient &&
-        effectiveClient !== '' &&
-        effectiveClient !== 'all' &&
-        effectiveClientName
-
-      if (hasValidClient) {
-        const filters = {
-          page: 1,
-          page_size: pagination.page_size,
-        }
-
-        response =
-          await salePaymentService.getSalesByClientNameWithPaymentStatus(
-            effectiveClientName,
-            filters
-          )
-      } else if (hasValidDateRange) {
-        const filters = {
-          page: 1,
-          page_size: pagination.page_size,
-          start_date: effectiveDateRange.start_date,
-          end_date: effectiveDateRange.end_date,
-        }
-
-        response =
-          await salePaymentService.getSalesByDateRangeWithPaymentStatus(filters)
+      if (selectedClientName) {
+        result = await salePaymentService.getSalesByClientNameWithPaymentStatus(selectedClientName, filters);
       } else {
-        const filters = {
-          page: 1,
-          page_size: pagination.page_size,
-          start_date: effectiveDateRange.start_date,
-          end_date: effectiveDateRange.end_date,
-        }
-
-        response =
-          await salePaymentService.getSalesByDateRangeWithPaymentStatus(filters)
+        result = await salePaymentService.getSalesByDateRangeWithPaymentStatus(filters);
       }
 
-      if (response && response.data) {
-        // Los endpoints de payment-status devuelven datos con la estructura correcta:
-        // { sale_id, client_name, total_amount, status, balance_due, total_paid, payment_progress, ... }
-        const salesData = response.data.map(item => {
-          const balanceDue = item.balance_due || 0
-          let correctedStatus = item.status
-
-          // CORRECCIÓN: Si balance_due = 0, el estado debe ser PAID, no PARTIAL_PAYMENT
-          if (balanceDue === 0 && correctedStatus === 'PARTIAL_PAYMENT') {
-            correctedStatus = 'PAID'
-          }
-
-          return {
-            id: item.sale_id || item.id,
-            sale_id: item.sale_id || item.id,
-            client_id: item.client_id,
-            client_name: item.client_name,
-            sale_date: item.sale_date,
-            total_amount: item.total_amount,
-            status: correctedStatus,
-            balance_due: balanceDue,
-            total_paid: item.total_paid || 0,
-            payment_progress: item.payment_progress || 0,
-            payment_count: item.payment_count || 0,
-            is_fully_paid: item.is_fully_paid || balanceDue === 0,
-            requires_payment: item.requires_payment !== false && balanceDue > 0,
-          }
-        })
-
-        // Guardar datos - el filtrado por estado se hace reactivamente
-        setRawSales(salesData)
-
-        // Actualizar paginación
-        if (response.pagination) {
-          setPagination(prev => ({
-            ...prev,
-            total_records: response.pagination.total_records || salesData.length,
-            total_pages: response.pagination.total_pages || 1,
-          }))
-        }
-      } else {
-        setRawSales([])
+      setRawSales(result?.data || []);
+      if (result?.pagination) {
+        setPagination({
+          page: result.pagination.page,
+          page_size: result.pagination.page_size,
+          total_records: result.pagination.total_records,
+          total_pages: result.pagination.total_pages,
+        });
       }
-    } catch (error) {
-      // NO mostrar errores 404 como críticos - simplemente no hay resultados
-      const statusCode =
-        error?.status ?? error?.statusCode ?? error?.response?.status
-      const is404 = statusCode === 404
-      const isCriticalError =
-        typeof statusCode === 'number' && statusCode >= 500
-
-      if (isCriticalError) {
-        console.error('Error loading sales:', error)
-        // Mostrar error en UI solo para errores críticos
-        setError(error.message || 'Error al cargar las ventas')
-      }
-      // 404 y otros errores no críticos se manejan silenciosamente - no hay resultados
-
-      // Siempre limpiar los datos en caso de error
-      setRawSales([])
+    } catch (err) {
+      console.error('Error loading sales:', err)
+      setError('Error al cargar los cobros de ventas. Por favor intente nuevamente.')
+      showError('Error de conexión con el servidor')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Filtrar ventas reactivamente por estado Y búsqueda
-  const filteredSales = React.useMemo(() => {
-    let filtered = rawSales
-
-    // Aplicar filtro de estado si está seleccionado
-    if (selectedStatus) {
-      filtered = filtered.filter(sale => sale.status === selectedStatus)
-    }
-
-    // Aplicar filtro de búsqueda de texto
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase().trim()
-      filtered = filtered.filter(sale => {
-        const orderId = (sale.id || '').toString().toLowerCase()
-        const clientName = (sale.client_name || '').toLowerCase()
-        return orderId.includes(term) || clientName.includes(term)
-      })
-    }
-
-    return filtered
-  }, [rawSales, selectedStatus, searchTerm])
-
-  // Calcular paginación reactivamente basada en datos filtrados
-  const paginatedSales = React.useMemo(() => {
-    const startIndex = (pagination.page - 1) * pagination.page_size
-    const endIndex = startIndex + pagination.page_size
-    return filteredSales.slice(startIndex, endIndex)
-  }, [filteredSales, pagination.page, pagination.page_size])
-
-  // Actualizar total_pages cuando cambian los datos filtrados
   useEffect(() => {
-    const totalRecords = filteredSales.length
-    const totalPages = Math.ceil(totalRecords / pagination.page_size) || 1
-    // Solo actualizar si cambió
-    setPagination(prev => ({
-      ...prev,
-      total_records: totalRecords,
-      total_pages: totalPages,
-      // Reset a página 1 si la página actual está fuera de rango
-      page: Math.min(prev.page, totalPages),
-    }))
-  }, [filteredSales.length, pagination.page_size])
-
-  // Manejar cambio de página (solo cambiar página, sin recargar API)
-  const handlePageChange = newPage => {
-    setPagination(prev => ({ ...prev, page: newPage }))
-  }
-
-  // Manejar filtro de estado (local, reactivo, sin recargar API)
-  const handleStatusFilter = status => {
-    const newStatus = selectedStatus === status ? '' : status // Toggle: si ya está seleccionado, deseleccionar
-    setSelectedStatus(newStatus)
-    // Reset a página 1 cuando cambia el filtro
-    setPagination(prev => ({ ...prev, page: 1 }))
-  }
-
-  // Aplicar filtros
-  const handleApplyFilters = () => {
-    setPagination(prev => ({ ...prev, page: 1 })) // Reset a página 1
     handleLoadSales()
+  }, []) // Initial load only
+
+  // Apply filters button
+  const applyFilters = () => {
+    handleLoadSales(1)
   }
 
-  // Limpiar filtros
   const handleClearFilters = () => {
-    const defaultDates = getDefaultDateRange()
     setSearchTerm('')
     setSelectedClient('')
     setSelectedClientName('')
-    setClientSearchTerm('')
-    setSelectedStatus('')
-    setDateRange(defaultDates)
-    setPagination(prev => ({ ...prev, page: 1 }))
-    // Resetear DOM de date inputs (son uncontrolled) y dedup ref
-    if (startDateRef.current) startDateRef.current.value = defaultDates.start_date
-    if (endDateRef.current) endDateRef.current.value = defaultDates.end_date
-    lastDateFetchRef.current = { start_date: '', end_date: '' }
-    handleLoadSales({ dateRange: defaultDates, client: '', clientName: '' })
+    setSelectedStatus('all')
+    setDateRange(getDefaultDateRange())
+    
+    // We need to defer the load slightly so state updates
+    setTimeout(() => handleLoadSales(1), 0)
   }
 
-  // Seleccionar cliente desde el dropdown
-  const handleSelectClient = client => {
-    setSelectedClient(client.id.toString())
-    setSelectedClientName(client.name || '')
-    setClientSearchTerm(client.name || '')
-    setShowClientDropdown(false)
-    setHighlightedClientIndex(-1)
-    setPagination(prev => ({ ...prev, page: 1 }))
-    handleLoadSales({ client: client.id.toString(), clientName: client.name || '' })
+  const handleRefresh = () => {
+    handleLoadSales(pagination.page)
+    showInfo('Actualizando datos...')
   }
 
-  // Limpiar selección de cliente
-  const handleClearClient = () => {
-    setSelectedClient('')
-    setSelectedClientName('')
-    setClientSearchTerm('')
-    setShowClientDropdown(false)
-    setHighlightedClientIndex(-1)
-    setPagination(prev => ({ ...prev, page: 1 }))
-    handleLoadSales({ client: '', clientName: '' })
-  }
+  // Derived filtered results (for search term on current page)
+  const displaySales = useMemo(() => {
+    if (!searchTerm) return rawSales;
+    const lowerTerm = searchTerm.toLowerCase();
+    return rawSales.filter(sale => 
+      String(sale.id).includes(lowerTerm) || 
+      (sale.client?.name || '').toLowerCase().includes(lowerTerm) ||
+      (sale.client?.document_id || '').includes(lowerTerm)
+    );
+  }, [rawSales, searchTerm])
 
-  // Buscar clientes cuando cambia el término de búsqueda (3 chars, 300ms debounce)
-  useEffect(() => {
-    const searchTimeout = setTimeout(async () => {
-      if (clientSearchTerm.trim().length >= 3) {
-        // Evitar búsqueda si el término coincide con el cliente seleccionado
-        if (selectedClient && clientSearchTerm === selectedClientName) {
-          return
-        }
-        try {
-          await searchClients(clientSearchTerm)
-          setShowClientDropdown(true)
-        } catch (error) {
-          console.error('Error searching clients:', error)
-          setShowClientDropdown(false)
-        }
-      } else {
-        setShowClientDropdown(false)
-      }
-    }, 300)
-
-    return () => clearTimeout(searchTimeout)
-  }, [clientSearchTerm, searchClients, selectedClient, selectedClientName])
-
-  // Cerrar dropdown al hacer clic fuera
-  useEffect(() => {
-    const handleClickOutside = event => {
-      if (
-        clientSearchContainerRef.current &&
-        !clientSearchContainerRef.current.contains(event.target)
-      ) {
-        setShowClientDropdown(false)
-        setHighlightedClientIndex(-1)
-      }
-    }
-
-    if (showClientDropdown) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside)
-      }
-    }
-  }, [showClientDropdown])
-
-  // Scroll al item destacado en el dropdown
-  useEffect(() => {
-    if (showClientDropdown && clientDropdownRef.current && highlightedClientIndex >= 0) {
-      const item = clientDropdownRef.current.children[highlightedClientIndex]
-      if (item) {
-        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-      }
-    }
-  }, [highlightedClientIndex, showClientDropdown])
-
-  // Manejar selección de venta (solo una a la vez)
-  const handleToggleSaleSelection = saleId => {
-    // Si ya está seleccionada, deseleccionar; sino, seleccionar esta
-    setSelectedSaleId(prev => (prev === saleId ? null : saleId))
-  }
-
-  // Manejar envío de pago
-  const handlePaymentSubmit = async paymentData => {
-    try {
-      await salePaymentService.processSalePaymentWithCashRegister(paymentData)
-      showSuccess(
-        t('common.success'),
-        t('sales.registerPaymentModal.successMessage', 'Pago registrado exitosamente')
-      )
-      // Reload sales data to update balance
-      await handleLoadSales()
-      // Clear selection and close modal
-      setSelectedSaleId(null)
-      setIsPaymentModalOpen(false)
-    } catch (error) {
-      console.error('Error registering payment:', error)
-      throw error // Re-throw so modal can handle it
-    }
-  }
-
-  // Formatear moneda en guaraníes
-  const formatCurrency = amount => {
-    if (amount === null || amount === undefined || isNaN(amount)) return 'Gs. 0'
-    return `Gs. ${Number(amount).toLocaleString('es-PY', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    })}`
-  }
-
-  // Formatear fecha
-  const formatDate = dateString => {
-    if (!dateString) return 'N/A'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('es-PY', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-  }
-
-  // Obtener badge de estado
   const getStatusBadge = status => {
-    const statusConfig = {
-      PENDING: {
-        label: t('sales.payment.status.pending', 'Pendiente'),
-        className: 'sales-payment-new__status-badge--pending',
-      },
-      PARTIAL_PAYMENT: {
-        label: t('sales.payment.status.partial', 'Parcialmente Pagado'),
-        className: 'sales-payment-new__status-badge--partial',
-      },
-      PAID: {
-        label: t('sales.payment.status.paid', 'Pagado'),
-        className: 'sales-payment-new__status-badge--paid',
-      },
-      CANCELLED: {
-        label: t('sales.payment.status.cancelled', 'Cancelada'),
-        className: 'sales-payment-new__status-badge--cancelled',
-      },
+    const s = status?.toLowerCase()
+    switch (s) {
+      case 'completed':
+      case 'paid':
+        return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1 shadow-sm">Pagado</Badge>
+      case 'partial':
+        return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1 shadow-sm">Parcial</Badge>
+      case 'overdue':
+        return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1 shadow-sm">Vencido</Badge>
+      default:
+        return <Badge className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1 shadow-sm">Pendiente</Badge>
     }
-
-    const config = statusConfig[status] || statusConfig['PENDING']
-
-    return (
-      <span className={`sales-payment-new__status-badge ${config.className}`}>
-        {config.label}
-      </span>
-    )
   }
 
-  // Estados de UI
-  if (isLoading && rawSales.length === 0) {
-    return <DataState variant='loading' skeletonVariant='list' />
-  }
-
-  if (error && rawSales.length === 0) {
+  if (error) {
     return (
-      <DataState
-        variant='error'
-        title={t('sales.payment.error.title', 'Error al cargar')}
-        message={error}
-        onRetry={handleLoadSales}
-      />
+      <div className="flex flex-col gap-6 animate-in fade-in duration-500 h-[60vh] justify-center">
+        <DataState variant="error" title="Error de Carga" message={error} onRetry={handleRefresh} />
+      </div>
     )
   }
 
   return (
-    <div className='sales-payment-new'>
-      {/* Header */}
-      <div className='sales-payment-new__header'>
-        <div className='sales-payment-new__header-content'>
-          <div className='sales-payment-new__header-icon'>
-            <Receipt className='icon icon--large' />
-          </div>
-          <div className='sales-payment-new__header-text'>
-            <h1 className='sales-payment-new__title'>
-              {t('sales.payment.title', 'Gestión de Cobros')}
-            </h1>
-            <p className='sales-payment-new__subtitle'>
-              {t(
-                'sales.payment.subtitle',
-                'Busque y seleccione órdenes para procesar pagos.'
-              )}
-            </p>
-          </div>
+    <div className="flex flex-col gap-8 animate-in fade-in duration-500 max-w-[1600px] mx-auto py-4">
+      {/* Header Section */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-primary pl-6 py-2">
+        <div className="space-y-1">
+          <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter uppercase leading-none font-display">
+            Cobros de Ventas
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base font-medium font-display">
+            Administración centralizada de cobros, saldos pendientes y pagos parciales
+          </p>
         </div>
-        <div className='sales-payment-new__header-actions'>
+
+        <div className="flex items-center gap-3">
           <Button
-            onClick={handleLoadSales}
-            disabled={isLoading}
-            variant='outline'
-            className='btn btn--secondary'
+            variant="outline"
+            onClick={handleRefresh}
+            className="h-12 border-slate-200 dark:border-slate-800 font-bold uppercase tracking-widest text-[10px] rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm"
           >
-            <RefreshCw className={`icon ${isLoading ? 'animate-spin' : ''}`} />
-            {t('sales.payment.action.refresh', 'Actualizar Lista')}
-          </Button>
-          <Button
-            onClick={() => setIsPaymentModalOpen(true)}
-            disabled={!selectedSaleId}
-            className='btn btn--primary'
-          >
-            <CreditCard className='icon' />
-            {t('sales.payment.action.proceed', 'Proceder al Pago')}
+            <RefreshCw size={16} className={`mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Actualizar
           </Button>
         </div>
+      </header>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+            <CardContent className="p-6 flex items-center gap-5">
+               <div className="size-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform">
+                  <Clock size={28} />
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldos Pendientes</p>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {formatCurrency(rawSales.reduce((acc, sale) => acc + (sale.payment_status === 'pending' ? sale.balance_due : 0), 0))}
+                  </h2>
+               </div>
+            </CardContent>
+         </Card>
+         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+            <CardContent className="p-6 flex items-center gap-5">
+               <div className="size-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                  <CircleDollarSign size={28} />
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cobros Parciales</p>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {rawSales.filter(sale => sale.payment_status === 'partial').length} Ventas
+                  </h2>
+               </div>
+            </CardContent>
+         </Card>
+         <Card className="rounded-2xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden group hover:shadow-fluent-8 transition-all duration-300">
+            <CardContent className="p-6 flex items-center gap-5">
+               <div className="size-14 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform">
+                  <CheckCircle2 size={28} />
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cobros Exitosos</p>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {formatCurrency(rawSales.reduce((acc, sale) => acc + (sale.amount_paid || 0), 0))}
+                  </h2>
+               </div>
+            </CardContent>
+         </Card>
       </div>
 
-      {/* Filtros */}
-      <div className='sales-payment-new__filters'>
-        {/* Búsqueda y Selectores */}
-        <div className='sales-payment-new__filters-row'>
-          {/* Búsqueda por texto */}
-          <div className='sales-payment-new__filter-search'>
-            <Search className='sales-payment-new__filter-search-icon' />
-            <Input
-              placeholder={t(
-                'sales.payment.search.placeholder',
-                'Buscar por ID de orden o nombre de cliente'
-              )}
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className='sales-payment-new__filter-input'
-            />
-          </div>
-
-          {/* Selector de cliente con búsqueda (estilo navbar search) */}
-          <div
-            className='sales-payment-new__filter-select'
-            ref={clientSearchContainerRef}
-            style={{ position: 'relative' }}
-          >
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <Search size={18} style={{ position: 'absolute', left: '12px', color: '#64748b', pointerEvents: 'none' }} />
-              <input
-                type='text'
-                placeholder={t(
-                  'sales.payment.filter.client_placeholder',
-                  'Buscar cliente por nombre...'
-                )}
-                value={clientSearchTerm}
-                onChange={event => {
-                  setClientSearchTerm(event.target.value)
-                  setShowClientDropdown(true)
-                  setHighlightedClientIndex(-1)
-                  if (selectedClient && event.target.value !== selectedClientName) {
-                    setSelectedClient('')
-                    setSelectedClientName('')
-                  }
-                }}
-                onFocus={() => {
-                  if (clientSearchTerm.length >= 3 && clients.length > 0) {
-                    setShowClientDropdown(true)
-                  }
-                }}
-                onKeyDown={e => {
-                  const itemCount = clients.length
-
-                  if (e.key === 'ArrowDown') {
-                    e.preventDefault()
-                    if (!showClientDropdown && itemCount > 0) {
-                      setShowClientDropdown(true)
-                      setHighlightedClientIndex(0)
-                    } else if (itemCount > 0) {
-                      setHighlightedClientIndex(prev =>
-                        prev < itemCount - 1 ? prev + 1 : 0
-                      )
-                    }
-                  }
-                  if (e.key === 'ArrowUp') {
-                    e.preventDefault()
-                    if (itemCount > 0) {
-                      setHighlightedClientIndex(prev =>
-                        prev > 0 ? prev - 1 : itemCount - 1
-                      )
-                    }
-                  }
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    if (showClientDropdown && itemCount > 0) {
-                      const indexToSelect =
-                        highlightedClientIndex >= 0 ? highlightedClientIndex : 0
-                      handleSelectClient(clients[indexToSelect])
-                    }
-                  }
-                  if (e.key === 'Escape') {
-                    e.preventDefault()
-                    setShowClientDropdown(false)
-                    setHighlightedClientIndex(-1)
-                  }
-                  if (e.key === 'Tab') {
-                    setShowClientDropdown(false)
-                    setHighlightedClientIndex(-1)
-                  }
-                }}
-                role='combobox'
-                aria-expanded={showClientDropdown}
-                aria-haspopup='listbox'
-                aria-controls='client-search-listbox'
-                aria-activedescendant={
-                  highlightedClientIndex >= 0
-                    ? `client-option-${highlightedClientIndex}`
-                    : undefined
-                }
-                autoComplete='off'
-                style={{
-                  width: '100%',
-                  padding: '8px 12px 8px 36px',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  backgroundColor: '#f8fafc',
-                  fontSize: '0.875rem',
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                  height: '48px',
-                }}
-              />
-              {clientSearchTerm && (
-                <button
-                  onClick={handleClearClient}
-                  style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
-                  aria-label='Limpiar búsqueda de cliente'
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-
-            {showClientDropdown && (
-              <div
-                ref={clientDropdownRef}
-                role='listbox'
-                id='client-search-listbox'
-                aria-label={t('sales.payment.filter.client_results', 'Resultados de clientes')}
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  marginTop: '8px',
-                  backgroundColor: 'white',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                  border: '1px solid #e2e8f0',
-                  maxHeight: '300px',
-                  overflowY: 'auto',
-                  zIndex: 9999,
-                }}
-              >
-                {clientsLoading ? (
-                  <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>
-                    {t('common.loading', 'Buscando...')}
-                  </div>
-                ) : clients.length === 0 ? (
-                  <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '0.875rem' }}>
-                    {clientSearchTerm.length < 3
-                      ? t('sales.payment.filter.min_chars', 'Escribe al menos 3 caracteres')
-                      : t('sales.payment.filter.no_results', 'No se encontraron clientes')}
-                  </div>
-                ) : (
-                  clients.map((client, index) => (
-                    <button
-                      key={`${client.id}-${index}`}
-                      id={`client-option-${index}`}
-                      role='option'
-                      aria-selected={index === highlightedClientIndex}
-                      onClick={() => handleSelectClient(client)}
-                      onMouseEnter={() => setHighlightedClientIndex(index)}
-                      onMouseLeave={() => setHighlightedClientIndex(-1)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        width: '100%',
-                        padding: '10px 16px',
-                        border: 'none',
-                        borderLeft: index === highlightedClientIndex ? '3px solid #3b82f6' : '3px solid transparent',
-                        background: index === highlightedClientIndex ? '#f1f5f9' : 'transparent',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        borderBottom: '1px solid #f1f5f9',
-                      }}
-                    >
-                      <User size={16} style={{ marginRight: '10px', color: '#64748b', flexShrink: 0 }} />
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1e293b' }}>
-                          {client.name}
-                        </span>
-                        {client.document_id && (
-                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                            Doc: {formatDocumentId(client.document_id)}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Selector de rango de fechas */}
-          <div className='sales-payment-new__filter-date'>
-            <input
-              type='date'
-              ref={startDateRef}
-              defaultValue={dateRange.start_date}
-              onChange={e => handleDateChange('start_date', e.target.value)}
-              onInput={e => handleDateChange('start_date', e.target.value)}
-              onBlur={e => handleDateChange('start_date', e.target.value)}
-              className='input sales-payment-new__filter-input'
-            />
-            <input
-              type='date'
-              ref={endDateRef}
-              defaultValue={dateRange.end_date}
-              onChange={e => handleDateChange('end_date', e.target.value)}
-              onInput={e => handleDateChange('end_date', e.target.value)}
-              onBlur={e => handleDateChange('end_date', e.target.value)}
-              className='input sales-payment-new__filter-input'
-            />
-          </div>
-        </div>
-
-        {/* Filtros de Estado */}
-        <div className='sales-payment-new__filters-row sales-payment-new__filters-row--status'>
-          <div className='sales-payment-new__status-label'>
-            {t('sales.payment.filter.status', 'Estado')}:
-          </div>
-          <div className='sales-payment-new__status-filters'>
-            <button
-              type='button'
-              onClick={() => handleStatusFilter('PENDING')}
-              className={`sales-payment-new__status-pill ${
-                selectedStatus === 'PENDING'
-                  ? 'sales-payment-new__status-pill--active sales-payment-new__status-pill--pending'
-                  : 'sales-payment-new__status-pill--pending'
-              }`}
-            >
-              {t('sales.payment.status.pending', 'Pendiente')}
-            </button>
-            <button
-              type='button'
-              onClick={() => handleStatusFilter('PARTIAL_PAYMENT')}
-              className={`sales-payment-new__status-pill ${
-                selectedStatus === 'PARTIAL_PAYMENT'
-                  ? 'sales-payment-new__status-pill--active sales-payment-new__status-pill--partial'
-                  : 'sales-payment-new__status-pill--partial'
-              }`}
-            >
-              {t('sales.payment.status.partial', 'Parcialmente Pagado')}
-            </button>
-            <button
-              type='button'
-              onClick={() => handleStatusFilter('PAID')}
-              className={`sales-payment-new__status-pill ${
-                selectedStatus === 'PAID'
-                  ? 'sales-payment-new__status-pill--active sales-payment-new__status-pill--paid'
-                  : 'sales-payment-new__status-pill--paid'
-              }`}
-            >
-              {t('sales.payment.status.paid', 'Pagado')}
-            </button>
-            <button
-              type='button'
-              onClick={() => handleStatusFilter('CANCELLED')}
-              className={`sales-payment-new__status-pill ${
-                selectedStatus === 'CANCELLED'
-                  ? 'sales-payment-new__status-pill--active sales-payment-new__status-pill--cancelled'
-                  : 'sales-payment-new__status-pill--cancelled'
-              }`}
-            >
-              {t('sales.payment.status.cancelled', 'Cancelada')}
-            </button>
-          </div>
-          <div className='sales-payment-new__filter-actions'>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={handleClearFilters}
-              className='sales-payment-new__clear-filters'
-            >
-              {t('common.action.clear_filters', 'Limpiar Filtros')}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabla */}
-      <div className='sales-payment-new__table-container'>
-        {paginatedSales.length > 0 || filteredSales.length === 0 ? (
-          <>
-            <Table className='sales-payment-new__table'>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className='sales-payment-new__table-head sales-payment-new__table-head--checkbox'>
-                    {/* Columna para selección individual */}
-                  </TableHead>
-                  <TableHead className='sales-payment-new__table-head'>
-                    {t('sales.payment.table.order_id', 'ID ORDEN')}
-                  </TableHead>
-                  <TableHead className='sales-payment-new__table-head'>
-                    {t('sales.payment.table.client', 'CLIENTE')}
-                  </TableHead>
-                  <TableHead className='sales-payment-new__table-head'>
-                    {t('sales.payment.table.date', 'FECHA')}
-                  </TableHead>
-                  <TableHead className='sales-payment-new__table-head sales-payment-new__table-head--right'>
-                    {t('sales.payment.table.total', 'MONTO TOTAL')}
-                  </TableHead>
-                  <TableHead className='sales-payment-new__table-head sales-payment-new__table-head--right'>
-                    {t('sales.payment.table.balance', 'SALDO PENDIENTE')}
-                  </TableHead>
-                  <TableHead className='sales-payment-new__table-head'>
-                    {t('sales.payment.table.status', 'ESTADO')}
-                  </TableHead>
-                  <TableHead className='sales-payment-new__table-head sales-payment-new__table-head--actions'>
-                    {t('sales.payment.table.action', 'ACCIÓN')}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedSales.map(sale => (
-                  <TableRow
-                    key={sale.id}
-                    className={`sales-payment-new__table-row ${
-                      selectedSaleId === sale.id
-                        ? 'sales-payment-new__table-row--selected'
-                        : ''
-                    }`}
-                    onClick={() => handleToggleSaleSelection(sale.id)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <TableCell className='sales-payment-new__table-cell sales-payment-new__table-cell--checkbox'>
-                      <input
-                        type='radio'
-                        name='sale-selection'
-                        checked={selectedSaleId === sale.id}
-                        onChange={() => handleToggleSaleSelection(sale.id)}
-                        onClick={e => e.stopPropagation()}
-                        className='sales-payment-new__radio'
-                      />
-                    </TableCell>
-                    <TableCell className='sales-payment-new__table-cell'>
-                      <span className='sales-payment-new__order-id'>
-                        #{sale.id}
-                      </span>
-                    </TableCell>
-                    <TableCell className='sales-payment-new__table-cell'>
-                      {sale.client_name || 'N/A'}
-                    </TableCell>
-                    <TableCell className='sales-payment-new__table-cell'>
-                      {formatDate(sale.sale_date || sale.created_at)}
-                    </TableCell>
-                    <TableCell className='sales-payment-new__table-cell sales-payment-new__table-cell--right'>
-                      <span className='sales-payment-new__amount'>
-                        {formatCurrency(sale.total_amount)}
-                      </span>
-                    </TableCell>
-                    <TableCell className='sales-payment-new__table-cell sales-payment-new__table-cell--right'>
-                      <span className='sales-payment-new__balance'>
-                        {formatCurrency(sale.balance_due)}
-                      </span>
-                    </TableCell>
-                    <TableCell className='sales-payment-new__table-cell'>
-                      {getStatusBadge(sale.status)}
-                    </TableCell>
-                    <TableCell className='sales-payment-new__table-cell sales-payment-new__table-cell--actions'>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        onClick={e => {
-                          e.stopPropagation()
-                          navigate(`/cobros-ventas/${sale.id}`)
-                        }}
-                        className='btn btn--ghost btn--small'
-                      >
-                        {t('common.action.view_detail', 'Ver Detalle')}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {/* Paginación */}
-            <div className='sales-payment-new__pagination'>
-              <div className='sales-payment-new__pagination-info'>
-                {t('sales.payment.pagination.showing', 'Mostrando')}{' '}
-                {filteredSales.length > 0
-                  ? (pagination.page - 1) * pagination.page_size + 1
-                  : 0}
-                -
-                {Math.min(
-                  pagination.page * pagination.page_size,
-                  filteredSales.length
-                )}{' '}
-                {t('sales.payment.pagination.of', 'de')}{' '}
-                {filteredSales.length}
-              </div>
-              <div className='sales-payment-new__pagination-controls'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                  disabled={pagination.page === 1 || isLoading}
-                  className='btn btn--secondary btn--small'
-                >
-                  {t('common.pagination.previous', 'Anterior')}
-                </Button>
-                <div className='sales-payment-new__pagination-pages'>
-                  {Array.from(
-                    { length: Math.min(pagination.total_pages, 5) },
-                    (_, i) => {
-                      const pageNumber = i + 1
-                      return (
-                        <Button
-                          key={pageNumber}
-                          variant={
-                            pagination.page === pageNumber
-                              ? 'default'
-                              : 'outline'
-                          }
-                          size='sm'
-                          onClick={() => handlePageChange(pageNumber)}
-                          disabled={isLoading}
-                          className={`btn ${
-                            pagination.page === pageNumber
-                              ? 'btn--primary'
-                              : 'btn--secondary'
-                          } btn--small`}
-                        >
-                          {pageNumber}
-                        </Button>
-                      )
-                    }
-                  )}
+      <div className="space-y-6">
+        {/* Filter Toolbar */}
+        <Card className="rounded-2xl border-slate-200 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden">
+          <CardContent className="p-6 flex flex-col lg:flex-row items-end gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1 w-full">
+              {/* Cliente Search */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Cliente</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                  <Input
+                    placeholder="Filtrar por cliente..."
+                    value={selectedClientName}
+                    onChange={e => setSelectedClientName(e.target.value)}
+                    className="h-11 pl-10 rounded-lg bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 font-semibold focus:ring-2 focus:ring-primary shadow-inner"
+                  />
                 </div>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={
-                    pagination.page === pagination.total_pages || isLoading
-                  }
-                  className='btn btn--secondary btn--small'
-                >
-                  {t('common.pagination.next', 'Siguiente')}
-                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Estado</label>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                  <SelectTrigger className="h-11 rounded-lg bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 font-bold uppercase text-[10px] tracking-widest shadow-inner">
+                    <SelectValue placeholder="Todos los estados" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-16">
+                    <SelectItem value="all" className="font-bold uppercase text-[10px] tracking-widest">Todos los estados</SelectItem>
+                    <SelectItem value="pending" className="font-bold uppercase text-[10px] tracking-widest">Pendiente</SelectItem>
+                    <SelectItem value="partial" className="font-bold uppercase text-[10px] tracking-widest">Parcial</SelectItem>
+                    <SelectItem value="paid" className="font-bold uppercase text-[10px] tracking-widest">Pagado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Desde Fecha</label>
+                <Input
+                  type="date"
+                  value={dateRange.start_date}
+                  onChange={e => setDateRange(prev => ({ ...prev, start_date: e.target.value }))}
+                  className="h-11 rounded-lg bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 font-semibold shadow-inner"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Hasta Fecha</label>
+                <Input
+                  type="date"
+                  value={dateRange.end_date}
+                  onChange={e => setDateRange(prev => ({ ...prev, end_date: e.target.value }))}
+                  className="h-11 rounded-lg bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 font-semibold shadow-inner"
+                />
               </div>
             </div>
-          </>
-        ) : (
-          <DataState
-            variant='empty'
-            title={t('sales.payment.empty.title', 'Sin resultados')}
-            message={t(
-              'sales.payment.empty.message',
-              'No se encontraron órdenes de venta con los filtros seleccionados'
-            )}
-            onAction={handleClearFilters}
-            actionLabel={t('common.action.clear_filters', 'Limpiar Filtros')}
-          />
-        )}
+
+            <div className="flex gap-2 w-full lg:w-auto">
+              <Button 
+                onClick={applyFilters} 
+                className="h-11 bg-primary hover:bg-primary-hover text-white font-black uppercase tracking-widest text-[10px] rounded-lg px-6 flex-1 lg:flex-none shadow-md shadow-primary/20 active:scale-95 transition-all"
+              >
+                <Filter size={16} className="mr-2" />
+                Filtrar
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleClearFilters}
+                className="h-11 rounded-lg border-slate-200 dark:border-slate-700 font-bold text-slate-500 hover:text-red-500"
+              >
+                Limpiar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Local Search inside Table Container */}
+        <div className="bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-slate-800 shadow-fluent-shadow overflow-hidden">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex justify-between items-center">
+             <div className="relative w-full max-w-sm">
+               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+               <Input
+                 placeholder="Buscar venta (ID o cliente)..."
+                 value={searchTerm}
+                 onChange={e => setSearchTerm(e.target.value)}
+                 className="h-9 pl-9 rounded-md bg-white dark:bg-surface-dark border-slate-200 dark:border-slate-700 text-sm shadow-sm"
+               />
+             </div>
+             <div className="text-[11px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+               {displaySales.length} Resultados
+             </div>
+          </div>
+
+          {isLoading && displaySales.length === 0 ? (
+            <div className="py-32 flex flex-col items-center justify-center gap-4">
+              <RefreshCw className="w-10 h-10 animate-spin text-primary opacity-30" />
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">Sincronizando operaciones...</p>
+            </div>
+          ) : displaySales.length === 0 ? (
+            <div className="py-32 flex flex-col items-center justify-center text-center px-6">
+              <div className="size-20 bg-slate-50 dark:bg-slate-900/50 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-700 mb-6 border-4 border-white dark:border-slate-800 shadow-inner">
+                <Receipt size={40} />
+              </div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">Sin cobros pendientes</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm mt-2 font-medium">No se encontraron ventas con los filtros actuales. Ajuste la búsqueda para ver más resultados.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+              <Table className="min-w-[1100px]">
+                <TableHeader>
+                  <TableRow className="bg-transparent border-none">
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 py-4 px-6">Nro. Venta</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4">Cliente</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4">Fecha Emisión</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 text-center">Estado</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 text-right">Total Facturado</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 text-right">Saldo Pendiente</TableHead>
+                    <TableHead className="w-20 px-6"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="divide-y divide-slate-50 dark:divide-slate-800">
+                  {displaySales.map(sale => (
+                    <TableRow 
+                      key={sale.id} 
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer"
+                      onClick={() => navigate(`/cobros-ventas/${sale.id}`)}
+                    >
+                      <TableCell className="py-4 px-6">
+                        <span className="font-black text-slate-900 dark:text-white text-sm">#{sale.id}</span>
+                      </TableCell>
+                      <TableCell className="px-4">
+                        <div className="flex items-center gap-3">
+                           <div className="size-9 bg-primary/5 rounded-lg flex items-center justify-center text-primary group-hover:bg-primary/10 transition-colors">
+                              <User size={18} />
+                           </div>
+                           <div className="flex flex-col">
+                              <span className="font-bold text-slate-900 dark:text-white text-sm truncate max-w-[200px]">
+                                {sale.client?.name || 'Cliente Ocasional'}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-medium uppercase tracking-widest truncate max-w-[180px]">
+                                CI: {formatDocumentId(sale.client?.document_id) || 'N/A'}
+                              </span>
+                           </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4">
+                        <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                          {formatDate(sale.issue_date)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-4 text-center">
+                        {getStatusBadge(sale.payment_status)}
+                      </TableCell>
+                      <TableCell className="px-4 text-right font-bold text-slate-900 dark:text-white tabular-nums">
+                        {formatCurrency(sale.total_amount)}
+                      </TableCell>
+                      <TableCell className="px-4 text-right font-black text-primary dark:text-primary-foreground tabular-nums">
+                        {formatCurrency(sale.balance_due)}
+                      </TableCell>
+                      <TableCell className="px-6 text-right" onClick={e => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-9 rounded-full text-slate-400 hover:text-primary hover:bg-primary/5 transition-all">
+                              <MoreVertical size={18} />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl border-slate-200 dark:border-slate-800 shadow-fluent-16">
+                            <DropdownMenuItem onClick={() => navigate(`/cobros-ventas/${sale.id}`)} className="gap-3 py-3 font-bold rounded-lg focus:bg-slate-50 dark:focus:bg-slate-800 cursor-pointer">
+                              <Eye size={18} /> Ver Detalle de Venta
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/cobros-ventas/${sale.id}/pagos`)} className="gap-3 py-3 font-bold rounded-lg focus:bg-slate-50 dark:focus:bg-slate-800 cursor-pointer">
+                              <List size={18} /> Historial de Pagos
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedSaleId(sale.id)
+                                setIsPaymentModalOpen(true)
+                              }}
+                              disabled={sale.payment_status === 'paid' || sale.payment_status === 'completed'}
+                              className="gap-3 py-3 font-bold rounded-lg focus:bg-green-50 focus:text-green-600 dark:focus:bg-green-900/30 cursor-pointer"
+                            >
+                              <CreditCard size={18} /> Registrar Cobro
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {/* Pagination Footer */}
+          {pagination.total_pages > 1 && (
+             <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between">
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                  Página {pagination.page} de {pagination.total_pages}
+                </p>
+                <div className="flex gap-2">
+                   <Button 
+                    variant="outline" 
+                    size="sm"
+                    disabled={pagination.page <= 1}
+                    onClick={() => handleLoadSales(pagination.page - 1)}
+                    className="h-9 rounded-md border-slate-200 font-bold px-3 text-xs"
+                   >
+                     <ChevronLeft size={16} />
+                   </Button>
+                   <Button 
+                    variant="outline" 
+                    size="sm"
+                    disabled={pagination.page >= pagination.total_pages}
+                    onClick={() => handleLoadSales(pagination.page + 1)}
+                    className="h-9 rounded-md border-slate-200 font-bold px-3 text-xs"
+                   >
+                     <ChevronRight size={16} />
+                   </Button>
+                </div>
+             </div>
+          )}
+        </div>
       </div>
 
-      {/* Modal de registro de pago */}
       <RegisterSalePaymentModal
-        open={isPaymentModalOpen}
-        onOpenChange={setIsPaymentModalOpen}
-        sale={rawSales.find(s => s.id === selectedSaleId)}
-        onSubmit={handlePaymentSubmit}
+        isOpen={isPaymentModalOpen}
+        onClose={() => {
+          setIsPaymentModalOpen(false)
+          setSelectedSaleId(null)
+        }}
+        saleId={selectedSaleId}
+        onSuccess={() => {
+          setIsPaymentModalOpen(false)
+          setSelectedSaleId(null)
+          showSuccess('Cobro registrado exitosamente')
+          handleLoadSales(pagination.page) // Recargar lista
+        }}
       />
+
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </div>
   )
 }
