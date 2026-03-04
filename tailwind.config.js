@@ -52,11 +52,20 @@ export default {
         "semantic-success": "#107c10",
         "semantic-danger": "#c50f1f",
         "semantic-warning": "#d83b01",
+        "fluent-success": "#107c10",
+        "fluent-danger": "#d13438",
+        "fluent-warning": "#ffaa44",
+        "fluent-gray": "#f3f2f1",
+      },
+      fontFamily: {
+        "display": ["Inter", "sans-serif"],
+        "mono": ["JetBrains Mono", "monospace"]
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        xl: "0.75rem",
+        lg: "0.5rem",
+        md: "0.25rem",
+        sm: "0.125rem",
       },
       boxShadow: {
         "fluent-2": "0 2px 4px rgba(0,0,0,0.04), 0 0 2px rgba(0,0,0,0.06)",

@@ -59,6 +59,7 @@ import MyProfileAndSecurity from '@/pages/MyProfileAndSecurity'
 import PurchaseEndpointsTest from '@/components/PurchaseEndpointsTest'
 import ReceivablesDashboard from '@/pages/ReceivablesDashboard'
 import PayablesDashboard from '@/pages/PayablesDashboard'
+import PayablesAgingReport from '@/pages/PayablesAgingReport'
 import ReceivablesMasterList from '@/pages/ReceivablesMasterList'
 import InvoicesMasterList from '@/pages/InvoicesMasterList'
 import InvoiceDetail from '@/pages/InvoiceDetail'
@@ -148,7 +149,8 @@ function AppContent() {
                       <Route path='/dashboard/payables' element={<PayablesDashboard />} />
                       <Route path='/finance/invoices' element={<InvoicesMasterList />} />
                       <Route path='/finance/invoices/:id' element={<InvoiceDetail />} />
-                      <Route path='/finance/cash-flow' element={<CashFlowProjection />} />
+                      <Route path='/payables/cash-flow' element={<CashFlowProjection />} />
+                      <Route path='/payables/aging-report' element={<PayablesAgingReport />} />
                       <Route path='/finance/analytical-cash-flow' element={<CashFlowAnalysisDashboard />} />
                       <Route path='/finance/tax-management' element={<TaxManagementDashboard />} />
                       <Route path='/finance/profit-and-loss' element={<ProfitAndLoss />} />

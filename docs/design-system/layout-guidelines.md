@@ -62,3 +62,7 @@ const MiPagina = () => {
 - **Transiciones y Animaciones**: Utiliza de manera consistente `animate-in fade-in duration-500` en el contenedor de entrada para garantizar consistencia visual a lo largo de los módulos.
 - **Verifica todas las resoluciones**: Antes de dar por finalizada una página, redimensiona el navegador simulando resolución de iPad (ej. _1024x768_) o laptop clásica (_1366x768_). Excesos de márgenes o _paddings_ rígidos pueden "exprimir" tu contenido en el centro impidiendo que las tablas o cuadros se lean adecuadamente.
 - **Delega responsabilidades**: Deja que `MainLayout` establezca los fondos (`bg-background-light`, etc) y las métricas de pantalla a pantalla (`min-h-screen`). Las sub-páginas únicamente manejan contenido.
+
+## 3. Refinamiento Visual y Estética
+
+Para asegurar una fidelidad del 100% con los diseños de referencia, consulta la [Guía de Refinamiento Visual](./visual-refinement.md), que detalla el uso correcto de bordes redondeados, recortes de contenido (`overflow-hidden`) y adaptabilidad de contenedores KPI.

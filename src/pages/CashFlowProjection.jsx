@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   Wallet, 
   Filter, 
   Download, 
-  Cloud, 
-  Building2 
+  ChevronRight
 } from "lucide-react";
+import { Link } from 'react-router-dom';
 
 // Feature imports
 import KpiSection from '@/features/cash-flow/components/KpiSection';
@@ -18,7 +18,8 @@ import { bankPositions } from '@/features/cash-flow/data/mockData';
 
 /**
  * Main Page Component for Cash Flow Projection.
- * Follows "React Components" and "React Best Practices" skills.
+ * Refactored for 100% Fidelity with Stitch and layout-guidelines.md
+ * Optimized header layout for a cleaner, more horizontal look.
  */
 const CashFlowProjection = () => {
   const { 
@@ -29,35 +30,58 @@ const CashFlowProjection = () => {
     pendingPayments 
   } = useCashFlow();
 
+  useEffect(() => {
+    document.title = 'Proyección de Pagos y Flujo | ERP System';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922] text-slate-800 dark:text-slate-100 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       
-      {/* Header (Top Navigation) */}
-      <header className="bg-white/80 dark:bg-[#101922]/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 md:px-10 py-6 transition-all">
-        <div className="max-w-[2400px] mx-auto flex flex-col xl:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-6 group">
-            <div className="bg-blue-600 p-2.5 rounded-xl text-white shadow-xl shadow-blue-600/30 group-hover:scale-110 transition-transform cursor-pointer">
-              <Wallet className="h-6 w-6" />
+      {/* Header Section */}
+      <div className="flex flex-col gap-4">
+        {/* Breadcrumbs */}
+        <nav className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+          <Link to="/dashboard/payables" className="hover:text-primary transition-colors flex items-center gap-1">
+            Finanzas
+          </Link>
+          <ChevronRight size={12} className="mx-2 opacity-30" />
+          <Link to="/dashboard/payables" className="hover:text-primary transition-colors">
+            Cuentas por Pagar
+          </Link>
+          <ChevronRight size={12} className="mx-2 opacity-30" />
+          <span className="text-slate-600 dark:text-slate-300">Flujo de Caja</span>
+        </nav>
+
+        {/* Title & Actions - Refined Horizontal Layout */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="bg-primary/10 p-2.5 rounded-xl text-primary shadow-sm border border-primary/20 flex-shrink-0">
+              <Wallet className="h-5 w-5" />
             </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">Proyección de Pagos y Flujo de Caja</h1>
-              <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-[0.2em]">Dashboard Inteligente de Liquidez</p>
+            <div className="flex flex-col min-w-0">
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white uppercase truncate">
+                Proyección de Pagos y Flujo de Caja
+              </h1>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-0.5 truncate">
+                Dashboard Inteligente de Liquidez
+              </p>
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-4 md:gap-8">
+          <div className="flex flex-wrap items-center gap-4 md:gap-5">
             {/* Period Selector (Segmented Control) */}
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
+            <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
               {['30D', '60D', '90D'].map((val) => {
                 const isActive = period === val;
                 return (
                   <button
                     key={val}
                     onClick={() => setPeriod(val)}
-                    className={`px-6 py-2 rounded-lg text-xs font-black transition-all uppercase tracking-widest ${
+                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all uppercase tracking-widest ${
                       isActive 
-                        ? 'bg-white dark:bg-slate-700 shadow-md text-blue-600 dark:text-blue-400 scale-[1.02]' 
-                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                        ? 'bg-white dark:bg-slate-700 shadow-sm text-primary border border-slate-200 dark:border-slate-600' 
+                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 border border-transparent'
                     }`}
                   >
                     {val === '30D' ? '30 Días' : val === '60D' ? '60 Días' : '90 Días'}
@@ -66,24 +90,24 @@ const CashFlowProjection = () => {
               })}
             </div>
 
-            <div className="hidden xl:block h-10 w-px bg-slate-200 dark:bg-slate-700"></div>
+            <div className="hidden xl:block h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
 
-            <div className="flex items-center gap-3">
-              <Button variant="outline" className="flex items-center gap-2 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 h-11 px-5 rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm">
-                <Filter className="h-4 w-4" />
+            <div className="flex items-center gap-2.5">
+              <button className="inline-flex items-center px-3.5 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95 text-slate-600 dark:text-slate-300">
+                <Filter className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
                 Filtros
-              </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/20 border-none flex items-center gap-2 h-11 px-6 rounded-xl font-black text-xs uppercase tracking-[0.1em] transition-all hover:scale-[1.02] active:scale-95">
-                <Download className="h-4 w-4" />
-                Exportar Informe
-              </Button>
+              </button>
+              <button className="inline-flex items-center px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl bg-primary text-white hover:bg-blue-600 transition-all shadow-md shadow-primary/20 active:scale-95">
+                <Download className="h-3.5 w-3.5 mr-1.5" />
+                Exportar
+              </button>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Content Area */}
-      <main className="max-w-[2400px] mx-auto px-6 md:px-10 py-10 space-y-10 pb-24">
+      <div className="flex flex-col gap-6">
         
         {/* Top KPIs Summary */}
         <KpiSection 
@@ -97,7 +121,7 @@ const CashFlowProjection = () => {
         <TrendChart data={filteredData} />
 
         {/* Operational Grid: Pending Calendar & Strategic Insights */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           <div className="lg:col-span-8">
             <PaymentCalendar pendingPayments={pendingPayments} />
@@ -108,34 +132,7 @@ const CashFlowProjection = () => {
           </div>
 
         </div>
-      </main>
-
-      {/* Persistence / Status Bar */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-6 md:px-10 py-2.5 flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest z-50">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2.5 group cursor-pointer">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-sm shadow-green-500/50"></span>
-            <span className="group-hover:text-slate-600 transition-colors tracking-tighter">Sincronizado con el ERP (Hace 3 min)</span>
-          </div>
-          <div className="flex items-center gap-2 group cursor-pointer">
-            <Cloud className="h-3.5 w-3.5 group-hover:text-blue-500 transition-colors" />
-            <span className="group-hover:text-slate-600 transition-colors tracking-tighter">Entorno: Producción</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-3.5 w-3.5" />
-            <span>ID: 693252806641531510</span>
-          </div>
-          <span className="opacity-30">|</span>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-300">Usuario:</span>
-            <span className="text-slate-500">tesoreria_admin</span>
-          </div>
-          <span className="opacity-30">|</span>
-          <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400">v2.4.1-fluent</span>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 };

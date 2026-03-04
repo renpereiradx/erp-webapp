@@ -1,27 +1,25 @@
 import React from 'react';
 import { Filter, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 /**
  * Filter ribbon for accounts payable dashboard.
- * Includes period, vendor, priority, and currency filters.
+ * Polished to match Stitch perfectly with rounded-xl.
  */
 const FilterRibbon = () => {
   return (
-    <div className="payables-dashboard__filter-ribbon">
-      <div className="payables-dashboard__filter-group">
-        <label className="payables-dashboard__filter-label">Periodo</label>
-        <select className="input input--small input--filled min-w-[180px]">
+    <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-wrap items-center gap-6 overflow-hidden">
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Periodo</label>
+        <select className="bg-slate-50 dark:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg text-sm font-medium focus:ring-4 focus:ring-primary/10 min-w-[180px] p-2.5 outline-none transition-all">
           <option>Este Mes (Mayo 2024)</option>
           <option>Último Trimestre</option>
           <option>Año Fiscal 2024</option>
         </select>
       </div>
       
-      <div className="payables-dashboard__filter-group">
-        <label className="payables-dashboard__filter-label">Proveedor</label>
-        <select className="input input--small input--filled min-w-[220px]">
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Proveedor</label>
+        <select className="bg-slate-50 dark:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg text-sm font-medium focus:ring-4 focus:ring-primary/10 min-w-[220px] p-2.5 outline-none transition-all">
           <option>Todos los proveedores</option>
           <option>Global Logistics S.A.</option>
           <option>Tech Solutions Inc.</option>
@@ -29,18 +27,18 @@ const FilterRibbon = () => {
         </select>
       </div>
       
-      <div className="payables-dashboard__filter-group">
-        <label className="payables-dashboard__filter-label">Prioridad</label>
-        <div className="payables-dashboard__priority-group">
-          <button className="payables-dashboard__priority-btn payables-dashboard__priority-btn--active">Alta</button>
-          <button className="payables-dashboard__priority-btn">Media</button>
-          <button className="payables-dashboard__priority-btn">Baja</button>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Prioridad</label>
+        <div className="flex gap-2">
+          <span className="px-3.5 py-2 bg-primary/10 text-primary rounded-lg text-xs font-bold border border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors">Alta</span>
+          <span className="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold border border-transparent cursor-pointer hover:border-slate-300 transition-colors">Media</span>
+          <span className="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold border border-transparent cursor-pointer hover:border-slate-300 transition-colors">Baja</span>
         </div>
       </div>
       
-      <div className="payables-dashboard__filter-group">
-        <label className="payables-dashboard__filter-label">Moneda</label>
-        <select className="input input--small input--filled">
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Moneda</label>
+        <select className="bg-slate-50 dark:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg text-sm font-medium focus:ring-4 focus:ring-primary/10 p-2.5 outline-none transition-all">
           <option>USD - Dólar</option>
           <option>MXN - Peso</option>
           <option>EUR - Euro</option>
@@ -48,12 +46,12 @@ const FilterRibbon = () => {
       </div>
       
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary transition-colors">
+        <button className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
           <Filter className="w-5 h-5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary transition-colors">
+        </button>
+        <button className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
           <Search className="w-5 h-5" />
-        </Button>
+        </button>
       </div>
     </div>
   );

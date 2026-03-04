@@ -157,17 +157,12 @@ const MainLayout = ({ children }) => {
               },
               {
                 name: t('payables.cashFlow', 'Proyección de Pagos y Flujo'),
-                href: '/finance/cash-flow',
-                icon: TrendingUp,
-              },
-              {
-                name: 'Análisis de Proveedor',
-                href: '/proveedores/PRV-8820/analisis',
+                href: '/payables/cash-flow',
                 icon: TrendingUp,
               },
               {
                 name: 'Reporte de Antigüedad',
-                href: '/receivables/aging-report',
+                href: '/payables/aging-report',
                 icon: ClockIcon,
               },
             ],
