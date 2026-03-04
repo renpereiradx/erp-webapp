@@ -17,7 +17,7 @@ import { Search, ChevronDown, Phone, MessageSquare, Mail, Filter, MoreHorizontal
  * Tabla de Cuentas Vencidas - Optimizada para evitar scroll horizontal y fiel a Stitch.
  * Todo en español.
  */
-const OverdueTable = ({ accounts = [] }) => {
+const OverdueTable = ({ accounts = [], toast }) => {
   const { t } = useI18n()
   const navigate = useNavigate()
   const safeAccounts = Array.isArray(accounts) ? accounts : []
@@ -28,25 +28,38 @@ const OverdueTable = ({ accounts = [] }) => {
       <div className="bg-white dark:bg-[#1A2633] p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:w-[400px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 size-4" />
             <input
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-transparent focus:border-primary focus:ring-0 rounded-lg text-sm transition-all text-slate-900 dark:text-white placeholder:text-slate-400 font-medium"
+              disabled
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-slate-800/50 border-transparent rounded-lg text-sm text-slate-400 dark:text-slate-500 placeholder:text-slate-300 font-medium cursor-not-allowed opacity-70"
               placeholder={t('receivables.overdue.search', 'Buscar por cliente, ID de factura...')}
               type="text"
             />
           </div>
           <div className="flex gap-2 items-center">
-            <button className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200">
+            <button 
+              disabled
+              onClick={() => toast.info(t('common.not_implemented'))}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-slate-800/50 rounded-lg text-xs font-bold text-slate-400 dark:text-slate-500 border border-transparent cursor-not-allowed opacity-70"
+            >
               <span>Prioridad: Todas</span>
-              <ChevronDown className="size-3 text-slate-400" />
+              <ChevronDown className="size-3" />
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200">
+            <button 
+              disabled
+              onClick={() => toast.info(t('common.not_implemented'))}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-slate-800/50 rounded-lg text-xs font-bold text-slate-400 dark:text-slate-500 border border-transparent cursor-not-allowed opacity-70"
+            >
               <span>Estado: Sin Resolver</span>
-              <ChevronDown className="size-3 text-slate-400" />
+              <ChevronDown className="size-3" />
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200">
+            <button 
+              disabled
+              onClick={() => toast.info(t('common.not_implemented'))}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-slate-800/50 rounded-lg text-xs font-bold text-slate-400 dark:text-slate-500 border border-transparent cursor-not-allowed opacity-70"
+            >
               <span>Cobrador: Mío</span>
-              <ChevronDown className="size-3 text-slate-400" />
+              <ChevronDown className="size-3" />
             </button>
           </div>
         </div>
@@ -133,13 +146,28 @@ const OverdueTable = ({ accounts = [] }) => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1 group-hover:opacity-100 transition-opacity">
-                        <button className="p-1.5 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-md transition-all" title="Llamar">
+                        <button 
+                          disabled
+                          onClick={() => toast.info(t('common.not_implemented'))}
+                          className="p-1.5 text-slate-300 dark:text-slate-600 cursor-not-allowed" 
+                          title="Llamar"
+                        >
                           <Phone size={14} strokeWidth={2.5} />
                         </button>
-                        <button className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-all" title="Chat">
+                        <button 
+                          disabled
+                          onClick={() => toast.info(t('common.not_implemented'))}
+                          className="p-1.5 text-slate-300 dark:text-slate-600 cursor-not-allowed" 
+                          title="Chat"
+                        >
                           <MessageSquare size={14} strokeWidth={2.5} />
                         </button>
-                        <button className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all" title="Email">
+                        <button 
+                          disabled
+                          onClick={() => toast.info(t('common.not_implemented'))}
+                          className="p-1.5 text-slate-300 dark:text-slate-600 cursor-not-allowed" 
+                          title="Email"
+                        >
                           <Mail size={14} strokeWidth={2.5} />
                         </button>
                       </div>
@@ -153,10 +181,22 @@ const OverdueTable = ({ accounts = [] }) => {
         
         {/* Paginación al estilo Stitch */}
         <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 flex items-center justify-between">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Mostrando 1 a {safeAccounts.length} de 23 resultados</span>
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Mostrando 1 a {safeAccounts.length} de {safeAccounts.length} resultados</span>
           <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 text-[11px] font-bold text-slate-400 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors">Anterior</button>
-            <button className="px-3 py-1.5 text-[11px] font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">Siguiente</button>
+            <button 
+              disabled
+              onClick={() => toast.info(t('common.not_implemented'))}
+              className="px-3 py-1.5 text-[11px] font-bold text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg cursor-not-allowed opacity-50 transition-colors"
+            >
+              Anterior
+            </button>
+            <button 
+              disabled
+              onClick={() => toast.info(t('common.not_implemented'))}
+              className="px-3 py-1.5 text-[11px] font-bold text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg cursor-not-allowed opacity-50 transition-colors"
+            >
+              Siguiente
+            </button>
           </div>
         </div>
       </div>

@@ -6,6 +6,8 @@ export const receivables = {
   // General
   'receivables.title': 'Cuentas por Cobrar',
   'receivables.breadcrumb.home': 'Inicio',
+  'receivables.breadcrumb.receivables': 'Cuentas por Cobrar',
+  'receivables.breadcrumb.list': 'Lista de Cuentas',
   'receivables.breadcrumb.clients': 'Clientes',
   
   // Client Credit Profile
@@ -73,7 +75,7 @@ export const receivables = {
   'receivables.aging_report.industry_avg_msg': 'Vs. promedio industria de 45 días',
   'receivables.aging_report.total_os': 'Total Pendiente',
   'receivables.aging_report.table.client': 'Cliente',
-  'receivables.aging_report.table.total': 'Total O/S',
+  'receivables.aging_report.table.total': 'Total Pendiente',
   'receivables.aging_report.table.risk': 'Riesgo',
   'receivables.aging_report.table.last_payment': 'Último Pago',
   

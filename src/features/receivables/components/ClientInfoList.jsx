@@ -12,8 +12,8 @@ const ClientInfoList = ({ address = '', contact = '', phone = '', rep = '', taxI
           </div>
           <div>
             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Dirección</p>
-            <p className="text-[13px] font-bold text-[#111418] dark:text-white mt-0.5 leading-snug">
-              {address || '1200 Logistics Blvd, Suite 400\nSan Diego, CA 92101, USA'}
+            <p className="text-[13px] font-bold text-[#111418] dark:text-white mt-0.5 whitespace-pre-wrap">
+              {address || 'Dirección no disponible'}
             </p>
           </div>
         </div>
@@ -24,8 +24,8 @@ const ClientInfoList = ({ address = '', contact = '', phone = '', rep = '', taxI
           </div>
           <div>
             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Contacto</p>
-            <p className="text-[13px] font-bold text-[#111418] dark:text-white mt-0.5">{contact || 'Sarah Jenkins (CFO)'}</p>
-            <p className="text-xs text-primary hover:underline cursor-pointer font-medium mt-0.5">{phone || '+1 (619) 555-0123'}</p>
+            <p className="text-[13px] font-bold text-[#111418] dark:text-white mt-0.5">{contact || 'Sin contacto definido'}</p>
+            {phone && <p className="text-xs text-primary hover:underline cursor-pointer font-medium mt-0.5">{phone}</p>}
           </div>
         </div>
 
@@ -35,14 +35,14 @@ const ClientInfoList = ({ address = '', contact = '', phone = '', rep = '', taxI
           </div>
           <div>
             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Representante</p>
-            <p className="text-[13px] font-bold text-[#111418] dark:text-white mt-0.5">{rep || 'Michael Ross'}</p>
+            <p className="text-[13px] font-bold text-[#111418] dark:text-white mt-0.5">{rep || 'No asignado'}</p>
           </div>
         </div>
 
         <div className="pt-5 border-t border-[#f0f2f4] dark:border-gray-800">
           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">Identificación Fiscal</p>
           <div className="flex items-center justify-between p-2.5 bg-[#f0f2f4] dark:bg-gray-800 rounded-lg text-xs font-mono text-[#111418] dark:text-white border border-slate-100 dark:border-slate-700">
-            <span className="font-bold">{taxId || 'US-99-882145'}</span>
+            <span className="font-bold">{taxId || 'No registrado'}</span>
             <Copy size={14} className="text-gray-400 cursor-pointer hover:text-primary transition-colors" />
           </div>
         </div>

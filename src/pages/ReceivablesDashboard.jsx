@@ -17,6 +17,8 @@ import { useReceivablesDashboard } from '@/features/receivables/hooks/useReceiva
 import SummaryCardsGrid from '@/features/receivables/components/SummaryCardsGrid'
 import AgingSummaryChart from '@/features/receivables/components/AgingSummaryChart'
 import RecentInvoicesTable from '@/features/receivables/components/RecentInvoicesTable'
+import { useToast } from '@/hooks/useToast'
+import ToastContainer from '@/components/ui/ToastContainer'
 
 /**
  * Accounts Receivable Overview Dashboard
@@ -25,6 +27,7 @@ import RecentInvoicesTable from '@/features/receivables/components/RecentInvoice
 const ReceivablesDashboard = () => {
   const navigate = useNavigate()
   const { t } = useI18n()
+  const toast = useToast()
   const { summary, aging, recentInvoices, loading, error, refresh } =
     useReceivablesDashboard()
 
@@ -49,27 +52,39 @@ const ReceivablesDashboard = () => {
         </div>
         <Button variant="secondary" size="sm" onClick={refresh} className="gap-2 rounded-lg">
           <RefreshCw className="size-4" />
-          Actualizar
+          {t('action.refresh', 'Actualizar')}
         </Button>
       </div>
 
       {/* Barra de Filtros */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-surface-dark p-4 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
         <div className="flex flex-wrap items-center gap-3">
-          <button className="flex h-8 items-center gap-2 rounded-lg bg-white dark:bg-surface-dark px-3 py-1.5 text-sm font-medium text-text-primary-light dark:text-text-primary-dark shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
-            <Calendar className="size-4 text-text-secondary-light" />
+          <button 
+            disabled 
+            onClick={() => toast.info(t('common.not_implemented'))}
+            className="flex h-8 items-center gap-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 px-3 py-1.5 text-sm font-medium text-text-secondary-light/60 dark:text-text-secondary-dark/60 border border-gray-100 dark:border-gray-700 cursor-not-allowed opacity-70"
+          >
+            <Calendar className="size-4" />
             <span>Periodo: Últimos 30 Días</span>
-            <ChevronDown className="size-4 text-text-secondary-light" />
+            <ChevronDown className="size-4" />
           </button>
-          <button className="flex h-8 items-center gap-2 rounded-lg bg-white dark:bg-surface-dark px-3 py-1.5 text-sm font-medium text-text-primary-light dark:text-text-primary-dark shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
-            <Globe className="size-4 text-text-secondary-light" />
+          <button 
+            disabled 
+            onClick={() => toast.info(t('common.not_implemented'))}
+            className="flex h-8 items-center gap-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 px-3 py-1.5 text-sm font-medium text-text-secondary-light/60 dark:text-text-secondary-dark/60 border border-gray-100 dark:border-gray-700 cursor-not-allowed opacity-70"
+          >
+            <Globe className="size-4" />
             <span>Entidad: Todas las Regiones</span>
-            <ChevronDown className="size-4 text-text-secondary-light" />
+            <ChevronDown className="size-4" />
           </button>
-          <button className="flex h-8 items-center gap-2 rounded-lg bg-white dark:bg-surface-dark px-3 py-1.5 text-sm font-medium text-text-primary-light dark:text-text-primary-dark shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
-            <CircleDollarSign className="size-4 text-text-secondary-light" />
+          <button 
+            disabled 
+            onClick={() => toast.info(t('common.not_implemented'))}
+            className="flex h-8 items-center gap-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 px-3 py-1.5 text-sm font-medium text-text-secondary-light/60 dark:text-text-secondary-dark/60 border border-gray-100 dark:border-gray-700 cursor-not-allowed opacity-70"
+          >
+            <CircleDollarSign className="size-4" />
             <span>Moneda: Guaraníes (PYG)</span>
-            <ChevronDown className="size-4 text-text-secondary-light" />
+            <ChevronDown className="size-4" />
           </button>
         </div>
         <div className="flex items-center gap-2 text-text-secondary-light dark:text-text-secondary-dark">
@@ -144,6 +159,9 @@ const ReceivablesDashboard = () => {
 
       {/* Facturas Recientes */}
       <RecentInvoicesTable invoices={recentInvoices} />
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>
   )
 }

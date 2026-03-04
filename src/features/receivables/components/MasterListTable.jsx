@@ -152,7 +152,10 @@ const MasterListTable = ({
                   <td className="py-3 px-4 text-[#111418] dark:text-white text-sm font-semibold text-right tabular-nums font-mono">{formatPYG(inv.pendingAmt)}</td>
                   <td className="py-3 px-4 text-center">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusVariant(inv.statusColor)}`}>
-                      {inv.status}
+                      {inv.status === 'OVERDUE' ? 'VENCIDO' : 
+                       inv.status === 'PENDING' ? 'PENDIENTE' : 
+                       inv.status === 'PARTIAL' ? 'P. PARCIAL' : 
+                       inv.status === 'PAID' ? 'PAGADO' : inv.status}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-right">

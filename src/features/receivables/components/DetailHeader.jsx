@@ -60,11 +60,17 @@ const DetailHeader = ({ id, client = {}, transaction = {} }) => {
 
         {/* Right: High Level Actions */}
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 h-10 rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-[#111418] dark:text-white font-medium text-sm">
+          <button 
+            disabled
+            className="flex items-center gap-2 px-4 h-10 rounded-lg border border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/50 text-[#617589] dark:text-gray-500 font-medium text-sm cursor-not-allowed opacity-70"
+          >
             <span className="material-symbols-outlined text-lg">download</span>
             <span>PDF</span>
           </button>
-          <button className="flex items-center gap-2 px-4 h-10 rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-[#111418] dark:text-white font-medium text-sm">
+          <button 
+            disabled
+            className="flex items-center gap-2 px-4 h-10 rounded-lg border border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/50 text-[#617589] dark:text-gray-500 font-medium text-sm cursor-not-allowed opacity-70"
+          >
             <span className="material-symbols-outlined text-lg">print</span>
             <span>{t('action.print', 'Imprimir')}</span>
           </button>

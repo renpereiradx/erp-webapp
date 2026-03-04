@@ -5,14 +5,18 @@ import React from 'react';
  * Estilo 100% fiel al diseño de Stitch.
  */
 const BillingVsCollectionChart = ({ trendData }) => {
-  const months = [
-    { name: 'Mayo', billed: 60, collected: 55 },
-    { name: 'Jun', billed: 75, collected: 70 },
-    { name: 'Jul', billed: 40, collected: 35 },
-    { name: 'Ago', billed: 90, collected: 80 },
-    { name: 'Sep', billed: 65, collected: 68 },
-    { name: 'Oct', billed: 85, collected: 82, active: true },
-  ];
+  const safeData = Array.isArray(trendData) && trendData.length > 0 ? trendData : [];
+  
+  // Calculate max to make bars proportional (assuming 100% height = max value * 1.1 for some padding)
+  const maxBilled = safeData.reduce((max, d) => Math.max(max, d.billed || 0), 1);
+  const scale = 100 / (maxBilled * 1.1);
+
+  const months = safeData.map((d, index) => ({
+    name: d.date || `P${index+1}`,
+    billed: (d.billed || 0) * scale,
+    collected: (d.collected || 0) * scale,
+    active: index === safeData.length - 1
+  }));
 
   return (
     <div className="w-full xl:w-[400px] bg-white dark:bg-[#1a2632] rounded-lg border border-[#e5e7eb] dark:border-[#2e3640] shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.06)] flex flex-col transition-all hover:shadow-[0_4px_8px_rgba(0,0,0,0.08),0_0_2px_rgba(0,0,0,0.1)]">

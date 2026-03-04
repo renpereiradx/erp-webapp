@@ -6,6 +6,10 @@ import { Landmark, Clock, PieChart } from 'lucide-react';
  * Estilo 100% fiel al diseño de Stitch (Fluent 2).
  */
 const AgingOverviewCards = ({ stats }) => {
+  const pendingAmount = stats ? (stats.total_billed || 0) - (stats.total_collected || 0) : 1250000;
+  const collectionRate = stats?.collection_rate || 94;
+  const dso = stats?.average_dso || 42; // average_dso no está oficializado en swagger pero si lo mandan lo tomamos
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Total Pendiente */}
@@ -15,7 +19,9 @@ const AgingOverviewCards = ({ stats }) => {
           <span className="material-symbols-outlined text-[#617589] dark:text-gray-500">account_balance</span>
         </div>
         <div className="flex items-baseline gap-2 mt-1">
-          <p className="text-[#111418] dark:text-white text-3xl font-bold tracking-tight">$1,250,000</p>
+          <p className="text-[#111418] dark:text-white text-3xl font-bold tracking-tight">
+            ${pendingAmount.toLocaleString('en-US', { minimumFractionDigits: 0 })}
+          </p>
           <span className="inline-flex items-center text-xs font-bold text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full">
             <span className="material-symbols-outlined text-[14px] mr-0.5 font-bold">trending_up</span>
             2.5%
@@ -31,7 +37,7 @@ const AgingOverviewCards = ({ stats }) => {
           <span className="material-symbols-outlined text-[#617589] dark:text-gray-500">schedule</span>
         </div>
         <div className="flex items-baseline gap-2 mt-1">
-          <p className="text-[#111418] dark:text-white text-3xl font-bold tracking-tight">42 Días</p>
+          <p className="text-[#111418] dark:text-white text-3xl font-bold tracking-tight">{Math.round(dso)} Días</p>
           <span className="inline-flex items-center text-xs font-bold text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
             <span className="material-symbols-outlined text-[14px] mr-0.5 font-bold">trending_down</span>
             1.2 días
@@ -47,7 +53,9 @@ const AgingOverviewCards = ({ stats }) => {
           <span className="material-symbols-outlined text-[#617589] dark:text-gray-500">pie_chart</span>
         </div>
         <div className="flex items-baseline gap-2 mt-1">
-          <p className="text-[#111418] dark:text-white text-3xl font-bold tracking-tight">94%</p>
+          <p className="text-[#111418] dark:text-white text-3xl font-bold tracking-tight">
+            {(collectionRate).toFixed(1)}%
+          </p>
           <span className="inline-flex items-center text-xs font-bold text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
             <span className="material-symbols-outlined text-[14px] mr-0.5 font-bold">trending_up</span>
             0.5%

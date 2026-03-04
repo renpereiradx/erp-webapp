@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/i18n';
 import { RefreshCw, AlertCircle, Download, ChevronRight, Home, Edit3, Ban } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/useToast';
+import ToastContainer from '@/components/ui/ToastContainer';
 
 // Hooks y Datos
 import { useClientCreditProfile } from '@/features/receivables/hooks/useClientCreditProfile';
@@ -23,6 +25,7 @@ const ClientCreditProfile = () => {
   const { clientId } = useParams();
   const navigate = useNavigate();
   const { t } = useI18n();
+  const toast = useToast();
   
   const { data, loading, error } = useClientCreditProfile(clientId);
 
@@ -50,7 +53,7 @@ const ClientCreditProfile = () => {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       {/* Breadcrumbs & Heading */}
       <div className="flex flex-col gap-4">
         <nav className="flex items-center gap-2 text-sm text-[#617589]">
@@ -77,17 +80,31 @@ const ClientCreditProfile = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 rounded-lg text-sm font-bold text-[#111418] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-gray-700 transition-colors shadow-sm h-10">
+            <Button 
+              variant="outline" 
+              disabled
+              onClick={() => toast.info(t('common.not_implemented'))}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 rounded-lg text-sm font-bold text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-70 h-10"
+            >
               <Edit3 size={18} />
-              Añadir Nota
+              {t('receivables.profile.action.add_note', 'Añadir Nota')}
             </Button>
-            <Button variant="outline" className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 rounded-lg text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shadow-sm h-10">
+            <Button 
+              variant="outline" 
+              disabled
+              onClick={() => toast.info(t('common.not_implemented'))}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-[#f0f2f4] dark:border-gray-700 rounded-lg text-sm font-bold text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-70 h-10"
+            >
               <Ban size={18} />
-              Suspender Crédito
+              {t('receivables.profile.action.suspend_credit', 'Suspender Crédito')}
             </Button>
-            <Button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-600 transition-all shadow-md h-10 active:scale-95">
+            <Button 
+              disabled
+              onClick={() => toast.info(t('common.not_implemented'))}
+              className="flex items-center gap-2 px-4 py-2 bg-primary/50 text-white rounded-lg text-sm font-bold cursor-not-allowed opacity-70 h-10 shadow-none border-none"
+            >
               <Download size={18} />
-              Exportar Reporte
+              {t('action.export_report', 'Exportar Reporte')}
             </Button>
           </div>
         </div>
@@ -126,6 +143,8 @@ const ClientCreditProfile = () => {
           />
         </div>
       </div>
+
+      <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>
   );
 };

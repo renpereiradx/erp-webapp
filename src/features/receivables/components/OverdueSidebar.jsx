@@ -8,7 +8,7 @@ import { Calendar, Play, ChevronRight, Sparkles, MoreHorizontal } from 'lucide-r
  * Widgets laterales para la página de Cuentas Vencidas.
  * Fiel al diseño de Stitch y todo en español.
  */
-const OverdueSidebar = () => {
+const OverdueSidebar = ({ toast }) => {
   const { t } = useI18n();
 
   return (
@@ -18,7 +18,13 @@ const OverdueSidebar = () => {
       <div className="bg-white dark:bg-[#1A2633] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 flex flex-col">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-tight">Tareas de Hoy</h3>
-          <button className="text-[10px] font-bold text-[#137fec] hover:underline uppercase tracking-wider">Ver Calendario</button>
+          <button 
+            disabled
+            onClick={() => toast.info(t('common.not_implemented'))}
+            className="text-[10px] font-bold text-slate-300 dark:text-slate-600 cursor-not-allowed uppercase tracking-wider"
+          >
+            Ver Calendario
+          </button>
         </div>
         
         {/* Mockup de Círculo de Progreso */}
@@ -58,7 +64,11 @@ const OverdueSidebar = () => {
           </div>
         </div>
 
-        <Button className="w-full mt-6 bg-[#137fec]/10 hover:bg-[#137fec]/20 text-[#137fec] border-none shadow-none text-xs font-bold h-10 rounded-lg">
+        <Button 
+          disabled
+          onClick={() => toast.info(t('common.not_implemented'))}
+          className="w-full mt-6 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-none shadow-none text-xs font-bold h-10 rounded-lg cursor-not-allowed"
+        >
           <Play className="size-3 mr-2 fill-current" />
           Iniciar Sesión de Llamadas
         </Button>
@@ -92,7 +102,11 @@ const OverdueSidebar = () => {
           ))}
         </div>
 
-        <button className="w-full mt-6 text-[10px] font-bold text-[#137fec] hover:underline uppercase tracking-wider flex items-center justify-center">
+        <button 
+          disabled
+          onClick={() => toast.info(t('common.not_implemented'))}
+          className="w-full mt-6 text-[10px] font-bold text-slate-300 dark:text-slate-600 cursor-not-allowed uppercase tracking-wider flex items-center justify-center"
+        >
           Ver Ranking Completo <ChevronRight size={12} className="ml-1" />
         </button>
       </div>
@@ -109,7 +123,11 @@ const OverdueSidebar = () => {
         <p className="text-xs text-blue-100/80 mb-6 leading-relaxed font-medium">
           Optimiza tu estrategia de cobranza con análisis predictivo impulsado por IA.
         </p>
-        <button className="px-4 py-2 bg-white text-[#137fec] rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 transition-all active:scale-95 shadow-md shadow-blue-900/20">
+        <button 
+          disabled
+          onClick={() => toast.info(t('common.not_implemented'))}
+          className="px-4 py-2 bg-white/50 text-[#137fec]/50 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-not-allowed shadow-md"
+        >
           Probar Beta
         </button>
       </div>

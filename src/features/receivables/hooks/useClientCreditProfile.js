@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { receivablesService } from '@/services/receivablesService';
+import { clientService } from '@/services/clientService';
 
 /**
  * Hook personalizado para manejar la lógica de negocio del perfil de crédito del cliente.
@@ -23,9 +24,10 @@ export const useClientCreditProfile = (clientId) => {
       setError(null);
       try {
         // Ejecutamos ambas peticiones en paralelo (Endpoints 6 y 7)
-        const [profileRes, riskRes] = await Promise.all([
+        const [profileRes, riskRes, basicInfoRes] = await Promise.all([
           receivablesService.getClientProfile(clientId).catch(err => ({ success: false, error: err })),
-          receivablesService.getClientRiskAnalysis(clientId).catch(err => ({ success: false, error: err }))
+          receivablesService.getClientRiskAnalysis(clientId).catch(err => ({ success: false, error: err })),
+          clientService.getById(clientId).catch(() => null)
         ]);
 
         if (!isMounted) return;
@@ -48,14 +50,14 @@ export const useClientCreditProfile = (clientId) => {
         // Mapear datos a estructura camelCase esperada por la UI
         setData({
           client: {
-            name: profile.client_name || profile.name || 'Cliente',
+            name: profile.client_name || profile.name || basicInfoRes?.name || 'Cliente',
             id: profile.client_id || profile.id || clientId,
             status: (profile.total_overdue || 0) > 0 ? 'Cuenta con Deuda' : 'Cuenta Activa',
-            address: profile.client_address || profile.address || 'Asunción, Paraguay',
-            contact: profile.client_contact || profile.contact || 'Representante Legal',
-            phone: profile.client_phone || profile.phone || '+595 981 000 000',
-            rep: profile.assigned_rep || profile.rep || 'Michael Ross',
-            taxId: profile.tax_id || profile.taxId || '80000000-1'
+            address: profile.client_address || profile.address || basicInfoRes?.address || 'Sin dirección registrada',
+            contact: profile.client_contact || profile.contact || basicInfoRes?.contact || 'Sin contacto definido',
+            phone: profile.client_phone || profile.phone || basicInfoRes?.phone || 'Sin télefono',
+            rep: profile.assigned_rep || profile.rep || 'No asignado',
+            taxId: profile.tax_id || profile.taxId || basicInfoRes?.document_id || 'No registrado'
           },
           risk: {
             score: risk.risk_score ?? risk.score ?? 50,

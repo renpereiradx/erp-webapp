@@ -10,8 +10,28 @@ import { useI18n } from '@/lib/i18n';
 /**
  * Sidebar para la página de detalle, incluyendo acciones rápidas, contacto y actividad.
  */
-const DetailSidebar = ({ client = {} }) => {
+const DetailSidebar = ({ client = {}, activities = [], toast }) => {
   const { t } = useI18n();
+
+  // Helper to get icon based on activity type
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'PAYMENT': return 'payments';
+      case 'NOTE': return 'description';
+      case 'SYSTEM': return 'settings';
+      default: return 'event';
+    }
+  };
+
+  // Helper to get color based on activity type
+  const getActivityColor = (type) => {
+    switch (type) {
+      case 'PAYMENT': return 'bg-emerald-500';
+      case 'NOTE': return 'bg-primary';
+      case 'SYSTEM': return 'bg-gray-300 dark:bg-gray-600';
+      default: return 'bg-gray-400';
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -19,16 +39,28 @@ const DetailSidebar = ({ client = {} }) => {
       <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-6">
         <h3 className="text-[#111418] dark:text-white text-lg font-bold mb-4">{t('receivables.detail.actions.title', 'Acciones Rápidas')}</h3>
         <div className="flex flex-col gap-3">
-          <button className="flex items-center justify-center gap-2 w-full h-11 rounded-lg bg-primary hover:bg-blue-600 text-white font-semibold transition-colors shadow-sm">
+          <button 
+            disabled
+            onClick={() => toast.info(t('common.not_implemented'))}
+            className="flex items-center justify-center gap-2 w-full h-11 rounded-lg bg-primary/50 text-white font-semibold cursor-not-allowed opacity-70"
+          >
             <span className="material-symbols-outlined">add_card</span>
             {t('receivables.detail.actions.register_payment', 'Registrar Pago')}
           </button>
           <div className="grid grid-cols-2 gap-3">
-            <button className="flex items-center justify-center gap-2 w-full h-10 rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-[#111418] dark:text-white font-medium text-sm transition-colors">
+            <button 
+              disabled
+              onClick={() => toast.info(t('common.not_implemented'))}
+              className="flex items-center justify-center gap-2 w-full h-10 rounded-lg border border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/50 text-[#617589] dark:text-gray-500 font-medium text-sm cursor-not-allowed opacity-70"
+            >
               <span className="material-symbols-outlined text-lg">send</span>
               {t('receivables.detail.actions.reminder', 'Recordatorio')}
             </button>
-            <button className="flex items-center justify-center gap-2 w-full h-10 rounded-lg border border-border-light dark:border-border-dark bg-white dark:bg-surface-dark hover:bg-gray-50 dark:hover:bg-gray-800 text-[#111418] dark:text-white font-medium text-sm transition-colors">
+            <button 
+              disabled
+              onClick={() => toast.info(t('common.not_implemented'))}
+              className="flex items-center justify-center gap-2 w-full h-10 rounded-lg border border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/50 text-[#617589] dark:text-gray-500 font-medium text-sm cursor-not-allowed opacity-70"
+            >
               <span className="material-symbols-outlined text-lg">flag</span>
               {t('receivables.detail.actions.dispute', 'Disputa')}
             </button>
@@ -97,54 +129,51 @@ const DetailSidebar = ({ client = {} }) => {
               rows="2"
             />
             <div className="flex justify-end">
-              <button className="text-xs font-semibold text-white bg-primary/80 hover:bg-primary px-3 py-1.5 rounded transition-colors">
+              <button 
+                onClick={() => toast.info(t('common.not_implemented'))}
+                className="text-xs font-semibold text-white bg-primary/80 hover:bg-primary px-3 py-1.5 rounded transition-colors"
+              >
                 {t('receivables.detail.activity.post', 'Publicar Nota')}
               </button>
             </div>
           </div>
 
           <div className="relative pl-4 border-l border-border-light dark:border-border-dark space-y-6">
-            {/* Timeline Item: System Event */}
-            <div className="relative">
-              <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-gray-300 dark:bg-gray-600 ring-4 ring-white dark:ring-surface-dark"></div>
-              <div className="flex flex-col gap-1">
-                <p className="text-xs text-gray-500">Hoy, 9:41 AM</p>
-                <p className="text-sm text-[#111418] dark:text-gray-200">
-                  <span className="font-semibold text-primary">Sistema</span> envió recordatorio automático vía Email.
-                </p>
-              </div>
-            </div>
-
-            {/* Timeline Item: Manual Note */}
-            <div className="relative">
-              <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark"></div>
-              <div className="flex flex-col gap-1">
-                <p className="text-xs text-gray-500">Ayer, 4:20 PM</p>
-                <div className="bg-blue-50 dark:bg-primary/10 p-3 rounded-lg rounded-tl-none">
-                  <p className="text-sm text-[#111418] dark:text-gray-200">
-                    Llamé a Sarah. Confirmó que el cheque del saldo restante se enviará este viernes.
-                  </p>
-                  <p className="text-xs text-primary mt-1 font-medium">- Tú</p>
+            {activities.length > 0 ? (
+              activities.map((activity, index) => (
+                <div key={activity.id || index} className="relative">
+                  <div className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full ${getActivityColor(activity.type)} ring-4 ring-white dark:ring-surface-dark`}></div>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-500">
+                      {new Date(activity.date).toLocaleDateString()} {activity.time || ''}
+                    </p>
+                    {activity.type === 'NOTE' ? (
+                      <div className="bg-blue-50 dark:bg-primary/10 p-3 rounded-lg rounded-tl-none">
+                        <p className="text-sm text-[#111418] dark:text-gray-200">
+                          {activity.description}
+                        </p>
+                        <p className="text-xs text-primary mt-1 font-medium">- {activity.user}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-[#111418] dark:text-gray-200">
+                        {activity.type === 'SYSTEM' && <span className="font-semibold text-primary">Sistema </span>}
+                        {activity.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="py-4 text-center">
+                <p className="text-sm text-gray-500 italic">{t('common.no_activity', 'No hay actividad reciente')}</p>
               </div>
-            </div>
-
-            {/* Timeline Item: Payment (Mock static for demonstration to match design) */}
-            <div className="relative">
-              <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-white dark:ring-surface-dark"></div>
-              <div className="flex flex-col gap-1">
-                <p className="text-xs text-gray-500">Nov 15, 2023</p>
-                <p className="text-sm text-[#111418] dark:text-gray-200">
-                  Pago de <span className="font-bold text-emerald-600 dark:text-emerald-400">$2,000.00</span> recibido vía transferencia bancaria.
-                </p>
-              </div>
-            </div>
-
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 };
+
 
 export default DetailSidebar;

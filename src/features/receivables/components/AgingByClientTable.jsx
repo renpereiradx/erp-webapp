@@ -1,17 +1,12 @@
 import React from 'react';
+import { formatPYG } from '@/utils/currencyUtils';
 
 /**
  * Tabla de deudores principales.
  * Estilo 100% fiel al diseño de Stitch.
  */
 const AgingByClientTable = ({ clientsData }) => {
-  const debtors = [
-    { name: 'Acme Corp', id: '#9201', total: 124500.00, over90: 12000.00, risk: 'Medio', riskColor: 'bg-orange-100 text-orange-700', avatar: 'AC', avatarBg: 'bg-blue-100 text-blue-700' },
-    { name: 'Globex Inc.', id: '#8821', total: 89200.00, over90: 0.00, risk: 'Bajo', riskColor: 'bg-green-100 text-green-700', avatar: 'GI', avatarBg: 'bg-purple-100 text-purple-700' },
-    { name: 'Soylent Ind.', id: '#7732', total: 215000.00, over90: 45000.00, risk: 'Alto', riskColor: 'bg-red-100 text-red-700', avatar: 'SI', avatarBg: 'bg-red-100 text-red-700' },
-    { name: 'Umbrella Corp', id: '#1002', total: 54320.00, over90: 0.00, risk: 'Bajo', riskColor: 'bg-green-100 text-green-700', avatar: 'UM', avatarBg: 'bg-teal-100 text-teal-700' },
-    { name: 'Massive Ind.', id: '#5512', total: 32100.00, over90: 5400.00, risk: 'Medio', riskColor: 'bg-orange-100 text-orange-700', avatar: 'MI', avatarBg: 'bg-indigo-100 text-indigo-700' },
-  ];
+  const safeClients = Array.isArray(clientsData) ? clientsData : [];
 
   return (
     <div className="flex-1 bg-white dark:bg-[#1a2632] rounded-lg border border-[#e5e7eb] dark:border-[#2e3640] shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.06)] flex flex-col overflow-hidden min-h-[400px]">
@@ -42,30 +37,47 @@ const AgingByClientTable = ({ clientsData }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f0f2f4] dark:divide-[#2e3640]">
-            {debtors.map((debtor, idx) => (
-              <tr key={idx} className="hover:bg-[#f8f9fa] dark:hover:bg-[#25303d] transition-colors group text-[#111418] dark:text-white">
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${debtor.avatarBg}`}>
-                      {debtor.avatar}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-semibold">{debtor.name}</span>
-                      <span className="text-xs text-[#617589]">ID: {debtor.id}</span>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-5 py-4 text-right font-mono font-medium">${debtor.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                <td className="px-5 py-4 text-right font-mono text-red-600 font-bold">${debtor.over90.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                <td className="px-5 py-4 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${debtor.riskColor}`}>{debtor.risk}</span>
-                </td>
-                <td className="px-5 py-4 text-[#617589] dark:text-gray-400">Oct 12, 2023</td>
-                <td className="px-5 py-4">
-                  <button className="text-[#137fec] hover:text-[#137fec]/80 font-medium text-xs uppercase tracking-wider">Ver</button>
-                </td>
+            {safeClients.length > 0 ? (
+              safeClients.map((client, idx) => {
+                const over90 = client.over_90_days || 0;
+                const total = client.total || 0;
+                // Riesgo calculado al vuelo según mora de > 90
+                const isHighRisk = over90 > (total * 0.2);
+                const riskColor = isHighRisk ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700';
+                const avatar = client.client_name?.substring(0, 2).toUpperCase() || 'CX';
+
+                return (
+                  <tr key={client.client_id || idx} className="hover:bg-[#f8f9fa] dark:hover:bg-[#25303d] transition-colors group text-[#111418] dark:text-white">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs bg-blue-100 text-blue-700">
+                          {avatar}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-semibold">{client.client_name}</span>
+                          <span className="text-xs text-[#617589]">ID: {client.client_id}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-right font-mono font-medium">{formatPYG(client.total || 0)}</td>
+                    <td className="px-5 py-4 text-right font-mono text-red-600 font-bold">{formatPYG(over90)}</td>
+                    <td className="px-5 py-4 text-center">
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${riskColor}`}>
+                        {isHighRisk ? 'Alto' : 'Bajo'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-[#617589] dark:text-gray-400">No disp.</td>
+                    <td className="px-5 py-4">
+                      <button className="text-[#137fec] hover:text-[#137fec]/80 font-medium text-xs uppercase tracking-wider">Ver</button>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={6} className="text-center py-6 text-slate-500">No hay datos por cliente.</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

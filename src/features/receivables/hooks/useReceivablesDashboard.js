@@ -19,11 +19,11 @@ const transformSummary = apiData => {
       amount: apiData.total_overdue || 0,
       percentage: overduePercentage,
     },
-    // Datos no disponibles en la API - mostramos valores neutros
+    // Estos datos ahora están totalmente soportados y confirmados en el Swagger
     totalCount: apiData.total_count || 0,
     overdueCount: apiData.overdue_count || 0,
-    avgDaysToCollect: apiData.average_days_to_collect || 0,
-    collectionRate: apiData.collection_rate || 0,
+    avgDaysToCollect: Math.round(apiData.average_days_to_collect || 0),
+    collectionRate: apiData.collection_rate ? Number(apiData.collection_rate).toFixed(2) : 0,
     collectionTrend: apiData.collection_trend || []
   }
 }

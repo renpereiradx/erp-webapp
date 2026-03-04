@@ -6,18 +6,20 @@ import { formatPYG } from '@/utils/currencyUtils';
  * Rediseñado con estilo analítico premium para Dashboard y Reportes.
  */
 const AgingSummaryChart = ({ agingData = {} }) => {
-  // Buckets de antigüedad con sus estilos y metadatos
-  const buckets = [
+  // Tramos de antigüedad con sus estilos y metadatos
+  const tramos = [
     { label: 'Corriente', key: 'current', color: 'bg-[#137fec]', border: 'border-[#137fec]', text: 'text-[#137fec]' },
-    { label: '1-30 Días', key: 'days_1_30', color: 'bg-[#38bdf8]', border: 'border-[#38bdf8]', text: 'text-[#38bdf8]' },
-    { label: '31-60 Días', key: 'days_31_60', color: 'bg-[#fbbf24]', border: 'border-[#fbbf24]', text: 'text-[#fbbf24]' },
-    { label: '61-90 Días', key: 'days_61_90', color: 'bg-[#f97316]', border: 'border-[#f97316]', text: 'text-[#f97316]' },
+    { label: '30-60 Días', key: 'days_30_60', color: 'bg-[#fbbf24]', border: 'border-[#fbbf24]', text: 'text-[#fbbf24]' },
+    { label: '60-90 Días', key: 'days_60_90', color: 'bg-[#f97316]', border: 'border-[#f97316]', text: 'text-[#f97316]' },
     { label: '> 90 Días', key: 'over_90_days', color: 'bg-[#dc2626]', border: 'border-[#dc2626]', text: 'text-[#dc2626]' }
   ];
 
   // Extraer datos o usar valores de ejemplo realistas
   const getAmount = (key) => agingData[key]?.amount || (key === 'current' ? 8500000 : 1500000);
-  const getPercentage = (key) => agingData[key]?.percentage || (key === 'current' ? 55 : 10);
+  const getPercentage = (key) => {
+    const raw = agingData[key]?.percentage || (key === 'current' ? 55 : 10);
+    return typeof raw === 'number' ? Number(raw.toFixed(2)) : raw;
+  };
 
   return (
     <div className="bg-white dark:bg-[#1a2632] rounded-xl border border-[#e5e7eb] dark:border-[#2e3640] shadow-fluent-2 flex flex-col h-full overflow-hidden transition-all hover:shadow-fluent-8">
@@ -34,14 +36,14 @@ const AgingSummaryChart = ({ agingData = {} }) => {
         {/* Barra de Distribución Principal (Estilo Stitch) */}
         <div className="space-y-3">
           <div className="w-full h-10 flex rounded-lg overflow-hidden shadow-inner border border-slate-100 dark:border-slate-800">
-            {buckets.map((bucket, i) => {
-              const pct = getPercentage(bucket.key);
+            {tramos.map((tramo, i) => {
+              const pct = getPercentage(tramo.key);
               return (
                 <div 
                   key={i} 
                   style={{ width: `${pct}%` }} 
-                  className={`${bucket.color} h-full transition-all duration-1000 hover:brightness-110 cursor-default flex items-center justify-center text-[10px] font-black text-white ${pct < 8 ? 'text-transparent' : ''}`}
-                  title={`${bucket.label}: ${pct}%`}
+                  className={`${tramo.color} h-full transition-all duration-1000 hover:brightness-110 cursor-default flex items-center justify-center text-[10px] font-black text-white ${pct < 8 ? 'text-transparent' : ''}`}
+                  title={`${tramo.label}: ${pct}%`}
                 >
                   {pct}%
                 </div>
@@ -56,16 +58,16 @@ const AgingSummaryChart = ({ agingData = {} }) => {
 
         {/* Lista Detallada con Indicadores Individuales */}
         <div className="space-y-6">
-          {buckets.map((bucket, i) => {
-            const amount = getAmount(bucket.key);
-            const pct = getPercentage(bucket.key);
+          {tramos.map((tramo, i) => {
+            const amount = getAmount(tramo.key);
+            const pct = getPercentage(tramo.key);
             
             return (
               <div key={i} className="group flex flex-col gap-2">
                 <div className="flex justify-between items-start">
                   <div className="flex flex-col">
                     <h4 className="text-base font-bold text-text-primary-light dark:text-text-primary-dark">
-                      {bucket.label}
+                      {tramo.label}
                     </h4>
                     <p className="text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider">
                       {pct}% del total de cartera
@@ -75,15 +77,15 @@ const AgingSummaryChart = ({ agingData = {} }) => {
                     <span className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark block leading-none">
                       {formatPYG(amount)}
                     </span>
-                    <span className={`text-xs font-medium ${bucket.text} mt-1 block`}>
-                      Bucket Analítico
+                    <span className={`text-xs font-medium ${tramo.text} mt-1 block`}>
+                      Tramo Analítico
                     </span>
                   </div>
                 </div>
                 {/* Mini barra de progreso individual */}
                 <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-[1px]">
                   <div 
-                    className={`${bucket.color} h-full rounded-full transition-all duration-1000 delay-300`} 
+                    className={`${tramo.color} h-full rounded-full transition-all duration-1000 delay-300`} 
                     style={{ width: `${pct}%` }}
                   />
                 </div>

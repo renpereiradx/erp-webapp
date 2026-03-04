@@ -13,6 +13,8 @@ import { useReceivableDetail } from '@/features/receivables/hooks/useReceivableD
 import DetailHeader from '@/features/receivables/components/DetailHeader';
 import PaymentHistoryTable from '@/features/receivables/components/PaymentHistoryTable';
 import DetailSidebar from '@/features/receivables/components/DetailSidebar';
+import { useToast } from '@/hooks/useToast';
+import ToastContainer from '@/components/ui/ToastContainer';
 
 /**
  * Receivable Detail & Payment History
@@ -21,6 +23,7 @@ const ReceivableDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useI18n();
+  const toast = useToast();
   const { data, loading, error } = useReceivableDetail(id);
 
   if (loading) {
@@ -48,8 +51,7 @@ const ReceivableDetail = () => {
   }
 
   return (
-    <div className="bg-background-light dark:bg-background-dark text-[#111418] dark:text-gray-100 flex flex-col min-h-screen font-display">
-      <div className="flex-1 w-full max-w-[1280px] mx-auto px-4 lg:px-10 py-6">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
         {/* Breadcrumbs */}
         <div className="flex flex-wrap gap-2 mb-6 text-sm">
           <a className="text-[#617589] dark:text-gray-400 font-medium hover:text-primary transition-colors cursor-pointer" onClick={() => navigate('/receivables/list')}>
@@ -83,10 +85,16 @@ const ReceivableDetail = () => {
 
           {/* Right Column: Actions & Contact (1/3 width) */}
           <div className="flex flex-col gap-6">
-            <DetailSidebar client={data.client || {}} />
+            <DetailSidebar 
+              client={data.client || {}} 
+              activities={data.activities || []}
+              toast={toast} 
+            />
           </div>
         </div>
-      </div>
+
+        {/* Toast Notifications */}
+        <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
     </div>
   );
 };
