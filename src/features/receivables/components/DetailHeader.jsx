@@ -1,13 +1,10 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Building2, Download, Printer, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Download, Printer, FileBadge, User, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 /**
  * Encabezado detallado para una factura específica.
+ * Refactorizado para 100% fidelidad visual con Stitch.
  */
 const DetailHeader = ({ id, client = {}, transaction = {} }) => {
   const { t } = useI18n();
@@ -19,84 +16,91 @@ const DetailHeader = ({ id, client = {}, transaction = {} }) => {
   const isOverdue = transaction.status === 'Overdue';
 
   return (
-    <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-6 mb-6">
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         {/* Left: Title & Info */}
-        <div className="flex gap-4">
-          <div className="size-16 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 border border-border-light dark:border-border-dark">
-            <span className="material-symbols-outlined text-3xl text-gray-400">domain</span>
+        <div className="flex items-start gap-5">
+          <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/5 shadow-sm text-primary">
+            <span className="material-symbols-outlined text-3xl">domain</span>
           </div>
-          <div>
+          <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-[#111418] dark:text-white text-2xl md:text-3xl font-bold tracking-tight">Factura #{id || transaction.invoiceNumber}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-slate-900 dark:text-white uppercase flex items-center">
+                Factura <span className="text-primary font-mono ml-2">#{id || transaction.invoiceNumber}</span>
+              </h1>
               {isOverdue ? (
-                <div className="flex items-center gap-1.5 rounded-full bg-red-50 dark:bg-red-900/20 px-2.5 py-0.5 border border-red-100 dark:border-red-800/30">
-                  <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-sm">warning</span>
-                  <span className="text-red-700 dark:text-red-300 text-xs font-semibold uppercase tracking-wide">Vencido</span>
+                <div className="flex items-center gap-1.5 rounded-lg bg-red-50 dark:bg-red-900/20 px-2.5 py-1 border border-red-100 dark:border-red-800/50 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-widest shadow-sm">
+                  <span className="size-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                  Vencido
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-0.5 border border-emerald-100 dark:border-emerald-800/30">
-                  <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-sm">check_circle</span>
-                  <span className="text-emerald-700 dark:text-emerald-300 text-xs font-semibold uppercase tracking-wide">{transaction.status || 'Pagado'}</span>
+                <div className="flex items-center gap-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-1 border border-emerald-100 dark:border-emerald-800/50 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest shadow-sm">
+                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  {transaction.status || 'Pagado'}
                 </div>
               )}
             </div>
-            <p className="text-[#617589] dark:text-gray-400 text-base mt-1">{client.name} {client.id ? `• Client ID: ${client.id}` : ''}</p>
-            <div className="flex items-center gap-2 mt-3 text-sm text-[#617589] dark:text-gray-400">
-              <span className="material-symbols-outlined text-lg">calendar_today</span>
-              <span>Emitida: <strong className="text-[#111418] dark:text-white">{transaction.issueDate}</strong></span>
-              <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mx-1"></span>
-              <span>Vence: <strong className="text-[#111418] dark:text-white">{transaction.dueDate}</strong></span>
+            <p className="text-slate-500 dark:text-slate-400 font-bold text-sm uppercase tracking-tight">
+              {client.name} <span className="mx-1 opacity-30">•</span> <span className="font-mono text-xs opacity-70">ID: {client.id || 'CLI-001'}</span>
+            </p>
+            <div className="flex items-center gap-2 mt-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              <Clock size={14} className="opacity-50" />
+              <span>Emitida: <span className="text-slate-600 dark:text-slate-300 font-mono">{transaction.issueDate}</span></span>
+              <span className="mx-1 opacity-30">•</span>
+              <span>Vence: <span className={isOverdue ? "text-fluent-danger font-black" : "text-slate-600 dark:text-slate-300"}>{transaction.dueDate}</span></span>
               
               {isOverdue && transaction.daysOverdue > 0 && (
                 <>
-                  <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mx-1"></span>
-                  <span className="text-red-600 dark:text-red-400 font-medium">{transaction.daysOverdue} {t('receivables.common.days_overdue', 'Días vencidos')}</span>
+                  <span className="mx-1 opacity-30">•</span>
+                  <span className="text-fluent-danger font-black">{transaction.daysOverdue} DÍAS DE MORA</span>
                 </>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right: High Level Actions */}
-        <div className="flex items-center gap-3">
+        {/* Right: Actions */}
+        <div className="flex items-center gap-3 lg:mb-1">
           <button 
             disabled
-            className="flex items-center gap-2 px-4 h-10 rounded-lg border border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/50 text-[#617589] dark:text-gray-500 font-medium text-sm cursor-not-allowed opacity-70"
+            className="inline-flex items-center px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95 text-slate-600 dark:text-slate-300 cursor-not-allowed opacity-50"
           >
-            <span className="material-symbols-outlined text-lg">download</span>
-            <span>PDF</span>
+            <Download className="w-4 h-4 mr-2" />
+            PDF
           </button>
           <button 
             disabled
-            className="flex items-center gap-2 px-4 h-10 rounded-lg border border-border-light dark:border-border-dark bg-gray-50 dark:bg-gray-800/50 text-[#617589] dark:text-gray-500 font-medium text-sm cursor-not-allowed opacity-70"
+            className="inline-flex items-center px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95 text-slate-600 dark:text-slate-300 cursor-not-allowed opacity-50"
           >
-            <span className="material-symbols-outlined text-lg">print</span>
-            <span>{t('action.print', 'Imprimir')}</span>
+            <Printer className="w-4 h-4 mr-2" />
+            Imprimir
           </button>
         </div>
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 pt-6 border-t border-border-light dark:border-border-dark">
-        <div className="flex flex-col gap-1">
-          <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">{t('receivables.detail.stats.total_invoiced', 'Total Facturado')}</p>
-          <p className="text-[#111418] dark:text-white text-2xl font-bold tracking-tight">{transaction.amount}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 pt-8 border-t border-slate-100 dark:border-slate-800 px-1">
+        <div className="flex flex-col gap-1 group">
+          <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] group-hover:text-primary transition-colors">{t('receivables.detail.stats.total_invoiced', 'Monto Original')}</p>
+          <p className="text-slate-900 dark:text-white text-2xl xl:text-3xl font-black tracking-tight font-mono">{transaction.amount}</p>
+          <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-slate-400 w-full opacity-30" />
+          </div>
         </div>
         
-        <div className="flex flex-col gap-1 relative">
-          {/* Visual connector for desktop math */}
-          <span className="hidden md:block absolute -left-[18px] top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600 material-symbols-outlined">remove</span>
-          <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">{t('receivables.detail.stats.total_paid', 'Total Pagado')}</p>
-          <p className="text-emerald-600 dark:text-emerald-400 text-2xl font-bold tracking-tight">{transaction.paid || (transaction.currency || 'GS') + ' 0'}</p>
+        <div className="flex flex-col gap-1 group border-l-0 md:border-l border-slate-100 dark:border-slate-800 md:pl-6">
+          <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] group-hover:text-emerald-500 transition-colors">{t('receivables.detail.stats.total_paid', 'Total Cobrado')}</p>
+          <p className="text-emerald-600 dark:text-emerald-400 text-2xl xl:text-3xl font-black tracking-tight font-mono">{transaction.paid || (transaction.currency || 'GS') + ' 0'}</p>
+          <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(16,185,129,0.4)]" style={{ width: `${progressPercent}%` }} />
+          </div>
         </div>
         
-        <div className="flex flex-col gap-1 relative">
-          <span className="hidden md:block absolute -left-[18px] top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600 material-symbols-outlined">equal</span>
-          <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">{t('receivables.detail.stats.balance_due', 'Saldo Pendiente')}</p>
-          <p className="text-primary text-2xl font-bold tracking-tight">{transaction.balance}</p>
-          <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full mt-2 overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }}></div>
+        <div className="flex flex-col gap-1 group border-l-0 md:border-l border-slate-100 dark:border-slate-800 md:pl-6">
+          <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] group-hover:text-primary transition-colors">{t('receivables.detail.stats.balance_due', 'Saldo Pendiente')}</p>
+          <p className="text-primary text-2xl xl:text-3xl font-black tracking-tight font-mono">{transaction.balance}</p>
+          <div className="mt-4 h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(19,127,236,0.4)]" style={{ width: `${100 - progressPercent}%` }} />
           </div>
         </div>
       </div>

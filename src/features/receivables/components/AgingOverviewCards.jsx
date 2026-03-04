@@ -1,70 +1,92 @@
-import React from 'react';
-import { Landmark, Clock, PieChart } from 'lucide-react';
+import React from 'react'
+import { Wallet, TrendingUp, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { formatPYG } from '@/utils/currencyUtils'
 
 /**
- * Tarjetas de KPIs para el reporte de antigüedad.
- * Estilo 100% fiel al diseño de Stitch (Fluent 2).
+ * Tarjetas de KPI para el reporte de antigüedad de CXC.
+ * Estilo unificado con el módulo de Payables.
  */
-const AgingOverviewCards = ({ stats }) => {
-  const pendingAmount = stats ? (stats.total_billed || 0) - (stats.total_collected || 0) : 1250000;
-  const collectionRate = stats?.collection_rate || 94;
-  const dso = stats?.average_dso || 42; // average_dso no está oficializado en swagger pero si lo mandan lo tomamos
+const AgingOverviewCards = ({ stats = {} }) => {
+  const cardBaseClass = "bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)] p-6 rounded-2xl flex flex-col justify-between h-full overflow-hidden transition-all hover:shadow-md";
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* Total Pendiente */}
-      <div className="bg-white dark:bg-[#1a2632] p-5 rounded-lg border border-[#e5e7eb] dark:border-[#2e3640] shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.06)] flex flex-col gap-1 transition-all hover:shadow-[0_4px_8px_rgba(0,0,0,0.08),0_0_2px_rgba(0,0,0,0.1)]">
-        <div className="flex justify-between items-start">
-          <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">Total Pendiente</p>
-          <span className="material-symbols-outlined text-[#617589] dark:text-gray-500">account_balance</span>
+    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+      {/* Total Receivables */}
+      <div className={cardBaseClass}>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Total Cartera</p>
+            <h2 className="text-xl xl:text-2xl font-black tracking-tight text-slate-900 dark:text-white mt-1.5 font-mono">
+              {formatPYG(stats.total_receivables || 1542000000)}
+            </h2>
+          </div>
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm border border-primary/5 shrink-0">
+            <Wallet className="h-5 w-5" />
+          </div>
         </div>
-        <div className="flex items-baseline gap-2 mt-1">
-          <p className="text-[#111418] dark:text-white text-3xl font-bold tracking-tight">
-            ${pendingAmount.toLocaleString('en-US', { minimumFractionDigits: 0 })}
-          </p>
-          <span className="inline-flex items-center text-xs font-bold text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full">
-            <span className="material-symbols-outlined text-[14px] mr-0.5 font-bold">trending_up</span>
-            2.5%
-          </span>
+        <div className="w-full bg-slate-100 dark:bg-slate-800 h-1 rounded-full overflow-hidden mt-auto">
+          <div className="bg-primary h-full w-full opacity-30" />
         </div>
-        <p className="text-xs text-[#617589] dark:text-gray-500 mt-2">Vs. 30 días anteriores</p>
       </div>
 
-      {/* DSO */}
-      <div className="bg-white dark:bg-[#1a2632] p-5 rounded-lg border border-[#e5e7eb] dark:border-[#2e3640] shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.06)] flex flex-col gap-1 transition-all hover:shadow-[0_4px_8px_rgba(0,0,0,0.08),0_0_2px_rgba(0,0,0,0.1)]">
-        <div className="flex justify-between items-start">
-          <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">DSO (Días de Venta Pendientes)</p>
-          <span className="material-symbols-outlined text-[#617589] dark:text-gray-500">schedule</span>
+      {/* Current Portfolio */}
+      <div className={`${cardBaseClass} border-l-4 border-l-emerald-500`}>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Al Día (Corriente)</p>
+            <h2 className="text-xl xl:text-2xl font-black tracking-tight text-emerald-600 dark:text-emerald-400 mt-1.5 font-mono">
+              {formatPYG(stats.current_receivables || 1240500000)}
+            </h2>
+          </div>
+          <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100 dark:border-emerald-900/10 shrink-0">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
         </div>
-        <div className="flex items-baseline gap-2 mt-1">
-          <p className="text-[#111418] dark:text-white text-3xl font-bold tracking-tight">{Math.round(dso)} Días</p>
-          <span className="inline-flex items-center text-xs font-bold text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
-            <span className="material-symbols-outlined text-[14px] mr-0.5 font-bold">trending_down</span>
-            1.2 días
-          </span>
+        <div className="flex items-center gap-1.5 mt-auto">
+          <span className="text-[10px] font-black text-emerald-600 uppercase tracking-tight">80.4% de efectividad</span>
         </div>
-        <p className="text-xs text-[#617589] dark:text-gray-500 mt-2">Vs. promedio industria de 45 días</p>
       </div>
 
-      {/* Eficiencia de Cobro */}
-      <div className="bg-white dark:bg-[#1a2632] p-5 rounded-lg border border-[#e5e7eb] dark:border-[#2e3640] shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.06)] flex flex-col gap-1 transition-all hover:shadow-[0_4px_8px_rgba(0,0,0,0.08),0_0_2px_rgba(0,0,0,0.1)]">
-        <div className="flex justify-between items-start">
-          <p className="text-[#617589] dark:text-gray-400 text-sm font-medium">Eficiencia de Cobranza</p>
-          <span className="material-symbols-outlined text-[#617589] dark:text-gray-500">pie_chart</span>
+      {/* Total Overdue */}
+      <div className={`${cardBaseClass} border-l-4 border-l-fluent-danger`}>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Cartera Vencida</p>
+            <h2 className="text-xl xl:text-2xl font-black tracking-tight text-fluent-danger mt-1.5 font-mono">
+              {formatPYG(stats.total_overdue || 301500000)}
+            </h2>
+          </div>
+          <div className="flex size-9 items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/20 text-fluent-danger shadow-sm border border-red-100 dark:border-red-900/10 shrink-0">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
         </div>
-        <div className="flex items-baseline gap-2 mt-1">
-          <p className="text-[#111418] dark:text-white text-3xl font-bold tracking-tight">
-            {(collectionRate).toFixed(1)}%
-          </p>
-          <span className="inline-flex items-center text-xs font-bold text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">
-            <span className="material-symbols-outlined text-[14px] mr-0.5 font-bold">trending_up</span>
-            0.5%
+        <div className="flex items-center gap-1.5 mt-auto">
+          <span className="flex items-center px-1.5 py-0.5 rounded-md bg-fluent-danger/10 text-fluent-danger text-[10px] font-black uppercase tracking-wider">
+            <TrendingUp size={12} className="mr-0.5" /> +1.2%
           </span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">incremento mora</span>
         </div>
-        <p className="text-xs text-[#617589] dark:text-gray-500 mt-2">Índice de Cobranza (CEI)</p>
+      </div>
+
+      {/* Critical Overdue */}
+      <div className={`${cardBaseClass} border-l-4 border-l-orange-500`}>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Mora &gt; 90 Días</p>
+            <h2 className="text-xl xl:text-2xl font-black tracking-tight text-orange-600 dark:text-orange-400 mt-1.5 font-mono">
+              {formatPYG(stats.critical_overdue || 85200000)}
+            </h2>
+          </div>
+          <div className="flex size-9 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 shadow-sm border border-orange-100 dark:border-orange-900/10 shrink-0">
+            <span className="material-symbols-outlined text-[20px]">priority_high</span>
+          </div>
+        </div>
+        <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mt-auto">
+          <div className="bg-orange-500 h-full transition-all duration-1000 shadow-[0_0_8px_rgba(249,115,22,0.4)]" style={{ width: '28%' }} />
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AgingOverviewCards;
+export default AgingOverviewCards

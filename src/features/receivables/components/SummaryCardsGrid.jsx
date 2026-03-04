@@ -4,84 +4,95 @@ import { formatPYG } from '@/utils/currencyUtils'
 
 /**
  * Grid de tarjetas de resumen para el dashboard de CXC.
- * Pulido al 100% para coincidir con el diseño de Stitch (en español).
+ * Pulido para coincidir con la estética de Payables.
  */
 const SummaryCardsGrid = ({ summary }) => {
   const { t } = useI18n()
 
+  const cardBaseClass = "bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)] p-6 rounded-2xl flex flex-col justify-between h-full overflow-hidden transition-all hover:shadow-md";
+
   return (
-    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
       {/* Total Pending */}
-      <div className="flex flex-col gap-1 rounded-xl bg-surface-light dark:bg-surface-dark p-5 shadow-card border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">
-            Total Pendiente
-          </p>
-          <div className="flex size-8 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
-            <span className="material-symbols-outlined text-[18px]">pending_actions</span>
+      <div className={cardBaseClass}>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">
+              Total Pendiente
+            </p>
+            <h2 className="text-xl xl:text-2xl font-black tracking-tight text-slate-900 dark:text-white mt-1.5 font-mono">
+              {formatPYG(summary.totalReceivables?.amount || 1240500)}
+            </h2>
+          </div>
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm border border-primary/5 shrink-0">
+            <span className="material-symbols-outlined text-[20px]">pending_actions</span>
           </div>
         </div>
-        <p className="text-2xl font-bold tracking-tight text-text-primary-light dark:text-text-primary-dark">
-          {formatPYG(summary.totalReceivables?.amount || 1240500)}
-        </p>
-        <div className="flex items-center gap-1 mt-1">
-          <span className="material-symbols-outlined text-[16px] text-semantic-success">trending_up</span>
-          <span className="text-xs font-semibold text-semantic-success">+2.5%</span>
-          <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark ml-1">vs mes anterior</span>
+        <div className="flex items-center gap-1.5 mt-auto">
+          <span className="flex items-center px-1.5 py-0.5 rounded-md bg-semantic-success/10 text-semantic-success text-[10px] font-black uppercase tracking-wider">
+            <span className="material-symbols-outlined text-[14px] mr-0.5">trending_up</span>+2.5%
+          </span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">vs mes anterior</span>
         </div>
       </div>
 
       {/* Total Overdue */}
-      <div className="flex flex-col gap-1 rounded-xl bg-surface-light dark:bg-surface-dark p-5 shadow-card border-l-4 border-l-semantic-danger">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Total en Mora</p>
-          <div className="flex size-8 items-center justify-center rounded-full bg-red-50 dark:bg-red-900/20 text-semantic-danger">
-            <span className="material-symbols-outlined text-[18px]">warning</span>
+      <div className={`${cardBaseClass} border-l-4 border-l-semantic-danger`}>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Total en Mora</p>
+            <h2 className="text-xl xl:text-2xl font-black tracking-tight text-semantic-danger mt-1.5 font-mono">
+              {formatPYG(summary.overdueAmount?.amount || 320000)}
+            </h2>
+          </div>
+          <div className="flex size-9 items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/20 text-semantic-danger shadow-sm border border-red-100 dark:border-red-900/10 shrink-0">
+            <span className="material-symbols-outlined text-[20px]">warning</span>
           </div>
         </div>
-        <p className="text-2xl font-bold tracking-tight text-text-primary-light dark:text-text-primary-dark">
-          {formatPYG(summary.overdueAmount?.amount || 320000)}
-        </p>
-        <div className="flex items-center gap-1 mt-1">
-          <span className="material-symbols-outlined text-[16px] text-semantic-danger">trending_up</span>
-          <span className="text-xs font-semibold text-semantic-danger">+1.2%</span>
-          <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark ml-1">aumento de mora</span>
+        <div className="flex items-center gap-1.5 mt-auto">
+          <span className="flex items-center px-1.5 py-0.5 rounded-md bg-semantic-danger/10 text-semantic-danger text-[10px] font-black uppercase tracking-wider">
+            <span className="material-symbols-outlined text-[14px] mr-0.5">trending_up</span>+1.2%
+          </span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">aumento de mora</span>
         </div>
       </div>
 
       {/* Collection Rate */}
-      <div className="flex flex-col gap-1 rounded-xl bg-surface-light dark:bg-surface-dark p-5 shadow-card border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Tasa de Cobranza</p>
-          <div className="flex size-8 items-center justify-center rounded-full bg-green-50 dark:bg-green-900/20 text-semantic-success">
-            <span className="material-symbols-outlined text-[18px]">percent</span>
+      <div className={cardBaseClass}>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Tasa de Cobranza</p>
+            <h2 className="text-xl xl:text-2xl font-black tracking-tight text-slate-900 dark:text-white mt-1.5">
+              {summary.collectionRate || 92}%
+            </h2>
+          </div>
+          <div className="flex size-9 items-center justify-center rounded-xl bg-green-50 dark:bg-green-900/20 text-semantic-success shadow-sm border border-green-100 dark:border-green-900/10 shrink-0">
+            <span className="material-symbols-outlined text-[20px]">percent</span>
           </div>
         </div>
-        <p className="text-2xl font-bold tracking-tight text-text-primary-light dark:text-text-primary-dark">
-          {summary.collectionRate || 92}%
-        </p>
-        <div className="flex items-center gap-1 mt-1">
-          <span className="material-symbols-outlined text-[16px] text-semantic-success">arrow_upward</span>
-          <span className="text-xs font-semibold text-semantic-success">+0.8%</span>
-          <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark ml-1">mejora de eficiencia</span>
+        <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden mt-auto">
+          <div className="bg-semantic-success h-full transition-all duration-1000" style={{ width: `${summary.collectionRate || 92}%` }} />
         </div>
       </div>
 
       {/* Avg Days (DSO) */}
-      <div className="flex flex-col gap-1 rounded-xl bg-surface-light dark:bg-surface-dark p-5 shadow-card border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">Días Prom. Cobro</p>
-          <div className="flex size-8 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/20 text-semantic-warning">
-            <span className="material-symbols-outlined text-[18px]">calendar_clock</span>
+      <div className={cardBaseClass}>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Días Prom. Cobro</p>
+            <h2 className="text-xl xl:text-2xl font-black tracking-tight text-slate-900 dark:text-white mt-1.5 font-mono">
+              {Math.round(summary.avgDaysToCollect || 45)} Días
+            </h2>
+          </div>
+          <div className="flex size-9 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/20 text-semantic-warning shadow-sm border border-orange-100 dark:border-orange-900/10 shrink-0">
+            <span className="material-symbols-outlined text-[20px]">calendar_clock</span>
           </div>
         </div>
-        <p className="text-2xl font-bold tracking-tight text-text-primary-light dark:text-text-primary-dark">
-          {Math.round(summary.avgDaysToCollect || 45)} Días
-        </p>
-        <div className="flex items-center gap-1 mt-1">
-          <span className="material-symbols-outlined text-[16px] text-semantic-success">arrow_downward</span>
-          <span className="text-xs font-semibold text-semantic-success">-2 días</span>
-          <span className="text-xs text-text-secondary-light dark:text-text-secondary-dark ml-1">mejora</span>
+        <div className="flex items-center gap-1.5 mt-auto">
+          <span className="flex items-center px-1.5 py-0.5 rounded-md bg-semantic-success/10 text-semantic-success text-[10px] font-black uppercase tracking-wider">
+            <span className="material-symbols-outlined text-[14px] mr-0.5">arrow_downward</span>-2 días
+          </span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">mejora de DSO</span>
         </div>
       </div>
     </div>

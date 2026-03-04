@@ -1,15 +1,18 @@
-import React, { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import React, { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { 
   Download, 
   Calendar as CalendarIcon, 
   Globe, 
   ChevronDown,
   RefreshCw,
-  Search,
-  Home
+  Home,
+  ChevronRight,
+  TrendingUp,
+  Clock
 } from 'lucide-react'
 import { useToast } from '@/hooks/useToast'
+import { useI18n } from '@/lib/i18n'
 import ToastContainer from '@/components/ui/ToastContainer'
 
 // Sub-componentes
@@ -22,89 +25,94 @@ import { useAgingReport } from '@/features/receivables/hooks/useAgingReport'
 
 /**
  * Reporte de Antigüedad y Estadísticas de Cobranza.
- * Estilo 100% fiel al diseño de Stitch (Fluent 2).
+ * Refactorizado para 100% fidelidad visual y consistencia con Payables.
  */
 const AgingReport = () => {
   const { t } = useI18n()
   const toast = useToast()
   const { data, loading, error } = useAgingReport('month')
 
+  useEffect(() => {
+    document.title = 'Reporte de Antigüedad | ERP System';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   if (loading && !data) {
     return (
       <div className='flex flex-col items-center justify-center min-h-[60vh] gap-4'>
         <RefreshCw className='animate-spin text-[#137fec]' size={48} strokeWidth={1.5} />
-        <p className='text-lg font-medium text-slate-500'>Cargando Reporte Analítico...</p>
+        <p className='text-lg font-medium text-slate-500'>Cargando reporte de antigüedad...</p>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500 pb-12">
         
-        {/* Breadcrumbs & Header */}
-        <div className="flex flex-col gap-4 animate-in fade-in duration-500">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-[#617589]">
-            <a className="hover:text-[#137fec] transition-colors flex items-center gap-1" href="#"><Home size={14} /> Inicio</a>
-            <span>/</span>
-            <a className="hover:text-[#137fec] transition-colors" href="#">Finanzas</a>
-            <span>/</span>
-            <span className="text-[#111418] dark:text-white font-medium tracking-tight">Reporte de Antigüedad</span>
-          </div>
-          
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <h1 className="text-[#111418] dark:text-white text-3xl font-black leading-tight tracking-tight uppercase">
-                Reporte de Antigüedad y Estadísticas
-              </h1>
-              <p className="text-[#617589] dark:text-gray-400 text-base font-medium">
-                Análisis detallado de cuentas por cobrar y rendimiento de cobranza.
-              </p>
-            </div>
+        {/* Header Section */}
+        <div className="flex flex-col gap-4">
+          {/* Breadcrumbs */}
+          <nav className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+            <Link to="/dashboard" className="hover:text-primary transition-colors flex items-center gap-1">
+              Inicio
+            </Link>
+            <ChevronRight size={12} className="mx-2 opacity-30" />
+            <Link to="/receivables" className="hover:text-primary transition-colors">
+              Cuentas por Cobrar
+            </Link>
+            <ChevronRight size={12} className="mx-2 opacity-30" />
+            <span className="text-slate-600 dark:text-slate-300">Reporte de Antigüedad</span>
+          </nav>
 
-            {/* Global Controls */}
+          {/* Title & Actions */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-4">
+              <div className="bg-primary/10 p-2.5 rounded-xl text-primary shadow-sm border border-primary/20 flex-shrink-0">
+                <Clock className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white uppercase truncate flex items-center gap-3">
+                  Reporte de Antigüedad y Estadísticas
+                </h1>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-0.5 truncate">
+                  Análisis estratégico de cartera y recuperación
+                </p>
+              </div>
+            </div>
+            
             <div className="flex flex-wrap items-center gap-3">
               <button 
                 disabled
-                onClick={() => toast.info(t('common.not_implemented'))}
-                className="flex items-center gap-2 h-10 px-4 bg-gray-50 dark:bg-slate-800/50 border border-[#dbe0e6] dark:border-slate-800 rounded-lg text-sm font-bold text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-70"
+                className="flex items-center px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 cursor-not-allowed opacity-50"
               >
-                <CalendarIcon size={18} />
-                <span>Oct 1, 2023 - Oct 31, 2023</span>
-                <ChevronDown size={18} />
+                <CalendarIcon size={16} className="mr-2" />
+                <span>Oct 2023</span>
               </button>
-              
               <button 
-                disabled
                 onClick={() => toast.info(t('common.not_implemented'))}
-                className="flex items-center gap-2 h-10 px-4 bg-gray-50 dark:bg-slate-800/50 border border-[#dbe0e6] dark:border-slate-800 rounded-lg text-sm font-bold text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-70"
+                className="inline-flex items-center px-5 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-md shadow-primary/20 active:scale-95"
               >
-                <Globe size={18} />
-                <span>Entidad Global</span>
-                <ChevronDown size={18} />
+                <Download size={16} className="mr-2" />
+                Exportar Reporte
               </button>
-
-              <Button 
-                disabled
-                onClick={() => toast.info(t('common.not_implemented'))}
-                className="h-10 px-5 bg-primary/50 text-white text-sm font-black rounded-lg cursor-not-allowed opacity-70 flex items-center gap-2 shadow-none border-none"
-              >
-                <Download size={18} />
-                <span>{t('action.export_report', 'Exportar Reporte')}</span>
-              </Button>
             </div>
           </div>
         </div>
 
-        {/* Contenido Principal */}
-        <div className="flex flex-col gap-6 animate-in slide-in-from-bottom-4 duration-700">
+        {/* Main Analytics Grid */}
+        <div className="flex flex-col gap-6">
           <AgingOverviewCards stats={data?.statistics} />
           
-          <AgingSummaryChart agingData={data?.summary} />
-
-          <div className="flex flex-col xl:flex-row gap-6">
-            <AgingByClientTable clientsData={data?.detailed?.by_client} />
-            <BillingVsCollectionChart trendData={data?.statistics?.collection_trend} />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-4">
+              <AgingSummaryChart agingData={data?.summary} />
+            </div>
+            <div className="lg:col-span-8">
+              <BillingVsCollectionChart trendData={data?.statistics?.collection_trend} />
+            </div>
           </div>
+
+          <AgingByClientTable clientsData={data?.detailed?.by_client} />
         </div>
 
         <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
