@@ -1,13 +1,13 @@
 /**
- * New Cash Register Page - MVP Implementation
+ * Cash Register Management Page - Fluent Design System
  * Gestión de Cajas Registradoras (Apertura y Cierre)
  *
+ * Design: Fluent 2.0 Design System
  * Features:
- * - Sistema de tabs para abrir/cerrar caja
- * - Formularios con validación básica
- * - Estilos con Sass/BEM siguiendo Fluent Design System
+ * - Panel lateral con estado de caja activa
+ * - Formularios optimizados con validación
+ * - Animaciones y transiciones fluidas
  * - i18n completo
- * - Estados loading/error/empty
  */
 
 import React, { useState, useEffect } from 'react'
@@ -20,15 +20,27 @@ import { Button } from '@/components/ui/button'
 import DataState from '@/components/ui/DataState'
 import { useToast } from '@/hooks/useToast'
 import ToastContainer from '@/components/ui/ToastContainer'
+import {
+  Calculator,
+  MapPin,
+  Calendar,
+  DollarSign,
+  FileText,
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+  TrendingUp,
+  TrendingDown,
+  Clock,
+  Wallet,
+  Store
+} from 'lucide-react'
 
 const NewCashRegister = () => {
   const { t } = useI18n()
   const { fetchDashboardData } = useDashboardStore()
-
-  // Toast notifications
   const toast = useToast()
 
-  // Store state
   const {
     activeCashRegister,
     isActiveCashRegisterLoading,
@@ -40,10 +52,8 @@ const NewCashRegister = () => {
     getActiveCashRegister,
   } = useCashRegisterStore()
 
-  // Local state for tabs
   const [activeTab, setActiveTab] = useState('open')
 
-  // Form state for opening cash register
   const [openForm, setOpenForm] = useState({
     name: '',
     location: '',
@@ -52,7 +62,6 @@ const NewCashRegister = () => {
     openingNotes: '',
   })
 
-  // Form state for closing cash register
   const [closeForm, setCloseForm] = useState({
     cashier: '',
     register: '',
@@ -61,38 +70,30 @@ const NewCashRegister = () => {
     closingNotes: '',
   })
 
-  // Error state
   const [formError, setFormError] = useState('')
 
-  // Load active cash register on mount
   useEffect(() => {
     getActiveCashRegister()
   }, [getActiveCashRegister])
 
-  // Formateo de números con separador de miles
   const formatNumber = value => {
     if (!value) return ''
-    // Remover todo excepto números
     const numericValue = value.toString().replace(/\D/g, '')
     if (!numericValue) return ''
-    // Formatear con separador de miles (punto)
     return Number(numericValue).toLocaleString('es-PY')
   }
 
   const parseFormattedNumber = formattedValue => {
     if (!formattedValue) return ''
-    // Remover separadores de miles y obtener número
     return formattedValue.replace(/\./g, '').replace(/,/g, '')
   }
 
-  // Handler especial para campos de monto con formateo
   const handleAmountChange = (formSetter, field, value) => {
     const numericValue = parseFormattedNumber(value)
     formSetter(prev => ({ ...prev, [field]: numericValue }))
     setFormError('')
   }
 
-  // Handlers for opening cash register
   const handleOpenFormChange = (field, value) => {
     setOpenForm(prev => ({ ...prev, [field]: value }))
     setFormError('')
@@ -102,21 +103,13 @@ const NewCashRegister = () => {
     e.preventDefault()
     setFormError('')
 
-    // Basic validation
     if (!openForm.name || openForm.name.trim() === '') {
-      setFormError(
-        t('cashRegister.error.noName', 'Debe ingresar un nombre para la caja')
-      )
+      setFormError(t('cashRegister.error.noName', 'Debe ingresar un nombre para la caja'))
       return
     }
 
     if (!openForm.initialBalance || parseFloat(openForm.initialBalance) <= 0) {
-      setFormError(
-        t(
-          'cashRegister.error.invalidBalance',
-          'El saldo inicial debe ser mayor a 0'
-        )
-      )
+      setFormError(t('cashRegister.error.invalidBalance', 'El saldo inicial debe ser mayor a 0'))
       return
     }
 
@@ -128,19 +121,9 @@ const NewCashRegister = () => {
         description: openForm.openingNotes?.trim() || null,
       })
 
-      // Show success notification
-      toast.success(
-        t(
-          'cashRegister.success.opened',
-          'Caja registradora abierta exitosamente'
-        ),
-        4000
-      )
+      toast.success(t('cashRegister.success.opened', 'Caja registradora abierta exitosamente'), 4000)
+      fetchDashboardData()
 
-      // Sincronizar dashboard proactivamente
-      fetchDashboardData();
-
-      // Reset form on success
       setOpenForm({
         name: '',
         location: '',
@@ -149,25 +132,13 @@ const NewCashRegister = () => {
         openingNotes: '',
       })
 
-      // Reload active cash register
       await getActiveCashRegister()
     } catch (error) {
-      toast.error(
-        error.message ||
-          t(
-            'cashRegister.error.opening',
-            'Error al abrir la caja registradora'
-          ),
-        5000
-      )
-      setFormError(
-        error.message ||
-          t('cashRegister.error.opening', 'Error al abrir la caja registradora')
-      )
+      toast.error(error.message || t('cashRegister.error.opening', 'Error al abrir la caja registradora'), 5000)
+      setFormError(error.message || t('cashRegister.error.opening', 'Error al abrir la caja registradora'))
     }
   }
 
-  // Handlers for closing cash register
   const handleCloseFormChange = (field, value) => {
     setCloseForm(prev => ({ ...prev, [field]: value }))
     setFormError('')
@@ -177,19 +148,13 @@ const NewCashRegister = () => {
     e.preventDefault()
     setFormError('')
 
-    // Basic validation
     if (!activeCashRegister) {
       setFormError(t('cashRegister.status.noActive', 'No hay caja activa'))
       return
     }
 
     if (!closeForm.finalBalance || parseFloat(closeForm.finalBalance) < 0) {
-      setFormError(
-        t(
-          'cashRegister.error.invalidBalance',
-          'El saldo ingresado no es válido'
-        )
-      )
+      setFormError(t('cashRegister.error.invalidBalance', 'El saldo ingresado no es válido'))
       return
     }
 
@@ -200,19 +165,9 @@ const NewCashRegister = () => {
         notes: closeForm.closingNotes || null,
       })
 
-      // Show success notification
-      toast.success(
-        t(
-          'cashRegister.success.closed',
-          'Caja registradora cerrada exitosamente'
-        ) + ` — ${closedRegisterName}`,
-        4000
-      )
+      toast.success(t('cashRegister.success.closed', 'Caja registradora cerrada exitosamente') + ` — ${closedRegisterName}`, 4000)
+      fetchDashboardData()
 
-      // Sincronizar dashboard proactivamente
-      fetchDashboardData();
-
-      // Reset form on success
       setCloseForm({
         cashier: '',
         register: '',
@@ -221,58 +176,44 @@ const NewCashRegister = () => {
         closingNotes: '',
       })
 
-      // Switch to open tab since there's no active register now
       setActiveTab('open')
-
-      // Reload active cash register
       await getActiveCashRegister()
     } catch (error) {
-      toast.error(
-        error.message ||
-          t(
-            'cashRegister.error.closing',
-            'Error al cerrar la caja registradora'
-          ),
-        5000
-      )
-      setFormError(
-        error.message ||
-          t(
-            'cashRegister.error.closing',
-            'Error al cerrar la caja registradora'
-          )
-      )
+      toast.error(error.message || t('cashRegister.error.closing', 'Error al cerrar la caja registradora'), 5000)
+      setFormError(error.message || t('cashRegister.error.closing', 'Error al cerrar la caja registradora'))
     }
   }
 
-  // Calculate difference for closing
   const calculateDifference = () => {
     if (!activeCashRegister || !closeForm.finalBalance) return 0
     const finalBalance = parseFloat(closeForm.finalBalance)
-    // Usar current_balance, o initial_balance como fallback si current_balance es 0/null
-    const currentBalance =
-      activeCashRegister.current_balance ||
-      activeCashRegister.initial_balance ||
-      0
+    const currentBalance = activeCashRegister.current_balance || activeCashRegister.initial_balance || 0
     return finalBalance - currentBalance
   }
 
-  // Obtener el saldo del sistema (con fallback a initial_balance)
   const getSystemBalance = () => {
     if (!activeCashRegister) return 0
-    return (
-      activeCashRegister.current_balance ||
-      activeCashRegister.initial_balance ||
-      0
-    )
+    return activeCashRegister.current_balance || activeCashRegister.initial_balance || 0
   }
 
-  // Loading state
+  const formatTimeOpen = () => {
+    if (!activeCashRegister?.opened_at) return null
+    const openedDate = new Date(activeCashRegister.opened_at)
+    const now = new Date()
+    const diffMs = now - openedDate
+    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+    
+    if (diffHrs > 0) {
+      return `${diffHrs}h ${diffMins}m`
+    }
+    return `${diffMins}m`
+  }
+
   if (isActiveCashRegisterLoading) {
     return <DataState variant='loading' skeletonVariant='list' count={3} />
   }
 
-  // Error state
   if (activeCashRegisterError) {
     return (
       <DataState
@@ -285,501 +226,499 @@ const NewCashRegister = () => {
   }
 
   return (
-    <div className='new-cash-register-page'>
-      {/* Toast Notifications */}
+    <div className='flex flex-col gap-6 animate-in fade-in duration-500'>
       <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
 
-      {/* Header */}
-      <div className='new-cash-register-page__header'>
-        <h1 className='new-cash-register-page__title'>
-          {t('cashRegister.title', 'Gestión de Cajas Registradoras')}
-        </h1>
-        <p className='new-cash-register-page__subtitle'>
-          {t(
-            'cashRegister.subtitle',
-            'Abre o cierra una caja para registrar los movimientos de efectivo.'
-          )}
-        </p>
+      {/* Header Section */}
+      <div className='flex flex-col md:flex-row md:items-start justify-between gap-4'>
+        <div className='flex items-center gap-4'>
+          <div className='size-12 bg-primary/10 rounded-xl flex items-center justify-center'>
+            <Calculator className='text-primary' size={28} />
+          </div>
+          <div className='space-y-0.5'>
+            <h1 className='text-2xl md:text-3xl font-black text-text-main tracking-tight'>
+              {t('cashRegister.title', 'Cajas Registradoras')}
+            </h1>
+            <p className='text-sm text-text-secondary font-medium'>
+              {t('cashRegister.subtitle', 'Gestiona la apertura y cierre de cajas')}
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Content */}
-      <div className='new-cash-register-page__tabs'>
-        {activeTab === 'open' && (
-          <div className='new-cash-register-page__tab-content'>
-            {/* Warning if there's already an active cash register */}
-            {activeCashRegister && (
-              <div
-                className='new-cash-register-page__active-warning'
-                style={{
-                  padding: '16px',
-                  marginBottom: '24px',
-                  backgroundColor: 'rgba(251, 191, 36, 0.1)',
-                  border: '1px solid rgba(251, 191, 36, 0.4)',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                }}
-              >
-                <div
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <span style={{ fontSize: '20px' }}>⚠️</span>
-                  <strong style={{ color: '#b45309', fontSize: '15px' }}>
-                    {t(
-                      'cashRegister.warning.alreadyOpen',
-                      'Ya tienes una caja abierta'
-                    )}
-                  </strong>
+      {/* Main Grid Layout */}
+      <div className='grid grid-cols-1 xl:grid-cols-12 gap-6'>
+        
+        {/* Active Cash Register Panel - Sidebar */}
+        {activeCashRegister && (
+          <div className='xl:col-span-4'>
+            <div className='bg-surface rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden sticky top-24'>
+              {/* Status Header */}
+              <div className='bg-success/10 px-5 py-4 border-b border-success/20'>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-2'>
+                    <div className='size-2 rounded-full bg-success animate-pulse' />
+                    <span className='text-[10px] font-black uppercase tracking-[0.15em] text-success'>
+                      {t('cashRegister.status.active', 'Caja Activa')}
+                    </span>
+                  </div>
+                  {formatTimeOpen() && (
+                    <div className='flex items-center gap-1 text-xs text-text-secondary'>
+                      <Clock size={14} />
+                      <span>{formatTimeOpen()}</span>
+                    </div>
+                  )}
                 </div>
-                <div
-                  style={{
-                    fontSize: '14px',
-                    color: 'var(--text-secondary)',
-                    paddingLeft: '28px',
-                  }}
-                >
-                  <p style={{ margin: '0 0 4px 0' }}>
-                    <strong>{t('cashRegister.field.name', 'Caja')}:</strong>{' '}
-                    {activeCashRegister.name}
+              </div>
+
+              {/* Cash Register Info */}
+              <div className='p-5 space-y-4'>
+                <div>
+                  <p className='text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1'>
+                    {t('cashRegister.field.name', 'Nombre')}
                   </p>
-                  <p style={{ margin: '0 0 4px 0' }}>
-                    <strong>
-                      {t('cashRegister.field.balance', 'Saldo actual')}:
-                    </strong>{' '}
-                    ₲{getSystemBalance().toLocaleString()}
+                  <h3 className='text-lg font-bold text-text-main'>{activeCashRegister.name}</h3>
+                </div>
+
+                {activeCashRegister.location && (
+                  <div className='flex items-start gap-2'>
+                    <MapPin size={18} className='text-text-secondary mt-0.5' />
+                    <div>
+                      <p className='text-[10px] font-black uppercase tracking-[0.2em] text-slate-400'>
+                        {t('cashRegister.field.location', 'Ubicación')}
+                      </p>
+                      <p className='text-sm font-medium text-text-main'>{activeCashRegister.location}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Balance Card */}
+                <div className='bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-4 border border-primary/10'>
+                  <p className='text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1'>
+                    {t('cashRegister.field.currentBalance', 'Saldo Actual')}
                   </p>
-                  {activeCashRegister.opened_at && (
-                    <p style={{ margin: '0' }}>
-                      <strong>
-                        {t('cashRegister.field.openedAt', 'Abierta desde')}:
-                      </strong>{' '}
-                      {new Date(activeCashRegister.opened_at).toLocaleString()}
+                  <p className='text-3xl font-black text-primary tracking-tight'>
+                    ₲{getSystemBalance().toLocaleString('es-PY')}
+                  </p>
+                </div>
+
+                {/* Quick Stats */}
+                <div className='grid grid-cols-2 gap-3'>
+                  <div className='bg-gray-50 rounded-lg p-3'>
+                    <p className='text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-0.5'>
+                      {t('cashRegister.field.initialBalance', 'Saldo Inicial')}
                     </p>
-                  )}
-                </div>
-                <p
-                  style={{
-                    fontSize: '13px',
-                    color: '#92400e',
-                    margin: '8px 0 0 0',
-                    paddingLeft: '28px',
-                    fontStyle: 'italic',
-                  }}
-                >
-                  {t(
-                    'cashRegister.warning.closeFirst',
-                    'Debes cerrar la caja actual antes de abrir una nueva.'
-                  )}
-                </p>
-                <div
-                  style={{
-                    marginTop: '12px',
-                    paddingLeft: '28px',
-                  }}
-                >
-                  <Button
-                    onClick={() => setActiveTab('close')}
-                    className='new-cash-register-page__form-button new-cash-register-page__form-button--primary'
-                    style={{
-                      fontSize: '14px',
-                      padding: '8px 16px',
-                    }}
-                  >
-                    {t('cashRegister.tab.close', 'Cerrar Caja')}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <form
-              onSubmit={handleOpenSubmit}
-              className='new-cash-register-page__form'
-            >
-              {/* Cash Register Name */}
-              <div className='new-cash-register-page__form-field'>
-                <label
-                  htmlFor='open-name'
-                  className='new-cash-register-page__form-label'
-                >
-                  {t('cashRegister.open.name', 'Nombre de la Caja')}
-                </label>
-                <Input
-                  id='open-name'
-                  type='text'
-                  value={openForm.name}
-                  onChange={e => handleOpenFormChange('name', e.target.value)}
-                  placeholder={t(
-                    'cashRegister.open.name.placeholder',
-                    'Ej: Caja Principal - Turno Mañana'
-                  )}
-                  className='new-cash-register-page__form-input'
-                  required
-                />
-              </div>
-
-              {/* Location (optional) */}
-              <div className='new-cash-register-page__form-field'>
-                <label
-                  htmlFor='open-location'
-                  className='new-cash-register-page__form-label'
-                >
-                  {t('cashRegister.open.location', 'Ubicación')}
-                </label>
-                <Input
-                  id='open-location'
-                  type='text'
-                  value={openForm.location}
-                  onChange={e =>
-                    handleOpenFormChange('location', e.target.value)
-                  }
-                  placeholder={t(
-                    'cashRegister.open.location.placeholder',
-                    'Ej: Punto de Venta 1'
-                  )}
-                  className='new-cash-register-page__form-input'
-                />
-              </div>
-
-              {/* Opening Date */}
-              <div className='new-cash-register-page__form-field'>
-                <label
-                  htmlFor='open-date'
-                  className='new-cash-register-page__form-label'
-                >
-                  {t('cashRegister.open.openingDate', 'Fecha de Apertura')}
-                </label>
-                <Input
-                  id='open-date'
-                  type='date'
-                  value={openForm.openingDate}
-                  onChange={e =>
-                    handleOpenFormChange('openingDate', e.target.value)
-                  }
-                  className='new-cash-register-page__form-input'
-                />
-              </div>
-
-              {/* Initial Balance */}
-              <div className='new-cash-register-page__form-field'>
-                <label
-                  htmlFor='open-balance'
-                  className='new-cash-register-page__form-label'
-                >
-                  {t('cashRegister.open.initialBalance', 'Saldo Inicial')}
-                </label>
-                <div className='new-cash-register-page__form-input-wrapper'>
-                  <span className='new-cash-register-page__form-input-prefix'>
-                    {t('cashRegister.field.currency', '₲')}
-                  </span>
-                  <Input
-                    id='open-balance'
-                    type='text'
-                    inputMode='numeric'
-                    value={formatNumber(openForm.initialBalance)}
-                    onChange={e =>
-                      handleAmountChange(
-                        setOpenForm,
-                        'initialBalance',
-                        e.target.value
-                      )
-                    }
-                    placeholder='0'
-                    className='new-cash-register-page__form-input new-cash-register-page__form-input--with-prefix'
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Opening Notes */}
-              <div className='new-cash-register-page__form-field new-cash-register-page__form-field--full'>
-                <label
-                  htmlFor='open-notes'
-                  className='new-cash-register-page__form-label'
-                >
-                  {t('cashRegister.open.openingNotes', 'Notas de Apertura')}
-                </label>
-                <Textarea
-                  id='open-notes'
-                  value={openForm.openingNotes}
-                  onChange={e =>
-                    handleOpenFormChange('openingNotes', e.target.value)
-                  }
-                  placeholder={t(
-                    'cashRegister.open.openingNotes.placeholder',
-                    'Añadir una descripción o nota (opcional)'
-                  )}
-                  className='new-cash-register-page__form-textarea'
-                  rows={3}
-                />
-              </div>
-
-              {/* Error Message */}
-              {formError && activeTab === 'open' && (
-                <div className='new-cash-register-page__form-field new-cash-register-page__form-field--full'>
-                  <div
-                    style={{
-                      padding: '12px',
-                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                      borderRadius: '6px',
-                    }}
-                  >
-                    <p style={{ fontSize: '14px', color: '#dc2626' }}>
-                      {formError}
+                    <p className='text-sm font-bold text-text-main'>
+                      ₲{(activeCashRegister.initial_balance || 0).toLocaleString('es-PY')}
+                    </p>
+                  </div>
+                  <div className='bg-gray-50 rounded-lg p-3'>
+                    <p className='text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 mb-0.5'>
+                      {t('cashRegister.field.openedAt', 'Abierta')}
+                    </p>
+                    <p className='text-sm font-bold text-text-main'>
+                      {activeCashRegister.opened_at 
+                        ? new Date(activeCashRegister.opened_at).toLocaleDateString('es-PY', { 
+                            day: '2-digit', 
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : '-'
+                      }
                     </p>
                   </div>
                 </div>
-              )}
 
-              {/* Actions */}
-              <div className='new-cash-register-page__form-field new-cash-register-page__form-field--full'>
-                <div className='new-cash-register-page__form-actions'>
-                  <button
-                    type='submit'
-                    disabled={isOpeningCashRegister || !!activeCashRegister}
-                    className='new-cash-register-page__form-button new-cash-register-page__form-button--primary'
-                    title={
-                      activeCashRegister
-                        ? t(
-                            'cashRegister.warning.closeFirst',
-                            'Debes cerrar la caja actual antes de abrir una nueva.'
-                          )
-                        : ''
-                    }
-                  >
-                    {isOpeningCashRegister
-                      ? t('cashRegister.opening', 'Abriendo caja...')
-                      : t('cashRegister.open.action', 'Abrir Caja')}
-                  </button>
-                  <button
-                    type='button'
-                    onClick={() => {
-                      setOpenForm({
-                        cashier: '',
-                        register: '',
-                        openingDate: new Date().toISOString().split('T')[0],
-                        initialBalance: '',
-                        openingNotes: '',
-                      })
-                      setFormError('')
-                    }}
-                    className='new-cash-register-page__form-button new-cash-register-page__form-button--secondary'
-                  >
-                    {t('action.cancel', 'Cancelar')}
-                  </button>
-                </div>
+                {/* Quick Action */}
+                <Button
+                  onClick={() => setActiveTab('close')}
+                  variant='primary'
+                  className='w-full'
+                >
+                  {t('cashRegister.tab.close', 'Cerrar Caja')}
+                </Button>
               </div>
-            </form>
+            </div>
           </div>
         )}
 
-        {/* Close Cash Register View */}
-        {activeTab === 'close' && (
-          <div className='new-cash-register-page__tab-content'>
-            {activeCashRegister ? (
-              <>
-                <form
-                  onSubmit={handleCloseSubmit}
-                  className='new-cash-register-page__form'
-                >
-                  {/* Location (read-only) */}
-                  <div className='new-cash-register-page__form-field'>
-                    <label
-                      htmlFor='close-location'
-                      className='new-cash-register-page__form-label'
-                    >
-                      {t('cashRegister.close.location', 'Ubicación')}
-                    </label>
-                    <Input
-                      id='close-location'
-                      type='text'
-                      value={activeCashRegister.location || ''}
-                      disabled
-                      className='new-cash-register-page__form-input'
-                    />
-                  </div>
+        {/* Main Form Panel */}
+        <div className={activeCashRegister ? 'xl:col-span-8' : 'xl:col-span-12'}>
+          <div className='bg-surface rounded-xl shadow-fluent-2 border border-border-subtle overflow-hidden'>
+            
+            {/* Tabs Header */}
+            <div className='flex border-b border-border-subtle bg-gray-50/50'>
+              <button
+                onClick={() => setActiveTab('open')}
+                className={`flex items-center justify-center gap-2 flex-1 py-4 px-6 text-sm font-bold transition-all ${
+                  activeTab === 'open'
+                    ? 'text-primary border-b-2 border-primary bg-white'
+                    : 'text-text-secondary hover:text-text-main hover:bg-gray-100'
+                }`}
+              >
+                <Calculator size={20} />
+                {t('cashRegister.tab.open', 'Abrir Caja')}
+              </button>
+              <button
+                onClick={() => setActiveTab('close')}
+                className={`flex items-center justify-center gap-2 flex-1 py-4 px-6 text-sm font-bold transition-all ${
+                  activeTab === 'close'
+                    ? 'text-primary border-b-2 border-primary bg-white'
+                    : 'text-text-secondary hover:text-text-main hover:bg-gray-100'
+                }`}
+              >
+                <CheckCircle2 size={20} />
+                {t('cashRegister.tab.close', 'Cerrar Caja')}
+              </button>
+            </div>
 
-                  {/* Register (read-only) */}
-                  <div className='new-cash-register-page__form-field'>
-                    <label
-                      htmlFor='close-register'
-                      className='new-cash-register-page__form-label'
-                    >
-                      {t('cashRegister.close.register', 'Caja')}
-                    </label>
-                    <Input
-                      id='close-register'
-                      type='text'
-                      value={activeCashRegister.name || ''}
-                      disabled
-                      className='new-cash-register-page__form-input'
-                    />
-                  </div>
-
-                  {/* Closing Date */}
-                  <div className='new-cash-register-page__form-field'>
-                    <label
-                      htmlFor='close-date'
-                      className='new-cash-register-page__form-label'
-                    >
-                      {t('cashRegister.close.closingDate', 'Fecha de Cierre')}
-                    </label>
-                    <Input
-                      id='close-date'
-                      type='date'
-                      value={closeForm.closingDate}
-                      onChange={e =>
-                        handleCloseFormChange('closingDate', e.target.value)
-                      }
-                      className='new-cash-register-page__form-input'
-                    />
-                  </div>
-
-                  {/* Final Balance */}
-                  <div className='new-cash-register-page__form-field'>
-                    <label
-                      htmlFor='close-balance'
-                      className='new-cash-register-page__form-label'
-                    >
-                      {t('cashRegister.close.finalBalance', 'Saldo Final')}
-                    </label>
-                    <div className='new-cash-register-page__form-input-wrapper'>
-                      <span className='new-cash-register-page__form-input-prefix'>
-                        {t('cashRegister.field.currency', '₲')}
-                      </span>
-                      <Input
-                        id='close-balance'
-                        type='text'
-                        inputMode='numeric'
-                        value={formatNumber(closeForm.finalBalance)}
-                        onChange={e =>
-                          handleAmountChange(
-                            setCloseForm,
-                            'finalBalance',
-                            e.target.value
-                          )
-                        }
-                        placeholder={formatNumber(getSystemBalance()) || '0'}
-                        className='new-cash-register-page__form-input new-cash-register-page__form-input--with-prefix'
-                        required
-                      />
-                    </div>
-                    <p
-                      style={{
-                        fontSize: '14px',
-                        marginTop: '4px',
-                        color: 'var(--text-secondary)',
-                      }}
-                    >
-                      {t(
-                        'cashRegister.close.systemBalance',
-                        'Saldo del Sistema'
-                      )}
-                      : ₲{getSystemBalance().toLocaleString('es-PY')}
-                    </p>
-                    {closeForm.finalBalance && (
-                      <p
-                        style={{
-                          fontSize: '14px',
-                          marginTop: '4px',
-                          fontWeight: 600,
-                          color:
-                            calculateDifference() >= 0 ? '#10b981' : '#ef4444',
-                        }}
-                      >
-                        {t('cashRegister.close.difference', 'Diferencia')}: ₲
-                        {calculateDifference().toLocaleString('es-PY')}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Closing Notes */}
-                  <div className='new-cash-register-page__form-field new-cash-register-page__form-field--full'>
-                    <label
-                      htmlFor='close-notes'
-                      className='new-cash-register-page__form-label'
-                    >
-                      {t('cashRegister.close.closingNotes', 'Notas de Cierre')}
-                    </label>
-                    <Textarea
-                      id='close-notes'
-                      value={closeForm.closingNotes}
-                      onChange={e =>
-                        handleCloseFormChange('closingNotes', e.target.value)
-                      }
-                      placeholder={t(
-                        'cashRegister.close.closingNotes.placeholder',
-                        'Observaciones del cierre (opcional)'
-                      )}
-                      className='new-cash-register-page__form-textarea'
-                      rows={3}
-                    />
-                  </div>
-
-                  {/* Error Message */}
-                  {formError && activeTab === 'close' && (
-                    <div className='new-cash-register-page__form-field new-cash-register-page__form-field--full'>
-                      <div
-                        style={{
-                          padding: '12px',
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          borderRadius: '6px',
-                        }}
-                      >
-                        <p style={{ fontSize: '14px', color: '#dc2626' }}>
-                          {formError}
+            {/* Tab Content */}
+            <div className='p-6'>
+              {/* Open Tab */}
+              {activeTab === 'open' && (
+                <div className='space-y-6'>
+                  {/* Warning Banner */}
+                  {activeCashRegister && (
+                    <div className='bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3'>
+                      <AlertTriangle size={24} className='text-amber-600 flex-shrink-0' />
+                      <div className='flex-1 min-w-0'>
+                        <p className='font-bold text-amber-800 text-sm'>
+                          {t('cashRegister.warning.alreadyOpen', 'Ya tienes una caja abierta')}
+                        </p>
+                        <p className='text-amber-700 text-sm mt-1'>
+                          {t('cashRegister.warning.closeFirst', 'Debes cerrar la caja actual antes de abrir una nueva.')}
                         </p>
                       </div>
                     </div>
                   )}
 
-                  {/* Actions */}
-                  <div className='new-cash-register-page__form-field new-cash-register-page__form-field--full'>
-                    <div className='new-cash-register-page__form-actions'>
-                      <button
+                  {/* Form */}
+                  <form onSubmit={handleOpenSubmit} className='space-y-5'>
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
+                      {/* Name */}
+                      <div className='md:col-span-2'>
+                        <label htmlFor='open-name' className='flex items-center gap-1.5 text-sm font-semibold text-text-main mb-2'>
+                          <Calculator size={16} className='text-primary' />
+                          {t('cashRegister.open.name', 'Nombre de la Caja')} *
+                        </label>
+                        <Input
+                          id='open-name'
+                          type='text'
+                          value={openForm.name}
+                          onChange={e => handleOpenFormChange('name', e.target.value)}
+                          placeholder={t('cashRegister.open.name.placeholder', 'Ej: Caja Principal - Turno Mañana')}
+                          className='h-11'
+                          required
+                        />
+                      </div>
+
+                      {/* Location */}
+                      <div>
+                        <label htmlFor='open-location' className='flex items-center gap-1.5 text-sm font-semibold text-text-main mb-2'>
+                          <Store size={16} className='text-primary' />
+                          {t('cashRegister.open.location', 'Ubicación')}
+                        </label>
+                        <Input
+                          id='open-location'
+                          type='text'
+                          value={openForm.location}
+                          onChange={e => handleOpenFormChange('location', e.target.value)}
+                          placeholder={t('cashRegister.open.location.placeholder', 'Ej: Punto de Venta 1')}
+                          className='h-11'
+                        />
+                      </div>
+
+                      {/* Opening Date */}
+                      <div>
+                        <label htmlFor='open-date' className='flex items-center gap-1.5 text-sm font-semibold text-text-main mb-2'>
+                          <Calendar size={16} className='text-primary' />
+                          {t('cashRegister.open.openingDate', 'Fecha de Apertura')}
+                        </label>
+                        <Input
+                          id='open-date'
+                          type='date'
+                          value={openForm.openingDate}
+                          onChange={e => handleOpenFormChange('openingDate', e.target.value)}
+                          className='h-11'
+                        />
+                      </div>
+
+                      {/* Initial Balance */}
+                      <div className='md:col-span-2'>
+                        <label htmlFor='open-balance' className='flex items-center gap-1.5 text-sm font-semibold text-text-main mb-2'>
+                          <DollarSign size={16} className='text-primary' />
+                          {t('cashRegister.open.initialBalance', 'Saldo Inicial')} *
+                        </label>
+                        <div className='relative'>
+                          <span className='absolute inset-y-0 left-0 pl-4 flex items-center text-text-secondary font-bold text-lg'>
+                            ₲
+                          </span>
+                          <Input
+                            id='open-balance'
+                            type='text'
+                            inputMode='numeric'
+                            value={formatNumber(openForm.initialBalance)}
+                            onChange={e => handleAmountChange(setOpenForm, 'initialBalance', e.target.value)}
+                            placeholder='0'
+                            className='h-12 pl-10 text-lg font-semibold'
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Notes */}
+                      <div className='md:col-span-2'>
+                        <label htmlFor='open-notes' className='flex items-center gap-1.5 text-sm font-semibold text-text-main mb-2'>
+                          <FileText size={16} className='text-primary' />
+                          {t('cashRegister.open.openingNotes', 'Notas de Apertura')}
+                        </label>
+                        <Textarea
+                          id='open-notes'
+                          value={openForm.openingNotes}
+                          onChange={e => handleOpenFormChange('openingNotes', e.target.value)}
+                          placeholder={t('cashRegister.open.openingNotes.placeholder', 'Añadir una descripción o nota (opcional)')}
+                          className='resize-none'
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Error */}
+                    {formError && activeTab === 'open' && (
+                      <div className='bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2'>
+                        <Info size={18} className='text-red-500' />
+                        <p className='text-sm text-red-600 font-medium'>{formError}</p>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className='flex gap-3 pt-2'>
+                      <Button
                         type='submit'
-                        disabled={isClosingCashRegister}
-                        className='new-cash-register-page__form-button new-cash-register-page__form-button--primary'
+                        disabled={isOpeningCashRegister || !!activeCashRegister}
+                        variant='primary'
+                        className='flex-1 h-11'
                       >
-                        {isClosingCashRegister
-                          ? t('cashRegister.closing', 'Cerrando caja...')
-                          : t('cashRegister.close.action', 'Cerrar Caja')}
-                      </button>
-                      <button
+                        {isOpeningCashRegister
+                          ? t('cashRegister.opening', 'Abriendo caja...')
+                          : t('cashRegister.open.action', 'Abrir Caja')}
+                      </Button>
+                      <Button
                         type='button'
+                        variant='secondary'
                         onClick={() => {
-                          setCloseForm({
+                          setOpenForm({
                             cashier: '',
                             register: '',
-                            closingDate: new Date().toISOString().split('T')[0],
-                            finalBalance: '',
-                            closingNotes: '',
+                            openingDate: new Date().toISOString().split('T')[0],
+                            initialBalance: '',
+                            openingNotes: '',
                           })
                           setFormError('')
-                          setActiveTab('open')
                         }}
-                        className='new-cash-register-page__form-button new-cash-register-page__form-button--secondary'
+                        className='h-11'
                       >
-                        {t('action.cancel', 'Cancelar')}
-                      </button>
+                        {t('action.cancel', 'Limpiar')}
+                      </Button>
                     </div>
-                  </div>
-                </form>
-              </>
-            ) : (
-              <DataState
-                variant='empty'
-                title={t('cashRegister.status.noActive', 'No hay caja activa')}
-                description={t(
-                  'cashRegister.empty.message',
-                  'No hay cajas registradas. Abre una nueva caja para comenzar.'
-                )}
-              />
-            )}
+                  </form>
+                </div>
+              )}
+
+              {/* Close Tab */}
+              {activeTab === 'close' && (
+                <div className='space-y-6'>
+                  {activeCashRegister ? (
+                    <form onSubmit={handleCloseSubmit} className='space-y-5'>
+                      {/* Info Card */}
+                      <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3'>
+                        <Info size={24} className='text-info flex-shrink-0' />
+                        <div className='flex-1 min-w-0'>
+                          <p className='font-bold text-text-main text-sm'>
+                            {t('cashRegister.close.info', 'Cerrando caja')}: {activeCashRegister.name}
+                          </p>
+                          <p className='text-text-secondary text-sm mt-1'>
+                            {t('cashRegister.close.systemBalance', 'Saldo del Sistema')}: 
+                            <span className='font-bold ml-1'>₲{getSystemBalance().toLocaleString('es-PY')}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
+                        {/* Location (read-only) */}
+                        <div>
+                        <label htmlFor='close-location' className='flex items-center gap-1.5 text-sm font-semibold text-text-main mb-2'>
+                          <MapPin size={16} className='text-text-secondary' />
+                            {t('cashRegister.close.location', 'Ubicación')}
+                          </label>
+                          <Input
+                            id='close-location'
+                            type='text'
+                            value={activeCashRegister.location || '-'}
+                            disabled
+                            className='h-11 bg-gray-100 text-text-secondary'
+                          />
+                        </div>
+
+                        {/* Register (read-only) */}
+                        <div>
+                        <label htmlFor='close-register' className='flex items-center gap-1.5 text-sm font-semibold text-text-main mb-2'>
+                          <Calculator size={16} className='text-text-secondary' />
+                            {t('cashRegister.close.register', 'Caja')}
+                          </label>
+                          <Input
+                            id='close-register'
+                            type='text'
+                            value={activeCashRegister.name || ''}
+                            disabled
+                            className='h-11 bg-gray-100 text-text-secondary'
+                          />
+                        </div>
+
+                        {/* Closing Date */}
+                        <div>
+                        <label htmlFor='close-date' className='flex items-center gap-1.5 text-sm font-semibold text-text-main mb-2'>
+                          <Calendar size={16} className='text-primary' />
+                            {t('cashRegister.close.closingDate', 'Fecha de Cierre')}
+                          </label>
+                          <Input
+                            id='close-date'
+                            type='date'
+                            value={closeForm.closingDate}
+                            onChange={e => handleCloseFormChange('closingDate', e.target.value)}
+                            className='h-11'
+                          />
+                        </div>
+
+                        {/* Final Balance */}
+                        <div>
+                        <label htmlFor='close-balance' className='flex items-center gap-1.5 text-sm font-semibold text-text-main mb-2'>
+                          <DollarSign size={16} className='text-primary' />
+                            {t('cashRegister.close.finalBalance', 'Saldo Final')} *
+                          </label>
+                          <div className='relative'>
+                            <span className='absolute inset-y-0 left-0 pl-4 flex items-center text-text-secondary font-bold text-lg'>
+                              ₲
+                            </span>
+                            <Input
+                              id='close-balance'
+                              type='text'
+                              inputMode='numeric'
+                              value={formatNumber(closeForm.finalBalance)}
+                              onChange={e => handleAmountChange(setCloseForm, 'finalBalance', e.target.value)}
+                              placeholder={formatNumber(getSystemBalance()) || '0'}
+                              className='h-12 pl-10 text-lg font-semibold'
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        {/* Difference Display */}
+                        {closeForm.finalBalance && (
+                          <div className='md:col-span-2'>
+                            <div className={`rounded-lg p-4 flex items-center gap-3 ${
+                              calculateDifference() >= 0 
+                                ? 'bg-green-50 border border-green-200' 
+                                : 'bg-red-50 border border-red-200'
+                            }`}>
+                              {calculateDifference() >= 0 ? (
+                                <TrendingUp size={24} className='text-success' />
+                              ) : (
+                                <TrendingDown size={24} className='text-error' />
+                              )}
+                              <div>
+                                <p className={`text-sm font-medium ${
+                                  calculateDifference() >= 0 ? 'text-success' : 'text-error'
+                                }`}>
+                                  {t('cashRegister.close.difference', 'Diferencia')}
+                                </p>
+                                <p className={`text-2xl font-black ${
+                                  calculateDifference() >= 0 ? 'text-success' : 'text-error'
+                                }`}>
+                                  {calculateDifference() >= 0 ? '+' : ''}₲{calculateDifference().toLocaleString('es-PY')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Closing Notes */}
+                        <div className='md:col-span-2'>
+                        <label htmlFor='close-notes' className='flex items-center gap-1.5 text-sm font-semibold text-text-main mb-2'>
+                          <FileText size={16} className='text-primary' />
+                            {t('cashRegister.close.closingNotes', 'Notas de Cierre')}
+                          </label>
+                          <Textarea
+                            id='close-notes'
+                            value={closeForm.closingNotes}
+                            onChange={e => handleCloseFormChange('closingNotes', e.target.value)}
+                            placeholder={t('cashRegister.close.closingNotes.placeholder', 'Observaciones del cierre (opcional)')}
+                            className='resize-none'
+                            rows={3}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Error */}
+                      {formError && activeTab === 'close' && (
+                        <div className='bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2'>
+                          <InfoOutlined sx={{ fontSize: 18 }} className='text-red-500' />
+                          <p className='text-sm text-red-600 font-medium'>{formError}</p>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className='flex gap-3 pt-2'>
+                        <Button
+                          type='submit'
+                          disabled={isClosingCashRegister}
+                          variant='primary'
+                          className='flex-1 h-11'
+                        >
+                          {isClosingCashRegister
+                            ? t('cashRegister.closing', 'Cerrando caja...')
+                            : t('cashRegister.close.action', 'Cerrar Caja')}
+                        </Button>
+                        <Button
+                          type='button'
+                          variant='secondary'
+                          onClick={() => {
+                            setCloseForm({
+                              cashier: '',
+                              register: '',
+                              closingDate: new Date().toISOString().split('T')[0],
+                              finalBalance: '',
+                              closingNotes: '',
+                            })
+                            setFormError('')
+                            setActiveTab('open')
+                          }}
+                          className='h-11'
+                        >
+                          {t('action.cancel', 'Cancelar')}
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className='py-12'>
+                      <DataState
+                        variant='empty'
+                        title={t('cashRegister.status.noActive', 'No hay caja activa')}
+                        description={t('cashRegister.empty.message', 'Abre una nueva caja para comenzar a registrar movimientos.')}
+                      />
+                      <div className='flex justify-center mt-6'>
+                        <Button onClick={() => setActiveTab('open')} variant='primary'>
+                          {t('cashRegister.tab.open', 'Abrir Caja')}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )
