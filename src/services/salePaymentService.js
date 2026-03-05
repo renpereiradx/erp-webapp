@@ -530,6 +530,9 @@ export const salePaymentService = {
       const params = new URLSearchParams();
       if (filters.start_date) params.append('start_date', filters.start_date);
       if (filters.end_date) params.append('end_date', filters.end_date);
+      if (filters.payment_status && filters.payment_status !== 'all') {
+        params.append('payment_status', filters.payment_status.toUpperCase());
+      }
       if (filters.page) params.append('page', filters.page);
       if (filters.page_size) params.append('page_size', filters.page_size);
       params.append('_t', Date.now().toString()); // bypass cache
@@ -540,29 +543,13 @@ export const salePaymentService = {
         return await apiClient.get(url);
       });
 
-      let data = Array.isArray(result) ? result : (result?.data || []);
-
-      if (filters.payment_status && filters.payment_status !== 'all') {
-        data = data.filter(sale => (sale.payment_status || sale.status) === filters.payment_status);
-      }
-
-      const paginatedResult = {
-        data,
-        pagination: result?.pagination || {
-          page: 1,
-          page_size: filters.page_size || 10,
-          total_records: data.length,
-          total_pages: 1
-        }
-      };
-
       telemetry.record('sale_payment.service.list_with_payment_status', {
         duration: Date.now() - startTime,
-        count: paginatedResult.data.length,
-        totalRecords: paginatedResult.pagination.total_records
+        count: result?.data?.length || 0,
+        totalRecords: result?.pagination?.total_records || 0
       });
 
-      return paginatedResult;
+      return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
         duration: Date.now() - startTime,
@@ -606,6 +593,11 @@ export const salePaymentService = {
 
     try {
       const params = new URLSearchParams();
+      if (filters.start_date) params.append('start_date', filters.start_date);
+      if (filters.end_date) params.append('end_date', filters.end_date);
+      if (filters.payment_status && filters.payment_status !== 'all') {
+        params.append('payment_status', filters.payment_status.toUpperCase());
+      }
       if (filters.page) params.append('page', filters.page);
       if (filters.page_size) params.append('page_size', filters.page_size);
       
@@ -615,40 +607,13 @@ export const salePaymentService = {
         return await apiClient.get(url);
       });
 
-      let data = Array.isArray(result) ? result : (result?.data || []);
-
-      if (filters.payment_status && filters.payment_status !== 'all') {
-        data = data.filter(sale => (sale.payment_status || sale.status) === filters.payment_status);
-      }
-
-      if (filters.start_date || filters.end_date) {
-        const getTimestamp = dateStr => dateStr ? new Date(dateStr).getTime() : 0;
-        const start = filters.start_date ? getTimestamp(filters.start_date) : 0;
-        const end = filters.end_date ? getTimestamp(filters.end_date) + 86400000 : Infinity;
-        
-        data = data.filter(sale => {
-          const saleTime = getTimestamp(sale.issue_date || sale.date);
-          return saleTime >= start && saleTime <= end;
-        });
-      }
-
-      const paginatedResult = {
-        data,
-        pagination: result?.pagination || {
-          page: 1,
-          page_size: filters.page_size || 10,
-          total_records: data.length,
-          total_pages: 1
-        }
-      };
-
       telemetry.record('sale_payment.service.client_search_with_payment_status', {
         duration: Date.now() - startTime,
         clientName,
-        count: paginatedResult.data.length
+        count: result?.data?.length || 0
       });
 
-      return paginatedResult;
+      return result;
     } catch (error) {
       telemetry.record('sale_payment.service.error', {
         duration: Date.now() - startTime,

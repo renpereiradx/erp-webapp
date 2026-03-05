@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { cn } from '@/lib/utils'
 import {
   Receipt,
   RefreshCw,
@@ -146,7 +147,8 @@ const SalePayment = () => {
         ...sale,
         id: sale.sale_id || sale.id,
         status: sale.status || sale.payment_status,
-        date: sale.sale_date || sale.issue_date || sale.date
+        date: sale.sale_date || sale.issue_date || sale.date,
+        client_name: sale.client_name || sale.client?.name || 'Ocasional'
       }));
 
       setRawSales(normalizedData);
@@ -189,7 +191,7 @@ const SalePayment = () => {
     const lowerTerm = searchTerm.toLowerCase();
     return rawSales.filter(sale => 
       String(sale.id).includes(lowerTerm) || 
-      (sale.client?.name || '').toLowerCase().includes(lowerTerm)
+      (sale.client_name || '').toLowerCase().includes(lowerTerm)
     );
   }, [rawSales, searchTerm])
 
@@ -228,12 +230,12 @@ const SalePayment = () => {
         </Button>
       </header>
 
-      {/* KPI Cards */}
+      {/* KPI Cards (Procesados sobre resultados actuales en pantalla) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
          {[
-           { label: 'Saldos Pendientes', icon: Clock, color: 'amber', value: formatCurrency(rawSales.reduce((acc, s) => acc + (['pending', 'pendiente'].includes(s.status?.toLowerCase()) ? s.balance_due : 0), 0)) },
-           { label: 'Cobros Parciales', icon: CircleDollarSign, color: 'blue', value: `${rawSales.filter(s => ['partial', 'parcial'].includes(s.status?.toLowerCase())).length} Ventas` },
-           { label: 'Cobros Exitosos', icon: CheckCircle2, color: 'green', value: formatCurrency(rawSales.reduce((acc, s) => acc + (s.amount_paid || 0), 0)) }
+           { label: 'Saldos Pendientes', icon: Clock, color: 'amber', value: formatCurrency(displaySales.reduce((acc, s) => acc + (Number(s.balance_due) || 0), 0)) },
+           { label: 'Cobros Parciales', icon: CircleDollarSign, color: 'blue', value: `${displaySales.filter(s => s.payment_count > 0 && s.balance_due > 0 || ['partial', 'parcial'].includes(s.status?.toLowerCase())).length} Ventas` },
+           { label: 'Cobros Exitosos', icon: CheckCircle2, color: 'green', value: formatCurrency(displaySales.reduce((acc, s) => acc + (Number(s.total_paid) || Number(s.amount_paid) || 0), 0)) }
          ].map((kpi, i) => (
            <Card key={i} className="rounded-xl border-slate-100 dark:border-slate-800 shadow-fluent-2 bg-white dark:bg-surface-dark overflow-hidden transition-all duration-300">
               <CardContent className="p-4 flex items-center gap-4">
@@ -352,6 +354,7 @@ const SalePayment = () => {
                     <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4">Cliente</TableHead>
                     <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4">Fecha</TableHead>
                     <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 text-center">Estado</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 text-right">Progreso</TableHead>
                     <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 text-right">Total</TableHead>
                     <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 text-right">Pendiente</TableHead>
                     <TableHead className="w-16 px-6"></TableHead>
@@ -362,12 +365,28 @@ const SalePayment = () => {
                         <TableCell className="py-3.5 px-6 font-black text-sm">#{sale.id}</TableCell>
                         <TableCell className="px-4">
                           <div className="flex flex-col">
-                            <span className="font-bold text-sm">{sale.client?.name || 'Ocasional'}</span>
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">CI: {formatDocumentId(sale.client?.document_id)}</span>
+                            <span className="font-bold text-sm">{sale.client_name}</span>
+                            {(sale.client?.document_id || sale.client_document_id) && (
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                CI: {formatDocumentId(sale.client?.document_id || sale.client_document_id)}
+                              </span>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell className="px-4 text-xs font-semibold">{formatDate(sale.date)}</TableCell>
                         <TableCell className="px-4 text-center">{getStatusBadge(sale.status)}</TableCell>
+                        <TableCell className="px-4">
+                          <div className="flex flex-col items-end gap-1.5 w-24 ml-auto">
+                            <div className="flex items-center justify-between w-full text-[10px] font-bold text-slate-500">
+                              <span>{sale.payment_progress}%</span>
+                              {sale.payment_count > 0 && <span className="text-primary">{sale.payment_count} pago{sale.payment_count > 1 ? 's' : ''}</span>}
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                              <div className={cn("h-full rounded-full transition-all duration-500", sale.payment_progress >= 100 ? "bg-green-500" : sale.payment_progress > 0 ? "bg-blue-500" : "bg-transparent")} style={{ width: `${Math.min(100, Math.max(0, sale.payment_progress || 0))}%` }} />
+                            </div>
+                            {sale.payment_method && <span className="text-[9px] uppercase tracking-widest font-black text-slate-400">{sale.payment_method}</span>}
+                          </div>
+                        </TableCell>
                         <TableCell className="px-4 text-right font-bold text-sm tabular-nums">{formatCurrency(sale.total_amount)}</TableCell>
                         <TableCell className="px-4 text-right font-black text-primary text-sm tabular-nums">{formatCurrency(sale.balance_due)}</TableCell>
                         <TableCell className="px-6 text-right" onClick={e => e.stopPropagation()}>
@@ -394,7 +413,7 @@ const SalePayment = () => {
                     <div className="flex justify-between items-start">
                       <div className="flex flex-col gap-1">
                         <span className="font-black text-sm text-primary">#{sale.id}</span>
-                        <span className="font-black text-slate-900 text-base">{sale.client?.name || 'Cliente Ocasional'}</span>
+                        <span className="font-black text-slate-900 text-base">{sale.client_name}</span>
                         <div className="flex items-center gap-2 text-slate-400">
                           <Calendar size={12} />
                           <span className="text-[10px] font-bold uppercase">{formatDate(sale.date)}</span>
@@ -402,14 +421,26 @@ const SalePayment = () => {
                       </div>
                       {getStatusBadge(sale.status)}
                     </div>
-                    <div className="flex justify-between items-end bg-slate-50 p-3 rounded-lg border border-slate-100">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Factura</span>
-                        <span className="font-bold text-sm tabular-nums">{formatCurrency(sale.total_amount)}</span>
+                    <div className="flex flex-col gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                      <div className="flex justify-between items-end">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Factura</span>
+                          <span className="font-bold text-sm tabular-nums">{formatCurrency(sale.total_amount)}</span>
+                        </div>
+                        <div className="flex flex-col text-right">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo Pendiente</span>
+                          <span className="font-black text-base text-primary tabular-nums">{formatCurrency(sale.balance_due)}</span>
+                        </div>
                       </div>
-                      <div className="flex flex-col text-right">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo Pendiente</span>
-                        <span className="font-black text-base text-primary tabular-nums">{formatCurrency(sale.balance_due)}</span>
+                      
+                      <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-200 dark:border-slate-700">
+                        <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          <span>{sale.payment_progress}% Pagado</span>
+                          <span>{sale.payment_count || 0} pago(s) {sale.payment_method ? `• ${sale.payment_method}` : ''}</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div className={cn("h-full rounded-full transition-all duration-500", sale.payment_progress >= 100 ? "bg-green-500" : sale.payment_progress > 0 ? "bg-blue-500" : "bg-transparent")} style={{ width: `${Math.min(100, Math.max(0, sale.payment_progress || 0))}%` }} />
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-2 pt-1" onClick={e => e.stopPropagation()}>
