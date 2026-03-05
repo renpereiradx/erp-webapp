@@ -58,14 +58,15 @@ export default {
         "fluent-gray": "#f3f2f1",
       },
       fontFamily: {
-        "display": ["Inter", "sans-serif"],
-        "mono": ["JetBrains Mono", "monospace"]
+        "display": ["Inter", "system-ui", "sans-serif"],
+        "mono": ["JetBrains Mono", "monospace"],
+        "tabular": ["Inter", "monospace"]
       },
       borderRadius: {
-        xl: "0.75rem",
-        lg: "0.5rem",
-        md: "0.25rem",
-        sm: "0.125rem",
+        xl: "8px",
+        lg: "6px",
+        md: "4px",
+        sm: "2px",
       },
       boxShadow: {
         "fluent-2": "0 2px 4px rgba(0,0,0,0.04), 0 0 2px rgba(0,0,0,0.06)",
