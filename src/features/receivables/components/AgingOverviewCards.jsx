@@ -17,7 +17,7 @@ const AgingOverviewCards = ({ stats = {} }) => {
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Total Cartera</p>
             <h2 className="text-xl xl:text-2xl font-black tracking-tight text-slate-900 dark:text-white mt-1.5 font-mono">
-              {formatPYG(stats.total_receivables || 1542000000)}
+              {formatPYG(stats.total_receivables ?? stats.total_billed ?? stats.total_pending ?? 1542000000)}
             </h2>
           </div>
           <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-sm border border-primary/5 shrink-0">
@@ -35,7 +35,7 @@ const AgingOverviewCards = ({ stats = {} }) => {
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Al Día (Corriente)</p>
             <h2 className="text-xl xl:text-2xl font-black tracking-tight text-emerald-600 dark:text-emerald-400 mt-1.5 font-mono">
-              {formatPYG(stats.current_receivables || 1240500000)}
+              {formatPYG(stats.current_receivables ?? stats.total_collected ?? stats.current ?? 1240500000)}
             </h2>
           </div>
           <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100 dark:border-emerald-900/10 shrink-0">
@@ -53,7 +53,7 @@ const AgingOverviewCards = ({ stats = {} }) => {
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Cartera Vencida</p>
             <h2 className="text-xl xl:text-2xl font-black tracking-tight text-fluent-danger mt-1.5 font-mono">
-              {formatPYG(stats.total_overdue || 301500000)}
+              {formatPYG(stats.total_overdue ?? stats.overdue_amount ?? 301500000)}
             </h2>
           </div>
           <div className="flex size-9 items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/20 text-fluent-danger shadow-sm border border-red-100 dark:border-red-900/10 shrink-0">
@@ -74,7 +74,7 @@ const AgingOverviewCards = ({ stats = {} }) => {
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Mora &gt; 90 Días</p>
             <h2 className="text-xl xl:text-2xl font-black tracking-tight text-orange-600 dark:text-orange-400 mt-1.5 font-mono">
-              {formatPYG(stats.critical_overdue || 85200000)}
+              {formatPYG(stats.critical_overdue ?? stats.over_90_days ?? 85200000)}
             </h2>
           </div>
           <div className="flex size-9 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 shadow-sm border border-orange-100 dark:border-orange-900/10 shrink-0">

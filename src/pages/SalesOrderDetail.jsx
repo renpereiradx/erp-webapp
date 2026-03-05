@@ -42,6 +42,7 @@ import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
 import { clientService } from '@/services/clientService'
 import { useToast } from '@/hooks/useToast'
+import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 
 const SalesOrderDetail = () => {
   const { saleId } = useParams()
@@ -56,7 +57,7 @@ const SalesOrderDetail = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
   const loadSale = useCallback(async () => {
-    if (!saleId) return
+    if (!saleId || saleId === 'undefined') return
 
     setLoading(true)
     setError(null)
@@ -131,7 +132,8 @@ const SalesOrderDetail = () => {
         client_document: clientDetails?.document_id || paymentStatusResponse.client?.document_id,
         client_contact: clientDetails?.contact || paymentStatusResponse.client?.contact,
         client_last_name: clientDetails?.last_name,
-        date: paymentStatusResponse.issue_date || paymentStatusResponse.created_at || paymentStatusResponse.date
+        date: paymentStatusResponse.issue_date || paymentStatusResponse.sale_date || paymentStatusResponse.created_at || paymentStatusResponse.date,
+        currency: paymentStatusResponse.currency || 'PYG'
       }
 
       setSale(saleData)
@@ -202,11 +204,13 @@ const SalesOrderDetail = () => {
   }
 
   const formatCurrency = amount => {
+    const currencyCode = normalizeCurrencyCode(sale?.currency)
+
     return new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
       style: 'currency',
-      currency: sale?.currency || 'PYG',
-      minimumFractionDigits: sale?.currency === 'PYG' ? 0 : 2,
-      maximumFractionDigits: sale?.currency === 'PYG' ? 0 : 2,
+      currency: currencyCode,
+      minimumFractionDigits: currencyCode === 'PYG' ? 0 : 2,
+      maximumFractionDigits: currencyCode === 'PYG' ? 0 : 2,
     }).format(amount || 0)
   }
 
@@ -479,15 +483,18 @@ const SalesOrderDetail = () => {
         </div>
       </div>
 
-      <RegisterSalePaymentModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        saleId={saleId}
-        saleTotal={totalAmount}
-        balanceDue={balanceDue}
-        clientName={sale?.client_name || sale?.client?.name}
-        onSuccess={handlePaymentSubmit}
-      />
+      {sale && (
+        <RegisterSalePaymentModal
+          open={isPaymentModalOpen}
+          onOpenChange={setIsPaymentModalOpen}
+          sale={{
+            ...sale,
+            balance_due: balanceDue,
+            currency: sale.currency || 'PYG'
+          }}
+          onSubmit={handlePaymentSubmit}
+        />
+      )}
     </div>
   )
 }

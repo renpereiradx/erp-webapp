@@ -2,7 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useI18n } from '@/lib/i18n'
 import { formatPYG } from '@/utils/currencyUtils'
-import { Search, ChevronDown, Phone, MessageSquare, Mail, Filter, MoreHorizontal } from 'lucide-react'
+import { Search, ChevronDown, ChevronLeft, ChevronRight, Phone, Filter, MoreHorizontal } from 'lucide-react'
 
 /**
  * Tabla de Cuentas Vencidas - Optimizada para evitar scroll horizontal y fiel a Stitch.
@@ -160,7 +160,7 @@ const OverdueTable = ({ accounts = [], toast }) => {
               <ChevronLeft size={16} />
             </button>
             <button className="size-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 transition-all shadow-sm">
-              <MoreHorizontal size={16} className="rotate-90" />
+              <ChevronRight size={16} />
             </button>
           </div>
         </div>

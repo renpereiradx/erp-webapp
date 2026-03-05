@@ -1,12 +1,11 @@
-import React from 'react';
-import { Download, Printer, FileBadge, User, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Download, Printer, FileBadge, User, Clock, CheckCircle2, AlertTriangle, CircleDollarSign } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 /**
  * Encabezado detallado para una factura específica.
  * Refactorizado para 100% fidelidad visual con Stitch.
  */
-const DetailHeader = ({ id, client = {}, transaction = {} }) => {
+const DetailHeader = ({ id, client = {}, transaction = {}, onRegisterPayment }) => {
   const { t } = useI18n();
 
   const progressPercent = transaction.rawAmount > 0
@@ -60,7 +59,15 @@ const DetailHeader = ({ id, client = {}, transaction = {} }) => {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-3 lg:mb-1">
+        <div className="flex flex-wrap items-center gap-3 lg:mb-1">
+          <button 
+            onClick={() => onRegisterPayment && onRegisterPayment()}
+            disabled={transaction.rawBalance <= 0}
+            className="inline-flex items-center px-5 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl bg-primary text-white hover:bg-blue-600 transition-all shadow-md shadow-primary/20 hover:shadow-primary/40 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <CircleDollarSign className="w-4 h-4 mr-2" />
+            Registrar Cobro
+          </button>
           <button 
             disabled
             className="inline-flex items-center px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm active:scale-95 text-slate-600 dark:text-slate-300 cursor-not-allowed opacity-50"

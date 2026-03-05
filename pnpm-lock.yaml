@@ -201,9 +201,6 @@ importers:
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
-      sass:
-        specifier: ^1.93.2
-        version: 1.93.2
       tailwindcss:
         specifier: ^3.4.19
         version: 3.4.19
@@ -4953,6 +4950,7 @@ snapshots:
   chokidar@4.0.3:
     dependencies:
       readdirp: 4.1.2
+    optional: true
 
   class-variance-authority@0.7.1:
     dependencies:
@@ -5433,7 +5431,8 @@ snapshots:
 
   immer@11.1.4: {}
 
-  immutable@5.1.4: {}
+  immutable@5.1.4:
+    optional: true
 
   import-fresh@3.3.1:
     dependencies:
@@ -5872,7 +5871,8 @@ snapshots:
     dependencies:
       picomatch: 2.3.1
 
-  readdirp@4.1.2: {}
+  readdirp@4.1.2:
+    optional: true
 
   recharts@3.7.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react-is@18.3.1)(react@19.2.4)(redux@5.0.1):
     dependencies:
@@ -5961,6 +5961,7 @@ snapshots:
       source-map-js: 1.2.1
     optionalDependencies:
       '@parcel/watcher': 2.5.1
+    optional: true
 
   saxes@6.0.0:
     dependencies:

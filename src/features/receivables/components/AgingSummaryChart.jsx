@@ -15,9 +15,9 @@ const AgingSummaryChart = ({ agingData = {} }) => {
   ];
 
   // Extraer datos o usar valores de ejemplo realistas
-  const getAmount = (key) => agingData[key]?.amount || (key === 'current' ? 8500000 : 1500000);
+  const getAmount = (key) => agingData[key]?.amount ?? agingData[key] ?? (key === 'current' ? 8500000 : 1500000);
   const getPercentage = (key) => {
-    const raw = agingData[key]?.percentage || (key === 'current' ? 55 : 10);
+    const raw = agingData[key]?.percentage ?? (key === 'current' ? 55 : 10);
     return typeof raw === 'number' ? Number(raw.toFixed(2)) : raw;
   };
 

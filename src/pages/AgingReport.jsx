@@ -37,7 +37,7 @@ const AgingReport = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  if (loading && !data) {
+  if (loading) {
     return (
       <div className='flex flex-col items-center justify-center min-h-[60vh] gap-4'>
         <RefreshCw className='animate-spin text-[#137fec]' size={48} strokeWidth={1.5} />

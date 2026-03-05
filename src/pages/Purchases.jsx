@@ -40,6 +40,7 @@ import {
   purchasePaymentsMvpService,
 } from '@/services/purchasePaymentsMvpService'
 import InstantPaymentDialog from '@/components/ui/InstantPaymentDialog'
+import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 
 /**
  * Purchases Page - Fluent Design System 2
@@ -237,7 +238,15 @@ const Purchases = () => {
     } finally { setLoading(false) }
   }
 
-  const formatCurrency = (amt, curr) => new Intl.NumberFormat('es-PY', { style: 'currency', currency: curr || paymentCurrency || 'PYG' }).format(amt || 0)
+  const formatCurrency = (amt, curr) => {
+    const code = normalizeCurrencyCode(curr || paymentCurrency)
+    return new Intl.NumberFormat('es-PY', { 
+      style: 'currency', 
+      currency: code,
+      minimumFractionDigits: code === 'PYG' ? 0 : 2,
+      maximumFractionDigits: code === 'PYG' ? 0 : 2
+    }).format(amt || 0)
+  }
   const formatDate = d => d ? new Date(d).toLocaleDateString('es-PY') : '-'
 
   // Helper functions for status display

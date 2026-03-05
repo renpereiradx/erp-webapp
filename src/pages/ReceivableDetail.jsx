@@ -11,6 +11,8 @@ import { useReceivableDetail } from '@/features/receivables/hooks/useReceivableD
 import DetailHeader from '@/features/receivables/components/DetailHeader';
 import PaymentHistoryTable from '@/features/receivables/components/PaymentHistoryTable';
 import DetailSidebar from '@/features/receivables/components/DetailSidebar';
+import RegisterSalePaymentModal from '@/components/sales/RegisterSalePaymentModal';
+import { salePaymentService } from '@/services/salePaymentService';
 import { useToast } from '@/hooks/useToast';
 import ToastContainer from '@/components/ui/ToastContainer';
 
@@ -23,7 +25,24 @@ const ReceivableDetail = () => {
   const navigate = useNavigate();
   const { t } = useI18n();
   const toast = useToast();
-  const { data, loading, error } = useReceivableDetail(id);
+  const { data, loading, error, refresh } = useReceivableDetail(id);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = React.useState(false);
+
+  const handlePaymentSubmit = async (paymentData) => {
+    try {
+      await salePaymentService.processSalePaymentWithCashRegister(paymentData);
+      toast.success(t('common.success'), t('sales.registerPaymentModal.successMessage'));
+      if (refresh) await refresh();
+      setIsPaymentModalOpen(false);
+    } catch (error) {
+      console.error('Error registering payment:', error);
+      throw error;
+    }
+  };
+
+  const openModal = () => {
+    setIsPaymentModalOpen(true);
+  };
 
   if (loading) {
     return (
@@ -63,11 +82,12 @@ const ReceivableDetail = () => {
         </nav>
 
         {/* Header Section */}
-        <DetailHeader
-          id={data.id}
-          client={data.client || {}}
-          transaction={data.transaction || {}}
-        />
+          <DetailHeader
+            id={data.id}
+            client={data.client || {}}
+            transaction={data.transaction || {}}
+            onRegisterPayment={openModal}
+          />
 
         {/* Content Grid */}
         <div className="grid grid-cols-12 gap-6 lg:gap-8">
@@ -86,9 +106,26 @@ const ReceivableDetail = () => {
               client={data.client || {}} 
               activities={data.activities || []}
               toast={toast} 
+              onRegisterPayment={openModal}
             />
           </aside>
         </div>
+
+        {data && (
+          <RegisterSalePaymentModal
+            open={isPaymentModalOpen}
+            onOpenChange={setIsPaymentModalOpen}
+            sale={{
+              id: data.id,
+              sale_id: data.id,
+              balance_due: data.transaction?.rawBalance || 0,
+              total_amount: data.transaction?.rawTotal || 0,
+              client_name: data.client?.name || '',
+              currency: data.transaction?.currency || 'PYG'
+            }}
+            onSubmit={handlePaymentSubmit}
+          />
+        )}
 
         {/* Toast Notifications */}
         <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />

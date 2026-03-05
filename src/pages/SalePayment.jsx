@@ -56,19 +56,22 @@ import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/hooks/useToast'
 import useClientStore from '@/store/useClientStore'
 import { salePaymentService } from '@/services/salePaymentService'
+import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 
 const formatDocumentId = value => {
   if (!value) return ''
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
-const currencyFormatter = (lang, currency) =>
-  new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
+const currencyFormatter = (lang, currency) => {
+  const code = normalizeCurrencyCode(currency)
+  return new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
     style: 'currency',
-    currency: currency || 'PYG',
-    minimumFractionDigits: currency === 'PYG' ? 0 : 2,
-    maximumFractionDigits: currency === 'PYG' ? 0 : 2,
+    currency: code,
+    minimumFractionDigits: code === 'PYG' ? 0 : 2,
+    maximumFractionDigits: code === 'PYG' ? 0 : 2,
   })
+}
 
 const dateFormatterFactory = lang =>
   new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-PY', {
@@ -116,7 +119,7 @@ const SalePayment = () => {
   })
 
   // Modal State
-  const [selectedSaleId, setSelectedSaleId] = useState(null)
+  const [selectedSale, setSelectedSale] = useState(null)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
   // Formatters
@@ -147,7 +150,15 @@ const SalePayment = () => {
         result = await salePaymentService.getSalesByDateRangeWithPaymentStatus(filters);
       }
 
-      setRawSales(result?.data || []);
+      const normalizedData = (result?.data || []).map(sale => ({
+        ...sale,
+        id: sale.sale_id || sale.id, // Asegurar ID consistente
+        sale_id: sale.sale_id || sale.id,
+        status: sale.status || sale.payment_status, // Normalizar estado
+        date: sale.sale_date || sale.issue_date || sale.date // Normalizar fecha
+      }));
+
+      setRawSales(normalizedData);
       if (result?.pagination) {
         setPagination({
           page: result.pagination.page,
@@ -195,21 +206,36 @@ const SalePayment = () => {
     if (!searchTerm) return rawSales;
     const lowerTerm = searchTerm.toLowerCase();
     return rawSales.filter(sale => 
-      String(sale.id).includes(lowerTerm) || 
+      String(sale.id || sale.sale_id).includes(lowerTerm) || 
       (sale.client?.name || '').toLowerCase().includes(lowerTerm) ||
       (sale.client?.document_id || '').includes(lowerTerm)
     );
   }, [rawSales, searchTerm])
+
+  const handlePaymentSubmit = async paymentData => {
+    try {
+      await salePaymentService.processSalePaymentWithCashRegister(paymentData)
+      showSuccess('Cobro registrado exitosamente')
+      handleLoadSales(pagination.page)
+    } catch (error) {
+      console.error('Error registering payment:', error)
+      throw error
+    }
+  }
 
   const getStatusBadge = status => {
     const s = status?.toLowerCase()
     switch (s) {
       case 'completed':
       case 'paid':
+      case 'pagado':
         return <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1 shadow-sm">Pagado</Badge>
       case 'partial':
+      case 'partial_payment':
+      case 'parcial':
         return <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1 shadow-sm">Parcial</Badge>
       case 'overdue':
+      case 'vencido':
         return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1 shadow-sm">Vencido</Badge>
       default:
         return <Badge className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-none font-black uppercase text-[10px] tracking-widest px-3 py-1 shadow-sm">Pendiente</Badge>
@@ -259,7 +285,7 @@ const SalePayment = () => {
                <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldos Pendientes</p>
                   <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                    {formatCurrency(rawSales.reduce((acc, sale) => acc + (sale.payment_status === 'pending' ? sale.balance_due : 0), 0))}
+                    {formatCurrency(rawSales.reduce((acc, sale) => acc + (['pending', 'pendiente'].includes(sale.status?.toLowerCase()) ? sale.balance_due : 0), 0))}
                   </h2>
                </div>
             </CardContent>
@@ -272,7 +298,7 @@ const SalePayment = () => {
                <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cobros Parciales</p>
                   <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                    {rawSales.filter(sale => sale.payment_status === 'partial').length} Ventas
+                   {rawSales.filter(sale => ['partial', 'partial_payment', 'parcial'].includes(sale.status?.toLowerCase())).length} Ventas
                   </h2>
                </div>
             </CardContent>
@@ -437,11 +463,11 @@ const SalePayment = () => {
                       </TableCell>
                       <TableCell className="px-4">
                         <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                          {formatDate(sale.issue_date)}
+                          {formatDate(sale.date)}
                         </span>
                       </TableCell>
                       <TableCell className="px-4 text-center">
-                        {getStatusBadge(sale.payment_status)}
+                        {getStatusBadge(sale.status)}
                       </TableCell>
                       <TableCell className="px-4 text-right font-bold text-slate-900 dark:text-white tabular-nums">
                         {formatCurrency(sale.total_amount)}
@@ -465,10 +491,10 @@ const SalePayment = () => {
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => {
-                                setSelectedSaleId(sale.id)
+                                setSelectedSale(sale)
                                 setIsPaymentModalOpen(true)
                               }}
-                              disabled={sale.payment_status === 'paid' || sale.payment_status === 'completed'}
+                              disabled={['paid', 'completed', 'pagado'].includes(sale.status?.toLowerCase())}
                               className="gap-3 py-3 font-bold rounded-lg focus:bg-green-50 focus:text-green-600 dark:focus:bg-green-900/30 cursor-pointer"
                             >
                               <CreditCard size={18} /> Registrar Cobro
@@ -515,18 +541,13 @@ const SalePayment = () => {
       </div>
 
       <RegisterSalePaymentModal
-        isOpen={isPaymentModalOpen}
-        onClose={() => {
-          setIsPaymentModalOpen(false)
-          setSelectedSaleId(null)
+        open={isPaymentModalOpen}
+        onOpenChange={open => {
+          setIsPaymentModalOpen(open)
+          if (!open) setSelectedSale(null)
         }}
-        saleId={selectedSaleId}
-        onSuccess={() => {
-          setIsPaymentModalOpen(false)
-          setSelectedSaleId(null)
-          showSuccess('Cobro registrado exitosamente')
-          handleLoadSales(pagination.page) // Recargar lista
-        }}
+        sale={selectedSale}
+        onSubmit={handlePaymentSubmit}
       />
 
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />

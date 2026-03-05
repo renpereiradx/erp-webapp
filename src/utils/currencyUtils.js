@@ -48,7 +48,32 @@ export const normalizePYG = (value) => {
   return Math.round(Number(value)) || 0;
 };
 
+/**
+ * Normalizes a currency string to a valid ISO 4217 code.
+ * Handles common names returned by some API endpoints.
+ * @param {string} code - The raw currency code/name
+ * @returns {string} Normalized 3-letter currency code
+ */
+export const normalizeCurrencyCode = (code) => {
+  if (!code) return 'PYG';
+  
+  const c = code.toString().trim().toUpperCase();
+  
+  // Handle full names often returned in Spanish, with robustness for encoding issues
+  if (/GUARAN/i.test(c)) {
+    return 'PYG';
+  }
+  
+  if (/D.LAR|USD/i.test(c)) {
+    return 'USD';
+  }
+  
+  // If it's already a 3-letter code, return it, otherwise default to PYG
+  return c.length === 3 ? c : 'PYG';
+};
+
 export default {
   formatPYG,
-  normalizePYG
+  normalizePYG,
+  normalizeCurrencyCode
 };

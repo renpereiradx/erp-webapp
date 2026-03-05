@@ -10,7 +10,7 @@ import { useI18n } from '@/lib/i18n';
 /**
  * Sidebar para la página de detalle, incluyendo acciones rápidas, contacto y actividad.
  */
-const DetailSidebar = ({ client = {}, activities = [], toast }) => {
+const DetailSidebar = ({ client = {}, activities = [], toast, onRegisterPayment }) => {
   const { t } = useI18n();
 
   // Helper to get icon based on activity type
@@ -40,11 +40,10 @@ const DetailSidebar = ({ client = {}, activities = [], toast }) => {
         <h3 className="text-[#111418] dark:text-white text-lg font-bold mb-4">{t('receivables.detail.actions.title', 'Acciones Rápidas')}</h3>
         <div className="flex flex-col gap-3">
           <button 
-            disabled
-            onClick={() => toast.info(t('common.not_implemented'))}
-            className="flex items-center justify-center gap-2 w-full h-11 rounded-lg bg-primary/50 text-white font-semibold cursor-not-allowed opacity-70"
+            onClick={() => onRegisterPayment && onRegisterPayment()}
+            className="flex items-center justify-center gap-2 w-full h-11 rounded-lg bg-primary text-white font-semibold transition-all hover:bg-primary-hover active:scale-95"
           >
-            <span className="material-symbols-outlined">add_card</span>
+            <CreditCard size={18} />
             {t('receivables.detail.actions.register_payment', 'Registrar Pago')}
           </button>
           <div className="grid grid-cols-2 gap-3">

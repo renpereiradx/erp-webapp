@@ -162,3 +162,111 @@
   overflow: visible !important;
   pointer-events: none !important;
 }
+
+/* =============================================================================
+   RADIX DIALOG / MODAL STYLES
+   ============================================================================= */
+
+.radix-dialog__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  animation: fade-in 200ms ease-out;
+}
+
+.radix-dialog__content {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 100; /* Aumentado para asegurar visibilidad sobre otros elementos */
+  width: 90%;
+  max-width: 500px;
+  transform: translate(-50%, -50%);
+  background-color: #ffffff;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  animation: content-show 200ms ease-out;
+}
+
+/* Dark mode fallback if hsl vars missing */
+.dark .radix-dialog__content {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+/* Specific for register payment modal to ensure look & feel */
+.register-sale-payment-modal {
+  max-width: 600px !important;
+}
+
+.radix-dialog__close {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  border-radius: 0.25rem;
+  opacity: 0.7;
+  transition: opacity 200ms;
+}
+
+.radix-dialog__close:hover {
+  opacity: 1;
+}
+
+.radix-dialog__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .radix-dialog__header {
+    text-align: left;
+  }
+}
+
+.radix-dialog__footer {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .radix-dialog__footer {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+}
+
+.radix-dialog__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.radix-dialog__description {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes content-show {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

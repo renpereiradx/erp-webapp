@@ -8,18 +8,28 @@ const BillingVsCollectionChart = ({ trendData }) => {
   const safeData = Array.isArray(trendData) && trendData.length > 0 ? trendData : [];
   
   // Calculate max to make bars proportional (assuming 100% height = max value * 1.1 for some padding)
-  const maxBilled = safeData.reduce((max, d) => Math.max(max, d.billed || 0), 1);
+  // Calculate max to make bars proportional 
+  const maxBilled = safeData.reduce((max, d) => {
+    const valBilled = Number(d.billed ?? d.amount_billed ?? d.total_billed ?? d.totalBilled ?? 0);
+    const valCollected = Number(d.collected ?? d.amount_collected ?? d.total_collected ?? d.totalCollected ?? 0);
+    return Math.max(max, valBilled, valCollected);
+  }, 1);
   const scale = 100 / (maxBilled * 1.1);
 
-  const months = safeData.map((d, index) => ({
-    name: d.date || `P${index+1}`,
-    billed: (d.billed || 0) * scale,
-    collected: (d.collected || 0) * scale,
-    active: index === safeData.length - 1
-  }));
+  const months = safeData.map((d, index) => {
+    const billed = d.billed ?? d.amount_billed ?? d.total_billed ?? d.totalBilled ?? 0;
+    const collected = d.collected ?? d.amount_collected ?? d.total_collected ?? d.totalCollected ?? 0;
+    
+    return {
+      name: d.date || d.name || `P${index+1}`,
+      billed: Number(billed) * scale,
+      collected: Number(collected) * scale,
+      active: index === safeData.length - 1
+    };
+  });
 
   return (
-    <div className="w-full xl:w-[400px] bg-white dark:bg-[#1a2632] rounded-lg border border-[#e5e7eb] dark:border-[#2e3640] shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.06)] flex flex-col transition-all hover:shadow-[0_4px_8px_rgba(0,0,0,0.08),0_0_2px_rgba(0,0,0,0.1)]">
+    <div className="w-full bg-white dark:bg-[#1a2632] rounded-lg border border-[#e5e7eb] dark:border-[#2e3640] shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.06)] flex flex-col transition-all hover:shadow-[0_4px_8px_rgba(0,0,0,0.08),0_0_2px_rgba(0,0,0,0.1)]">
       <div className="p-5 border-b border-[#f0f2f4] dark:border-[#2e3640]">
         <h3 className="text-[#111418] dark:text-white text-lg font-bold">Facturación vs. Cobranzas</h3>
         <p className="text-xs text-[#617589] mt-1">Tendencia de los últimos 6 meses</p>
@@ -48,7 +58,7 @@ const BillingVsCollectionChart = ({ trendData }) => {
                   style={{ height: `${m.collected}%` }}
                 ></div>
               </div>
-              <span className={`text-[10px] ${m.active ? 'text-[#111418] dark:text-white font-bold' : 'text-[#617589] font-medium'}`}>
+              <span className={`text-[8px] md:text-[10px] text-center leading-tight ${m.active ? 'text-[#111418] dark:text-white font-bold' : 'text-[#617589] font-medium'}`}>
                 {m.name}
               </span>
             </div>

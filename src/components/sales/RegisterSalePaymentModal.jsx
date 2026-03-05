@@ -5,7 +5,22 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { AlertCircle, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
+import { 
+  AlertCircle, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Loader2, 
+  Wallet, 
+  Receipt, 
+  ArrowRight, 
+  Coins, 
+  Banknote,
+  ArrowUpRight,
+  User,
+  Hash,
+  ChevronRight
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 import { useI18n } from '@/lib/i18n'
 import {
@@ -28,6 +43,7 @@ import {
 } from '@/components/ui/select'
 import { cashRegisterService } from '@/services/cashRegisterService'
 import { calculateCashRegisterBalance } from '@/utils/cashRegisterUtils'
+import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 
 const CASH_REGISTER_NONE_VALUE = '__none__'
 
@@ -36,12 +52,18 @@ const CASH_REGISTER_NONE_VALUE = '__none__'
  * Para PYG (guaraníes): redondea a entero (sin decimales).
  * Esto asegura que la validación use el mismo valor que se muestra al usuario.
  */
-const getNormalizedBalanceDue = balanceDue => {
+const getNormalizedBalanceDue = (balanceDue, currency) => {
   if (balanceDue === null || balanceDue === undefined) return null
   const raw = Number(balanceDue)
   if (!Number.isFinite(raw)) return null
+  
+  const code = normalizeCurrencyCode(currency)
   // PYG siempre sin decimales
-  return Math.round(raw)
+  if (code === 'PYG') {
+    return Math.round(raw)
+  }
+  // Otras monedas con 2 decimales
+  return Math.round(raw * 100) / 100
 }
 
 /**
@@ -92,7 +114,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     if (open) {
       resetForm()
     }
-  }, [open, resetForm])
+  }, [open])
 
   const handleDialogChange = nextOpen => {
     if (!nextOpen) {
@@ -105,13 +127,26 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
 
   const formatter = useMemo(() => {
     const locale = lang === 'en' ? 'en-US' : 'es-PY'
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: 'PYG',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    })
-  }, [lang])
+    let currencyCode = 'PYG'
+    
+    try {
+      currencyCode = normalizeCurrencyCode(sale?.currency)
+      return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currencyCode,
+        minimumFractionDigits: currencyCode === 'PYG' ? 0 : 2,
+        maximumFractionDigits: currencyCode === 'PYG' ? 0 : 2,
+      })
+    } catch (e) {
+      console.error('Error creating NumberFormat for currency:', sale?.currency, e)
+      return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: 'PYG',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })
+    }
+  }, [lang, sale?.currency])
 
   const formatLocalizedCurrency = useCallback(
     value => {
@@ -172,7 +207,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
       const numericToApply = Number.parseFloat(
         parseNumberWithDots(amountToApply)
       )
-      const balanceDue = getNormalizedBalanceDue(sale.balance_due)
+      const balanceDue = getNormalizedBalanceDue(sale.balance_due, sale.currency)
 
       if (!Number.isFinite(numericToApply)) {
         errors.amountToApply = 'Monto inválido'
@@ -210,6 +245,15 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     const balanceDue = Number(sale.balance_due || 0)
     return balanceDue <= 0
   }, [sale])
+
+  // Cálculo de balance proyectado
+  const projectedBalance = useMemo(() => {
+    if (!sale) return 0
+    const balanceDue = getNormalizedBalanceDue(sale.balance_due, sale.currency) || 0
+    const toApply = Number.parseFloat(parseNumberWithDots(amountToApply)) || 0
+    const result = balanceDue - toApply
+    return result > 0 ? result : 0
+  }, [sale, amountToApply, parseNumberWithDots])
 
   const loadCashRegisters = useCallback(async () => {
     setCashRegistersLoading(true)
@@ -288,44 +332,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     }
   }, [cashRegisterId, cashRegisters])
 
-  // Auto-completar "Monto a Aplicar" cuando cambia "Monto Recibido"
-  useEffect(() => {
-    if (!amountReceived || !sale) {
-      setAmountToApply('')
-      userEditedAmountToApply.current = false
-      return
-    }
-
-    const numericReceived = Number.parseFloat(parseNumberWithDots(amountReceived))
-    if (!Number.isFinite(numericReceived) || numericReceived <= 0) {
-      setAmountToApply('')
-      userEditedAmountToApply.current = false
-      return
-    }
-
-    // Calcular monto a aplicar = MIN(monto_recibido, balance_pendiente)
-    const balanceDue = getNormalizedBalanceDue(sale.balance_due) || 0
-    const autoAmountToApply = Math.min(numericReceived, balanceDue)
-
-    // Si el usuario editó manualmente, verificar si el monto recibido cambió
-    // significativamente (más de ₲100 de diferencia)
-    if (userEditedAmountToApply.current && amountToApply) {
-      const currentToApply = Number.parseFloat(parseNumberWithDots(amountToApply))
-      // Si el monto recibido es menor que el monto a aplicar, forzar actualización
-      if (numericReceived < currentToApply) {
-        setAmountToApply(
-          formatNumberWithDots(String(Math.round(autoAmountToApply)))
-        )
-        userEditedAmountToApply.current = false
-        return
-      }
-      // Si la diferencia es significativa, permitir que el usuario lo maneje manualmente
-      return
-    }
-
-    // Auto-completar
-    setAmountToApply(formatNumberWithDots(String(Math.round(autoAmountToApply))))
-  }, [amountReceived, sale, parseNumberWithDots, formatNumberWithDots, amountToApply])
+  // Efecto eliminado para permitir tipado manual sin interrupciones destructivas
 
   const cashRegisterOptions = useMemo(
     () =>
@@ -438,7 +445,7 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     }
 
     // Validar que amount_to_apply no exceda balance_due
-    const normalizedBalanceDue = getNormalizedBalanceDue(sale.balance_due)
+    const normalizedBalanceDue = getNormalizedBalanceDue(sale.balance_due, sale.currency)
     if (normalizedBalanceDue !== null && numericAmountToApply > normalizedBalanceDue) {
       setAmountToApplyError(
         t('sales.registerPaymentModal.amountToApply.errorExceeded')
@@ -499,340 +506,257 @@ const RegisterSalePaymentModal = ({ open, onOpenChange, sale, onSubmit }) => {
     return formatLocalizedCurrency(sale.balance_due)
   }, [formatLocalizedCurrency, sale])
 
+
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className='register-sale-payment-modal'>
+      <DialogContent className='register-sale-payment-modal max-w-5xl p-0 overflow-hidden border-none shadow-2xl'>
+        <DialogTitle className='sr-only'>Registrar Pago de Venta</DialogTitle>
+        <DialogDescription className='sr-only'>Registre el cobro de la venta seleccionada.</DialogDescription>
         <form
-          className='register-sale-payment-modal__form'
+          className='flex flex-col h-full max-h-[90vh]'
           onSubmit={handleSubmit}
         >
-          <DialogHeader className='register-sale-payment-modal__header'>
-            <DialogTitle className='register-sale-payment-modal__title'>
-              {sale
-                ? t('sales.registerPaymentModal.titleWithOrder', {
-                    orderId: sale.id || sale.sale_id,
-                  })
-                : t('sales.registerPaymentModal.title')}
-            </DialogTitle>
-            <DialogDescription className='register-sale-payment-modal__description'>
-              {balanceDueLabel
-                ? t('sales.registerPaymentModal.balanceDue', {
-                    amount: balanceDueLabel,
-                  })
-                : t('sales.registerPaymentModal.orderFallback')}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className='register-sale-payment-modal__body'>
-            {/* Warning: Factura ya está completamente pagada */}
-            {isAlreadyPaid && (
-              <div
-                className='register-sale-payment-modal__alert'
-                role='alert'
-                aria-live='assertive'
-              >
-                <AlertCircle className='register-sale-payment-modal__alert-icon' />
-                <span>
-                  Esta factura ya está completamente pagada. No se pueden
-                  registrar más pagos.
-                </span>
-              </div>
-            )}
-
-            {/* Warning: Cash register closed */}
-            {!isAlreadyPaid && isCashRegisterClosed && (
-              <div
-                className='register-sale-payment-modal__warning'
-                role='status'
-                aria-live='polite'
-              >
-                <AlertTriangle className='register-sale-payment-modal__warning-icon' />
-                <div className='register-sale-payment-modal__warning-content'>
-                  <p className='register-sale-payment-modal__warning-title'>
-                    {t('common.warning')}
-                  </p>
-                  <p className='register-sale-payment-modal__warning-text'>
-                    {t('sales.registerPaymentModal.cashRegister.closedWarning')}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Amount Received (Cash) */}
-            <div className='register-sale-payment-modal__field'>
-              <label
-                htmlFor='sale-payment-amount-received'
-                className='register-sale-payment-modal__label'
-              >
-                {t('sales.registerPaymentModal.amountReceived.label')}
-              </label>
-              <Input
-                id='sale-payment-amount-received'
-                type='text'
-                autoComplete='off'
-                inputMode='numeric'
-                value={amountReceived}
-                onChange={event => {
-                  const value = event.target.value
-                  const numeric = parseNumberWithDots(value)
-                  const formatted = formatNumberWithDots(numeric)
-                  setAmountReceived(formatted)
-                  // Limpiar error manual al editar
-                  setAmountReceivedError(null)
-                }}
-                disabled={isFormDisabled}
-                aria-invalid={Boolean(
-                  amountReceivedError || validationErrors.amountReceived
-                )}
-                className='register-sale-payment-modal__control'
-                placeholder='0'
-              />
-              {balanceDueLabel && (
-                <div className='register-sale-payment-modal__hint' style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                  <span>
-                    {t('sales.registerPaymentModal.amountReceived.pending', 'Saldo pendiente: {amount}', {
-                      amount: balanceDueLabel,
-                    })}
+          <div className='flex flex-col lg:flex-row h-full overflow-hidden'>
+            {/* PANEL IZQUIERDO: RESUMEN (Estilo Premium) */}
+            <div className='w-full lg:w-2/5 bg-slate-900 p-8 text-white flex flex-col justify-between overflow-y-auto relative border-r border-white/5'>
+              <div className='space-y-8'>
+                <div className='flex items-center gap-3 opacity-90 transition-all'>
+                  <div className='p-2 bg-white/20 rounded-lg backdrop-blur-md ring-1 ring-white/30'>
+                    <Wallet size={20} className='text-primary-foreground' />
+                  </div>
+                  <span className='text-xs font-black uppercase tracking-[0.2em] text-white/90'>
+                    Resumen de Pago
                   </span>
-                  <button
-                    type='button'
-                    disabled={isFormDisabled}
-                    onClick={() => {
-                      const balanceDue = getNormalizedBalanceDue(sale.balance_due)
-                      if (balanceDue !== null) {
-                        setAmountReceived(formatNumberWithDots(String(balanceDue)))
+                </div>
+
+                <div className='space-y-1.5'>
+                  <div className='flex items-center gap-2 text-white/70'>
+                    <User size={14} className='text-primary-foreground' />
+                    <span className='text-sm font-bold'>{sale?.client_name || 'Cliente'}</span>
+                  </div>
+                  <h2 className='text-3xl font-black tracking-tight leading-none text-white'>
+                    {sale?.id || sale?.sale_id || 'ID Desconocido'}
+                  </h2>
+                </div>
+
+                <div className='p-6 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md space-y-4 shadow-2xl'>
+                  <div className='space-y-1'>
+                    <span className='text-xs font-black text-white/60 uppercase tracking-widest'>Deuda Actual</span>
+                    <p className='text-3xl font-black text-lime-400 drop-shadow-[0_0_10px_rgba(163,230,53,0.3)]'>
+                      {balanceDueLabel || formatLocalizedCurrency(0)}
+                    </p>
+                  </div>
+
+                  {amountToApply && !validationErrors.amountToApply && projectedBalance < (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 0) && (
+                    <div className='pt-4 border-t border-white/20 flex items-center justify-between'>
+                      <div className='space-y-1'>
+                        <span className='text-[10px] font-black text-white/60 uppercase tracking-widest'>Nuevo Saldo</span>
+                        <p className={cn(
+                          'text-xl font-black transition-all drop-shadow-sm',
+                          projectedBalance <= 0 ? 'text-lime-300' : 'text-orange-300'
+                        )}>
+                          {formatLocalizedCurrency(projectedBalance)}
+                        </p>
+                      </div>
+                      <div className='p-2 bg-white/10 rounded-full'>
+                        <ArrowUpRight size={18} className='text-white/50' />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className='space-y-4'>
+                   <div className='flex items-center justify-between text-xs font-black uppercase tracking-widest text-white/50'>
+                      <span>Progreso del Cobro</span>
+                      <span className='text-white/90'>{Math.round((Number.parseFloat(parseNumberWithDots(amountToApply)) || 0) / (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 1) * 100)}%</span>
+                   </div>
+                   <div className='h-2 bg-slate-700/50 rounded-full overflow-hidden'>
+                      <div 
+                        className='h-full bg-lime-400 transition-all duration-500'
+                        style={{ width: `${Math.min(100, Math.round((Number.parseFloat(parseNumberWithDots(amountToApply)) || 0) / (getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 1) * 100))}%` }}
+                      ></div>
+                   </div>
+                </div>
+              </div>
+
+              <div className='mt-8 pt-6 border-t border-white/10 hidden lg:block'>
+                <p className='text-[10px] leading-relaxed text-white/40 uppercase font-black tracking-widest italic'>
+                  SISTEMA DE GESTIÓN EMPRESARIAL <br /> <span className='text-white/20'>FACTURACIÓN Y COBRANZAS V2.0</span>
+                </p>
+              </div>
+            </div>
+
+            {/* PANEL DERECHO: FORMULARIO */}
+            <div className='w-full lg:w-3/5 p-8 bg-white flex flex-col gap-6 overflow-y-auto'>
+              <header className='flex justify-between items-start'>
+                <div>
+                  <h3 className='text-xl font-black text-slate-900 uppercase tracking-tighter'>Registrar Pago</h3>
+                  <p className='text-sm font-medium text-slate-500'>Complete los detalles de la transacción</p>
+                </div>
+              </header>
+
+              <div className='space-y-6'>
+                {/* Monto Recibido */}
+                <div className='space-y-2'>
+                  <div className='flex justify-between items-end'>
+                    <label className='text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2'>
+                      <Banknote size={14} className='text-primary' /> Monto Recibido
+                    </label>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        const balanceDue = getNormalizedBalanceDue(sale.balance_due, sale.currency)
+                        if (balanceDue !== null) {
+                          setAmountReceived(formatNumberWithDots(String(balanceDue)))
+                          setAmountReceivedError(null)
+                          userEditedAmountToApply.current = false
+                        }
+                      }}
+                      className='text-[10px] font-black uppercase text-primary hover:text-primary-hover underline underline-offset-4 tracking-tighter'
+                    >
+                      Cobrar todo
+                    </button>
+                  </div>
+                  <div className='relative group'>
+                    <Input
+                      type='text'
+                      inputMode='numeric'
+                      value={amountReceived}
+                      onChange={e => {
+                        const value = e.target.value
+                        const numeric = parseNumberWithDots(value)
+                        const formatted = formatNumberWithDots(numeric)
+                        setAmountReceived(formatted)
+                        
+                        // Lógica manual de sincronización para evitar loops de efectos
+                        if (!userEditedAmountToApply.current) {
+                          const balanceDue = getNormalizedBalanceDue(sale?.balance_due, sale?.currency) || 0
+                          const numericValue = Number.parseFloat(numeric) || 0
+                          const autoToApply = Math.min(numericValue, balanceDue)
+                          setAmountToApply(formatNumberWithDots(String(Math.round(autoToApply))))
+                        }
+                        
                         setAmountReceivedError(null)
-                        userEditedAmountToApply.current = false
-                      }
-                    }}
-                    style={{
-                      background: 'none',
-                      border: '1px solid #0078d4',
-                      borderRadius: '4px',
-                      color: '#0078d4',
-                      cursor: isFormDisabled ? 'not-allowed' : 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      padding: '2px 8px',
-                      whiteSpace: 'nowrap',
-                      opacity: isFormDisabled ? 0.5 : 1,
-                    }}
+                      }}
+                      placeholder='0'
+                      className='h-14 text-2xl font-black bg-slate-50 border-2 border-slate-100 focus:border-primary focus:bg-white transition-all rounded-xl pl-12 pr-6'
+                    />
+                    <div className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-lg'>
+                      ₲
+                    </div>
+                  </div>
+                  {amountReceivedError && (
+                    <p className='text-[10px] font-bold text-rose-500 uppercase tracking-wide flex items-center gap-1 mt-1'>
+                      <AlertCircle size={10} /> {amountReceivedError}
+                    </p>
+                  )}
+                </div>
+
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                  {/* Monto a Aplicar */}
+                  <div className='space-y-2'>
+                    <label className='text-[10px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2'>
+                      <Coins size={12} className='text-orange-500' /> Monto Aplicar
+                    </label>
+                    <Input
+                      type='text'
+                      inputMode='numeric'
+                      value={amountToApply}
+                      onChange={e => {
+                        setAmountToApply(formatNumberWithDots(parseNumberWithDots(e.target.value)))
+                        userEditedAmountToApply.current = true
+                        setAmountToApplyError(null)
+                      }}
+                      className='h-12 font-bold bg-slate-50 rounded-xl border-dashed border-2 hover:border-slate-300'
+                    />
+                    {amountToApplyError && <p className='text-[10px] font-bold text-rose-500 mt-1 uppercase'>{amountToApplyError}</p>}
+                  </div>
+
+                  {/* Vuelto / Diferencia */}
+                  <div className='space-y-2'>
+                    <label className='text-[10px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2'>
+                      Vuelto / Saldo
+                    </label>
+                    <div className='h-12 flex items-center px-4 bg-orange-50 text-orange-700 font-black rounded-xl border border-orange-100'>
+                      {formatLocalizedCurrency(change)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Caja Registradora */}
+                <div className='space-y-2'>
+                  <label className='text-[10px] font-black text-slate-800 uppercase tracking-widest'>Caja de Cobro</label>
+                  <Select
+                    value={resolvedCashRegisterValue}
+                    onValueChange={v => v === CASH_REGISTER_NONE_VALUE ? setCashRegisterId('') : setCashRegisterId(v)}
+                    modal={false}
                   >
-                    {t('sales.registerPaymentModal.amountReceived.collectFull', 'Cobro Total')}
-                  </button>
+                    <SelectTrigger className='h-12 rounded-xl bg-slate-50 border-slate-100'>
+                      <SelectValue placeholder='Seleccione Caja' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={CASH_REGISTER_NONE_VALUE}>Sin asignar caja</SelectItem>
+                      {cashRegisterOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          <div className='flex justify-between gap-4 w-full min-w-[200px]'>
+                            <span className='font-bold'>{opt.label}</span>
+                            <span className='text-[10px] opacity-70'>{opt.balanceLabel}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Notas */}
+                <div className='space-y-2'>
+                  <label className='text-[10px] font-black text-slate-800 uppercase tracking-widest'>Comentarios</label>
+                  <Textarea
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    placeholder='Notas internas del cobro...'
+                    className='min-h-[80px] rounded-xl bg-slate-50 border-slate-100 text-sm'
+                  />
+                </div>
+              </div>
+
+              {/* Errores del Servidor */}
+              {formError && (
+                <div className='p-4 bg-rose-50 border border-rose-100 rounded-xl text-rose-600 text-[10px] font-black uppercase flex items-center gap-3'>
+                  <AlertTriangle size={16} />
+                  <span>{formError}</span>
                 </div>
               )}
-              {(amountReceivedError || validationErrors.amountReceived) && (
-                <p className='register-sale-payment-modal__error'>
-                  {amountReceivedError || validationErrors.amountReceived}
-                </p>
-              )}
-            </div>
 
-            {/* Amount to Apply */}
-            <div className='register-sale-payment-modal__field'>
-              <label
-                htmlFor='sale-payment-amount-to-apply'
-                className='register-sale-payment-modal__label'
-              >
-                {t('sales.registerPaymentModal.amountToApply.label')}
-              </label>
-              <Input
-                id='sale-payment-amount-to-apply'
-                type='text'
-                autoComplete='off'
-                inputMode='numeric'
-                value={amountToApply}
-                onChange={event => {
-                  const value = event.target.value
-                  const numeric = parseNumberWithDots(value)
-                  const formatted = formatNumberWithDots(numeric)
-                  setAmountToApply(formatted)
-                  // Marcar que el usuario editó manualmente
-                  userEditedAmountToApply.current = true
-                  // Limpiar error manual al editar
-                  setAmountToApplyError(null)
-                }}
-                disabled={isFormDisabled}
-                aria-invalid={Boolean(
-                  amountToApplyError || validationErrors.amountToApply
-                )}
-                className='register-sale-payment-modal__control'
-                placeholder='0'
-              />
-              {balanceDueLabel && !validationErrors.amountToApply && (
-                <p className='register-sale-payment-modal__hint'>
-                  {t('sales.registerPaymentModal.amountToApply.pending', {
-                    amount: balanceDueLabel,
-                  })}
-                </p>
-              )}
-              {(amountToApplyError || validationErrors.amountToApply) && (
-                <p className='register-sale-payment-modal__error'>
-                  {amountToApplyError || validationErrors.amountToApply}
-                </p>
-              )}
-            </div>
-
-            {/* Cash Register */}
-            <div className='register-sale-payment-modal__field'>
-              <label className='register-sale-payment-modal__label'>
-                {t('sales.registerPaymentModal.cashRegister.label')}
-              </label>
-              <Select
-                value={resolvedCashRegisterValue}
-                onValueChange={value => {
-                  if (value === CASH_REGISTER_NONE_VALUE) {
-                    setCashRegisterId('')
-                    return
-                  }
-                  setCashRegisterId(value)
-                }}
-                modal={false}
-                disabled={isFormDisabled || isCashRegistersLoading}
-              >
-                <SelectTrigger className='register-sale-payment-modal__control register-sale-payment-modal__control--select w-full'>
-                  <SelectValue
-                    placeholder={t(
-                      isCashRegistersLoading
-                        ? 'sales.registerPaymentModal.cashRegister.loading'
-                        : 'sales.registerPaymentModal.cashRegister.placeholder'
-                    )}
-                  />
-                </SelectTrigger>
-                <SelectContent className='register-sale-payment-modal__select-content'>
-                  <SelectItem
-                    value={CASH_REGISTER_NONE_VALUE}
-                    className='register-sale-payment-modal__select-item'
-                  >
-                    {t('sales.registerPaymentModal.cashRegister.none')}
-                  </SelectItem>
-                  {cashRegisterOptions.length ? (
-                    cashRegisterOptions.map(option => (
-                      <SelectItem
-                        key={option.value}
-                        value={option.value}
-                        className='register-sale-payment-modal__select-item'
-                      >
-                        <span className='register-sale-payment-modal__cash-register-option'>
-                          <span className='register-sale-payment-modal__cash-register-name'>
-                            {option.label}
-                            {!option.isOpen && (
-                              <span className='register-sale-payment-modal__cash-register-status'>
-                                {' '}
-                                (
-                                {t(
-                                  'sales.registerPaymentModal.cashRegister.closed'
-                                )}
-                                )
-                              </span>
-                            )}
-                          </span>
-                          {option.balanceLabel && (
-                            <span className='register-sale-payment-modal__cash-register-balance'>
-                              {option.balanceLabel}
-                            </span>
-                          )}
-                          {option.meta && (
-                            <span className='register-sale-payment-modal__cash-register-meta'>
-                              {option.meta}
-                            </span>
-                          )}
-                        </span>
-                      </SelectItem>
-                    ))
+              {/* Botones de Acción */}
+              <footer className='mt-4 flex gap-3 pt-6 border-t border-slate-100'>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() => handleDialogChange(false)}
+                  className='flex-1 h-12 rounded-xl font-black uppercase tracking-widest text-[10px]'
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type='submit'
+                  disabled={isSubmitDisabled}
+                  className='flex-[2] h-12 rounded-xl bg-primary hover:bg-primary-hover text-white shadow-xl shadow-primary/20 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95'
+                >
+                  {isSubmitting ? (
+                    <div className='flex items-center gap-2'>
+                      <Loader2 size={16} className='animate-spin' />
+                      Procesando...
+                    </div>
                   ) : (
-                    <SelectItem
-                      value='__empty__'
-                      disabled
-                      className='register-sale-payment-modal__select-item'
-                    >
-                      {t(
-                        isCashRegistersLoading
-                          ? 'sales.registerPaymentModal.cashRegister.loading'
-                          : 'sales.registerPaymentModal.cashRegister.empty'
-                      )}
-                    </SelectItem>
+                    <div className='flex items-center gap-2 uppercase'>
+                      <CheckCircle2 size={16} /> Confirmar Transacción
+                    </div>
                   )}
-                </SelectContent>
-              </Select>
-              {cashRegistersError && (
-                <p className='register-sale-payment-modal__error'>
-                  {cashRegistersError}
-                </p>
-              )}
+                </Button>
+              </footer>
             </div>
-
-            {/* Notes */}
-            <div className='register-sale-payment-modal__field register-sale-payment-modal__field--full'>
-              <label
-                className='register-sale-payment-modal__label'
-                htmlFor='sale-payment-notes'
-              >
-                {t('sales.registerPaymentModal.notes.label')}
-              </label>
-              <Textarea
-                id='sale-payment-notes'
-                value={notes}
-                onChange={event => setNotes(event.target.value)}
-                disabled={isFormDisabled}
-                placeholder={t('sales.registerPaymentModal.notes.placeholder')}
-                rows={3}
-                className='register-sale-payment-modal__control register-sale-payment-modal__control--textarea'
-              />
-            </div>
-
-            {/* Change Display - Siempre visible cuando hay montos ingresados */}
-            {amountReceived && amountToApply && !validationErrors.hasErrors && (
-              <div className='register-sale-payment-modal__change-box'>
-                <p className='register-sale-payment-modal__change-label'>
-                  {change > 0
-                    ? t('sales.registerPaymentModal.change.willReturn')
-                    : t('sales.registerPaymentModal.change.noChange')}
-                </p>
-                <p className='register-sale-payment-modal__change-value'>
-                  {formatLocalizedCurrency(change)}
-                </p>
-              </div>
-            )}
-
-            {/* Form error */}
-            {formError && (
-              <div className='register-sale-payment-modal__alert'>
-                <AlertCircle className='register-sale-payment-modal__alert-icon' />
-                <span>{formError}</span>
-              </div>
-            )}
           </div>
-
-          <DialogFooter className='register-sale-payment-modal__footer'>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => handleDialogChange(false)}
-              disabled={isSubmitting}
-              className='register-sale-payment-modal__button register-sale-payment-modal__button--ghost'
-            >
-              {t('sales.registerPaymentModal.cancel')}
-            </Button>
-            <Button
-              type='submit'
-              disabled={isSubmitDisabled}
-              className='register-sale-payment-modal__button register-sale-payment-modal__button--primary'
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className='register-sale-payment-modal__button-spinner' />
-                  {t('sales.registerPaymentModal.loading')}
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className='register-sale-payment-modal__button-icon' />
-                  {t('sales.registerPaymentModal.confirm')}
-                </>
-              )}
-            </Button>
-          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
