@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Visualización - ERP Fluent 2.0</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#106ebe",
+                "primary-hover": "#005a9e",
+                "background-light": "#f3f4f6",
+                "background-dark": "#101922",
+                "surface": "#ffffff",
+                "border-subtle": "#e5e7eb",
+                "text-main": "#242424",
+                "text-secondary": "#616161",
+                "success": "#107c10",
+                "error": "#a4262c",
+                "warning": "#ffb900"
+              },
+              fontFamily: { "display": ["Inter", "sans-serif"] },
+              borderRadius: { "DEFAULT": "4px", "lg": "8px", "xl": "12px", "full": "9999px" },
+              boxShadow: {
+                "fluent-2": "0 2px 4px rgba(0,0,0,0.04), 0 0 2px rgba(0,0,0,0.06)",
+                "fluent-shadow": "0 2px 4px rgba(0,0,0,0.04), 0 4px 8px rgba(0,0,0,0.04)"
+              }
+            },
+          },
+        }
+    </script>
+<link rel="stylesheet" href="./FLUENT2_RESOURCES.css">
+</head>
+<body class="bg-background-light text-text-main font-display min-h-screen flex">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-72 flex-shrink-0 border-r border-border-subtle bg-white flex flex-col sticky top-0 h-screen">
+        <div class="p-6 flex items-center gap-3">
+            <div class="size-9 bg-primary rounded flex items-center justify-center text-white">
+                <span class="material-symbols-outlined text-xl font-bold">architecture</span>
+            </div>
+            <div>
+                <h1 class="font-black text-base tracking-tighter uppercase leading-none">Design System</h1>
+                <p class="text-[10px] text-text-secondary font-bold uppercase tracking-widest leading-none mt-1">Fluent ERP v2.0</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-1">
+            <div class="px-3 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Categorías</div>
+            <a href="FLUENT2_FUNDAMENTALS.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-text-secondary hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="material-symbols-outlined text-lg">grid_view</span> 01. Fundamentos
+            </a>
+            <a href="FLUENT2_COMPONENTS.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-text-secondary hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="material-symbols-outlined text-lg">smart_button</span> 02. Componentes
+            </a>
+            <a href="FLUENT2_DATA_VISUALIZATION.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-bold text-sm">
+                <span class="material-symbols-outlined text-lg">table_chart</span> 03. Visualización
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto">
+        <header class="h-16 border-b border-border-subtle bg-white flex items-center px-10">
+            <nav class="flex items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest gap-2">
+                <span>03. Visualización</span> <span class="material-symbols-outlined text-xs">chevron_right</span>
+                <span class="text-text-main">Grids y Listas</span>
+            </nav>
+        </header>
+
+        <div class="p-10 space-y-16 max-w-[1500px] mx-auto">
+            
+            <!-- CONTENIDO DE STITCH PANTALLA 7: Grids de Datos Avanzados -->
+            <section class="space-y-8">
+                <div class="flex flex-col gap-1 border-l-4 border-primary pl-4">
+                    <h2 class="text-3xl font-black text-text-main tracking-tighter uppercase">Data Grids de Alta Densidad</h2>
+                    <p class="text-text-secondary text-sm font-medium">Grillas optimizadas para operaciones complejas.</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-fluent-shadow border border-border-subtle overflow-hidden">
+                    <div class="px-6 py-4 border-b border-border-subtle bg-slate-50 flex justify-between items-center">
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1.5 bg-white border border-border-subtle text-[10px] font-black uppercase rounded hover:bg-slate-50">Edición Masiva</button>
+                            <button class="px-3 py-1.5 bg-white border border-border-subtle text-[10px] font-black uppercase rounded hover:bg-slate-50">Exportar</button>
+                        </div>
+                        <button class="px-4 py-2 bg-primary text-white text-[10px] font-black uppercase rounded">Nuevo Registro</button>
+                    </div>
+                    <table class="w-full text-left">
+                        <thead class="bg-white border-b border-border-subtle text-[11px] font-black uppercase text-slate-400 tracking-wider">
+                            <tr>
+                                <th class="py-4 px-6 w-12 text-center"><input type="checkbox" class="rounded border-slate-300 text-primary"/></th>
+                                <th class="py-4 px-4">Estado</th>
+                                <th class="py-4 px-4">Usuario / Entidad</th>
+                                <th class="py-4 px-4">Rol / Categoría</th>
+                                <th class="py-4 px-4 text-right">Monto</th>
+                                <th class="py-4 px-6 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50 text-xs">
+                            <tr class="hover:bg-slate-50 group">
+                                <td class="py-4 px-6 text-center"><input type="checkbox" class="rounded border-slate-300 text-primary"/></td>
+                                <td class="py-4 px-4">
+                                    <span class="bg-green-100 text-success px-2.5 py-1 rounded-full font-bold text-[10px]">PAGADO</span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="size-8 rounded-full bg-slate-100 border border-border-subtle flex items-center justify-center font-bold">AS</div>
+                                        <span class="font-bold text-text-main">Alice Smith</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-4 text-text-secondary font-medium">Administrador</td>
+                                <td class="py-4 px-4 text-right font-black">$2,500.00</td>
+                                <td class="py-4 px-6 text-right"><button class="text-slate-300 hover:text-primary"><span class="material-symbols-outlined text-lg">more_vert</span></button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- CONTENIDO DE STITCH PANTALLA 8: Jerarquías Operativas -->
+            <section class="space-y-8">
+                <div class="flex flex-col gap-1 border-l-4 border-primary pl-4">
+                    <h2 class="text-3xl font-black text-text-main tracking-tighter uppercase">Jerarquías y Árboles</h2>
+                    <p class="text-text-secondary text-sm font-medium">Organización estructural de departamentos y sedes.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Tree View Sample -->
+                    <div class="bg-white p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-4">
+                        <div class="flex items-center gap-2 text-sm font-bold text-text-main">
+                            <span class="material-symbols-outlined text-slate-400 rotate-90">chevron_right</span>
+                            <span class="material-symbols-outlined text-primary">business</span>
+                            Sede Principal (HQ)
+                        </div>
+                        <div class="ml-6 pl-4 border-l border-slate-200 space-y-3">
+                            <div class="flex items-center gap-2 text-sm text-text-secondary">
+                                <span class="material-symbols-outlined text-slate-400 rotate-90">chevron_right</span>
+                                <span class="material-symbols-outlined text-warning">folder</span>
+                                Finanzas
+                            </div>
+                            <div class="ml-6 pl-4 border-l border-slate-200 space-y-2">
+                                <div class="flex items-center gap-2 text-sm text-primary font-bold">
+                                    <span class="material-symbols-outlined">receipt_long</span>
+                                    Facturación (Activo)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Activity Feed Sample -->
+                    <div class="bg-white p-6 rounded-xl border border-border-subtle shadow-fluent-2">
+                        <h3 class="text-xs font-black uppercase text-slate-400 tracking-widest mb-6">Feed de Actividad</h3>
+                        <div class="space-y-6 relative before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-px before:bg-slate-100">
+                            <div class="relative pl-8">
+                                <div class="absolute left-0 top-0 size-5 bg-green-500 rounded-full border-4 border-white"></div>
+                                <p class="text-xs font-bold leading-none">Tarea Completada</p>
+                                <p class="text-[10px] text-text-secondary mt-1">Hace 2 horas • por Ana García</p>
+                            </div>
+                            <div class="relative pl-8">
+                                <div class="absolute left-0 top-0 size-5 bg-primary rounded-full border-4 border-white"></div>
+                                <p class="text-xs font-bold leading-none">Actualización de Sistema</p>
+                                <p class="text-[10px] text-text-secondary mt-1">Hace 5 horas • v2.4.1</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONTENIDO DE STITCH PANTALLA 9: Listas en Tarjetas -->
+            <section class="space-y-8">
+                <div class="flex flex-col gap-1 border-l-4 border-primary pl-4">
+                    <h2 class="text-3xl font-black text-text-main tracking-tighter uppercase">Listas de Directorio</h2>
+                    <p class="text-text-secondary text-sm font-medium">Tarjetas de perfil para gestión de usuarios.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-5 bg-white rounded-xl border border-border-subtle shadow-sm hover:shadow-fluent-8 transition-all flex justify-between items-center group cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="size-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-slate-400">JP</div>
+                            <div>
+                                <h4 class="font-bold text-sm text-text-main group-hover:text-primary transition-colors">Juan Pérez</h4>
+                                <p class="text-xs text-text-secondary font-medium uppercase tracking-tighter">Ingeniero de Software • IT</p>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 bg-green-50 text-success text-[10px] font-black rounded uppercase border border-green-100">Activo</span>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+</body>
+</html>

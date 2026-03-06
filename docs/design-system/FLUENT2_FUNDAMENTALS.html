@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Fundamentos - ERP Fluent 2.0</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#106ebe",
+                "primary-hover": "#005a9e",
+                "background-light": "#f3f4f6",
+                "background-dark": "#101922",
+                "surface": "#ffffff",
+                "border-subtle": "#e5e7eb",
+                "text-main": "#242424",
+                "text-secondary": "#616161",
+                "success": "#107c10",
+                "error": "#a4262c",
+                "warning": "#ffb900",
+                "info": "#0078d4"
+              },
+              fontFamily: { "display": ["Inter", "Segoe UI", "sans-serif"] },
+              borderRadius: { "DEFAULT": "4px", "lg": "8px", "xl": "12px", "full": "9999px" },
+              boxShadow: {
+                "fluent-2": "0 2px 4px rgba(0,0,0,0.04), 0 0 2px rgba(0,0,0,0.06)",
+                "fluent-8": "0 4px 8px rgba(0,0,0,0.12), 0 0 2px rgba(0,0,0,0.06)",
+                "fluent-16": "0 8px 16px rgba(0,0,0,0.14), 0 0 2px rgba(0,0,0,0.06)"
+              }
+            },
+          },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+    </style>
+<link rel="stylesheet" href="./FLUENT2_RESOURCES.css">
+</head>
+<body class="bg-background-light text-text-main font-display min-h-screen flex">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-72 flex-shrink-0 border-r border-border-subtle bg-white flex flex-col sticky top-0 h-screen">
+        <div class="p-6 flex items-center gap-3">
+            <div class="size-9 bg-primary rounded flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-xl font-bold">architecture</span>
+            </div>
+            <div>
+                <h1 class="font-black text-base tracking-tighter uppercase leading-none">Design System</h1>
+                <p class="text-[10px] text-text-secondary font-bold uppercase tracking-widest leading-none mt-1">Fluent ERP v2.0</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
+            <div class="px-3 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Categorías</div>
+            <a href="FLUENT2_FUNDAMENTALS.html" class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary font-bold text-sm">
+                <span class="material-symbols-outlined text-lg">grid_view</span> 01. Fundamentos
+            </a>
+            <a href="FLUENT2_COMPONENTS.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-text-secondary hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="material-symbols-outlined text-lg">smart_button</span> 02. Componentes
+            </a>
+            <a href="FLUENT2_DATA_VISUALIZATION.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-text-secondary hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="material-symbols-outlined text-lg">table_chart</span> 03. Visualización
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+        <header class="h-16 border-b border-border-subtle bg-white/80 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between px-10">
+            <nav class="flex items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest gap-2">
+                <span>01. Fundamentos</span> <span class="material-symbols-outlined text-xs">chevron_right</span>
+                <span class="text-text-main">Estructura y Superficies</span>
+            </nav>
+        </header>
+
+        <div class="p-10 space-y-20 max-w-[1400px] mx-auto">
+            
+            <!-- CONTENIDO DE STITCH PANTALLA 1: Biblioteca UI Avanzada -->
+            <section id="library" class="space-y-8">
+                <div class="flex flex-col gap-1 border-l-4 border-primary pl-4">
+                    <h2 class="text-3xl font-black text-text-main tracking-tighter uppercase">Biblioteca UI Avanzada</h2>
+                    <p class="text-text-secondary text-sm font-medium">Conceptos de diseño y jerarquía visual del sistema.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Split Button Sample -->
+                    <div class="bg-white p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-4">
+                        <label class="block text-xs font-black uppercase text-slate-400 tracking-widest">Botón Dividido (Split Button)</label>
+                        <div class="inline-flex rounded shadow-sm">
+                            <button class="px-4 py-2 bg-primary text-white text-xs font-bold rounded-l hover:bg-primary-hover transition-colors">Acción Principal</button>
+                            <button class="px-2 py-2 bg-primary text-white border-l border-white/20 rounded-r hover:bg-primary-hover transition-colors">
+                                <span class="material-symbols-outlined text-lg">arrow_drop_down</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Number Field Sample -->
+                    <div class="bg-white p-6 rounded-xl border border-border-subtle shadow-fluent-2 space-y-4">
+                        <label class="block text-xs font-black uppercase text-slate-400 tracking-widest">Control Numérico</label>
+                        <div class="flex rounded border border-border-subtle overflow-hidden max-w-[150px]">
+                            <input type="number" value="42" class="w-full px-3 py-2 text-sm border-none focus:ring-0" />
+                            <div class="flex flex-col border-l border-border-subtle bg-slate-50">
+                                <button class="p-1 border-b border-border-subtle hover:bg-white"><span class="material-symbols-outlined text-xs">expand_less</span></button>
+                                <button class="p-1 hover:bg-white"><span class="material-symbols-outlined text-xs">expand_more</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONTENIDO DE STITCH PANTALLA 2: Feedback y Superficies -->
+            <section id="feedback" class="space-y-8">
+                <div class="flex flex-col gap-1 border-l-4 border-warning pl-4">
+                    <h2 class="text-3xl font-black text-text-main tracking-tighter uppercase">Feedback y Mensajería</h2>
+                    <p class="text-text-secondary text-sm font-medium">Estados de alerta, información y confirmación.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-start gap-3 p-4 rounded-lg bg-green-50 border border-green-200">
+                        <span class="material-symbols-outlined text-success">check_circle</span>
+                        <div>
+                            <h4 class="font-bold text-sm text-green-900 leading-none">Operación exitosa</h4>
+                            <p class="text-xs text-green-700 mt-1">Los cambios se han guardado correctamente.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-4 rounded-lg bg-red-50 border border-red-200">
+                        <span class="material-symbols-outlined text-error">error</span>
+                        <div>
+                            <h4 class="font-bold text-sm text-red-900 leading-none">Error de sistema</h4>
+                            <p class="text-xs text-red-700 mt-1">No se pudo conectar con el servidor central.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Shimmer/Skeleton Sample -->
+                <div class="bg-white p-6 rounded-xl border border-border-subtle shadow-fluent-2">
+                    <div class="animate-pulse flex space-x-4">
+                        <div class="rounded-full bg-slate-100 h-10 w-10"></div>
+                        <div class="flex-1 space-y-3 py-1">
+                            <div class="h-2 bg-slate-100 rounded w-3/4"></div>
+                            <div class="h-2 bg-slate-100 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONTENIDO DE STITCH PANTALLA 3: Estructura y Operación -->
+            <section id="structure" class="space-y-8">
+                <div class="flex flex-col gap-1 border-l-4 border-info pl-4">
+                    <h2 class="text-3xl font-black text-text-main tracking-tighter uppercase">Estructura de Navegación</h2>
+                    <p class="text-text-secondary text-sm font-medium">Migas de pan y barras de herramientas operativas.</p>
+                </div>
+                <!-- Breadcrumbs -->
+                <nav class="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-400">
+                    <span class="flex items-center gap-1 hover:text-primary cursor-pointer"><span class="material-symbols-outlined text-xs">home</span> Inicio</span>
+                    <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+                    <span class="hover:text-primary cursor-pointer">Operación</span>
+                    <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+                    <span class="text-text-main">Ventas</span>
+                </nav>
+                <!-- Toolbar Example -->
+                <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-border-subtle shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <button class="px-4 py-2 bg-primary text-white text-[10px] font-black uppercase rounded hover:bg-primary-hover shadow-md">Nuevo Registro</button>
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                        <button class="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded"><span class="material-symbols-outlined text-lg">edit</span></button>
+                        <button class="p-2 text-slate-400 hover:text-error hover:bg-red-50 rounded"><span class="material-symbols-outlined text-lg">delete</span></button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                <span class="material-symbols-outlined text-sm">search</span>
+                            </span>
+                            <input type="text" placeholder="Buscar..." class="pl-9 pr-3 py-1.5 text-xs border border-border-subtle rounded-full bg-slate-50 w-48 focus:ring-1 focus:ring-primary outline-none" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+</body>
+</html>
