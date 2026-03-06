@@ -28,7 +28,7 @@ const ClientListItem = ({ client, onEdit, onDelete, onView }) => {
   };
 
   return (
-    <div className={`${styles.card('p-6')} erp-hover-card group cursor-pointer`}>
+    <div className={`${styles.card('p-6')} transition-all duration-200 hover:-translate-y-1 hover:shadow-fluent-8 active:translate-y-0 active:shadow-fluent-2 group cursor-pointer`}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-start justify-between mb-3">

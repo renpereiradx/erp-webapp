@@ -27,10 +27,10 @@ const DebtTrendChart = ({ data }) => {
       <div className="relative h-48 md:h-64 w-full flex items-end justify-between gap-2 md:gap-4 px-2 md:px-0">
         {/* Chart Vertical Axis Labels - Hidden on tiny screens */}
         <div className="absolute left-0 top-0 bottom-0 hidden sm:flex flex-col justify-between text-[8px] md:text-[10px] text-slate-400 -ml-8">
-          <span>$1.5M</span>
-          <span>$1.0M</span>
-          <span>$500K</span>
-          <span>$0</span>
+          <span>Gs. 1.5M</span>
+          <span>Gs. 1.0M</span>
+          <span>Gs. 500K</span>
+          <span>Gs. 0</span>
         </div>
 
         {/* Chart Horizontal Grid Lines */}

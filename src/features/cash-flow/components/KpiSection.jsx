@@ -60,7 +60,7 @@ const KpiSection = ({ coverageRatio, netFlow, totalInflows, totalOutflows }) => 
             </div>
             <div className="mt-4">
               <span className="text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-                ${netFlow.toLocaleString()}
+                Gs. {netFlow.toLocaleString('es-PY')}
               </span>
               <div className="mt-1 text-xs font-bold text-green-600 flex items-center gap-1">
                 +12.4% <span className="text-slate-400 font-medium tracking-tight">vs. mes anterior</span>
@@ -92,7 +92,7 @@ const KpiSection = ({ coverageRatio, netFlow, totalInflows, totalOutflows }) => 
             </div>
             <div className="mt-4">
               <span className="text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-                ${totalInflows.toLocaleString()}
+                Gs. {totalInflows.toLocaleString('es-PY')}
               </span>
             </div>
           </div>
@@ -120,7 +120,7 @@ const KpiSection = ({ coverageRatio, netFlow, totalInflows, totalOutflows }) => 
             </div>
             <div className="mt-4">
               <span className="text-3xl lg:text-4xl font-black tracking-tight text-orange-500">
-                ${totalOutflows.toLocaleString()}
+                Gs. {totalOutflows.toLocaleString('es-PY')}
               </span>
             </div>
           </div>

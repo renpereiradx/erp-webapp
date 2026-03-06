@@ -15,6 +15,7 @@ import {
   ChevronsRight
 } from 'lucide-react';
 import { invoicesMasterData } from '../features/accounts-payable/data/invoicesMockData';
+import { formatPYG } from '@/utils/currencyUtils';
 
 /**
  * Invoices Master List Page.
@@ -30,10 +31,7 @@ const InvoicesMasterList = () => {
   }, []);
 
   const formatCurrency = (val) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(val);
+    return formatPYG(val);
   };
 
   return (
@@ -161,7 +159,7 @@ const InvoicesMasterList = () => {
                     </td>
                     <td 
                       className="px-3 py-3.5 text-[13px] font-mono font-bold text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors whitespace-nowrap cursor-pointer hover:underline"
-                      onClick={() => navigate(`/finance/invoices/${invoice.id}`)}
+                      onClick={() => navigate(`/payables/detail/${invoice.id}`)}
                     >
                       #{invoice.id}
                     </td>

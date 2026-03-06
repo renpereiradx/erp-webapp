@@ -51,8 +51,8 @@ const ActiveObligationsTable = ({ invoices, summary }) => {
               <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                 <td className="px-4 md:px-8 py-4 font-medium text-[#137fec]">{invoice.id}</td>
                 <td className="px-4 py-4 text-slate-600 dark:text-slate-400">{invoice.date}</td>
-                <td className="px-4 py-4 text-right font-medium text-slate-700 dark:text-slate-300">${invoice.originalAmount.toLocaleString()}</td>
-                <td className="px-4 py-4 text-right font-bold text-slate-900 dark:text-white">${invoice.pendingAmount.toLocaleString()}</td>
+                <td className="px-4 py-4 text-right font-medium text-slate-700 dark:text-slate-300">Gs. {invoice.originalAmount.toLocaleString()}</td>
+                <td className="px-4 py-4 text-right font-bold text-slate-900 dark:text-white">Gs. {invoice.pendingAmount.toLocaleString()}</td>
                 <td className={`px-4 py-4 font-medium ${invoice.isOverdue ? 'text-[#dc3545]' : 'text-slate-600 dark:text-slate-400'}`}>
                   {invoice.dueDate}
                 </td>

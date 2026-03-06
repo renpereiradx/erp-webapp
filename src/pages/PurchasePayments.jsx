@@ -57,15 +57,18 @@ import {
 import { Badge } from '@/components/ui/badge'
 import usePurchasePaymentsMvpStore from '@/store/usePurchasePaymentsMvpStore'
 import { useToast } from '@/hooks/useToast'
-import { normalizeCurrencyCode } from '@/utils/currencyUtils'
+import { normalizeCurrencyCode, formatPYG } from '@/utils/currencyUtils'
 
 const currencyFormatter = (lang, currency) => {
   const code = normalizeCurrencyCode(currency)
-  return new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-PY', {
+  if (code === 'PYG') {
+    return { format: (val) => formatPYG(val) }
+  }
+  return new Intl.NumberFormat('es-PY', {
     style: 'currency',
     currency: code,
-    minimumFractionDigits: code === 'PYG' ? 0 : 2,
-    maximumFractionDigits: code === 'PYG' ? 0 : 2,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   })
 }
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Wallet, 
@@ -17,23 +17,101 @@ import {
   ChevronLeft
 } from 'lucide-react';
 
+import { formatPYG } from '@/utils/currencyUtils';
+import { usePayables } from '../hooks/usePayables';
+
 /**
  * Reporte de Antigüedad de Deuda (Payables)
- * 100% Fidelity with Stitch and layout-guidelines.md
+ * 100% Fidelity with Stitch, React Best Practices and Real Hook Integration.
  */
 const PayablesAgingReport = () => {
+  const { 
+    loading, 
+    overview, 
+    agingReport, 
+    statistics,
+    fetchOverview, 
+    fetchAgingReport, 
+    fetchStatistics 
+  } = usePayables();
 
+  // 1. Effects for browser synchronization
   useEffect(() => {
     document.title = 'Reporte de Antigüedad | ERP System';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const formatCurrency = (val) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(val);
-  };
+  // 2. Initial Data Fetching
+  useEffect(() => {
+    fetchOverview();
+    fetchAgingReport();
+    fetchStatistics('month');
+  }, [fetchOverview, fetchAgingReport, fetchStatistics]);
+
+  // 3. Derived State / Data Transformations (Calculate During Render)
+  
+  // KPIs for the top of the page
+  const agingKpis = useMemo(() => {
+    if (!overview || !statistics) return { dpo: "---", overdue: "---", critical: "---" };
+    return {
+      dpo: `${statistics.average_dpo || overview.average_days_to_pay || 0} Días`,
+      overdue: `${statistics.overdue_percentage || 0}%`,
+      critical: formatPYG(overview.aging_summary?.over_90_days?.amount || 0)
+    };
+  }, [overview, statistics]);
+
+  // Distribution Chart Data (Hero Section)
+  const distribution = useMemo(() => {
+    if (!overview?.aging_summary) return null;
+    const summary = overview.aging_summary;
+    return {
+      total: overview.total_pending,
+      current: { amount: summary.current.amount, percentage: summary.current.percentage },
+      days30_60: { amount: summary.days_30_60.amount, percentage: summary.days_30_60.percentage },
+      days60_90: { amount: summary.days_60_90.amount, percentage: summary.days_60_90.percentage },
+      over90: { amount: summary.over_90_days.amount, percentage: summary.over_90_days.percentage }
+    };
+  }, [overview]);
+
+  // Analytical Breakdown Table Data
+  const tableData = useMemo(() => {
+    if (!agingReport?.by_supplier) return [];
+    return agingReport.by_supplier.map(s => {
+      // Determine risk level based on overdue amounts
+      let risk = "Mínimo";
+      let riskClass = "bg-fluent-success/10 text-fluent-success border-fluent-success/20";
+      
+      if (s.over_90_days > 0) {
+        risk = "Crítico";
+        riskClass = "bg-fluent-danger/10 text-fluent-danger border-fluent-danger/20";
+      } else if (s.days_60_90 > 0 || s.days_30_60 > (s.total * 0.5)) {
+        risk = "Moderado";
+        riskClass = "bg-fluent-warning/10 text-fluent-warning border-fluent-warning/20";
+      }
+
+      return {
+        id: s.supplier_id,
+        name: s.supplier_name,
+        current: s.current,
+        days30_60: s.days_30_60,
+        days60_90: s.days_60_90,
+        over90: s.over_90_days,
+        total: s.total,
+        risk,
+        riskClass
+      };
+    });
+  }, [agingReport]);
+
+  // 4. Loading State
+  if (loading && !overview) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <span className="ml-3 font-bold text-slate-500 uppercase tracking-widest text-xs">Generando reporte analítico...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 pb-12">
@@ -65,7 +143,7 @@ const PayablesAgingReport = () => {
               </h1>
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5">
                 <Clock size={14} className="opacity-50" />
-                <span>Corte al: <span className="text-slate-600 dark:text-slate-300">24 de Mayo, 2024</span></span>
+                <span>Corte al: <span className="text-slate-600 dark:text-slate-300">{new Date().toLocaleDateString('es-PY', { day: 'numeric', month: 'long', year: 'numeric' })}</span></span>
               </div>
             </div>
           </div>
@@ -101,23 +179,23 @@ const PayablesAgingReport = () => {
           </div>
           <div className="md:text-right">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Deuda Total Consolidada</p>
-            <p className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white break-words tracking-tight">{formatCurrency(4285120.45)}</p>
+            <p className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white break-words tracking-tight">{formatPYG(distribution?.total || 0)}</p>
           </div>
         </div>
 
         {/* Stacked Bar Chart */}
         <div className="relative w-full h-12 md:h-16 flex rounded-xl overflow-hidden mb-6 shadow-inner">
-          <div className="group relative bg-fluent-success h-full flex items-center justify-center transition-all cursor-pointer hover:brightness-110" style={{ width: '55%' }}>
-            <span className="text-white text-xs font-bold hidden md:block">Corriente (55%)</span>
+          <div className="group relative bg-fluent-success h-full flex items-center justify-center transition-all cursor-pointer hover:brightness-110" style={{ width: `${distribution?.current.percentage || 0}%` }}>
+            <span className="text-white text-xs font-bold hidden md:block">Corriente ({distribution?.current.percentage || 0}%)</span>
           </div>
-          <div className="group relative bg-fluent-warning h-full flex items-center justify-center transition-all cursor-pointer hover:brightness-110" style={{ width: '20%' }}>
-            <span className="text-slate-900 text-xs font-bold hidden md:block">31-60 d (20%)</span>
+          <div className="group relative bg-fluent-warning h-full flex items-center justify-center transition-all cursor-pointer hover:brightness-110" style={{ width: `${distribution?.days30_60.percentage || 0}%` }}>
+            <span className="text-slate-900 text-xs font-bold hidden md:block">31-60 d ({distribution?.days30_60.percentage || 0}%)</span>
           </div>
-          <div className="group relative bg-orange-500 h-full flex items-center justify-center transition-all cursor-pointer hover:brightness-110" style={{ width: '15%' }}>
-            <span className="text-white text-xs font-bold hidden md:block">61-90 d (15%)</span>
+          <div className="group relative bg-orange-500 h-full flex items-center justify-center transition-all cursor-pointer hover:brightness-110" style={{ width: `${distribution?.days60_90.percentage || 0}%` }}>
+            <span className="text-white text-xs font-bold hidden md:block">61-90 d ({distribution?.days60_90.percentage || 0}%)</span>
           </div>
-          <div className="group relative bg-fluent-danger h-full flex items-center justify-center transition-all cursor-pointer hover:brightness-110" style={{ width: '10%' }}>
-            <span className="text-white text-xs font-bold hidden md:block">+90 d (10%)</span>
+          <div className="group relative bg-fluent-danger h-full flex items-center justify-center transition-all cursor-pointer hover:brightness-110" style={{ width: `${distribution?.over90.percentage || 0}%` }}>
+            <span className="text-white text-xs font-bold hidden md:block">+90 d ({distribution?.over90.percentage || 0}%)</span>
           </div>
         </div>
 
@@ -128,28 +206,28 @@ const PayablesAgingReport = () => {
               <div className="w-2.5 h-2.5 rounded-full bg-fluent-success shadow-sm shadow-fluent-success/50"></div>
               <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Corriente (0-30 d)</p>
             </div>
-            <p className="text-lg font-black text-slate-900 dark:text-white">{formatCurrency(2356816.25)}</p>
+            <p className="text-lg font-black text-slate-900 dark:text-white">{formatPYG(distribution?.current.amount || 0)}</p>
           </div>
           <div className="flex flex-col gap-2 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-fluent-warning shadow-sm shadow-fluent-warning/50"></div>
               <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Vencido (31-60 d)</p>
             </div>
-            <p className="text-lg font-black text-slate-900 dark:text-white">{formatCurrency(857024.09)}</p>
+            <p className="text-lg font-black text-slate-900 dark:text-white">{formatPYG(distribution?.days30_60.amount || 0)}</p>
           </div>
           <div className="flex flex-col gap-2 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm shadow-orange-500/50"></div>
               <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Vencido (61-90 d)</p>
             </div>
-            <p className="text-lg font-black text-slate-900 dark:text-white">{formatCurrency(642768.07)}</p>
+            <p className="text-lg font-black text-slate-900 dark:text-white">{formatPYG(distribution?.days60_90.amount || 0)}</p>
           </div>
           <div className="flex flex-col gap-2 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-fluent-danger shadow-sm shadow-fluent-danger/50"></div>
               <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Crítico (+90 d)</p>
             </div>
-            <p className="text-lg font-black text-slate-900 dark:text-white">{formatCurrency(428512.04)}</p>
+            <p className="text-lg font-black text-slate-900 dark:text-white">{formatPYG(distribution?.over90.amount || 0)}</p>
           </div>
         </div>
       </section>
@@ -161,13 +239,13 @@ const PayablesAgingReport = () => {
           <div className="flex justify-between items-start">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 group-hover:text-primary transition-colors">DPO (Días Promedio de Pago)</p>
-              <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">42 Días</h3>
-              <div className="flex items-center gap-2 mt-2">
+              <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{agingKpis.dpo}</h3>
+              {/* <div className="flex items-center gap-2 mt-2">
                 <span className="flex items-center text-fluent-success text-xs font-bold bg-fluent-success/10 px-2 py-0.5 rounded-md">
                   <TrendingUp size={14} className="mr-1" /> 2.4%
                 </span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">vs. mes anterior (41 d)</span>
-              </div>
+              </div> */}
             </div>
             <div className="bg-primary/10 p-3 rounded-xl flex-shrink-0 text-primary shadow-sm border border-primary/10">
               <Clock size={20} />
@@ -189,13 +267,13 @@ const PayablesAgingReport = () => {
           <div className="flex justify-between items-start">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 group-hover:text-orange-500 transition-colors">% de Deuda Vencida</p>
-              <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">15.4%</h3>
-              <div className="flex items-center gap-2 mt-2">
+              <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{agingKpis.overdue}</h3>
+              {/* <div className="flex items-center gap-2 mt-2">
                 <span className="flex items-center text-fluent-danger text-xs font-bold bg-fluent-danger/10 px-2 py-0.5 rounded-md">
                   <TrendingUp size={14} className="mr-1" /> 1.2%
                 </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Objetivo: &lt; 10%</span>
-              </div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Objetivo: < 10%</span>
+              </div> */}
             </div>
             <div className="bg-orange-500/10 p-3 rounded-xl flex-shrink-0 text-orange-500 shadow-sm border border-orange-500/10">
               <AlertCircle size={20} />
@@ -213,20 +291,20 @@ const PayablesAgingReport = () => {
           <div className="flex justify-between items-start">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 group-hover:text-fluent-danger transition-colors">Monto en Riesgo Crítico</p>
-              <h3 className="text-3xl font-black text-fluent-danger tracking-tight break-words">{formatCurrency(450000)}</h3>
-              <div className="flex items-center gap-2 mt-2">
+              <h3 className="text-3xl font-black text-fluent-danger tracking-tight break-words">{agingKpis.critical}</h3>
+              {/* <div className="flex items-center gap-2 mt-2">
                 <span className="flex items-center text-fluent-success text-xs font-bold bg-fluent-success/10 px-2 py-0.5 rounded-md">
-                  <TrendingDown size={14} className="mr-1" /> $12k
+                  <TrendingDown size={14} className="mr-1" /> Gs. 12M
                 </span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">en recuperación activa</span>
-              </div>
+              </div> */}
             </div>
             <div className="bg-fluent-danger/10 p-3 rounded-xl flex-shrink-0 text-fluent-danger shadow-sm border border-fluent-danger/10">
               <AlertTriangle size={20} />
             </div>
           </div>
           <div className="mt-8 flex items-center gap-3">
-            <span className="text-[9px] font-black text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md uppercase tracking-widest border border-slate-200 dark:border-slate-700">8 PROVEEDORES</span>
+            <span className="text-[9px] font-black text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md uppercase tracking-widest border border-slate-200 dark:border-slate-700">{tableData.length} PROVEEDORES</span>
             <div className="flex -space-x-2 overflow-hidden">
               <div className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-[#1b2633] bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-black text-slate-600 dark:text-slate-300">JD</div>
               <div className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-[#1b2633] bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[9px] font-black text-slate-600 dark:text-slate-300">AC</div>
@@ -270,97 +348,39 @@ const PayablesAgingReport = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50 text-[13px]">
-              
-              {/* Row 1 */}
-              <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer">
-                <td className="px-6 py-4 sticky left-0 bg-white dark:bg-[#1b2633] group-hover:bg-slate-50/80 dark:group-hover:bg-[#1f2b38] transition-colors z-10 font-extrabold text-slate-900 dark:text-white truncate max-w-[200px]">
-                  Global Tech Solutions S.A.
-                </td>
-                <td className="px-4 py-4 text-right font-mono font-bold text-fluent-success">{formatCurrency(142500)}</td>
-                <td className="px-4 py-4 text-right font-mono font-medium text-slate-500">{formatCurrency(0)}</td>
-                <td className="px-4 py-4 text-right font-mono font-medium text-slate-500">{formatCurrency(0)}</td>
-                <td className="px-4 py-4 text-right font-mono font-medium text-slate-500">{formatCurrency(0)}</td>
-                <td className="px-4 py-4 text-right font-mono font-black text-slate-900 dark:text-white">{formatCurrency(142500)}</td>
-                <td className="px-4 py-4 text-center">
-                  <span className="px-2.5 py-1 rounded-md text-[9px] font-black bg-fluent-success/10 text-fluent-success uppercase tracking-widest border border-fluent-success/20">Mínimo</span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="p-1 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-primary transition-all">
-                    <MoreHorizontal size={16} />
-                  </button>
-                </td>
-              </tr>
-              
-              {/* Row 2 */}
-              <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer">
-                <td className="px-6 py-4 sticky left-0 bg-white dark:bg-[#1b2633] group-hover:bg-slate-50/80 dark:group-hover:bg-[#1f2b38] transition-colors z-10 font-extrabold text-slate-900 dark:text-white truncate max-w-[200px]">
-                  Constructora del Norte & Cía
-                </td>
-                <td className="px-4 py-4 text-right font-mono font-medium text-slate-700 dark:text-slate-300">{formatCurrency(85200)}</td>
-                <td className="px-4 py-4 text-right font-mono font-bold text-fluent-warning">{formatCurrency(124000)}</td>
-                <td className="px-4 py-4 text-right font-mono font-medium text-slate-500">{formatCurrency(0)}</td>
-                <td className="px-4 py-4 text-right font-mono font-medium text-slate-500">{formatCurrency(0)}</td>
-                <td className="px-4 py-4 text-right font-mono font-black text-slate-900 dark:text-white">{formatCurrency(209200)}</td>
-                <td className="px-4 py-4 text-center">
-                  <span className="px-2.5 py-1 rounded-md text-[9px] font-black bg-fluent-warning/10 text-fluent-warning uppercase tracking-widest border border-fluent-warning/20">Moderado</span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="p-1 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-primary transition-all">
-                    <MoreHorizontal size={16} />
-                  </button>
-                </td>
-              </tr>
-              
-              {/* Row 3 (Critical) */}
-              <tr className="bg-red-50/30 dark:bg-red-900/10 hover:bg-red-50/60 dark:hover:bg-red-900/20 transition-colors group cursor-pointer border-y border-red-100 dark:border-red-900/30">
-                <td className="px-6 py-4 sticky left-0 bg-red-50/50 dark:bg-[#1f1e24] group-hover:bg-red-50/80 dark:group-hover:bg-[#251f25] transition-colors z-10 font-extrabold text-slate-900 dark:text-white truncate max-w-[200px]">
-                  Insumos Industriales MX
-                </td>
-                <td className="px-4 py-4 text-right font-mono font-medium text-slate-700 dark:text-slate-300">{formatCurrency(12000)}</td>
-                <td className="px-4 py-4 text-right font-mono font-medium text-slate-700 dark:text-slate-300">{formatCurrency(15400)}</td>
-                <td className="px-4 py-4 text-right font-mono font-bold text-orange-500">{formatCurrency(88900)}</td>
-                <td className="px-4 py-4 text-right font-mono font-black text-fluent-danger">{formatCurrency(310000)}</td>
-                <td className="px-4 py-4 text-right font-mono font-black text-fluent-danger">{formatCurrency(426300)}</td>
-                <td className="px-4 py-4 text-center">
-                  <span className="px-2.5 py-1 rounded-md text-[9px] font-black bg-fluent-danger/10 text-fluent-danger uppercase tracking-widest border border-fluent-danger/20 shadow-sm">Crítico</span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="p-1 opacity-0 group-hover:opacity-100 text-fluent-danger hover:text-red-700 transition-all">
-                    <MoreHorizontal size={16} />
-                  </button>
-                </td>
-              </tr>
-              
-              {/* Row 4 */}
-              <tr className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer">
-                <td className="px-6 py-4 sticky left-0 bg-white dark:bg-[#1b2633] group-hover:bg-slate-50/80 dark:group-hover:bg-[#1f2b38] transition-colors z-10 font-extrabold text-slate-900 dark:text-white truncate max-w-[200px]">
-                  Logística Express Internacional
-                </td>
-                <td className="px-4 py-4 text-right font-mono font-bold text-fluent-success">{formatCurrency(320000)}</td>
-                <td className="px-4 py-4 text-right font-mono font-medium text-slate-500">{formatCurrency(0)}</td>
-                <td className="px-4 py-4 text-right font-mono font-medium text-slate-500">{formatCurrency(0)}</td>
-                <td className="px-4 py-4 text-right font-mono font-medium text-slate-500">{formatCurrency(0)}</td>
-                <td className="px-4 py-4 text-right font-mono font-black text-slate-900 dark:text-white">{formatCurrency(320000)}</td>
-                <td className="px-4 py-4 text-center">
-                  <span className="px-2.5 py-1 rounded-md text-[9px] font-black bg-fluent-success/10 text-fluent-success uppercase tracking-widest border border-fluent-success/20">Mínimo</span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button className="p-1 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-primary transition-all">
-                    <MoreHorizontal size={16} />
-                  </button>
-                </td>
-              </tr>
+              {tableData.map(row => (
+                <tr key={row.id} className={`${row.risk === 'Crítico' ? 'bg-red-50/30 dark:bg-red-900/10 border-y border-red-100 dark:border-red-900/30' : ''} hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer`}>
+                  <td className={`px-6 py-4 sticky left-0 ${row.risk === 'Crítico' ? 'bg-red-50/50 dark:bg-[#1f1e24]' : 'bg-white dark:bg-[#1b2633]'} group-hover:bg-slate-50/80 dark:group-hover:bg-[#1f2b38] transition-colors z-10 font-extrabold text-slate-900 dark:text-white truncate max-w-[200px]`}>
+                    {row.name}
+                  </td>
+                  <td className={`px-4 py-4 text-right font-mono font-bold ${row.current > 0 ? 'text-fluent-success' : 'text-slate-500'}`}>{formatPYG(row.current)}</td>
+                  <td className={`px-4 py-4 text-right font-mono font-bold ${row.days30_60 > 0 ? 'text-fluent-warning' : 'text-slate-500'}`}>{formatPYG(row.days30_60)}</td>
+                  <td className={`px-4 py-4 text-right font-mono font-bold ${row.days60_90 > 0 ? 'text-orange-500' : 'text-slate-500'}`}>{formatPYG(row.days60_90)}</td>
+                  <td className={`px-4 py-4 text-right font-mono font-black ${row.over90 > 0 ? 'text-fluent-danger' : 'text-slate-500'}`}>{formatPYG(row.over90)}</td>
+                  <td className={`px-4 py-4 text-right font-mono font-black ${row.risk === 'Crítico' ? 'text-fluent-danger' : 'text-slate-900 dark:text-white'}`}>{formatPYG(row.total)}</td>
+                  <td className="px-4 py-4 text-center">
+                    <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${row.riskClass}`}>
+                      {row.risk}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button className="p-1 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-primary transition-all">
+                      <MoreHorizontal size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
             <tfoot className="bg-slate-50 dark:bg-slate-800/80 border-t-2 border-slate-200 dark:border-slate-700">
               <tr>
                 <td className="px-6 py-4 sticky left-0 bg-slate-50 dark:bg-slate-800 z-10 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                   TOTALES
                 </td>
-                <td className="px-4 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">{formatCurrency(2356816.25)}</td>
-                <td className="px-4 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">{formatCurrency(857024.09)}</td>
-                <td className="px-4 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">{formatCurrency(642768.07)}</td>
-                <td className="px-4 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">{formatCurrency(428512.04)}</td>
-                <td className="px-4 py-4 text-right font-mono font-black text-primary text-sm">{formatCurrency(4285120.45)}</td>
+                <td className="px-4 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">{formatPYG(distribution?.current.amount || 0)}</td>
+                <td className="px-4 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">{formatPYG(distribution?.days30_60.amount || 0)}</td>
+                <td className="px-4 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">{formatPYG(distribution?.days60_90.amount || 0)}</td>
+                <td className="px-4 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">{formatPYG(distribution?.over90.amount || 0)}</td>
+                <td className="px-4 py-4 text-right font-mono font-black text-primary text-sm">{formatPYG(distribution?.total || 0)}</td>
                 <td className="px-4 py-4"></td>
                 <td className="px-6 py-4"></td>
               </tr>
@@ -370,7 +390,7 @@ const PayablesAgingReport = () => {
         
         {/* Pagination Footer */}
         <div className="px-6 md:px-8 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-[#1b2633]">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mostrando 4 de 142 proveedores</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mostrando {tableData.length} de 142 proveedores</p>
           <div className="flex items-center gap-1.5">
             <button className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 disabled:opacity-30" disabled>
               <ChevronLeft size={16} />
@@ -387,102 +407,12 @@ const PayablesAgingReport = () => {
         </div>
       </section>
 
-      {/* Footer Visual Section: Trend & Summary */}
+      {/* Footer Visual Section: Trend & Summary (Oculto porque no está soportado por los endpoints actuales) */}
+      {/* 
       <section className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        
-        <div className="lg:col-span-3 bg-white dark:bg-[#1b2633] p-6 md:p-8 rounded-2xl border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)]">
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-8 gap-4">
-            <div>
-              <h3 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight mb-1">Evolución de Morosidad 12 Meses</h3>
-              <p className="text-xs font-medium text-slate-500">Tendencia histórica de Deuda Total vs. Deuda Vencida (+30 días)</p>
-            </div>
-            <div className="flex items-center gap-5">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-1 rounded-full bg-primary shadow-sm shadow-primary/50"></div>
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Total</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-1 rounded-full bg-fluent-danger shadow-sm shadow-fluent-danger/50"></div>
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Vencida</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Mock Area Chart */}
-          <div className="relative h-56 md:h-64 w-full">
-            {/* Chart Vertical Axis Labels */}
-            <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-[10px] font-bold text-slate-400 z-10 bg-white/50 dark:bg-[#1b2633]/50 pr-2">
-              <span>$1.5M</span>
-              <span>$1.0M</span>
-              <span>$500K</span>
-              <span>$0</span>
-            </div>
-            
-            {/* Chart Horizontal Grid Lines */}
-            <div className="absolute inset-x-8 top-0 bottom-8 flex flex-col justify-between pointer-events-none opacity-50">
-              <div className="w-full border-t border-slate-200 dark:border-slate-700/50"></div>
-              <div className="w-full border-t border-slate-200 dark:border-slate-700/50"></div>
-              <div className="w-full border-t border-slate-200 dark:border-slate-700/50"></div>
-              <div className="w-full border-b border-slate-300 dark:border-slate-600"></div>
-            </div>
-
-            {/* SVG Chart Line Mock */}
-            <div className="absolute inset-x-8 top-0 bottom-8">
-              <svg className="w-full h-full" preserveAspectRatio="none">
-                <path d="M 0 100 Q 20% 80, 40% 90 T 80% 60 L 100% 65" fill="none" stroke="#137fec" strokeLinecap="round" strokeWidth="3" className="drop-shadow-sm"></path>
-                <path d="M 0 200 Q 20% 190, 40% 210 T 80% 180 L 100% 180" fill="none" stroke="#d13438" strokeDasharray="6,6" strokeLinecap="round" strokeWidth="3"></path>
-              </svg>
-            </div>
-
-            {/* X-Axis Labels */}
-            <div className="absolute bottom-0 inset-x-8 flex justify-between text-[9px] font-black text-slate-400 uppercase tracking-widest pt-2">
-              <span>Jun '23</span>
-              <span>Ago '23</span>
-              <span>Oct '23</span>
-              <span>Dic '23</span>
-              <span>Feb '24</span>
-              <span>Abr '24</span>
-              <span className="text-primary">May '24</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Executive Summary Card */}
-        <div className="lg:col-span-1 bg-primary text-white p-6 md:p-8 rounded-2xl shadow-xl shadow-primary/20 flex flex-col justify-between relative overflow-hidden group">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
-          
-          <div className="relative z-10">
-            <h3 className="text-lg font-black mb-3 tracking-tight">Resumen Ejecutivo</h3>
-            <p className="text-white/80 text-sm font-medium leading-relaxed mb-6">
-              La morosidad se ha incrementado un <span className="font-bold text-white underline decoration-white/50 underline-offset-2">5.2%</span> respecto al trimestre anterior, impulsado principalmente por el retraso en el sector de Insumos.
-            </p>
-            <ul className="space-y-5">
-              <li className="flex items-start gap-3">
-                <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm shadow-sm border border-white/10">
-                  <AlertCircle size={16} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold">Alerta de Liquidez</p>
-                  <p className="text-xs text-white/70 font-medium mt-0.5">8 cuentas superan los 90 días.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm shadow-sm border border-white/10">
-                  <TrendingUp size={16} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold">Flujo Optimizado</p>
-                  <p className="text-xs text-white/70 font-medium mt-0.5">DPO superior al promedio del sector.</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-          
-          <button className="w-full mt-8 bg-white text-primary font-black text-xs uppercase tracking-widest py-3.5 rounded-xl hover:bg-slate-50 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 relative z-10">
-            Descargar PDF
-          </button>
-        </div>
+        ... contenido oculto ...
       </section>
+      */}
 
     </div>
   );

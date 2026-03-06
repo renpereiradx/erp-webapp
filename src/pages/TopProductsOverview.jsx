@@ -3,7 +3,6 @@ import useDashboardStore from '@/store/useDashboardStore';
 import { formatPYG } from '@/utils/currencyUtils';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import DashboardNav from '@/components/business-intelligence/DashboardNav';
 
 const TopProductsOverview = () => {
     const { 
@@ -54,7 +53,6 @@ const TopProductsOverview = () => {
   return (
     <div className="flex-1 w-full max-w-[1400px] mx-auto space-y-6">
       {/* Top Navigation */}
-      <DashboardNav />
 
       {/* Page Heading */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pt-4">

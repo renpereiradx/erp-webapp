@@ -10,17 +10,17 @@ export const accountsPayableData = {
       id: "total-pending",
       title: "Total Pendiente",
       value: 4820150.00,
-      currency: "USD",
-      trend: "+12.5%",
-      trendType: "success",
-      icon: "account_balance_wallet",
-      subtitle: "vs. mes anterior"
+      currency: "PYG",
+      /* trend: "+12.5%", */
+      /* trendType: "success", */
+      icon: "account_balance_wallet" /*,
+      subtitle: "vs. mes anterior" */
     },
     {
       id: "total-overdue",
       title: "Total Vencido",
       value: 842300.00,
-      currency: "USD",
+      currency: "PYG",
       trend: "18 facturas",
       trendType: "danger",
       icon: "priority_high",
@@ -31,7 +31,7 @@ export const accountsPayableData = {
       id: "weekly-payments",
       title: "Pagos esta Semana",
       value: 1250000.00,
-      currency: "USD",
+      currency: "PYG",
       icon: "calendar_today",
       subtitle: "Flujo de caja proyectado para 7 días"
     },
@@ -51,7 +51,7 @@ export const accountsPayableData = {
     { label: "Más de 90 Días", amount: 430150.00, percentage: 10, color: "bg-fluent-danger", critical: true }
   ],
   agingStats: {
-    total: "$4.82M",
+    total: "Gs. 4.82M",
     onTime: "75%",
     critical: "10%",
     avgDays: "42 Días"

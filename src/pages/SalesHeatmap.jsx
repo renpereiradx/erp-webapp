@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import useDashboardStore from '@/store/useDashboardStore'
-import DashboardNav from '@/components/business-intelligence/DashboardNav'
 import { formatPYG } from '@/utils/currencyUtils';
 
 const hours = [
@@ -107,7 +106,6 @@ const SalesHeatmap = () => {
                 </div>
             </div>
 
-            <DashboardNav />
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

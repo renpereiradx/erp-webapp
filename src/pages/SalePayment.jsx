@@ -422,28 +422,28 @@ const SalePayment = () => {
                   <SelectTrigger className='h-10 min-w-0 w-full rounded-md bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 font-bold uppercase text-[10px] tracking-widest shadow-inner [&>span]:truncate'>
                     <SelectValue placeholder='Estado' />
                   </SelectTrigger>
-                  <SelectContent className='rounded-lg border-slate-200 dark:border-slate-800 shadow-fluent-16'>
+                  <SelectContent className='rounded-lg border-slate-200 dark:border-slate-800 bg-white dark:bg-surface-dark shadow-fluent-16 z-50'>
                     <SelectItem
                       value='all'
-                      className='font-bold uppercase text-[10px] tracking-widest'
+                      className='font-bold uppercase text-[10px] tracking-widest focus:bg-slate-50 dark:focus:bg-slate-800'
                     >
                       Todos
                     </SelectItem>
                     <SelectItem
                       value='pending'
-                      className='font-bold uppercase text-[10px] tracking-widest'
+                      className='font-bold uppercase text-[10px] tracking-widest focus:bg-slate-50 dark:focus:bg-slate-800'
                     >
                       Pendiente
                     </SelectItem>
                     <SelectItem
                       value='partial'
-                      className='font-bold uppercase text-[10px] tracking-widest'
+                      className='font-bold uppercase text-[10px] tracking-widest focus:bg-slate-50 dark:focus:bg-slate-800'
                     >
                       Parcial
                     </SelectItem>
                     <SelectItem
                       value='paid'
-                      className='font-bold uppercase text-[10px] tracking-widest'
+                      className='font-bold uppercase text-[10px] tracking-widest focus:bg-slate-50 dark:focus:bg-slate-800'
                     >
                       Pagado
                     </SelectItem>
@@ -653,7 +653,7 @@ const SalePayment = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent
                               align='end'
-                              className='w-52 p-1.5 rounded-lg shadow-lg'
+                              className='w-52 p-1.5 rounded-lg shadow-fluent-16 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800'
                             >
                               <DropdownMenuItem
                                 onClick={() =>
@@ -791,7 +791,7 @@ const SalePayment = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                           align='end'
-                          className='w-52 p-2 rounded-lg'
+                          className='w-52 p-2 rounded-lg bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 shadow-fluent-16'
                         >
                           <DropdownMenuItem
                             onClick={() =>

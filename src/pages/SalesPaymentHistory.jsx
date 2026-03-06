@@ -30,6 +30,7 @@ import { salePaymentService } from '@/services/salePaymentService'
 import { saleService } from '@/services/saleService'
 import { clientService } from '@/services/clientService'
 import { useToast } from '@/hooks/useToast'
+import { normalizeCurrencyCode } from '@/utils/currencyUtils'
 
 const SalesPaymentHistory = () => {
   const { saleId } = useParams()

@@ -33,7 +33,7 @@ const TreasuryInsights = ({ bankPositions }) => {
         <p className="text-[11px] text-blue-800/80 dark:text-blue-300 leading-relaxed font-bold tracking-tight">
           El proveedor <strong className="font-black text-blue-900 dark:text-blue-100">Logística Global</strong> ofrece un 2% de descuento por pronto pago si se liquida antes del 18 de Octubre. 
           <br/>
-          Ahorro potencial: <span className="font-black text-green-600">$2,450.00</span>.
+          Ahorro potencial: <span className="font-black text-green-600">Gs. 2.450.000</span>.
         </p>
         <div className="pt-2 flex gap-3">
           <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 border-none text-[10px] font-black h-8 shadow-sm uppercase tracking-tighter px-4">Aplicar Pago Ahora</Button>
@@ -48,7 +48,7 @@ const TreasuryInsights = ({ bankPositions }) => {
           <AlertTriangle className="h-4 w-4 text-orange-500" />
         </div>
         <p className="text-[11px] text-orange-800/80 dark:text-orange-300 leading-relaxed font-bold tracking-tight">
-          Se proyecta un balance negativo de <span className="font-black text-orange-900 dark:text-orange-100">-$14,200</span> el día 22 de Octubre debido a la coincidencia de pagos de nómina e impuestos.
+          Se proyecta un balance negativo de <span className="font-black text-orange-900 dark:text-orange-100">-Gs. 14.200.000</span> el día 22 de Octubre debido a la coincidencia de pagos de nómina e impuestos.
         </p>
         <div className="pt-2">
           <Button size="sm" variant="outline" className="w-full bg-white dark:bg-slate-800 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-400 hover:bg-orange-50 hover:text-orange-800 text-[10px] font-black h-9 uppercase tracking-tighter shadow-sm">
@@ -72,7 +72,7 @@ const TreasuryInsights = ({ bankPositions }) => {
                   <div className="text-[9px] font-black text-slate-400 tracking-widest">{bank.account}</div>
                 </div>
               </div>
-              <div className="text-xs font-black text-slate-900 dark:text-white tracking-tighter">{bank.amount}</div>
+              <div className="text-xs font-black text-slate-900 dark:text-white tracking-tighter">{bank.amount.replace('$', 'Gs. ')}</div>
             </div>
           ))}
         </div>

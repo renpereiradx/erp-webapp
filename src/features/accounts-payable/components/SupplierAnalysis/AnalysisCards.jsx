@@ -46,11 +46,11 @@ const AnalysisCards = ({ rating, terms }) => {
           </div>
           <div className="min-w-0">
             <p className="text-[10px] text-slate-500 uppercase truncate">Límite</p>
-            <p className="text-sm md:text-base font-bold truncate">${terms.creditLimit.toLocaleString()}</p>
+            <p className="text-sm md:text-base font-bold truncate">Gs. {terms.creditLimit.toLocaleString()}</p>
           </div>
           <div className="min-w-0">
             <p className="text-[10px] text-slate-500 uppercase truncate">Disponible</p>
-            <p className="text-sm md:text-base font-bold text-[#28a745] truncate">${terms.availableCredit.toLocaleString()}</p>
+            <p className="text-sm md:text-base font-bold text-[#28a745] truncate">Gs. {terms.availableCredit.toLocaleString()}</p>
           </div>
         </div>
       </div>

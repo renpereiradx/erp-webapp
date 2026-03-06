@@ -63,7 +63,7 @@ const TrendChart = ({ data }) => {
                 axisLine={false} 
                 tickLine={false} 
                 tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 800 }}
-                tickFormatter={(value) => `$${value / 1000}k`}
+                tickFormatter={(value) => `Gs. ${value / 1000}k`}
               />
               <Tooltip 
                 contentStyle={{ 

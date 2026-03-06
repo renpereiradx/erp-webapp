@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
 import useDashboardStore from '../store/useDashboardStore';
 import { formatPYG } from '@/utils/currencyUtils';
-import DashboardNav from '../components/business-intelligence/DashboardNav';
+import { formatTimeInParaguayTimezone } from '@/utils/timeUtils';
 
 /**
  * Dashboard Page - Executive BI Dashboard
@@ -10,12 +11,20 @@ import DashboardNav from '../components/business-intelligence/DashboardNav';
  */
 const DetailedKPIs = () => {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState('month');
   const { summary, kpis, alerts, fetchDashboardData, fetchKPIData, loading, error } = useDashboardStore();
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
-    fetchDashboardData();
-    fetchKPIData(period);
+    const loadData = async () => {
+        await Promise.allSettled([
+            fetchDashboardData(),
+            fetchKPIData(period)
+        ]);
+        setLastUpdated(new Date());
+    };
+    loadData();
   }, [fetchDashboardData, fetchKPIData, period]);
 
   const formatCurrency = (val) => formatPYG(val);
@@ -32,8 +41,7 @@ const DetailedKPIs = () => {
     return date.toLocaleDateString();
   };
 
-  const lastUpdated = "Today, 9:41 AM"; // Static matching Stitch
-  const vsLast30Days = t('dashboard.dashboard.kpi.vsPrevious30Days', 'vs. previous 30 days');
+  const vsLast30Days = t('dashboard.dashboard.kpi.vsPrevious30Days', 'vs. últimos 30 días');
 
   if (loading && !kpis && !summary) {
     return (
@@ -83,26 +91,23 @@ const DetailedKPIs = () => {
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-6 text-slate-900 dark:text-white pb-8">
       
-      {/* 1.1 BI Navigation - Added back from existing code, matching styling */}
-      <DashboardNav />
-
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{t('dashboard.dashboard.actions.viewDetails', 'Detailed KPIs Panel')}</h2>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{t('dashboard.dashboard.actions.viewDetails', 'Panel de KPIs Detallado')}</h2>
           <p className="text-slate-500 mt-1 flex items-center gap-1 text-sm">
             <span className="material-symbols-outlined text-[16px]">schedule</span>
-            {t('dashboard.dashboard.activity.lastUpdated', 'Last updated:')} {lastUpdated}
+            {t('dashboard.dashboard.activity.lastUpdated', 'Última actualización:')} {formatTimeInParaguayTimezone(lastUpdated)}
           </p>
         </div>
         <div className="flex gap-3">
           <button className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 shadow-sm" onClick={() => { fetchDashboardData(); fetchKPIData(period); }}>
             <span className="material-symbols-outlined text-[18px]">{loading ? 'refresh' : 'share'}</span>
-            {t('common.share', 'Share')}
+            {t('common.share', 'Compartir')}
           </button>
           <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-sm shadow-blue-200 dark:shadow-none">
             <span className="material-symbols-outlined text-[18px]">download</span>
-            {t('dashboard.dashboard.actions.export', 'Export Report')}
+            {t('dashboard.dashboard.actions.export', 'Exportar Informe')}
           </button>
         </div>
       </div>
@@ -110,26 +115,32 @@ const DetailedKPIs = () => {
       {/* Filters / Chips */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative group">
-          <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
-            <span className="material-symbols-outlined text-[18px] text-slate-400">calendar_today</span>
-            Period: {period === 'month' ? 'This Month' : period === 'year' ? 'This Year' : period === 'week' ? 'This Week' : 'Today'}
-            <span className="material-symbols-outlined text-[18px] text-slate-400">arrow_drop_down</span>
-          </button>
+          <select 
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 transition-colors outline-none focus:ring-1 focus:ring-primary appearance-none pr-8 cursor-pointer"
+          >
+            <option value="today">Período: Hoy</option>
+            <option value="week">Período: Esta Semana</option>
+            <option value="month">Período: Este Mes</option>
+            <option value="year">Período: Este Año</option>
+          </select>
+          <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[18px]">arrow_drop_down</span>
         </div>
-        {/* Static filters matching Stitch */}
+        
         <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
-          Region: Global
+          Región: Global
           <span className="material-symbols-outlined text-[18px] text-slate-400">arrow_drop_down</span>
         </button>
         <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
-          Dept: All
+          Depto: Todos
           <span className="material-symbols-outlined text-[18px] text-slate-400">arrow_drop_down</span>
         </button>
         <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
-          Currency: USD
+          Moneda: PYG
           <span className="material-symbols-outlined text-[18px] text-slate-400">arrow_drop_down</span>
         </button>
-        <button className="ml-auto text-sm text-primary font-medium hover:underline" onClick={() => setPeriod('month')}>{t('common.clearFilters', 'Clear all filters')}</button>
+        <button className="ml-auto text-sm text-primary font-medium hover:underline" onClick={() => setPeriod('month')}>{t('common.clearFilters', 'Limpiar filtros')}</button>
       </div>
 
       {/* KPI Summary Cards */}
@@ -141,13 +152,9 @@ const DetailedKPIs = () => {
           </div>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.revenue', 'Total Revenue')}</p>
+              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.revenue', 'Ingresos Totales')}</p>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{formatCurrency(revenueTotal)}</h3>
             </div>
-            <span className="flex items-center text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/50">
-              <span className="material-symbols-outlined text-[14px] mr-0.5">trending_up</span>
-              +12.5%
-            </span>
           </div>
           <div className="mt-auto">
             <div className="flex items-end justify-between gap-1 h-12">
@@ -171,13 +178,9 @@ const DetailedKPIs = () => {
           </div>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.netProfit', 'Net Profit')}</p>
+              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.netProfit', 'Margen Neto')}</p>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{netMargin}%</h3>
             </div>
-            <span className="flex items-center text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/50">
-              <span className="material-symbols-outlined text-[14px] mr-0.5">trending_up</span>
-              +5.2%
-            </span>
           </div>
           <div className="mt-auto relative z-10">
             <svg className="w-full h-10 text-purple-500 stroke-current" fill="none" viewBox="0 0 100 40">
@@ -201,13 +204,9 @@ const DetailedKPIs = () => {
           </div>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.newCustomers', 'New Customers')}</p>
+              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.newCustomers', 'Clientes Nuevos')}</p>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{newCustomers.toLocaleString()}</h3>
             </div>
-            <span className="flex items-center text-xs font-bold text-red-600 bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded-full border border-red-100 dark:border-red-800/50">
-              <span className="material-symbols-outlined text-[14px] mr-0.5">trending_down</span>
-              -2.1%
-            </span>
           </div>
           <div className="mt-auto relative z-10">
             <div className="flex items-end justify-between gap-1 h-12">
@@ -233,12 +232,12 @@ const DetailedKPIs = () => {
           </div>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.inventoryValue', 'Inventory Value')}</p>
+              <p className="text-sm font-medium text-slate-500">{t('dashboard.dashboard.kpi.inventoryValue', 'Valor Inventario')}</p>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{formatCurrency(inventoryValue)}</h3>
             </div>
             <span className="flex items-center text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/50">
               <span className="material-symbols-outlined text-[14px] mr-0.5">check_circle</span>
-              Healthy
+              Saludable
             </span>
           </div>
           <div className="mt-auto w-full relative z-10">
@@ -246,7 +245,7 @@ const DetailedKPIs = () => {
               <div className="bg-orange-400 h-2 rounded-full" style={{ width: '75%' }}></div>
             </div>
             <div className="flex justify-between mt-2 text-xs text-slate-400">
-              <span>Stock Level</span>
+              <span>Nivel de Stock</span>
               <span className="font-medium text-slate-700 dark:text-slate-300">75%</span>
             </div>
           </div>
@@ -337,8 +336,8 @@ const DetailedKPIs = () => {
       {/* Alerts View - using Stitch format */}
       <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('dashboard.dashboard.activity.title', 'Recent Alerts')}</h3>
-          <a className="text-sm text-primary font-medium hover:underline cursor-pointer">View All</a>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('dashboard.dashboard.activity.title', 'Alertas Recientes')}</h3>
+          <button className="text-sm text-primary font-medium hover:underline cursor-pointer" onClick={() => navigate('/dashboard/alerts')}>Ver Todo</button>
         </div>
         <div className="space-y-4">
           {alerts.slice(0, 5).map((alert) => {
@@ -361,7 +360,7 @@ const DetailedKPIs = () => {
             }
 
             return (
-              <div key={alert.id} className={`flex gap-4 items-start p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border-l-4 ${borderClass}`}>
+              <div key={alert.id} className={`flex gap-4 items-start p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer border-l-4 ${borderClass}`} onClick={() => navigate('/dashboard/alerts')}>
                 <div className="mt-0.5">
                   <span className={`material-symbols-outlined ${iconClass}`}>{iconText}</span>
                 </div>

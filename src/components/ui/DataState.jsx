@@ -50,7 +50,7 @@ export default function DataState({
     const count = skeletonProps.count || 3;
     const sv = skeletonVariant || skeletonProps.variant;
     return (
-      <div className="data-state-wrapper" data-testid={testId || 'data-state-loading'}>
+      <div className="py-20 text-center flex flex-col items-center justify-center" data-testid={testId || 'data-state-loading'}>
         {sv === 'list' ? (
           <GenericSkeletonList count={count} data-testid="data-state-loading-list" />
         ) : (
@@ -62,7 +62,7 @@ export default function DataState({
 
   if (variant === 'error') {
     return (
-      <div className="data-state-wrapper" data-testid={testId || 'data-state-error'}>
+      <div className="py-20 text-center flex flex-col items-center justify-center" data-testid={testId || 'data-state-error'}>
         <div className="text-center p-8" data-testid="error-state-inner">
           <div className="mb-4">
             <CircleAlert className="w-16 h-16 mx-auto text-destructive" aria-hidden="true" />
@@ -91,7 +91,7 @@ export default function DataState({
 
   // Empty state
   return (
-    <div className="data-state-wrapper" data-testid={testId || 'data-state-empty'}>
+    <div className="py-20 text-center flex flex-col items-center justify-center" data-testid={testId || 'data-state-empty'}>
       <div className="text-center p-8">
         <div className="mb-4">
           <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">

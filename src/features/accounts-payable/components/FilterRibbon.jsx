@@ -39,8 +39,8 @@ const FilterRibbon = () => {
       <div className="flex flex-col gap-1.5">
         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Moneda</label>
         <select className="bg-slate-50 dark:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg text-sm font-medium focus:ring-4 focus:ring-primary/10 p-2.5 outline-none transition-all">
+          <option>PYG - Guaraní</option>
           <option>USD - Dólar</option>
-          <option>MXN - Peso</option>
           <option>EUR - Euro</option>
         </select>
       </div>

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import DashboardNav from '@/components/business-intelligence/DashboardNav';
 import { Button } from '@/components/ui/button';
 import { Download, TrendingUp, ArrowRight } from 'lucide-react';
+import { useFinancialReports } from '../hooks/useFinancialReports';
+import { formatPYG } from '../utils/currencyUtils';
 
 /**
  * Financial Summary Dashboard (BI Assisted)
@@ -11,23 +12,38 @@ const FinancialSummaryDashboard = () => {
   const [period, setPeriod] = useState('Month');
   const [comparePrevious, setComparePrevious] = useState(true);
 
+  const { loading, incomeStatement, fetchIncomeStatement } = useFinancialReports();
+
+  React.useEffect(() => {
+    fetchIncomeStatement(period.toLowerCase(), comparePrevious);
+  }, [period, comparePrevious, fetchIncomeStatement]);
+
+    if (loading && !incomeStatement) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <span className="ml-3 font-bold text-slate-500 uppercase tracking-widest text-xs">Cargando Resumen Financiero...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">Resumen Financiero</h1>
-          <p className="text-sm text-text-secondary font-medium">Monitoreo de salud empresarial en tiempo real asistido por BI</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight uppercase">Resumen Financiero</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Monitoreo de salud empresarial en tiempo real asistido por BI</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-surface p-1 rounded-xl shadow-sm border border-border-subtle w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 w-full sm:w-auto">
           <div className="flex h-9 items-center justify-center rounded-lg bg-slate-100 p-1 grow sm:grow-0">
             {['Hoy', 'Semana', 'Mes', 'Año'].map((p) => {
               const value = p === 'Hoy' ? 'Today' : p === 'Semana' ? 'Week' : p === 'Mes' ? 'Month' : 'Year';
               const isSelected = period === value;
               return (
                 <label key={p} className={`flex cursor-pointer h-full grow items-center justify-center rounded-md px-4 transition-all text-[10px] font-black uppercase tracking-widest ${
-                  isSelected ? 'bg-white shadow-sm text-primary' : 'text-text-secondary hover:text-text-main'
+                  isSelected ? 'bg-white shadow-sm text-primary' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white'
                 }`}>
                   <span>{p}</span>
                   <input 
@@ -50,13 +66,11 @@ const FinancialSummaryDashboard = () => {
         </div>
       </div>
 
-      <DashboardNav />
-
       {/* Comparison Toggle */}
       <div className="flex items-center justify-between bg-blue-50/50 px-6 py-4 rounded-xl border border-blue-100 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="size-2 rounded-full bg-primary animate-pulse flex-shrink-0"></div>
-          <p className="text-text-main text-[10px] font-black uppercase tracking-[0.2em]">Comparar con el período anterior</p>
+          <p className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Comparar con el período anterior</p>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">
           <input 
@@ -72,67 +86,71 @@ const FinancialSummaryDashboard = () => {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Revenue */}
-        <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
           <div className="flex justify-between items-start mb-4">
             <div className="size-10 rounded-lg bg-green-50 flex items-center justify-center text-success group-hover:scale-110 transition-transform">
               <TrendingUp size={20} />
             </div>
-            <span className="flex items-center text-[10px] font-black uppercase tracking-widest text-success bg-green-50 px-2 py-1 rounded-full">+12.4%</span>
+            <span className="flex items-center text-[10px] font-black uppercase tracking-widest text-success bg-green-50 px-2 py-1 rounded-full">
+              {incomeStatement?.comparison?.revenue_change_pct >= 0 ? '+' : ''}{incomeStatement?.comparison?.revenue_change_pct || 0}%
+            </span>
           </div>
-          <p className="text-xs font-black uppercase tracking-widest text-text-secondary mb-1">Ingresos Totales</p>
-          <h3 className="text-2xl font-black text-text-main tracking-tight">$450,230.00</h3>
+          <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Ingresos Totales</p>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{formatPYG(incomeStatement?.revenue?.net_sales || 0)}</h3>
         </div>
 
         {/* Expenses */}
-        <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
           <div className="flex justify-between items-start mb-4">
             <div className="size-10 rounded-lg bg-red-50 flex items-center justify-center text-error group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined text-[20px]">payments</span>
             </div>
             <span className="flex items-center text-[10px] font-black uppercase tracking-widest text-error bg-red-50 px-2 py-1 rounded-full">-3.2%</span>
           </div>
-          <p className="text-xs font-black uppercase tracking-widest text-text-secondary mb-1">Gastos Operativos</p>
-          <h3 className="text-2xl font-black text-text-main tracking-tight">$212,400.00</h3>
+          <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Gastos Operativos</p>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{formatPYG(incomeStatement?.cost_of_sales?.cost_of_goods_sold || 0)}</h3>
         </div>
 
         {/* Net Income */}
-        <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
           <div className="flex justify-between items-start mb-4">
             <div className="size-10 rounded-lg bg-blue-50 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>
             </div>
-            <span className="flex items-center text-[10px] font-black uppercase tracking-widest text-success bg-green-50 px-2 py-1 rounded-full">+8.1%</span>
+            <span className="flex items-center text-[10px] font-black uppercase tracking-widest text-success bg-green-50 px-2 py-1 rounded-full">
+              {incomeStatement?.comparison?.net_income_change_pct >= 0 ? '+' : ''}{incomeStatement?.comparison?.net_income_change_pct || 0}%
+            </span>
           </div>
-          <p className="text-xs font-black uppercase tracking-widest text-text-secondary mb-1">Utilidad Neta</p>
-          <h3 className="text-2xl font-black text-text-main tracking-tight">$237,830.00</h3>
+          <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Utilidad Neta</p>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{formatPYG(incomeStatement?.net_income || 0)}</h3>
         </div>
 
         {/* Cash Position */}
-        <div className="bg-surface p-6 rounded-xl border border-border-subtle shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-2 hover:shadow-fluent-8 transition-all group">
           <div className="flex justify-between items-start mb-4">
             <div className="size-10 rounded-lg bg-amber-50 flex items-center justify-center text-warning group-hover:scale-110 transition-transform">
               <span className="material-symbols-outlined text-[20px]">savings</span>
             </div>
             <span className="flex items-center text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-50 px-2 py-1 rounded-full">Estable</span>
           </div>
-          <p className="text-xs font-black uppercase tracking-widest text-text-secondary mb-1">Posición de Caja</p>
-          <h3 className="text-2xl font-black text-text-main tracking-tight">$1.2M</h3>
+          <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Posición de Caja</p>
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">$1.2M</h3>
         </div>
       </div>
 
       {/* Main Content Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Gauge & Health Score */}
-        <div className="lg:col-span-1 bg-surface p-8 rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col items-center text-center">
-          <h3 className="text-sm font-black text-text-main uppercase tracking-tight mb-8">Salud Financiera</h3>
+        <div className="lg:col-span-1 bg-white dark:bg-slate-900 p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-2 flex flex-col items-center text-center">
+          <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight mb-8">Salud Financiera</h3>
           {/* Gauge Visual */}
           <div className="relative flex items-center justify-center mb-8">
             <svg className="w-48 h-48 transform -rotate-90">
-              <circle className="text-slate-100" cx="96" cy="96" r="80" stroke="currentColor" strokeDasharray="502" strokeDashoffset="125" strokeWidth="14" fill="transparent"></circle>
+              <circle className="text-slate-100 dark:text-slate-800" cx="96" cy="96" r="80" stroke="currentColor" strokeDasharray="502" strokeDashoffset="125" strokeWidth="14" fill="transparent"></circle>
               <circle className="text-primary" cx="96" cy="96" r="80" stroke="currentColor" strokeDasharray="502" strokeDashoffset="175" strokeLinecap="round" strokeWidth="14" fill="transparent"></circle>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-5xl font-black text-text-main tracking-tight">84</span>
+              <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tight">84</span>
               <span className="text-[10px] font-black text-success tracking-widest uppercase mt-1">Excelente</span>
             </div>
           </div>
@@ -141,19 +159,19 @@ const FinancialSummaryDashboard = () => {
               <span className="material-symbols-outlined text-[18px]">lightbulb</span>
               <p className="text-[10px] font-black uppercase tracking-widest">Recomendación BI</p>
             </div>
-            <p className="text-xs text-text-secondary leading-relaxed text-left font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed text-left font-medium">
               Tu flujo de caja es óptimo. Considera reinvertir el excedente del 15% en activos de alta liquidez para mejorar el Quick Ratio.
             </p>
           </div>
-          <Button variant="ghost" className="w-full mt-6 h-11 text-[11px] font-black uppercase tracking-widest text-text-secondary hover:text-primary hover:bg-blue-50">
+          <Button variant="ghost" className="w-full mt-6 h-11 text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-blue-50">
             Ver Análisis Completo
           </Button>
         </div>
 
         {/* Financial Ratios */}
-        <div className="lg:col-span-2 bg-surface p-8 rounded-xl border border-border-subtle shadow-fluent-2 flex flex-col">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-fluent-2 flex flex-col">
           <div className="flex justify-between items-center mb-8">
-            <h3 className="text-sm font-black text-text-main uppercase tracking-tight">Ratios Financieros Clave</h3>
+            <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Ratios Financieros Clave</h3>
             <span className="material-symbols-outlined text-slate-300">info</span>
           </div>
           <div className="space-y-10 flex-1">
@@ -161,11 +179,11 @@ const FinancialSummaryDashboard = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
-                  <p className="text-sm font-black text-text-main uppercase tracking-tight">Current Ratio</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">Capacidad de pago a corto plazo</p>
+                  <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Current Ratio</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 opacity-60">Capacidad de pago a corto plazo</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-black text-text-main tracking-tight">2.45</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white tracking-tight">2.45</p>
                   <p className="text-[10px] font-black uppercase tracking-widest text-success">Saludable</p>
                 </div>
               </div>
@@ -177,11 +195,11 @@ const FinancialSummaryDashboard = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
-                  <p className="text-sm font-black text-text-main uppercase tracking-tight">Quick Ratio</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">Liquidez inmediata</p>
+                  <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Quick Ratio</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 opacity-60">Liquidez inmediata</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-black text-text-main tracking-tight">1.82</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white tracking-tight">1.82</p>
                   <p className="text-[10px] font-black uppercase tracking-widest text-success">Saludable</p>
                 </div>
               </div>
@@ -193,11 +211,11 @@ const FinancialSummaryDashboard = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-end">
                 <div className="space-y-1">
-                  <p className="text-sm font-black text-text-main uppercase tracking-tight">Margen Bruto</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-60">Rentabilidad operativa</p>
+                  <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Margen Bruto</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 opacity-60">Rentabilidad operativa</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-black text-text-main tracking-tight">42.5%</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white tracking-tight">42.5%</p>
                   <p className="text-[10px] font-black uppercase tracking-widest text-primary">Obj: 45%</p>
                 </div>
               </div>
@@ -206,8 +224,8 @@ const FinancialSummaryDashboard = () => {
               </div>
             </div>
           </div>
-          <div className="mt-8 pt-6 border-t border-border-subtle flex items-center justify-between">
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary opacity-40 italic">Sincronizado BI: Hace 4m</p>
+          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 opacity-40 italic">Sincronizado BI: Hace 4m</p>
             <a className="text-primary text-[11px] font-black uppercase tracking-widest flex items-center gap-1 hover:underline cursor-pointer">
               Detalle
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>

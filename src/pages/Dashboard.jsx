@@ -1,8 +1,9 @@
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
 import useDashboardStore from '../store/useDashboardStore';
+import { formatTimeInParaguayTimezone } from '@/utils/timeUtils';
 import {
   DollarSign,
   ShoppingCart,
@@ -22,7 +23,6 @@ import {
   Clock
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import DashboardNav from '../components/business-intelligence/DashboardNav';
 import {
   AreaChart,
   Area,
@@ -40,10 +40,16 @@ const Dashboard = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { summary, alerts, activities, loading, error, fetchDashboardData } = useDashboardStore();
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData().then(() => setLastUpdated(new Date()));
   }, [fetchDashboardData]);
+
+  const handleRefresh = async () => {
+    await fetchDashboardData();
+    setLastUpdated(new Date());
+  };
 
   // Mock Data for "Revenue vs Expenses" Area Chart
   // In a future step, this could also be fetched from /dashboard/trends or similar
@@ -121,7 +127,7 @@ const Dashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
            <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">{t('dashboard.executive.title', 'Resumen Ejecutivo')}</h1>
-           <p className="text-sm text-text-secondary font-medium">{t('dashboard.executive.subtitle', 'Visión general en tiempo real de los indicadores clave')}</p>
+           <p className="text-sm text-text-secondary font-medium">{t('dashboard.executive.subtitle', 'Visión general en tiempo real de los indicadores clave')} • {formatTimeInParaguayTimezone(lastUpdated)}</p>
         </div>
          <div className="flex items-center gap-3">
             <Button variant="secondary" size="md" className="shadow-sm border-border-subtle" onClick={() => navigate('/configuracion')}>
@@ -137,7 +143,6 @@ const Dashboard = () => {
       </div>
 
       {/* 1.1 BI Navigation */}
-      <DashboardNav />
 
        {/* 2. Top KPI Cards */}
        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

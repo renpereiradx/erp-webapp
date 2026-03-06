@@ -77,7 +77,6 @@ import ProfitabilityAnalysis from '@/pages/ProfitabilityAnalysis'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import ErrorBoundary from '@/components/ErrorBoundary'
-import './App.css'
 
 // Componente de protección de rutas
 const ProtectedRoute = ({ children }) => {
@@ -147,8 +146,8 @@ function AppContent() {
                       <Route path='/dashboard/top-products' element={<TopProductsOverview />} />
                       <Route path='/dashboard/receivables' element={<ReceivablesDashboard />} />
                       <Route path='/dashboard/payables' element={<PayablesDashboard />} />
-                      <Route path='/finance/invoices' element={<InvoicesMasterList />} />
-                      <Route path='/finance/invoices/:id' element={<InvoiceDetail />} />
+                      <Route path='/payables/list' element={<InvoicesMasterList />} />
+                      <Route path='/payables/detail/:id' element={<InvoiceDetail />} />
                       <Route path='/payables/cash-flow' element={<CashFlowProjection />} />
                       <Route path='/payables/aging-report' element={<PayablesAgingReport />} />
                       <Route path='/finance/analytical-cash-flow' element={<CashFlowAnalysisDashboard />} />

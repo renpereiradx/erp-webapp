@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, MoreHorizontal, ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-react';
+import { formatPYG } from '@/utils/currencyUtils';
 
 /**
  * Table showing major suppliers with the highest debt.
@@ -39,11 +40,11 @@ const SuppliersDebtTable = ({ vendors = [] }) => {
           <thead className="bg-slate-50/50 dark:bg-slate-900/50 text-slate-500 border-b border-slate-100 dark:border-slate-700">
             <tr>
               <th className="px-6 py-4 font-black text-[10px] uppercase tracking-widest">Nombre del Proveedor</th>
-              <th className="px-6 py-4 font-black text-[10px] uppercase tracking-widest">Identificación (RFC)</th>
+              {/* <th className="px-6 py-4 font-black text-[10px] uppercase tracking-widest">Identificación (RFC)</th> */}
               <th className="px-6 py-4 font-black text-[10px] uppercase tracking-widest text-right">Saldo Total</th>
               <th className="px-6 py-4 font-black text-[10px] uppercase tracking-widest text-right">Monto Vencido</th>
-              <th className="px-6 py-4 font-black text-[10px] uppercase tracking-widest">Vencimiento</th>
-              <th className="px-6 py-4 font-black text-[10px] uppercase tracking-widest">Prioridad</th>
+              {/* <th className="px-6 py-4 font-black text-[10px] uppercase tracking-widest">Vencimiento</th> */}
+              {/* <th className="px-6 py-4 font-black text-[10px] uppercase tracking-widest">Prioridad</th> */}
               <th className="px-6 py-4 font-black text-[10px] uppercase tracking-widest text-center">Acciones</th>
             </tr>
           </thead>
@@ -68,27 +69,27 @@ const SuppliersDebtTable = ({ vendors = [] }) => {
                       <span className="text-sm font-extrabold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{vendor.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  {/* <td className="px-6 py-4">
                     <span className="text-xs font-mono font-medium text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded border border-slate-100 dark:border-slate-700">{vendor.rfc}</span>
-                  </td>
+                  </td> */}
                   <td className="px-6 py-4 text-right">
                     <span className="text-sm font-black text-slate-900 dark:text-white">
-                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(vendor.totalBalance)}
+                      {formatPYG(vendor.totalBalance)}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <span className={`text-sm font-black ${vendor.overdueAmount > 0 ? 'text-fluent-danger' : 'text-slate-900 dark:text-white'}`}>
-                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(vendor.overdueAmount)}
+                      {formatPYG(vendor.overdueAmount)}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  {/* <td className="px-6 py-4">
                     <span className="text-xs font-bold text-slate-500">{vendor.nextPayment}</span>
-                  </td>
-                  <td className="px-6 py-4">
+                  </td> */}
+                  {/* <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 rounded-lg ${priorityClasses} text-[9px] font-black uppercase tracking-widest inline-block`}>
                       {vendor.priority}
                     </span>
-                  </td>
+                  </td> */}
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
                       <button className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-500 hover:text-primary border border-transparent hover:border-slate-100 dark:hover:border-slate-600 shadow-none hover:shadow-sm transition-all">

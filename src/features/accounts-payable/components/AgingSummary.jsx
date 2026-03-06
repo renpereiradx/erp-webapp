@@ -1,5 +1,6 @@
 import React from 'react';
 import { Info } from 'lucide-react';
+import { formatPYG } from '@/utils/currencyUtils';
 
 /**
  * Aging Summary Chart for the Dashboard.
@@ -11,7 +12,7 @@ const AgingSummary = ({ aging = [], stats = {} }) => {
       <div className="flex justify-between items-center mb-8">
         <h3 className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">Resumen de Antigüedad (Aging)</h3>
         <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Moneda: USD</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Moneda: PYG</span>
           <Info className="text-primary w-3.5 h-3.5" />
         </div>
       </div>
@@ -34,10 +35,7 @@ const AgingSummary = ({ aging = [], stats = {} }) => {
               <div className="flex justify-between items-end">
                 <span className={textClass}>{item.label}</span>
                 <span className={valClass}>
-                  {new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                  }).format(item.amount)}
+                  {formatPYG(item.amount)}
                 </span>
               </div>
               <div className="w-full bg-slate-100 dark:bg-slate-700 h-7 rounded-xl overflow-hidden flex p-1 shadow-inner">

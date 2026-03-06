@@ -69,7 +69,7 @@ const CashFlowAnalysisDashboard = () => {
               </div>
             </div>
             <div>
-              <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">$450,000</h3>
+              <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Gs. 450.000.000</h3>
               <p className="text-xs text-slate-400 mt-2">Al 01 de Octubre</p>
             </div>
           </div>
@@ -83,7 +83,7 @@ const CashFlowAnalysisDashboard = () => {
               </div>
             </div>
             <div>
-              <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">+$124,500</h3>
+              <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">+Gs. 124.500.000</h3>
               <div className="flex items-center gap-1.5 mt-2">
                 <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">+8.2%</span>
                 <span className="text-xs text-slate-400">vs periodo anterior</span>
@@ -100,7 +100,7 @@ const CashFlowAnalysisDashboard = () => {
               </div>
             </div>
             <div>
-              <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">-$62,200</h3>
+              <h3 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white">-Gs. 62.200.000</h3>
               <div className="flex items-center gap-1.5 mt-2">
                 <span className="text-xs font-bold text-rose-600 bg-rose-50 dark:bg-rose-900/30 px-1.5 py-0.5 rounded">-2.1%</span>
                 <span className="text-xs text-slate-400">vs periodo anterior</span>
@@ -117,7 +117,7 @@ const CashFlowAnalysisDashboard = () => {
               </div>
             </div>
             <div className="relative z-10">
-              <h3 className="text-4xl font-bold tracking-tight">$512,300</h3>
+              <h3 className="text-4xl font-bold tracking-tight">Gs. 512.300.000</h3>
               <p className="text-xs text-blue-100/80 mt-2">Corte al día de hoy</p>
             </div>
             <div className="absolute -right-6 -bottom-6 opacity-10">

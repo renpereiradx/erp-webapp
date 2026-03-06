@@ -39,7 +39,7 @@ import { cashRegisterService } from '@/services/cashRegisterService'
 import { CurrencyService } from '@/services/currencyService'
 import { PaymentMethodService } from '@/services/paymentMethodService'
 import { calculateCashRegisterBalance } from '@/utils/cashRegisterUtils'
-import { normalizeCurrencyCode } from '@/utils/currencyUtils'
+import { normalizeCurrencyCode, formatPYG } from '@/utils/currencyUtils'
 import { cn } from '@/lib/utils'
 
 const DEFAULT_CURRENCY_CODE = 'PYG'
@@ -85,15 +85,17 @@ const RegisterPaymentModal = ({ open, onOpenChange, order, onSubmit }) => {
   }
 
   const formatLocalizedCurrency = useCallback((value, currencyCode = 'PYG') => {
-    const locale = lang === 'en' ? 'en-US' : 'es-PY'
     const code = normalizeCurrencyCode(currencyCode)
-    const formatter = new Intl.NumberFormat(locale, {
+    if (code === 'PYG') {
+      return formatPYG(Number(value || 0));
+    }
+    const formatter = new Intl.NumberFormat('es-PY', {
       style: 'currency', currency: code,
-      minimumFractionDigits: code === 'PYG' ? 0 : 2,
-      maximumFractionDigits: code === 'PYG' ? 0 : 2,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     })
     return formatter.format(Number(value || 0))
-  }, [lang])
+  }, [])
 
   const pendingLabel = useMemo(() => !order || order.pendingAmount === null ? null : formatLocalizedCurrency(order.pendingAmount, order.currency), [formatLocalizedCurrency, order])
   const numericAmount = useMemo(() => { const val = Number.parseFloat(amount); return Number.isFinite(val) ? val : 0 }, [amount])

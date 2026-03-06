@@ -22,6 +22,7 @@ import {
   FileBadge
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { formatPYG } from '@/utils/currencyUtils';
 
 /**
  * Detalle de Factura de Pagos e Historial (Payables)
@@ -70,11 +71,8 @@ const InvoiceDetail = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const formatUSD = (val) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(val);
+  const formatAmount = (val) => {
+    return formatPYG(val);
   };
 
   if (loading) return (
@@ -90,11 +88,11 @@ const InvoiceDetail = () => {
       <div className="flex flex-col gap-4">
         {/* Breadcrumbs with better styling */}
         <nav className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
-          <Link to="/finance/invoices" className="hover:text-primary transition-colors flex items-center gap-1">
+          <Link to="/payables/list" className="hover:text-primary transition-colors flex items-center gap-1">
             Finanzas
           </Link>
           <ChevronRight size={12} className="mx-2 opacity-30" />
-          <Link to="/finance/invoices" className="hover:text-primary transition-colors">
+          <Link to="/payables/list" className="hover:text-primary transition-colors">
             Cuentas por Pagar
           </Link>
           <ChevronRight size={12} className="mx-2 opacity-30" />
@@ -154,7 +152,7 @@ const InvoiceDetail = () => {
         <div className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)] p-6 md:p-8 rounded-2xl flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all">
           <div className="flex-1 min-w-0">
             <div className="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em] group-hover:text-primary transition-colors">Monto Original</div>
-            <div className="text-2xl xl:text-3xl font-black text-slate-900 dark:text-white break-words">{formatUSD(invoice.montoOriginal)}</div>
+            <div className="text-2xl xl:text-3xl font-black text-slate-900 dark:text-white break-words">{formatAmount(invoice.montoOriginal)}</div>
           </div>
           <div className="mt-5 h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
             <div className="bg-slate-400 h-full w-full rounded-full opacity-50"></div>
@@ -164,7 +162,7 @@ const InvoiceDetail = () => {
         <div className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)] p-6 md:p-8 rounded-2xl border-l-4 border-l-emerald-500 flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all">
           <div className="flex-1 min-w-0">
             <div className="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em] group-hover:text-emerald-500 transition-colors">Monto Pagado</div>
-            <div className="text-2xl xl:text-3xl font-black text-emerald-600 dark:text-emerald-400 break-words">{formatUSD(invoice.montoPagado)}</div>
+            <div className="text-2xl xl:text-3xl font-black text-emerald-600 dark:text-emerald-400 break-words">{formatAmount(invoice.montoPagado)}</div>
           </div>
           <div className="mt-5 h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
             <div className="bg-emerald-500 h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(16,185,129,0.4)]" style={{ width: `${invoice.progreso}%` }}></div>
@@ -174,7 +172,7 @@ const InvoiceDetail = () => {
         <div className="bg-white dark:bg-[#1b2633] border border-[#edebe9] dark:border-[#2d3d4f] shadow-[0_1.6px_3.6px_0_rgba(0,0,0,0.132),_0_0.3px_0.9px_0_rgba(0,0,0,0.108)] p-6 md:p-8 rounded-2xl border-l-4 border-l-primary flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all">
           <div className="flex-1 min-w-0">
             <div className="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em] group-hover:text-primary transition-colors">Saldo Pendiente</div>
-            <div className="text-2xl xl:text-3xl font-black text-primary break-words">{formatUSD(invoice.saldoPendiente)}</div>
+            <div className="text-2xl xl:text-3xl font-black text-primary break-words">{formatAmount(invoice.saldoPendiente)}</div>
           </div>
           <div className="mt-5 h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden p-0.5">
             <div className="bg-primary h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(19,127,236,0.4)]" style={{ width: `${100 - invoice.progreso}%` }}></div>
@@ -256,7 +254,7 @@ const InvoiceDetail = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right font-mono font-black text-slate-900 dark:text-white text-sm">
-                        {formatUSD(pago.monto)}
+                        {formatAmount(pago.monto)}
                       </td>
                     </tr>
                   ))}
@@ -265,7 +263,7 @@ const InvoiceDetail = () => {
             </div>
             <div className="px-6 py-4 md:py-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 text-right flex items-center justify-end">
               <span className="text-xs font-black uppercase tracking-widest text-slate-500 mr-4">Total Pagado:</span>
-              <span className="text-lg md:text-xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{formatUSD(invoice.montoPagado)}</span>
+              <span className="text-lg md:text-xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{formatAmount(invoice.montoPagado)}</span>
             </div>
           </section>
         </div>

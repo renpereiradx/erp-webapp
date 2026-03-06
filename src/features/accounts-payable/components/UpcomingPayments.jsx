@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatPYG } from '@/utils/currencyUtils';
 
 /**
  * Upcoming payments list component.
@@ -40,10 +41,7 @@ const UpcomingPayments = ({ payments = [] }) => {
               
               <div className="text-right flex-shrink-0">
                 <p className="text-sm font-black text-slate-900 dark:text-white">
-                  {new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                  }).format(payment.amount)}
+                  {formatPYG(payment.amount)}
                 </p>
                 <span className={`text-[9px] px-2 py-0.5 rounded-full ${statusClasses} font-black uppercase tracking-widest mt-1 inline-block`}>
                   {payment.status}
