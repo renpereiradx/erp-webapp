@@ -10,6 +10,69 @@ import saleService from '@/services/saleService'
 import { telemetryService } from '@/services/telemetryService'
 import { DEMO_CONFIG_SALES } from '@/config/demoData'
 
+const getSaleIdentifier = sale =>
+  sale?.sale_id || sale?.id || sale?.saleId || null
+
+const mergeSalesByIdentifier = (baseSales = [], incomingSales = []) => {
+  const merged = [...baseSales]
+  const knownIds = new Set(
+    baseSales
+      .map(item => getSaleIdentifier(item))
+      .filter(Boolean)
+      .map(id => String(id)),
+  )
+
+  incomingSales.forEach(item => {
+    const itemId = getSaleIdentifier(item)
+
+    if (!itemId) {
+      merged.push(item)
+      return
+    }
+
+    const normalizedId = String(itemId)
+    if (!knownIds.has(normalizedId)) {
+      merged.push(item)
+      knownIds.add(normalizedId)
+    }
+  })
+
+  return merged
+}
+
+const normalizeStorePagination = (rawPagination, fallbackCount = 0) => {
+  const totalRecords = Number(
+    rawPagination?.total_records ??
+      rawPagination?.totalRecords ??
+      rawPagination?.total ??
+      fallbackCount,
+  )
+
+  const totalPages = Number(
+    rawPagination?.total_pages ?? rawPagination?.totalPages ?? 0,
+  )
+
+  const currentPage = Number(
+    rawPagination?.page ?? rawPagination?.current_page ?? 1,
+  )
+
+  const hasNext = rawPagination?.has_next ?? rawPagination?.hasNext ?? false
+  const hasPrevious =
+    rawPagination?.has_previous ?? rawPagination?.hasPrevious ?? currentPage > 1
+
+  return {
+    total:
+      Number.isFinite(totalRecords) && totalRecords >= 0
+        ? totalRecords
+        : fallbackCount,
+    totalPages: Number.isFinite(totalPages) && totalPages >= 0 ? totalPages : 0,
+    currentPage:
+      Number.isFinite(currentPage) && currentPage > 0 ? currentPage : 1,
+    hasNext: Boolean(hasNext),
+    hasPrevious: Boolean(hasPrevious),
+  }
+}
+
 const useSaleStore = create()(
   devtools(
     (set, get) => ({
@@ -118,7 +181,7 @@ const useSaleStore = create()(
         try {
           const response = await saleService.endSaleSession(
             session.session_id,
-            summary
+            summary,
           )
 
           if (response.success) {
@@ -172,7 +235,7 @@ const useSaleStore = create()(
         try {
           const response = await saleService.calculateChange(
             totalAmount,
-            amountPaid
+            amountPaid,
           )
 
           if (response.success) {
@@ -228,22 +291,83 @@ const useSaleStore = create()(
       fetchSalesByDateRange: async (params = {}) => {
         set({ loading: true, error: null })
         try {
-          const response = await saleService.getSalesByDateRange(params)
+          const requestedPageSize = Number(
+            params.page_size || params.limit || 50,
+          )
+          const pageSize =
+            Number.isFinite(requestedPageSize) && requestedPageSize > 0
+              ? requestedPageSize
+              : 50
+          const initialPage = Number(params.page || 1)
+          let currentPage =
+            Number.isFinite(initialPage) && initialPage > 0 ? initialPage : 1
+          const shouldFetchAllPages = params.fetchAllPages !== false
+          const maxPages = 20
 
-          if (response.success) {
-            set({
-              sales: response.data || [],
-              pagination: response.pagination || get().pagination,
-              loading: false,
+          let aggregatedSales = []
+          let lastResponse = null
+          let pagesFetched = 0
+
+          while (pagesFetched < maxPages) {
+            const response = await saleService.getSalesByDateRange({
+              ...params,
+              page: currentPage,
+              page_size: pageSize,
             })
 
-            telemetryService.recordEvent('sales_fetched_by_date_range', {
-              count: response.data?.length || 0,
-              params: JSON.stringify(params),
-            })
+            if (!response?.success) {
+              throw new Error(
+                response?.error || 'No se pudo obtener ventas por fechas',
+              )
+            }
+
+            const pageData = Array.isArray(response.data) ? response.data : []
+            aggregatedSales = mergeSalesByIdentifier(aggregatedSales, pageData)
+            lastResponse = response
+            pagesFetched += 1
+
+            if (!shouldFetchAllPages) {
+              break
+            }
+
+            const hasNext =
+              response?.pagination?.has_next === true ||
+              response?.pagination?.hasNext === true ||
+              (Number(response?.pagination?.total_pages) > 0 &&
+                currentPage < Number(response?.pagination?.total_pages)) ||
+              (Number(response?.pagination?.totalPages) > 0 &&
+                currentPage < Number(response?.pagination?.totalPages)) ||
+              pageData.length >= pageSize
+
+            if (!hasNext || pageData.length === 0) {
+              break
+            }
+
+            currentPage += 1
           }
 
-          return response
+          const pagination = normalizeStorePagination(
+            lastResponse?.pagination,
+            aggregatedSales.length,
+          )
+
+          set({
+            sales: aggregatedSales,
+            pagination,
+            loading: false,
+          })
+
+          telemetryService.recordEvent('sales_fetched_by_date_range', {
+            count: aggregatedSales.length,
+            pages_fetched: pagesFetched,
+            params: JSON.stringify(params),
+          })
+
+          return {
+            success: true,
+            data: aggregatedSales,
+            pagination: lastResponse?.pagination,
+          }
         } catch (error) {
           set({ error: error.message, loading: false })
           throw error
@@ -254,26 +378,87 @@ const useSaleStore = create()(
       fetchSalesByClientName: async (clientName, params = {}) => {
         set({ loading: true, error: null })
         try {
-          const response = await saleService.getSalesByClientName(
-            clientName,
-            params
+          const requestedPageSize = Number(
+            params.page_size || params.limit || 50,
           )
+          const pageSize =
+            Number.isFinite(requestedPageSize) && requestedPageSize > 0
+              ? requestedPageSize
+              : 50
+          const initialPage = Number(params.page || 1)
+          let currentPage =
+            Number.isFinite(initialPage) && initialPage > 0 ? initialPage : 1
+          const shouldFetchAllPages = params.fetchAllPages !== false
+          const maxPages = 20
 
-          if (response.success) {
-            set({
-              sales: response.data || [],
-              pagination: response.pagination || get().pagination,
-              loading: false,
-            })
+          let aggregatedSales = []
+          let lastResponse = null
+          let pagesFetched = 0
 
-            telemetryService.recordEvent('sales_fetched_by_client_name', {
-              count: response.data?.length || 0,
-              client_name: clientName,
-              params: JSON.stringify(params),
-            })
+          while (pagesFetched < maxPages) {
+            const response = await saleService.getSalesByClientName(
+              clientName,
+              {
+                ...params,
+                page: currentPage,
+                page_size: pageSize,
+              },
+            )
+
+            if (!response?.success) {
+              throw new Error(
+                response?.error || 'No se pudo obtener ventas por cliente',
+              )
+            }
+
+            const pageData = Array.isArray(response.data) ? response.data : []
+            aggregatedSales = mergeSalesByIdentifier(aggregatedSales, pageData)
+            lastResponse = response
+            pagesFetched += 1
+
+            if (!shouldFetchAllPages) {
+              break
+            }
+
+            const hasNext =
+              response?.pagination?.has_next === true ||
+              response?.pagination?.hasNext === true ||
+              (Number(response?.pagination?.total_pages) > 0 &&
+                currentPage < Number(response?.pagination?.total_pages)) ||
+              (Number(response?.pagination?.totalPages) > 0 &&
+                currentPage < Number(response?.pagination?.totalPages)) ||
+              pageData.length >= pageSize
+
+            if (!hasNext || pageData.length === 0) {
+              break
+            }
+
+            currentPage += 1
           }
 
-          return response
+          const pagination = normalizeStorePagination(
+            lastResponse?.pagination,
+            aggregatedSales.length,
+          )
+
+          set({
+            sales: aggregatedSales,
+            pagination,
+            loading: false,
+          })
+
+          telemetryService.recordEvent('sales_fetched_by_client_name', {
+            count: aggregatedSales.length,
+            pages_fetched: pagesFetched,
+            client_name: clientName,
+            params: JSON.stringify(params),
+          })
+
+          return {
+            success: true,
+            data: aggregatedSales,
+            pagination: lastResponse?.pagination,
+          }
         } catch (error) {
           set({ error: error.message, loading: false })
           throw error
@@ -307,8 +492,8 @@ const useSaleStore = create()(
           const data = Array.isArray(response?.data)
             ? response.data
             : Array.isArray(response)
-            ? response
-            : []
+              ? response
+              : []
 
           set({ pendingSales: data, pendingSalesLoading: false })
 
@@ -336,7 +521,7 @@ const useSaleStore = create()(
           const endTime = performance.now()
           telemetryService.recordMetric(
             'pending_sales_fetch_duration',
-            endTime - startTime
+            endTime - startTime,
           )
         }
       },
@@ -374,7 +559,7 @@ const useSaleStore = create()(
             const sales = get().sales.map(sale =>
               sale.id === saleId || sale.sale_id === saleId
                 ? { ...sale, ...response.data }
-                : sale
+                : sale,
             )
             set({ sales })
           }
@@ -495,7 +680,7 @@ const useSaleStore = create()(
 
           // Actualizar la venta en la lista
           const sales = get().sales.map(sale =>
-            sale.id === id ? response.data : sale
+            sale.id === id ? response.data : sale,
           )
 
           set({
@@ -520,7 +705,7 @@ const useSaleStore = create()(
           const sales = get().sales.map(sale =>
             sale.id === id || sale.sale_id === id
               ? { ...sale, status: 'cancelled' }
-              : sale
+              : sale,
           )
 
           set({ sales, loading: false })
@@ -540,7 +725,7 @@ const useSaleStore = create()(
 
           // Actualizar estado de la venta
           const sales = get().sales.map(sale =>
-            sale.id === id ? { ...sale, status: 'completed' } : sale
+            sale.id === id ? { ...sale, status: 'completed' } : sale,
           )
 
           set({ sales, loading: false })
@@ -560,7 +745,7 @@ const useSaleStore = create()(
 
           // Actualizar estado de la venta
           const sales = get().sales.map(sale =>
-            sale.id === id ? { ...sale, status: 'refunded' } : sale
+            sale.id === id ? { ...sale, status: 'refunded' } : sale,
           )
 
           set({ sales, loading: false })
@@ -577,7 +762,7 @@ const useSaleStore = create()(
       // Use createSale() and reservationService.createReservation() separately
       createSaleWithReservation: async () => {
         console.warn(
-          '⚠️  createSaleWithReservation is deprecated. Handle sales and reservations separately.'
+          '⚠️  createSaleWithReservation is deprecated. Handle sales and reservations separately.',
         )
         set({
           error:
@@ -585,7 +770,7 @@ const useSaleStore = create()(
           loading: false,
         })
         throw new Error(
-          'This method has been deprecated. Please create sales and reservations separately for better separation of concerns.'
+          'This method has been deprecated. Please create sales and reservations separately for better separation of concerns.',
         )
       },
 
@@ -671,7 +856,7 @@ const useSaleStore = create()(
       addItemToCurrentSale: (product, quantity = 1) => {
         const currentSaleData = get().currentSaleData
         const existingItemIndex = currentSaleData.items.findIndex(
-          item => item.id === product.id
+          item => item.id === product.id,
         )
 
         let newItems
@@ -680,7 +865,7 @@ const useSaleStore = create()(
           newItems = currentSaleData.items.map((item, index) =>
             index === existingItemIndex
               ? { ...item, quantity: item.quantity + quantity }
-              : item
+              : item,
           )
         } else {
           // Agregar nuevo ítem (MVP: estructura simple)
@@ -700,7 +885,7 @@ const useSaleStore = create()(
         // Recalcular totales (MVP: cálculos simples)
         const subtotalAmount = newItems.reduce(
           (sum, item) => sum + item.total_price,
-          0
+          0,
         )
         const taxAmount = subtotalAmount * 0.16 // IVA del 16%
         const totalAmount =
@@ -734,13 +919,13 @@ const useSaleStore = create()(
         const newItems = currentSaleData.items.map(item =>
           item.id === itemId
             ? { ...item, quantity, total_price: item.unit_price * quantity }
-            : item
+            : item,
         )
 
         // Recalcular totales
         const subtotalAmount = newItems.reduce(
           (sum, item) => sum + item.total_price,
-          0
+          0,
         )
         const taxAmount = subtotalAmount * 0.16
         const totalAmount =
@@ -765,13 +950,13 @@ const useSaleStore = create()(
       removeItemFromCurrentSale: itemId => {
         const currentSaleData = get().currentSaleData
         const newItems = currentSaleData.items.filter(
-          item => item.id !== itemId
+          item => item.id !== itemId,
         )
 
         // Recalcular totales
         const subtotalAmount = newItems.reduce(
           (sum, item) => sum + item.total_price,
-          0
+          0,
         )
         const taxAmount = subtotalAmount * 0.16
         const totalAmount =
@@ -854,7 +1039,7 @@ const useSaleStore = create()(
           .filter(
             sale =>
               sale.sale_date?.toString().startsWith(today) &&
-              sale.status !== 'cancelled'
+              sale.status !== 'cancelled',
           )
 
         const totalRevenue = sales
@@ -926,14 +1111,14 @@ const useSaleStore = create()(
         const today = new Date().toISOString().split('T')[0]
         return sales.filter(
           sale =>
-            sale.sale_date?.startsWith(today) && sale.status !== 'cancelled'
+            sale.sale_date?.startsWith(today) && sale.status !== 'cancelled',
         ).length
       },
 
       getCurrentSaleItemsCount: () => {
         return get().currentSaleData.items.reduce(
           (sum, item) => sum + item.quantity,
-          0
+          0,
         )
       },
 
@@ -957,8 +1142,8 @@ const useSaleStore = create()(
         )
       },
     }),
-    { name: 'sale-store' }
-  )
+    { name: 'sale-store' },
+  ),
 )
 
 export default useSaleStore

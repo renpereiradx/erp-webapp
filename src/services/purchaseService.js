@@ -7,7 +7,10 @@
 import { apiClient } from './api'
 import { telemetryService } from './telemetryService'
 import { DEMO_CONFIG } from '../config/demoAuth'
-import { DEMO_PURCHASE_ORDERS_DATA, DEMO_TAX_RATES_DATA } from '../config/demoData'
+import {
+  DEMO_PURCHASE_ORDERS_DATA,
+  DEMO_TAX_RATES_DATA,
+} from '../config/demoData'
 // TypeScript types are available in ../types/purchase.ts
 
 // Configuración de timeouts y reintentos
@@ -22,13 +25,146 @@ const withRetry = async (fn, attempts = RETRY_ATTEMPTS) => {
     } catch (error) {
       if (i === attempts - 1) throw error
       await new Promise(resolve =>
-        setTimeout(resolve, RETRY_DELAY * Math.pow(2, i))
+        setTimeout(resolve, RETRY_DELAY * Math.pow(2, i)),
       )
     }
   }
 }
 
 class PurchaseService {
+  extractPurchasesAndPagination(response, fallback = {}) {
+    const arrayCandidates = [
+      response,
+      response?.data,
+      response?.data?.data,
+      response?.purchases,
+      response?.data?.purchases,
+      response?.results,
+      response?.data?.results,
+      response?.items,
+      response?.data?.items,
+      response?.rows,
+      response?.data?.rows,
+    ]
+
+    let data = []
+    for (const candidate of arrayCandidates) {
+      if (Array.isArray(candidate)) {
+        data = candidate
+        break
+      }
+    }
+
+    if (
+      data.length === 0 &&
+      response &&
+      typeof response === 'object' &&
+      (response.purchase || response.id)
+    ) {
+      data = [response]
+    }
+
+    const paginationSource =
+      (response?.pagination && typeof response.pagination === 'object'
+        ? response.pagination
+        : null) ||
+      (response?.data?.pagination &&
+      typeof response.data.pagination === 'object'
+        ? response.data.pagination
+        : null) ||
+      (response?.meta?.pagination &&
+      typeof response.meta.pagination === 'object'
+        ? response.meta.pagination
+        : null) ||
+      (response?.data?.meta?.pagination &&
+      typeof response.data.meta.pagination === 'object'
+        ? response.data.meta.pagination
+        : null)
+
+    const page = Number(
+      paginationSource?.page ??
+        paginationSource?.current_page ??
+        response?.page ??
+        response?.data?.page ??
+        fallback.page ??
+        1,
+    )
+
+    const normalizedPage = Number.isFinite(page) && page > 0 ? page : 1
+
+    const pageSize = Number(
+      paginationSource?.page_size ??
+        paginationSource?.pageSize ??
+        paginationSource?.per_page ??
+        response?.page_size ??
+        response?.data?.page_size ??
+        fallback.pageSize ??
+        50,
+    )
+
+    const normalizedPageSize =
+      Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 50
+
+    const totalPages = Number(
+      paginationSource?.total_pages ??
+        paginationSource?.totalPages ??
+        response?.total_pages ??
+        response?.data?.total_pages ??
+        0,
+    )
+
+    const normalizedTotalPages =
+      Number.isFinite(totalPages) && totalPages > 0 ? totalPages : null
+
+    const totalRecords = Number(
+      paginationSource?.total_records ??
+        paginationSource?.totalRecords ??
+        paginationSource?.total_items ??
+        paginationSource?.totalItems ??
+        response?.total_records ??
+        response?.data?.total_records ??
+        response?.total_items ??
+        response?.data?.total_items ??
+        0,
+    )
+
+    const normalizedTotalRecords =
+      Number.isFinite(totalRecords) && totalRecords >= 0 ? totalRecords : null
+
+    const hasNextFromSource =
+      paginationSource?.has_next ??
+      paginationSource?.hasNext ??
+      paginationSource?.has_more ??
+      paginationSource?.hasMore
+
+    const hasPreviousFromSource =
+      paginationSource?.has_previous ?? paginationSource?.hasPrevious
+
+    const hasNext =
+      typeof hasNextFromSource === 'boolean'
+        ? hasNextFromSource
+        : normalizedTotalPages
+          ? normalizedPage < normalizedTotalPages
+          : data.length >= normalizedPageSize
+
+    const hasPrevious =
+      typeof hasPreviousFromSource === 'boolean'
+        ? hasPreviousFromSource
+        : normalizedPage > 1
+
+    return {
+      data,
+      pagination: {
+        page: normalizedPage,
+        pageSize: normalizedPageSize,
+        totalPages: normalizedTotalPages,
+        totalRecords: normalizedTotalRecords,
+        hasNext,
+        hasPrevious,
+      },
+    }
+  }
+
   // ============ ENHANCED PURCHASE ORDER OPERATIONS ============
 
   // Create enhanced purchase order with auto-pricing
@@ -72,7 +208,7 @@ class PurchaseService {
         }),
         auto_update_prices: Boolean(orderData.auto_update_prices !== false),
         default_profit_margin: parseFloat(
-          orderData.default_profit_margin || 30.0
+          orderData.default_profit_margin || 30.0,
         ),
         payment_method_id: orderData.payment_method_id
           ? parseInt(orderData.payment_method_id)
@@ -136,7 +272,7 @@ class PurchaseService {
     } finally {
       telemetryService.recordMetric(
         'create_enhanced_purchase_duration',
-        performance.now() - startTime
+        performance.now() - startTime,
       )
     }
   }
@@ -145,7 +281,7 @@ class PurchaseService {
   async getPurchaseOrderAnalysis(purchaseOrderId) {
     try {
       const response = await apiClient.get(
-        `/purchase-orders/${purchaseOrderId}/detailed-analysis`
+        `/purchase-orders/${purchaseOrderId}/detailed-analysis`,
       )
       return {
         success: true,
@@ -166,7 +302,7 @@ class PurchaseService {
   async validatePurchaseOrderIntegrity(purchaseOrderId) {
     try {
       const response = await apiClient.get(
-        `/purchase-orders/${purchaseOrderId}/integrity-validation`
+        `/purchase-orders/${purchaseOrderId}/integrity-validation`,
       )
       return {
         success: true,
@@ -188,9 +324,9 @@ class PurchaseService {
   async getPurchasesBySupplier(supplierId, options = {}) {
     try {
       const response = await apiClient.makeRequest(
-        `/purchase/supplier_id/${supplierId}`
+        `/purchase/supplier_id/${supplierId}`,
       )
-      const data = Array.isArray(response) ? response : response.data || []
+      const { data } = this.extractPurchasesAndPagination(response)
 
       // Process enhanced metadata for each purchase order with filter options
       const enrichedData = this.processEnhancedPurchaseData(data, options)
@@ -203,7 +339,7 @@ class PurchaseService {
           return supplierStatus !== false // Show only active suppliers (true or undefined)
         })
         console.log(
-          `🔍 Filtered ${enrichedData.length} → ${filteredData.length} orders (active suppliers only)`
+          `🔍 Filtered ${enrichedData.length} → ${filteredData.length} orders (active suppliers only)`,
         )
       }
 
@@ -228,8 +364,8 @@ class PurchaseService {
     try {
       const response = await apiClient.makeRequest(
         `/purchase/${purchaseOrderId}/supplier/${encodeURIComponent(
-          supplierName
-        )}`
+          supplierName,
+        )}`,
       )
       return {
         success: true,
@@ -238,7 +374,7 @@ class PurchaseService {
     } catch (error) {
       console.error(
         'Error fetching purchase order with supplier validation:',
-        error
+        error,
       )
       return {
         success: false,
@@ -262,7 +398,7 @@ class PurchaseService {
       endDate,
       page,
       pageSize,
-      options
+      options,
     )
   }
 
@@ -270,9 +406,9 @@ class PurchaseService {
   async getPurchasesBySupplierName(supplierName, options = {}) {
     try {
       const response = await apiClient.makeRequest(
-        `/purchase/supplier_name/${encodeURIComponent(supplierName)}`
+        `/purchase/supplier_name/${encodeURIComponent(supplierName)}`,
       )
-      const data = Array.isArray(response) ? response : response.data || []
+      const { data, pagination } = this.extractPurchasesAndPagination(response)
 
       // Process enhanced metadata for each purchase order with filter options
       const enrichedData = this.processEnhancedPurchaseData(data, options)
@@ -280,6 +416,10 @@ class PurchaseService {
       return {
         success: true,
         data: enrichedData,
+        pagination: {
+          ...pagination,
+          hasMore: pagination.hasNext,
+        },
       }
     } catch (error) {
       console.error('❌ Error fetching purchases by supplier name:', error)
@@ -299,10 +439,12 @@ class PurchaseService {
     endDate,
     page = 1,
     pageSize = 50,
-    options = {}
+    options = {},
   ) {
     if (DEMO_CONFIG.enabled) {
-      console.log('🧪 [PurchaseService] Demo mode: returning mock purchase orders')
+      console.log(
+        '🧪 [PurchaseService] Demo mode: returning mock purchase orders',
+      )
       return {
         success: true,
         data: DEMO_PURCHASE_ORDERS_DATA,
@@ -310,18 +452,29 @@ class PurchaseService {
       }
     }
     try {
-      // Construir query parameters según la nueva especificación API
-      const params = new URLSearchParams({
-        start_date: startDate,
-        end_date: endDate,
-        page: parseInt(page).toString(),
-        page_size: parseInt(pageSize).toString(),
+      const numericPage = parseInt(page)
+      const numericPageSize = parseInt(pageSize)
+
+      const response = await apiClient.makeRequest('/purchase/date_range/', {
+        params: {
+          start_date: startDate,
+          end_date: endDate,
+          page:
+            Number.isFinite(numericPage) && numericPage > 0 ? numericPage : 1,
+          page_size:
+            Number.isFinite(numericPageSize) && numericPageSize > 0
+              ? numericPageSize
+              : 50,
+        },
       })
 
-      const response = await apiClient.makeRequest(
-        `/purchase/date_range/?${params.toString()}`
+      const { data, pagination } = this.extractPurchasesAndPagination(
+        response,
+        {
+          page: numericPage,
+          pageSize: numericPageSize,
+        },
       )
-      const data = Array.isArray(response) ? response : response.data || []
 
       // Process enhanced metadata for each purchase order with filter options
       const enrichedData = this.processEnhancedPurchaseData(data, options)
@@ -330,9 +483,8 @@ class PurchaseService {
         success: true,
         data: enrichedData,
         pagination: {
-          page: parseInt(page),
-          pageSize: parseInt(pageSize),
-          hasMore: response.length === parseInt(pageSize),
+          ...pagination,
+          hasMore: pagination.hasNext,
         },
       }
     } catch (error) {
@@ -379,7 +531,7 @@ class PurchaseService {
         // Validación de fecha de expiración si está presente
         if (item.expDate && new Date(item.expDate) <= new Date()) {
           errors.push(
-            `Producto ${index + 1}: Fecha de expiración debe ser futura`
+            `Producto ${index + 1}: Fecha de expiración debe ser futura`,
           )
         }
       })
@@ -401,7 +553,7 @@ class PurchaseService {
     try {
       return await withRetry(async () => {
         const response = await apiClient.makeRequest(
-          `/tax_rate/${start}/${limit}`
+          `/tax_rate/${start}/${limit}`,
         )
         return {
           success: true,
@@ -421,7 +573,7 @@ class PurchaseService {
       const endTime = performance.now()
       telemetryService.recordMetric(
         'get_tax_rates_duration',
-        endTime - startTime
+        endTime - startTime,
       )
     }
   }
@@ -505,7 +657,7 @@ class PurchaseService {
       const detailSalePrice = parseFloat(detail.sale_price || 0)
       const metadataSalePrice = parseFloat(metadata.sale_price || 0)
       const profitPct = parseFloat(
-        detail.profit_pct || metadata.profit_pct || 0
+        detail.profit_pct || metadata.profit_pct || 0,
       )
 
       let finalSalePrice = 0
@@ -524,7 +676,7 @@ class PurchaseService {
         tax_rate: parseFloat(detail.tax_rate || metadata.tax_rate || 0),
         profit_pct: profitPct,
         line_total: parseFloat(
-          detail.line_total || metadata.line_total || quantity * unitPrice
+          detail.line_total || metadata.line_total || quantity * unitPrice,
         ),
         sale_price: finalSalePrice,
       }
@@ -563,7 +715,7 @@ class PurchaseService {
   async previewPurchaseOrderCancellation(purchaseOrderId) {
     try {
       const response = await apiClient.makeRequest(
-        `/purchase/${purchaseOrderId}/preview-cancellation`
+        `/purchase/${purchaseOrderId}/preview-cancellation`,
       )
       return {
         success: true,
@@ -586,14 +738,25 @@ class PurchaseService {
     try {
       const { purchase_order_id, reason, notes } = cancellationRequest
 
-      // El endpoint correcto es PUT /purchase/cancel/{id}
-      const response = await apiClient.makeRequest(
-        `/purchase/cancel/${purchase_order_id}`,
-        {
-          method: 'PUT',
-          body: JSON.stringify({ reason, notes }),
-        }
-      )
+      let response
+      try {
+        response = await apiClient.makeRequest(
+          `/purchase/${purchase_order_id}/cancel`,
+          {
+            method: 'PUT',
+            body: JSON.stringify({ reason, notes }),
+          },
+        )
+      } catch {
+        response = await apiClient.makeRequest(
+          `/purchase/cancel/${purchase_order_id}`,
+          {
+            method: 'PUT',
+            body: JSON.stringify({ reason, notes }),
+          },
+        )
+      }
+
       return {
         success: true,
         data: response,
@@ -616,7 +779,7 @@ class PurchaseService {
   async getPurchaseOrderByIdWithSupplierValidation(orderId, supplierName) {
     try {
       const response = await apiClient.makeRequest(
-        `/purchase/${orderId}/supplier/${encodeURIComponent(supplierName)}`
+        `/purchase/${orderId}/supplier/${encodeURIComponent(supplierName)}`,
       )
 
       // Procesar datos enriquecidos
@@ -629,7 +792,7 @@ class PurchaseService {
     } catch (error) {
       console.error(
         'Error fetching purchase order with supplier validation:',
-        error
+        error,
       )
       return {
         success: false,
